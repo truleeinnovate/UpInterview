@@ -38,7 +38,7 @@ app.post('/api/save-user', (req, res) => {
     user.save()
         .then(() => res.json({ message: 'User saved successfully' }))
         .catch(err => {
-            console.error('Error saving user:', err);
+            console.error('Error saving user:', err); // Log the error details
             res.status(500).json({ error: 'Error saving user' });
         });
 });
