@@ -33,22 +33,12 @@ app.get('/api/db-status', (req, res) => {
 app.post('/api/save-user', async (req, res) => {
     const { name } = req.body;
     try {
-        const existingUser = await User.findOne({ name });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Name already exists' });
-        }
         const user = new User({ name });
         await user.save();
         res.json({ message: 'User saved successfully' });
     } catch (err) {
-        if (err.code === 11000) {
-            // Duplicate key error
-            console.error('Duplicate key error:', err);
-            res.status(400).json({ error: 'Duplicate entry' });
-        } else {
-            console.error('Error saving user:', err);
-            res.status(500).json({ error: 'Error saving user' });
-        }
+        console.error('Error saving user:', err);
+        res.status(500).json({ error: 'Error saving user' });
     }
 });
 
