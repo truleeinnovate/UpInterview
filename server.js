@@ -8,6 +8,8 @@ const port = process.env.PORT || 4041;
 // MongoDB connection string
 const mongoUri = process.env.MONGO_URI;
 
+console.log('Mongo URI:', process.env.MONGO_URI);
+
 // Connect to MongoDB
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
