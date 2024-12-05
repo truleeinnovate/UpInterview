@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose'); // Add this line
+const mongoose = require('mongoose');
 const User = require('./models/User.js');
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.json());
 app.use(cors());
 
 const port = process.env.PORT || 4041;
 const mongoUri = process.env.MONGO_URI;
 
-console.log('Mongo URI:', process.env.MONGO_URI);
+console.log('Mongo URI:', mongoUri);
 
 // Connect to MongoDB
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/message', (req, res) => {
-    res.json({ message: 'Hello from the backend! now updated on 11:10 pm' });
+    res.json({ message: 'Hello from the backend!' });
 });
 
 app.get('/api/db-status', (req, res) => {
@@ -31,13 +31,17 @@ app.get('/api/db-status', (req, res) => {
 });
 
 app.post('/api/save-user', (req, res) => {
+    console.log('Received user data:', req.body);
     const { name, email } = req.body;
     const user = new User({ name, email });
     user.save()
-        .then(() => res.json({ message: 'User saved successfully' }))
+        .then(() => {
+            console.log('User saved successfully');
+            res.json({ message: 'User saved successfully' });
+        })
         .catch(err => {
-            console.error('Error saving user:', err); // Log the error details
-            res.status(500).json({ error: 'Error saving user' });
+            console.error('Error saving user:', err);
+            res.status(500).json({ error: 'Error saving user', details: err.message });
         });
 });
 

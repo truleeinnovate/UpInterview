@@ -7,7 +7,7 @@ function App() {
   const [dbStatus, setDbStatus] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [isSignedIn, setIsSignedIn] = useState(false); // Add this line
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
     const backendUrl = process.env.NODE_ENV === 'production'
@@ -20,7 +20,7 @@ function App() {
         setMessage(response.data.message);
       })
       .catch(error => {
-        console.error('There was an error!', error);
+        console.error('There was an error fetching the message!', error);
       });
 
     // Fetch MongoDB connection status
@@ -39,31 +39,28 @@ function App() {
       ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/'
       : 'http://localhost:4041';
 
+    console.log('Submitting user data:', { name, email });
+
     axios.post(`${backendUrl}/api/save-user`, { name, email })
       .then(response => {
         console.log('User saved:', response.data);
-        setIsSignedIn(true); // Update this line to show the home page
+        setIsSignedIn(true);
       })
       .catch(error => {
-        console.error('Error saving user', error);
+        console.error('Error saving user:', error.response ? error.response.data : error.message);
       });
   };
-
-  const Home = () => (
-    <div>
-      <h1>Welcome to the Home Page</h1>
-      <p>This is the home page content.</p>
-    </div>
-  );
 
   return (
     <div className="App">
       <header className="App-header">
         {isSignedIn ? (
-          <Home /> // Show Home component if signed in
+          <div>
+            <h1>Welcome to the Home Page</h1>
+            <p>This is the home page content.</p>
+          </div>
         ) : (
           <>
-            hello
             <p>{message}</p>
             <p>{dbStatus}</p>
             <form onSubmit={handleSubmit}>
