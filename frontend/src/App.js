@@ -107,7 +107,6 @@ function App() {
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-  // Log the backend URL to verify it's being read correctly
   console.log('Backend URL:', backendUrl);
 
   useEffect(() => {
