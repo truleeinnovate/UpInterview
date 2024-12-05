@@ -31,12 +31,12 @@ app.get('/api/db-status', (req, res) => {
 });
 
 app.post('/api/save-user', (req, res) => {
-    const { name, email } = req.body;
-    const user = new User({ name, email });
+    const { name } = req.body;
+    const user = new User({ name });
     user.save()
         .then(() => res.json({ message: 'User saved successfully' }))
         .catch(err => {
-            console.error('Error saving user:', err); // Log the error details
+            console.error('Error saving user:', err);
             res.status(500).json({ error: 'Error saving user' });
         });
 });

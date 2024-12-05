@@ -6,7 +6,6 @@ function App() {
   const [message, setMessage] = useState('');
   const [dbStatus, setDbStatus] = useState('');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
@@ -39,9 +38,9 @@ function App() {
       ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/'
       : 'http://localhost:4041';
 
-    console.log('Submitting user data:', { name, email });
+    console.log('Submitting user data:', { name });
 
-    axios.post(`${backendUrl}/api/save-user`, { name, email })
+    axios.post(`${backendUrl}/api/save-user`, { name })
       .then(response => {
         console.log('User saved:', response.data);
         setIsSignedIn(true);
@@ -60,7 +59,7 @@ function App() {
             <p>This is the home page content.</p>
           </div>
         ) : (
-          <>  
+          <>
             <p>{message}</p>
             <p>{dbStatus}</p>
             <form onSubmit={handleSubmit}>
@@ -69,12 +68,6 @@ function App() {
                 placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
               />
               <button type="submit">Sign In</button>
             </form>
