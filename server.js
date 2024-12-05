@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose'); // Add this line
+const mongoose = require('mongoose');
 const User = require('./models/User.js');
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.json());
 app.use(cors());
 
 const port = process.env.PORT || 4041;

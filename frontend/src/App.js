@@ -32,7 +32,7 @@ function App() {
       });
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e) => { 
     e.preventDefault();
     const backendUrl = process.env.NODE_ENV === 'production'
       ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/'
