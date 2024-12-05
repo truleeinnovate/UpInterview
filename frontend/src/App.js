@@ -105,7 +105,6 @@ function App() {
   const [email, setEmail] = useState('');
   const [isSignedIn, setIsSignedIn] = useState(false);
 
-  // Use environment variable for backend URL
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   // Log the backend URL to verify it's being read correctly
