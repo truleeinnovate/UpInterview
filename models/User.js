@@ -5,8 +5,7 @@ const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true, // Name is required
-        trim: true, // Trim whitespace
-        unique: true // Ensure name is unique if needed
+        trim: true // Trim whitespace
     }
 });
 
