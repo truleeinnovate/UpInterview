@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose'); // Add this line
+const User = require('./models/User.js');
 
 const app = express();
 app.use(express.json());
@@ -33,11 +34,13 @@ app.get('/api/db-status', (req, res) => {
 
 app.post('/api/save-user', (req, res) => {
     const { name, email } = req.body;
-    // Assuming you have a User model set up with Mongoose
     const user = new User({ name, email });
     user.save()
         .then(() => res.json({ message: 'User saved successfully' }))
-        .catch(err => res.status(500).json({ error: 'Error saving user' }));
+        .catch(err => {
+            console.error('Error saving user:', err);
+            res.status(500).json({ error: 'Error saving user' });
+        });
 });
 
 app.listen(port, () => {
