@@ -41,8 +41,14 @@ app.post('/api/save-user', async (req, res) => {
         await user.save();
         res.json({ message: 'User saved successfully' });
     } catch (err) {
-        console.error('Error saving user:', err);
-        res.status(500).json({ error: 'Error saving user' });
+        if (err.code === 11000) {
+            // Duplicate key error
+            console.error('Duplicate key error:', err);
+            res.status(400).json({ error: 'Duplicate entry' });
+        } else {
+            console.error('Error saving user:', err);
+            res.status(500).json({ error: 'Error saving user' });
+        }
     }
 });
 
