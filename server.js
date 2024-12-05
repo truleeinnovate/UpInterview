@@ -4,10 +4,10 @@ const mongoose = require('mongoose'); // Add this line
 const User = require('./models/User.js');
 
 const app = express();
-app.use(express.json());
-const port = process.env.PORT || 4041;
+app.use(express.json()); // Middleware to parse JSON bodies
+app.use(cors());
 
-// MongoDB connection string
+const port = process.env.PORT || 4041;
 const mongoUri = process.env.MONGO_URI;
 
 console.log('Mongo URI:', process.env.MONGO_URI);
@@ -16,8 +16,6 @@ console.log('Mongo URI:', process.env.MONGO_URI);
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB', err));
-
-app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('Hello World! this is updated on 10:40 pm');
