@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(cors());
 
 const port = process.env.PORT || 4041;
-const mongoUri = process.env.MONGO_URI;
+const mongoUri = process.env.MONGO_URI + '&retryWrites=false';
 
 console.log('Mongo URI:', process.env.MONGO_URI);
 
@@ -31,10 +31,10 @@ app.get('/api/db-status', (req, res) => {
 });
 
 app.post('/api/save-user', async (req, res) => {
-    const { name } = req.body;
+    const { name } = req.body; // Ensure this matches the data being sent
     try {
-        const user = new User({ name });
-        await user.save();
+        const user = new User({ name }); // Create a new user with the provided data
+        await user.save(); // Save the user to the database
         res.json({ message: 'User saved successfully' });
     } catch (err) {
         console.error('Error saving user:', err);
