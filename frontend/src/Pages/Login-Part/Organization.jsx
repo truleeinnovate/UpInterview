@@ -11,27 +11,6 @@ import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDro
 const countryOptions = ["India", "UK"];
 const employeesOptions = ["1-10", "11-20", "21-50", "51-100", "100+"];
 
-// const FloatingLabelInput = memo(({ id, label, value, onChange, type = "text", readOnly, onClick }) => (
-//   <div className="relative">
-//     <input
-//       type={type}
-//       id={id}
-//       className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-//       placeholder=" "
-//       value={value}
-//       onChange={onChange}
-//       readOnly={readOnly}
-//       onClick={onClick}
-//     />
-//     <label
-//       htmlFor={id}
-//       className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-//     >
-//       {label}
-//     </label>
-//   </div>
-// ));
-
 const Organization = memo(() => {
     const [selectedFirstName, setSelectedFirstName] = useState("");
     const [selectedLastName, setSelectedLastName] = useState("");
@@ -50,6 +29,10 @@ const Organization = memo(() => {
     const [objectsData, setObjectsData] = useState([]);
     const [tabsData, setTabsData] = useState([]);
     const navigate = useNavigate();
+
+    const backendUrl = process.env.NODE_ENV === 'production'
+        ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/'
+        : 'http://localhost:4041';
 
     useEffect(() => {
         const fetchObjectsData = async () => {
@@ -120,13 +103,7 @@ const Organization = memo(() => {
             .map(([field]) => field);
 
         if (emptyFields.length > 0) {
-            setErrorMessage(`Please fill in the following required fields: ${emptyFields.join(', ')}`);
-            return false;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(selectedEmail)) {
-            setErrorMessage("Please enter a valid email address");
+            setErrorMessage(`Please fill in the following fields: ${emptyFields.join(', ')}`);
             return false;
         }
 
@@ -154,7 +131,7 @@ const Organization = memo(() => {
                 password: selectedPassword
             };
 
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization`, formData);
+            const response = await axios.post(`${backendUrl}/organization`, formData);
 
             if (!response?.data?.user?._id || !response?.data?.organization?._id) {
                 throw new Error("Invalid response from server");
@@ -174,7 +151,7 @@ const Organization = memo(() => {
                 GrantAccess: false
             }));
 
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/sharing-settings`, {
+            await axios.post(`${backendUrl}/api/sharing-settings`, {
                 Name: 'sharingSettingDefaultName',
                 organizationId: organization._id,
                 accessBody
@@ -199,7 +176,7 @@ const Organization = memo(() => {
                     }
                 }));
 
-                const profileResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, {
+                const profileResponse = await axios.post(`${backendUrl}/api/profiles`, {
                     label: profileName,
                     Name: profileName,
                     Description: `Default profile description for ${profileName}`,
@@ -254,7 +231,7 @@ const Organization = memo(() => {
                     roleData.reportsToRoleId = reportsToRoleId;
                 }
 
-                const roleResponse = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, roleData);
+                const roleResponse = await axios.post(`${backendUrl}/rolesdata`, roleData);
 
                 if (roles[i].name === "Admin") {
                     adminRoleId = roleResponse.data._id;
@@ -267,7 +244,7 @@ const Organization = memo(() => {
                 }
             }
 
-            await axios.put(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
+            await axios.put(`${backendUrl}/users/${user._id}`, {
                 RoleId: adminRoleId,
                 ProfileId: adminProfileId
             });
@@ -314,7 +291,6 @@ const Organization = memo(() => {
                                     type="text"
                                     id="last_name"
                                     className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                                    placeholder=" "
                                     value={selectedLastName}
                                     onChange={(e) => setSelectedLastName(e.target.value)}
                                 />
@@ -328,9 +304,54 @@ const Organization = memo(() => {
                         </div>
                         <div className="relative">
                             <input
+                                type="email"
+                                id="email"
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+                                value={selectedEmail}
+                                onChange={(e) => setSelectedEmail(e.target.value)}
+                            />
+                            <label
+                                htmlFor="email"
+                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                            >
+                                Email
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                id="phone"
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+                                value={selectedPhone}
+                                onChange={(e) => setSelectedPhone(e.target.value)}
+                            />
+                            <label
+                                htmlFor="phone"
+                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                            >
+                                Phone
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                id="username"
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+                                value={selectedUsername}
+                                onChange={(e) => setSelectedUsername(e.target.value)}
+                            />
+                            <label
+                                htmlFor="username"
+                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                            >
+                                Username
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
                                 type="text"
                                 id="job_title"
-                                className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
                                 value={selectedJobTitle}
                                 onChange={(e) => setSelectedJobTitle(e.target.value)}
                             />
@@ -343,42 +364,9 @@ const Organization = memo(() => {
                         </div>
                         <div className="relative">
                             <input
-                                type="email"
-                                id="Email"
-                                className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                                placeholder=" "
-                                value={selectedEmail}
-                                onChange={(e) => setSelectedEmail(e.target.value)}
-                            />
-                            <label
-                                htmlFor="Email"
-                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                            >
-                                Email
-                            </label>
-                        </div>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                id="Phone"
-                                className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                                placeholder=" "
-                                value={selectedPhone}
-                                onChange={(e) => setSelectedPhone(e.target.value)}
-                            />
-                            <label
-                                htmlFor="Phone"
-                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                            >
-                                Phone
-                            </label>
-                        </div>
-                        <div className="relative">
-                            <input
                                 type="text"
                                 id="company"
-                                className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                                placeholder=" "
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
                                 value={selectedCompany}
                                 onChange={(e) => setSelectedCompany(e.target.value)}
                             />
@@ -390,43 +378,40 @@ const Organization = memo(() => {
                             </label>
                         </div>
                         <div className="relative">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    id="employees"
-                                    className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                                    placeholder=" "
-                                    value={selectedEmployees}
-                                    onClick={toggleDropdownEmployees}
-                                    readOnly
-                                />
-                                <label
-                                    htmlFor="employees"
-                                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                                >
-                                    Employees
-                                </label>
-                                <div
-                                    className="absolute right-0 top-0"
-                                    onClick={toggleDropdownEmployees}
-                                >
-                                    <MdArrowDropDown className="text-lg text-gray-500 mt-[14px] mr-3 cursor-pointer" />
-                                </div>
+                            <input
+                                type="text"
+                                id="employees"
+                                className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+                                value={selectedEmployees}
+                                onClick={toggleDropdownEmployees}
+                                readOnly
+                            />
+                            <label
+                                htmlFor="employees"
+                                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                            >
+                                Employees
+                            </label>
+                            <div
+                                className="absolute right-0 top-0"
+                                onClick={toggleDropdownEmployees}
+                            >
+                                <MdArrowDropDown className="text-lg text-gray-500 mt-[14px] mr-3 cursor-pointer" />
                             </div>
-                            {showDropdownEmployees && (
-                                <div className="absolute z-50 border mb-5 w-full rounded-md bg-white shadow-lg">
-                                    {employeesOptions.map((option) => (
-                                        <div
-                                            key={option}
-                                            className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                            onClick={() => handleEmployeesSelect(option)}
-                                        >
-                                            {option}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
+                        {showDropdownEmployees && (
+                            <div className="absolute z-50 border mb-5 w-full rounded-md bg-white shadow-lg">
+                                {employeesOptions.map((option) => (
+                                    <div
+                                        key={option}
+                                        className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleEmployeesSelect(option)}
+                                    >
+                                        {option}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         <div className="relative">
                             <div className="relative">
                                 <input

@@ -14,6 +14,10 @@ const Admin = () => {
     const { can } = usePermify();
     const navigate = useNavigate();
 
+    const backendUrl = process.env.NODE_ENV === 'production'
+        ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/'
+        : 'http://localhost:4041';
+
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
@@ -21,7 +25,7 @@ const Admin = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/login`, { Email, password });
+            const response = await axios.post(`${backendUrl}/organization/login`, { Email, password });
             if (response.status === 200) {
                 const { userId, organizationId } = response.data;
                 Cookies.set('userId', userId);
@@ -36,19 +40,14 @@ const Admin = () => {
     return (
         <>
             <div>
-                {/* <div className="border-b p-4">
-          <p className="font-bold text-xl">LOGO</p>
-        </div> */}
                 <div className="border-b p-4">
                     <img src={logo} alt="Logo" className="w-20" />
                 </div>
 
                 <div className="grid grid-cols-2">
-                    {/* col 1 */}
                     <div className="flex justify-center">
                         <img src={image1} alt="logo" className='h-[30rem]' />
                     </div>
-                    {/* col 2 */}
                     <div className="mt-5">
                         <div className="flex justify-center gap-52 mb-8">
                             <button className="border-2 border-gray-400 font-medium rounded-md px-10 py-2">User</button>
