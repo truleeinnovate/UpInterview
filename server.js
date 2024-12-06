@@ -7,10 +7,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+require('dotenv').config();
+
 const port = process.env.PORT || 4041;
 const mongoUri = process.env.MONGO_URI + '&retryWrites=false';
-
-console.log('Mongo URI:', process.env.MONGO_URI);
 
 // Connect to MongoDB
 mongoose.connect(mongoUri)
@@ -31,14 +31,20 @@ app.get('/api/db-status', (req, res) => {
 });
 
 app.post('/api/save-user', async (req, res) => {
-    const { name } = req.body; // Ensure this matches the data being sent
+    const { name } = req.body;
     try {
-        const user = new User({ name }); // Create a new user with the provided data
-        await user.save(); // Save the user to the database
+        const user = new User({ name });
+        await user.save();
         res.json({ message: 'User saved successfully' });
     } catch (err) {
-        console.error('Error saving user:', err);
-        res.status(500).json({ error: 'Error saving user' });
+        if (err.code === 11000) {
+            // Duplicate key error
+            console.error('Duplicate key error:', err);
+            res.status(400).json({ error: 'Duplicate entry' });
+        } else {
+            console.error('Error saving user:', err);
+            res.status(500).json({ error: 'Error saving user' });
+        }
     }
 });
 
