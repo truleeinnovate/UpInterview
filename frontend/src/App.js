@@ -101,14 +101,14 @@ import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
 // const QuestionBank = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx'));
 // const Team = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Team-Tab/Team.jsx"));
 // const OutsourceOption = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/Interviews/OutsourceOption.jsx'));
-// const Price = React.lazy(() => import('./Pages/Login-Part/price.jsx'));
+const Price = React.lazy(() => import('./Pages/Login-Part/price.jsx'));
 const Login1 = React.lazy(() => import('./Pages/Login-Part/Login-1.jsx'));
-// const Login2 = React.lazy(() => import('./Pages/Login-Part/Login-2.jsx'));
+const Login2 = React.lazy(() => import('./Pages/Login-Part/Login-2.jsx'));
 // const Login3 = React.lazy(() => import('./Pages/Login-Part/Login-3.jsx'));
 // const Login4 = React.lazy(() => import('./Pages/Login-Part/Login-4.jsx'));
-// const Admin = React.lazy(() => import('./Pages/Login-Part/Admin.jsx'));
+const Admin = React.lazy(() => import('./Pages/Login-Part/Admin.jsx'));
 // const NoFreelancer = React.lazy(() => import('./Pages/Login-Part/NoFreelancer.jsx'));
-// const Organization = React.lazy(() => import('./Pages/Login-Part/Organization.jsx'));
+const Organization = React.lazy(() => import('./Pages/Login-Part/Organization.jsx'));
 
 const App = () => {
   const location = useLocation();
@@ -128,9 +128,9 @@ const App = () => {
             {/* login */}
             <Route path="/" element={<Login1 />} />
             {/* <Route path="/callback" element={<Callback />} />
-            <Route path="/nofreelance" element={<NoFreelancer />} />
+            <Route path="/nofreelance" element={<NoFreelancer />} /> */}
             <Route path="/profile1" element={<Login2 />} />
-            <Route path="/profile3" element={<Login3 />} />
+            {/* <Route path="/profile3" element={<Login3 />} />
             <Route path="/profile4" element={<Login4 />} /> */}
 
             {/* home */}
@@ -140,10 +140,10 @@ const App = () => {
             <Route path="/assessment" element={<Assessment />} />
             <Route path="/interview-question" element={<QuestionBank />} />
             <Route path="/team" element={<Team />} />
-            <Route path="/outsourceoption" element={<OutsourceOption />} />
+            <Route path="/outsourceoption" element={<OutsourceOption />} /> */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/price" element={<Price />} />
-            <Route path="/organization" element={<Organization />} /> */}
+            <Route path="/organization" element={<Organization />} />
           </Routes>
         </Suspense>
       </div>
