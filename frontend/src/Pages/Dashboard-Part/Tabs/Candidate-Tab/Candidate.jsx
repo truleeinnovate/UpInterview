@@ -24,7 +24,7 @@ import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { usePermissions } from '../../../../PermissionsContext';
 import { useMemo } from 'react';
-// import config from '../../../../config';
+import config from '../../../../config';
 
 const CandidateProfileDetails = React.lazy(() => import('./CandidateProfileDetails'));
 const Sidebar = React.lazy(() => import('../Candidate-Tab/CreateCandidate'));
@@ -335,8 +335,8 @@ const Candidate = ({ isAssessmentContext = false, onSelectCandidates }) => {
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissions);
       const candidatesWithImages = filteredCandidates.map((candidate) => {
         if (candidate.ImageData && candidate.ImageData.filename) {
-          // const imageUrl = `${config.apiUrl}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
-          // return { ...candidate, imageUrl };
+          const imageUrl = `${config.apiUrl}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
+          return { ...candidate, imageUrl };
         }
         return candidate;
       });
