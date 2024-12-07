@@ -1,3 +1,17 @@
+import React, { useState, useEffect, memo } from "react";
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import image1 from "../Dashboard-Part/Images/image1.png";
+import Cookies from 'js-cookie';
+import { fetchMasterData } from '../../utils/fetchMasterData';
+import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
+
+import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
+
+const countryOptions = ["India", "UK"];
+const employeesOptions = ["1-10", "11-20", "21-50", "51-100", "100+"];
+
+
 const Organization = memo(() => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
   const [selectedLastName, setSelectedLastName] = useState("");
