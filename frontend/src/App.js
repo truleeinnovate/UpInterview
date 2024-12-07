@@ -94,21 +94,21 @@ import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.j
 import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
 import Callback from './Callback.js';
 
-const Home = React.lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home.jsx'));
-const Assessment = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx"));
-const Candidate = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx"));
-const Position = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx"));
-const QuestionBank = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx'));
-const Team = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Team-Tab/Team.jsx"));
-const OutsourceOption = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/Interviews/OutsourceOption.jsx'));
-const Price = React.lazy(() => import('./Pages/Login-Part/price.jsx'));
-const Login1 = React.lazy(() => import('./Pages/Login-Part/Login-1.jsx'));
-const Login2 = React.lazy(() => import('./Pages/Login-Part/Login-2.jsx'));
-const Login3 = React.lazy(() => import('./Pages/Login-Part/Login-3.jsx'));
-const Login4 = React.lazy(() => import('./Pages/Login-Part/Login-4.jsx'));
-const Admin = React.lazy(() => import('./Pages/Login-Part/Admin.jsx'));
-const NoFreelancer = React.lazy(() => import('./Pages/Login-Part/NoFreelancer.jsx'));
-const Organization = React.lazy(() => import('./Pages/Login-Part/Organization.jsx'));
+const Home = React.lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home.jsx').then(module => ({ default: module.default })));
+const Assessment = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx").then(module => ({ default: module.default })));
+const Candidate = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx").then(module => ({ default: module.default })));
+const Position = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx").then(module => ({ default: module.default })));
+const QuestionBank = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx').then(module => ({ default: module.default })));
+const Team = React.lazy(() => import("./Pages/Dashboard-Part/Tabs/Team-Tab/Team.jsx").then(module => ({ default: module.default })));
+const OutsourceOption = React.lazy(() => import('./Pages/Dashboard-Part/Tabs/Interviews/OutsourceOption.jsx').then(module => ({ default: module.default })));
+const Price = React.lazy(() => import('./Pages/Login-Part/price.jsx').then(module => ({ default: module.default })));
+const Login1 = React.lazy(() => import('./Pages/Login-Part/Login-1.jsx').then(module => ({ default: module.default })));
+const Login2 = React.lazy(() => import('./Pages/Login-Part/Login-2.jsx').then(module => ({ default: module.default })));
+const Login3 = React.lazy(() => import('./Pages/Login-Part/Login-3.jsx').then(module => ({ default: module.default })));
+const Login4 = React.lazy(() => import('./Pages/Login-Part/Login-4.jsx').then(module => ({ default: module.default })));
+const Admin = React.lazy(() => import('./Pages/Login-Part/Admin.jsx').then(module => ({ default: module.default })));
+const NoFreelancer = React.lazy(() => import('./Pages/Login-Part/NoFreelancer.jsx').then(module => ({ default: module.default })));
+const Organization = React.lazy(() => import('./Pages/Login-Part/Organization.jsx').then(module => ({ default: module.default })));
 
 const App = () => {
   const location = useLocation();
