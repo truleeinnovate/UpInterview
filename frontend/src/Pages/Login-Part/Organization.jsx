@@ -1,38 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import image1 from "../Dashboard-Part/Images/image1.png";
-import Cookies from 'js-cookie';
-import { fetchMasterData } from '../../utils/fetchMasterData';
-import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
-
-import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
-
-const countryOptions = ["India", "UK"];
-const employeesOptions = ["1-10", "11-20", "21-50", "51-100", "100+"];
-
-// const FloatingLabelInput = memo(({ id, label, value, onChange, type = "text", readOnly, onClick }) => (
-//   <div className="relative">
-//     <input
-//       type={type}
-//       id={id}
-//       className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-//       placeholder=" "
-//       value={value}
-//       onChange={onChange}
-//       readOnly={readOnly}
-//       onClick={onClick}
-//     />
-//     <label
-//       htmlFor={id}
-//       className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-//     >
-//       {label}
-//     </label>
-//   </div>
-// ));
-
-export const Organization = memo(() => {
+const Organization = memo(() => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
   const [selectedLastName, setSelectedLastName] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
@@ -532,3 +498,5 @@ export const Organization = memo(() => {
     </>
   );
 });
+
+export default Organization;
