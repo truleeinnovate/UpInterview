@@ -27,10 +27,9 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: Build backend
+      - name: Install backend dependencies
         run: |
-          cd backend
-          npm install
+          npm install # assuming the backend dependencies are in the root package.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -38,7 +37,7 @@ jobs:
           name: app
           path: |
             frontend/build
-            backend
+            server.js
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,5 +53,5 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           app_location: "frontend/build"
-          api_location: "backend"
+          api_location: "."
           output_location: "build"
