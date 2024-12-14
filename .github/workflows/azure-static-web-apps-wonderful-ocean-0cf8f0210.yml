@@ -1,61 +1,3 @@
-# name: Azure Static Web Apps CI/CD
-
-# on:
-#   push:
-#     branches: [ "main" ]
-#     paths:
-#       - "./backend/**"
-#       - ".github/workflows/azure-static-web-apps-wonderful-ocean-0cf8f0210.yml"
-#   workflow_dispatch:
-
-# env:
-#   NODE_VERSION: '20.x'
-
-# permissions:
-#   contents: read
-#   id-token: write
-
-# jobs:
-#   build_and_deploy:
-#     runs-on: ubuntu-latest
-#     environment: 
-#       name: Production
-#     defaults:
-#       run:
-#         working-directory: ./backend/
-#     steps:
-#       - uses: actions/checkout@v2
-
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: ${{ env.NODE_VERSION }}
-#           cache: npm
-#           cache-dependency-path: ./backend/package-lock.json
-
-#       - name: npm install, build and test
-#         run: |
-#           npm install
-#           npm run build
-
-#       - name: Azure CLI Login
-#         uses: azure/login@v1
-#         with:
-#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-#       - name: Deploy to Azure Static Web Apps
-#         id: builddeploy
-#         uses: Azure/static-web-apps-deploy@v1
-#         with:
-#           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_OCEAN_0CF8F0210 }}
-#           action: 'upload'
-#           app_location: './backend/frontend/build'
-
-
-
-
 name: Build and deploy Node.js app to Azure Web App - kanodejamysqlapp
 
 on:
@@ -130,3 +72,5 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_OCEAN_0CF8F0210 }}
           action: 'upload'
           app_location: './backend/frontend/build'
+          api_location: "./backend"
+          output_location: "build"
