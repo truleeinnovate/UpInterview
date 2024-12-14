@@ -32,12 +32,14 @@ jobs:
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
+          skip_deploy_on_missing_secrets: true
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "frontend"      # Frontend folder
-          api_location: "."             # Root directory for backend
-          output_location: "frontend/build" # Built frontend output folder
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided
+          action: upload
+          app_location: frontend    # Location of your frontend code
+          api_location: .           # API code location (use '.' if none)
+    output_location: frontend/build # Build output location
+
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
