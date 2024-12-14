@@ -1,25 +1,24 @@
-// const express = require('express');
-// const cors = require('cors');
-// const mongoose = require('mongoose');
-// // const User = require('./models/User.js');
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+// const User = require('./models/User.js');
 
-// const app = express();
-// app.use(express.json());
-// app.use(cors());
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-// require('dotenv').config();
+require('dotenv').config();
 
-// const port = process.env.PORT || 4041;
+const port = process.env.PORT || 4041;
 // const mongoUri = process.env.MONGO_URI + '&retryWrites=false';
 
-// // Connect to MongoDB
 // mongoose.connect(mongoUri)
 //     .then(() => console.log('Connected to MongoDB'))
 //     .catch(err => console.error('Could not connect to MongoDB', err));
 
-// app.get('/', (req, res) => {
-//     res.send('Hello World!');
-// });
+app.get('/', (req, res) => {
+    res.send('Server is running !');
+});
 
 // app.get('/api/message', (req, res) => {
 //     res.json({ message: 'Hello from the backend !' });
@@ -30,27 +29,27 @@
 //     res.json({ status });
 // });
 
-// // app.post('/api/save-user', async (req, res) => {
-// //     const { name } = req.body;
-// //     try {
-// //         const user = new User({ name });
-// //         await user.save();
-// //         res.json({ message: 'User saved successfully' });
-// //     } catch (err) {
-// //         if (err.code === 11000) {
-// //             // Duplicate key error
-// //             console.error('Duplicate key error:', err);
-// //             res.status(400).json({ error: 'Duplicate entry' });
-// //         } else {
-// //             console.error('Error saving user:', err);
-// //             res.status(500).json({ error: 'Error saving user' });
-// //         }
-// //     }
-// // });
-
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
+// app.post('/api/save-user', async (req, res) => {
+//     const { name } = req.body;
+//     try {
+//         const user = new User({ name });
+//         await user.save();
+//         res.json({ message: 'User saved successfully' });
+//     } catch (err) {
+//         if (err.code === 11000) {
+//             // Duplicate key error
+//             console.error('Duplicate key error:', err);
+//             res.status(400).json({ error: 'Duplicate entry' });
+//         } else {
+//             console.error('Error saving user:', err);
+//             res.status(500).json({ error: 'Error saving user' });
+//         }
+//     }
 // });
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
 
 
 
@@ -4053,106 +4052,106 @@
 
 
 
-const express = require('express');
-const bodyParser = require('body-parser');
+// const express = require('express');
+// const bodyParser = require('body-parser');
 
-const cors = require('cors');
+// const cors = require('cors');
 
-const corsOptions = {
-    origin: 'https://www.app.upinterview.io', // Your frontend URL
-    credentials: true, // Allows cookies or authentication tokens
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Include necessary HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Include necessary headers
-};
+// const corsOptions = {
+//     origin: 'https://www.app.upinterview.io', // Your frontend URL
+//     credentials: true, // Allows cookies or authentication tokens
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Include necessary HTTP methods
+//     allowedHeaders: ['Content-Type', 'Authorization'], // Include necessary headers
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
-const app = express();
+// const app = express();
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 
-const { Organization, OrganizationHistory } = require('./models/Organization.js');
+// // const { Organization, OrganizationHistory } = require('./models/Organization.js');
 
-app.post('/organization', async (req, res) => {
-    const { firstName,
-        // lastName, Email, Phone, username, jobTitle, company, employees, country, password, Role, Profile, ProfileId, RoleId
-    } = req.body;
+// // app.post('/organization', async (req, res) => {
+// //     const { firstName,
+// //         // lastName, Email, Phone, username, jobTitle, company, employees, country, password, Role, Profile, ProfileId, RoleId
+// //     } = req.body;
 
-    try {
-        // Check if email already exists
-        // const existingOrganization = await Organization.findOne({ Email });
-        // if (existingOrganization) {
-        //     return res.status(400).json({ message: 'Email already registered' });
-        // }
+// //     try {
+// //         // Check if email already exists
+// //         // const existingOrganization = await Organization.findOne({ Email });
+// //         // if (existingOrganization) {
+// //         //     return res.status(400).json({ message: 'Email already registered' });
+// //         // }
 
-        // Hash the password
-        // const hashedPassword = await bcrypt.hash(password, saltRounds);
+// //         // Hash the password
+// //         // const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        // Create a new organization
-        const organization = new Organization({
-            firstName,
-            // lastName,
-            // Email,
-            // Phone,
-            // username,
-            // jobTitle,
-            // company,
-            // employees,
-            // country,
-            // password: hashedPassword,
-        });
+// //         // Create a new organization
+// //         const organization = new Organization({
+// //             firstName,
+// //             // lastName,
+// //             // Email,
+// //             // Phone,
+// //             // username,
+// //             // jobTitle,
+// //             // company,
+// //             // employees,
+// //             // country,
+// //             // password: hashedPassword,
+// //         });
 
-        const savedOrganization = await organization.save();
+// //         const savedOrganization = await organization.save();
 
-        // Create a new user
-        // const newUser = new Users({
-        //     Name: `${firstName} ${lastName}`,
-        //     Firstname: firstName,
-        //     Email,
-        //     UserId: username,
-        //     Phone,
-        //     organizationId: savedOrganization._id,
-        //     sub: 'dfbd',
-        //     RoleId,
-        //     ProfileId,
-        //     password: hashedPassword,
-        // });
+// //         // Create a new user
+// //         // const newUser = new Users({
+// //         //     Name: `${firstName} ${lastName}`,
+// //         //     Firstname: firstName,
+// //         //     Email,
+// //         //     UserId: username,
+// //         //     Phone,
+// //         //     organizationId: savedOrganization._id,
+// //         //     sub: 'dfbd',
+// //         //     RoleId,
+// //         //     ProfileId,
+// //         //     password: hashedPassword,
+// //         // });
 
-        // const savedUser = await newUser.save();
+// //         // const savedUser = await newUser.save();
 
-        // newUser.sub = savedUser._id;
-        // await newUser.save();
+// //         // newUser.sub = savedUser._id;
+// //         // await newUser.save();
 
-        // Create a new contact
-        // const contact = new Contacts({
-        //     Name: `${firstName} ${lastName}`,
-        //     Firstname: firstName,
-        //     Email,
-        //     Phone,
-        //     UserId: username,
-        //     CurrentRole: jobTitle,
-        //     company,
-        //     employees,
-        //     CountryCode: country,
-        //     user: savedUser._id,
-        // });
+// //         // Create a new contact
+// //         // const contact = new Contacts({
+// //         //     Name: `${firstName} ${lastName}`,
+// //         //     Firstname: firstName,
+// //         //     Email,
+// //         //     Phone,
+// //         //     UserId: username,
+// //         //     CurrentRole: jobTitle,
+// //         //     company,
+// //         //     employees,
+// //         //     CountryCode: country,
+// //         //     user: savedUser._id,
+// //         // });
 
-        // const savedContact = await contact.save();
+// //         // const savedContact = await contact.save();
 
-        res.status(201).json({
-            organization: savedOrganization,
-            // contact: savedContact, user: savedUser
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
-});
+// //         res.status(201).json({
+// //             organization: savedOrganization,
+// //             // contact: savedContact, user: savedUser
+// //         });
+// //     } catch (error) {
+// //         res.status(500).json({ message: 'Internal server error', error: error.message });
+// //     }
+// // });
 
-app.get('/', (req, res) => {
-    res.send('Server is running.');
-});
+// app.get('/', (req, res) => {
+//     res.send('Server is running.');
+// });
 
-const PORT = process.env.PORT || 4041;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// const PORT = process.env.PORT || 4041;
+// app.listen(PORT, () => {
+//     console.log(`Server is running on http://localhost:${PORT}`);
+// });
