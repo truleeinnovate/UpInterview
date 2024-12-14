@@ -18,7 +18,7 @@ mongoose.connect(mongoUri)
     .catch(err => console.error('Could not connect to MongoDB', err));
 
 app.get('/', (req, res) => {
-    res.send('Hello World! this is updated on 10:40 pm');
+    res.send('Hello World!');
 });
 
 app.get('/api/message', (req, res) => {
@@ -30,27 +30,28 @@ app.get('/api/db-status', (req, res) => {
     res.json({ status });
 });
 
-app.post('/api/save-user', async (req, res) => {
-    const { name } = req.body;
-    try {
-        const user = new User({ name });
-        await user.save();
-        res.json({ message: 'User saved successfully' });
-    } catch (err) {
-        if (err.code === 11000) {
-            // Duplicate key error
-            console.error('Duplicate key error:', err);
-            res.status(400).json({ error: 'Duplicate entry' });
-        } else {
-            console.error('Error saving user:', err);
-            res.status(500).json({ error: 'Error saving user' });
-        }
-    }
-});
+// app.post('/api/save-user', async (req, res) => {
+//     const { name } = req.body;
+//     try {
+//         const user = new User({ name });
+//         await user.save();
+//         res.json({ message: 'User saved successfully' });
+//     } catch (err) {
+//         if (err.code === 11000) {
+//             // Duplicate key error
+//             console.error('Duplicate key error:', err);
+//             res.status(400).json({ error: 'Duplicate entry' });
+//         } else {
+//             console.error('Error saving user:', err);
+//             res.status(500).json({ error: 'Error saving user' });
+//         }
+//     }
+// });
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
 
 
 
@@ -134,14 +135,21 @@ app.use(cors({
     credentials: true
 }));
 
+// const cors = require('cors');
+
+app.use(cors({
+    origin: 'https://www.app.upinterview.io',
+    credentials: true,
+}));
+
 // app.use(cors({
 //   origin: (origin, callback) => {
 //     // List of allowed origins
 //     const allowedOrigins = [
-//       'http://localhost:3000',                    // Local development
-//       'https:/www.app.upinterview.io/', // Azure frontend
-//       process.env.CORS_ORIGIN                     // From environment variable
-//     ].filter(Boolean); // Remove any undefined/null values
+//       'http://localhost:3000',
+//       'https:/www.app.upinterview.io/',
+//       process.env.CORS_ORIGIN
+//     ].filter(Boolean);
 
 //     if (!origin || allowedOrigins.includes(origin)) {
 //       callback(null, true);
