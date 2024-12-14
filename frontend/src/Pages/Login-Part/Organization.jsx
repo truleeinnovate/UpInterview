@@ -148,15 +148,15 @@ const Organization = memo(() => {
     try {
       const formData = {
         firstName: selectedFirstName.trim(),
-        lastName: selectedLastName.trim(),
-        Email: selectedEmail.trim(),
-        Phone: selectedPhone.trim(),
-        username: selectedUsername.trim(),
-        jobTitle: selectedJobTitle.trim(),
-        company: selectedCompany.trim(),
-        employees: selectedEmployees,
-        country: selectedCountry,
-        password: selectedPassword
+        // lastName: selectedLastName.trim(),
+        // Email: selectedEmail.trim(),
+        // Phone: selectedPhone.trim(),
+        // username: selectedUsername.trim(),
+        // jobTitle: selectedJobTitle.trim(),
+        // company: selectedCompany.trim(),
+        // employees: selectedEmployees,
+        // country: selectedCountry,
+        // password: selectedPassword
       };
 
       // Create axios instance with default config
