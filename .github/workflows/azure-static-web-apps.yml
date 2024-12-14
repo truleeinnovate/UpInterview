@@ -36,7 +36,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided
           action: upload
           app_location: frontend    # Location of your frontend code
-          api_location: .           # API code location (use '.' if none)
+          api_location: "."           # API code location (use '.' if none)
     output_location: frontend/build # Build output location
 
 
