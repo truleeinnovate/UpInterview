@@ -4054,15 +4054,20 @@
 
 
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
+
+const cors = require('cors');
+
+const corsOptions = {
+    origin: 'https://www.app.upinterview.io', // Allow your frontend
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Allow cookies and headers
+};
+
+app.use(cors(corsOptions));
 
 const app = express();
 
-app.use(cors({
-    origin: 'https://www.app.upinterview.io',
-    credentials: true,
-}));
 app.use(bodyParser.json());
 
 app.post('/organization', (req, res) => {
@@ -4081,7 +4086,7 @@ app.get('/', (req, res) => {
     res.send('Server is running.');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4041;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
