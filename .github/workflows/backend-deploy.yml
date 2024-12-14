@@ -1,0 +1,39 @@
+name: Build and Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.js"            # Trigger when any JavaScript file changes
+      - "package.json"       # Trigger on package updates
+      - ".github/workflows/backend-deploy.yml" # Trigger on workflow file changes
+  workflow_dispatch:        # Allows manual triggering of this workflow
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'  # Specify Node.js version
+          cache: npm
+
+      - name: Install backend dependencies
+        run: |
+          npm install
+
+      - name: Zip backend files
+        run: |
+          zip -r backend.zip . -x "node_modules/*"
+
+      - name: Deploy Backend to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: "basic-backend-001"  # Replace with your Azure App Service name
+          slot-name: "production"           # Deployment slot (default: production)
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
