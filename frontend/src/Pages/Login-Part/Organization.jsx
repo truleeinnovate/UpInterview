@@ -101,49 +101,49 @@ const Organization = memo(() => {
     setShowDropdownCountry(false);
   };
 
-  const validateForm = () => {
-    if (selectedPassword !== selectedConfirmPassword) {
-      setErrorMessage("Passwords do not match!");
-      return false;
-    }
+  // const validateForm = () => {
+    // if (selectedPassword !== selectedConfirmPassword) {
+    //   setErrorMessage("Passwords do not match!");
+    //   return false;
+    // }
 
-    const requiredFields = {
-      'First Name': selectedFirstName,
-      // 'Last Name': selectedLastName,
-      // 'Email': selectedEmail,
-      // 'Phone': selectedPhone,
-      // 'Username': selectedUsername,
-      // 'Job Title': selectedJobTitle,
-      // 'Company': selectedCompany,
-      // 'Employees': selectedEmployees,
-      // 'Country': selectedCountry,
-      // 'Password': selectedPassword
-    };
+    // const requiredFields = {
+    //   'First Name': selectedFirstName,
+    //   'Last Name': selectedLastName,
+    //   'Email': selectedEmail,
+    //   'Phone': selectedPhone,
+    //   'Username': selectedUsername,
+    //   'Job Title': selectedJobTitle,
+    //   'Company': selectedCompany,
+    //   'Employees': selectedEmployees,
+    //   'Country': selectedCountry,
+    //   'Password': selectedPassword
+    // };
 
-    const emptyFields = Object.entries(requiredFields)
-      .filter(([_, value]) => !value)
-      .map(([field]) => field);
+    // const emptyFields = Object.entries(requiredFields)
+    //   .filter(([_, value]) => !value)
+    //   .map(([field]) => field);
 
-    if (emptyFields.length > 0) {
-      setErrorMessage(`Please fill in the following required fields: ${emptyFields.join(', ')}`);
-      return false;
-    }
+    // if (emptyFields.length > 0) {
+    //   setErrorMessage(`Please fill in the following required fields: ${emptyFields.join(', ')}`);
+    //   return false;
+    // }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(selectedEmail)) {
-      setErrorMessage("Please enter a valid email address");
-      return false;
-    }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(selectedEmail)) {
+    //   setErrorMessage("Please enter a valid email address");
+    //   return false;
+    // }
 
-    return true;
-  };
+    // return true;
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    // if (!validateForm()) {
+    //   return;
+    // }
 
     try {
       const formData = {
