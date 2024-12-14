@@ -55,3 +55,4 @@ jobs:
           app_location: "frontend/build"
           api_location: "."
           output_location: "build"
+          deployment_action: "upload" 
