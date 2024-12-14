@@ -4059,9 +4059,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const corsOptions = {
-    origin: 'https://www.app.upinterview.io', // Allow your frontend
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Allow cookies and headers
+    origin: 'https://www.app.upinterview.io', // Your frontend URL
+    credentials: true, // Allows cookies or authentication tokens
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Include necessary HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Include necessary headers
 };
 
 app.use(cors(corsOptions));
