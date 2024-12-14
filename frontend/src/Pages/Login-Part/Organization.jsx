@@ -11,6 +11,26 @@ import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDro
 const countryOptions = ["India", "UK"];
 const employeesOptions = ["1-10", "11-20", "21-50", "51-100", "100+"];
 
+// const FloatingLabelInput = memo(({ id, label, value, onChange, type = "text", readOnly, onClick }) => (
+//   <div className="relative">
+//     <input
+//       type={type}
+//       id={id}
+//       className="block rounded px-2.5 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
+//       placeholder=" "
+//       value={value}
+//       onChange={onChange}
+//       readOnly={readOnly}
+//       onClick={onClick}
+//     />
+//     <label
+//       htmlFor={id}
+//       className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+//     >
+//       {label}
+//     </label>
+//   </div>
+// ));
 
 const Organization = memo(() => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
@@ -31,32 +51,37 @@ const Organization = memo(() => {
   const [tabsData, setTabsData] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchObjectsData = async () => {
-      try {
-        const data = await fetchMasterData('api/objects');
-        const objects = data?.objects;
-        setObjectsData(Array.isArray(objects) ? objects : []);
-      } catch (error) {
-        console.error('Error fetching objects data:', error);
-        setObjectsData([]);
-      }
-    };
+  const backendUrl = process.env.NODE_ENV === 'production'
+    ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net'
+    : 'http://localhost:4041';
 
-    const fetchTabsData = async () => {
-      try {
-        const data = await fetchMasterData('api/tabs');
-        const tabs = data?.tabs;
-        setTabsData(Array.isArray(tabs) ? tabs : []);
-      } catch (error) {
-        console.error('Error fetching tabs data:', error);
-        setTabsData([]);
-      }
-    };
 
-    fetchObjectsData();
-    fetchTabsData();
-  }, []);
+  // useEffect(() => {
+  //   const fetchObjectsData = async () => {
+  //     try {
+  //       const data = await fetchMasterData('api/objects');
+  //       const objects = data?.objects;
+  //       setObjectsData(Array.isArray(objects) ? objects : []);
+  //     } catch (error) {
+  //       console.error('Error fetching objects data:', error);
+  //       setObjectsData([]);
+  //     }
+  //   };
+
+  //   const fetchTabsData = async () => {
+  //     try {
+  //       const data = await fetchMasterData('api/tabs');
+  //       const tabs = data?.tabs;
+  //       setTabsData(Array.isArray(tabs) ? tabs : []);
+  //     } catch (error) {
+  //       console.error('Error fetching tabs data:', error);
+  //       setTabsData([]);
+  //     }
+  //   };
+
+  //   fetchObjectsData();
+  //   fetchTabsData();
+  // }, []);
 
   const toggleDropdownEmployees = () => {
     setShowDropdownEmployees(!showDropdownEmployees);
@@ -115,7 +140,7 @@ const Organization = memo(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -134,7 +159,19 @@ const Organization = memo(() => {
         password: selectedPassword
       };
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization`, formData);
+      // Create axios instance with default config
+      const axiosInstance = axios.create({
+        baseURL: backendUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': window.location.origin
+        },
+        withCredentials: true,
+        timeout: 15000
+      });
+
+      const response = await axiosInstance.post('/organization', formData);
 
       if (!response?.data?.user?._id || !response?.data?.organization?._id) {
         throw new Error("Invalid response from server");
@@ -142,120 +179,37 @@ const Organization = memo(() => {
 
       const { user, organization } = response.data;
 
-      Cookies.set('userId', user._id, { expires: 7 });
-      Cookies.set('organizationId', organization._id, { expires: 7 });
-
-      const safeObjectsData = Array.isArray(objectsData) ? objectsData : [];
-      const safeTabsData = Array.isArray(tabsData) ? tabsData : [];
-
-      const accessBody = safeObjectsData.map(tab => ({
-        ObjName: tab,
-        Access: 'Public',
-        GrantAccess: false
-      }));
-
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/sharing-settings`, {
-        Name: 'sharingSettingDefaultName',
-        organizationId: organization._id,
-        accessBody
+      // Set cookies with proper domain
+      Cookies.set('userId', user._id, { 
+        expires: 7,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
       });
-
-      const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter"];
-      let adminProfileId = null;
-
-      for (const profileName of profileNames) {
-        const profileTabs = safeTabsData.map(tab => ({
-          name: tab,
-          status: profileName === "Admin" ? 'Visible' : 'Hidden'
-        }));
-
-        const profileObjects = safeObjectsData.map(object => ({
-          name: object,
-          permissions: {
-            View: true,
-            Create: true,
-            Edit: true,
-            Delete: profileName === "Admin"
-          }
-        }));
-
-        const profileResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, {
-          label: profileName,
-          Name: profileName,
-          Description: `Default profile description for ${profileName}`,
-          Tabs: profileTabs,
-          Objects: profileObjects,
-          organizationId: organization._id
-        });
-
-        if (profileName === "Admin" && profileResponse?.data?._id) {
-          adminProfileId = profileResponse.data._id;
-        }
-      }
-
-      if (!adminProfileId) {
-        throw new Error("Failed to create admin profile");
-      }
-
-      const roles = [
-        { label: "Admin", name: "Admin" },
-        { label: "CEO", name: "CEO" },
-        { label: "HR Manager", name: "HR_Manager" },
-        { label: "HR Lead", name: "HR_Lead" },
-        { label: "Recruiter", name: "Recruiter" },
-      ];
-
-      let adminRoleId = "";
-      let ceoRoleId = "";
-      let hrManagerRoleId = "";
-      let hrLeadRoleId = "";
-
-      for (let i = 0; i < roles.length; i++) {
-        let reportsToRoleId = null;
-
-        if (roles[i].name === "CEO") {
-          reportsToRoleId = adminRoleId;
-        } else if (roles[i].name === "HR_Manager") {
-          reportsToRoleId = ceoRoleId;
-        } else if (roles[i].name === "HR_Lead") {
-          reportsToRoleId = hrManagerRoleId;
-        } else if (roles[i].name === "Recruiter") {
-          reportsToRoleId = hrLeadRoleId;
-        }
-
-        const roleData = {
-          label: roles[i].label,
-          roleName: roles[i].name,
-          description: `Default role description for ${roles[i].name}`,
-          organizationId: organization._id,
-        };
-
-        if (reportsToRoleId) {
-          roleData.reportsToRoleId = reportsToRoleId;
-        }
-
-        const roleResponse = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, roleData);
-
-        if (roles[i].name === "Admin") {
-          adminRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "CEO") {
-          ceoRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "HR_Manager") {
-          hrManagerRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "HR_Lead") {
-          hrLeadRoleId = roleResponse.data._id;
-        }
-      }
-
-      await axios.put(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
-        RoleId: adminRoleId,
-        ProfileId: adminProfileId
+      
+      Cookies.set('organizationId', organization._id, {
+        expires: 7,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
       });
 
       navigate('/price');
+
     } catch (error) {
       console.error('Error saving organization:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'An error occurred while saving the organization';
+      
+      let errorMessage = 'An error occurred while saving the organization';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+        console.error('Server error:', error.response.data);
+      } else if (error.request) {
+        errorMessage = 'Unable to reach the server. Please check your connection.';
+        console.error('Network error:', error.request);
+      } else {
+        errorMessage = error.message;
+        console.error('Error:', error.message);
+      }
+      
       setErrorMessage(errorMessage);
     }
   };
