@@ -109,15 +109,15 @@ const Organization = memo(() => {
 
     const requiredFields = {
       'First Name': selectedFirstName,
-      'Last Name': selectedLastName,
-      'Email': selectedEmail,
-      'Phone': selectedPhone,
-      'Username': selectedUsername,
-      'Job Title': selectedJobTitle,
-      'Company': selectedCompany,
-      'Employees': selectedEmployees,
-      'Country': selectedCountry,
-      'Password': selectedPassword
+      // 'Last Name': selectedLastName,
+      // 'Email': selectedEmail,
+      // 'Phone': selectedPhone,
+      // 'Username': selectedUsername,
+      // 'Job Title': selectedJobTitle,
+      // 'Company': selectedCompany,
+      // 'Employees': selectedEmployees,
+      // 'Country': selectedCountry,
+      // 'Password': selectedPassword
     };
 
     const emptyFields = Object.entries(requiredFields)
