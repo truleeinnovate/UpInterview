@@ -74,8 +74,9 @@ app.post('/organization', async (req, res) => {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    // const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = 'abcd';
+      
     // Create a new organization
     const organization = new Organization({
       firstName,
