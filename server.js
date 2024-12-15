@@ -324,22 +324,24 @@ app.get('/qualification', async (req, res) => {
   }
 });
 
-// Function to push list of qualifications
-const pushQualifications = async (qualificationList) => {
-    if (!Array.isArray(qualificationList)) {
-        throw new Error('qualificationList must be an array.');
-    }
-
-    const qualifications = qualificationList.map((name) => ({
-        QualificationName: name,
-    }));
-
-    return HigherQualification.insertMany(qualifications);
-};
-
-// Predefined List of Qualifications
 const qualificationList = [
-    "Bachelor of Arts (BA)",
-    "Bachelor of Science (BSc)",
-    "Bachelor of Commerce (BCom)"
-];
+      "Bachelor of Arts (BA)",
+      "Bachelor of Science (BSc)",
+      "Bachelor of Commerce (BCom)",
+      "Bachelor of Engineering (BE/BTech)",
+      // ... other qualifications
+    ];
+
+    try {
+      const existingData = await HigherQualification.find();
+      if (existingData.length === 0) {
+        await HigherQualification.insertMany(qualificationList.map(name => ({ QualificationName: name })));
+        console.log('Qualifications pushed successfully.');
+      } else {
+        console.log('Qualifications already exist.');
+      }
+    } catch (error) {
+      console.error('Error pushing qualifications:', error.message);
+    }
+  })
+  .catch((err) => console.error('Failed to connect to MongoDB:', err.message));
