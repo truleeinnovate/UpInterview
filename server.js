@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const { Organization, OrganizationHistory } = require('./models/Organization.js');
 const { Contacts, ContactHistory } = require('./models/Contacts1.js')
 const { Users, UserHistory } = require("./models/Users.js")
+const { HigherQualification, HigherQualificationHistory } = require('./models/higherqualification.js');
+
 
 
 
@@ -311,3 +313,33 @@ app.put('/contacts/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+// higher qualification
+
+app.get('/qualification', async (req, res) => {
+  try {
+    const higherqualifications = await HigherQualification.find({}, 'QualificationName');
+    res.json(higherqualifications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Function to push list of qualifications
+const pushQualifications = async (qualificationList) => {
+    if (!Array.isArray(qualificationList)) {
+        throw new Error('qualificationList must be an array.');
+    }
+
+    const qualifications = qualificationList.map((name) => ({
+        QualificationName: name,
+    }));
+
+    return HigherQualification.insertMany(qualifications);
+};
+
+// Predefined List of Qualifications
+const qualificationList = [
+    "Bachelor of Arts (BA)",
+    "Bachelor of Science (BSc)",
+    "Bachelor of Commerce (BCom)"
+];
