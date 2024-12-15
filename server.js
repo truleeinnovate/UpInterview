@@ -30,7 +30,7 @@ mongoose.connect(mongoUri, {
   .catch(err => console.error('Could not connect to MongoDB', err));
 
 app.get('/', (req, res) => {
-    res.send('Hello World! this is updated on 10:40 pm');
+    res.send('Hello World!');
 });
 
 app.get('/api/message', (req, res) => {
