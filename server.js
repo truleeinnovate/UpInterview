@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-// const User = require('./models/User.js');
+const { Organization } = require('./models/Organization.js');
 
 const app = express();
 app.use(express.json());
@@ -12,7 +12,6 @@ const mongoUri = process.env.MONGO_URI;
 
 console.log('Mongo URI:', mongoUri);
 
-// Connect to MongoDB
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB', err));
@@ -30,21 +29,22 @@ app.get('/api/db-status', (req, res) => {
     res.json({ status });
 });
 
-// app.post('/api/save-user', (req, res) => {
-//     console.log('Received user data:', req.body);
-//     const { name, email } = req.body;
-//     const user = new User({ name, email });
-//     user.save()
-//         .then(() => {
-//             console.log('User saved successfully');
-//             res.json({ message: 'User saved successfully' });
-//         })
-//         .catch(err => {
-//             console.error('Error saving user:', err);
-//             res.status(500).json({ error: 'Error saving user', details: err.message });
-//         });
-// });
-
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
+});
+
+app.post('/organization', async (req, res) => {
+  const { firstName } = req.body;
+
+  try {
+    const organization = new Organization({
+      firstName,
+    });
+
+    const savedOrganization = await organization.save();
+
+    res.status(201).json({ organization: savedOrganization });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
 });
