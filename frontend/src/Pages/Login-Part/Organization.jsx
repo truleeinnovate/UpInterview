@@ -228,115 +228,115 @@ const Organization = memo(() => {
         password: selectedPassword
       };
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization`, formData);
+      const response = await axios.post(`https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/organization`, formData);
 
       Cookies.set('userId', response.data.user._id, { expires: 7 });
       Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
 
-      const organizationId = response.data.organization._id;
-      const userId = response.data.user._id; // Ensure user ID is correctly retrieved
+      // const organizationId = response.data.organization._id;
+      // // const userId = response.data.user._id; // Ensure user ID is correctly retrieved
 
-      // Construct accessBody from objectsData and tabsData
-      const accessBody = objectsData.map(tab => ({
-        ObjName: tab,
-        Access: 'Public',
-        GrantAccess: false
-      }));
+      // // Construct accessBody from objectsData and tabsData
+      // const accessBody = objectsData.map(tab => ({
+      //   ObjName: tab,
+      //   Access: 'Public',
+      //   GrantAccess: false
+      // }));
 
-      // Save default sharing settings
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/sharing-settings`, {
-        Name: 'sharingSettingDefaultName',
-        organizationId: organizationId,
-        accessBody: accessBody
-      });
+      // // Save default sharing settings
+      // await axios.post(`https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/api/sharing-settings`, {
+      //   Name: 'sharingSettingDefaultName',
+      //   organizationId: organizationId,
+      //   accessBody: accessBody
+      // });
 
-      // Create default profiles
-      const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter"];
-      let adminProfileId = "";
-      for (let i = 0; i < profileNames.length; i++) {
-        const profileTabs = tabsData.map(tab => ({
-          name: tab,
-          status: profileNames[i] === "Admin" ? 'Visible' : 'Hidden'
-        }));
-        const profileObjects = objectsData.map(object => ({
-          name: object,
-          permissions: {
-            View: true,
-            Create: true,
-            Edit: true,
-            Delete: profileNames[i] === "Admin"
-          }
-        }));
+      // // Create default profiles
+      // const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter"];
+      // let adminProfileId = "";
+      // for (let i = 0; i < profileNames.length; i++) {
+      //   const profileTabs = tabsData.map(tab => ({
+      //     name: tab,
+      //     status: profileNames[i] === "Admin" ? 'Visible' : 'Hidden'
+      //   }));
+      //   const profileObjects = objectsData.map(object => ({
+      //     name: object,
+      //     permissions: {
+      //       View: true,
+      //       Create: true,
+      //       Edit: true,
+      //       Delete: profileNames[i] === "Admin"
+      //     }
+      //   }));
 
-        const profileResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, {
-          label: profileNames[i],
-          Name: profileNames[i],
-          Description: `Default profile description for ${profileNames[i]}`,
-          Tabs: profileTabs,
-          Objects: profileObjects,
-          organizationId: organizationId
-        });
+      //   const profileResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/ profiles`, {
+      //     label: profileNames[i],
+      //     Name: profileNames[i],
+      //     Description: `Default profile description for ${profileNames[i]}`,
+      //     Tabs: profileTabs,
+      //     Objects: profileObjects,
+      //     organizationId: organizationId
+      //   });
 
-        if (profileNames[i] === "Admin") {
-          adminProfileId = profileResponse.data._id;
-        }
-      }
+      //   if (profileNames[i] === "Admin") {
+      //     adminProfileId = profileResponse.data._id;
+      //   }
+      // }
 
-      // Create default roles
-      const roles = [
-        { label: "Admin", name: "Admin" },
-        { label: "CEO", name: "CEO" },
-        { label: "HR Manager", name: "HR_Manager" },
-        { label: "HR Lead", name: "HR_Lead" },
-        { label: "Recruiter", name: "Recruiter" },
-      ];
+      // // Create default roles
+      // const roles = [
+      //   { label: "Admin", name: "Admin" },
+      //   { label: "CEO", name: "CEO" },
+      //   { label: "HR Manager", name: "HR_Manager" },
+      //   { label: "HR Lead", name: "HR_Lead" },
+      //   { label: "Recruiter", name: "Recruiter" },
+      // ];
 
-      let adminRoleId = "";
-      let ceoRoleId = "";
-      let hrManagerRoleId = "";
-      let hrLeadRoleId = "";
+      // let adminRoleId = "";
+      // let ceoRoleId = "";
+      // let hrManagerRoleId = "";
+      // let hrLeadRoleId = "";
 
-      for (let i = 0; i < roles.length; i++) {
-        let reportsToRoleId = null;
+      // for (let i = 0; i < roles.length; i++) {
+      //   let reportsToRoleId = null;
 
-        if (roles[i].name === "CEO") {
-          reportsToRoleId = adminRoleId;
-        } else if (roles[i].name === "HR_Manager") {
-          reportsToRoleId = ceoRoleId;
-        } else if (roles[i].name === "HR_Lead") {
-          reportsToRoleId = hrManagerRoleId;
-        } else if (roles[i].name === "Recruiter") {
-          reportsToRoleId = hrLeadRoleId;
-        }
+      //   if (roles[i].name === "CEO") {
+      //     reportsToRoleId = adminRoleId;
+      //   } else if (roles[i].name === "HR_Manager") {
+      //     reportsToRoleId = ceoRoleId;
+      //   } else if (roles[i].name === "HR_Lead") {
+      //     reportsToRoleId = hrManagerRoleId;
+      //   } else if (roles[i].name === "Recruiter") {
+      //     reportsToRoleId = hrLeadRoleId;
+      //   }
 
-        const roleData = {
-          label: roles[i].label,
-          roleName: roles[i].name,
-          description: `Default role description for ${roles[i].name}`,
-          organizationId: organizationId,
-        };
+      //   const roleData = {
+      //     label: roles[i].label,
+      //     roleName: roles[i].name,
+      //     description: `Default role description for ${roles[i].name}`,
+      //     organizationId: organizationId,
+      //   };
 
-        if (reportsToRoleId) {
-          roleData.reportsToRoleId = reportsToRoleId;
-        }
+      //   if (reportsToRoleId) {
+      //     roleData.reportsToRoleId = reportsToRoleId;
+      //   }
 
-        const roleResponse = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, roleData);
+      //   const roleResponse = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, roleData);
 
-        if (roles[i].name === "Admin") {
-          adminRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "CEO") {
-          ceoRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "HR_Manager") {
-          hrManagerRoleId = roleResponse.data._id;
-        } else if (roles[i].name === "HR_Lead") {
-          hrLeadRoleId = roleResponse.data._id;
-        }
-      }
+      //   if (roles[i].name === "Admin") {
+      //     adminRoleId = roleResponse.data._id;
+      //   } else if (roles[i].name === "CEO") {
+      //     ceoRoleId = roleResponse.data._id;
+      //   } else if (roles[i].name === "HR_Manager") {
+      //     hrManagerRoleId = roleResponse.data._id;
+      //   } else if (roles[i].name === "HR_Lead") {
+      //     hrLeadRoleId = roleResponse.data._id;
+      //   }
+      // }
 
-      await axios.put(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
-        RoleId: adminRoleId,
-        ProfileId: adminProfileId
-      });
+      // await axios.put(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
+      //   RoleId: adminRoleId,
+      //   ProfileId: adminProfileId
+      // });
 
       navigate('/price');
     } catch (error) {
