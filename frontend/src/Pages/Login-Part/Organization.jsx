@@ -9,54 +9,68 @@ const Organization = memo(() => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  const [formData, setFormData] = useState({
+    firstname: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log(`Input changed: ${name} = ${value}`);
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+
   const backendUrl = process.env.NODE_ENV === 'production'
     ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net'
     : 'http://localhost:4041';
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent the default form submission behavior
+    console.log('Captured form data:', formData);
 
     try {
-      const formData = {
-        firstName: selectedFirstName.trim(),
-      };
+      // Step 1: Log form data
+      console.log('Form data being submitted:', formData);
 
-      const axiosInstance = axios.create({
-        baseURL: backendUrl,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        withCredentials: true,
-        timeout: 15000
+      // Step 2: Make the request
+      const response = await fetch(`${backendUrl}/organization`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
 
-      const response = await axiosInstance.post('/organization', formData);
+      // Step 3: Log response status and headers
+      console.log('Response received:');
+      console.log('Status:', response.status);
+      console.log('Headers:', response.headers);
 
-      if (!response?.data?.user?._id || !response?.data?.organization?._id) {
-        throw new Error("Invalid response from server");
+      // Step 4: Check if response is ok
+      if (!response.ok) {
+        console.error('Server responded with an error:');
+        console.error('Status:', response.status);
+        console.error('Text:', await response.text()); // Log the response body for debugging
+        throw new Error(`Failed to save organization. Status code: ${response.status}`);
       }
-      navigate('/price');
+
+      // Step 5: Parse response JSON
+      const data = await response.json();
+      console.log('Response JSON parsed successfully:', data);
+
+      // Step 6: Log success
+      console.log('Organization saved successfully:', data);
 
     } catch (error) {
-      console.error('Error saving organization:', error);
-      
-      let errorMessage = 'An error occurred while saving the organization';
-      
-      if (error.response) {
-        errorMessage = error.response.data?.message || errorMessage;
-        console.error('Server error:', error.response.data);
-      } else if (error.request) {
-        errorMessage = 'Unable to reach the server. Please check your connection.';
-        console.error('Network error:', error.request);
-      } else {
-        errorMessage = error.message;
-        console.error('Error:', error.message);
-      }
-      
-      setErrorMessage(errorMessage);
+      // Step 7: Log the error
+      console.error('An error occurred during form submission:', error);
+    } finally {
+      // Step 8: Log completion
+      console.log('Form submission process completed.');
     }
   };
+
 
   return (
     <>
@@ -75,13 +89,14 @@ const Organization = memo(() => {
               <div className="relative">
                 <input
                   type="text"
-                  id="first_name"
+                  name="firstname"
+                  id="firstname"
                   className="block rounded px-8 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer"
-                  value={selectedFirstName}
-                  onChange={(e) => setSelectedFirstName(e.target.value)}
+                  value={formData.name}
+                  onChange={handleChange}
                 />
                 <label
-                  htmlFor="first_name"
+                  htmlFor="firstname"
                   className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                 >
                   First Name
