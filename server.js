@@ -12,9 +12,22 @@ const mongoUri = process.env.MONGO_URI;
 
 console.log('Mongo URI:', mongoUri);
 
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Could not connect to MongoDB', err));
+const corsOptions = {
+  origin: 'https://www.app.upinterview.io', // Replace with your front-end origin
+  credentials: true, // Allow cookies to be sent
+};
+
+app.use(cors(corsOptions));
+
+// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+//     .then(() => console.log('Connected to MongoDB'))
+//     .catch(err => console.error('Could not connect to MongoDB', err));
+
+mongoose.connect(mongoUri, { 
+  serverSelectionTimeoutMS: 5000, 
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Could not connect to MongoDB', err));
 
 app.get('/', (req, res) => {
     res.send('Hello World! this is updated on 10:40 pm');
@@ -37,14 +50,11 @@ app.post('/organization', async (req, res) => {
   const { firstName } = req.body;
 
   try {
-    const organization = new Organization({
-      firstName,
-    });
-
+    const organization = new Organization({ firstName });
     const savedOrganization = await organization.save();
-
     res.status(201).json({ organization: savedOrganization });
   } catch (error) {
+    console.error('Error saving organization:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });

@@ -26,7 +26,6 @@ const Organization = memo(() => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Origin': window.location.origin
         },
         withCredentials: true,
         timeout: 15000
