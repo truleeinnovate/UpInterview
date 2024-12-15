@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const { Organization } = require('./models/Organization.js');
+// const { Organization } = require('./models/Organization.js');
+const { Organization, OrganizationHistory } = require('./models/Organization.js');
+
 
 const app = express();
 app.use(express.json());
@@ -46,15 +48,87 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
+// app.post('/organization', async (req, res) => {
+//   const { firstname } = req.body;
+
+//   try {
+//     const organization = new Organization({ firstname });
+//     const savedOrganization = await organization.save();
+//     res.status(201).json({ organization: savedOrganization });
+//   } catch (error) {
+//     console.error('Error saving organization:', error);
+//     res.status(500).json({ message: 'Internal server error', error: error.message });
+//   }
+// });
+
+
+const saltRounds = 10;
 app.post('/organization', async (req, res) => {
-  const { firstname } = req.body;
+  const { firstName, lastName, Email, Phone, username, jobTitle, company, employees, country, password, Role, Profile, ProfileId, RoleId } = req.body;
 
   try {
-    const organization = new Organization({ firstname });
+    // Check if email already exists
+    const existingOrganization = await Organization.findOne({ Email });
+    if (existingOrganization) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create a new organization
+    const organization = new Organization({
+      firstName,
+      lastName,
+      Email,
+      Phone,
+      username,
+      jobTitle,
+      company,
+      employees,
+      country,
+      password: hashedPassword,
+    });
+
     const savedOrganization = await organization.save();
-    res.status(201).json({ organization: savedOrganization });
+
+    // Create a new user
+    const newUser = new Users({
+      Name: `${firstName} ${lastName}`,
+      Firstname: firstName,
+      Email,
+      UserId: username,
+      Phone,
+      organizationId: savedOrganization._id,
+      sub: 'dfbd',
+      RoleId,
+      ProfileId,
+      password: hashedPassword,
+    });
+
+    const savedUser = await newUser.save();
+
+    newUser.sub = savedUser._id;
+    await newUser.save();
+
+    // Create a new contact
+    const contact = new Contacts({
+      Name: `${firstName} ${lastName}`,
+      Firstname: firstName,
+      Email,
+      Phone,
+      UserId: username,
+      CurrentRole: jobTitle,
+      company,
+      employees,
+      CountryCode: country,
+      user: savedUser._id,
+    });
+
+    const savedContact = await contact.save();
+
+    res.status(201).json({ organization: savedOrganization, contact: savedContact, user: savedUser });
   } catch (error) {
-    console.error('Error saving organization:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
