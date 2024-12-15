@@ -13,8 +13,8 @@ const mongoUri = process.env.MONGO_URI;
 console.log('Mongo URI:', mongoUri);
 
 const corsOptions = {
-  origin: 'https://www.app.upinterview.io', // Replace with your front-end origin
-  credentials: true, // Allow cookies to be sent
+  origin: 'https://www.app.upinterview.io',
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
