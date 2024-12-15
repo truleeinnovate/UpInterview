@@ -283,14 +283,14 @@ const CreateCandidate = ({ onClose, onCandidateAdded, onDataAdded }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const skillsData = await fetchMasterData('skills');
-        setSkills(skillsData);
-        setFilteredSkills(skillsData);
+        // const skillsData = await fetchMasterData('skills');
+        // setSkills(skillsData);
+        // setFilteredSkills(skillsData);
         const qualificationData = await fetchMasterData('qualification');
         setQualification(qualificationData);
         console.log (qualificationData,"Qualification Data");
-        const collegeData = await fetchMasterData('universitycollege');
-        setCollege(collegeData);
+        // const collegeData = await fetchMasterData('universitycollege');
+        // setCollege(collegeData);
       } catch (error) {
         console.error('Error fetching master data:', error);
       }
