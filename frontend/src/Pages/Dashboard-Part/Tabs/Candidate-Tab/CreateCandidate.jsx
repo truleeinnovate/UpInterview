@@ -280,24 +280,25 @@ const CreateCandidate = ({ onClose, onCandidateAdded, onDataAdded }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // const skillsData = await fetchMasterData('skills');
-        // setSkills(skillsData);
-        // setFilteredSkills(skillsData);
-        const qualificationData = await fetchMasterData('qualification');
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const qualificationData = await fetchMasterData('qualification');
+      console.log(qualificationData, "Qualification Data");
+      
+      if (qualificationData && Array.isArray(qualificationData)) {
         setQualification(qualificationData);
-        console.log (qualificationData,"Qualification Data");
-        // const collegeData = await fetchMasterData('universitycollege');
-        // setCollege(collegeData);
-      } catch (error) {
-        console.error('Error fetching master data:', error);
+      } else {
+        console.error('Qualification data is not in expected format:', qualificationData);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching master data:', error);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
+
 
   const handleNewPositionAdded = (newPosition) => {
     setSelectedPosition(newPosition.title);
