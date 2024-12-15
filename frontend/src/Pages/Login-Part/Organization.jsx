@@ -233,8 +233,8 @@ const Organization = memo(() => {
       // Cookies.set('userId', response.data.user._id, { expires: 7 });
       // Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
 
-      // const organizationId = response.data.organization._id;
-      // // const userId = response.data.user._id; // Ensure user ID is correctly retrieved
+      const organizationId = response.data.organization._id;
+      const userId = response.data.user._id; // Ensure user ID is correctly retrieved
 
       // // Construct accessBody from objectsData and tabsData
       // const accessBody = objectsData.map(tab => ({
@@ -333,11 +333,10 @@ const Organization = memo(() => {
       //   }
       // }
 
-      // await axios.put(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
+      // await axios.put(`https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/users/${userId}`, {
       //   RoleId: adminRoleId,
       //   ProfileId: adminProfileId
       // });
-
       navigate('/price');
     } catch (error) {
       console.error('Error saving organization:', error.response?.data || error.message);
