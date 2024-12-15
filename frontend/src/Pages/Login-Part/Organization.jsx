@@ -129,17 +129,16 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import image1 from "../Dashboard-Part/Images/image1.png";
 import Cookies from 'js-cookie';
 import { fetchMasterData } from '../../utils/fetchMasterData';
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
-
 import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
 
-export const Organization = () => {
+const Organization = memo(() => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
   const [selectedLastName, setSelectedLastName] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
@@ -160,28 +159,28 @@ export const Organization = () => {
   const [tabsData, setTabsData] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchObjectsData = async () => {
-      try {
-        const data = await fetchMasterData('api/objects');
-        setObjectsData(data.objects || []);
-      } catch (error) {
-        console.error('Error fetching objects data:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchObjectsData = async () => {
+  //     try {
+  //       const data = await fetchMasterData('api/objects');
+  //       setObjectsData(data.objects || []);
+  //     } catch (error) {
+  //       console.error('Error fetching objects data:', error);
+  //     }
+  //   };
 
-    const fetchTabsData = async () => {
-      try {
-        const data = await fetchMasterData('api/tabs');
-        setTabsData(data.tabs || []);
-      } catch (error) {
-        console.error('Error fetching tabs data:', error);
-      }
-    };
+  //   const fetchTabsData = async () => {
+  //     try {
+  //       const data = await fetchMasterData('api/tabs');
+  //       setTabsData(data.tabs || []);
+  //     } catch (error) {
+  //       console.error('Error fetching tabs data:', error);
+  //     }
+  //   };
 
-    fetchObjectsData();
-    fetchTabsData();
-  }, []);
+  //   fetchObjectsData();
+  //   fetchTabsData();
+  // }, []);
 
   const toggleDropdownEmployees = () => {
     setShowDropdownEmployees(!showDropdownEmployees);
@@ -597,4 +596,6 @@ export const Organization = () => {
       </div>
     </>
   );
-};
+});
+
+export default Organization;
