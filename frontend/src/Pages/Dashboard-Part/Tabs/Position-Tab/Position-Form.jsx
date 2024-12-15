@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../styles/tabs.scss";
 import axios from "axios";
-import PopupComponent from "../Interviews/OutsourceOption";
+// import PopupComponent from "../Interviews/OutsourceOption";
 import { fetchMasterData } from '../../../../utils/fetchMasterData.js';
 import { fetchFilterData } from '../../../../utils/dataUtils.js';
 import { validateForm, validateRound } from "../../../../utils/PositionValidation.js";
