@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const User = require('./models/User.js');
+// const User = require('./models/User.js');
 
 const app = express();
 app.use(express.json());
@@ -30,20 +30,20 @@ app.get('/api/db-status', (req, res) => {
     res.json({ status });
 });
 
-app.post('/api/save-user', (req, res) => {
-    console.log('Received user data:', req.body);
-    const { name, email } = req.body;
-    const user = new User({ name, email });
-    user.save()
-        .then(() => {
-            console.log('User saved successfully');
-            res.json({ message: 'User saved successfully' });
-        })
-        .catch(err => {
-            console.error('Error saving user:', err);
-            res.status(500).json({ error: 'Error saving user', details: err.message });
-        });
-});
+// app.post('/api/save-user', (req, res) => {
+//     console.log('Received user data:', req.body);
+//     const { name, email } = req.body;
+//     const user = new User({ name, email });
+//     user.save()
+//         .then(() => {
+//             console.log('User saved successfully');
+//             res.json({ message: 'User saved successfully' });
+//         })
+//         .catch(err => {
+//             console.error('Error saving user:', err);
+//             res.status(500).json({ error: 'Error saving user', details: err.message });
+//         });
+// });
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
