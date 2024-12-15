@@ -566,13 +566,13 @@ const Candidate = ({ isAssessmentContext = false, onSelectCandidates }) => {
                   )}
                 </div>
 
-                {objectPermissions.Create && !isAssessmentContext && (
+{/*                 {objectPermissions.Create && !isAssessmentContext && ( */}
                   <div onClick={toggleSidebar} className="">
                     <span className="p-2 bg-custom-blue text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded">
                       Add
                     </span>
                   </div>
-                )}
+{/*                 )} */}
               </div>
             </div>
             <div className={`fixed top-28 sm:top-32 md:top-36 left-0 right-0 ${isAssessmentContext ? 'justify-end top-[150px]' : 'lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between'} p-4`}>
