@@ -324,24 +324,30 @@ app.get('/qualification', async (req, res) => {
   }
 });
 
+// Insert qualifications into the database if not already present
 const qualificationList = [
-      "Bachelor of Arts (BA)",
-      "Bachelor of Science (BSc)",
-      "Bachelor of Commerce (BCom)",
-      "Bachelor of Engineering (BE/BTech)",
-      // ... other qualifications
-    ];
+  "Bachelor of Arts (BA)",
+  "Bachelor of Science (BSc)",
+  "Bachelor of Commerce (BCom)",
+  "Bachelor of Engineering (BE/BTech)",
+  // Add more qualifications as needed
+];
 
-    try {
-      const existingData = await HigherQualification.find();
-      if (existingData.length === 0) {
-        await HigherQualification.insertMany(qualificationList.map(name => ({ QualificationName: name })));
-        console.log('Qualifications pushed successfully.');
-      } else {
-        console.log('Qualifications already exist.');
-      }
-    } catch (error) {
-      console.error('Error pushing qualifications:', error.message);
+const insertQualificationsIfNeeded = async () => {
+  try {
+    const existingData = await HigherQualification.find();
+    if (existingData.length === 0) {
+      await HigherQualification.insertMany(
+        qualificationList.map(name => ({ QualificationName: name }))
+      );
+      console.log('Qualifications pushed successfully.');
+    } else {
+      console.log('Qualifications already exist in the database.');
     }
-  })
-  .catch((err) => console.error('Failed to connect to MongoDB:', err.message));
+  } catch (error) {
+    console.error('Error pushing qualifications:', error.message);
+  }
+};
+
+// Run qualification insert logic on startup
+insertQualificationsIfNeeded();
