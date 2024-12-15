@@ -288,6 +288,7 @@ const CreateCandidate = ({ onClose, onCandidateAdded, onDataAdded }) => {
         setFilteredSkills(skillsData);
         const qualificationData = await fetchMasterData('qualification');
         setQualification(qualificationData);
+        console.log (qualificationData,"Qualification Data");
         const collegeData = await fetchMasterData('universitycollege');
         setCollege(collegeData);
       } catch (error) {
