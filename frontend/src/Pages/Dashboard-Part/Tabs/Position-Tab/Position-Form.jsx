@@ -1516,7 +1516,7 @@ const Position_Form = ({ onClose, onPositionAdded }) => {
       </div>
 
 
-      {showPopup && <PopupComponent onClose={handlePopupClose} />}
+      {/* {showPopup && <PopupComponent onClose={handlePopupClose} />}/ */}
     </>
   );
 };
