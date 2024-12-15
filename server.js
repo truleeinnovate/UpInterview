@@ -47,10 +47,10 @@ app.listen(port, () => {
 });
 
 app.post('/organization', async (req, res) => {
-  const { firstName } = req.body;
+  const { firstname } = req.body;
 
   try {
-    const organization = new Organization({ firstName });
+    const organization = new Organization({ firstname });
     const savedOrganization = await organization.save();
     res.status(201).json({ organization: savedOrganization });
   } catch (error) {
