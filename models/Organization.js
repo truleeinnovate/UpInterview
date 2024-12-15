@@ -20,7 +20,7 @@ const OrganizationSchema = new mongoose.Schema({
   company: { type: String, required: true },
   employees: { type: String, required: true },
   country: { type: String, required: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  // user: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   CreatedDate: { type: Date, default: Date.now },
 });
 

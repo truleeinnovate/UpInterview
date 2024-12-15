@@ -93,42 +93,45 @@ app.post('/organization', async (req, res) => {
 
     const savedOrganization = await organization.save();
 
-    // Create a new user
-    const newUser = new Users({
-      Name: `${firstName} ${lastName}`,
-      Firstname: firstName,
-      Email,
-      UserId: username,
-      Phone,
-      organizationId: savedOrganization._id,
-      sub: 'dfbd',
-      RoleId,
-      ProfileId,
-      password: hashedPassword,
-    });
+    // // Create a new user
+    // const newUser = new Users({
+    //   Name: `${firstName} ${lastName}`,
+    //   Firstname: firstName,
+    //   Email,
+    //   UserId: username,
+    //   Phone,
+    //   organizationId: savedOrganization._id,
+    //   sub: 'dfbd',
+    //   RoleId,
+    //   ProfileId,
+    //   password: hashedPassword,
+    // });
 
-    const savedUser = await newUser.save();
+    // const savedUser = await newUser.save();
 
-    newUser.sub = savedUser._id;
-    await newUser.save();
+    // newUser.sub = savedUser._id;
+    // await newUser.save();
 
-    // Create a new contact
-    const contact = new Contacts({
-      Name: `${firstName} ${lastName}`,
-      Firstname: firstName,
-      Email,
-      Phone,
-      UserId: username,
-      CurrentRole: jobTitle,
-      company,
-      employees,
-      CountryCode: country,
-      user: savedUser._id,
-    });
+    // // Create a new contact
+    // const contact = new Contacts({
+    //   Name: `${firstName} ${lastName}`,
+    //   Firstname: firstName,
+    //   Email,
+    //   Phone,
+    //   UserId: username,
+    //   CurrentRole: jobTitle,
+    //   company,
+    //   employees,
+    //   CountryCode: country,
+    //   user: savedUser._id,
+    // });
 
-    const savedContact = await contact.save();
+    // const savedContact = await contact.save();
 
-    res.status(201).json({ organization: savedOrganization, contact: savedContact, user: savedUser });
+      res.status(201).json({
+          organization: savedOrganization,
+        //   contact: savedContact, user: savedUser
+      });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
