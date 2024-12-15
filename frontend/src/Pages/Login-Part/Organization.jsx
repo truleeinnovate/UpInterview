@@ -230,8 +230,8 @@ const Organization = memo(() => {
 
       const response = await axios.post(`https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/organization`, formData);
 
-      // Cookies.set('userId', response.data.user._id, { expires: 7 });
-      // Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
+      Cookies.set('userId', response.data.user._id, { expires: 7 });
+      Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
 
       const organizationId = response.data.organization._id;
       const userId = response.data.user._id; // Ensure user ID is correctly retrieved
