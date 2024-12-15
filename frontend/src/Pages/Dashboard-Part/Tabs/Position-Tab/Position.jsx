@@ -460,13 +460,13 @@ const Position = () => {
                   )}
                 </div>
 
-{/*                 {objectPermissions.Create && ( */}
+                {objectPermissions.Create && (
                   <div onClick={toggleSidebar}>
                     <span className="p-2 bg-custom-blue text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded">
                       Add
                     </span>
                   </div>
-{/*                 )} */}
+                )}
               </div>
             </div>
             <div className="fixed top-28 sm:top-32 md:top-36 left-0 right-0">
@@ -983,11 +983,11 @@ const Position = () => {
             <div className={"fixed inset-0 bg-black bg-opacity-15 z-50"}>
               <div className="fixed inset-y-0 right-0 z-50 sm:w-full md:w-3/4 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
                 <Suspense fallback={<div>Loading...</div>}>
-                  <Sidebar
+                   <Sidebar
                     onClose={closeSidebar}
                     onOutsideClick={handleOutsideClick}
                     onPositionAdded={handlePositionAdded}
-                  />
+                  /> 
                 </Suspense>
               </div>
             </div>
