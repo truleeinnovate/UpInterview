@@ -5,7 +5,7 @@ const UsersSchema = new mongoose.Schema({
   // sub: { type: String },
   Firstname: { type: String },
   CountryCode: { type: String },
-  UserId: { type: String, unique: true },
+  UserId: { type: String},
   Email: { type: String },
   password: { type: String, },
   Phone: { type: String },
