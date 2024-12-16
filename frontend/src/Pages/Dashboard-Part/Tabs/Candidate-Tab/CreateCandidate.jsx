@@ -280,24 +280,23 @@ const CreateCandidate = ({ onClose, onCandidateAdded, onDataAdded }) => {
     };
   }, []);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const qualificationData = await fetchMasterData('qualification');
-      console.log(qualificationData, "Qualification Data");
-      
-      if (qualificationData && Array.isArray(qualificationData)) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const skillsData = await fetchMasterData('skills');
+        setSkills(skillsData);
+        setFilteredSkills(skillsData);
+        const qualificationData = await fetchMasterData('qualification');
         setQualification(qualificationData);
-      } else {
-        console.error('Qualification data is not in expected format:', qualificationData);
+        const collegeData = await fetchMasterData('universitycollege');
+        setCollege(collegeData);
+      } catch (error) {
+        console.error('Error fetching master data:', error);
       }
-    } catch (error) {
-      console.error('Error fetching master data:', error);
-    }
-  };
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
 
   const handleNewPositionAdded = (newPosition) => {
@@ -929,8 +928,8 @@ useEffect(() => {
                           <div className="absolute z-50 -mt-3 mb-5 w-full rounded-md h-72 overflow-y-scroll bg-white shadow-lg">
                             {qualification.map((qualification) => (
                               <div
-                              // key={qualification.code}
-                              // mansoor, i changed this due to the error of duplicate keys in console when opening the dropdown
+                                // key={qualification.code}
+                                // mansoor, i changed this due to the error of duplicate keys in console when opening the dropdown
                                 key={qualification._id}
                                 // mansoor
                                 className="py-2 px-4 cursor-pointer hover:bg-gray-100"

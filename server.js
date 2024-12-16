@@ -16,7 +16,7 @@ app.use(cors());
 const port = process.env.PORT || 4041;
 const mongoUri = process.env.MONGO_URI;
  
-console.log('Mongo URI:', mongoUri);
+console.log('Mongo URI:', mongoUri)
  
 const corsOptions = {
   origin: 'https://www.app.upinterview.io',
@@ -236,7 +236,6 @@ app.put('/updateuser', async (req, res) => {
   }
 });
  
- 
 // Contact schema code
  
 app.get('/contacts', async (req, res) => {
@@ -323,47 +322,6 @@ app.get('/qualification', async (req, res) => {
   }
 });
  
-// Insert qualifications into the database if not already present
-const qualificationList = [
-  "Bachelor of Arts (BA)",
-  "Bachelor of Science (BSc)",
-  "Bachelor of Commerce (BCom)",
-  "Bachelor of Engineering (BE/BTech)",
-  "Bachelor of Technology (B.Tech)",
-  "Bachelor of Business Administration (BBA)",
-  "Bachelor of Computer Applications (BCA)",
-  "Bachelor of Architecture (BArch)",
-  "Master of Arts (MA)",
-  "Master of Science (MSc)",
-  "Master of Commerce (MCom)",
-  "Master of Engineering (ME/MTech)",
-  "Master of Technology (M.Tech)",
-  "Master of Business Administration (MBA)",
-  "Master of Computer Applications (MCA)",
-  "Diploma in Engineering",
-  "Diploma in Computer Applications (DCA)",
-  "Diploma in Business Administration"
-];
- 
- 
-const insertQualificationsIfNeeded = async () => {
-  try {
-    const existingData = await HigherQualification.find();
-    if (existingData.length === 0) {
-      await HigherQualification.insertMany(
-        qualificationList.map(name => ({ QualificationName: name }))
-      );
-      console.log('Qualifications pushed successfully.');
-    } else {
-      console.log('Qualifications already exist in the database.');
-    }
-  } catch (error) {
-    console.error('Error pushing qualifications:', error.message);
-  }
-};
-// Run qualification insert logic on startup
-insertQualificationsIfNeeded();
- 
 // colleges
  
 app.get('/universitycollege', async (req, res) => {
@@ -375,58 +333,6 @@ app.get('/universitycollege', async (req, res) => {
   }
 });
  
-const collegeList = [
-  "Indian Institutes of Technology (IITs)",
-  "National Institutes of Technology (NITs)",
-  "Delhi University (University of Delhi)",
-  "Jawaharlal Nehru University (JNU)",
-  "Indian Institute of Science (IISc)",
-  "Banaras Hindu University (BHU)",
-  "Jadavpur University",
-  "University of Mumbai",
-  "University of Calcutta",
-  "Osmania University (OU)",
-  "Jawaharlal Nehru Technological University (JNTU)",
-  "Indian Statistical Institute (ISI)",
-  "Indian Institute of Management Ahmedabad (IIMA)",
-  "Indian Institute of Management Bangalore (IIMB)",
-  "Indian Institute of Management Calcutta (IIMC)",
-  "Indian Institute of Management Lucknow (IIML)",
-  "Indian Institute of Technology Bombay (IIT Bombay)",
-  "Indian Institute of Technology Delhi (IIT Delhi)",
-  "Indian Institute of Technology Madras (IIT Madras)",
-  "Andhra University",
-  "Sri Venkateswara University",
-  "Acharya Nagarjuna University",
-  "Sri Krishnadevaraya University",
-  "Dr. B.R. Ambedkar University",
-  "Yogi Vemana University",
-  "Rayalaseema University",
-  "Vikrama Simhapuri University",
-  "Chennai Institute of Technology",
-  "Indian Institute of Technology Tirupati",
-  "Loyola College"
-];
- 
-const insertCollegesIfNeeded = async () => {
-  try {
-    const existingData = await University_CollegeName.find();
-    if (existingData.length === 0) {
-      await University_CollegeName.insertMany(
-        collegeList.map(name => ({ University_CollegeName: name }))
-      );
-      console.log('Colleges pushed successfully.');
-    } else {
-      console.log('Colleges already exist in the database.');
-    }
-  } catch (error) {
-    console.error('Error pushing colleges:', error.message);
-  }
-};
- 
-// Run college insert logic on startup
-insertCollegesIfNeeded();
- 
 // Skills
  
 app.get('/skills', async (req, res) => {
@@ -437,65 +343,3 @@ app.get('/skills', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
- 
-const skillsList = [
-  "Python",
-  "JavaScript",
-  "Java",
-  "C++",
-  "C#",
-  "Ruby",
-  "PHP",
-  "Go",
-  "Rust",
-  "Swift",
-  "HTML",
-  "CSS",
-  "React",
-  "Angular",
-  "Vue.js",
-  "Node.js",
-  "Next.js",
-  "Tailwind CSS",
-  "SQL",
-  "NoSQL",
-  "MongoDB",
-  "PostgreSQL",
-  "MySQL",
-  "Firebase",
-  "Redis",
-  "Cassandra",
-  "AWS",
-  "Azure",
-  "Google Cloud Platform (GCP)",
-  "Kubernetes",
-  "Docker",
-  "Terraform",
-  "Pandas",
-  "NumPy",
-  "Matplotlib",
-  "Scikit-learn",
-  "TensorFlow",
-  "PyTorch",
-  "Tableau",
-  "Power BI"
-];
- 
-const insertSkillsIfNeeded = async () => {
-  try {
-    const existingData = await Skills.find();
-    if (existingData.length === 0) {
-      await Skills.insertMany(
-        skillsList.map(name => ({ SkillName: name }))
-      );
-      console.log('Skills pushed successfully.');
-    } else {
-      console.log('Skills already exist in the database.');
-    }
-  } catch (error) {
-    console.error('Error pushing skills:', error.message);
-  }
-};
- 
-// Run skills insert logic on startup
-insertSkillsIfNeeded();
