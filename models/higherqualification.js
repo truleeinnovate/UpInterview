@@ -5,11 +5,11 @@ const qualificationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    CreatedDate: {
-        type: Date,
-        default: Date.now
-    },
-    CreatedBy: String,
+    // CreatedDate: {
+    //     type: Date,
+    //     default: Date.now
+    // },
+    // CreatedBy: String,
     // ModifiedDate: Date,
     // ModifiedBy: String,
 });
@@ -17,8 +17,8 @@ const qualificationSchema = new mongoose.Schema({
 const QualificationHistorySchema = new mongoose.Schema({
     qualificationId: { type: mongoose.Schema.Types.ObjectId, ref: 'HigherQualification' },
     QualificationName: String,
-    ModifiedDate: { type: Date, default: Date.now },
-    ModifiedBy: String,
+    // ModifiedDate: { type: Date, default: Date.now },
+    // ModifiedBy: String,
 });
 
 qualificationSchema.pre('save', function(next) {

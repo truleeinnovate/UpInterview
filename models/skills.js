@@ -5,11 +5,11 @@ const skillsSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    CreatedDate: {
-        type: Date,
-        default: Date.now
-    },
-    CreatedBy: String,
+    // CreatedDate: {
+    //     type: Date,
+    //     default: Date.now
+    // },
+    // CreatedBy: String,
     // ModifiedDate: Date,
     // ModifiedBy: String,
 });
@@ -17,8 +17,8 @@ const skillsSchema = new mongoose.Schema({
 const SkillsHistorySchema = new mongoose.Schema({
     skillId: { type: mongoose.Schema.Types.ObjectId, ref: 'Skills' },
     SkillName: String,
-    ModifiedDate: { type: Date, default: Date.now },
-    ModifiedBy: String,
+    // ModifiedDate: { type: Date, default: Date.now },
+    // ModifiedBy: String,
 });
 
 skillsSchema.pre('save', function(next) {
