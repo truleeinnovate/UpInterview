@@ -24,7 +24,7 @@ import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 
 // const PositionProfileDetails = React.lazy(() => import('./PositionProfileDetails'));
-// const Sidebar = React.lazy(() => import('../Position-Tab/Position-Form.jsx'));
+const Sidebar = React.lazy(() => import('../Position-Tab/Position-Form.jsx'));
 // const Editposition = React.lazy(() => import('./Editpositionform.jsx'));
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
@@ -283,9 +283,9 @@ const Position = () => {
     fetchSkillsData();
   }, [fetchSkillsData]);
 
-  // const handlePositionAdded = () => {
-  //   fetchSkillsData();
-  // };
+  const handlePositionAdded = () => {
+    fetchSkillsData();
+  };
 
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
@@ -978,7 +978,7 @@ const Position = () => {
         />
         </Suspense>
         )} */}
-{/*         {sidebarOpen && (
+        {sidebarOpen && (
           <>
             <div className={"fixed inset-0 bg-black bg-opacity-15 z-50"}>
               <div className="fixed inset-y-0 right-0 z-50 sm:w-full md:w-3/4 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
@@ -992,7 +992,7 @@ const Position = () => {
               </div>
             </div>
           </>
-        )} */}
+        )}
       </div>
     </ErrorBoundary>
   );

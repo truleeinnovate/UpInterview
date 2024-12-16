@@ -17,18 +17,17 @@ const port = process.env.PORT || 4041;
 const mongoUri = process.env.MONGO_URI;
  
 console.log('Mongo URI:', mongoUri)
- 
 const corsOptions = {
   origin: 'https://www.app.upinterview.io',
   credentials: true,
 };
  
 app.use(cors(corsOptions));
- 
+
 // mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
 //     .then(() => console.log('Connected to MongoDB'))
 //     .catch(err => console.error('Could not connect to MongoDB', err));
- 
+
 mongoose.connect(mongoUri, {
   serverSelectionTimeoutMS: 5000,
 })

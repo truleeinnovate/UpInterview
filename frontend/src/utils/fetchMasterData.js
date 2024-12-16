@@ -1,12 +1,18 @@
 import axios from "axios";
-// const backendUrl = process.env.NODE_ENV === 'production'
-// ? 'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net'
-// : 'http://localhost:4041';
 
+// Retrieve the backend URL from the environment variable
+const backendUrl = process.env.REACT_APP_API_URL;
+
+if (!backendUrl) {
+  console.error("REACT_APP_API_URL is not defined. Please set it in the environment.");
+} else {
+  console.log("REACT_APP_API_URL :", backendUrl);
+}
 
 export const fetchMasterData = async (endpoint) => {
   try {
-    const response = await axios.get(`https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/${endpoint}`);
+    // Use the backend URL from the environment variable
+    const response = await axios.get(`${backendUrl}/${endpoint}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching ${endpoint} data:`, error);
