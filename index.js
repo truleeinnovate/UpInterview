@@ -1,8 +1,7 @@
 require('dotenv').config();
-const config = require('./config.js')
 const express = require('express');
 const mongoose = require('mongoose');
-const connectDB = require('./db.js');
+// const connectDB = require('./db.js');
 const bcrypt = require('bcrypt');
 const { Candidate } = require('./models/candidate.js');
 const { Position} = require('./models/position.js');
@@ -50,9 +49,10 @@ const { InterviewQuestion } = require('./models/InterviewQuestion.js');
 const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
+// app.use(cookieParser());for cookies
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || config.CORS_ORIGIN.split(',').includes(origin)) {
+    if (!origin || process.env.CORS_ORIGIN.split(',').includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -60,7 +60,22 @@ app.use(cors({
   },
   credentials: true,
 }));
-connectDB();
+// connectDB();
+
+const port = process.env.PORT || 4041;
+const mongoUri = process.env.MONGO_URI;
+ 
+console.log('Mongo URI:', mongoUri)
+const corsOptions = {
+  origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
+  credentials: true,
+};
+
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+  
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: process.env.WS_PORT || 8080 });
 
@@ -272,7 +287,7 @@ const http = require('http');
 // const socketIo = require('socket.io');
 
 // const server = http.createServer(app);
-// const PORT = api.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
 // const io = require('socket.io')(3001, { cors: true });
 
 
@@ -1642,28 +1657,28 @@ app.post('/organization', async (req, res) => {
 });
 
 // route for login from admin page
-// app.post('/organization/login', async (req, res) => {
-//   const { Email, password } = req.body;
+app.post('/organization/login', async (req, res) => {
+  const { Email, password } = req.body;
 
-//   try {
-//     // Case-insensitive email search
-//     const user = await Users.findOne({ Email: new RegExp(`^${Email}$`, 'i') });
-//     if (!user) {
-//       return res.status(400).json({ message: 'Invalid email or password' });
-//     }
+  try {
+    // Case-insensitive email search
+    const user = await Users.findOne({ Email: new RegExp(`^${Email}$`, 'i') });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
 
-//     // const isPasswordValid = await bcrypt.compare(password, user.password);
-//     // if (!isPasswordValid) {
-//     //   return res.status(400).json({ message: 'Invalid email or password' });
-//     // }
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
+    // if (!isPasswordValid) {
+    //   return res.status(400).json({ message: 'Invalid email or password' });
+    // }
 
-//     // Add this line to include userId and organizationId in the response
-//     res.status(200).json({ message: 'Login successful', userId: user._id, organizationId: user.organizationId });
-//   } catch (error) {
-//     console.error('Error during login:', error);
-//     res.status(500).json({ message: 'Internal server error' });
-//   }
-// });
+    // Add this line to include userId and organizationId in the response
+    res.status(200).json({ message: 'Login successful', userId: user._id, organizationId: user.organizationId });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // app.post('/organization/invoice', async (req, res) => {
 //   const { invoice, invoiceLines, payment, cardDetails } = req.body;
