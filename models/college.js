@@ -5,18 +5,18 @@ const University_CollegeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    // CreatedDate: {
-    //     type: Date,
-    //     default: Date.now
-    // },
-    // CreatedBy: String,
+    CreatedDate: {
+        type: Date,
+        default: Date.now
+    },
+    CreatedBy: String,
 });
 
 const University_CollegeHistorySchema = new mongoose.Schema({
     universityCollegeId: { type: mongoose.Schema.Types.ObjectId, ref: 'University_CollegeName' },
     University_CollegeName: String,
-    // ModifiedDate: { type: Date, default: Date.now },
-    // ModifiedBy: String,
+    ModifiedDate: { type: Date, default: Date.now },
+    ModifiedBy: String,
 });
 
 University_CollegeSchema.pre('save', function(next) {
