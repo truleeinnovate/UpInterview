@@ -63,20 +63,20 @@ app.use(cors({
 }));
 
 
-const mongoUri = process.env.MONGO_URI;
+// const mongoUri = process.env.MONGO_URI;
  
-console.log('Mongo URI:', mongoUri)
-const corsOptions = {
-  origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
-  credentials: true,
-};
+// console.log('Mongo URI:', mongoUri)
+// const corsOptions = {
+//   origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
+//   credentials: true,
+// };
 
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('MongoDB connected successfully'))
+//   .catch(err => console.error('MongoDB connection error:', err));
 
  
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
   
 const WebSocket = require('ws');
