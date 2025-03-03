@@ -24,7 +24,7 @@ const Admin = () => {
   }
 
   // console.log('API URL:', config.CLIENT_ID);
-  console.log('process.env.REACT_APP_API_URL:', config.REACT_APP_API_URL);
+  // console.log('process.env.REACT_APP_API_URL:', config.REACT_APP_API_URL);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ const Admin = () => {
 
       // const response = await axios.post(`${BASE_URL}/Organization/Login`, organizationLogin);
       // const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, organizationLogin);
-      const response = await axios.post('basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login', organizationLogin);
+      const response = await axios.post('https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login', organizationLogin);
 
       if (response.status === 200) {
         const { userId, organizationId } = response.data;
