@@ -719,7 +719,7 @@
 
 
 
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const { Organization } = require('../models/Organization');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
@@ -754,7 +754,7 @@ const registerOrganization = async (req, res) => {
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Create new organization
         const organization = new Organization({
