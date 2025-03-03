@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-// const connectDB = require('./db.js');
+const connectDB = require('./db.js');
+connectDB();
 const bcrypt = require('bcrypt');
 const { Candidate } = require('./models/candidate.js');
 const { Position} = require('./models/position.js');
@@ -44,7 +45,7 @@ const Task = require('./models/task.js');
 const jwt = require('jsonwebtoken');
 const { exec } = require('child_process');
 const cors = require('cors');
-const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js')
+const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js');
 const { InterviewQuestion } = require('./models/InterviewQuestion.js');
 const app = express();
 app.use(express.json());
@@ -60,9 +61,8 @@ app.use(cors({
   },
   credentials: true,
 }));
-// connectDB();
 
-const port = process.env.PORT || 4041;
+
 const mongoUri = process.env.MONGO_URI;
  
 console.log('Mongo URI:', mongoUri)
@@ -74,6 +74,9 @@ const corsOptions = {
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+ 
+app.use(cors(corsOptions));
 
   
 const WebSocket = require('ws');
@@ -2597,9 +2600,7 @@ app.use('/emailCommon',emailCommonRouter)
 const individualLoginRoutes = require("./routes/individualLoginRoutes");
 app.use("/Individual", individualLoginRoutes);
 
-// organization
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-app.use('/Organization', organizationRoutes);
+
 
 const EmailTemplate = require('./models/EmailTemplatemodel.js'); 
 
@@ -2715,3 +2716,16 @@ app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
 //   }
 // }
 // clearAssessments();
+
+
+
+
+
+
+
+
+
+
+// organization
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+app.use('/Organization', organizationRoutes);
