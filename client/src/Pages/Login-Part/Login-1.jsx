@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Login_1 = () => {
 	const navigate = useNavigate()
-	
+
 	const Signup = () => {
 		navigate("/profile1", { state: { from: "signup" } });
 	};
@@ -11,7 +11,7 @@ const Login_1 = () => {
 	const Login = () => {
 		navigate("/profile1", { state: { from: "login" } });
 	};
-	
+
 	return (
 		<React.Fragment>
 			<div className='container mx-auto'>
