@@ -211,29 +211,31 @@
 
 
 
-// for deployment checking data base
-const { Organization } = require('../models/Organization'); // Ensure your model is imported
+const { Organization } = require('../models/Organization');
 
-const saveEmailToDatabase = async (req, res) => {
+const loginWithEmail = async (req, res) => {
     const { Email } = req.body;
 
     try {
-        console.log('Received Email in saving email in controller:', Email); // Log the received email
+        console.log('Checking Email:', Email);
 
-        // Create a new entry in MongoDB
-        const newEntry = new Organization({ Email });
-        await newEntry.save();
+        // Find if the email exists in the database
+        const existingUser = await Organization.findOne({ Email });
 
-        console.log('Data saved successfully in saving email in controller:', newEntry); // Log the saved entry
-
-        res.status(201).json({
-            message: 'Email saved successfully in saving email in controller',
-            emailId: newEntry._id
-        });
+        if (existingUser) {
+            console.log('Email found, login successful:', existingUser);
+            return res.status(200).json({
+                message: 'Login successful',
+                emailId: existingUser._id
+            });
+        } else {
+            console.log('Email not found, login failed.');
+            return res.status(404).json({ message: 'Email not found. Please check your email or register.' });
+        }
     } catch (error) {
-        console.error('Error saving email in saving email in controller:', error);
-        res.status(500).json({ message: 'Internal server error in saving email in controller' });
+        console.error('Error checking email:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
-module.exports = { saveEmailToDatabase };
+module.exports = { loginWithEmail };

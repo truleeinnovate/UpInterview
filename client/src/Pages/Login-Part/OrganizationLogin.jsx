@@ -49,24 +49,24 @@ const Admin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      console.log('Submitting Email:', Email);
-  
-      const response = await axios.post(
-        'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization', 
-        { Email }
-      );
-  
-      console.log('Response received:', response.data);
-  
-      if (response.status === 201) {
-        console.log('Email stored successfully. Navigating to home...');
-        navigate('/home');
-      }
+        console.log('Checking Email:', Email);
+
+        const response = await axios.post(
+            'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/login', 
+            { Email }
+        );
+
+        console.log('Response:', response.data);
+
+        if (response.status === 200) {
+            console.log('Login successful. Navigating to home...');
+            navigate('/home');
+        }
     } catch (error) {
-      console.error('Error saving email:', error);
-      setErrorMessage('Failed to save email.');
+        console.error('Login failed:', error);
+        setErrorMessage('Email not found. Please check your email or register.');
     }
-  };
+};
 
   
   return (

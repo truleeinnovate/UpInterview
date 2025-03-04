@@ -12,10 +12,13 @@
 
 // module.exports = router;
 
+
+
+
 const express = require('express');
 const router = express.Router();
-const { saveEmailToDatabase } = require('../controllers/organizationLoginController'); // Ensure correct path
+const { loginWithEmail } = require('../controllers/organizationLoginController');
 
-router.post('/', saveEmailToDatabase); // Ensure function exists
+router.post('/login', loginWithEmail); // Use a dedicated login route
 
 module.exports = router;

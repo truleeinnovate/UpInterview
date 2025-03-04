@@ -2717,27 +2717,6 @@ mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
 
  
 app.use(cors(corsOptions));
-
-// mongoose.connect(mongoUri, {
-//   serverSelectionTimeoutMS: 5000,
-// })
-//   .then(() => console.log('Connected to MongoDB'))
-//   .catch(err => console.error('Could not connect to MongoDB', err));
- 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
- 
-app.get('/api/message', (req, res) => {
-    res.json({ message: 'Hello from the backend!' });
-});
-
-app.get('/api/db-status', (req, res) => {
-  const status = mongoose.connection.readyState === 1 ? 'Connected to MongoDB' : 'Not connected to MongoDB';
-  console.log('Database connection status:', status);
-  res.json({ status });
-});
-
  
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
