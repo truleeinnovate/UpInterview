@@ -2734,9 +2734,11 @@ app.get('/api/message', (req, res) => {
 });
 
 app.get('/api/db-status', (req, res) => {
-    const status = mongoose.connection.readyState === 1 ? 'Connected to MongoDB' : 'Not connected to MongoDB';
-    res.json({ status });
+  const status = mongoose.connection.readyState === 1 ? 'Connected to MongoDB' : 'Not connected to MongoDB';
+  console.log('Database connection status:', status);
+  res.json({ status });
 });
+
  
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

@@ -26,26 +26,49 @@ const Admin = () => {
   // console.log('API URL:', config.CLIENT_ID);
   // console.log('process.env.REACT_APP_API_URL:', config.REACT_APP_API_URL);
 
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   try {
+
+  //     // const response = await axios.post(`${BASE_URL}/Organization/Login`, organizationLogin);
+  //     // const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, organizationLogin);
+  //     const response = await axios.post('https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login', organizationLogin);
+
+  //     if (response.status === 200) {
+  //       const { userId, organizationId } = response.data;
+  //       Cookies.set('userId', userId);
+  //       Cookies.set('organizationId', organizationId);
+  //       navigate('/home');
+  //       console.log('organizationId:', organizationId);
+  //     }
+  //   } catch (error) {
+  //     setErrorMessage('Invalid email or password');
+  //   }
+  // };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-
-      // const response = await axios.post(`${BASE_URL}/Organization/Login`, organizationLogin);
-      // const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, organizationLogin);
-      const response = await axios.post('https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login', organizationLogin);
-
-      if (response.status === 200) {
-        const { userId, organizationId } = response.data;
-        Cookies.set('userId', userId);
-        Cookies.set('organizationId', organizationId);
+      console.log('Submitting Email:', Email);
+  
+      const response = await axios.post(
+        'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login1', 
+        { Email }
+      );
+  
+      console.log('Response received:', response.data);
+  
+      if (response.status === 201) {
+        console.log('Email stored successfully. Navigating to home...');
         navigate('/home');
-        console.log('organizationId:', organizationId);
       }
     } catch (error) {
-      setErrorMessage('Invalid email or password');
+      console.error('Error saving email:', error);
+      setErrorMessage('Failed to save email.');
     }
   };
 
+  
   return (
     <>
       <div>
