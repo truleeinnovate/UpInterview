@@ -1,95 +1,81 @@
 import React, { useState } from 'react';
-// import { IoIosPersonAdd } from "react-icons/io";
-// import { GoOrganization } from "react-icons/go";
+import { IoIosPersonAdd } from "react-icons/io";
+import { GoOrganization } from "react-icons/go";
 import { useLocation, useNavigate } from 'react-router-dom';
-import image1 from '../Dashboard-Part/Images/image1.png';
 import { useAuth0 } from "@auth0/auth0-react";
-import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import Slideshow from './Slideshow';
 
 const Profile1 = () => {
-  const [showCreateProfile, setShowCreateProfile] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null); // Track selected button
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
-  const [isActive, setIsActive] = useState(false);
-  // linkedin auth0 start
   const { loginWithRedirect } = useAuth0();
 
-  // Handler to toggle the active state
-  const toggleActiveState = () => {
-    setIsActive(!isActive);
-    setShowCreateProfile(!showCreateProfile);
+  const handleIndividualClick = () => {
+    setSelectedOption("individual");
   };
 
   const handleOrganizationClick = () => {
+    setSelectedOption("organization");
+    
     if (state?.from === "signup") {
       navigate('/organization');
     } else if (state?.from === "login") {
-      navigate('/organiationLogin');
+      navigate('/organizationLogin'); 
     }
   };
 
-  const handleSignUp = () => {
-    navigate('/profile3')
-  }
-
   return (
     <div>
-      
-
-      <div className='grid grid-cols-2'>
+      <div className='grid grid-cols-2 sm:grid-cols-1'>
         {/* col 1 */}
         <div>
-          {/* <img src={image1} alt="" className='h-[30rem]' /> */}
-          <Slideshow  />
+          <Slideshow />
         </div>
+
         {/* col 2 */}
-        <div className='flex flex-col items-center justify-center mt-'>
-          <p className='mb-5 text-gray-500'>Pick your path to continue</p>
-          {/* Individual */}
-          <div className='flex justify-center'>
-            <button
-              type="button"
-              className={`flex text-lg w-80 items-center justify-center border rounded-2xl px-11 p-2 font-medium transition-colors duration-300 mb-2 ${isActive ? 'bg-[#f5f5f5]' : 'bg-white'}`}
-              onClick={toggleActiveState}
-            >
-              <p className='mr-5 text-3xl'>
-                {/* <IoIosPersonAdd /> */}
-              </p>
-              <p>Individual</p>
-            </button>
-          </div>
-          <p className='flex justify-center mb-8 font-normal text-xs text-gray-500'>
+        <div className="flex flex-col text-sm items-center justify-center space-y-4 sm:mt-5 sm:mb-5 sm:px-[7%] px-[25%] md:px-[10%]">
+          <p className="text-gray-500 text-center">Pick your path to continue</p>
+
+          {/* Individual Button */}
+          <button
+            type="button"
+            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${
+              selectedOption === "individual" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
+            }`}
+            onClick={handleIndividualClick}
+          >
+            <IoIosPersonAdd className="text-2xl mr-4" />
+            <p>Individual</p>
+          </button>
+          <p className="text-gray-500 text-center text-sm px-4">
             Enhance your interviewing journey as an individual interviewer
           </p>
-          {/* Organization */}
-          <div className='flex justify-center'>
-            <button
-              type="button"
-              onClick={handleOrganizationClick}
-              className="flex justify-center text-lg w-80 items-center bg-white border rounded-2xl px-11 p-2 font-medium transition-colors duration-300 mb-2 focus:bg-f5f5f5"
-            >
-              <p className='mr-5 text-3xl'>
-                {/* <GoOrganization /> */}
-              </p>
-              <p>Organization</p>
-            </button>
-          </div>
-          <p className='flex justify-center mb-8 font-normal text-xs text-gray-500'>
+
+          {/* Organization Button */}
+          <button
+            type="button"
+            onClick={handleOrganizationClick}
+            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${
+              selectedOption === "organization" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
+            }`}
+          >
+            <GoOrganization className="text-2xl mr-4" />
+            <p>Organization</p>
+          </button>
+          <p className="text-gray-500 text-center text-sm px-4">
             Streamline your Organization interviewing process effortlessly
           </p>
+
           {/* Create Profile */}
-          {showCreateProfile && (
-            <div className="flex justify-center">
-              <p
-                // onClick={() => loginWithRedirect()}
-                onClick={handleSignUp}
-                className="text-sm text-white w-auto items-center border bg-sky-400 rounded-full p-3 focus:text-black hover:text-gray-500"
-              >
-                Sign Up with LinkedIn
-              </p>
-            </div>
+          {selectedOption === "individual" && (
+            <button
+              onClick={() => loginWithRedirect()}
+              className="bg-sky-400 text-white py-2 rounded-full hover:bg-sky-500 transition w-full"
+            >
+              Sign Up with LinkedIn
+            </button>
           )}
         </div>
       </div>

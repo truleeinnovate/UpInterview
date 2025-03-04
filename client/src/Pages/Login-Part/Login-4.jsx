@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-// import { MdArrowDropDown, MdUpdate } from "react-icons/md";
-// import { ImCancelCircle } from "react-icons/im";
-// import { GiCancel } from "react-icons/gi";
-// import { IoIosCopy } from "react-icons/io";
-// import { FaPlus, FaMinus } from "react-icons/fa6";
-// import { FaSearch } from 'react-icons/fa';
-// import { TbCameraPlus } from "react-icons/tb";
-import DatePicker from "react-datepicker";
+import { MdArrowDropDown, MdUpdate } from "react-icons/md";
+import { ImCancelCircle } from "react-icons/im";
+import { GiCancel } from "react-icons/gi";
+import { IoIosCopy } from "react-icons/io";
+import { FaPlus, FaMinus } from "react-icons/fa6";
+import { FaSearch } from 'react-icons/fa';
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import moment from 'moment-timezone';
@@ -19,6 +17,34 @@ import { validateSteps } from '../../utils/LoginValidation';
 import { useCustomContext } from "../../Context/Contextfetch";
 import { fetchMasterData } from '../../utils/fetchMasterData';
 import { TailSpin } from "react-loader-spinner";
+import { FaArrowRightLong } from "react-icons/fa6";
+import noImage from '../Dashboard-Part/Images/no-photo.png';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
+import { IoPersonOutline } from "react-icons/io5";
+
+const FooterButtons = ({ onNext, onPrev, currentStep, isFreelancer }) => {
+  return (
+    <div className="flex justify-between space-x-3 mt-4 mb-4 sm:text-sm">
+      <button
+        type="button"
+        onClick={onPrev}
+        className="border border-custom-blue rounded px-6 sm:px-3 py-1 text-custom-blue"
+      >
+        Prev
+      </button>
+      <button
+        onClick={onNext}
+        className="px-6 sm:px-3 py-1 bg-custom-blue text-white rounded"
+        type="button"
+      >
+        {(!isFreelancer && currentStep === 1) || (isFreelancer && currentStep === 3) ? "Save" : "Next"}
+      </button>
+    </div>
+  );
+};
+
 const MultiStepForm = () => {
   const {
     skills,
@@ -56,17 +82,18 @@ const MultiStepForm = () => {
   const [searchTermIndustry, setSearchTermIndustry] = useState('');
   const [searchTermTechnology, setSearchTermTechnology] = useState('');
   const [searchTermSkills, setSearchTermSkills] = useState('');
+  const [showTechPopup, setTechpopup] = useState(false);
   // const [filePreview, setFilePreview] = useState(user.picture ? user.picture : null);
   const [filePreview, setFilePreview] = useState(null);
   const [file, setFile] = useState(null);
   const [times, setTimes] = useState({
-    Sunday: [{ startTime: null, endTime: null }],
-    Monday: [{ startTime: null, endTime: null }],
-    Tuesday: [{ startTime: null, endTime: null }],
-    Wednesday: [{ startTime: null, endTime: null }],
-    Thursday: [{ startTime: null, endTime: null }],
-    Friday: [{ startTime: null, endTime: null }],
-    Saturday: [{ startTime: null, endTime: null }]
+    Sun: [{ startTime: null, endTime: null }],
+    Mon: [{ startTime: null, endTime: null }],
+    Tue: [{ startTime: null, endTime: null }],
+    Wed: [{ startTime: null, endTime: null }],
+    Thu: [{ startTime: null, endTime: null }],
+    Fri: [{ startTime: null, endTime: null }],
+    Sat: [{ startTime: null, endTime: null }]
   });
 
   const [formData, setFormData] = useState({
@@ -81,13 +108,10 @@ const MultiStepForm = () => {
     Experience: "",
     location: "",
     Introduction: "",
-    // Role: "Admin",
-    // RoleId: "66efd7dea968b6eb0f11adfa",
-    // Profile: "Admin",
-    // ProfileId: "66f3ceebf4d8a896eeaa2f6b",
+    dateOfBirth: "",
+    gender: "",
+    CoverLetterdescription: "",
   });
-
-
 
   const [formData2, setFormData2] = useState({
     InterviewPreviousExperience: "",
@@ -99,7 +123,6 @@ const MultiStepForm = () => {
     ExpectedRatePerMockInterviewMin: "",
     ExpectedRatePerMockInterviewMax: "",
     NoShowPolicy: "",
-
   });
 
   const [formData3, setFormData3] = useState({
@@ -108,7 +131,8 @@ const MultiStepForm = () => {
     Availability: ""
   });
   const [currentStep, setCurrentStep] = useState(0);
-  const [services,setServices] = useState()
+  const [completed, setCompleted] = useState([false, false, false, false]);
+  const [services, setServices] = useState()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,9 +148,7 @@ const MultiStepForm = () => {
     fetchData();
   }, []);
 
-
   const handleNextStep = async () => {
-    console.log("currentStep", currentStep);
 
     const params = {
       formData,
@@ -142,7 +164,7 @@ const MultiStepForm = () => {
       selectedOption,
     };
 
-    // Validate the current step
+    // // Validate the current step
     const isValid = validateSteps(currentStep, params, setErrors);
     if (!isValid) {
       console.log("Validation failed");
@@ -150,17 +172,24 @@ const MultiStepForm = () => {
     }
 
     // If Freelancer is false, submit directly from step 0 after validation
-    if (!Freelancer) {
+    if (!Freelancer && currentStep === 1) {
       await handleSubmit();
       return;
     }
 
-    // If it's the last step and validation passes, submit the form
-    if (currentStep === 2) {
+    // Mark current step as completed before moving forward
+    setCompleted((prev) => {
+      const updated = [...prev];
+      updated[currentStep] = true; // Mark this step as completed
+      return updated;
+    });
+
+    // If it's the last step (3) and validation passes, submit the form
+    if (currentStep === 3) {
       await handleSubmit();
     } else {
       // Otherwise, move to the next step
-      setCurrentStep((prevStep) => Math.min(prevStep + 1, 2));
+      setCurrentStep((prevStep) => Math.min(prevStep + 1, 3));
     }
   };
 
@@ -191,7 +220,7 @@ const MultiStepForm = () => {
 
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
-      setShowPopup(false);
+      setTechpopup(false);
     }
   };
 
@@ -201,10 +230,6 @@ const MultiStepForm = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const togglePopup = () => {
-    setShowPopup((prev) => !prev);
-  };
 
 
   const handleRemoveSkill = (index) => {
@@ -274,77 +299,6 @@ const MultiStepForm = () => {
     });
   };
 
-  //   const handleChange = async (e) => {
-  //     const { name, value } = e.target;
-  //     const formDataMap = {
-  //       CurrentRole: setFormData,
-  //       Experience: setFormData,
-  //       Introduction: setFormData,
-  //       TimeZone: setFormData3
-  //     };
-
-  //     // Update form data
-  //     if (formDataMap[name]) {
-  //       formDataMap[name](prevState => ({ ...prevState, [name]: value }));
-  //     } else {
-  //       setFormData(prevState => ({ ...prevState, [name]: value }));
-  //     }
-  //    // Explicitly clear Experience error on valid input
-  //    if (name === "Experience") {
-  //     if (value.trim() !== "" && value >= 1 && value <= 15) {
-  //         setExperienceError(""); // Clear error when value is valid
-  //     } else {
-  //         setExperienceError("Experience must be between 1 and 15 years");
-  //     }
-  // }
-
-  //     // Clear errors
-  //     const errorMap = {
-  //       Name: setNameError,
-  //       UserId: setUserIdError,
-  //       Email: setEmailError,
-  //       Phone: setPhoneError,
-  //       LinkedinUrl: setLinkedinurlError,
-  //       CurrentRole: setCurrentroleError,
-  //       Experience: setExperienceError,
-  //       Introduction: setIntroductionError,
-  //       TimeZone: setTimeZoneError
-  //     };
-
-  //     if (errorMap[name] && value.trim() !== "") {
-  //       errorMap[name](""); // Clear error if value is entered
-  //   }
-
-  //     // Set character count for Introduction
-  //     if (name === 'Introduction') {
-  //       setCharCount(value.length);
-  //     }
-
-  //     // Check if UserId or Email is unique
-  //     // const asyncValidationMap = {
-  //     // UserId: async () => {
-  //     //   try {
-  //     //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-userid/${value}`);
-  //     //     setUserIdError(response.data.exists ? 'That User ID is already taken. Please choose another.' : '');
-  //     //   } catch (error) {
-  //     //     console.error('Error checking User ID:', error);
-  //     //   }
-  //     // },
-  //     // Email: async () => {
-  //     //   try {
-  //     //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-email/${value}`);
-  //     //     setEmailError(response.data.exists ? 'That email is already in use. Please choose another.' : '');
-  //     //   } catch (error) {
-  //     //     console.error('Error checking Email:', error);
-  //     //   }
-  //     // }
-  //     // };
-
-  //     // if (asyncValidationMap[name]) {
-  //     //   asyncValidationMap[name]();
-  //     // }
-  //   };
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -354,11 +308,6 @@ const MultiStepForm = () => {
       ...prevState,
       [name]: value,
     }));
-    // setFormData2((prev) => ({
-    //   ...prev,
-    //   [name]: value === "" ? "" : Math.max(1, Math.min(15, Number(value))), // Restrict value between 1-15
-    // }));
-
     // Clear the error when user types
     setErrors((prevErrors) => ({
       ...prevErrors,
@@ -394,81 +343,49 @@ const MultiStepForm = () => {
     }));
   };
 
-  // const handleSelectCandidate = (technologies) => {
-  //   if (!selectedCandidates.includes(technologies)) {
-  //     setSelectedCandidates((prev) => [...prev, technologies]);
-  //     setFormData2((prev) => ({
-  //       ...prev,
-  //       Technology: [...prev.Technology, technologies.TechnologyMasterName],
-  //     }));
-  //   }
-  //   setShowPopup(false);
-
-  //   // Clear Technology error
-  //   setErrors((prevErrors) => ({
-  //     ...prevErrors,
-  //     Technology: "",
-  //   }));
-  // };
   const handleSelectCandidate = (technologies) => {
     if (!selectedCandidates.includes(technologies)) {
       setSelectedCandidates((prev) => [...prev, technologies]);
-  
+
       setFormData2((prev) => ({
         ...prev,
-        Technologys: Array.isArray(prev.Technology) 
-          ? [...prev.Technology, technologies.TechnologyMasterName] 
+        Technologys: Array.isArray(prev.Technology)
+          ? [...prev.Technology, technologies.TechnologyMasterName]
           : [technologies.TechnologyMasterName],
       }));
     }
-  
-    setShowPopup(false);
-  
+
+    setTechpopup(false);
+
     // Clear Technology error
     setErrors((prevErrors) => ({
       ...prevErrors,
       Technologys: "",
     }));
   };
-  
 
-  // const handleSelectSkill = (skill) => {
-  //   if (!selectedSkills.includes(skill)) {
-  //     setSelectedSkills((prev) => [...prev, skill]);
-  //     setFormData2((prev) => ({
-  //       ...prev,
-  //       Skill: [...prev.Skill, skill.SkillName],
-  //     }));
-  //   }
-  //   setShowSkillsPopup(false);
-  //   // Clear Skill error
-  //   setErrors((prevErrors) => ({
-  //     ...prevErrors,
-  //     Skill: "",
-  //   }));
-  // };
 
   const handleSelectSkill = (skill) => {
     if (!selectedSkills.includes(skill)) {
       setSelectedSkills((prev) => [...prev, skill]);
-  
+
       setFormData2((prev) => ({
         ...prev,
-        Skills: Array.isArray(prev.Skill) 
-          ? [...prev.Skill, skill.SkillName] 
-          : [skill.SkillName], // Initialize as an array if undefined
+        Skills: Array.isArray(prev.Skill)
+          ? [...prev.Skill, skill.SkillName]
+          : [skill.SkillName],
       }));
     }
-  
+
     setShowSkillsPopup(false);
-  
+
     // Clear Skill error
     setErrors((prevErrors) => ({
       ...prevErrors,
       Skills: "",
     }));
   };
-  
+
 
   const handleRadioChange = (e) => {
     const value = e.target.value;
@@ -593,7 +510,7 @@ const MultiStepForm = () => {
       contactType: "Individual",
       LetUsKnowYourProfession: profession,
     };
-    
+
 
     // Prepare availability data
     const availabilityData = Object.keys(times)
@@ -622,25 +539,6 @@ const MultiStepForm = () => {
         availabilityData,
         Freelancer,
       });
-      // console.log("Sending user data to backend...");
-      // const userResponse = await axios.post(`${process.env.REACT_APP_API_URL}/users`, userData1);
-      // console.log("User successfully created:", userResponse.data);
-
-      // console.log("Sending contact data to backend...");
-      // const contactResponse = await axios.post(`${process.env.REACT_APP_API_URL}/contacts`, {
-      //   ...contactData,
-      //   OwnerId: userResponse.data._id, // Linking the user ID
-      // });
-      // console.log("Contact successfully created:", contactResponse.data._id);
-
-      // console.log("Sending interview availability data to backend...");
-      // if (Freelancer) {
-      //   const availabilityResponse = await axios.post(`${process.env.REACT_APP_API_URL}/interviewavailability`, {
-      //     contact: contactResponse.data._id, // Linking the contact ID
-      //     days: availabilityData,
-      //   });
-      //   console.log("Interview availability successfully created:", availabilityResponse.data);
-      // }
       const contactId = response.data.contactId;
       console.log("file data:", file);
 
@@ -654,35 +552,15 @@ const MultiStepForm = () => {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-      }else{
+      } else {
         console.log("No file uploaded");
       }
 
-      // console.log("userData data:", userResponse.data);
-      // console.log("contactResponse data:", contactResponse.data);
-
-
-
-      // localStorage.setItem("contactId", contactResponse.data._id);
       Cookies.set("userId", response.data.userId, { expires: 7 });
       if (Cookies.get("organizationId")) {
         Cookies.remove("organizationId");
       }
-      // email sending with notification
-
-      // await axios.post(`${process.env.REACT_APP_API_URL}/emailCommon/loginSendEmail`, {
-      //   email:contactResponse.data.Email,
-      //   ownerId: Cookies.get("userId"),
-      //   tenantId: Cookies.get("organizationId"),
-      //   // ccEmail: "shaikmansoor1200@gmail.com",
-      //   name:contactResponse.data.Name
-      // });
-          // Reload cookies and page
-          // setTimeout(() => {
-
-        //     window.location.reload();
-        // }, 500);
-        setLoading(false);
+      setLoading(false);
       console.log("Navigating to subscription...");
       navigate("/subscription-plans");
     } catch (error) {
@@ -718,13 +596,10 @@ const MultiStepForm = () => {
     }));
   };
 
-  // const filteredCurrentRoles = CurrentRole.filter(role =>
-  //   role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  // );
+  const filteredCurrentRoles = CurrentRole.filter(role =>
+    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
+  );
 
-  const filteredCurrentRoles = Array.isArray(CurrentRole) 
-  ? CurrentRole.filter(role => role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())) 
-  : [];
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -792,13 +667,6 @@ const MultiStepForm = () => {
     }
   }, [selectedLocation, locations]);
 
-  // const handlePrevStep = () => {
-  //   if (step === 0) {
-  //     navigate('/profile3');
-  //   } else {
-  //     setStep(step - 1);
-  //   }
-  // };
 
   const handlePrevStep = () => {
     if (currentStep === 0) {
@@ -855,17 +723,6 @@ const MultiStepForm = () => {
   const coverLetterInputRef = useRef(null);
 
   const [isReady, setIsReady] = useState(null);
-
-  // const handleRadioChange3 = (event) => {
-  //   // Update the formData2 object with the selected value
-  //   setFormData2((prevData) => ({
-  //     ...prevData,
-  //     IsReadyForMockInterviews: event.target.value,
-  //   }));
-
-  //   // Update isReady based on the selected value
-  //   setIsReady(event.target.value === "yes");
-  // };
   const handleRadioChange3 = (event) => {
     const { value } = event.target;
 
@@ -906,21 +763,26 @@ const MultiStepForm = () => {
       [fieldName]: '',
     }));
   };
-
   const handleInputChangeintro = (e, field) => {
     const { value } = e.target;
+    const limit = field === "CoverLetterdescription" ? 2000 : 500; // Set different limits
 
-    if (value.length <= 500) {
-        setFormData((prevData) => ({
-            ...prevData,
-            [field]: value
-        }));
+    if (value.length <= limit) {
+      setFormData((prevData) => ({
+        ...prevData,
+        [field]: value,
+      }));
     }
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [field]: '',
-    }));
-};
+
+    // Only update errors for "introduction", not for "CoverLetterdescription"
+    if (field === "Introduction") {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [field]: '',
+      }));
+    }
+  };
+
 
   useEffect(() => {
     // Disable page scrolling when component is mounted
@@ -932,9 +794,54 @@ const MultiStepForm = () => {
     };
   }, []);
 
+  const steps = [
+    { label: "Basic Details" },
+    { label: "Additional Details" },
+    { label: "Interview Details" },
+    { label: "Availability" },
+  ];
+
+
+  // gender code
+
+  const [showDropdowngender, setShowDropdownGender] = useState(false);
+  const genders = ["Male", "Female", "Others"];
+  const [selectedGender, setSelectedGender] = useState("");
+  const toggleDropdowngender = () => {
+    setShowDropdownGender(!showDropdowngender);
+  };
+
+  const handleGenderSelect = (gender) => {
+    setSelectedGender(gender);
+    setShowDropdownGender(false);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      gender,
+    }));
+  };
+
+
+  // date of birth
+
+  const [startDate, setStartDate] = useState(null);
+
+  const handleDateChange = (date) => {
+    if (!date) {
+      setFormData((prevData) => ({ ...prevData, Date_Of_Birth: "" }));
+      setStartDate(null);
+      setErrors((prevErrors) => ({ ...prevErrors, Date_Of_Birth: "" }));
+      return;
+    }
+
+    const formattedDate = format(date, "dd-MM-yyyy");
+    setFormData((prevData) => ({ ...prevData, dateOfBirth: formattedDate }));
+    setStartDate(date);
+  };
+
   return (
-    <div className="flex flex-col h-screen">
-   {loading && (
+    <div className="px-[15%] sm:px-[5%] md:px-[2%] lg:px-[2%] xl:px-[10%]">
+
+      {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="flex flex-col items-center">
             <TailSpin color="#ffffff" height={50} width={50} />
@@ -944,979 +851,621 @@ const MultiStepForm = () => {
       )}
 
       {/* Scrollable Content */}
-      <di className="flex-1">
-        {/* Fixed Header */}
-        {Freelancer && (
-          <div className="flex justify-center gap-3 py-5 bg-white">
-            <div className={`rounded h-2 w-24 border ${currentStep === 0 ? 'bg-orange-300' : currentStep > 0 ? 'bg-custom-blue' : 'bg-gray-200'}`}></div>
-            <div className={`rounded h-2 w-24 border ${currentStep === 1 ? 'bg-orange-300' : currentStep > 1 ? 'bg-custom-blue' : 'bg-gray-200'}`}></div>
-            <div className={`rounded h-2 w-24 border ${currentStep === 2 ? 'bg-orange-300' : currentStep > 2 ? 'bg-custom-blue' : 'bg-gray-200'}`}></div>
+      <div>
+        {/*  Header */}
+        <div>
+          <p className="font-bold text-2xl sm:text-md">Signup</p>
+          <div className="block  md:flex xl:flex lg:flex 2xl:flex items-center justify-center py-3 md:space-x-5 xl:space-x-5 lg:space-x-5 2xl:space-x-5">
+            {/* Left Side: Step Numbers with Arrows */}
+            <div className="flex items-center justify-center space-x-2 mr-2">
+              {steps
+                .filter((_, index) => Freelancer || index < 2) // Show all steps if Freelancer, else only first two
+                .map((_, index) => (
+                  <React.Fragment key={index}>
+                    <div
+                      className={`flex items-center justify-center w-6 h-6 rounded-full sm:text-xs font-bold
+                       ${currentStep === index ? "bg-orange-500 text-white"
+                          : completed[index] ? "bg-custom-blue text-white"
+                            : "bg-sky-100 text-custom-blue"}`}
+                    >
+                      {index + 1}
+                    </div>
+                    {index < (Freelancer ? steps.length - 1 : 1) && (
+                      <FaArrowRightLong className="mx-2 text-gray-500" size={20} />
+                    )}
+                  </React.Fragment>
+                ))}
+            </div>
+
+            {/* Right Side: Step Labels */}
+            <div className="flex justify-center items-center sm:mt-2">
+              {steps
+                .filter((_, index) => Freelancer || index < 2)
+                .map((step, index) => (
+                  <span
+                    key={index}
+                    className={`sm:text-[9px] mr-3 font-semibold 
+                     ${currentStep === index ? "text-orange-500"
+                        : completed[index] ? "text-custom-blue"
+                          : "text-gray-400"}`}
+                  >
+                    {step.label}
+                  </span>
+                ))}
+            </div>
           </div>
-        )}
-        <form onSubmit={handleSubmit} className="">
-          <div className="relative mx-7 border border-gray-300 rounded-lg h-[calc(100vh-10.5rem)]">
-            <div className="h-full overflow-auto p-4 pr-4 scrollbar-thin scrollbar-thumb-custom-blue scrollbar-track-gray-100">
+        </div>
+
+
+
+        <form onSubmit={handleSubmit}>
+          <div>
+            <div className="border border-gray-300 rounded-lg p-4 sm:p-2 md:p-2">
 
               {currentStep === 0 && (
-
                 <>
-                  <div className=" top-16 bottom-16 overflow-auto px-5 py-1 text-sm right-0">
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className="col-span-1">
-                        <div className="text-xl font-bold mb-5">Basic Details:</div>
-                        {/* name */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="Name" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                            Name <span className="text-red-500">*</span>
-                          </label>
-                          <div>
-                            <input
-                              type="text"
-                              value={formData.Name}
-                              onChange={(e) => handleInputChange(e, 'Name')} // Update value and clear error
-                              placeholder="John Doe"
-                              className={`border-b ${errors.Name ? 'border-red-500' : 'border-gray-300'} focus:outline-none mb-5 w-96`}
-                              autoComplete="off"
-                            />
-                            {errors.Name && <p className="text-red-500 text-sm -mt-5">{errors.Name}</p>}
-                          </div>
-                        </div>
-
-                        {/* User name */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="UserName" className="block text-sm font-medium leading-6 text-gray-900 w-36">User Name <span className="text-red-500">*</span></label>
-                          <div>
-                            <input
-                              name="UserName"
-                              type="text"
-                              id="UserName"
-                              value={formData.UserName}
-                              onChange={(e) => handleInputChange(e, 'UserName')} // Update value and clear error
-                              placeholder="John.doe123"
-                              className={`border-b ${errors.UserName ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-5 w-96`}
-                              autoComplete="off"
-                            />
-                            {errors.UserName && <p className="text-red-500 text-sm -mt-5">{errors.UserName}</p>}
-                          </div>
-                        </div>
-
-                        {/* email */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="Email" className="block text-sm font-medium leading-6 text-gray-900 w-36">Email Address <span className="text-red-500">*</span></label>
-                          <div>
-                            <input
-                              name="Email"
-                              type="text"
-                              id="Email"
-                              value={formData.Email}
-                              onChange={(e) => handleInputChange(e, 'Email')} // Update value and clear error
-                              placeholder="John.doe@gmail.com"
-                              className={`border-b ${errors.Email ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-5 w-96`}
-                              autoComplete="off"
-                            />
-                            {errors.Email && <p className="text-red-500 text-sm -mt-5">{errors.Email}</p>}
-                          </div>
-                        </div>
-
-                        {/* Phone */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="Phone" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                            Phone Number<span className="text-red-500">*</span>
-                          </label>
-                          <div>
-                            <div className="flex gap-2">
-                              <select
-                                name="CountryCode"
-                                id="CountryCode"
-                                value={formData.CountryCode || "+91"}
-                                onChange={handleInputChange} // Keep the general input handler
-                                className="border-b focus:outline-none mb-5 w-20"
-                              >
-                                <option value=""></option>
-                                <option value="+91">+91</option>
-                                <option value="+1">+1</option>
-                                <option value="+44">+44</option>
-                                <option value="+61">+61</option>
-                                <option value="+971">+971</option>
-                                <option value="+60">+60</option>
-                              </select>
-                              <input
-                                type="text"
-                                name="Phone"
-                                id="Phone"
-                                value={formData.Phone}
-                                onChange={handlePhoneInput} // Call the specific handler to update Phone
-                                autoComplete="off"
-                                maxLength="10"
-                                placeholder="Enter 10 digit number"
-                                className={`border-b ${errors.Phone ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-5 w-72`}
-                              />
+                  {/* basic details */}
+                  <div className="text-xl font-bold mb-5 sm:text-sm">Basic Details:</div>
+                  <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-6">
+                    {/* image */}
+                    <div className="sm:col-span-6 col-span-2">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div className="sm:col-span-6 col-span-1">
+                          <div className="flex items-center space-x-4">
+                            {/* Image Preview Box */}
+                            <div className="w-28 h-32 sm:w-20 sm:h-20 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden">
+                              {filePreview ? (
+                                <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <img src={noImage} alt="Preview" className="w-full h-full object-cover" />
+                              )}
                             </div>
-                            {errors.Phone && <p className="text-red-500 text-sm -mt-5">{errors.Phone}</p>}
-                          </div>
-                        </div>
 
-
-                        {/* linkedin url */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="LinkedinUrl" className="block text-sm font-medium leading-6 text-gray-900 w-36">LinkedIn URL <span className="text-red-500">*</span></label>
-                          <div>
-                            <input
-                              name="LinkedinUrl"
-                              type="text"
-                              id="LinkedinUrl"
-                              value={formData.LinkedinUrl}
-                              onChange={(e) => handleInputChange(e, 'LinkedinUrl')} // Update value and clear error
-                              placeholder="linkedin.com/in/johndoe"
-                              autoComplete="off"
-                              className={`border-b ${errors.LinkedinUrl ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-5 w-96`}
-                            />
-                            {errors.LinkedinUrl && <p className="text-red-500 text-sm -mt-5">{errors.LinkedinUrl}</p>}
+                            {/* File Upload UI */}
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-600 sm:text-[10px]">Please upload square image, size less than 100KB</p>
+                              <div className="flex items-center space-x-2 mt-1 bg-sky-50 py-2 rounded">
+                                <input
+                                  type="file"
+                                  id="imageInput"
+                                  className="hidden"
+                                  onChange={handleFileChange}
+                                  ref={fileInputRef}
+                                  accept="image/*"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => fileInputRef.current.click()}
+                                  className="border px-4 sm:px-1 py-1 rounded-md sm:text-xs text-sm text-custom-blue border-custom-blue hover:bg-gray-200"
+                                >
+                                  Choose File
+                                </button>
+                                {file ? (
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-700">{file.name}</span>
+                                    <button onClick={handleDeleteImage} type="button" className="text-red-500">
+                                      <ImCancelCircle className="text-lg" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm sm:px-1 text-gray-400 sm:text-xs">No file chosen</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
 
                       </div>
-                      {/* Image Upload Section */}
-                      <div className="col-span-1">
-                        <div className="mt-16 flex justify-center">
-                          <div className="w-32 h-32 border border-gray-300 rounded-md flex items-center justify-center relative">
+
+                    </div>
+
+                    {/* Left Side */}
+                    <div className="space-y-6 sm:col-span-6 col-span-1">
+                      {/* Name */}
+                      <div>
+                        <label htmlFor="Name" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.Name}
+                          onChange={(e) => handleInputChange(e, 'Name')}
+                          placeholder="John Doe"
+                          className={`block w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.Name ? 'border-red-500' : 'border-gray-400'}`}
+                          autoComplete="given-name"
+                        />
+                        {errors.Name && <p className="text-red-500 text-sm sm:text-xs">{errors.Name}</p>}
+                      </div>
+
+                      {/* Date of Birth */}
+                      <div>
+                        <label htmlFor="dateofbirth" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Date of Birth
+                        </label>
+                        <DatePicker
+                          selected={startDate}
+                          onChange={handleDateChange}
+                          dateFormat="MMMM d, yyyy"
+                          maxDate={new Date()}
+                          showYearDropdown
+                          showMonthDropdown
+                          dropdownMode="select"
+                          className="w-full"
+                          wrapperClassName="w-full"
+                          customInput={
                             <input
-                              type="file"
-                              id="imageInput"
-                              className="hidden"
-                              onChange={handleFileChange}
-                              ref={fileInputRef}
+                              type="text"
+                              readOnly
+                              className="block w-full rounded-md bg-white px-3 py-2  text-base text-gray-900 placeholder-gray-400 border border-gray-400 focus:outline-none sm:text-sm"
                             />
-                            {filePreview ? (
-                              <>
-                                <img src={filePreview} alt="Selected" className="w-full h-full object-cover" />
-                                <div className="absolute bottom-0 left-0">
-                                  <button
-                                    type="button"
-                                    onClick={handleReplace}
-                                    className="text-white"
-                                  >
-                                    {/* <MdUpdate className="text-xl ml-2 mb-1" /> */}
-                                  </button>
-                                </div>
-                                <div className="absolute bottom-0 right-0">
-                                  <button
-                                    type="button"
-                                    onClick={handleDeleteImage}
-                                    className="text-white"
-                                  >
-                                    {/* <ImCancelCircle className="text-xl mr-2 mb-1" /> */}
-                                  </button>
-                                </div>
-                              </>
-                            ) : (
-                              <button
-                                className="flex flex-col items-center justify-center"
-                                onClick={() => fileInputRef.current.click()}
-                                type="button"
-                              >
-                                <span style={{ fontSize: "40px" }}>
-                                  {/* <TbCameraPlus /> */}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                          }
+                          onChangeRaw={(e) => e.preventDefault()}
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label htmlFor="Email" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          name="Email"
+                          type="text"
+                          id="Email"
+                          value={formData.Email}
+                          onChange={(e) => handleInputChange(e, 'Email')}
+                          placeholder="John.doe@gmail.com"
+                          className={`block w-full rounded-md bg-white px-3 py-2  text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.Email ? 'border-red-500' : 'border-gray-400'}`}
+                          autoComplete="email"
+                        />
+                        {errors.Email && <p className="text-red-500 text-sm sm:text-xs">{errors.Email}</p>}
+                      </div>
+
+                      {/* LinkedIn URL */}
+                      <div>
+                        <label htmlFor="LinkedinUrl" className="block text-sm font-medium sm:text-xs text-gray-900 mb-1">
+                          LinkedIn URL <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          name="LinkedinUrl"
+                          type="text"
+                          id="LinkedinUrl"
+                          value={formData.LinkedinUrl}
+                          onChange={(e) => handleInputChange(e, 'LinkedinUrl')}
+                          placeholder="linkedin.com/in/johndoe"
+                          autoComplete="off"
+                          className={`block w-full rounded-md bg-white px-3 py-2  text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.LinkedinUrl ? 'border-red-500' : 'border-gray-400'}`}
+                        />
+                        {errors.LinkedinUrl && <p className="text-red-500 text-sm sm:text-xs">{errors.LinkedinUrl}</p>}
                       </div>
                     </div>
 
-                    <hr className="border-t border-gray-300 my-5" />
-
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="text-xl font-bold mb-5">Additional Details:</div>
-                      <div className="flex gap-12">
-                        {/* Current Role */}
-                        <div className="flex gap-5 mb-2">
-                          <label htmlFor="CurrentRole" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                            Current Role <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative w-96">
-                            <input
-                              name="CurrentRole"
-                              type="text"
-                              id="CurrentRole"
-                              value={selectedCurrentRole}
-                              onClick={toggleCurrentRole}
-                              placeholder="Senior Software Engineer"
-                              autoComplete="off"
-                              className={`border-b ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-3 w-full`}
-                              readOnly
-                            />
-                            <div className="absolute right-2 -mt-6 transform -translate-y-1/2 cursor-pointer">
-                              {/* <MdArrowDropDown className="text-lg text-gray-500" onClick={toggleCurrentRole} /> */}
-                            </div>
-                            {errors.CurrentRole && <p className="text-red-500 text-sm -mt-3">{errors.CurrentRole}</p>}
-                            {showDropdownCurrentRole && (
-                              <div className="absolute bg-white border border-gray-300 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                    <input
-                                      type="text"
-                                      placeholder="Search Current Role"
-                                      value={searchTermCurrentRole}
-                                      // onChange={(e) => setSearchTermCurrentRole(e.target.value)}
-                                      className="pl-8  focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
-                                </div>
-                                {filteredCurrentRoles.length > 0 ? (
-                                  filteredCurrentRoles.map((role) => (
-                                    <div
-                                      key={role._id}
-                                      onClick={() => handleRoleSelect(role.RoleName)}
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {role.RoleName}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="p-2 text-gray-500">No roles found</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Industry */}
-                        <div className="flex gap-5 relative mb-2">
-                          <label htmlFor="Industry" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                            Industry <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative w-96">
-                            <input
-                              name="Industry"
-                              type="text"
-                              id="Industry"
-                              value={selectedIndustry}
-                              placeholder="Information Technology"
-                              autoComplete="off"
-                              onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
-                              className={`border-b ${errors.Industry ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-3 w-full`}
-                              readOnly
-                            />
-                            <div className="absolute right-2 -mt-6 transform -translate-y-1/2 cursor-pointer">
-                              {/* <MdArrowDropDown className="text-lg text-gray-500" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} /> */}
-                            </div>
-                            {errors.Industry && <p className="text-red-500 text-sm -mt-3">{errors.Industry}</p>}
-                            {showDropdownIndustry && (
-                              <div className="absolute bg-white border border-gray-300 w-full -mt-3 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                    <input
-                                      type="text"
-                                      placeholder="Search Industry"
-                                      value={searchTermIndustry}
-                                      onChange={(e) => setSearchTermIndustry(e.target.value)}
-                                      className="pl-8  focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
-                                </div>
-                                {industries.filter(industry =>
-                                  industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
-                                ).length > 0 ? (
-                                  industries.filter(industry =>
-                                    industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
-                                  ).map((industry) => (
-                                    <div
-                                      key={industry._id}
-                                      onClick={() => handleIndustrySelect(industry)}
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {industry.IndustryName}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="p-2 text-gray-500">No industries found</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-12">
-                        {/* Experience */}
-                        <div className="flex gap-5 mb-2">
-                          <div>
-                            <label htmlFor="Experience" className="block text-sm font-medium leading-6 text-gray-900  w-36">
-                              Years of Experience <span className="text-red-500">*</span>
-                            </label>
-                          </div>
-                          <div className="flex-grow">
-                            <input
-                              type="number"
-                              name="Experience"
-                              autoComplete="off"
-                              value={formData.Experience}
-                              placeholder="5 years"
-                              onChange={handleChange}
-                              id="Experience" min="1" max="15"
-                              className={`border-b focus:outline-none mb-3 w-96 ${errors.Experience ? 'border-red-500' : 'border-gray-300 focus:border-black'}`} />
-                            {errors.Experience && <p className="text-red-500 text-sm -mt-3">{errors.Experience}</p>}
-                          </div>
-                        </div>
-
-                        {/* Location */}
-                        <div className="flex gap-5 relative mb-2">
-                          <label htmlFor="Location" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                            Location <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative w-96">
-                            <input
-                              name="Location"
-                              type="text"
-                              id="Location"
-                              value={selectedLocation}
-                              placeholder="Delhi,India"
-                              autoComplete="off"
-                              onClick={() => setShowDropdownLocation(!showDropdownLocation)}
-                              className={`border-b ${errors.Location ? 'border-red-500' : 'border-gray-300'} focus:border-black focus:outline-none mb-3 w-full`}
-                              readOnly
-                            />
-                            <div className="absolute right-2 -mt-6 transform -translate-y-1/2 cursor-pointer">
-                              {/* <MdArrowDropDown className="text-lg text-gray-500" onClick={() => setShowDropdownLocation(!showDropdownLocation)} /> */}
-                            </div>
-                            {errors.Location && <p className="text-red-500 text-sm -mt-3">{errors.Location}</p>}
-                            {showDropdownLocation && (
-                              <div className="absolute bg-white border border-gray-300 w-full text-xs -mt-3 max-h-60 overflow-y-auto z-10">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                    <input
-                                      type="text"
-                                      placeholder="Search Location"
-                                      value={searchTermLocation}
-                                      autoComplete="off"
-                                      onChange={(e) => setSearchTermLocation(e.target.value)}
-                                      className="pl-8 focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
-                                </div>
-                                {(() => {
-                                  const filteredLocations = locations.filter(location =>
-                                    location.LocationName && location.LocationName.toLowerCase().includes(searchTermLocation.toLowerCase())
-                                  );
-
-                                  return filteredLocations.length > 0 ? (
-                                    filteredLocations.map((location) => (
-                                      <div
-                                        key={location._id}
-                                        onClick={() => handleLocationSelect(location)}
-                                        className="cursor-pointer hover:bg-gray-200 p-2"
-                                      >
-                                        {location.LocationName}
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <div className="p-2 text-gray-500">No locations found</div>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-12">
-                        {/* Resume Section */}
-                        <div>
-                          <div className="flex gap-5 mb-2">
-                            <label htmlFor="Resume" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                              Resume
-                            </label>
-                            <div className="relative flex w-96">
-                              <input
-                                ref={resumeInputRef}
-                                type="file"
-                                name="Resume"
-                                id="Resume"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => handleFileUpload(e, 'Resume')}
-                              />
-                              <div
-                                className="bg-blue-500 text-white text-center py-2 px-4 rounded cursor-pointer"
-                                onClick={() => resumeInputRef.current.click()}  // Trigger file input click
-                              >
-                                {resumeName ? 'Uploaded' : 'Upload File'}
-                              </div>
-                              <p className="text-md text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
-                            </div>
-                          </div>
-                          {resumeName && (
-                            <div className="border mt-2 ml-[164px] inline-flex items-center gap-2">
-                              <span className="text-gray-600">{resumeName}</span>
-                              <button
-                                className="text-red-500"
-                                onClick={() => handleRemoveFile('Resume')}
-                              >
-                                <span className="text-xl">×</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Cover Letter Section */}
-                        <div>
-                          <div className="flex gap-5 mb-2">
-                            <label htmlFor="CoverLetter" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                              Cover Letter
-                            </label>
-                            <div className="relative flex w-96">
-                              <input
-                                ref={coverLetterInputRef}
-                                type="file"
-                                name="CoverLetter"
-                                id="CoverLetter"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => handleFileUpload(e, 'CoverLetter')}
-                              />
-                              <div
-                                className="bg-blue-500 text-white text-center py-2 px-4 rounded cursor-pointer"
-                                onClick={() => coverLetterInputRef.current.click()}  // Trigger file input click
-                              >
-                                {coverLetterName ? 'Uploaded' : 'Upload File'}
-                              </div>
-                              <p className="text-md text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
-                            </div>
-                          </div>
-                          {coverLetterName && (
-                            <div className="border mt-2 ml-[164px] inline-flex items-center gap-2">
-                              <span className="text-gray-600">{coverLetterName}</span>
-                              <button
-                                className="text-red-500"
-                                onClick={() => handleRemoveFile('CoverLetter')}
-                              >
-                                <span className="text-xl">×</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-
-
-                      {/* Introduction */}
-                      <div className="w-full flex gap-5 mb-2">
-                        <label htmlFor="Introduction" className="block text-sm font-medium leading-6 text-gray-900 w-36">
-                          Introduction <span className="text-red-500">*</span>
+                    {/* Right Side */}
+                    <div className="space-y-6 sm:col-span-6 col-span-1">
+                      {/* Username */}
+                      <div>
+                        <label htmlFor="UserName" className="block sm:text-xs text-sm font-medium text-gray-900 mb-1">
+                          Username <span className="text-red-500">*</span>
                         </label>
-                        <div className="flex-grow mt-3">
-                          <textarea
-                            name="Introduction"
-                            type="text"
-                            rows={5}
-                            id="Introduction"
-                            value={formData.Introduction}
-                            onChange={(e) => handleInputChangeintro(e, 'Introduction')}
-                            placeholder="I am a technical interviewer with 5+ years of experience in assessing candidates for software engineering roles."
-                            autoComplete="off"
-                            // onChange={handleChange}
-                            className={`border p-2 focus:outline-none mb-3 w-full rounded-md ${errors.Introduction ? 'border-red-500' : 'border-gray-300 focus:border-black'}`}
-                          />
-                          {errors.Introduction && <p className="text-red-500 text-sm -mt-4">{errors.Introduction}</p>}
-                          <p className="text-gray-600 text-sm float-right -mt-4">
-    {formData.Introduction.length}/500
-</p>
-                        </div>
+                        <input
+                          name="UserName"
+                          type="text"
+                          id="UserName"
+                          value={formData.UserName}
+                          onChange={(e) => handleInputChange(e, 'UserName')}
+                          placeholder="John.doe123"
+                          className={`block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.UserName ? 'border-red-500' : 'border-gray-400'}`}
+                          autoComplete="username"
+                        />
+                        {errors.UserName && <p className="text-red-500 text-sm sm:text-xs">{errors.UserName}</p>}
                       </div>
-                      {/* Footer */}
-                      <div className="footer-buttons flex justify-between">
-                        <button type="button" onClick={handlePrevStep} className="border border-custom-blue px-10 rounded py-2 mr-5 text-custom-blue">Prev</button>
-                        <button
-                          onClick={handleNextStep}
-                          className="px-10 bg-custom-blue text-white rounded py-2"
-                          type="button"
-                        >
-                          {Freelancer ? "Next" : "Save"}
-                        </button>
 
+                      {/* Gender */}
+                      <div className="relative">
+                        <label htmlFor="gender" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Gender
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="gender"
+                            autoComplete="off"
+                            value={selectedGender}
+                            onClick={toggleDropdowngender}
+                            readOnly
+                            className="block w-full rounded-md bg-white px-3 py-1 text-base text-gray-900 placeholder-gray-400 border border-gray-400 focus:outline-none cursor-pointer"
+                          />
+                          {/* Dropdown Arrow */}
+                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500" onClick={toggleDropdowngender}>
+                            <MdArrowDropDown className="text-lg" />
+                          </div>
+                        </div>
+
+                        {showDropdowngender && (
+                          <div className="absolute z-50 mt-1 text-xs w-full rounded-md bg-white shadow-lg border border-gray-200">
+                            {genders.map((gender) => (
+                              <div
+                                key={gender}
+                                className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleGenderSelect(gender)}
+                              >
+                                {gender}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+
+                      {/* Phone Number */}
+                      <div>
+                        <label htmlFor="Phone" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <select
+                            name="CountryCode"
+                            id="CountryCode"
+                            value={formData.CountryCode || "+91"}
+                            onChange={handleInputChange}
+                            className={`w-20 rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.Phone ? 'border-red-500' : 'border-gray-400'}`}
+                          >
+                            <option value="+91">+91</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                            <option value="+61">+61</option>
+                            <option value="+971">+971</option>
+                            <option value="+60">+60</option>
+                          </select>
+                          <input
+                            type="text"
+                            name="Phone"
+                            id="Phone"
+                            value={formData.Phone}
+                            onChange={handlePhoneInput}
+                            autoComplete="off"
+                            maxLength="10"
+                            placeholder="Enter 10-digit number"
+                            className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 placeholder-gray-400 border focus:outline-none sm:text-sm ${errors.Phone ? 'border-red-500' : 'border-gray-400'}`}
+                          />
+                        </div>
+                        {errors.Phone && <p className="text-red-500 text-sm sm:text-xs">{errors.Phone}</p>}
                       </div>
                     </div>
                   </div>
                 </>
               )}
-              {Freelancer && (
+
+              {currentStep === 1 && (
                 <>
-                  {currentStep === 1 && (
-                    <>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div className="text-xl font-bold mb-5">
-                          Skills and Experience Details:
-                        </div>
-                        <div className="flex gap-4 mb-2">
-                          <label htmlFor="technology" className="block text-sm font-medium leading-6 text-gray-900 w-72">
-                            Select Your Comfortable Technologies <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex-grow relative">
-                            <div
-                              className={`border-b border-gray-300 focus:border-black focus:outline-none -mt-2 w-96 cursor-pointer flex flex-wrap items-center min-h-10 ${errors.Technology ? 'border-red-500' : 'border-gray-300'}`}
-                              onClick={togglePopup}
-                            >
-                              {selectedCandidates.length === 0 && (
-                                <span className="text-gray-400 text-sm pl-2 mt-3">
-                                  Select Multiple Technologies
-                                </span>
-                              )}
-                              {selectedCandidates.map((candidate, index) => (
-                                <div key={index} className="bg-slate-200 rounded px-2 m-1 py-1 inline-block mr-2 text-sm">
-                                  {candidate.TechnologyMasterName}
-                                  <button type="button" onClick={() => handleRemoveCandidate(index)} className="ml-2 bg-gray-300 rounded px-2">x</button>
-                                </div>
-                              ))}
-                              {selectedCandidates.length > 0 && (
-                                <button type="button" onClick={clearRemoveCandidate} className="bg-slate-300 rounded px-2 absolute top-0 text-sm" style={{ marginLeft: "360px" }}>X</button>
-                              )}
-                            </div>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-6">
+                    {/* additional details */}
+                    <div className="text-xl font-bold col-span-2 sm:col-span-6 sm:text-sm">Additional Details:</div>
+                    {/* left side */}
+                    <div className="sm:col-span-6 col-span-1 space-y-4">
+                      {/* current role */}
+                      <div >
+                        <label htmlFor="CurrentRole" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Current Role <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="CurrentRole"
+                            type="text"
+                            id="CurrentRole"
+                            value={selectedCurrentRole}
+                            onClick={toggleCurrentRole}
+                            placeholder="Senior Software Engineer"
+                            autoComplete="off"
+                            className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.CurrentRole ? 'border-red-500' : 'border-gray-400'}`}
+                            readOnly
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                            <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
+                          </div>
 
-                            {showPopup && (
-                              <div ref={popupRef} className="absolute bg-white border border-gray-300 w-96 mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                    <input
-                                      type="text"
-                                      placeholder="Search Technology"
-                                      value={searchTermTechnology}
-                                      onChange={(e) => setSearchTermTechnology(e.target.value)}
-                                      className="pl-8 focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
+                          {showDropdownCurrentRole && (
+                            <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+                              <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                  <FaSearch className="absolute ml-1 text-gray-500" />
+                                  <input
+                                    type="text"
+                                    placeholder="Search Current Role"
+                                    value={searchTermCurrentRole}
+                                    // onChange={(e) => setSearchTermCurrentRole(e.target.value)}
+                                    className="pl-8  focus:border-black focus:outline-none w-full"
+                                  />
                                 </div>
-                                {services.filter(service =>
-                                  service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                                ).length > 0 ? (
-                                  services.filter(service =>
-                                    service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                                  ).map((service) => (
-                                    <div
-                                      key={service._id}
-                                      onClick={() => handleSelectCandidate(service)}
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {service.TechnologyMasterName}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="p-2 text-gray-500">No technologies found</div>
-                                )}
                               </div>
-                            )}
-                            {errors.Technologys && <p className="text-red-500 text-sm">{errors.Technologys}</p>}
-                          </div>
-                        </div>
-
-
-                        {/* skills */}
-                        <div className="flex gap-4 mb-2">
-                          <label htmlFor="skills" className="block text-sm font-medium leading-6 text-gray-900 w-72">
-                            Select Skills <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex-grow relative">
-                            <div
-                              className={`border-b border-gray-300 focus:border-black focus:outline-none -mt-2 w-96 cursor-pointer flex flex-wrap items-center min-h-10 ${errors.Skills ? 'border-red-500' : 'border-gray-300'}`}
-                              onClick={toggleSkillsPopup}
-                              placeholder="Select Multiple Skills"
-
-                            >
-                              {selectedSkills.length === 0 && (
-                                <span className="text-gray-400 text-sm mt-3 pl-2">
-                                  Select Multiple Skills
-                                </span>
-                              )}
-
-                              {selectedSkills.map((skill, index) => (
-                                <div key={index} className="bg-slate-200 rounded px-2 py-1 m-1 inline-block mr-2 text-sm">
-                                  {skill.SkillName}
-                                  <button type="button"
-                                    onClick={() => handleRemoveSkill(index)} className="ml-2 bg-gray-300 rounded px-2">x</button>
-                                </div>
-                              ))}
-                              {selectedSkills.length > 0 && (
-                                <button type="button" onClick={clearSkills} className="bg-slate-300 rounded px-2 absolute top-0 text-sm" style={{ marginLeft: "360px" }}>X</button>
-                              )}
-                            </div>
-
-
-                            {showSkillsPopup && (
-                              <div ref={skillsPopupRef} className="absolute bg-white border border-gray-300 w-96 mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                    <input
-                                      type="text"
-                                      placeholder="Search Skills"
-                                      value={searchTermSkills}
-                                      onChange={(e) => setSearchTermSkills(e.target.value)}
-                                      className="pl-8  focus:border-black focus:outline-none w-full"
-                                    />
+                              {filteredCurrentRoles.length > 0 ? (
+                                filteredCurrentRoles.map((role) => (
+                                  <div
+                                    key={role._id}
+                                    onClick={() => handleRoleSelect(role.RoleName)}
+                                    className="cursor-pointer hover:bg-gray-200 p-2"
+                                  >
+                                    {role.RoleName}
                                   </div>
-                                </div>
-                                {skills.filter(skill =>
-                                  skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                ).length > 0 ? (
-                                  skills.filter(skill =>
-                                    skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                  ).map((skill) => (
-                                    <div
-                                      key={skill._id}
-                                      onClick={() => handleSelectSkill(skill)}
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {skill.SkillName}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="p-2 text-gray-500">No skills found</div>
-                                )}
-                              </div>
-                            )}
-                            {errors.Skills && <p className="text-red-500 text-sm">{errors.Skills}</p>}
-                          </div>
-                        </div>
-
-                        {/* previous experience */}
-                        <div className="text-gray-900 text-sm  font-medium leading-6 rounded-lg">
-                          <p>Do you have any previous experience conducting interviews? <span className="text-red-500">*</span></p>
-                          <div className="mt-3 mb-6">
-                            <label className="inline-flex items-center">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="interviewpreviousExperience"
-                                value="yes"
-                                checked={InterviewPreviousExperience === 'yes'}
-                                onChange={handleRadioChange}
-                              />
-                              <span className="ml-2">Yes</span>
-                            </label>
-                            <label className="inline-flex items-center ml-4">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="InterviewPreviousExperience"
-                                value="no"
-                                checked={InterviewPreviousExperience === 'no'}
-                                onChange={handleRadioChange}
-                              />
-                              <span className="ml-2">No</span>
-                            </label>
-                            {errors.PreviousExperience && <p className="text-red-500 text-sm mt-2">{errors.PreviousExperience}</p>}
-                          </div>
-                        </div>
-                        {/* Conditional rendering for years of experience */}
-                        {InterviewPreviousExperience === 'yes' && (
-                          <div>
-                            <div className="flex mb-6">
-                              <label htmlFor="InterviewPreviousExperienceYears" className="block text-sm font-medium leading-6 text-gray-900 mb-2">
-                                How many years of experience do you have in conducting interviews? <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="number"
-                                id="InterviewPreviousExperienceYears"
-                                name="InterviewPreviousExperienceYears"
-                                min="1" max="15"
-                                value={formData2.InterviewPreviousExperienceYears}
-                                onChange={handleChangeExperienceYears}
-                                className={`border-b focus:border-black focus:outline-none w-32 ml-2 ${errors.InterviewPreviousExperienceYears ? "border-red-500" : ""
-                                  }`}
-                              />
+                                ))
+                              ) : (
+                                <div className="p-2 text-gray-500">No roles found</div>
+                              )}
                             </div>
-                            {errors.InterviewPreviousExperienceYears && (
-                              <p className="text-red-500 text-sm -mt-5 mb-5">{errors.InterviewPreviousExperienceYears}</p>
-                            )}
-                          </div>
-                        )}
-
-
-                        {/* Level of Expertise */}
-                        <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg -mt-5">
-                          <p>Choose your level of expertise (comfort) in conducting interviews <span className="text-red-500">*</span></p>
-                          <div className="mt-3 flex">
-                            <label className="inline-flex items-center mr-10">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="expertiseLevel"
-                                value="junior"
-                                checked={formData2.InterviewExpertiseLevel === 'junior'}
-                                onChange={handleRadioChange2}
-                              />
-                              <span className="ml-2">Junior (0-3 years)</span>
-                            </label>
-                            <label className="inline-flex items-center mr-10">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="expertiseLevel"
-                                value="mid-level"
-                                checked={formData2.InterviewExpertiseLevel === 'mid-level'}
-                                onChange={handleRadioChange2}
-                              />
-                              <span className="ml-2">Mid-level (2-5 years)</span>
-                            </label>
-                            <label className="inline-flex items-center mr-10">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="expertiseLevel"
-                                value="senior"
-                                checked={formData2.InterviewExpertiseLevel === 'senior'}
-                                onChange={handleRadioChange2}
-                              />
-                              <span className="ml-2">Senior (5-8 years)</span>
-                            </label>
-                            <label className="inline-flex items-center mr-10">
-                              <input
-                                type="radio"
-                                className="form-radio text-gray-600"
-                                name="expertiseLevel"
-                                value="lead"
-                                checked={formData2.InterviewExpertiseLevel === 'lead'}
-                                onChange={handleRadioChange2}
-                              />
-                              <span className="ml-2">Lead (8+ years)</span>
-                            </label>
-                          </div>
+                          )}
                         </div>
-                        {errors.ExpertiseLevel && <p className="text-red-500 text-sm">{errors.ExpertiseLevel}</p>}
+                        {errors.CurrentRole && <p className="text-red-500 text-sm sm:text-xs">{errors.CurrentRole}</p>}
+                      </div>
 
-                        <hr className="border-t border-gray-300 my-5" />
-                        {/* Compensation block */}
+                      {/* Experience */}
+                      <div>
                         <div>
-                          <div className="text-xl font-bold mb-5">
-                            Compensation Details:
-                          </div>
-                          {/* Expected rate per hour */}
-                          <div className="flex gap-4 mb-5">
-                            <label htmlFor="ExpectedRateMin" className="block text-sm font-medium leading-6 text-gray-900 w-72">
-                              Expected rate per hour <span className="text-red-500">*</span>
-                            </label>
-                            <div className="flex relative gap-5">
-                              <div>
-                                <label htmlFor="ExpectedRateMin" className="mr-2">Min</label>
-                                <input
-                                  type="number"
-                                  id="ExpectedRateMin"
-                                  name="ExpectedRateMin"
-                                  min="1"
-                                  max="15"
-                                  autoComplete="off"
-                                  value={formData2.ExpectedRateMin}
-                                  onChange={handleChangeforExp}
-                                  className={`border-b focus:outline-none w-32 ${errors.ExpectedRateMin ? 'border-red-500' : 'border-gray-300 focus:border-black'}`}
-                                />
-                                {errors.ExpectedRateMin && <p className="text-red-500 text-sm ml-10">{errors.ExpectedRateMin}</p>}
-                              </div>
-
-                              <div>
-                                <label htmlFor="ExpectedRateMax" className="mr-2">Max</label>
-                                <input
-                                  type="number"
-                                  id="ExpectedRateMax"
-                                  name="ExpectedRateMax"
-                                  min="1"
-                                  max="15"
-                                  value={formData2.ExpectedRateMax}
-                                  onChange={handleChangeforExp}
-                                  className={`border-b focus:outline-none w-32 ${errors.ExpectedRateMax ? 'border-red-500' : 'border-gray-300 focus:border-black'}`}
-                                />
-                                {errors.ExpectedRateMax && <p className="text-red-500 text-sm ml-10">{errors.ExpectedRateMax}</p>}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* mock data */}
-                          <div>
-                            <div className=" text-sm leading-6 rounded-lg">
-                              <p className="font-medium">Are you ready to take mock interviews?<span className="text-red-500">*</span></p>
-                              <div className="mt-3 mb-6">
-                                <div className="inline-flex items-center">
-                                  <input
-                                    type="radio"
-                                    name="radioGroup"
-                                    className="form-radio font-medium"
-                                    value="yes"
-                                    checked={formData2.IsReadyForMockInterviews === "yes"}
-                                    onChange={handleRadioChange3}
-                                  />
-                                  <span className="ml-2">Yes</span>
-                                </div>
-                                <div className="inline-flex items-center ml-4">
-                                  <input
-                                    type="radio"
-                                    name="radioGroup"
-                                    className="form-radio font-medium"
-                                    value="no"
-                                    checked={formData2.IsReadyForMockInterviews === "no"}
-                                    onChange={handleRadioChange3}
-                                  />
-                                  <span className="ml-2">No</span>
-                                </div>
-                                {errors.IsReadyForMockInterviews && (
-                                  <p className="text-red-500 text-sm mt-1">{errors.IsReadyForMockInterviews}</p>
-                                )}
-
-                              </div>
-
-                            </div>
-
-                            {/* Conditionally render the second block if "Yes" is selected */}
-                            {isReady === true && (
-                              <>
-                                <div className="flex gap-4 mb-5">
-                                  <label htmlFor="technology" className="block text-sm font-medium leading-6 text-gray-900 w-72">
-                                    Expected rate per mock interviews<span className="text-red-500">*</span>
-                                  </label>
-                                  <div className="flex relative gap-5">
-                                    <div>
-                                      <label htmlFor="ExpectedRatePerMockInterviewMin" className="mr-2">Min</label>
-                                      <input
-                                        type="number"
-                                        id="ExpectedRatePerMockInterviewMin"
-                                        name="ExpectedRatePerMockInterviewMin"
-                                        min="1" max="15"
-                                        value={formData2.ExpectedRatePerMockInterviewMin}
-                                        onChange={handleChangeforExp}
-                                        className="border-b focus:border-black focus:outline-none w-32"
-                                      />
-                                      {errors.ExpectedRatePerMockInterviewMin && (
-                                        <p className="text-red-500 text-sm">{errors.ExpectedRatePerMockInterviewMin}</p>
-                                      )}
-                                    </div>
-
-
-                                    <div>
-                                      <label htmlFor="ExpectedRatePerMockInterviewMax" className="mr-2">
-                                        Max
-                                      </label>
-                                      <input
-                                        type="number"
-                                        id="ExpectedRatePerMockInterviewMax"
-                                        name="ExpectedRatePerMockInterviewMax"
-                                        min="1" max="15"
-                                        // value={expecetdratemax}
-                                        value={formData2.ExpectedRatePerMockInterviewMax}
-                                        onChange={handleChangeforExp}
-                                        className="border-b focus:border-black focus:outline-none w-32"
-                                      />
-                                      {errors.ExpectedRatePerMockInterviewMax && (
-                                        <p className="text-red-500 text-sm">{errors.ExpectedRatePerMockInterviewMax}</p>
-                                      )}
-                                    </div>
-
-                                  </div>
-                                </div>
-                                <p className="text-gray-900 text-sm">
-                                  Note: <span className="text-gray-400 text-sm">The final rate will be decided at the time of decision.</span>
-                                </p>
-                              </>
-                            )}
-                          </div>
-
-
-
+                          <label htmlFor="Experience" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                            Years of Experience <span className="text-red-500">*</span>
+                          </label>
                         </div>
-
-                        {isReady === true && (
-                          <>
-                            <hr className="border-t border-gray-300 my-5" />
-                            {/* policy block */}
-                            <div>
-                              <div className="text-xl font-bold mb-5">
-                                No-Show Policy Details:
-                              </div>
-                              {/* policy details */}
-                              <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-                                <p>Policy for No-Show Cases <span className="text-red-500">*</span></p>
-
-                                <div className="mt-3 grid grid-cols-2 gap-4">
-                                  <label className="inline-flex items-center mb-1">
-                                    <input
-                                      type="radio"
-                                      name="NoShowPolicy"
-                                      value="25%"
-                                      onChange={handleNoShow}
-                                      checked={formData2.NoShowPolicy === "25%"}
-                                      className="form-radio text-gray-600"
-                                    />
-                                    <span className="ml-2">Charge 25% without rescheduling</span>
-                                  </label>
-                                  <label className="inline-flex items-center mb-1">
-                                    <input
-                                      type="radio"
-                                      name="NoShowPolicy"
-                                      value="50%"
-                                      onChange={handleNoShow}
-                                      checked={formData2.NoShowPolicy === "50%"}
-                                      className="form-radio text-gray-600"
-                                    />
-                                    <span className="ml-2">Charge 50% without rescheduling</span>
-                                  </label>
-                                  <label className="inline-flex items-center mb-1">
-                                    <input
-                                      type="radio"
-                                      name="NoShowPolicy"
-                                      className="form-radio text-gray-600"
-                                      onChange={handleNoShow}
-                                      checked={formData2.NoShowPolicy === "75%"}
-                                      value="75%" />
-                                    <span className="ml-2">Charge 75% without rescheduling</span>
-                                  </label>
-                                  <label className="inline-flex items-center">
-                                    <input
-                                      type="radio"
-                                      name="NoShowPolicy"
-                                      onChange={handleNoShow}
-                                      checked={formData2.NoShowPolicy === "100%"}
-                                      value="100%" className="form-radio text-gray-600"
-                                    />
-                                    <span className="ml-2">Charge 100% with rescheduling option</span>
-                                  </label>
-                                </div>
-
-                              </div>
-
-                              {errors.NoShowPolicy && (
-                                <p className="text-red-500 text-sm">{errors.NoShowPolicy}</p>
-                              )}
-
-
-
-
-                            </div>
-                          </>
-                        )}
-                        {/* <div className="flex justify-between ml-5 mb-5 mt-7">
-                      <button type="button" onClick={handlePrevStep} className="w-40 h-10 p-2 rounded-lg text-md bg-gray-300 hover:bg-gray-400">Prev</button>
-                      <button
-                        onClick={handleNextStep}
-                        className="w-40 h-10 p-2 rounded-lg text-md bg-gray-300 hover:bg-gray-400"
-                        type="button"
-                      >
-                        Next
-                      </button>
-                    </div> */}
-                        {/* Footer */}
-                        <div className="footer-buttons flex justify-between">
-                          <button type="button" onClick={handlePrevStep} className="border border-custom-blue px-10 rounded py-2 mr-5 text-custom-blue">Prev</button>
-                          <button
-                            onClick={handleNextStep}
-                            className="px-10 bg-custom-blue text-white rounded py-2"
-                            type="button"
-                          >
-                            Next
-                          </button>
-
+                        <div>
+                          <input
+                            type="number"
+                            name="Experience"
+                            autoComplete="off"
+                            value={formData.Experience}
+                            placeholder="5 years"
+                            onChange={handleChange}
+                            id="Experience" min="1" max="15"
+                            className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Experience ? 'border-red-500' : 'border-gray-400'}`}
+                          />
+                          {errors.Experience && <p className="text-red-500 text-sm sm:text-xs">{errors.Experience}</p>}
                         </div>
                       </div>
-                    </>
-                  )}
+                      {/* Resume Section */}
+                      <div>
+                        <div>
+                          <label htmlFor="Resume" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                            Resume
+                          </label>
+                          <div className="relative flex">
+                            <input
+                              ref={resumeInputRef}
+                              type="file"
+                              name="Resume"
+                              id="Resume"
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              onChange={(e) => handleFileUpload(e, 'Resume')}
+                            />
+                            <div
+                              className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                              onClick={() => resumeInputRef.current.click()}  // Trigger file input click
+                            >
+                              {resumeName ? 'Uploaded' : 'Upload File'}
+                            </div>
+                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
+                          </div>
+                        </div>
+                        {resumeName && (
+                          <div className="border mt-2 inline-flex items-center gap-2">
+                            <span className="text-gray-600">{resumeName}</span>
+                            <button
+                              className="text-red-500"
+                              onClick={() => handleRemoveFile('Resume')}
+                            >
+                              <span className="text-xl">×</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Cover Letter Section */}
+                      <div>
+                        <div>
+                          <label htmlFor="CoverLetter" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                            Cover Letter
+                          </label>
+                          <div className="relative flex">
+                            <input
+                              ref={coverLetterInputRef}
+                              type="file"
+                              name="CoverLetter"
+                              id="CoverLetter"
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              onChange={(e) => handleFileUpload(e, 'CoverLetter')}
+                            />
+                            <div
+                              className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                              onClick={() => coverLetterInputRef.current.click()}  // Trigger file input click
+                            >
+                              {coverLetterName ? 'Uploaded' : 'Upload File'}
+                            </div>
+                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
+                          </div>
+                        </div>
+                        {coverLetterName && (
+                          <div className="border mt-2 inline-flex items-center gap-2">
+                            <span className="text-gray-600">{coverLetterName}</span>
+                            <button
+                              className="text-red-500"
+                              onClick={() => handleRemoveFile('CoverLetter')}
+                            >
+                              <span className="text-xl">×</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                    {/* right side */}
+                    <div className="sm:col-span-6 col-span-1 space-y-4">
+
+                      {/* Industry */}
+                      <div >
+                        <label htmlFor="Industry" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Industry <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="Industry"
+                            type="text"
+                            id="Industry"
+                            value={selectedIndustry}
+                            placeholder="Information Technology"
+                            autoComplete="off"
+                            onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
+                            className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Industry ? 'border-red-500' : 'border-gray-400'}`}
+                            readOnly
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} />
+                          </div>
+                          {showDropdownIndustry && (
+                            <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                              <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                  <FaSearch className="absolute ml-1 text-gray-500" />
+                                  <input
+                                    type="text"
+                                    placeholder="Search Industry"
+                                    value={searchTermIndustry}
+                                    onChange={(e) => setSearchTermIndustry(e.target.value)}
+                                    className="pl-8  focus:border-black focus:outline-none w-full"
+                                  />
+                                </div>
+                              </div>
+                              {industries.filter(industry =>
+                                industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
+                              ).length > 0 ? (
+                                industries.filter(industry =>
+                                  industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
+                                ).map((industry) => (
+                                  <div
+                                    key={industry._id}
+                                    onClick={() => handleIndustrySelect(industry)}
+                                    className="cursor-pointer hover:bg-gray-200 p-2"
+                                  >
+                                    {industry.IndustryName}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-2 text-gray-500">No industries found</div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                        {errors.Industry && <p className="text-red-500 text-sm sm:text-xs">{errors.Industry}</p>}
+
+                      </div>
+
+                      {/* Location */}
+                      <div >
+                        <label htmlFor="Location" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                          Location <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="Location"
+                            type="text"
+                            id="Location"
+                            value={selectedLocation}
+                            placeholder="Delhi,India"
+                            autoComplete="off"
+                            onClick={() => setShowDropdownLocation(!showDropdownLocation)}
+                            className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Location ? 'border-red-500' : 'border-gray-400'}`}
+
+                            readOnly
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
+                          </div>
+                          {showDropdownLocation && (
+                            <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
+                              <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                  <FaSearch className="absolute ml-1 text-gray-500" />
+                                  <input
+                                    type="text"
+                                    placeholder="Search Location"
+                                    value={searchTermLocation}
+                                    autoComplete="off"
+                                    onChange={(e) => setSearchTermLocation(e.target.value)}
+                                    className="pl-8 focus:border-black focus:outline-none w-full"
+                                  />
+                                </div>
+                              </div>
+                              {(() => {
+                                const filteredLocations = locations.filter(location =>
+                                  location.LocationName && location.LocationName.toLowerCase().includes(searchTermLocation.toLowerCase())
+                                );
+
+                                return filteredLocations.length > 0 ? (
+                                  filteredLocations.map((location) => (
+                                    <div
+                                      key={location._id}
+                                      onClick={() => handleLocationSelect(location)}
+                                      className="cursor-pointer hover:bg-gray-200 p-2"
+                                    >
+                                      {location.LocationName}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="p-2 text-gray-500">No locations found</div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                        {errors.Location && <p className="text-red-500 text-sm sm:text-xs">{errors.Location}</p>}
+
+                      </div>
+
+
+                    </div>
+
+
+                    {/* CoverLetterdescription */}
+                    <div className="col-span-2 sm:col-span-6">
+                      <p className="flex justify-center mb-3">(OR)</p>
+                      <div>
+                        <textarea
+                          name="CoverLetterdescription"
+                          type="text"
+                          rows={5}
+                          id="CoverLetterdescription"
+                          onChange={(e) => handleInputChangeintro(e, 'CoverLetterdescription')}
+                          placeholder="I am a technical interviewer..."
+                          autoComplete="off"
+                          className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
+                        />
+
+                        <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
+                          {formData.CoverLetterdescription.length}/2000
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Introduction */}
+                    <div className="col-span-2 sm:col-span-6">
+                      <label htmlFor="Introduction" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                        Introduction <span className="text-red-500">*</span>
+                      </label>
+                      <div>
+                        <textarea
+                          name="Introduction"
+                          type="text"
+                          rows={5}
+                          id="Introduction"
+                          onChange={(e) => handleInputChangeintro(e, 'Introduction')}
+                          placeholder="I am a technical interviewer with 5+ years of experience in assessing candidates for software engineering roles."
+                          autoComplete="off"
+                          // onChange={handleChange}
+                          className={`border p-2 focus:outline-none mb-3 sm:placeholder:text-xs placeholder:text-sm w-full rounded-md ${errors.Introduction ? 'border-red-500' : 'border-gray-300 focus:border-black'}`}
+                        />
+                        {errors.Introduction && <p className="text-red-500 text-sm sm:text-xs -mt-4">{errors.Introduction}</p>}
+                        <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
+                          {formData.Introduction.length}/500
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -1924,283 +1473,588 @@ const MultiStepForm = () => {
                 <>
                   {currentStep === 2 && (
                     <>
-                      <div className="grid grid-cols-2 gap-10">
-                        <div className="text-sm flex">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-xl font-bold mb-5 col-span-2">
+                          Skills and Experience Details:
+                        </div>
+                        <div className="col-span-1 sm:col-span-6">
+                          {/* technology */}
                           <div>
-                            <div className="text-xl">
-                              <h2>
-                                Availability &nbsp;{" "}
-                                <span className="text-red-500 -ml-3">*</span>
-                              </h2>
-                              {errors.TimeSlot && <p className="text-red-500 text-sm">{errors.TimeSlot}</p>}
-                            </div>
-                            {Object.keys(times).map((day) => (
-                              <div key={day}>
-                                <div className="flex justify-center space-y-8">
-                                  <span className="w-24 mr-10 mt-7">{day}</span>
-                                  <div>
-                                    {times[day].map((timeSlot, index) => (
-                                      <div key={index} className={`flex items-center -mt-2 justify-center ${index > 0 ? 'mt-5' : ''}`}>
-                                        {timeSlot.startTime === "unavailable" ? (
-                                          <span className="p-2 bg-slate-200 text-center w-32 mr-0" style={{ width: "287px" }}>Unavailable</span>
-                                        ) : (
-                                          <>
-                                            {/* start time */}
-                                            <div className="w-28 mr-5">
-                                              <div className="border-2 border-black">
-                                                <div className="flex justify-center">
-                                                  <div className="text-center">
-                                                    <DatePicker
-                                                      selected={timeSlot.startTime}
-                                                      // onChange={(date) => {
-                                                      //   const newTimes = [...times[day]];
-                                                      //   newTimes[index].startTime = date;
-                                                      //   setTimes(prevTimes => ({
-                                                      //     ...prevTimes,
-                                                      //     [day]: newTimes
-                                                      //   }));
-                                                      //   if (date && newTimes[index].endTime) {
-                                                      //     setTimesError('');
-                                                      //   }
-                                                      // }}
-                                                      onChange={(date) => handleTimeChange(day, index, "startTime", date)}
-                                                      showTimeSelect
-                                                      showTimeSelectOnly
-                                                      timeIntervals={15}
-                                                      dateFormat="h:mm aa"
-                                                      placeholderText="Start Time"
-                                                      className="p-2 w-full"
-                                                    />
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            {/* minus */}
-                                            <div className='mr-5'>
-                                              <span>
-                                                {/* <FaMinus className='text-2xl' /> */}
-                                              </span>
-                                            </div>
-                                            {/* end time */}
-                                            <div className="max-w-sm w-28">
-                                              <div className="border-2 border-black">
-                                                <div className="flex justify-center">
-                                                  <div className="text-center">
-                                                    <DatePicker
-                                                      selected={timeSlot.endTime}
-                                                      // onChange={(date) => {
-                                                      //   const newTimes = [...times[day]];
-                                                      //   newTimes[index].endTime = date;
-                                                      //   setTimes(prevTimes => ({
-                                                      //     ...prevTimes,
-                                                      //     [day]: newTimes
-                                                      //   }));
-                                                      //   if (newTimes[index].startTime && date) {
-                                                      //     setTimesError('');
-                                                      //   }
-                                                      // }}
-                                                      onChange={(date) => handleTimeChange(day, index, "endTime", date)}
-                                                      showTimeSelect
-                                                      showTimeSelectOnly
-                                                      timeIntervals={15}
-                                                      dateFormat="h:mm aa"
-                                                      placeholderText="End Time"
-                                                      className="w-full p-2"
-                                                    />
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </>
-                                        )}
-                                        {/* cancel */}
-                                        <div className='ml-12' style={{ width: '24px', height: '24px' }}>
-                                          {/* {(timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable") ? (
-                                            <GiCancel
-                                              className='text-2xl cursor-pointer'
-                                              onClick={() => handleRemoveTimeSlot(day, index)}
-                                            />
-                                          ) : (
-                                            <div style={{ width: '24px', height: '24px' }}></div>
-                                          )} */}
-                                        </div>
-                                      </div>
-                                    ))}
+                            <label htmlFor="technology" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                              Select Your Comfortable Technologies <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative"ref={popupRef}>
+                              <input
+                                placeholder="Select Multiple Technologies"
+                                readOnly // Prevent typing
+                                onClick={() => setTechpopup((prev) => !prev)}
+                                className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Technologys ? "border-red-500" : "border-gray-400"
+                                  }`}
+                              />
+                              <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                                <MdArrowDropDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
+                              </div>
+                              {showTechPopup && (
+                                <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                                  <div className="border-b">
+                                    <div className="flex items-center border rounded px-2 py-1 m-2">
+                                      <FaSearch className="absolute ml-1 text-gray-500" />
+                                      <input
+                                        type="text"
+                                        placeholder="Search Technology"
+                                        value={searchTermTechnology}
+                                        onChange={(e) => setSearchTermTechnology(e.target.value)}
+                                        className="pl-8 focus:border-black focus:outline-none w-full"
+                                      />
+                                    </div>
                                   </div>
-                                  {/* plus */}
-                                  <div>
-                                    {/* <FaPlus className='text-2xl cursor-pointer mx-5' onClick={() => handleAddTimeSlot(day)} /> */}
-                                  </div>
-                                  {/* copy */}
-                                  <div className='relative'>
-                                    {/* <IoIosCopy className='text-2xl cursor-pointer' onClick={(e) => handleCopy(e, day)} /> */}
-                                    {showPopup1 && selectedDay === day && (
+                                  {services.filter(service =>
+                                    service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
+                                  ).length > 0 ? (
+                                    services.filter(service =>
+                                      service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
+                                    ).map((service) => (
                                       <div
-                                        className="absolute bg-white p-4 rounded-lg w-72 shadow-md border"
-                                        style={{ top: '100%', transform: 'translate(-90%, 10px)', zIndex: 1000 }}
+                                        key={service._id}
+                                        onClick={() => handleSelectCandidate(service)}
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
                                       >
-                                        <div className='flex justify-between'>
-                                          <h2 className="text-lg font-semibold mb-2 mr-2">Duplicate Time Entries</h2>
-                                          {/* <GiCancel
-                                            className="text-2xl cursor-pointer"
-                                            onClick={() => setShowPopup1(false)}
-                                          /> */}
-                                        </div>
-                                        <div>
-                                          {Object.keys(times).map(dayOption => (
-                                            <label key={dayOption} className="block">
-                                              <input
-                                                type="checkbox"
-                                                value={dayOption}
-                                                checked={selectedDays.includes(dayOption)}
-                                                disabled={dayOption === selectedDay}
-                                                onChange={(e) => {
-                                                  const value = e.target.value;
-                                                  setSelectedDays(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
-                                                }}
-                                                className="mr-2"
-                                              />
-                                              {dayOption}
-                                            </label>
-                                          ))}
-                                        </div>
-                                        <button type="button" onClick={handlePaste} className="mt-4 bg-blue-500 text-white py-1 px-4 rounded">
-                                          Duplicate
-                                        </button>
-                                        <button type="button" onClick={() => setShowPopup1(false)} className="mt-4 ml-2 bg-gray-500 text-white py-1 px-4 rounded">
-                                          Cancel
-                                        </button>
+                                        {service.TechnologyMasterName}
                                       </div>
-                                    )}
+                                    ))
+                                  ) : (
+                                    <div className="p-2 text-gray-500">No technologies found</div>
+                                  )}
+                                </div>
+                              )}
+                              {errors.Technologys && <p className="text-red-500 text-sm sm:text-xs">{errors.Technologys}</p>}
+                            </div>
+
+                            {/* to display selected one */}
+                            <div className="mt-5 mb-5 relative">
+                              {selectedCandidates.map((candidate, index) => (
+                                <div key={index} className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]">
+                                  <div className="flex items-center justify-between gap-2 text-custom-blue">
+                                    <div className="flex">
+                                      <span className="sm:w-5 w-8"> <IoPersonOutline className="pt-1 text-lg" /></span>
+                                      {candidate.TechnologyMasterName}
+                                    </div>
+                                    <button type="button" onClick={() => handleRemoveCandidate(index)} className="ml-2 text-red-500 rounded px-2">X</button>
+                                  </div>
+
+                                </div>
+                              ))}
+                              {selectedCandidates.length > 0 && (
+                                <button type="button" onClick={clearRemoveCandidate} className="text-red-500 border border-custom-blue rounded px-2 sm:px-1 sm:text-xs absolute top-1 text-sm right-0" title="Clear All">X</button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* skills */}
+                          <div>
+                            <label htmlFor="skills" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
+                              Select Skills <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative"ref={skillsPopupRef}>
+                              <input
+                                onClick={toggleSkillsPopup}
+                                className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Skills ? 'border-red-500' : 'border-gray-400'}`}
+                                placeholder="Select Multiple Skills"
+
+                              />
+                              <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                                <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} />
+                              </div>
+                              {showSkillsPopup && (
+                                <div  className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                                  <div className="border-b">
+                                    <div className="flex items-center border rounded px-2 py-1 m-2">
+                                      <FaSearch className="absolute ml-1 text-gray-500" />
+                                      <input
+                                        type="text"
+                                        placeholder="Search Skills"
+                                        value={searchTermSkills}
+                                        onChange={(e) => setSearchTermSkills(e.target.value)}
+                                        className="pl-8  focus:border-black focus:outline-none w-full"
+                                      />
+                                    </div>
+                                  </div>
+                                  {skills.filter(skill =>
+                                    skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
+                                  ).length > 0 ? (
+                                    skills.filter(skill =>
+                                      skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
+                                    ).map((skill) => (
+                                      <div
+                                        key={skill._id}
+                                        onClick={() => handleSelectSkill(skill)}
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                      >
+                                        {skill.SkillName}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="p-2 text-gray-500">No skills found</div>
+                                  )}
+                                </div>
+                              )}
+                              {errors.Skills && <p className="text-red-500 text-sm sm:text-xs">{errors.Skills}</p>}
+                            </div>
+
+                            <div className="mt-5 mb-5 relative">
+
+                              {selectedSkills.map((skill, index) => (
+                                <div key={index} className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]">
+                                  <div className="flex items-center justify-between gap-2 text-custom-blue">
+                                    <div className="flex">
+                                      <span className="sm:w-5 w-8">
+                                        <IoPersonOutline className="pt-1 text-lg" />
+                                      </span>
+                                      {skill.SkillName}
+                                    </div>
+                                    <button type="button" onClick={() => handleRemoveSkill(index)} className="ml-2 text-red-500 rounded px-2">X</button>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-
+                              ))}
+                              {selectedSkills.length > 0 && (
+                                <button type="button" onClick={clearSkills} className="text-red-500 border border-custom-blue rounded sm:px-1 sm:text-xs px-2 absolute top-1 text-sm right-0" title="Clear All">X</button>
+                              )}
+                            </div>
                           </div>
+
                         </div>
-                        <div className="mt-10">
-                          {/* Time Zone */}
-                          <div className="flex mb-7 mt-4 overflow-visible">
-                            <div>
-                              <label
-                                htmlFor="TimeZone"
-                                className="block text-sm font-medium leading-6 text-gray-900 w-20"
-                              >
-                                Time Zone <span className="text-red-500">*</span>
+
+
+                        <div className="col-span-2 sm:col-span-6 space-y-6">
+                          {/* Previous Experience */}
+                          <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                            <p >
+                              Do you have any previous experience conducting interviews? <span className="text-red-500">*</span>
+                            </p>
+                            <div className="mt-3 mb-3 flex space-x-6">
+                              <label className="inline-flex items-center">
+                                <input
+                                  type="radio"
+                                  className="form-radio text-gray-600"
+                                  name="InterviewPreviousExperience"
+                                  value="yes"
+                                  checked={InterviewPreviousExperience === "yes"}
+                                  onChange={handleRadioChange}
+                                />
+                                <span className="ml-2">Yes</span>
+                              </label>
+                              <label className="inline-flex items-center">
+                                <input
+                                  type="radio"
+                                  className="form-radio text-gray-600"
+                                  name="InterviewPreviousExperience"
+                                  value="no"
+                                  checked={InterviewPreviousExperience === "no"}
+                                  onChange={handleRadioChange}
+                                />
+                                <span className="ml-2">No</span>
                               </label>
                             </div>
-                            <div className="flex-grow w-full overflow-visible -mt-1">
-                              <div className="w-full overflow-visible">
-                                <TimezoneSelect
-                                  value={selectedTimezone}
-                                  onChange={handleTimezoneChange}
-                                  className="TimezonePicker ml-5"
-                                />
-                                {errors.TimeZone && <p className="text-red-500 text-sm ml-5 mt-2">{errors.TimeZone}</p>}
+                            {errors.PreviousExperience && (
+                              <p className="text-red-500 text-sm sm:text-xs">{errors.PreviousExperience}</p>
+                            )}
+                          </div>
+
+                          {/* Conditional Experience Years */}
+                          {InterviewPreviousExperience === "yes" && (
+                            <div>
+                              <label htmlFor="InterviewPreviousExperienceYears" className="block text-sm font-medium text-gray-900 mb-2">
+                                How many years of experience do you have in conducting interviews? <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                id="InterviewPreviousExperienceYears"
+                                name="InterviewPreviousExperienceYears"
+                                min="1"
+                                max="15"
+                                value={formData2.InterviewPreviousExperienceYears}
+                                onChange={handleChangeExperienceYears}
+                                className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-1/4 sm:w-1/2 focus:outline-none ${errors.InterviewPreviousExperienceYears ? "border-red-500" : "border-gray-400"
+                                  }`}
+                              />
+                              {errors.InterviewPreviousExperienceYears && (
+                                <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.InterviewPreviousExperienceYears}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Level of Expertise */}
+                          <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                            <p>Choose your level of expertise in conducting interviews <span className="text-red-500">*</span></p>
+                            <div className="mt-3 flex flex-wrap space-x-20 md:space-x-10 sm:space-x-0 sm:flex-col">
+                              {["junior", "mid-level", "senior", "lead"].map((level, index) => (
+                                <label key={index} className="inline-flex items-center">
+                                  <input
+                                    type="radio"
+                                    className="form-radio text-gray-600"
+                                    name="InterviewExpertiseLevel"
+                                    value={level}
+                                    checked={formData2.InterviewExpertiseLevel === level}
+                                    onChange={handleRadioChange2}
+                                  />
+                                  <span className="ml-2 capitalize">{level.replace("-", " ")} ({index * 3}-{(index + 1) * 3} years)</span>
+                                </label>
+                              ))}
+                            </div>
+                            {errors.ExpertiseLevel && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.ExpertiseLevel}</p>}
+                          </div>
+
+                          {/* Expected Rate Per Hour */}
+                          <div>
+                            <label htmlFor="ExpectedRateMin" className="block text-sm font-medium text-gray-900 mb-2">
+                              Expected rate per hour <span className="text-red-500">*</span>
+                            </label>
+                            <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                              {["Min", "Max"].map((label, index) => (
+                                <div key={index} className="w-full">
+                                  <div className="flex items-center gap-2">
+                                    {/* Min/Max Label */}
+                                    <span className="text-gray-900 text-sm mb-1">{label}:</span>
+
+                                    {/* Input Field with $ Symbol Inside */}
+                                    <div className="relative flex-1">
+                                      <input
+                                        type="number"
+                                        id={`ExpectedRate${label}`}
+                                        name={`ExpectedRate${label}`}
+                                        min="1"
+                                        max="100"
+                                        value={formData2[`ExpectedRate${label}`]}
+                                        onChange={handleChangeforExp}
+                                        className={`block border rounded-md bg-white pl-3 pr-6 py-2 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${errors[`ExpectedRate${label}`] ? "border-red-500" : "border-gray-400"
+                                          } appearance-none`}
+                                      />
+                                      {/* Dollar Symbol Inside Input (After Value) */}
+                                      <span className="absolute inset-y-0 right-3 flex items-center text-gray-500 pointer-events-none">$</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Error Message Below Input */}
+                                  {errors[`ExpectedRate${label}`] && (
+                                    <p className="text-red-500 text-sm sm:text-xs mt-1 ml-9">{errors[`ExpectedRate${label}`]}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+
+
+
+
+                          {/* Mock Interviews */}
+                          <div>
+                            <p className="block text-sm font-medium text-gray-900 mb-2">Are you ready to take mock interviews? <span className="text-red-500">*</span></p>
+                            <div className="mt-3 flex space-x-6">
+                              {["yes", "no"].map((option) => (
+                                <label key={option} className="inline-flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="IsReadyForMockInterviews"
+                                    className="form-radio text-gray-600"
+                                    value={option}
+                                    checked={formData2.IsReadyForMockInterviews === option}
+                                    onChange={handleRadioChange3}
+                                  />
+                                  <span className="ml-2 capitalize">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                            {errors.IsReadyForMockInterviews && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.IsReadyForMockInterviews}</p>}
+                          </div>
+
+                          {/* Expected Rate Per Mock Interview */}
+                          {isReady && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-900 mb-2">
+                                Expected rate per mock interview <span className="text-red-500">*</span>
+                              </label>
+                              <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                {["Min", "Max"].map((label, index) => (
+                                  <div key={index} className="w-full">
+                                    <div className="flex items-center gap-2">
+                                      {/* Min/Max Label */}
+                                      <span className="text-gray-900 text-sm mb-1">{label}:</span>
+
+                                      {/* Input Field with $ Symbol Inside */}
+                                      <div className="relative flex-1">
+                                        <input
+                                          type="number"
+                                          name={`ExpectedRatePerMockInterview${label}`}
+                                          min="1"
+                                          max="100"
+                                          value={formData2[`ExpectedRatePerMockInterview${label}`]}
+                                          onChange={handleChangeforExp}
+                                          className={`block border rounded-md bg-white pl-3 pr-6 py-2 text-sm text-gray-900 w-full focus:outline-none ${errors[`ExpectedRatePerMockInterview${label}`] ? "border-red-500" : "border-gray-400"
+                                            } appearance-none`}
+                                        />
+                                        {/* Dollar Symbol Inside Input (After Value) */}
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-gray-500 pointer-events-none">$</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Error Message Below Input */}
+                                    {errors[`ExpectedRatePerMockInterview${label}`] && (
+                                      <p className="text-red-500 text-sm sm:text-xs mt-1 ml-9">{errors[`ExpectedRatePerMockInterview${label}`]}</p>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          </div>
 
-                          {/* preferred interview */}
-                          <div>
-                            <div className="bg-gray-50 border border-gray-500 text-gray-900 text-sm p-4 rounded-lg">
-                              <p className="font-medium">Preferred Interview Duration <span className="text-red-500">*</span></p>
-                              <ul className="flex mt-3 text-xs font-medium">
-                                <li
-                                  className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${selectedOption === "30"
-                                    ? "bg-gray-700 text-white"
-                                    : "bg-gray-300"
-                                    }`}
-                                  onClick={() => handleOptionClick("30")}
-                                >
-                                  30 mints
-                                </li>
-                                <li
-                                  className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${selectedOption === "60"
-                                    ? "bg-gray-700 text-white"
-                                    : "bg-gray-300"
-                                    }`}
-                                  onClick={() => handleOptionClick("60")}
-                                >
-                                  1 Hour
-                                </li>
-                                <li
-                                  className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${selectedOption === "90"
-                                    ? "bg-gray-700 text-white"
-                                    : "bg-gray-300"
-                                    }`}
-                                  onClick={() => handleOptionClick("90")}
-                                >
-                                  1:30 mints
-                                </li>
-                                <li
-                                  className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${selectedOption === "120"
-                                    ? "bg-gray-700 text-white"
-                                    : "bg-gray-300"
-                                    }`}
-                                  onClick={() => handleOptionClick("120")}
-                                >
-                                  2 Hour
-                                </li>
-                              </ul>
+
+                          )}
+
+                          {/* No-Show Policy */}
+                          {isReady && (
+                            <div>
+                              <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
+                                Policy for No-Show Cases <span className="text-red-500">*</span>
+                              </p>
+                              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
+                                {["25%", "50%", "75%", "100%"].map((policy) => (
+                                  <label key={policy} className="inline-flex items-center">
+                                    <input
+                                      type="radio"
+                                      name="NoShowPolicy"
+                                      value={policy}
+                                      checked={formData2.NoShowPolicy === policy}
+                                      onChange={handleNoShow}
+                                      className="form-radio text-gray-600"
+                                    />
+                                    <span className="ml-2">Charge {policy} without rescheduling</span>
+                                  </label>
+                                ))}
+                              </div>
+                              {errors.NoShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.NoShowPolicy}</p>}
                             </div>
-                            {errors.PreferredDuration && <p className="text-red-500 text-sm mt-2">{errors.PreferredDuration}</p>}
-                          </div>
+                          )}
                         </div>
-
-                      </div>
-                      {/* <div className="flex justify-between ml-5 my-7">
-                    <button type="button" onClick={handlePrevStep} className="w-40 h-10 p-2 rounded-lg text-md bg-gray-300 hover:bg-gray-400">Prev</button>
-                    <button
-                      // type="submit"
-                      type="button"
-                      onClick={handleNextStep}
-                      className="w-40 h-10 p-2 rounded-lg text-md bg-gray-300 hover:bg-gray-400"
-                    >
-                      Save
-                    </button>
-                  </div> */}
-                      {/* Footer */}
-                      <div className="footer-buttons flex justify-between">
-                        <button type="button" onClick={handlePrevStep} className="border border-custom-blue px-10 rounded py-2 mr-5 text-custom-blue">Prev</button>
-                        <button
-                          onClick={handleNextStep}
-                          className="px-10 bg-custom-blue text-white rounded py-2"
-                          type="button"
-                        >
-                          Save
-                        </button>
-
                       </div>
                     </>
                   )}
                 </>
               )}
-            </div>
-          </div>
-        </form>
-      </di>
 
-      {/* Fixed Footer */}
-      {/* <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-300">
-        <div className="container mx-auto px-10 py-4 flex justify-between">
-        <button 
-           type="button" 
-           onClick={handlePrevStep} 
-           className="w-32 h-10 p-2 rounded-lg text-md border border-custom-blue text-custom-blue hover:bg-custom-blue hover:text-white transition-colors"
-         >
-           Prev
-         </button>
-          <button
-            onClick={Freelancer ? handleNextStep : handleSubmit}
-            className="w-32 h-10 p-2 rounded-lg text-md bg-custom-blue text-white"
-            type="button"
-          >
-            {Freelancer ? "Next" : "Save"}
-          </button>
-        </div>
-      </div> */}
+              {Freelancer && (
+                <>
+                  {currentStep === 3 && (
+                    <>
+                      <div className="grid grid-cols-2 gap-10 md:gap-5 lg:gap-5 xl:gap-8">
+                        <div className="text-sm sm:col-span-6 col-span-1">
+                          <h2 className="text-xl sm:text-md sm:text-md font-semibold mb-3">
+                            Availability <span className="text-red-500">*</span>
+                          </h2>
+                          {errors.TimeSlot && <p className="text-red-500 text-sm sm:text-xs">{errors.TimeSlot}</p>}
+                          <div className="border border-gray-300 p-4 sm:p-2 md:p-1 rounded-lg w-[90%] sm:w-full md:w-full xl:w-full">
+                            {Object.keys(times).map((day) => (
+                              <div key={day} className="mb-3 relative">
+                                <div className="flex space-x-3 md:space-x-2 sm:space-x-1">
+                                  {/* Day Name */}
+                                  <p className="sm:text-[8px] border border-gray-400 sm:mt-[2px] md:pt-[6px] lg:pt-[6px] xl:pt-[7px] 2xl:pt-[7px] rounded sm:w-16 md:w-20 lg:w-[100px] xl:w-[80px] 2xl:w-[80px] sm:h-[21px] md:h-[37.5px] lg:h-[37px] xl:h-[37px] 2xl:h-[37px] xl:mr-5 text-center">
+                                    {day}
+                                  </p>
+
+                                  <div className="flex flex-col">
+                                    {times[day].map((timeSlot, index) => (
+                                      <div key={index} className="flex items-center space-x-3 sm:space-x-2 md:space-x-2 xl:space-x-6">
+                                        {timeSlot.startTime === "unavailable" ? (
+                                          <span className="p-2 bg-gray-200 text-center w-72 sm:w-full text-sm">Unavailable</span>
+                                        ) : (
+                                          <>
+                                            {/* Start Time Picker */}
+                                            <DatePicker
+                                              selected={timeSlot.startTime}
+                                              onChange={(date) => handleTimeChange(day, index, "startTime", date)}
+                                              showTimeSelect
+                                              showTimeSelectOnly
+                                              timeIntervals={15}
+                                              dateFormat="h:mm aa"
+                                              placeholderText="Start Time"
+                                              className="p-2 sm:p-0 border mb-1 border-gray-400 rounded w-24 sm:w-14 md:w-20 sm:placeholder:text-[8px] sm:text-[8px] text-center outline-none focus:ring-0"
+                                            />
+
+                                            <FaMinus className="text-xs text-gray-600 sm:text-[8px]" />
+
+                                            {/* End Time Picker */}
+                                            <DatePicker
+                                              selected={timeSlot.endTime}
+                                              onChange={(date) => handleTimeChange(day, index, "endTime", date)}
+                                              showTimeSelect
+                                              showTimeSelectOnly
+                                              timeIntervals={15}
+                                              dateFormat="h:mm aa"
+                                              placeholderText="End Time"
+                                              className="p-2 sm:p-0 border mb-1 border-gray-400 rounded sm:placeholder:text-[8px] sm:text-[8px] w-24 md:w-20 sm:w-14 outline-none text-center focus:ring-0"
+                                            />
+
+                                            {/* Cancel Icon (Invisible When Not Needed) */}
+                                            <GiCancel
+                                              className={`text-2xl xl:ml-4 cursor-pointer text-red-500 sm:text-sm ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable"
+                                                ? "visible"
+                                                : "invisible"
+                                                }`}
+                                              onClick={() => handleRemoveTimeSlot(day, index)}
+                                            />
+                                          </>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Add Time Slot */}
+                                  <FaPlus
+                                    className="text-2xl cursor-pointer sm:text-sm w-20 mt-[4.5px] xl:mt-2 2xl:mt-2"
+                                    onClick={() => handleAddTimeSlot(day)}
+                                  />
+
+                                  {/* Copy Icon (Click to Toggle Popup) */}
+                                  <div className="relative mt-[4.5px] xl:mt-2 2xl:mt-2">
+                                    <IoIosCopy
+                                      className="text-xl cursor-pointer sm:text-sm"
+                                      onClick={() => {
+                                        if (showPopup && selectedDay === day) {
+                                          setShowPopup(false);
+                                          setSelectedDay(null);
+                                        } else {
+                                          setSelectedDay(day);
+                                          setShowPopup(true);
+                                        }
+                                      }}
+                                    />
+
+                                    {/* Copy Popup (Only Show for Selected Day) */}
+                                    {showPopup && selectedDay === day && (
+                                      <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-50">
+                                        <div className="bg-white p-3 rounded-lg w-72 sm:w-60 shadow-md border text-sm">
+
+                                          <h2 className="text-lg sm:text-md font-semibold p-2">Duplicate Time Entries</h2>
+
+
+                                          <div className="space-y-2">
+                                            {Object.keys(times).map((dayOption) => (
+                                              <label key={dayOption} className="block">
+                                                <input
+                                                  type="checkbox"
+                                                  value={dayOption}
+                                                  checked={selectedDays.includes(dayOption)}
+                                                  disabled={dayOption === selectedDay}
+                                                  onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setSelectedDays((prev) =>
+                                                      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+                                                    );
+                                                  }}
+                                                  className="mr-2"
+                                                />
+                                                {dayOption}
+                                              </label>
+                                            ))}
+                                          </div>
+
+                                          <div className="mt-4 flex gap-2 justify-end">
+                                            <button
+                                              type="button"
+                                              onClick={() => setShowPopup(false)}
+                                              className="bg-white border border-custom-blue text-custom-blue py-1 px-4 rounded"
+                                            >
+                                              Cancel
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                handlePaste(selectedDay, selectedDays);
+                                                setShowPopup(false);
+                                              }}
+                                              className="bg-custom-blue text-white py-1 px-4 rounded"
+                                            >
+                                              Duplicate
+                                            </button>
+
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-10 sm:col-span-6 col-span-1">
+                          {/* Time Zone */}
+                          <div>
+
+                            <label
+                              htmlFor="TimeZone"
+                              className="block text-sm sm:text-xs font-medium text-gray-900 mb-1"
+                            >
+                              Time Zone <span className="text-red-500">*</span>
+                            </label>
+
+                            <div className="flex-grow w-full overflow-visible">
+                              <div className="w-full overflow-visible">
+                                <TimezoneSelect
+                                  value={selectedTimezone}
+                                  onChange={handleTimezoneChange}
+                                  className="mt-1 sm:text-xs"
+                                />
+                                {errors.TimeZone && <p className="text-red-500 text-sm sm:text-xs ml-5 mt-2">{errors.TimeZone}</p>}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* preferred interview */}
+                          <div className="mt-5">
+                            <div className="border border-gray-500 text-sm sm:text-xs p-3 rounded-lg w-[80%] sm:w-full md:w-full lg:w-full">
+                              <p className="font-medium">
+                                Preferred Interview Duration <span className="text-red-500">*</span>
+                              </p>
+                              <ul className="flex mt-3 text-xs font-medium space-x-3">
+                                {["30", "45", "60", "90"].map((duration) => (
+                                  <li
+                                    key={duration}
+                                    className={`option cursor-pointer inline-block py-2 px-3 sm:py-1 sm:px-2 sm:text-[9px] rounded-lg border border-custom-blue ${selectedOption === duration ? "text-white bg-custom-blue" : "bg-white"
+                                      }`}
+                                    onClick={() => handleOptionClick(duration)}
+                                  >
+                                    {duration} mins
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            {errors.PreferredDuration && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.PreferredDuration}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+
+
+            </div>
+            {/* Common Footer for all steps */}
+            {currentStep <= 3 && (
+              <FooterButtons
+                onNext={handleNextStep}
+                onPrev={handlePrevStep}
+                currentStep={currentStep}
+                isFreelancer={Freelancer}
+              />
+            )}
+
+          </div>
+
+        </form>
+      </div>
     </div>
   );
 };
