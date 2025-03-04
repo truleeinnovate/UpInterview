@@ -218,21 +218,21 @@ const saveEmailToDatabase = async (req, res) => {
     const { Email } = req.body;
 
     try {
-        console.log('Received Email:', Email); // Log the received email
+        console.log('Received Email in saving email in controller:', Email); // Log the received email
 
         // Create a new entry in MongoDB
         const newEntry = new Organization({ Email });
         await newEntry.save();
 
-        console.log('Data saved successfully:', newEntry); // Log the saved entry
+        console.log('Data saved successfully in saving email in controller:', newEntry); // Log the saved entry
 
         res.status(201).json({
-            message: 'Email saved successfully',
+            message: 'Email saved successfully in saving email in controller',
             emailId: newEntry._id
         });
     } catch (error) {
-        console.error('Error saving email:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error saving email in saving email in controller:', error);
+        res.status(500).json({ message: 'Internal server error in saving email in controller' });
     }
 };
 

@@ -52,7 +52,7 @@ const Admin = () => {
       console.log('Submitting Email:', Email);
   
       const response = await axios.post(
-        'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/Login1', 
+        'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization', 
         { Email }
       );
   
