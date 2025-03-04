@@ -51,6 +51,12 @@ const Admin = () => {
     try {
         console.log('Checking Email:', Email);
 
+
+      //   const response = await axios.post(
+      //     'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/login', 
+      //     { Email }
+      // );
+
         const response = await axios.post(
           `${config.REACT_APP_API_URL}/Organization/login`,  // Using the config variable
           { Email }
