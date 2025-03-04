@@ -718,10 +718,13 @@ const MultiStepForm = () => {
     }));
   };
 
-  const filteredCurrentRoles = CurrentRole.filter(role =>
-    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  );
+  // const filteredCurrentRoles = CurrentRole.filter(role =>
+  //   role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
+  // );
 
+  const filteredCurrentRoles = Array.isArray(CurrentRole) 
+  ? CurrentRole.filter(role => role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())) 
+  : [];
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
