@@ -102,7 +102,7 @@ const Admin = () => {
                 </div>
 
                 <div className="mb-5">
-                  <p className="text-blue-500">Forgot Password?</p>
+                  <p className="text-blue-500">Forgot Password ?</p>
                 </div>
                 <div className="flex flex-col items-center">
                   <button type="submit" className="bg-blue-500 text-white rounded-full px-16 py-2 mb-2">Login</button>

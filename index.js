@@ -2732,7 +2732,7 @@ app.get('/', (req, res) => {
 app.get('/api/message', (req, res) => {
     res.json({ message: 'Hello from the backend!' });
 });
- 
+
 app.get('/api/db-status', (req, res) => {
     const status = mongoose.connection.readyState === 1 ? 'Connected to MongoDB' : 'Not connected to MongoDB';
     res.json({ status });

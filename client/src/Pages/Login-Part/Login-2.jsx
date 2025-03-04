@@ -30,6 +30,10 @@ const Profile1 = () => {
     }
   };
 
+  const handleSignUp = () => {
+    navigate('/profile3')
+  }
+
   return (
     <div>
       
@@ -79,7 +83,8 @@ const Profile1 = () => {
           {showCreateProfile && (
             <div className="flex justify-center">
               <p
-                onClick={() => loginWithRedirect()}
+                // onClick={() => loginWithRedirect()}
+                onClick={handleSignUp}
                 className="text-sm text-white w-auto items-center border bg-sky-400 rounded-full p-3 focus:text-black hover:text-gray-500"
               >
                 Sign Up with LinkedIn
