@@ -24,7 +24,7 @@ const Admin = () => {
   }
 
   // console.log('API URL:', config.CLIENT_ID);
-  // console.log('process.env.REACT_APP_API_URL:', config.REACT_APP_API_URL);
+  console.log('config.REACT_APP_API_URL:', config.REACT_APP_API_URL);
 
   // const handleLogin = async (e) => {
   //   e.preventDefault();
@@ -52,9 +52,9 @@ const Admin = () => {
         console.log('Checking Email:', Email);
 
         const response = await axios.post(
-            'https://basic-backend-001-fadbheefgmdffzd4.uaenorth-01.azurewebsites.net/Organization/login', 
-            { Email }
-        );
+          `${config.REACT_APP_API_URL}/Organization/login`,  // Using the config variable
+          { Email }
+      );
 
         console.log('Response:', response.data);
 

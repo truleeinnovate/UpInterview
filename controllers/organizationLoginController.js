@@ -219,15 +219,11 @@ const loginWithEmail = async (req, res) => {
     try {
         console.log('Checking Email:', Email);
 
-        // Find if the email exists in the database
         const existingUser = await Organization.findOne({ Email });
 
         if (existingUser) {
             console.log('Email found, login successful:', existingUser);
-            return res.status(200).json({
-                message: 'Login successful',
-                emailId: existingUser._id
-            });
+            return res.status(200).json(existingUser);
         } else {
             console.log('Email not found, login failed.');
             return res.status(404).json({ message: 'Email not found. Please check your email or register.' });
