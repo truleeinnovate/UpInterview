@@ -98,8 +98,8 @@ import ReportsPage from '../src/Pages/Dashboard-Part/Tabs/Analytics-Tab/ReportsP
 import ReportDetailPage from '../src/Pages/Dashboard-Part/Tabs/Analytics-Tab/ReportDetailPage.jsx';
 
 // Subscription
-import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
-import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
+// import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
+// import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 
 import SubscriptionTable from "../src/Pages/Dashboard-Part/Tabs/Settings-Tab/Subscriptions/SubscriptionTable";
 import CreateSubscription from "../src/Pages/Dashboard-Part/Tabs/Settings-Tab/Subscriptions/CreateSubscription";
@@ -138,9 +138,9 @@ const App = () => {
           {/* login */}
           <Route path="/" element={<Login1 />} />
           <Route path="/callback" element={<Callback />} />
-          <Route path="/profile1" element={<Login2 />} />
+          {/* <Route path="/profile1" element={<Login2 />} />
           <Route path="/profile3" element={<Login3 />} />
-          <Route path="/profile4" element={<Login4 />} />
+          <Route path="/profile4" element={<Login4 />} /> */}
 
 
          {/* <Route path="/AppViewMore" element={<AppViewMore />} />

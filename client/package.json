@@ -20,7 +20,6 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.20.0",
     "axios": "^1.6.8",
-    "bcryptjs": "^2.4.3",
     "casbin": "^5.30.0",
     "chart.js": "^4.4.5",
     "crypto-browserify": "^3.12.0",

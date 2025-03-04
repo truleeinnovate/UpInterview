@@ -7,7 +7,7 @@ import "react-phone-input-2/lib/style.css";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaSearch } from "react-icons/fa";
 import axios from "axios";
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs';
 import Interviewers from "../../Tabs/Team-Tab/CreateTeams.jsx";
 
 import TimezoneSelect from 'react-timezone-select';
@@ -225,7 +225,7 @@ const UserForm = ({ isOpen, onClose, onDataAdded }) => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(userData.Password, 10);
+    // const hashedPassword = await bcrypt.hash(userData.Password, 10);
 
     const dataToSend = {
       Name: userData.LastName,
@@ -241,7 +241,7 @@ const UserForm = ({ isOpen, onClose, onDataAdded }) => {
       organizationId: userData.OrganizationId || "",
       RoleId: selectedCurrentRoleId,
       ProfileId: selectedProfileId,
-      password: hashedPassword,
+      // password: hashedPassword,
       isAddedTeam,
     };
 
@@ -267,7 +267,7 @@ const UserForm = ({ isOpen, onClose, onDataAdded }) => {
         organizationId: userData.OrganizationId || "",
         roleId: selectedCurrentRoleId,
         profileId: selectedProfileId,
-        password: hashedPassword,
+        // password: hashedPassword,
         user: savedUserId,
         imageData: userData.ImageData || "",
         isAddedTeam,
