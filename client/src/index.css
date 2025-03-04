@@ -3,3 +3,9 @@
 @tailwind utilities;
 
 @import 'react-datepicker/dist/react-datepicker.css';
+
+html,
+body {
+    height: 100%;
+    overflow: auto !important;
+}

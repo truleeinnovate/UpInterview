@@ -2698,6 +2698,9 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
+// master tables
+const { RoleMaster } = require('./models/RoleMaster.js');
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -2755,6 +2758,16 @@ app.get('/skills', async (req, res) => {
   }
 });
 
+//role master
+app.get('/roles', async (req, res) => {
+  try {
+    const roles = await RoleMaster.find({}, 'RoleName');
+    res.json(roles);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 
 // organization

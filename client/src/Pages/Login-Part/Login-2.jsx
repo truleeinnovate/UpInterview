@@ -26,6 +26,10 @@ const Profile1 = () => {
     }
   };
 
+  const onNext = () => {
+    navigate('/profile3');
+  }
+
   return (
     <div>
       <div className='grid grid-cols-2 sm:grid-cols-1'>
@@ -71,7 +75,8 @@ const Profile1 = () => {
           {/* Create Profile */}
           {selectedOption === "individual" && (
             <button
-              onClick={() => loginWithRedirect()}
+              // onClick={() => loginWithRedirect()}
+              onClick={onNext}
               className="bg-sky-400 text-white py-2 rounded-full hover:bg-sky-500 transition w-full"
             >
               Sign Up with LinkedIn

@@ -3,16 +3,31 @@ export const validateSteps = (step, params, setErrors) => {
 
   // Initialize errors object
   const errors = {};
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+};
+
 
   if (step === 0) {
-    const { formData, selectedIndustry, selectedLocation } = params;
+    const { formData } = params;
 
     // Validate fields for step 0
     errors.Name = !formData.Name ? 'Last Name is required' : '';
     errors.UserName = !formData.UserName ? 'Username is required' : '';
-    errors.Email = !formData.Email ? 'Email is required' : '';
+    // errors.Email = !formData.Email ? 'Email is required' : '';
+    errors.Email = !formData.Email
+    ? "Email is required"
+    : !validateEmail(formData.Email)
+    ? "Invalid email format"
+    : ""; // Validate email properly
     errors.Phone = !formData.Phone ? 'Phone number is required' : '';
     errors.LinkedinUrl = !formData.LinkedinUrl ? 'LinkedIn URL is required' : '';
+  }
+
+  
+  if (step === 1) {
+    const { formData, selectedIndustry, selectedLocation } = params;
     errors.CurrentRole = !formData.CurrentRole ? 'Current Role is required' : '';
     errors.Industry = !selectedIndustry ? 'Industry is required' : '';
     errors.Experience = !formData.Experience ? 'Experience is required' : '';
@@ -20,7 +35,7 @@ export const validateSteps = (step, params, setErrors) => {
     errors.Introduction = !formData.Introduction ? 'Introduction is required' : '';
   }
 
-  if (step === 1) {
+  if (step === 2) {
     const { selectedCandidates, selectedSkills, InterviewPreviousExperience, expertiseLevel, formData2 } = params;
 
     // Validate fields for step 1
@@ -61,7 +76,7 @@ export const validateSteps = (step, params, setErrors) => {
 
 
 
-  if (step === 2) {
+  if (step === 3) {
     const { times, formData3, selectedOption } = params;
 
     // Validate fields for step 2
@@ -73,6 +88,7 @@ export const validateSteps = (step, params, setErrors) => {
     errors.TimeZone = !formData3.TimeZone ? 'Time Zone is required' : '';
     errors.PreferredDuration = !selectedOption ? 'Preferred Interview Duration is required' : '';
   }
+
 
   // Check for any errors
   hasError = Object.values(errors).some((error) => error !== '');
