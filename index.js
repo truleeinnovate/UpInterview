@@ -2694,86 +2694,180 @@
 
 // const connectDB = require('./db.js');
 // connectDB();
+// const express = require('express');
+// const cors = require('cors');
+// const mongoose = require('mongoose');
+
+// const app = express();
+// app.use(express.json());
+// app.use(cors());
+ 
+// const port = process.env.PORT || 5000;
+// const mongoUri = process.env.MONGO_URI;
+ 
+// console.log('Mongo URI:', mongoUri)
+// const corsOptions = {
+//   origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
+//   credentials: true,
+// };
+
+// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('MongoDB connected successfully'))
+//   .catch(err => console.error('MongoDB connection error:', err));
+ 
+// app.use(cors(corsOptions));
+ 
+// app.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`);
+// });
+
+
+// // organization
+// const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+// app.use('/Organization', organizationRoutes);
+
+
+
+// // locations master data
+// const { LocationMaster } = require('./models/LocationMaster.js');
+// app.get('/locations', async (req, res) => {
+//   try {
+//     const LocationNames = await LocationMaster.find({}, 'LocationName');
+//     console.log("Fetched Locations from DB:", LocationNames);
+//     res.json(LocationNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
+
+// // Industry data
+// const { Industry } = require('./models/industries.js');
+// app.get('/industries', async (req, res) => {
+//   try {
+//     const IndustryNames = await Industry.find({}, 'IndustryName');
+//     console.log("Fetched industries from DB:", IndustryNames);
+//     res.json(IndustryNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
+
+// //role master
+// const { RoleMaster } = require('./models/RoleMaster.js');
+// app.get('/roles', async (req, res) => {
+//   try {
+//     const roles = await RoleMaster.find({}, 'RoleName');
+//     console.log("Fetched roles from DB:", roles);
+//     res.json(roles);
+
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+// app.post('/roles', async (req, res) => {
+//   try {
+//     const { RoleName, CreatedBy } = req.body;
+//     if (!RoleName || !CreatedBy) {
+//       return res.status(400).json({ message: 'RoleName and CreatedBy are required' });
+//     }
+//     const newRole = new RoleMaster({ RoleName, CreatedBy });
+//     await newRole.save();
+//     res.status(201).json(newRole);
+//   } catch (error) {
+//     console.error("Error adding role:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+
+// // technology master
+// const { TechnologyMaster} = require('./models/TechnologyMaster.js');
+// app.get('/technology', async (req, res) => {
+//   try {
+//     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
+//     console.log("Fetched technology from DB:", technology);
+//     res.json(technology);
+
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+
+
+
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const { RoleMaster } = require('./models/RoleMaster.js');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
- 
+
 const port = process.env.PORT || 5000;
 const mongoUri = process.env.MONGO_URI;
- 
-console.log('Mongo URI:', mongoUri)
+
+console.log('Mongo URI:', mongoUri);
+
 const corsOptions = {
   origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
   credentials: true,
 };
 
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(async () => {
+    console.log('MongoDB connected successfully');
+    
+    // Insert roles on startup
+    await insertRoles();
+  })
   .catch(err => console.error('MongoDB connection error:', err));
- 
+
 app.use(cors(corsOptions));
- 
+
+// Function to insert roles into the database
+async function insertRoles() {
+  const rolesData = [
+    { "RoleName": "Software Developer/Engineer", "CreatedBy": "Admin" },
+    { "RoleName": "Systems Analyst", "CreatedBy": "Admin" },
+    { "RoleName": "Network Administrator", "CreatedBy": "Admin" },
+    { "RoleName": "Database Administrator", "CreatedBy": "Admin" },
+    { "RoleName": "IT Support Specialist", "CreatedBy": "Admin" },
+    { "RoleName": "Cybersecurity Analyst", "CreatedBy": "Admin" },
+    { "RoleName": "Data Scientist", "CreatedBy": "Admin" },
+    { "RoleName": "Cloud Architect", "CreatedBy": "Admin" },
+    { "RoleName": "DevOps Engineer", "CreatedBy": "Admin" },
+    { "RoleName": "IT Project Manager", "CreatedBy": "Admin" },
+    { "RoleName": "Business Intelligence Analyst", "CreatedBy": "Admin" },
+    { "RoleName": "Mobile Application Developer", "CreatedBy": "Admin" },
+    { "RoleName": "Web Developer", "CreatedBy": "Admin" },
+    { "RoleName": "IT Consultant", "CreatedBy": "Admin" },
+    { "RoleName": "QA Tester", "CreatedBy": "Admin" },
+    { "RoleName": "Technical Support Engineer", "CreatedBy": "Admin" },
+    { "RoleName": "Systems Engineer", "CreatedBy": "Admin" },
+    { "RoleName": "UX/UI Designer", "CreatedBy": "Admin" },
+    { "RoleName": "IT Operations Manager", "CreatedBy": "Admin" },
+    { "RoleName": "AI/Machine Learning Engineer", "CreatedBy": "Admin" }
+  ];
+
+  try {
+    for (const role of rolesData) {
+      const existingRole = await RoleMaster.findOne({ RoleName: role.RoleName });
+      if (!existingRole) {
+        await new RoleMaster(role).save();
+        console.log(`Inserted role: ${role.RoleName}`);
+      } else {
+        console.log(`Role already exists: ${role.RoleName}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error inserting roles:", error);
+  }
+}
+
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
-
-
-// organization
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-app.use('/Organization', organizationRoutes);
-
-
-
-// locations master data
-const { LocationMaster } = require('./models/LocationMaster.js');
-app.get('/locations', async (req, res) => {
-  try {
-    const LocationNames = await LocationMaster.find({}, 'LocationName');
-    console.log("Fetched Locations from DB:", LocationNames);
-    res.json(LocationNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Industry data
-const { Industry } = require('./models/industries.js');
-app.get('/industries', async (req, res) => {
-  try {
-    const IndustryNames = await Industry.find({}, 'IndustryName');
-    console.log("Fetched industries from DB:", IndustryNames);
-    res.json(IndustryNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-//role master
-const { RoleMaster } = require('./models/RoleMaster.js');
-app.get('/roles', async (req, res) => {
-  try {
-    const roles = await RoleMaster.find({}, 'RoleName');
-    console.log("Fetched roles from DB:", roles);
-    res.json(roles);
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// technology master
-const { TechnologyMaster} = require('./models/TechnologyMaster.js');
-app.get('/technology', async (req, res) => {
-  try {
-    const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
-    console.log("Fetched technology from DB:", technology);
-    res.json(technology);
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  console.log(`Server is running on http://localhost:${port}`);
 });
