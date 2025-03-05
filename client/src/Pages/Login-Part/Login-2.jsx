@@ -6,7 +6,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Slideshow from './Slideshow';
 
 const Profile1 = () => {
-  const [selectedOption, setSelectedOption] = useState(null); // Track selected button
+  const [selectedOption, setSelectedOption] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;

@@ -2704,8 +2704,7 @@ app.use(cors());
  
 const port = process.env.PORT || 5000;
 const mongoUri = process.env.MONGO_URI;
- 
-console.log('Mongo URI:', mongoUri)
+
 const corsOptions = {
   origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
   credentials: true,
@@ -2726,14 +2725,22 @@ app.listen(port, () => {
 const organizationRoutes = require('./routes/organizationLoginRoutes.js');
 app.use('/Organization', organizationRoutes);
 
-
+// skills master data
+const { Skills } = require('./models/skills.js');
+app.get('/skills', async (req, res) => {
+  try {
+    const skills = await Skills.find({});
+    res.json(skills);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // locations master data
 const { LocationMaster } = require('./models/LocationMaster.js');
 app.get('/locations', async (req, res) => {
   try {
     const LocationNames = await LocationMaster.find({}, 'LocationName');
-    console.log("Fetched Locations from DB:", LocationNames);
     res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2745,7 +2752,6 @@ const { Industry } = require('./models/industries.js');
 app.get('/industries', async (req, res) => {
   try {
     const IndustryNames = await Industry.find({}, 'IndustryName');
-    console.log("Fetched industries from DB:", IndustryNames);
     res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2757,7 +2763,6 @@ const { RoleMaster } = require('./models/RoleMaster.js');
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
-    console.log("Fetched roles from DB:", roles);
     res.json(roles);
 
   } catch (error) {
@@ -2770,45 +2775,9 @@ const { TechnologyMaster} = require('./models/TechnologyMaster.js');
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
-    console.log("Fetched technology from DB:", technology);
     res.json(technology);
 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
-
-
-const insertTechnologiesIfNeeded = async () => {
-  try {
-    const existingTechnologies = await TechnologyMaster.find({}, 'TechnologyMasterName');
-    const existingTechnologyNames = existingTechnologies.map(tech => tech.TechnologyMasterName);
-
-    const newTechnologies = [
-      "Programming Languages",
-      "Web Development",
-      "Database Management",
-      "Cloud Computing",
-      "Data Science & Analytics"
-    ].filter(name => !existingTechnologyNames.includes(name));
-
-    if (newTechnologies.length > 0) {
-      await TechnologyMaster.insertMany(
-        newTechnologies.map(name => ({
-          TechnologyMasterName: name,
-          CreatedBy: "System",
-          ModifiedBy: "System"
-        }))
-      );
-      console.log('New technologies inserted successfully.');
-    } else {
-      console.log('All technologies already exist in the database.');
-    }
-  } catch (error) {
-    console.error('Error inserting technologies:', error.message);
-  }
-};
-
-// Call the function to insert technologies
-insertTechnologiesIfNeeded();

@@ -339,24 +339,14 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Fetching master data...");
-  
         const technologyData = await fetchMasterData('technology');
-        console.log("Fetched technology data:", technologyData);
         setTechnology(technologyData);
-  
         const locationsData = await fetchMasterData('locations');
-        console.log("Fetched locations data:", locationsData);
         setLocations(locationsData);
-  
         const industriesData = await fetchMasterData('industries');
-        console.log("Fetched industries data:", industriesData);
         setIndustries(industriesData);
-  
         const rolesData = await fetchMasterData('roles');
-        console.log("Fetched roles data:", rolesData);
         setCurrentRole(rolesData);
-        
       } catch (error) {
         console.error("Error fetching master data:", error);
       }
@@ -375,7 +365,6 @@ const CustomProvider = ({ children }) => {
   //         `${process.env.REACT_APP_API_URL}/notification?userId=${userId}`
   //       );
   //       setNotificationsData(response.data);
-  //       console.log("Fetched notificationData:", response.data);
   //     } catch (error) {
   //       console.error("Error fetching notificationData:", error);
   //     }
