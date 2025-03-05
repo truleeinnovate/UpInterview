@@ -2794,91 +2794,56 @@ app.get('/technology', async (req, res) => {
   }
 });
 
-// Industry data
-const industriesList = [
-    { IndustryName: "Telecommunications", CreatedBy: "Admin" },
-    { IndustryName: "Entertainment", CreatedBy: "Admin" },
-    { IndustryName: "Transportation", CreatedBy: "Admin" },
-    { IndustryName: "Automotive", CreatedBy: "Admin" },
-    { IndustryName: "Hospitality", CreatedBy: "Admin" },
-    { IndustryName: "Information Technology", CreatedBy: "Admin" },
-    { IndustryName: "Healthcare", CreatedBy: "Admin" },
-    { IndustryName: "Construction", CreatedBy: "Admin" },
-    { IndustryName: "Manufacturing", CreatedBy: "Admin" },
-    { IndustryName: "Media", CreatedBy: "Admin" },
-    { IndustryName: "Retail", CreatedBy: "Admin" },
-    { IndustryName: "Pharmaceutical", CreatedBy: "Admin" },
-    { IndustryName: "Real Estate", CreatedBy: "Admin" },
-    { IndustryName: "Energy", CreatedBy: "Admin" },
-    { IndustryName: "Finance", CreatedBy: "Admin" },
-    { IndustryName: "Aerospace", CreatedBy: "Admin" },
-    { IndustryName: "Education", CreatedBy: "Admin" }
+
+
+
+const locationsList = [
+  "Bengaluru (Bangalore)", "San Francisco, California", "London", "Sydney", "Dubai", "Kuala Lumpur",
+  "Hyderabad", "San Jose, California", "Manchester", "Melbourne", "Abu Dhabi", "George Town (Penang)",
+  "Pune", "Seattle, Washington", "Edinburgh", "Brisbane", "Sharjah", "Cyberjaya",
+  "Chennai", "Austin, Texas", "Birmingham", "Perth", "Ajman", "Putrajaya",
+  "Gurgaon (Gurugram)", "Boston, Massachusetts", "Glasgow", "Adelaide", "Ras Al Khaimah", "Johor Bahru",
+  "Noida", "New York City, New York", "Bristol", "Canberra", "Fujairah", "Shah Alam",
+  "Mumbai", "Los Angeles, California", "Leeds", "Hobart", "Umm Al Quwain", "Petaling Jaya",
+  "Kolkata", "Raleigh, North Carolina", "Cambridge", "Darwin", "Al Ain", "Subang Jaya",
+  "Ahmedabad", "Washington, D.C.", "Reading", "Gold Coast", "Khor Fakkan", "Ipoh",
+  "Thiruvananthapuram (Trivandrum)", "Dallas, Texas", "Newcastle upon Tyne", "Newcastle", "Dibba Al-Fujairah", "Seremban",
+  "Kochi", "Atlanta, Georgia", "Belfast", "Wollongong", "Dibba Al-Hisn", "Melaka (Malacca)",
+  "Indore", "Chicago, Illinois", "Cardiff", "Geelong", "Jebel Ali", "Kuching",
+  "Chandigarh", "Denver, Colorado", "Oxford", "Townsville", "Hatta", "Kota Kinabalu",
+  "Bhubaneswar", "San Diego, California", "Nottingham", "Cairns", "Kalba", "Miri",
+  "Visakhapatnam", "Portland, Oregon", "Sheffield", "Toowoomba", "Dhaid", "Sibu",
+  "Jaipur", "Philadelphia, Pennsylvania", "Liverpool", "Ballarat", "Madinat Zayed", "Kuantan",
+  "Lucknow", "Houston, Texas", "Southampton", "Bendigo", "Ruwais", "Alor Setar",
+  "Coimbatore", "Minneapolis, Minnesota", "Brighton", "Launceston", "Liwa Oasis", "Kuala Terengganu",
+  "Mysore", "Phoenix, Arizona", "Milton Keynes", "Mackay", "Ghayathi", "Sandakan",
+  "Nagpur", "Salt Lake City, Utah", "Coventry", "Rockhampton", "Mirfa", "Bintulu"
 ];
 
-const insertIndustriesIfNeeded = async () => {
-    try {
-        const existingIndustries = await Industry.find();
-        if (existingIndustries.length === 0) {
-            await Industry.insertMany(industriesList);
-            console.log('Industries inserted successfully.');
-        } else {
-            console.log('Industries already exist in the database.');
-        }
-    } catch (error) {
-        console.error('Error inserting industries:', error.message);
+const insertLocationsIfNeeded = async () => {
+  try {
+    const existingLocations = await LocationMaster.find({}, 'LocationName');
+
+    const existingLocationNames = existingLocations.map(loc => loc.LocationName);
+
+    const newLocations = locationsList.filter(name => !existingLocationNames.includes(name));
+
+    if (newLocations.length > 0) {
+      await LocationMaster.insertMany(
+        newLocations.map(name => ({
+          LocationName: name,
+          TimeZone: "UTC",
+          CreatedBy: "System",
+          ModifiedBy: "System"
+        }))
+      );
+      console.log('New locations inserted successfully.');
+    } else {
+      console.log('All locations already exist in the database.');
     }
+  } catch (error) {
+    console.error('Error inserting locations:', error.message);
+  }
 };
 
-insertIndustriesIfNeeded();
-
-
-// const locationsList = [
-//   "Bengaluru (Bangalore)", "San Francisco, California", "London", "Sydney", "Dubai", "Kuala Lumpur",
-//   "Hyderabad", "San Jose, California", "Manchester", "Melbourne", "Abu Dhabi", "George Town (Penang)",
-//   "Pune", "Seattle, Washington", "Edinburgh", "Brisbane", "Sharjah", "Cyberjaya",
-//   "Chennai", "Austin, Texas", "Birmingham", "Perth", "Ajman", "Putrajaya",
-//   "Gurgaon (Gurugram)", "Boston, Massachusetts", "Glasgow", "Adelaide", "Ras Al Khaimah", "Johor Bahru",
-//   "Noida", "New York City, New York", "Bristol", "Canberra", "Fujairah", "Shah Alam",
-//   "Mumbai", "Los Angeles, California", "Leeds", "Hobart", "Umm Al Quwain", "Petaling Jaya",
-//   "Kolkata", "Raleigh, North Carolina", "Cambridge", "Darwin", "Al Ain", "Subang Jaya",
-//   "Ahmedabad", "Washington, D.C.", "Reading", "Gold Coast", "Khor Fakkan", "Ipoh",
-//   "Thiruvananthapuram (Trivandrum)", "Dallas, Texas", "Newcastle upon Tyne", "Newcastle", "Dibba Al-Fujairah", "Seremban",
-//   "Kochi", "Atlanta, Georgia", "Belfast", "Wollongong", "Dibba Al-Hisn", "Melaka (Malacca)",
-//   "Indore", "Chicago, Illinois", "Cardiff", "Geelong", "Jebel Ali", "Kuching",
-//   "Chandigarh", "Denver, Colorado", "Oxford", "Townsville", "Hatta", "Kota Kinabalu",
-//   "Bhubaneswar", "San Diego, California", "Nottingham", "Cairns", "Kalba", "Miri",
-//   "Visakhapatnam", "Portland, Oregon", "Sheffield", "Toowoomba", "Dhaid", "Sibu",
-//   "Jaipur", "Philadelphia, Pennsylvania", "Liverpool", "Ballarat", "Madinat Zayed", "Kuantan",
-//   "Lucknow", "Houston, Texas", "Southampton", "Bendigo", "Ruwais", "Alor Setar",
-//   "Coimbatore", "Minneapolis, Minnesota", "Brighton", "Launceston", "Liwa Oasis", "Kuala Terengganu",
-//   "Mysore", "Phoenix, Arizona", "Milton Keynes", "Mackay", "Ghayathi", "Sandakan",
-//   "Nagpur", "Salt Lake City, Utah", "Coventry", "Rockhampton", "Mirfa", "Bintulu"
-// ];
-
-// const insertLocationsIfNeeded = async () => {
-//   try {
-//     const existingLocations = await LocationMaster.find({}, 'LocationName');
-
-//     const existingLocationNames = existingLocations.map(loc => loc.LocationName);
-
-//     const newLocations = locationsList.filter(name => !existingLocationNames.includes(name));
-
-//     if (newLocations.length > 0) {
-//       await LocationMaster.insertMany(
-//         newLocations.map(name => ({
-//           LocationName: name,
-//           TimeZone: "UTC",
-//           CreatedBy: "System",
-//           ModifiedBy: "System"
-//         }))
-//       );
-//       console.log('New locations inserted successfully.');
-//     } else {
-//       console.log('All locations already exist in the database.');
-//     }
-//   } catch (error) {
-//     console.error('Error inserting locations:', error.message);
-//   }
-// };
-
-// insertLocationsIfNeeded();
+insertLocationsIfNeeded();
