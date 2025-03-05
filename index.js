@@ -2698,9 +2698,6 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-// master tables
-const { RoleMaster } = require('./models/RoleMaster.js');
-
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -2717,7 +2714,6 @@ const corsOptions = {
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
-
  
 app.use(cors(corsOptions));
  
@@ -2725,43 +2721,43 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-// higher qualification
- 
-app.get('/qualification', async (req, res) => {
+
+// organization
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+app.use('/Organization', organizationRoutes);
+
+
+
+// locations master data
+const { LocationMaster } = require('./models/LocationMaster.js');
+app.get('/locations', async (req, res) => {
   try {
-    const higherqualifications = await HigherQualification.find({}, 'QualificationName');
-    res.json(higherqualifications);
+    const LocationNames = await LocationMaster.find({}, 'LocationName');
+    console.log(JSON.stringify(LocationNames), 'Location')
+    res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
- 
-// colleges
- 
-app.get('/universitycollege', async (req, res) => {
+
+// Industry data
+const { Industry } = require('./models/industries.js');
+app.get('/industries', async (req, res) => {
   try {
-    const universityCollegeNames = await University_CollegeName.find({}, 'University_CollegeName');
-    res.json(universityCollegeNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
- 
-// Skills
- 
-app.get('/skills', async (req, res) => {
-  try {
-    const skills = await Skills.find({});
-    res.json(skills);
+    const IndustryNames = await Industry.find({}, 'IndustryName');
+    console.log(JSON.stringify(IndustryNames), 'Location')
+    res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
 //role master
+const { RoleMaster } = require('./models/RoleMaster.js');
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
+    console.log(JSON.stringify(roles), 'Location')
     res.json(roles);
 
   } catch (error) {
@@ -2769,7 +2765,15 @@ app.get('/roles', async (req, res) => {
   }
 });
 
+// technology master
+const { TechnologyMaster} = require('./models/TechnologyMaster.js');
+app.get('/technology', async (req, res) => {
+  try {
+    const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
+    console.log(JSON.stringify(technology), 'Location')
+    res.json(technology);
 
-// organization
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-app.use('/Organization', organizationRoutes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
