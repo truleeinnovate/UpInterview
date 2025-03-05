@@ -2794,10 +2794,6 @@ app.get('/technology', async (req, res) => {
   }
 });
 
-
-const { Industry } = require('./models/industries.js');
-const mongoose = require('mongoose');
-
 // Industry data
 const industriesList = [
     { IndustryName: "Telecommunications", CreatedBy: "Admin" },
