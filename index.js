@@ -2720,10 +2720,7 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-
-// organization
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-app.use('/Organization', organizationRoutes);
+// <--------------------------------master data----------------------------------
 
 // skills master data
 const { Skills } = require('./models/skills.js');
@@ -2781,3 +2778,25 @@ app.get('/technology', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// ---------------------------------------------------------------------------->
+
+
+
+
+// organization Login
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+app.use('/Organization', organizationRoutes);
+
+// sending email common code for all
+const emailCommonRouter = require('./routes/emailCommonRoutes.js')
+app.use('/emailCommon',emailCommonRouter) 
+// individual login
+
+const individualLoginRoutes = require("./routes/individualLoginRoutes");
+app.use("/Individual", individualLoginRoutes);
+
+// organization
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+app.use('/Organization', organizationRoutes);
+
+const EmailTemplate = require('./models/EmailTemplatemodel.js');
