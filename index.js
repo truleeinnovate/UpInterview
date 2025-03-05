@@ -2794,152 +2794,95 @@ app.get('/technology', async (req, res) => {
   }
 });
 
-// Role master data
-const rolesList = [
-  { "RoleName": "Software Developer/Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Systems Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Network Administrator", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Database Administrator", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Support Specialist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Cybersecurity Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Data Scientist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Cloud Architect", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "DevOps Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Project Manager", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Business Intelligence Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Mobile Application Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Web Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Consultant", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "QA Tester", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Technical Support Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Systems Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "UX/UI Designer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Operations Manager", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "AI/Machine Learning Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Network Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Security Manager", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Front-end Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Back-end Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Full Stack Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Director", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Data Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Application Support Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Scrum Master", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "ERP Specialist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Solutions Architect", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Auditor", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Penetration Tester", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Systems Administrator", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Big Data Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Virtualization Engineer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Asset Manager", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Technology Strategist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Digital Transformation Specialist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Business Systems Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Cloud Systems Administrator", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Telecommunications Specialist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Blockchain Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Robotics Process Automation (RPA) Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "IT Risk Manager", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Web Designer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Email Marketing Specialist", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "API Developer", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" },
-  { "RoleName": "Service Desk Analyst", "CreatedBy": "Admin", "CreatedDate": "2024-07-30T07:44:31.883Z", "ModifiedDate": "2024-07-30T07:44:31.883Z" }
+
+const { Industry } = require('./models/industries.js');
+const mongoose = require('mongoose');
+
+// Industry data
+const industriesList = [
+    { IndustryName: "Telecommunications", CreatedBy: "Admin" },
+    { IndustryName: "Entertainment", CreatedBy: "Admin" },
+    { IndustryName: "Transportation", CreatedBy: "Admin" },
+    { IndustryName: "Automotive", CreatedBy: "Admin" },
+    { IndustryName: "Hospitality", CreatedBy: "Admin" },
+    { IndustryName: "Information Technology", CreatedBy: "Admin" },
+    { IndustryName: "Healthcare", CreatedBy: "Admin" },
+    { IndustryName: "Construction", CreatedBy: "Admin" },
+    { IndustryName: "Manufacturing", CreatedBy: "Admin" },
+    { IndustryName: "Media", CreatedBy: "Admin" },
+    { IndustryName: "Retail", CreatedBy: "Admin" },
+    { IndustryName: "Pharmaceutical", CreatedBy: "Admin" },
+    { IndustryName: "Real Estate", CreatedBy: "Admin" },
+    { IndustryName: "Energy", CreatedBy: "Admin" },
+    { IndustryName: "Finance", CreatedBy: "Admin" },
+    { IndustryName: "Aerospace", CreatedBy: "Admin" },
+    { IndustryName: "Education", CreatedBy: "Admin" }
 ];
 
-const insertRolesIfNeeded = async () => {
+const insertIndustriesIfNeeded = async () => {
+    try {
+        const existingIndustries = await Industry.find();
+        if (existingIndustries.length === 0) {
+            await Industry.insertMany(industriesList);
+            console.log('Industries inserted successfully.');
+        } else {
+            console.log('Industries already exist in the database.');
+        }
+    } catch (error) {
+        console.error('Error inserting industries:', error.message);
+    }
+};
+
+insertIndustriesIfNeeded();
+
+
+const locationsList = [
+  "Bengaluru (Bangalore)", "San Francisco, California", "London", "Sydney", "Dubai", "Kuala Lumpur",
+  "Hyderabad", "San Jose, California", "Manchester", "Melbourne", "Abu Dhabi", "George Town (Penang)",
+  "Pune", "Seattle, Washington", "Edinburgh", "Brisbane", "Sharjah", "Cyberjaya",
+  "Chennai", "Austin, Texas", "Birmingham", "Perth", "Ajman", "Putrajaya",
+  "Gurgaon (Gurugram)", "Boston, Massachusetts", "Glasgow", "Adelaide", "Ras Al Khaimah", "Johor Bahru",
+  "Noida", "New York City, New York", "Bristol", "Canberra", "Fujairah", "Shah Alam",
+  "Mumbai", "Los Angeles, California", "Leeds", "Hobart", "Umm Al Quwain", "Petaling Jaya",
+  "Kolkata", "Raleigh, North Carolina", "Cambridge", "Darwin", "Al Ain", "Subang Jaya",
+  "Ahmedabad", "Washington, D.C.", "Reading", "Gold Coast", "Khor Fakkan", "Ipoh",
+  "Thiruvananthapuram (Trivandrum)", "Dallas, Texas", "Newcastle upon Tyne", "Newcastle", "Dibba Al-Fujairah", "Seremban",
+  "Kochi", "Atlanta, Georgia", "Belfast", "Wollongong", "Dibba Al-Hisn", "Melaka (Malacca)",
+  "Indore", "Chicago, Illinois", "Cardiff", "Geelong", "Jebel Ali", "Kuching",
+  "Chandigarh", "Denver, Colorado", "Oxford", "Townsville", "Hatta", "Kota Kinabalu",
+  "Bhubaneswar", "San Diego, California", "Nottingham", "Cairns", "Kalba", "Miri",
+  "Visakhapatnam", "Portland, Oregon", "Sheffield", "Toowoomba", "Dhaid", "Sibu",
+  "Jaipur", "Philadelphia, Pennsylvania", "Liverpool", "Ballarat", "Madinat Zayed", "Kuantan",
+  "Lucknow", "Houston, Texas", "Southampton", "Bendigo", "Ruwais", "Alor Setar",
+  "Coimbatore", "Minneapolis, Minnesota", "Brighton", "Launceston", "Liwa Oasis", "Kuala Terengganu",
+  "Mysore", "Phoenix, Arizona", "Milton Keynes", "Mackay", "Ghayathi", "Sandakan",
+  "Nagpur", "Salt Lake City, Utah", "Coventry", "Rockhampton", "Mirfa", "Bintulu"
+];
+
+const insertLocationsIfNeeded = async () => {
   try {
-    const existingData = await RoleMaster.find();
-    if (existingData.length === 0) {
-      await Roles.insertMany(
-        rolesList.map(name => ({ RoleName: name }))
+    const existingLocations = await LocationMaster.find({}, 'LocationName');
+
+    const existingLocationNames = existingLocations.map(loc => loc.LocationName);
+
+    const newLocations = locationsList.filter(name => !existingLocationNames.includes(name));
+
+    if (newLocations.length > 0) {
+      await LocationMaster.insertMany(
+        newLocations.map(name => ({
+          LocationName: name,
+          TimeZone: "UTC",
+          CreatedBy: "System",
+          ModifiedBy: "System"
+        }))
       );
-      console.log('Roles inserted successfully.');
+      console.log('New locations inserted successfully.');
     } else {
-      console.log('Roles already exist in the database.');
+      console.log('All locations already exist in the database.');
     }
   } catch (error) {
-    console.error('Error inserting roles:', error.message);
+    console.error('Error inserting locations:', error.message);
   }
 };
 
-insertRolesIfNeeded();
-
-
-
-
-
-
-// const express = require('express');
-// const cors = require('cors');
-// const mongoose = require('mongoose');
-// const { RoleMaster } = require('./models/RoleMaster.js');
-
-// const app = express();
-// app.use(express.json());
-// app.use(cors());
-
-// const port = process.env.PORT || 5000;
-// const mongoUri = process.env.MONGO_URI;
-
-// console.log('Mongo URI:', mongoUri);
-
-// const corsOptions = {
-//   origin: ['https://www.app.upinterview.io', 'https://purple-sand-0e5d43e00.4.azurestaticapps.net'],
-//   credentials: true,
-// };
-
-// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(async () => {
-//     console.log('MongoDB connected successfully');
-    
-//     // Insert roles on startup
-//     await insertRoles();
-//   })
-//   .catch(err => console.error('MongoDB connection error:', err));
-
-// app.use(cors(corsOptions));
-
-// // Function to insert roles into the database
-// async function insertRoles() {
-//   const rolesData = [
-    // { "RoleName": "Software Developer/Engineer", "CreatedBy": "Admin" },
-    // { "RoleName": "Systems Analyst", "CreatedBy": "Admin" },
-    // { "RoleName": "Network Administrator", "CreatedBy": "Admin" },
-    // { "RoleName": "Database Administrator", "CreatedBy": "Admin" },
-    // { "RoleName": "IT Support Specialist", "CreatedBy": "Admin" },
-    // { "RoleName": "Cybersecurity Analyst", "CreatedBy": "Admin" },
-    // { "RoleName": "Data Scientist", "CreatedBy": "Admin" },
-    // { "RoleName": "Cloud Architect", "CreatedBy": "Admin" },
-    // { "RoleName": "DevOps Engineer", "CreatedBy": "Admin" },
-    // { "RoleName": "IT Project Manager", "CreatedBy": "Admin" },
-    // { "RoleName": "Business Intelligence Analyst", "CreatedBy": "Admin" },
-    // { "RoleName": "Mobile Application Developer", "CreatedBy": "Admin" },
-    // { "RoleName": "Web Developer", "CreatedBy": "Admin" },
-    // { "RoleName": "IT Consultant", "CreatedBy": "Admin" },
-    // { "RoleName": "QA Tester", "CreatedBy": "Admin" },
-    // { "RoleName": "Technical Support Engineer", "CreatedBy": "Admin" },
-    // { "RoleName": "Systems Engineer", "CreatedBy": "Admin" },
-    // { "RoleName": "UX/UI Designer", "CreatedBy": "Admin" },
-    // { "RoleName": "IT Operations Manager", "CreatedBy": "Admin" },
-    // { "RoleName": "AI/Machine Learning Engineer", "CreatedBy": "Admin" }
-//   ];
-
-//   try {
-//     for (const role of rolesData) {
-//       const existingRole = await RoleMaster.findOne({ RoleName: role.RoleName });
-//       if (!existingRole) {
-//         await new RoleMaster(role).save();
-//         console.log(`Inserted role: ${role.RoleName}`);
-//       } else {
-//         console.log(`Role already exists: ${role.RoleName}`);
-//       }
-//     }
-//   } catch (error) {
-//     console.error("Error inserting roles:", error);
-//   }
-// }
-
-// app.listen(port, () => {
-//   console.log(`Server is running on http://localhost:${port}`);
-// });
+insertLocationsIfNeeded();
