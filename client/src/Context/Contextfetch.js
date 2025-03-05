@@ -339,6 +339,8 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const skillsData = await fetchMasterData('skills');
+        setSkills(skillsData);
         const technologyData = await fetchMasterData('technology');
         setTechnology(technologyData);
         const locationsData = await fetchMasterData('locations');

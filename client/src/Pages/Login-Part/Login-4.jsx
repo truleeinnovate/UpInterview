@@ -52,7 +52,7 @@ const MultiStepForm = () => {
     industries,
     CurrentRole
   } = useCustomContext();
-  console.log('login4 skills, locations, industries, currentrole:', skills, locations, industries, CurrentRole);
+  console.log('login4 skills :', skills);
   const { user } = useAuth0();
   const popupRef = useRef(null);
   const navigate = useNavigate();
