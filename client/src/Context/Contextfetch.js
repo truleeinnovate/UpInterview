@@ -359,6 +359,7 @@ const CustomProvider = ({ children }) => {
         console.error('Error fetching master data:', error);
       }
     };
+    console.log('fetchdata:', fetchData)
     fetchData();
   }, []);
   // notifications
