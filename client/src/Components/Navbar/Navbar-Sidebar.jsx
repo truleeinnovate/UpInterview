@@ -13,7 +13,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import config from "../../config.js";
+import { config } from "../../config.js";
 
 import "./Navbar-Sidebar.scss";
 import Cookies from 'js-cookie';
