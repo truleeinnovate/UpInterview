@@ -2765,22 +2765,6 @@ app.get('/roles', async (req, res) => {
   }
 });
 
-app.post('/roles', async (req, res) => {
-  try {
-    const { RoleName, CreatedBy } = req.body;
-    if (!RoleName || !CreatedBy) {
-      return res.status(400).json({ message: 'RoleName and CreatedBy are required' });
-    }
-    const newRole = new RoleMaster({ RoleName, CreatedBy });
-    await newRole.save();
-    res.status(201).json(newRole);
-  } catch (error) {
-    console.error("Error adding role:", error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-
 // technology master
 const { TechnologyMaster} = require('./models/TechnologyMaster.js');
 app.get('/technology', async (req, res) => {
@@ -2796,54 +2780,35 @@ app.get('/technology', async (req, res) => {
 
 
 
-
-const locationsList = [
-  "Bengaluru (Bangalore)", "San Francisco, California", "London", "Sydney", "Dubai", "Kuala Lumpur",
-  "Hyderabad", "San Jose, California", "Manchester", "Melbourne", "Abu Dhabi", "George Town (Penang)",
-  "Pune", "Seattle, Washington", "Edinburgh", "Brisbane", "Sharjah", "Cyberjaya",
-  "Chennai", "Austin, Texas", "Birmingham", "Perth", "Ajman", "Putrajaya",
-  "Gurgaon (Gurugram)", "Boston, Massachusetts", "Glasgow", "Adelaide", "Ras Al Khaimah", "Johor Bahru",
-  "Noida", "New York City, New York", "Bristol", "Canberra", "Fujairah", "Shah Alam",
-  "Mumbai", "Los Angeles, California", "Leeds", "Hobart", "Umm Al Quwain", "Petaling Jaya",
-  "Kolkata", "Raleigh, North Carolina", "Cambridge", "Darwin", "Al Ain", "Subang Jaya",
-  "Ahmedabad", "Washington, D.C.", "Reading", "Gold Coast", "Khor Fakkan", "Ipoh",
-  "Thiruvananthapuram (Trivandrum)", "Dallas, Texas", "Newcastle upon Tyne", "Newcastle", "Dibba Al-Fujairah", "Seremban",
-  "Kochi", "Atlanta, Georgia", "Belfast", "Wollongong", "Dibba Al-Hisn", "Melaka (Malacca)",
-  "Indore", "Chicago, Illinois", "Cardiff", "Geelong", "Jebel Ali", "Kuching",
-  "Chandigarh", "Denver, Colorado", "Oxford", "Townsville", "Hatta", "Kota Kinabalu",
-  "Bhubaneswar", "San Diego, California", "Nottingham", "Cairns", "Kalba", "Miri",
-  "Visakhapatnam", "Portland, Oregon", "Sheffield", "Toowoomba", "Dhaid", "Sibu",
-  "Jaipur", "Philadelphia, Pennsylvania", "Liverpool", "Ballarat", "Madinat Zayed", "Kuantan",
-  "Lucknow", "Houston, Texas", "Southampton", "Bendigo", "Ruwais", "Alor Setar",
-  "Coimbatore", "Minneapolis, Minnesota", "Brighton", "Launceston", "Liwa Oasis", "Kuala Terengganu",
-  "Mysore", "Phoenix, Arizona", "Milton Keynes", "Mackay", "Ghayathi", "Sandakan",
-  "Nagpur", "Salt Lake City, Utah", "Coventry", "Rockhampton", "Mirfa", "Bintulu"
-];
-
-const insertLocationsIfNeeded = async () => {
+const insertTechnologiesIfNeeded = async () => {
   try {
-    const existingLocations = await LocationMaster.find({}, 'LocationName');
+    const existingTechnologies = await TechnologyMaster.find({}, 'TechnologyMasterName');
+    const existingTechnologyNames = existingTechnologies.map(tech => tech.TechnologyMasterName);
 
-    const existingLocationNames = existingLocations.map(loc => loc.LocationName);
+    const newTechnologies = [
+      "Programming Languages",
+      "Web Development",
+      "Database Management",
+      "Cloud Computing",
+      "Data Science & Analytics"
+    ].filter(name => !existingTechnologyNames.includes(name));
 
-    const newLocations = locationsList.filter(name => !existingLocationNames.includes(name));
-
-    if (newLocations.length > 0) {
-      await LocationMaster.insertMany(
-        newLocations.map(name => ({
-          LocationName: name,
-          TimeZone: "UTC",
+    if (newTechnologies.length > 0) {
+      await TechnologyMaster.insertMany(
+        newTechnologies.map(name => ({
+          TechnologyMasterName: name,
           CreatedBy: "System",
           ModifiedBy: "System"
         }))
       );
-      console.log('New locations inserted successfully.');
+      console.log('New technologies inserted successfully.');
     } else {
-      console.log('All locations already exist in the database.');
+      console.log('All technologies already exist in the database.');
     }
   } catch (error) {
-    console.error('Error inserting locations:', error.message);
+    console.error('Error inserting technologies:', error.message);
   }
 };
 
-insertLocationsIfNeeded();
+// Call the function to insert technologies
+insertTechnologiesIfNeeded();
