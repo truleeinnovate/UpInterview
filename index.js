@@ -2733,7 +2733,7 @@ const { LocationMaster } = require('./models/LocationMaster.js');
 app.get('/locations', async (req, res) => {
   try {
     const LocationNames = await LocationMaster.find({}, 'LocationName');
-    console.log(JSON.stringify(LocationNames), 'Location')
+    console.log("Fetched Locations from DB:", LocationNames);
     res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2745,7 +2745,7 @@ const { Industry } = require('./models/industries.js');
 app.get('/industries', async (req, res) => {
   try {
     const IndustryNames = await Industry.find({}, 'IndustryName');
-    console.log(JSON.stringify(IndustryNames), 'Location')
+    console.log("Fetched industries from DB:", IndustryNames);
     res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2757,7 +2757,7 @@ const { RoleMaster } = require('./models/RoleMaster.js');
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
-    console.log(JSON.stringify(roles), 'Location')
+    console.log("Fetched roles from DB:", roles);
     res.json(roles);
 
   } catch (error) {
@@ -2770,7 +2770,7 @@ const { TechnologyMaster} = require('./models/TechnologyMaster.js');
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
-    console.log(JSON.stringify(technology), 'Location')
+    console.log("Fetched technology from DB:", technology);
     res.json(technology);
 
   } catch (error) {

@@ -339,29 +339,32 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const skillsData = await fetchMasterData('skills');
-        setSkills(skillsData);
-        const qualificationData = await fetchMasterData('qualification');
-        setQualification(qualificationData);
-        const collegeData = await fetchMasterData('universitycollege');
-        setCollege(collegeData);
-        const companyData = await fetchMasterData('company');
-        setCompanies(companyData);
+        console.log("Fetching master data...");
+  
         const technologyData = await fetchMasterData('technology');
+        console.log("Fetched technology data:", technologyData);
         setTechnology(technologyData);
+  
         const locationsData = await fetchMasterData('locations');
+        console.log("Fetched locations data:", locationsData);
         setLocations(locationsData);
+  
         const industriesData = await fetchMasterData('industries');
+        console.log("Fetched industries data:", industriesData);
         setIndustries(industriesData);
+  
         const rolesData = await fetchMasterData('roles');
+        console.log("Fetched roles data:", rolesData);
         setCurrentRole(rolesData);
+        
       } catch (error) {
-        console.error('Error fetching master data:', error);
+        console.error("Error fetching master data:", error);
       }
     };
-    console.log('fetchdata:', fetchData)
+  
     fetchData();
   }, []);
+  
   // notifications
   const [notificationsData, setNotificationsData] = useState([]);
 
