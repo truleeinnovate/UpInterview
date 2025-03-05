@@ -13,6 +13,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import config from "../../config.js";
 
 import "./Navbar-Sidebar.scss";
 import Cookies from 'js-cookie';
@@ -47,10 +48,10 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProfileImage = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/${userId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/contacts/${userId}`);
           const contact = response.data;
           if (contact.ImageData && contact.ImageData.filename) {
-            const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`;
+            const imageUrl = `${config.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`;
             console.log('Image URL:', imageUrl);
             setProfileImage(imageUrl);
           } else {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MdArrowDropDown, MdUpdate } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
+import { config } from '../../config.js';
 import { GiCancel } from "react-icons/gi";
 import { IoIosCopy } from "react-icons/io";
 import { FaPlus, FaMinus } from "react-icons/fa6";
@@ -534,7 +535,7 @@ const MultiStepForm = () => {
 
     try {
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Individual/Signup`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
         userData,
         contactData,
         availabilityData,
@@ -549,7 +550,7 @@ const MultiStepForm = () => {
         imageData.append("type", "contact");
         imageData.append("id", contactId);
 
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
