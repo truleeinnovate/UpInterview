@@ -108,22 +108,89 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+// const { Users } = require("../models/Users");
+
+// exports.individualLogin = async (req, res) => {
+//   try {
+//     const { userData } = req.body;
+
+//     // Step 1: Create User in DB
+//     const newUser = new Users(userData);
+//     const savedUser = await newUser.save();
+//     console.log("User successfully created:", savedUser);
+
+//     // Send Response
+//     res.status(200).json({
+//       success: true,
+//       message: "User created successfully",
+//       userId: savedUser._id,
+//     });
+
+//   } catch (error) {
+//     console.error("Error in individual login:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error in individual login",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { Users } = require("../models/Users");
+const { Contacts } = require("../models/Contacts");
 
 exports.individualLogin = async (req, res) => {
   try {
-    const { userData } = req.body;
+    const { userData, contactData } = req.body;
 
     // Step 1: Create User in DB
     const newUser = new Users(userData);
     const savedUser = await newUser.save();
     console.log("User successfully created:", savedUser);
 
+    // Step 2: Create Contact and Link to User
+    console.log("Saving contact data in DB...");
+    const newContact = new Contacts({
+      ...contactData,
+      ownerId: savedUser._id, // Linking the user ID
+    });
+    const savedContact = await newContact.save();
+    console.log("Contact successfully created:", savedContact._id);
+
     // Send Response
     res.status(200).json({
       success: true,
-      message: "User created successfully",
+      message: "User and Contact created successfully",
       userId: savedUser._id,
+      contactId: savedContact._id,
     });
 
   } catch (error) {
