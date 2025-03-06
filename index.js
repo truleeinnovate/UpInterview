@@ -2723,7 +2723,7 @@ app.listen(port, () => {
 // <--------------------------------master data----------------------------------
 
 // skills master data
-const { Skills } = require('./models/skills.js');
+const { Skills } = require('./models/MasterSchemas/skills.js');
 app.get('/skills', async (req, res) => {
   try {
     const skills = await Skills.find({});
@@ -2734,7 +2734,7 @@ app.get('/skills', async (req, res) => {
 });
 
 // locations master data
-const { LocationMaster } = require('./models/LocationMaster.js');
+const { LocationMaster } = require('./models/MasterSchemas/LocationMaster.js');
 app.get('/locations', async (req, res) => {
   try {
     const LocationNames = await LocationMaster.find({}, 'LocationName');
@@ -2745,7 +2745,7 @@ app.get('/locations', async (req, res) => {
 });
 
 // Industry data
-const { Industry } = require('./models/industries.js');
+const { Industry } = require('./models/MasterSchemas/industries.js');
 app.get('/industries', async (req, res) => {
   try {
     const IndustryNames = await Industry.find({}, 'IndustryName');
@@ -2756,7 +2756,7 @@ app.get('/industries', async (req, res) => {
 });
 
 //role master
-const { RoleMaster } = require('./models/RoleMaster.js');
+const { RoleMaster } = require('./models/MasterSchemas/RoleMaster.js');
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
@@ -2768,7 +2768,7 @@ app.get('/roles', async (req, res) => {
 });
 
 // technology master
-const { TechnologyMaster} = require('./models/TechnologyMaster.js');
+const { TechnologyMaster} = require('./models/MasterSchemas/TechnologyMaster.js');
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
@@ -2787,10 +2787,10 @@ app.get('/technology', async (req, res) => {
 // const organizationRoutes = require('./routes/organizationLoginRoutes.js');
 // app.use('/Organization', organizationRoutes);
 
-// // sending email common code for all
-// const emailCommonRouter = require('./routes/emailCommonRoutes.js')
-// app.use('/emailCommon',emailCommonRouter) 
-// // individual login
+// sending email common code for all
+const emailCommonRouter = require('./routes/emailCommonRoutes.js')
+app.use('/emailCommon',emailCommonRouter) 
 
-// const individualLoginRoutes = require("./routes/individualLoginRoutes");
-// app.use("/Individual", individualLoginRoutes);
+// individual login
+const individualLoginRoutes = require("./routes/individualLoginRoutes");
+app.use("/Individual", individualLoginRoutes);
