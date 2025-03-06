@@ -41,8 +41,6 @@
 //       await availabilityController.createOrUpdateInterviewAvailability(mockReq, mockRes);
 //       console.log("Interview availability successfully created.");
 
-
-
 //       // // creating outsource interviewer
 //       // const newInterviewer = new OutsourceInterviewer({
 //       //   ownerId: savedUser._id,
@@ -77,9 +75,6 @@
 //       console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
 //     }
 
-
-
-
 //     // Step 4: Call Email Sending Controller
 //     // console.log("Calling email sending controller...");
 //     // await loginSendEmail({
@@ -89,8 +84,6 @@
 //     //     name: savedContact.Name,
 //     //   },
 //     // }, { json: () => { } }); // Simulating Express response object
-
-
 
 //     // Step 5: Send Response
 //     res.status(200).json({
@@ -164,12 +157,75 @@
 
 
 
+// const { Users } = require("../models/Users");
+// const { Contacts } = require("../models/Contacts");
+
+// exports.individualLogin = async (req, res) => {
+//   try {
+//     const { userData, contactData } = req.body;
+
+//     const newUser = new Users(userData);
+//     const savedUser = await newUser.save();
+//     console.log("User successfully created:", savedUser);
+
+//     console.log("Saving contact data in DB...");
+//     const newContact = new Contacts({
+//       ...contactData,
+//       ownerId: savedUser._id,
+//     });
+//     const savedContact = await newContact.save();
+//     console.log("Contact successfully created:", savedContact._id);
+
+//     res.status(200).json({
+//       success: true,
+//       message: "User and Contact created successfully",
+//       userId: savedUser._id,
+//       contactId: savedContact._id,
+//     });
+
+//   } catch (error) {
+//     console.error("Error in individual login:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error in individual login",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
+const availabilityController = require("./interviewAvailabilityController");
 
 exports.individualLogin = async (req, res) => {
   try {
-    const { userData, contactData } = req.body;
+    const { userData, contactData, availabilityData } = req.body;
 
     // Step 1: Create User in DB
     const newUser = new Users(userData);
@@ -185,10 +241,27 @@ exports.individualLogin = async (req, res) => {
     const savedContact = await newContact.save();
     console.log("Contact successfully created:", savedContact._id);
 
+    // Step 3: Save Interview Availability (if provided)
+    if (availabilityData && availabilityData.length > 0) {
+      console.log("Saving interview availability in DB...");
+
+      const mockReq = { body: { contact: savedContact._id, days: availabilityData } };
+      const mockRes = {
+        status: (code) => ({
+          json: (data) => {
+            console.log(`Interview availability response:`, data);
+          },
+        }),
+      };
+
+      await availabilityController.createOrUpdateInterviewAvailability(mockReq, mockRes);
+      console.log("Interview availability successfully created.");
+    }
+
     // Send Response
     res.status(200).json({
       success: true,
-      message: "User and Contact created successfully",
+      message: "User, Contact, and Availability (if any) created successfully",
       userId: savedUser._id,
       contactId: savedContact._id,
     });
