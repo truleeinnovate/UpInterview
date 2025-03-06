@@ -533,6 +533,7 @@ const MultiStepForm = () => {
 
     try {
 
+      console.log('Individual/Signup')
       const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
         userData,
         contactData,
@@ -543,6 +544,7 @@ const MultiStepForm = () => {
       console.log("file data:", file);
 
       if (file) {
+        console.log('upload')
         const imageData = new FormData();
         imageData.append("image", file);
         imageData.append("type", "contact");
