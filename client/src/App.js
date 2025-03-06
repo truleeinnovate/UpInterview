@@ -11,6 +11,7 @@ import Login4 from './Pages/Login-Part/Login-4.jsx';
 import Logo from './Pages/Login-Part/Logo.jsx';
 import OrganiationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import Callback from './Callback.js';
+import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/profile4" element={<Login4 />} />
           <Route path="/home" element={<Home />} />
           <Route path="/organiationLogin" element={<OrganiationLogin />} />
+          <Route path="/subscription-plans" element={<SubscriptionPlan />} />
         </Routes>
       </div>
     </React.Fragment>
