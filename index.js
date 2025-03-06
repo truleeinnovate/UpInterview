@@ -2692,8 +2692,8 @@
 
 
 
-// const connectDB = require('./db.js');
-// connectDB();
+const connectDB = require('./db.js');
+connectDB();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -2789,7 +2789,7 @@ app.get('/technology', async (req, res) => {
 
 // sending email common code for all
 const emailCommonRouter = require('./routes/emailCommonRoutes.js')
-app.use('/emailCommon',emailCommonRouter) 
+app.use('/emailCommon',emailCommonRouter)
 
 // individual login
 const individualLoginRoutes = require("./routes/individualLoginRoutes");
