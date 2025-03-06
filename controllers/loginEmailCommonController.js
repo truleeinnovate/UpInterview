@@ -1,7 +1,6 @@
 const sendEmail = require("../utils/sendEmail");
 const notificationMiddleware = require("../middlewares/notificationMiddleware");
 const { Users } = require("../models/Users");
-// const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 // this controller use for sending mails in signup or reset password

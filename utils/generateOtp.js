@@ -1,7 +1,7 @@
 
 
-const CryptoJS = require("crypto-js");
-const crypto = require("crypto");
+// const CryptoJS = require("crypto-js");
+// const crypto = require("crypto");
 
 function generateOTP(candidateId, interval = 180)  {
   try {
@@ -9,7 +9,7 @@ function generateOTP(candidateId, interval = 180)  {
     const secret = `${candidateId}${
       process.env.HMAC_SECRET || "default-secret"
     }`;
-    const hmac = crypto.createHmac("sha1", secret);
+    // const hmac = crypto.createHmac("sha1", secret);
     hmac.update(Buffer.from(time.toString()));
     const hash = hmac.digest("hex");
     const offset = parseInt(hash[hash.length - 1], 16);
@@ -27,7 +27,7 @@ function generateOTP(candidateId, interval = 180)  {
 
 
 const encrypt = (text, secretKey) => {
-  const encrypted = CryptoJS.AES.encrypt(text, secretKey).toString();
+  // const encrypted = CryptoJS.AES.encrypt(text, secretKey).toString();
   return encodeURIComponent(encrypted); // Make it URL-safe
 };
 
