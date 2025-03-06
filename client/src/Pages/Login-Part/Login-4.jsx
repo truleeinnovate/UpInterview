@@ -534,7 +534,7 @@ const MultiStepForm = () => {
     try {
 
       console.log('Individual/Signup')
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Individual`, {
         userData,
         contactData,
         availabilityData,
