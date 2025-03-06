@@ -7,8 +7,4 @@ router.post('/Login', loginOrganization);
 router.post('/reset-password', resetPassword);
 router.post('/new-user-Creation', organizationUserCreation);
 
-
-
-
-
 module.exports = router;

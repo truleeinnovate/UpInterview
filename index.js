@@ -2794,9 +2794,3 @@ app.use('/emailCommon',emailCommonRouter)
 
 const individualLoginRoutes = require("./routes/individualLoginRoutes");
 app.use("/Individual", individualLoginRoutes);
-
-// organization
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-app.use('/Organization', organizationRoutes);
-
-const EmailTemplate = require('./models/EmailTemplatemodel.js');

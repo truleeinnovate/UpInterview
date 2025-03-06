@@ -195,7 +195,7 @@
 
 
 
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const { Organization } = require('../models/Organization');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
@@ -231,7 +231,7 @@ const registerOrganization = async (req, res) => {
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Create new organization
         const organization = new Organization({
@@ -451,8 +451,8 @@ const loginOrganization = async (req, res) => {
         }
 
         // Compare hashed password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log(isPasswordValid, "isPasswordValid");
+        // const isPasswordValid = await bcrypt.compare(password, user.password);
+        // console.log(isPasswordValid, "isPasswordValid");
 
         if (!isPasswordValid) {
             return res.status(400).json({ success: false, message: 'Invalid email or password' });
@@ -497,16 +497,16 @@ const resetPassword = async (req, res) => {
         }
 
         // If user is resetting password, ensure it's different from the old one
-        if (type !== "usercreatepass") {
-            const isSamePassword = await bcrypt.compare(newPassword, user.password);
-            if (isSamePassword) {
-                return res.status(400).json({ success: false, message: "New password must be different from the old password." });
-            }
-        }
+        // if (type !== "usercreatepass") {
+        //     const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        //     if (isSamePassword) {
+        //         return res.status(400).json({ success: false, message: "New password must be different from the old password." });
+        //     }
+        // }
 
         // Hash new password and update user
-        user.password = await bcrypt.hash(newPassword, 10);
-        await user.save();
+        // user.password = await bcrypt.hash(newPassword, 10);
+        // await user.save();
 
         return res.json({ success: true, message: "Password reset successful" });
 
