@@ -2788,8 +2788,8 @@ app.get('/technology', async (req, res) => {
 // app.use('/Organization', organizationRoutes);
 
 // sending email common code for all
-const emailCommonRouter = require('./routes/emailCommonRoutes.js')
-app.use('/emailCommon',emailCommonRouter) 
+// const emailCommonRouter = require('./routes/emailCommonRoutes.js')
+// app.use('/emailCommon',emailCommonRouter) 
 
 // individual login
 const individualLoginRoutes = require("./routes/individualLoginRoutes");
