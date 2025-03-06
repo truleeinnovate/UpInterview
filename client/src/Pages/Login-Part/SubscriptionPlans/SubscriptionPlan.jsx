@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import config from '../../../config.js'
+import { config } from '../../../config.js'
 import { useCustomContext } from "../../../Context/Contextfetch";
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
