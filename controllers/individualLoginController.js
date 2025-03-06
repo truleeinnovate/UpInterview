@@ -1,6 +1,6 @@
 const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
-const { loginSendEmail } = require("./loginEmailCommonController");
+// const { loginSendEmail } = require("./loginEmailCommonController");
 const availabilityController = require("./interviewAvailabilityController");
 const OutsourceInterviewer = require("../models/OutsourceInterviewersSchema");
 
@@ -81,14 +81,14 @@ exports.individualLogin = async (req, res) => {
 
 
     // Step 4: Call Email Sending Controller
-    console.log("Calling email sending controller...");
-    await loginSendEmail({
-      body: {
-        email: savedContact.Email,
-        ownerId: savedUser._id,
-        name: savedContact.Name,
-      },
-    }, { json: () => { } }); // Simulating Express response object
+    // console.log("Calling email sending controller...");
+    // await loginSendEmail({
+    //   body: {
+    //     email: savedContact.Email,
+    //     ownerId: savedUser._id,
+    //     name: savedContact.Name,
+    //   },
+    // }, { json: () => { } }); // Simulating Express response object
 
     // Step 5: Send Response
     res.status(200).json({
