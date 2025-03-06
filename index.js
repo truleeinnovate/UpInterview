@@ -2792,5 +2792,5 @@ app.get('/technology', async (req, res) => {
 // app.use('/emailCommon',emailCommonRouter) 
 
 // individual login
-const individualLoginRoutes = require("./routes/individualLoginRoutes");
-app.use("/Individual", individualLoginRoutes);
+// const individualLoginRoutes = require("./routes/individualLoginRoutes");
+// app.use("/Individual", individualLoginRoutes);
