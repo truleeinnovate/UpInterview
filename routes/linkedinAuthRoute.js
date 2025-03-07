@@ -24,14 +24,14 @@ router.post('/token', async (req, res) => {
             }
         });
 
-        // Get user profile using v2 API with correct scope
-        const profileResponse = await axios.get('https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName)', {
+        // Get user profile
+        const profileResponse = await axios.get('https://api.linkedin.com/v2/me', {
             headers: {
                 'Authorization': `Bearer ${tokenResponse.data.access_token}`
             }
         });
 
-        // Get user email using v2 API with correct scope
+        // Get user email
         const emailResponse = await axios.get('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
             headers: {
                 'Authorization': `Bearer ${tokenResponse.data.access_token}`
@@ -55,10 +55,10 @@ router.post('/token', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('LinkedIn authentication error:', error.response?.data || error.message);
+        console.error('LinkedIn authentication error:', error);
         res.status(500).json({ 
             error: 'Authentication failed',
-            details: error.response?.data?.message || error.message 
+            details: error.message 
         });
     }
 });
