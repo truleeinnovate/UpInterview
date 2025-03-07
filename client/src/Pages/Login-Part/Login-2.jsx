@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { IoIosPersonAdd } from "react-icons/io";
 import { GoOrganization } from "react-icons/go";
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth0 } from "@auth0/auth0-react";
 import Slideshow from './Slideshow';
+import { linkedInConfig } from '../../config/linkedin';
 
 const Profile1 = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
-  const { loginWithRedirect } = useAuth0();
 
   const handleIndividualClick = () => {
     setSelectedOption("individual");
@@ -18,17 +17,25 @@ const Profile1 = () => {
 
   const handleOrganizationClick = () => {
     setSelectedOption("organization");
-    
+
     if (state?.from === "signup") {
       navigate('/organization');
     } else if (state?.from === "login") {
-      navigate('/organizationLogin'); 
+      navigate('/organizationLogin');
     }
   };
 
-  const onNext = () => {
-    navigate('/profile3');
-  }
+  const handleLinkedInLogin = () => {
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?` +
+      `response_type=code` +
+      `&client_id=${linkedInConfig.clientId}` +
+      `&redirect_uri=${encodeURIComponent(linkedInConfig.redirectUri)}` +
+      `&scope=${encodeURIComponent(linkedInConfig.scope)}` +
+      `&state=${linkedInConfig.state}` +
+      `&response_mode=form_post`;
+    
+    window.location.href = authUrl;
+  };
 
   return (
     <div>
@@ -45,9 +52,8 @@ const Profile1 = () => {
           {/* Individual Button */}
           <button
             type="button"
-            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${
-              selectedOption === "individual" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
-            }`}
+            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${selectedOption === "individual" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
+              }`}
             onClick={handleIndividualClick}
           >
             <IoIosPersonAdd className="text-2xl mr-4" />
@@ -61,9 +67,8 @@ const Profile1 = () => {
           <button
             type="button"
             onClick={handleOrganizationClick}
-            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${
-              selectedOption === "organization" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
-            }`}
+            className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${selectedOption === "organization" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
+              }`}
           >
             <GoOrganization className="text-2xl mr-4" />
             <p>Organization</p>
@@ -75,8 +80,7 @@ const Profile1 = () => {
           {/* Create Profile */}
           {selectedOption === "individual" && (
             <button
-              // onClick={() => loginWithRedirect()}
-              onClick={onNext}
+              onClick={handleLinkedInLogin}
               className="bg-sky-400 text-white py-2 rounded-full hover:bg-sky-500 transition w-full"
             >
               Sign Up with LinkedIn

@@ -15,7 +15,7 @@ root.render(
         domain="dev-niskaip8y4c68yht.us.auth0.com"
         clientId="tCOgxwRPpniDMhLmN7oYFonIIMqx92GR"
         authorizationParams={{
-          redirect_uri: `${window.location.origin}/callback`
+          redirect_uri: `${window.location.origin}/callback1`
         }}
       >
         <CustomProvider >

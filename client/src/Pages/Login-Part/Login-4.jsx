@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MdArrowDropDown, MdUpdate } from "react-icons/md";
+import { MdArrowDropDown } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { config } from '../../config.js';
 import { GiCancel } from "react-icons/gi";
@@ -75,10 +75,9 @@ const MultiStepForm = () => {
   const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState('');
   const [expertiseLevel, setExpertiseLevel] = useState('');
   const [selectedOption, setSelectedOption] = useState(null);
-  const [showPopup1, setShowPopup1] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
-  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState('');
+  const [searchTermCurrentRole] = useState('');
   const [searchTermIndustry, setSearchTermIndustry] = useState('');
   const [searchTermTechnology, setSearchTermTechnology] = useState('');
   const [searchTermSkills, setSearchTermSkills] = useState('');
@@ -255,12 +254,6 @@ const MultiStepForm = () => {
 
   const toggleSkillsPopup = () => {
     setShowSkillsPopup((prev) => !prev);
-  };
-
-  const handleCopy = (event, day) => {
-    setSelectedDay(day);
-    setSelectedDays([day]);
-    setShowPopup1(true);
   };
 
   const handlePaste = () => {
@@ -570,12 +563,6 @@ const MultiStepForm = () => {
     }
   };
 
-
-
-  const handleCountryCodeChange = (e) => {
-    setFormData({ ...formData, CountryCode: e.target.value });
-  };
-
   const handlePhoneInput = (e) => {
     const { value, name } = e.target;
 
@@ -609,12 +596,6 @@ const MultiStepForm = () => {
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
 
-    }
-  };
-
-  const handleReplace = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
     }
   };
 

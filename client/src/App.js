@@ -12,6 +12,7 @@ import Logo from './Pages/Login-Part/Logo.jsx';
 import OrganiationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import Callback from './Callback.js';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
+import LinkedInCallback from './components/LinkedInCallback';
 
 const App = () => {
   const location = useLocation();
@@ -29,13 +30,14 @@ const App = () => {
       <div className={!shouldRenderNavbar ? 'mt-16' : 'mt-16'}>
         <Routes>
           <Route path="/" element={<Login1 />} />
-          <Route path="/callback" element={<Callback />} />
+          <Route path="/callback1" element={<Callback />} />
           <Route path="/profile1" element={<Login2 />} />
           <Route path="/profile3" element={<Login3 />} />
           <Route path="/profile4" element={<Login4 />} />
           <Route path="/home" element={<Home />} />
           <Route path="/organiationLogin" element={<OrganiationLogin />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
+          <Route path="/callback" element={<LinkedInCallback />} />
         </Routes>
       </div>
     </React.Fragment>

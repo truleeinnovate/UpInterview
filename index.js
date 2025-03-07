@@ -2804,3 +2804,37 @@ app.use('/',CustomerSubscriptionRouter)
 // payment for subscription plans
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 app.use('/',Cardrouter)
+
+
+
+app.post('/api/linkedin/token', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    // Exchange code for tokens
+    const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+      params: {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: config.REACT_APP_REDIRECT_URI,
+        client_id: config.REACT_APP_CLIENT_ID,
+        client_secret: config.REACT_APP_CLIENT_SECRET
+      }
+    });
+
+    // Get user info using access token
+    const userResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokenResponse.data.access_token}`
+      }
+    });
+
+    res.json({
+      ...tokenResponse.data,
+      userInfo: userResponse.data
+    });
+  } catch (error) {
+    console.error('LinkedIn token exchange error:', error);
+    res.status(500).json({ error: 'Failed to exchange LinkedIn code for token' });
+  }
+});

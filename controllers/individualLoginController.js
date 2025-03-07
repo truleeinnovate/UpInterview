@@ -329,7 +329,7 @@ exports.individualLogin = async (req, res) => {
     console.log("Saving contact data in DB...");
     const newContact = new Contacts({
       ...contactData,
-      ownerId: savedUser._id, // Linking the user ID
+      ownerId: savedUser._id,
     });
     const savedContact = await newContact.save();
     console.log("Contact successfully created:", savedContact._id);
@@ -359,7 +359,7 @@ exports.individualLogin = async (req, res) => {
         ownerId: savedUser._id,
         name: savedContact.Name,
       },
-    }, { json: () => {} }); // Simulating Express response object
+    }, { json: () => {} });
     console.log("Email successfully sent.");
 
     // Step 5: Send Response
