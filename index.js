@@ -2807,53 +2807,5 @@ app.use('/',Cardrouter)
 
 
 
-
-const config = require('./config');
-const { Users } = require('./models/Users');
-app.post('/api/linkedin/token', async (req, res) => {
-  try {
-    console.log('Processing LinkedIn authentication...');
-    const { code } = req.body;
-
-    if (!code) {
-      return res.status(400).json({ error: 'Authorization code is required' });
-    }
-    
-    // Exchange code for tokens
-    const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
-      params: {
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: config.REACT_APP_REDIRECT_URI,
-        client_id: config.REACT_APP_CLIENT_ID,
-        client_secret: config.REACT_APP_CLIENT_SECRET
-      }
-    });
-
-     // Get user info using id token
-     const idToken = tokenResponse.data.id_token;
-     const userInfo = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
- 
-     // Check if user exists in database
-     const existingUser = await Users.findOne({ Email: userInfo.email });
- 
-     // Return response
-     res.json({
-       access_token: tokenResponse.data.access_token,
-       userInfo: {
-         email: userInfo.email,
-         given_name: userInfo.given_name,
-         family_name: userInfo.family_name,
-         sub: userInfo.sub
-       },
-       existingUser: Boolean(existingUser)
-     });
- 
-   } catch (error) {
-     console.error('LinkedIn authentication error:', error);
-     res.status(500).json({ 
-       error: 'Authentication failed',
-       details: error.message 
-     });
-   }
- });
+const linkedinAuthRoutes = require('./routes/linkedinAuth');
+app.use('/api/linkedin', linkedinAuthRoutes);
