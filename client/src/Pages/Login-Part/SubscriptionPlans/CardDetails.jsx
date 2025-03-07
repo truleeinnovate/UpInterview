@@ -1,6 +1,7 @@
 import { RiCloseCircleLine } from "react-icons/ri";
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
+import { config } from '../../../config.js'
 
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -90,7 +91,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                 cardNumber: cardDetails.cardNumber.replace(/-/g, "")
             };
               // Send the token to your backend to complete the payment
-              const paymentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/payment/submit`, {
+              const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
                 cardDetails:updatedCardDetails//card creation
         });
             const { message,transactionId, status } = paymentResponse.data;            
@@ -108,7 +109,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                     transactionId
                 });
                 
-                const subscriptionResponse = await axios.post(`${process.env.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
+                const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
                     planDetails,
                     cardDetails,
                     status,
@@ -117,7 +118,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                     transactionId
 
                 });
-                const response = await axios.post(`${process.env.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
+                const response = await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
                     ownerId,
                     tenantId,
                     // ccEmail: "shaikmansoor1200@gmail.com",

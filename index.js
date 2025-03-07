@@ -2798,6 +2798,9 @@ app.use("/Individual", individualLoginRoutes);
 // subscription after individual login
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
 app.use('/',SubscriptionRouter);
-
 const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
 app.use('/',CustomerSubscriptionRouter)
+
+// payment for subscription plans
+const Cardrouter = require("./routes/Carddetailsroutes.js");
+app.use('/',Cardrouter)
