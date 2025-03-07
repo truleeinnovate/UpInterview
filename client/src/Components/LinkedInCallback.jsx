@@ -19,7 +19,7 @@ const LinkedInCallback = () => {
 
                 // Exchange code for user data
                 const response = await axios.post(
-                    `${config.REACT_APP_API_URL}/api/linkedin/token`,
+                    `${config.REACT_APP_API_URL}/linkedin/token`,
                     { code }
                 );
 

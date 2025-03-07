@@ -2807,5 +2807,5 @@ app.use('/',Cardrouter)
 
 
 
-const linkedinAuthRoutes = require('./routes/linkedinAuth');
-app.use('/api/linkedin', linkedinAuthRoutes);
+const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
+app.use('/linkedin', linkedinAuthRoutes);

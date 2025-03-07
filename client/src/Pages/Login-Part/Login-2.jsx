@@ -30,9 +30,9 @@ const Profile1 = () => {
       `response_type=code` +
       `&client_id=${config.REACT_APP_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(config.REACT_APP_REDIRECT_URI)}` +
-      `&scope=openid%20profile%20email` +
+      `&scope=${encodeURIComponent('r_liteprofile r_emailaddress')}` +
       `&state=${Math.random().toString(36).substring(7)}`;
-    
+
     window.location.href = authUrl;
   };
 
