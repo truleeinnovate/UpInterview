@@ -2697,7 +2697,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
+const axios = require('axios');
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -2807,10 +2807,17 @@ app.use('/',Cardrouter)
 
 
 
+
+const config = require('./config');
+const { Users } = require('./models/Users');
 app.post('/api/linkedin/token', async (req, res) => {
   try {
-    console.log('hello from backend linked in api');
+    console.log('Processing LinkedIn authentication...');
     const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code is required' });
+    }
     
     // Exchange code for tokens
     const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
@@ -2823,19 +2830,30 @@ app.post('/api/linkedin/token', async (req, res) => {
       }
     });
 
-    // Get user info using access token
-    const userResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
-      headers: {
-        'Authorization': `Bearer ${tokenResponse.data.access_token}`
-      }
-    });
-
-    res.json({
-      ...tokenResponse.data,
-      userInfo: userResponse.data
-    });
-  } catch (error) {
-    console.error('LinkedIn token exchange error:', error);
-    res.status(500).json({ error: 'Failed to exchange LinkedIn code for token' });
-  }
-});
+     // Get user info using id token
+     const idToken = tokenResponse.data.id_token;
+     const userInfo = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
+ 
+     // Check if user exists in database
+     const existingUser = await Users.findOne({ Email: userInfo.email });
+ 
+     // Return response
+     res.json({
+       access_token: tokenResponse.data.access_token,
+       userInfo: {
+         email: userInfo.email,
+         given_name: userInfo.given_name,
+         family_name: userInfo.family_name,
+         sub: userInfo.sub
+       },
+       existingUser: Boolean(existingUser)
+     });
+ 
+   } catch (error) {
+     console.error('LinkedIn authentication error:', error);
+     res.status(500).json({ 
+       error: 'Authentication failed',
+       details: error.message 
+     });
+   }
+ });
