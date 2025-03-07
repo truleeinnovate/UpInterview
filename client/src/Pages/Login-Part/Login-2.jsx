@@ -3,7 +3,7 @@ import { IoIosPersonAdd } from "react-icons/io";
 import { GoOrganization } from "react-icons/go";
 import { useLocation, useNavigate } from 'react-router-dom';
 import Slideshow from './Slideshow';
-import { linkedInConfig } from '../../config/linkedin';
+import { linkedInConfig } from '../../config/linkedin.js';
 
 const Profile1 = () => {
   const [selectedOption, setSelectedOption] = useState(null);

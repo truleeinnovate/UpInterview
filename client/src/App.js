@@ -12,7 +12,7 @@ import Logo from './Pages/Login-Part/Logo.jsx';
 import OrganiationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import Callback from './Callback.js';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
-import LinkedInCallback from './components/LinkedInCallback';
+import LinkedInCallback from './Components/LinkedInCallback.jsx';
 
 const App = () => {
   const location = useLocation();
