@@ -2809,6 +2809,7 @@ app.use('/',Cardrouter)
 
 app.post('/api/linkedin/token', async (req, res) => {
   try {
+    console.log('hello from backend linked in api');
     const { code } = req.body;
     
     // Exchange code for tokens

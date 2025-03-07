@@ -37,7 +37,14 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/organiationLogin" element={<OrganiationLogin />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-          <Route path="/callback" element={<LinkedInCallback />} />
+          <Route 
+            path="/callback" 
+            element={
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <LinkedInCallback />
+              </React.Suspense>
+            } 
+          />
         </Routes>
       </div>
     </React.Fragment>

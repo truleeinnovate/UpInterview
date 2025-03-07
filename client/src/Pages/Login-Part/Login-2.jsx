@@ -3,7 +3,7 @@ import { IoIosPersonAdd } from "react-icons/io";
 import { GoOrganization } from "react-icons/go";
 import { useLocation, useNavigate } from 'react-router-dom';
 import Slideshow from './Slideshow';
-import { linkedInConfig } from '../../config/linkedin.js';
+import { config } from '../../config';
 
 const Profile1 = () => {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -28,11 +28,10 @@ const Profile1 = () => {
   const handleLinkedInLogin = () => {
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?` +
       `response_type=code` +
-      `&client_id=${linkedInConfig.clientId}` +
-      `&redirect_uri=${encodeURIComponent(linkedInConfig.redirectUri)}` +
-      `&scope=${encodeURIComponent(linkedInConfig.scope)}` +
-      `&state=${linkedInConfig.state}` +
-      `&response_mode=form_post`;
+      `&client_id=${config.REACT_APP_CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(config.REACT_APP_REDIRECT_URI)}` +
+      `&scope=openid%20profile%20email` +
+      `&state=${Math.random().toString(36).substring(7)}`;
     
     window.location.href = authUrl;
   };
