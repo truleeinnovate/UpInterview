@@ -112,7 +112,7 @@
 
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
 import Slideshow from './Slideshow';
 
@@ -120,6 +120,9 @@ const Profile3 = () => {
     const [selectedTab, setSelectedTab] = useState('');
     const navigate = useNavigate();
     const [showPopup, setShowPopup] = useState(false);
+    const location = useLocation();
+    const linkedInData = location.state?.linkedInData;
+
 
     const toggleActiveState = (tab) => {
         setSelectedTab((prevTab) => (prevTab === tab ? '' : tab));
@@ -142,7 +145,7 @@ const Profile3 = () => {
 
     const navigateToNext = (Freelancer) => {
         const professionName = selectedTab === 'technical' ? 'Technical_Expert/Developer' : 'HR/Recruiter';
-        navigate('/profile4', { state: { Freelancer, profession: professionName } });
+        navigate('/profile4', { state: { Freelancer, profession: professionName, linkedInData } });
     };
 
     return (

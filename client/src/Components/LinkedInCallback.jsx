@@ -4,6 +4,7 @@ import axios from 'axios';
 import { config } from '../config';
 
 const LinkedInCallback = () => {
+  console.log('navigated to call back');
   const navigate = useNavigate();
   const [error, setError] = useState(null);
 
