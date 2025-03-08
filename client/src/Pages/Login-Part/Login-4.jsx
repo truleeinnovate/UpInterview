@@ -58,7 +58,7 @@ const MultiStepForm = () => {
   const skillsPopupRef = useRef(null);
   const fileInputRef = useRef(null);
   const location = useLocation();
-  const { Freelancer, profession } = location.state || {};
+  const { Freelancer, profession, linkedInData } = location.state || {};
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [selectedLocation, setSelectedLocation] = useState('');
   const [showDropdownLocation, setShowDropdownLocation] = useState(false);
@@ -96,9 +96,9 @@ const MultiStepForm = () => {
   });
 
   const [formData, setFormData] = useState({
-    Name: "",
+    Name: linkedInData ? `${linkedInData.firstName} ${linkedInData.lastName}` : "",
     UserName: "",
-    Email: "",
+    Email: linkedInData?.email || "",
     Phone: "",
     LinkedinUrl: "",
     CountryCode: "+91",
@@ -735,6 +735,9 @@ const MultiStepForm = () => {
 
 
   const handleInputChange = (e, fieldName) => {
+    // Prevent email field from being changed
+    if (fieldName === 'Email') return;
+
     setFormData({
       ...formData,
       [fieldName]: e.target.value,
@@ -996,6 +999,7 @@ const MultiStepForm = () => {
                           type="text"
                           id="Email"
                           value={formData.Email}
+                          readOnly
                           onChange={(e) => handleInputChange(e, 'Email')}
                           placeholder="John.doe@gmail.com"
                           className={`block w-full rounded-md bg-white px-3 py-2  text-sm text-gray-900 placeholder-gray-400 border focus:outline-none ${errors.Email ? 'border-red-500' : 'border-gray-400'}`}
