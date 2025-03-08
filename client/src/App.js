@@ -12,7 +12,7 @@ import Logo from './Pages/Login-Part/Logo.jsx';
 import OrganiationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import Callback from './Callback.js';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
-import LinkedInCallback from './Components/LinkedInCallback.jsx';
+import LinkedInCallback from './Components/LinkedInCallback';
 
 const App = () => {
   const location = useLocation();
@@ -37,14 +37,15 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/organiationLogin" element={<OrganiationLogin />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-          <Route 
+          {/* <Route 
             path="/callback" 
             element={
               <React.Suspense fallback={<div>Loading...</div>}>
                 <LinkedInCallback />
               </React.Suspense>
             } 
-          />
+          /> */}
+            <Route path="/callback" element={<LinkedInCallback />} />
         </Routes>
       </div>
     </React.Fragment>
