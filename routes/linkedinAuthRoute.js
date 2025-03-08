@@ -13,7 +13,7 @@ router.post('/token', async (req, res) => {
       console.error('Backend: No code provided');
       return res.status(400).json({ error: 'No code provided' });
     }
-
+    
     console.log('Backend: 2. Authorization code received:', code);
 
     // Exchange code for tokens using OpenID Connect endpoint
@@ -43,7 +43,7 @@ router.post('/token', async (req, res) => {
       name: `${userInfo.given_name} ${userInfo.family_name}`,
       sub: userInfo.sub
     });
-
+    
     // Check if user exists in database
     console.log('Backend: 7. Checking if user exists in database');
     const existingUser = await Users.findOne({ Email: userInfo.email });
@@ -77,9 +77,9 @@ router.post('/token', async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    res.status(500).json({ 
       error: 'Authentication failed',
-      details: error.response?.data || error.message
+      details: error.response?.data || error.message 
     });
   }
 });
@@ -122,8 +122,6 @@ router.post('/check-user', async (req, res) => {
         firstName: userInfo.given_name,
         lastName: userInfo.family_name,
         email: userInfo.email,
-        pictureUrl: pictureResponse.data.profilePicture?.['displayImage~']?.elements[0]?.identifiers[0]?.identifier,
-        profileUrl: `https://www.linkedin.com/in/${profileResponse.data.id}`
       }
     });
 
