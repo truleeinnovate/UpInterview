@@ -11,33 +11,23 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('3. Received callback from LinkedIn');
+        console.log('1. LinkedIn callback received');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         
-        if (!code) {
-          console.error('4. No authorization code received');
-          throw new Error('No authorization code received');
-        }
-
-        // Exchange code for user info
-        console.log('5. Getting user details from LinkedIn');
-        const response = await axios.post(
-          `${config.REACT_APP_API_URL}/linkedin/check-user`,
-          { code }
-        );
-
-        console.log('6. Received user details:', response.data);
-
+        console.log('2. Fetching user details with code:', code);
+        const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, { code });
+        console.log('3. User details received:', response.data);
+    
         if (response.data.existingUser) {
-          console.log('7a. User exists - showing message');
-          alert('This email is already registered. Please login instead.');
+          console.log('4a. User exists - redirecting to login');
+          alert('Account already exists. Please login.');
           navigate('/profile1');
         } else {
-          console.log('7b. New user - proceeding to profile completion');
+          console.log('4b. New user - navigating to profile3');
           navigate('/profile3', {
             state: {
-              userData: {
+              linkedInData: {
                 firstName: response.data.userInfo.firstName,
                 lastName: response.data.userInfo.lastName,
                 email: response.data.userInfo.email
@@ -46,9 +36,7 @@ const LinkedInCallback = () => {
           });
         }
       } catch (error) {
-        console.error('Error:', error);
-        setError('Authentication failed. Please try again.');
-        setTimeout(() => navigate('/profile1'), 3000);
+        console.error('Error in LinkedIn callback:', error);
       }
     };
 

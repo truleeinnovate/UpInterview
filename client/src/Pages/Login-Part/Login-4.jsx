@@ -10,7 +10,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import moment from 'moment-timezone';
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
 import TimezoneSelect from 'react-timezone-select';
 import Cookies from 'js-cookie';
 import { useLocation } from 'react-router-dom';
@@ -95,6 +94,9 @@ const MultiStepForm = () => {
     Sat: [{ startTime: null, endTime: null }]
   });
 
+  console.log('7. Profile4 received state:', location.state);
+  console.log('8. LinkedIn data in Profile4:', linkedInData);
+
   const [formData, setFormData] = useState({
     Name: linkedInData ? `${linkedInData.firstName} ${linkedInData.lastName}` : "",
     UserName: "",
@@ -111,6 +113,19 @@ const MultiStepForm = () => {
     gender: "",
     CoverLetterdescription: "",
   });
+
+  console.log('9. Initial form data:', formData);
+
+  useEffect(() => {
+    console.log('10. Component mounted with linkedInData:', linkedInData);
+    if (linkedInData) {
+      setFormData(prev => ({
+        ...prev,
+        Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
+        Email: linkedInData.email
+      }));
+    }
+  }, [linkedInData]);
 
   const [formData2, setFormData2] = useState({
     InterviewPreviousExperience: "",
