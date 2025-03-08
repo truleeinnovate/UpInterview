@@ -361,7 +361,7 @@ const Outsource = () => {
 
       setCandidateData(interviewsWithCandidates);
     } catch (error) {
-      console.error("Error fetching InterviewData:", error);
+      // console.error("Error fetching InterviewData:", error);
     } finally {
       setLoading(false);
     }

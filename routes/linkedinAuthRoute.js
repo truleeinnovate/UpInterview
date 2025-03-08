@@ -8,6 +8,12 @@ router.post('/token', async (req, res) => {
   try {
     console.log('Backend: 1. Received token request');
     const { code } = req.body;
+
+    if (!code) {
+      console.error('Backend: No code provided');
+      return res.status(400).json({ error: 'No code provided' });
+    }
+    
     console.log('Backend: 2. Authorization code received:', code);
 
     // Exchange code for tokens using OpenID Connect endpoint

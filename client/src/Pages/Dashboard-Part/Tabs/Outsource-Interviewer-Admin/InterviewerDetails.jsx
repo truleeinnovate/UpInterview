@@ -46,7 +46,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
       }
 
     } catch (err) {
-      console.error('❌ Error fetching interviewers:', err);
+      // console.error('❌ Error fetching interviewers:', err);
     }
   };
 

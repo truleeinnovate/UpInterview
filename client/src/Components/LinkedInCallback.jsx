@@ -27,7 +27,7 @@ const LinkedInCallback = () => {
 
         console.log('5. Sending code to backend:', code);
         const response = await axios.post(
-          `${config.REACT_APP_API_URL}/api/linkedin/token`,
+          `${config.REACT_APP_API_URL}/linkedin/token`,
           { code }
         );
 

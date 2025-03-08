@@ -68,7 +68,7 @@ const CustomProvider = ({ children }) => {
 
       setInterviewerSectionData(formattedList);
     } catch (error) {
-      console.error("Error fetching interviewer questions:", error);
+      // console.error("Error fetching interviewer questions:", error);
     }
   }, []);
 
@@ -299,7 +299,7 @@ const CustomProvider = ({ children }) => {
       const reversedData = interviewsWithCandidates.reverse();
       setInterviewData(reversedData);
     } catch (error) {
-      console.error("Error fetching InterviewData:", error);
+      // console.error("Error fetching InterviewData:", error);
     } finally {
       setLoading(false);
     }
@@ -318,7 +318,7 @@ const CustomProvider = ({ children }) => {
       const reversedData = response.data.reverse();
       setInterviewers(reversedData);
     } catch (err) {
-      console.error('❌ Error fetching interviewers:', err);
+      // console.error('❌ Error fetching interviewers:', err);
     }
   }, []);
 
