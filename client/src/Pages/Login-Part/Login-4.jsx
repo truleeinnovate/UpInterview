@@ -81,8 +81,8 @@ const MultiStepForm = () => {
   const [searchTermTechnology, setSearchTermTechnology] = useState('');
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const [showTechPopup, setTechpopup] = useState(false);
-  // const [filePreview, setFilePreview] = useState(user.picture ? user.picture : null);
-  const [filePreview, setFilePreview] = useState(null);
+  const [filePreview, setFilePreview] = useState(linkedInData.profileUrl ? linkedInData.profileUrl : null);
+  // const [filePreview, setFilePreview] = useState(null);
   const [file, setFile] = useState(null);
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -102,7 +102,7 @@ const MultiStepForm = () => {
     UserName: "",
     Email: linkedInData?.email || "",
     Phone: "",
-    LinkedinUrl: "",
+    LinkedinUrl: linkedInData?.profileUrl || "",
     CountryCode: "+91",
     CurrentRole: "",
     industry: "",
@@ -113,17 +113,17 @@ const MultiStepForm = () => {
     gender: "",
     CoverLetterdescription: "",
   });
-  
 
   console.log('9. Initial form data:', formData);
 
   useEffect(() => {
-    console.log('10. Component mounted with linkedInData:', linkedInData);
     if (linkedInData) {
+      setFilePreview(linkedInData.pictureUrl);
       setFormData(prev => ({
         ...prev,
         Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
-        Email: linkedInData.email
+        Email: linkedInData.email,
+        LinkedinUrl: linkedInData.profileUrl
       }));
     }
   }, [linkedInData]);
@@ -751,20 +751,21 @@ const MultiStepForm = () => {
 
 
   const handleInputChange = (e, fieldName) => {
-    // Prevent email field from being changed
-    if (fieldName === 'Email') return;
-
-    setFormData({
-      ...formData,
-      [fieldName]: e.target.value,
-    });
-
-    // Clear the error for the specific field
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [fieldName]: '',
+    if (fieldName === 'Email' || fieldName === 'LinkedinUrl') return; // Prevent changes to LinkedIn URL
+    
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: e.target.value
     }));
+    
+    if (errors[fieldName]) {
+      setErrors(prev => ({
+        ...prev,
+        [fieldName]: ''
+      }));
+    }
   };
+
   const handleInputChangeintro = (e, field) => {
     const { value } = e.target;
     const limit = field === "CoverLetterdescription" ? 2000 : 500; // Set different limits
@@ -1034,6 +1035,7 @@ const MultiStepForm = () => {
                           type="text"
                           id="LinkedinUrl"
                           value={formData.LinkedinUrl}
+                          readOnly
                           onChange={(e) => handleInputChange(e, 'LinkedinUrl')}
                           placeholder="linkedin.com/in/johndoe"
                           autoComplete="off"

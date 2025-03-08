@@ -39,9 +39,11 @@ const LinkedInCallback = () => {
           navigate('/profile3', {
             state: {
               linkedInData: {
-                firstName: response.data.userInfo.firstName,
-                lastName: response.data.userInfo.lastName,
-                email: response.data.userInfo.email
+                firstName: userInfo.firstName,
+                lastName: userInfo.lastName,
+                email: userInfo.email,
+                pictureUrl: userInfo.pictureUrl,
+                profileUrl: userInfo.profileUrl
               }
             }
           });
