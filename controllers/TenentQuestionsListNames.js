@@ -6,8 +6,8 @@ const getList = async (req, res) => {
     const lists = await QuestionbankFavList.find({ ownerId: userId });
     res.status(200).json(lists);
   } catch (error) {
-    console.error('Error fetching lists:', error);
-    res.status(500).json({ error: 'Error fetching lists' });
+    // console.error('Error fetching lists:', error);
+    // res.status(500).json({ error: 'Error fetching lists' });
   }
 }
 const createList = async (req, res) => {

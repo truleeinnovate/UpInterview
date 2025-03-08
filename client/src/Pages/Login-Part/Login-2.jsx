@@ -31,7 +31,7 @@ const Profile1 = () => {
       `response_type=code` +
       `&client_id=${config.REACT_APP_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(config.REACT_APP_REDIRECT_URI)}` +
-      `&scope=${encodeURIComponent('r_liteprofile r_emailaddress')}` +
+      `&scope=${encodeURIComponent('openid profile email')}` + // Updated to OpenID Connect scopes
       `&state=${Math.random().toString(36).substring(7)}`;
     
     console.log('2. Redirecting to LinkedIn auth URL:', authUrl);

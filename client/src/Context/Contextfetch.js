@@ -89,7 +89,7 @@ const CustomProvider = ({ children }) => {
 
       setMyQuestionsList(newObject);
     } catch (error) {
-      console.error("Error fetching questions:", error);
+      // console.error("Error fetching questions:", error);
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ const CustomProvider = ({ children }) => {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
       setCreatedLists(response.data.reverse());
     } catch (error) {
-      console.error("Error fetching lists:", error);
+      // console.error("Error fetching lists:", error);
     }
   };
 
@@ -148,7 +148,7 @@ const CustomProvider = ({ children }) => {
       const reversedData = candidatesWithImages.reverse();
       setCandidateData(reversedData);
     } catch (error) {
-      console.error('Error fetching candidate data:', error);
+      // console.error('Error fetching candidate data:', error);
     } finally {
       setLoading(false);
     }
@@ -170,7 +170,7 @@ const CustomProvider = ({ children }) => {
       const reversedData = filteredPositions.reverse();
       setSkillsData(reversedData);
     } catch (error) {
-      console.error("Error fetching position data:", error);
+      // console.error("Error fetching position data:", error);
     } finally {
       setLoading(false);
     }
@@ -194,7 +194,7 @@ const CustomProvider = ({ children }) => {
       );
       setmockinterviewData(filteredInterviews.reverse());
     } catch (error) {
-      console.error("Error fetching InterviewData:", error);
+      // console.error("Error fetching InterviewData:", error);
     } finally {
       setLoading(false);
     }
@@ -243,7 +243,7 @@ const CustomProvider = ({ children }) => {
       });
       setTeamsData(teamsWithContacts);
     } catch (error) {
-      console.error('Error fetching team data:', error);
+      // console.error('Error fetching team data:', error);
     } finally {
       setLoading(false);
     }
