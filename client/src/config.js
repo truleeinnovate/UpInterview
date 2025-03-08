@@ -8,6 +8,7 @@ export const config = {
 export const linkedInConfig = {
   clientId: "86vj2ix33jf4aq",
   redirectUri: "https://purple-sand-0e5d43e00.4.azurestaticapps.net/callback",
-  scope: "openid profile email",
+  // scope: "openid profile email",
+  scope: 'openid profile email w_member_social',
   state: Math.random().toString(36).substring(7)
 };

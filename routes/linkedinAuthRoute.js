@@ -136,7 +136,7 @@ router.post('/check-user', async (req, res) => {
     console.log('Backend: 1. Received user check request');
     const { code } = req.body;
 
-    // Exchange code for token
+    // Exchange code for token with available scopes
     console.log('Backend: 2. Exchanging code for token');
     const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
       params: {
@@ -150,7 +150,7 @@ router.post('/check-user', async (req, res) => {
 
     const accessToken = tokenResponse.data.access_token;
 
-    // Get basic user info
+    // Get user info from OpenID Connect userinfo endpoint
     console.log('Backend: 3. Getting user info from LinkedIn');
     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
@@ -158,37 +158,34 @@ router.post('/check-user', async (req, res) => {
       }
     });
 
-    // Get profile picture
-    console.log('Backend: 4. Getting profile picture');
-    const profileResponse = await axios.get('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
-
-    const profilePicture = profileResponse.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
-    const linkedInProfileUrl = `https://www.linkedin.com/in/${userInfoResponse.data.sub}`;
-
+    console.log('Backend: 4. Processing user info');
     const userInfo = {
       firstName: userInfoResponse.data.given_name,
       lastName: userInfoResponse.data.family_name,
       email: userInfoResponse.data.email,
-      pictureUrl: profilePicture || null,
-      profileUrl: linkedInProfileUrl
+      pictureUrl: userInfoResponse.data.picture || null, // OpenID Connect profile picture
+      profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`
     };
 
     console.log('Backend: 5. Checking if user exists in database');
     const existingUser = await Users.findOne({ Email: userInfo.email });
     
-    console.log('Backend: 6. Sending response with complete user info');
+    console.log('Backend: 6. Sending response with user info:', userInfo);
     res.json({
       existingUser: Boolean(existingUser),
       userInfo
     });
 
   } catch (error) {
-    console.error('Backend Error:', error);
-    res.status(500).json({ error: 'Failed to process request' });
+    console.error('Backend Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    res.status(500).json({ 
+      error: 'Failed to process LinkedIn data',
+      details: error.response?.data || error.message
+    });
   }
 });
 
