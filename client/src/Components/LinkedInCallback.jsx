@@ -21,7 +21,14 @@ const LinkedInCallback = () => {
 
         const { userInfo } = response.data;
     
-        console.log('LinkedIn data received:', userInfo);
+        console.log('4.0: LinkedIn data received:', userInfo);
+
+        console.log('4. LinkedIn complete data:', {
+          name: `${userInfo.firstName} ${userInfo.lastName}`,
+          email: userInfo.email,
+          picture: userInfo.pictureUrl,
+          profileUrl: userInfo.profileUrl
+        });
     
         if (response.data.existingUser) {
           console.log('4a. User exists - redirecting to login');

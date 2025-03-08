@@ -84,6 +84,53 @@ router.post('/token', async (req, res) => {
   }
 });
 
+// router.post('/check-user', async (req, res) => {
+//   try {
+//     console.log('Backend: 1. Received user check request');
+//     const { code } = req.body;
+
+//     // Exchange code for token
+//     console.log('Backend: 2. Exchanging code for token');
+//     const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+//       params: {
+//         grant_type: 'authorization_code',
+//         code,
+//         redirect_uri: config.REACT_APP_REDIRECT_URI,
+//         client_id: config.REACT_APP_CLIENT_ID,
+//         client_secret: config.REACT_APP_CLIENT_SECRET
+//       }
+//     });
+
+//     // Get user info using token
+//     console.log('Backend: 3. Getting user info from LinkedIn');
+//     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+//       headers: {
+//         'Authorization': `Bearer ${tokenResponse.data.access_token}`
+//       }
+//     });
+
+//     const userInfo = userInfoResponse.data;
+//     console.log('Backend: 4. Checking if user exists in database');
+
+//     // Check if user exists in database
+//     const existingUser = await Users.findOne({ Email: userInfo.email });
+//     console.log('Backend: 5. User exists:', Boolean(existingUser));
+
+//     res.json({
+//       existingUser: Boolean(existingUser),
+//       userInfo: {
+//         firstName: userInfo.given_name,
+//         lastName: userInfo.family_name,
+//         email: userInfo.email,
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Backend Error:', error);
+//     res.status(500).json({ error: 'Failed to process request' });
+//   }
+// });
+
 router.post('/check-user', async (req, res) => {
   try {
     console.log('Backend: 1. Received user check request');
@@ -101,28 +148,42 @@ router.post('/check-user', async (req, res) => {
       }
     });
 
-    // Get user info using token
+    const accessToken = tokenResponse.data.access_token;
+
+    // Get basic user info
     console.log('Backend: 3. Getting user info from LinkedIn');
     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
-        'Authorization': `Bearer ${tokenResponse.data.access_token}`
+        'Authorization': `Bearer ${accessToken}`
       }
     });
 
-    const userInfo = userInfoResponse.data;
-    console.log('Backend: 4. Checking if user exists in database');
+    // Get profile picture
+    console.log('Backend: 4. Getting profile picture');
+    const profileResponse = await axios.get('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
 
-    // Check if user exists in database
+    const profilePicture = profileResponse.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
+    const linkedInProfileUrl = `https://www.linkedin.com/in/${userInfoResponse.data.sub}`;
+
+    const userInfo = {
+      firstName: userInfoResponse.data.given_name,
+      lastName: userInfoResponse.data.family_name,
+      email: userInfoResponse.data.email,
+      pictureUrl: profilePicture || null,
+      profileUrl: linkedInProfileUrl
+    };
+
+    console.log('Backend: 5. Checking if user exists in database');
     const existingUser = await Users.findOne({ Email: userInfo.email });
-    console.log('Backend: 5. User exists:', Boolean(existingUser));
-
+    
+    console.log('Backend: 6. Sending response with complete user info');
     res.json({
       existingUser: Boolean(existingUser),
-      userInfo: {
-        firstName: userInfo.given_name,
-        lastName: userInfo.family_name,
-        email: userInfo.email,
-      }
+      userInfo
     });
 
   } catch (error) {
