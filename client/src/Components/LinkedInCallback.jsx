@@ -10,42 +10,42 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('3. LinkedIn callback received');
+        console.log('3. Received callback from LinkedIn');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const error = urlParams.get('error');
-
-        if (error) {
-          console.error('4. LinkedIn auth error:', error);
-          throw new Error(`LinkedIn auth error: ${error}`);
-        }
-
+        
         if (!code) {
           console.error('4. No authorization code received');
           throw new Error('No authorization code received');
         }
 
-        console.log('5. Sending code to backend:', code);
+        // Exchange code for user info
+        console.log('5. Getting user details from LinkedIn');
         const response = await axios.post(
-          `${config.REACT_APP_API_URL}/linkedin/token`,
+          `${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code }
         );
 
-        console.log('6. Received response from backend:', response.data);
+        console.log('6. Received user details:', response.data);
 
         if (response.data.existingUser) {
-          console.log('7a. Existing user - redirecting to home');
-          navigate('/home');
+          console.log('7a. User exists - showing message');
+          alert('This email is already registered. Please login instead.');
+          navigate('/profile1');
         } else {
-          console.log('7b. New user - redirecting to profile completion');
+          console.log('7b. New user - proceeding to profile completion');
           navigate('/profile3', {
             state: {
-              userData: response.data.userInfo
+              userData: {
+                firstName: response.data.userInfo.firstName,
+                lastName: response.data.userInfo.lastName,
+                email: response.data.userInfo.email
+              }
             }
           });
         }
       } catch (error) {
-        console.error('Error in LinkedIn callback:', error);
+        console.error('Error:', error);
         setError('Authentication failed. Please try again.');
         setTimeout(() => navigate('/profile1'), 3000);
       }
@@ -54,21 +54,19 @@ const LinkedInCallback = () => {
     handleCallback();
   }, [navigate]);
 
-  if (error) {
-    return (
-      <div className="text-center mt-10">
-        <p className="text-red-500">{error}</p>
-        <p className="text-gray-600">Redirecting to login page...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Processing your login...</p>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      {error ? (
+        <div className="text-red-500 text-center p-4">
+          <p>{error}</p>
+          <p className="text-sm mt-2">Redirecting to login page...</p>
+        </div>
+      ) : (
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-4">Processing your information...</p>
+        </div>
+      )}
     </div>
   );
 };
