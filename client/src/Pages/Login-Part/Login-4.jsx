@@ -647,7 +647,7 @@ const MultiStepForm = () => {
   
   const handleDeleteImage = () => {
     setFile(null);
-    setFilePreview(linkedInData?.pictureUrl || null); // Revert to LinkedIn photo if available
+    setFilePreview(linkedInData?.pictureUrl || null); 
   };
 
   const handleLocationSelect = (location) => {
