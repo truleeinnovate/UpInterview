@@ -81,8 +81,8 @@ const MultiStepForm = () => {
   const [searchTermTechnology, setSearchTermTechnology] = useState('');
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const [showTechPopup, setTechpopup] = useState(false);
-  const [filePreview, setFilePreview] = useState(linkedInData.profileUrl ? linkedInData.profileUrl : null);
-  // const [filePreview, setFilePreview] = useState(null);
+  // const [filePreview, setFilePreview] = useState(linkedInData.pictureUrl ? linkedInData.pictureUrl : null);
+  const [filePreview, setFilePreview] = useState(null);
   const [file, setFile] = useState(null);
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -552,19 +552,45 @@ const MultiStepForm = () => {
       const contactId = response.data.contactId;
       console.log("file data:", file);
 
+      // if (file) {
+      //   console.log('upload')
+      //   const imageData = new FormData();
+      //   imageData.append("image", file);
+      //   imageData.append("type", "contact");
+      //   imageData.append("id", contactId);
+
+      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+
+      // } else {
+      //   console.log("No file uploaded");
+      // }
+
       if (file) {
-        console.log('upload')
+        // If user selected a new file
         const imageData = new FormData();
         imageData.append("image", file);
         imageData.append("type", "contact");
         imageData.append("id", contactId);
-
+  
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-
-      } else {
-        console.log("No file uploaded");
+      } else if (linkedInData?.pictureUrl && !filePreview) {
+        // If using LinkedIn profile picture
+        const response = await fetch(linkedInData.pictureUrl);
+        const blob = await response.blob();
+        const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
+  
+        const imageData = new FormData();
+        imageData.append("image", imageFile);
+        imageData.append("type", "contact");
+        imageData.append("id", contactId);
+  
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
 
       Cookies.set("userId", response.data.userId, { expires: 7 });
@@ -609,15 +635,19 @@ const MultiStepForm = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      // Check file size
+      if (selectedFile.size > 100 * 1024) { // 100KB
+        alert('File size should be less than 100KB');
+        return;
+      }
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
-
     }
   };
-
+  
   const handleDeleteImage = () => {
     setFile(null);
-    setFilePreview(null);
+    setFilePreview(linkedInData?.pictureUrl || null); // Revert to LinkedIn photo if available
   };
 
   const handleLocationSelect = (location) => {
@@ -752,12 +782,12 @@ const MultiStepForm = () => {
 
   const handleInputChange = (e, fieldName) => {
     if (fieldName === 'Email' || fieldName === 'LinkedinUrl') return; // Prevent changes to LinkedIn URL
-    
+
     setFormData(prev => ({
       ...prev,
       [fieldName]: e.target.value
     }));
-    
+
     if (errors[fieldName]) {
       setErrors(prev => ({
         ...prev,
@@ -941,17 +971,17 @@ const MultiStepForm = () => {
                                   onClick={() => fileInputRef.current.click()}
                                   className="border px-4 sm:px-1 py-1 rounded-md sm:text-xs text-sm text-custom-blue border-custom-blue hover:bg-gray-200"
                                 >
-                                  Choose File
+                                  {filePreview ? 'Change Photo' : 'Choose File'}
                                 </button>
-                                {file ? (
+                                {filePreview && (
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-gray-700">{file.name}</span>
+                                    <span className="text-sm text-gray-700">
+                                      {file ? file.name : 'LinkedIn Profile Photo'}
+                                    </span>
                                     <button onClick={handleDeleteImage} type="button" className="text-red-500">
                                       <ImCancelCircle className="text-lg" />
                                     </button>
                                   </div>
-                                ) : (
-                                  <span className="text-sm sm:px-1 text-gray-400 sm:text-xs">No file chosen</span>
                                 )}
                               </div>
                             </div>
@@ -1488,7 +1518,7 @@ const MultiStepForm = () => {
                             <label htmlFor="technology" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
                               Select Your Comfortable Technologies <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative"ref={popupRef}>
+                            <div className="relative" ref={popupRef}>
                               <input
                                 placeholder="Select Multiple Technologies"
                                 readOnly // Prevent typing
@@ -1560,7 +1590,7 @@ const MultiStepForm = () => {
                             <label htmlFor="skills" className="block text-sm sm:text-xs font-medium text-gray-900 mb-1">
                               Select Skills <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative"ref={skillsPopupRef}>
+                            <div className="relative" ref={skillsPopupRef}>
                               <input
                                 onClick={toggleSkillsPopup}
                                 className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 ${errors.Skills ? 'border-red-500' : 'border-gray-400'}`}
@@ -1571,7 +1601,7 @@ const MultiStepForm = () => {
                                 <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} />
                               </div>
                               {showSkillsPopup && (
-                                <div  className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                                <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                                   <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
                                       <FaSearch className="absolute ml-1 text-gray-500" />
