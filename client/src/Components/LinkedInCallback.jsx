@@ -11,32 +11,33 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('1. LinkedIn callback received');
+        console.log('Fetching LinkedIn user data...');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         
-        console.log('2. Fetching user details with code:', code);
         const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, { code });
-        console.log('3. User details received:', response.data);
+        const { existingUser, userInfo } = response.data;
+        
+        console.log('LinkedIn data received:', userInfo);
     
-        if (response.data.existingUser) {
-          console.log('4a. User exists - redirecting to login');
+        if (existingUser) {
           alert('Account already exists. Please login.');
           navigate('/profile1');
         } else {
-          console.log('4b. New user - navigating to profile3');
           navigate('/profile3', {
             state: {
               linkedInData: {
-                firstName: response.data.userInfo.firstName,
-                lastName: response.data.userInfo.lastName,
-                email: response.data.userInfo.email
+                firstName: userInfo.firstName,
+                lastName: userInfo.lastName,
+                email: userInfo.email,
+                pictureUrl: userInfo.pictureUrl,
+                profileUrl: userInfo.profileUrl
               }
             }
           });
         }
       } catch (error) {
-        console.error('Error in LinkedIn callback:', error);
+        console.error('LinkedIn data fetch error:', error);
       }
     };
 

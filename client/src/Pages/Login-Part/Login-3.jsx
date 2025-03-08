@@ -122,8 +122,6 @@ const Profile3 = () => {
     const [showPopup, setShowPopup] = useState(false);
     const location = useLocation();
     console.log('5. Profile3 received LinkedIn data:', location.state?.linkedInData);
-    const linkedInData = location.state?.linkedInData;
-
 
     const toggleActiveState = (tab) => {
         setSelectedTab((prevTab) => (prevTab === tab ? '' : tab));

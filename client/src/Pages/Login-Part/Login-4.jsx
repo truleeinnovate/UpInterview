@@ -82,7 +82,7 @@ const MultiStepForm = () => {
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const [showTechPopup, setTechpopup] = useState(false);
   // const [filePreview, setFilePreview] = useState(user.picture ? user.picture : null);
-  const [filePreview, setFilePreview] = useState(null);
+  const [filePreview, setFilePreview] = useState(linkedInData?.pictureUrl || null);
   const [file, setFile] = useState(null);
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -93,9 +93,6 @@ const MultiStepForm = () => {
     Fri: [{ startTime: null, endTime: null }],
     Sat: [{ startTime: null, endTime: null }]
   });
-
-  console.log('7. Profile4 received state:', location.state);
-  console.log('8. LinkedIn data in Profile4:', linkedInData);
 
   const [formData, setFormData] = useState({
     Name: linkedInData ? `${linkedInData.firstName} ${linkedInData.lastName}` : "",
@@ -114,16 +111,18 @@ const MultiStepForm = () => {
     CoverLetterdescription: "",
   });
 
-  console.log('9. Initial form data:', formData);
-
   useEffect(() => {
-    console.log('10. Component mounted with linkedInData:', linkedInData);
     if (linkedInData) {
       setFormData(prev => ({
         ...prev,
         Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
-        Email: linkedInData.email
+        Email: linkedInData.email,
+        LinkedinUrl: linkedInData.profileUrl
       }));
+
+      if (linkedInData.pictureUrl) {
+        setFilePreview(linkedInData.pictureUrl);
+      }
     }
   }, [linkedInData]);
 
@@ -750,20 +749,21 @@ const MultiStepForm = () => {
 
 
   const handleInputChange = (e, fieldName) => {
-    // Prevent email field from being changed
-    if (fieldName === 'Email') return;
-
-    setFormData({
-      ...formData,
-      [fieldName]: e.target.value,
-    });
-
-    // Clear the error for the specific field
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [fieldName]: '',
+    if (fieldName === 'Email' || fieldName === 'LinkedinUrl') return;
+    
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: e.target.value
     }));
+    
+    if (errors[fieldName]) {
+      setErrors(prev => ({
+        ...prev,
+        [fieldName]: ''
+      }));
+    }
   };
+  
   const handleInputChangeintro = (e, field) => {
     const { value } = e.target;
     const limit = field === "CoverLetterdescription" ? 2000 : 500; // Set different limits
