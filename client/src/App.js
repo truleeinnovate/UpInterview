@@ -36,7 +36,7 @@ const App = () => {
           <Route path="/profile3" element={<Login3 />} />
           <Route path="/profile4" element={<Login4 />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/organiationLogin" element={<OrganiationLogin />} />
+          <Route path="/organizationLogin" element={<OrganiationLogin />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
