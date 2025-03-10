@@ -26,14 +26,16 @@ const Profile1 = () => {
   };
 
   const handleLinkedInLogin = () => {
+    console.log('1. Starting LinkedIn login flow...');
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?` +
       `response_type=code` +
       `&client_id=${config.REACT_APP_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(config.REACT_APP_REDIRECT_URI)}` +
       `&scope=${encodeURIComponent('openid profile email')}` +
       `&state=${Math.random().toString(36).substring(7)}`;
+    
+    console.log('2. Redirecting to LinkedIn auth URL:', authUrl);
     window.location.href = authUrl;
-    // after this step this will navigate to LinkedInCallback.jsx page 
   };
 
   return (
