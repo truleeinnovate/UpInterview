@@ -3,7 +3,7 @@ const router = express.Router();
 const { registerOrganization, loginOrganization,resetPassword,organizationUserCreation } = require('../controllers/organizationLoginController');
 
 router.post('/Signup', registerOrganization);
-router.post('/Login', loginOrganization);
+router.post('/login', loginOrganization);
 router.post('/reset-password', resetPassword);
 router.post('/new-user-Creation', organizationUserCreation);
 
