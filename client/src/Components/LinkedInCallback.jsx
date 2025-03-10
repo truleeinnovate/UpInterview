@@ -33,7 +33,7 @@ const LinkedInCallback = () => {
         if (response.data.existingUser) {
           console.log('4a. User exists - redirecting to login');
           alert('Account already exists. Please login.');
-          navigate('/profile1');
+          navigate('/home');
         } else {
           console.log('4b. New user - navigating to profile3');
           navigate('/profile3', {
