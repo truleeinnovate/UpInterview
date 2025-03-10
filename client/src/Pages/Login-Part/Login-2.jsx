@@ -33,7 +33,7 @@ const Profile1 = () => {
       `&scope=${encodeURIComponent('openid profile email')}` +
       `&state=${Math.random().toString(36).substring(7)}`;
     window.location.href = authUrl;
-    // after this step this will navigate to LinkedInCallback.jsx page
+    // after this step this will navigate to LinkedInCallback.jsx page 
   };
 
   return (
