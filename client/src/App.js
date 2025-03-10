@@ -13,11 +13,12 @@ import OrganiationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import Callback from './Callback.js';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 import LinkedInCallback from './Components/LinkedInCallback';
+import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
 
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organiationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
-  const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods','/emailSettings'];
+  const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
   const shouldRenderLogo = ['/organization', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
@@ -37,15 +38,8 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/organiationLogin" element={<OrganiationLogin />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-          {/* <Route 
-            path="/callback" 
-            element={
-              <React.Suspense fallback={<div>Loading...</div>}>
-                <LinkedInCallback />
-              </React.Suspense>
-            } 
-          /> */}
-            <Route path="/callback" element={<LinkedInCallback />} />
+          <Route path="/callback" element={<LinkedInCallback />} />
+          <Route path="/payment-details" element={<CardDetails />} />
         </Routes>
       </div>
     </React.Fragment>
