@@ -6,7 +6,7 @@ import { config } from '../config';
 const LinkedInCallback = () => {
   console.log('navigated to call back');
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -14,26 +14,23 @@ const LinkedInCallback = () => {
         console.log('1. LinkedIn callback received');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        
+  
         console.log('2. Fetching user details with code:', code);
         const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, { code });
         console.log('3. User details received:', response.data);
-
-        const { userInfo } = response.data;
-    
-        console.log('4.0: LinkedIn data received:', userInfo);
-
+  
+        const { userInfo, existingUser } = response.data;
+  
         console.log('4. LinkedIn complete data:', {
           name: `${userInfo.firstName} ${userInfo.lastName}`,
           email: userInfo.email,
           picture: userInfo.pictureUrl,
           profileUrl: userInfo.profileUrl
         });
-    
-        if (response.data.existingUser) {
-          console.log('4a. User exists - redirecting to login');
-          alert('Account already exists. Please login.');
-          navigate('/profile1');
+  
+        if (existingUser) {
+          console.log('4a. User exists - redirecting to home');
+          navigate('/home');
         } else {
           console.log('4b. New user - navigating to profile3');
           navigate('/profile3', {

@@ -2692,8 +2692,6 @@
 
 
 
-// const connectDB = require('./db.js');
-// connectDB();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -2701,8 +2699,9 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 app.use(cors());
- 
-const port = process.env.PORT || 5000;
+const port = 5000;
+
+// <-------------Azure MongoDb Connection------------------
 const mongoUri = process.env.MONGO_URI;
 
 const corsOptions = {
@@ -2715,6 +2714,7 @@ mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch(err => console.error('MongoDB connection error:', err));
  
 app.use(cors(corsOptions));
+// ------------------------------------------------------->
  
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
@@ -2798,6 +2798,7 @@ app.use("/Individual", individualLoginRoutes);
 // subscription after individual login
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
 app.use('/',SubscriptionRouter);
+
 const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
 app.use('/',CustomerSubscriptionRouter)
 
@@ -2806,17 +2807,6 @@ const Cardrouter = require("./routes/Carddetailsroutes.js");
 app.use('/',Cardrouter)
 
 
-
+// for LinkedIn
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 app.use('/linkedin', linkedinAuthRoutes);
-
-// Add this after your routes
-app.use((req, res, next) => {
-  console.log(`404 - Not Found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ error: 'Route not found for linked in' });
-});
-
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error for linked in' });
-});
