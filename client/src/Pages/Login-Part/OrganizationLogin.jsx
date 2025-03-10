@@ -21,25 +21,43 @@ const Admin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      console.log('Checking Email:', Email);
-
+      // Validate inputs
+      if (!Email || !password) {
+        setErrorMessage('Email and password are required');
+        return;
+      }
+  
+      console.log('Attempting login with:', { Email, password });
+  
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Organization/login`,
-        { Email }
+        { 
+          email: Email.trim(), // Send lowercase email
+          password: password 
+        }
       );
-
+  
       console.log('Response:', response.data);
-
-      if (response.status === 200) {
+  
+      if (response.data.success) {
+        // // Store tokens/user data if needed
+        // if (response.data.userId) {
+        //   Cookies.set('userId', response.data.userId, { expires: 7 });
+        // }
+        // if (response.data.organizationId) {
+        //   Cookies.set('organizationId', response.data.organizationId, { expires: 7 });
+        // }
+        
         console.log('Login successful. Navigating to home...');
         navigate('/home');
+      } else {
+        setErrorMessage(response.data.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login failed:', error);
-      setErrorMessage('Email not found. Please check your email or register.');
+      setErrorMessage(error.response?.data?.message || 'Invalid email or password');
     }
   };
-
 
   return (
     <>
