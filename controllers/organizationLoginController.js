@@ -209,7 +209,7 @@ const jwt = require("jsonwebtoken");
 
 const saltRounds = 10;
 
-const registerOrganization = async (req, res) => { 
+const registerOrganization = async (req, res) => {
     try {
         const {
             firstName, lastName, Email, Phone, username, jobTitle,
@@ -286,7 +286,7 @@ const registerOrganization = async (req, res) => {
         await sharingSettings.save();
 
         // Create default profiles
-        const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter","Internal Interviewer"];
+        const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
         let adminProfileId = "";
 
         for (let profileName of profileNames) {
@@ -426,49 +426,81 @@ const organizationUserCreation = async (req, res) => {
     }
 };
 
-
 const loginOrganization = async (req, res) => {
     try {
-        let { email, password } = req.body;
-        console.log("email",email);
-        console.log("password",password);
+        const { email, password } = req.body;
+        console.log("Login attempt for:", email);
 
-
-        // Trim input to remove unwanted spaces
-        email = email?.trim().toLowerCase();
-        password = password?.trim();
-
-        // Validate required fields
+        // Input validation
         if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Email and password are required' });
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
         }
 
-        // Ensure case-insensitive email search
-        const user = await Users.findOne({ Email:email });
+        // Normalize email
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // Find user with case-insensitive email search
+        const user = await Users.findOne({
+            Email: { $regex: new RegExp(`^${normalizedEmail}$`, 'i') }
+        });
 
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password' });
+            console.log("User not found:", normalizedEmail);
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
         }
 
-        // Compare hashed password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log(isPasswordValid, "isPasswordValid");
-
-        if (!isPasswordValid) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password' });
+        // Verify if user has password field
+        if (!user.password) {
+            console.error("User has no password:", user._id);
+            return res.status(400).json({
+                success: false,
+                message: 'Account not properly configured'
+            });
         }
 
-        // Return user info upon successful login
-        res.status(200).json({
+        // Compare password
+        try {
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            console.log("Password verification result:", isPasswordValid);
+
+            if (!isPasswordValid) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid email or password'
+                });
+            }
+        } catch (bcryptError) {
+            console.error("Password comparison error:", bcryptError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error validating credentials'
+            });
+        }
+
+        // Login successful - prepare response
+        const response = {
             success: true,
             message: 'Login successful',
             userId: user._id,
             organizationId: user.organizationId
-        });
+        };
+
+        console.log("Login successful for user:", user._id);
+        return res.status(200).json(response);
 
     } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
+        console.error('Login error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
     }
 };
 
@@ -521,5 +553,5 @@ const resetPassword = async (req, res) => {
 
 
 
-module.exports = { registerOrganization, loginOrganization, resetPassword,organizationUserCreation };
+module.exports = { registerOrganization, loginOrganization, resetPassword, organizationUserCreation };
 
