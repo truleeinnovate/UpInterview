@@ -95,21 +95,22 @@ const CustomProvider = ({ children }) => {
     }
   }, [sharingPermissions]);
 
-  useEffect(() => {
-    fetchMyQuestionsData();
-    fetchLists();
-  }, [fetchMyQuestionsData]);
-
+  
   // Fetch Created Lists
-  const fetchLists = async () => {
+  const fetchLists = useCallback(async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
       setCreatedLists(response.data.reverse());
     } catch (error) {
       // console.error("Error fetching lists:", error);
     }
-  };
+  },[userId]);
 
+  useEffect(() => {
+    fetchMyQuestionsData();
+    fetchLists();
+  }, [fetchMyQuestionsData, fetchLists]);
+  
   // Fetch Suggested Questions
   useEffect(() => {
     const getQuestions = async () => {
@@ -328,9 +329,9 @@ const CustomProvider = ({ children }) => {
 
   // master data fetch
   const [skills, setSkills] = useState([]);
-  const [qualification, setQualification] = useState([]);
-  const [college, setCollege] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  const [qualification] = useState([]);
+  const [college] = useState([]);
+  const [companies] = useState([]);
   const [technologies, setTechnology] = useState([]);
   const [locations, setLocations] = useState([]);
   const [CurrentRole, setCurrentRole] = useState([]);
@@ -358,7 +359,7 @@ const CustomProvider = ({ children }) => {
   }, []);
   
   // notifications
-  const [notificationsData, setNotificationsData] = useState([]);
+  const [notificationsData] = useState([]);
 
   // useEffect(() => {
   //   const fetchNotificationData = async () => {

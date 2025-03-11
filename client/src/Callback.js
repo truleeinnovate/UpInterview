@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
@@ -19,7 +19,7 @@ const Callback = () => {
     }
   };
 
-  const handleRedirect = async () => {
+  const handleRedirect = useCallback(async () => {
     if (isAuthenticated && user && user.sub) {
       const userExists = await checkUserExistence(user.sub);
 
@@ -33,13 +33,17 @@ const Callback = () => {
       navigate('/');
     }
     setIsCheckingUser(false);
-  };
+  }, [isAuthenticated, navigate, user]);
 
   useEffect(() => {
     if (!isLoading && isCheckingUser) {
       handleRedirect();
     }
-  }, [isAuthenticated, user, isLoading, isCheckingUser]);
+  }, [handleRedirect, isCheckingUser, isLoading]);
+
+  useEffect(() => {
+    handleRedirect();
+  }, [handleRedirect]); // Added missing dependency
 
   return isCheckingUser ? <div className='flex justify-center items-center h-screen'>Loading...</div> : null;
 };

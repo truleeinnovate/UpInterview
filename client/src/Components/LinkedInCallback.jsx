@@ -6,7 +6,7 @@ import { config } from '../config';
 const LinkedInCallback = () => {
   console.log('navigated to call back');
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
 
   useEffect(() => {
     const handleCallback = async () => {
