@@ -23,33 +23,38 @@ const Admin = () => {
     setErrorMessage('');
 
     try {
+        // Validate input
         if (!Email || !password) {
             setErrorMessage('Email and password are required');
             return;
         }
 
-        console.log('Attempting login with:', { email: Email.trim() });
-
+        // Show loading state
         const response = await axios.post(
             `${config.REACT_APP_API_URL}/Organization/login`,
             {
-                email: Email.trim(),
+                email: Email.trim().toLowerCase(),
                 password: password
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
         );
 
-        console.log('Login response:', response.data);
-
         if (response.data.success) {
-            // // Store auth data
+            // // Store authentication data
             // if (response.data.userId) {
-            //     Cookies.set('userId', response.data.userId);
+            //     Cookies.set('userId', response.data.userId, { expires: 7 });
             // }
             // if (response.data.organizationId) {
-            //     Cookies.set('organizationId', response.data.organizationId);
+            //     Cookies.set('organizationId', response.data.organizationId, { expires: 7 });
+            // }
+            // if (response.data.token) {
+            //     Cookies.set('token', response.data.token, { expires: 7 });
             // }
 
-            console.log('Login successful, navigating...');
             navigate('/home');
         } else {
             setErrorMessage(response.data.message || 'Login failed');
@@ -57,10 +62,18 @@ const Admin = () => {
 
     } catch (error) {
         console.error('Login error:', error);
-        setErrorMessage(
-            error.response?.data?.message || 
-            'Unable to connect to server. Please try again.'
-        );
+        
+        // Handle specific error cases
+        if (error.response?.status === 500) {
+            setErrorMessage('Server error. Please try again later.');
+        } else if (error.response?.status === 401) {
+            setErrorMessage('Invalid email or password');
+        } else {
+            setErrorMessage(
+                error.response?.data?.message || 
+                'Unable to connect to server. Please try again.'
+            );
+        }
     }
 };
 

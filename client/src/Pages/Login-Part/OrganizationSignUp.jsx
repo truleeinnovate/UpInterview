@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
 import Slideshow from "./Slideshow";
+import { config } from '../../config'
 
 export const Organization = () => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
@@ -96,7 +97,7 @@ export const Organization = () => {
   //       contactType: 'Organization'
   //     };
 
-  //     const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization`, formData);
+  //     const response = await axios.post(`${config.REACT_APP_API_URL}/organization`, formData);
 
   //     Cookies.set('userId', response.data.user._id, { expires: 7 });
   //     Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
@@ -112,7 +113,7 @@ export const Organization = () => {
   //     }));
 
   //     // Save default sharing settings
-  //     await axios.post(`${process.env.REACT_APP_API_URL}/api/sharing-settings`, {
+  //     await axios.post(`${config.REACT_APP_API_URL}/api/sharing-settings`, {
   //       Name: 'sharingSettingDefaultName',
   //       organizationId: organizationId,
   //       accessBody: accessBody
@@ -136,7 +137,7 @@ export const Organization = () => {
   //         }
   //       }));
 
-  //       const profileResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, {
+  //       const profileResponse = await axios.post(`${config.REACT_APP_API_URL}/api/profiles`, {
   //         label: profileNames[i],
   //         Name: profileNames[i],
   //         Description: `Default profile description for ${profileNames[i]}`,
@@ -188,7 +189,7 @@ export const Organization = () => {
   //         roleData.reportsToRoleId = reportsToRoleId;
   //       }
 
-  //       const roleResponse = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, roleData);
+  //       const roleResponse = await axios.post(`${config.REACT_APP_API_URL}/rolesdata`, roleData);
 
   //       if (roles[i].name === "Admin") {
   //         adminRoleId = roleResponse.data._id;
@@ -201,7 +202,7 @@ export const Organization = () => {
   //       }
   //     }
 
-  //     await axios.put(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
+  //     await axios.put(`${config.REACT_APP_API_URL}/users/${userId}`, {
   //       RoleId: adminRoleId,
   //       ProfileId: adminProfileId
   //     });
@@ -243,14 +244,12 @@ export const Organization = () => {
  // Clear error if validation passes
  setErrorMessage("");
     try {
-      // const response = await fetch(`${process.env.REACT_APP_API_URL}/Organization/Signup`, {
+      // const response = await fetch(`${config.REACT_APP_API_URL}/Organization/Signup`, {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(organizationData),
       // });
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Signup`, organizationData);
-
-
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
 
       const data = response.data;
 

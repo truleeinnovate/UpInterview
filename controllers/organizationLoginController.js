@@ -211,6 +211,7 @@ const saltRounds = 10;
 
 const registerOrganization = async (req, res) => {
     try {
+        console.log('triggered sign up from backend.........................')
         const {
             firstName, lastName, Email, Phone, username, jobTitle,
             company, employees, country, password
