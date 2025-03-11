@@ -102,7 +102,7 @@ export const PermissionsProvider = ({ children }) => {
     };
 
     initialize();
-  }, []);
+  }, [organization]);
 
   return (
     <PermissionsContext.Provider value={{

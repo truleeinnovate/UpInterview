@@ -1,16 +1,16 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 
-import axios from "axios";
+// import axios from "axios";
 import React from 'react';
 import "./Home.scss";
 import AppViewMore from "./AppViewMore";
 import CandidateProfileDetails from "../Tabs/Candidate-Tab/CandidateProfileDetails";
-import PositionProfileDetails from "../Tabs/Position-Tab/PositionProfileDetails";
-import TeamProfileDetails from "../Tabs/Team-Tab/TeamProfileDetails";
-import Internalprofiledetails from "../Tabs/Interviews/Internalprofiledetails";
-import { fetchMultipleData } from "../../../utils/dataUtils";
-import { fetchFilterData } from '../../../utils/dataUtils';
+// import PositionProfileDetails from "../Tabs/Position-Tab/PositionProfileDetails";
+// import TeamProfileDetails from "../Tabs/Team-Tab/TeamProfileDetails";
+// import Internalprofiledetails from "../Tabs/Interviews/Internalprofiledetails";
+// import { fetchMultipleData } from "../../../utils/dataUtils";
+// import { fetchFilterData } from '../../../utils/dataUtils';
 import { Bar } from 'react-chartjs-2';
 import { parse, isValid } from 'date-fns';
 import maleImage from '../../Dashboard-Part/Images/man.png';
