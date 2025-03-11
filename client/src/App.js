@@ -11,7 +11,6 @@ import Login4 from './Pages/Login-Part/Login-4.jsx';
 import Logo from './Pages/Login-Part/Logo.jsx';
 import {Organization} from './Pages/Login-Part/OrganizationSignUp.jsx';
 import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
-import Callback from './Callback.js';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 import LinkedInCallback from './Components/LinkedInCallback';
 import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
@@ -32,7 +31,6 @@ const App = () => {
       <div className={!shouldRenderNavbar ? 'mt-16' : 'mt-16'}>
         <Routes>
           <Route path="/" element={<Login1 />} />
-          <Route path="/callback1" element={<Callback />} />
           <Route path="/profile1" element={<Login2 />} />
           <Route path="/profile3" element={<Login3 />} />
           <Route path="/profile4" element={<Login4 />} />

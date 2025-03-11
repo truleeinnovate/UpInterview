@@ -1,13 +1,13 @@
 const bcrypt = require('bcryptjs');
-const { Organization } = require('../models/Organization');
-const { Users } = require('../models/Users');
-const { Contacts } = require('../models/Contacts');
-const SharingSettings = require('../models/SharingSettings');
-const Profile = require('../models/Profile');
+const { Organization } = require('../models/Organization.js');
+const { Users } = require('../models/Users.js');
+const { Contacts } = require('../models/Contacts.js');
+const SharingSettings = require('../models/SharingSettings.js');
+const Profile = require('../models/Profile.js');
 const Role = require('../models/RolesData.js');
-const Tabs = require('../models/Tabs');
-const Objects = require('../models/Objects');
-const { loginSendEmail } = require("./loginEmailCommonController");
+const Tabs = require('../models/Tabs.js');
+const Objects = require('../models/Objects.js');
+const { loginSendEmail } = require("./loginEmailCommonController.js");
 const jwt = require("jsonwebtoken");
 
 const saltRounds = 10;
@@ -361,10 +361,6 @@ const resetPassword = async (req, res) => {
         return res.status(500).json({ success: false, message: "Something went wrong" });
     }
 };
-
-
-
-
 
 module.exports = { registerOrganization, loginOrganization, resetPassword, organizationUserCreation };
 

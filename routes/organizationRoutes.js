@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerOrganization, loginOrganization,resetPassword,organizationUserCreation } = require('../controllers/organizationLoginController');
+const { registerOrganization, loginOrganization,resetPassword,organizationUserCreation } = require('../controllers/organizationController');
 
 router.post('/Signup', registerOrganization);
 router.post('/login', loginOrganization);
