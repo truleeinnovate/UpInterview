@@ -195,7 +195,7 @@
 
 
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { Organization } = require('../models/Organization');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
