@@ -196,6 +196,8 @@ const OutsourceInterviewers = () => {
     loading,
   } = useCustomContext();
 
+  console.log('interviewers data :', interviewers)
+
   const [searchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
