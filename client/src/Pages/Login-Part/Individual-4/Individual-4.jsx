@@ -632,18 +632,18 @@
 //   );
 
 
-//   const handleFileChange = (e) => {
-//     const selectedFile = e.target.files[0];
-//     if (selectedFile) {
-//       // Check file size
-//       if (selectedFile.size > 100 * 1024) { // 100KB
-//         alert('File size should be less than 100KB');
-//         return;
-//       }
-//       setFile(selectedFile);
-//       setFilePreview(URL.createObjectURL(selectedFile));
-//     }
-//   };
+  // const handleFileChange = (e) => {
+  //   const selectedFile = e.target.files[0];
+  //   if (selectedFile) {
+  //     // Check file size
+  //     if (selectedFile.size > 100 * 1024) { // 100KB
+  //       alert('File size should be less than 100KB');
+  //       return;
+  //     }
+  //     setFile(selectedFile);
+  //     setFilePreview(URL.createObjectURL(selectedFile));
+  //   }
+  // };
 
 //   const handleDeleteImage = () => {
 //     setFile(null);
@@ -2105,7 +2105,7 @@
 
 
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -2177,6 +2177,18 @@ const MultiStepForm = () => {
     dateOfBirth: "",
     gender: "",
   });
+
+  useEffect(() => {
+  if (linkedInData) {
+    setFilePreview(linkedInData.pictureUrl);
+    setBasicDetailsData(prev => ({
+      ...prev,
+      Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
+      Email: linkedInData.email,
+      LinkedinUrl: linkedInData.profileUrl
+    }));
+  }
+}, [linkedInData]);
 
   const [additionalDetailsData, setAdditionalDetailsData] = useState({
     CurrentRole: "",
@@ -2361,6 +2373,7 @@ const MultiStepForm = () => {
                     setFile={setFile}
                     filePreview={filePreview}
                     setFilePreview={setFilePreview}
+                    linkedInData={linkedInData}
                   />
                 )}
 
