@@ -27,14 +27,34 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
 });
 
 // Auto-generate a unique interviewer number before saving
+// OutsourceInterviewerSchema.pre('save', async function (next) {
+//     if (!this.interviewerNo) {
+//         // Generate a sequential unique number (e.g., OINT-1001, OINT-1002, ...)
+//         const lastRecord = await mongoose.model('OutsourceInterviewer').findOne().sort({ createdAt: -1 });
+//         const lastNumber = lastRecord?.interviewerNo ? parseInt(lastRecord.interviewerNo.split('-')[1]) : 1000;
+//         this.interviewerNo = `OINT-${lastNumber + 1}`;
+//     }
+//     next();
+// });
+
 OutsourceInterviewerSchema.pre('save', async function (next) {
     if (!this.interviewerNo) {
-        // Generate a sequential unique number (e.g., OINT-1001, OINT-1002, ...)
-        const lastRecord = await mongoose.model('OutsourceInterviewer').findOne().sort({ createdAt: -1 });
-        const lastNumber = lastRecord?.interviewerNo ? parseInt(lastRecord.interviewerNo.split('-')[1]) : 1000;
-        this.interviewerNo = `OINT-${lastNumber + 1}`;
+        // Use a separate counter collection to avoid sorting
+        const counter = await mongoose.model('Counter').findOneAndUpdate(
+            { name: 'outsourceInterviewer' },
+            { $inc: { seq: 1 } },
+            { upsert: true, new: true }
+        );
+        this.interviewerNo = `OINT-${counter.seq}`;
     }
     next();
 });
+
+// Define a Counter schema (create this if it doesn't exist)
+const CounterSchema = new mongoose.Schema({
+    name: String,
+    seq: { type: Number, default: 1000 }
+});
+mongoose.model('Counter', CounterSchema);
 
 module.exports = mongoose.model('OutsourceInterviewer', OutsourceInterviewerSchema);
