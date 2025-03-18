@@ -116,17 +116,17 @@
 
 //   console.log('9. Initial form data:', formData);
 
-//   useEffect(() => {
-//     if (linkedInData) {
-//       setFilePreview(linkedInData.pictureUrl);
-//       setFormData(prev => ({
-//         ...prev,
-//         Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
-//         Email: linkedInData.email,
-//         LinkedinUrl: linkedInData.profileUrl
-//       }));
-//     }
-//   }, [linkedInData]);
+// useEffect(() => {
+//   if (linkedInData) {
+//     setFilePreview(linkedInData.pictureUrl);
+//     setFormData(prev => ({
+//       ...prev,
+//       Name: `${linkedInData.firstName} ${linkedInData.lastName}`,
+//       Email: linkedInData.email,
+//       LinkedinUrl: linkedInData.profileUrl
+//     }));
+//   }
+// }, [linkedInData]);
 
 //   const [formData2, setFormData2] = useState({
 //     InterviewPreviousExperience: "",
@@ -567,31 +567,31 @@
 //       //   console.log("No file uploaded");
 //       // }
 
-//       if (file) {
-//         // If user selected a new file
-//         const imageData = new FormData();
-//         imageData.append("image", file);
-//         imageData.append("type", "contact");
-//         imageData.append("id", contactId);
-  
-//         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         });
-//       } else if (linkedInData?.pictureUrl && !filePreview) {
-//         // If using LinkedIn profile picture
-//         const response = await fetch(linkedInData.pictureUrl);
-//         const blob = await response.blob();
-//         const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
-  
-//         const imageData = new FormData();
-//         imageData.append("image", imageFile);
-//         imageData.append("type", "contact");
-//         imageData.append("id", contactId);
-  
-//         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         });
-//       }
+// if (file) {
+//   // If user selected a new file
+//   const imageData = new FormData();
+//   imageData.append("image", file);
+//   imageData.append("type", "contact");
+//   imageData.append("id", contactId);
+
+//   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+//     headers: { "Content-Type": "multipart/form-data" },
+//   });
+// } else if (linkedInData?.pictureUrl && !filePreview) {
+//   // If using LinkedIn profile picture
+//   const response = await fetch(linkedInData.pictureUrl);
+//   const blob = await response.blob();
+//   const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
+
+//   const imageData = new FormData();
+//   imageData.append("image", imageFile);
+//   imageData.append("type", "contact");
+//   imageData.append("id", contactId);
+
+//   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+//     headers: { "Content-Type": "multipart/form-data" },
+//   });
+// }
 
 //       Cookies.set("userId", response.data.userId, { expires: 7 });
 //       if (Cookies.get("organizationId")) {
@@ -644,7 +644,7 @@
 //       setFilePreview(URL.createObjectURL(selectedFile));
 //     }
 //   };
-  
+
 //   const handleDeleteImage = () => {
 //     setFile(null);
 //     setFilePreview(linkedInData?.pictureUrl || null); 
@@ -2144,13 +2144,14 @@ const FooterButtons = ({ onNext, onPrev, currentStep, isFreelancer }) => {
 const MultiStepForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { Freelancer } = location.state || {};
+  const { Freelancer, profession, linkedInData } = location.state || {};
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [errors, setErrors] = useState({});
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [file, setFile] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [filePreview, setFilePreview] = useState(null);
 
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -2162,13 +2163,16 @@ const MultiStepForm = () => {
     Sat: [{ startTime: null, endTime: null }]
   });
 
+  console.log('7. Profile4 received state:', location.state);
+  console.log('8. LinkedIn data in Profile4:', linkedInData);
+
   const [basicDetailsData, setBasicDetailsData] = useState({
-    Name: "",
+    Name: linkedInData ? `${linkedInData.firstName} ${linkedInData.lastName}` : "",
     UserName: "",
-    Email: "",
+    Email: linkedInData?.email || "",
     CountryCode: "",
     Phone: "",
-    LinkedinUrl: "",
+    LinkedinUrl: linkedInData?.profileUrl || "",
     portfolioUrl: "",
     dateOfBirth: "",
     gender: "",
@@ -2250,6 +2254,7 @@ const MultiStepForm = () => {
       ...basicDetailsData,
       ...additionalDetailsData,
       ...interviewDetailsData,
+      LetUsKnowYourProfession: profession
     };
 
     const availabilityData = Object.keys(availabilityDetailsData.Availability || times)
@@ -2283,8 +2288,17 @@ const MultiStepForm = () => {
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-      } else {
-        console.log("No file uploaded");
+      } else if (linkedInData?.pictureUrl && !filePreview) {
+        const response = await fetch(linkedInData.pictureUrl);
+        const blob = await response.blob();
+        const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
+        const imageData = new FormData();
+        imageData.append("image", imageFile);
+        imageData.append("type", "contact");
+        imageData.append("id", contactId);
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
 
       Cookies.set("userId", response.data.userId, { expires: 7 });
@@ -2345,6 +2359,8 @@ const MultiStepForm = () => {
                     setErrors={setErrors}
                     file={file}
                     setFile={setFile}
+                    filePreview={filePreview}
+                    setFilePreview={setFilePreview}
                   />
                 )}
 

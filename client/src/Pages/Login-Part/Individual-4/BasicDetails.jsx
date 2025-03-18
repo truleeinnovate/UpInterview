@@ -14,12 +14,13 @@ const BasicDetails = ({
   errors,
   setErrors,
   file,
-  setFile
+  setFile,
+  filePreview,
+  setFilePreview
 }) => {
 
   const [startDate, setStartDate] = useState(null);
   const fileInputRef = useRef(null);
-  const [filePreview, setFilePreview] = useState(null);
   const [showDropdowngender, setShowDropdownGender] = useState(false);
   const genders = ["Male", "Female", "Others"];
   const [selectedGender, setSelectedGender] = useState("");
@@ -96,12 +97,52 @@ const BasicDetails = ({
           <div className="sm:col-span-6 col-span-1">
             <div className="flex items-center space-x-4">
               {/* Image Preview Box */}
+              {/* <div className="w-28 h-32 sm:w-20 sm:h-20 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden">
+                {filePreview ? (
+                  <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <img src={noImage} alt="Preview" className="w-full h-full object-cover" />
+                )}
+              </div> */}
+
               <div className="w-28 h-32 sm:w-20 sm:h-20 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden">
                 {filePreview ? (
                   <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <img src={noImage} alt="Preview" className="w-full h-full object-cover" />
                 )}
+              </div>
+
+              {/* File Upload UI */}
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 sm:text-[10px]">Please upload square image, size less than 100KB</p>
+                <div className="flex items-center space-x-2 mt-1 bg-sky-50 py-2 rounded">
+                  <input
+                    type="file"
+                    id="imageInput"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                    accept="image/*"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    className="border px-4 sm:px-1 py-1 rounded-md sm:text-xs text-sm text-custom-blue border-custom-blue hover:bg-gray-200"
+                  >
+                    {filePreview ? 'Change Photo' : 'Choose File'}
+                  </button>
+                  {filePreview && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-700">
+                        {file ? file.name : 'LinkedIn Profile Photo'}
+                      </span>
+                      <button onClick={handleDeleteImage} type="button" className="text-red-500">
+                        <ImCancelCircle className="text-lg" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* File Upload UI */}
