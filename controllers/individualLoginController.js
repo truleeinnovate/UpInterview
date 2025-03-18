@@ -315,6 +315,7 @@ const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const availabilityController = require("./interviewAvailabilityController");
 const { loginSendEmail } = require("./loginEmailCommonController");
+const OutsourceInterviewer = require("../models/OutsourceInterviewersSchema");
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -332,7 +333,7 @@ exports.individualLogin = async (req, res) => {
       ownerId: savedUser._id,
     });
     const savedContact = await newContact.save();
-    console.log("Contact successfully created:", savedContact._id);
+    console.log("Contact successfully created:", savedContact);
 
     // Step 3: Save Interview Availability (if provided)
     if (availabilityData && availabilityData.length > 0) {
@@ -351,6 +352,29 @@ exports.individualLogin = async (req, res) => {
       console.log("Interview availability successfully created.");
     }
 
+    // <-----------------------OutsourceInterviewer------------------------------->
+    // const newInterviewer = new OutsourceInterviewer({
+    //   ownerId: savedUser._id,
+    //   contactId: savedContact._id,
+    //   requestedRate: {
+    //     hourlyRate: contactData.hourlyRate
+    //   },
+    //   finalRate: null,
+    //   feedback: [{
+    //     givenBy: savedUser._id,
+    //     rating: 4.5,
+    //     comments: "",
+    //     createdAt: new Date()
+    //   }],
+    //   createdBy: savedUser._id,
+    //   currency: 'USD'
+    // });
+
+    // const savedInterviewer = await newInterviewer.save();
+    // console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
+    // <-----------------------OutsourceInterviewer------------------------------->
+
+
     // Step 4: Send Email
     console.log("Sending email to user...");
     await loginSendEmail({
@@ -359,7 +383,7 @@ exports.individualLogin = async (req, res) => {
         ownerId: savedUser._id,
         name: savedContact.Name,
       },
-    }, { json: () => {} });
+    }, { json: () => { } });
     console.log("Email successfully sent.");
 
     // Step 5: Send Response

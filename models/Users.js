@@ -17,10 +17,6 @@ const UsersSchema = new mongoose.Schema({
   ModifiedBy: { type: String },
 });
 
-
-
 const Users = mongoose.model('Users', UsersSchema);
 
-module.exports = {
-  Users,
-};
+module.exports = { Users };

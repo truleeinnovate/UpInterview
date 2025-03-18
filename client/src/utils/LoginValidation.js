@@ -6,89 +6,74 @@ export const validateSteps = (step, params, setErrors) => {
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
-};
+  };
 
+  console.log("Step valid:", step);
+  console.log("Params for Step valid:", params);
 
   if (step === 0) {
-    const { formData } = params;
-
-    // Validate fields for step 0
-    errors.Name = !formData.Name ? 'Last Name is required' : '';
-    errors.UserName = !formData.UserName ? 'Username is required' : '';
-    // errors.Email = !formData.Email ? 'Email is required' : '';
-    errors.Email = !formData.Email
-    ? "Email is required"
-    : !validateEmail(formData.Email)
-    ? "Invalid email format"
-    : ""; // Validate email properly
-    errors.Phone = !formData.Phone ? 'Phone number is required' : '';
-    errors.LinkedinUrl = !formData.LinkedinUrl ? 'LinkedIn URL is required' : '';
+    const { basicDetailsData } = params;
+    errors.Name = !basicDetailsData.Name ? 'Name is required' : '';
+    errors.UserName = !basicDetailsData.UserName ? 'Username is required' : '';
+    errors.Email = !basicDetailsData.Email ? "Email is required" : !validateEmail(basicDetailsData.Email) ? "Invalid email format" : "";
+    errors.Phone = !basicDetailsData.Phone ? 'Phone number is required' : '';
+    errors.LinkedinUrl = !basicDetailsData.LinkedinUrl ? 'LinkedIn URL is required' : '';
+    errors.portfolioUrl = !basicDetailsData.portfolioUrl ? 'Portfolio URL is required' : '';
   }
 
-  
   if (step === 1) {
-    const { formData, selectedIndustry, selectedLocation } = params;
-    errors.CurrentRole = !formData.CurrentRole ? 'Current Role is required' : '';
-    errors.Industry = !selectedIndustry ? 'Industry is required' : '';
-    errors.Experience = !formData.Experience ? 'Experience is required' : '';
-    errors.Location = !selectedLocation ? 'Location is required' : '';
-    errors.Introduction = !formData.Introduction ? 'Introduction is required' : '';
+    const { additionalDetailsData } = params;
+    errors.CurrentRole = !additionalDetailsData.CurrentRole ? 'Current Role is required' : '';
+    errors.industry = !additionalDetailsData.industry ? 'Industry is required' : '';
+    errors.YearsOfExperience = !additionalDetailsData.YearsOfExperience ? 'Experience is required' : '';
+    errors.location = !additionalDetailsData.location ? 'Location is required' : '';
   }
 
   if (step === 2) {
-    const { selectedCandidates, selectedSkills, InterviewPreviousExperience, expertiseLevel, formData2 } = params;
-
-    // Validate fields for step 1
-    errors.Technologys = !selectedCandidates.length ? 'Technology is required' : '';
-    errors.Skills = !selectedSkills.length ? 'Skill is required' : '';
-    errors.PreviousExperience = !InterviewPreviousExperience ? 'Previous Experience is required' : '';
-    errors.ExpertiseLevel = !expertiseLevel ? 'Expertise Level is required' : '';
-    // Validate Expected Rate Per Hour
-    errors.ExpectedRateMin = !formData2.ExpectedRateMin ? 'Min rate is required' : '';
-    errors.ExpectedRateMax = !formData2.ExpectedRateMax ? 'Max rate is required' : '';
-    errors.IsReadyForMockInterviews = !formData2.IsReadyForMockInterviews ? 'MockInterview is required' : '';
-
+    const { interviewDetailsData } = params;
+    errors.Technology = !interviewDetailsData.Technology || interviewDetailsData.Technology.length === 0
+      ? 'At least one technology is required'
+      : '';
+    errors.Skills = !interviewDetailsData.Skills || interviewDetailsData.Skills.length === 0
+      ? 'At least one skill is required'
+      : '';
+    errors.PreviousExperienceConductingInterviews = !interviewDetailsData.PreviousExperienceConductingInterviews ? 'Previous Experience is required' : '';
+    errors.ExpertiseLevel_ConductingInterviews = !interviewDetailsData.ExpertiseLevel_ConductingInterviews ? 'Expertise Level is required' : '';
+    errors.hourlyRate = !interviewDetailsData.hourlyRate ? 'Expected Hourly Rate is required' : '';
+    errors.InterviewFormatWeOffer = interviewDetailsData.InterviewFormatWeOffer.length === 0 ? "Please select at least one interview format" : "";
 
     // Validate Interview Previous Experience Years if "Yes" is selected
-    if (InterviewPreviousExperience === "yes") {
-      errors.InterviewPreviousExperienceYears = !formData2.InterviewPreviousExperienceYears
+    if (interviewDetailsData.PreviousExperienceConductingInterviews === "yes") {
+      errors.PreviousExperienceConductingInterviewsYears = !interviewDetailsData.PreviousExperienceConductingInterviewsYears
         ? 'Years of experience is required'
         : '';
     }
-    // Validate Mock Interview Fields Only if "Yes" is Selected
-  if (formData2.IsReadyForMockInterviews === "yes") {
-    errors.ExpectedRatePerMockInterviewMin = !formData2.ExpectedRatePerMockInterviewMin 
-      ? "Min expected rate is required" 
-      : "";
-    errors.ExpectedRatePerMockInterviewMax = !formData2.ExpectedRatePerMockInterviewMax 
-      ? "Max expected rate is required" 
-      : "";
-    errors.NoShowPolicy = !formData2.NoShowPolicy ? "No-show policy selection is required" : "";
-  } else {
-    // Reset values when "No" is selected
-    formData2.ExpectedRatePerMockInterviewMin = "";
-    formData2.ExpectedRatePerMockInterviewMax = "";
-    formData2.NoShowPolicy = "";
+
+    // Validate Mock Interview Fields Only if "Mock Interviews" is Selected
+    if (interviewDetailsData.InterviewFormatWeOffer.includes("mock")) {
+      errors.ExpectedRatePerMockInterviewMin = !interviewDetailsData.ExpectedRatePerMockInterviewMin
+        ? "Min expected rate is required"
+        : "";
+      errors.ExpectedRatePerMockInterviewMax = !interviewDetailsData.ExpectedRatePerMockInterviewMax
+        ? "Max expected rate is required"
+        : "";
+      errors.NoShowPolicy = !interviewDetailsData.NoShowPolicy ? "No-show policy selection is required" : "";
+    }
   }
-
-
-  }
-
-
 
   if (step === 3) {
-    const { times, formData3, selectedOption } = params;
-
-    // Validate fields for step 2
-    const hasValidTimeSlot = Object.values(times).some((dayTimes) =>
-      dayTimes.some((timeSlot) => timeSlot.startTime && timeSlot.endTime)
+    const { availabilityDetailsData } = params;
+    const hasValidTimeSlot = availabilityDetailsData.Availability && Object.values(availabilityDetailsData.Availability).some((dayTimes) =>
+      dayTimes.some((timeSlot) => timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable")
     );
 
     errors.TimeSlot = !hasValidTimeSlot ? 'At least one valid time slot is required' : '';
-    errors.TimeZone = !formData3.TimeZone ? 'Time Zone is required' : '';
-    errors.PreferredDuration = !selectedOption ? 'Preferred Interview Duration is required' : '';
+    errors.TimeZone = !availabilityDetailsData.TimeZone ? 'Time Zone is required' : '';
+    errors.PreferredDuration = !availabilityDetailsData.PreferredDuration ? 'Preferred Interview Duration is required' : '';
   }
 
+  // Log errors object
+  console.log("Errors valid:", errors);
 
   // Check for any errors
   hasError = Object.values(errors).some((error) => error !== '');

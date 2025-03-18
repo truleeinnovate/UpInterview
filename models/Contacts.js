@@ -8,7 +8,9 @@ const ContactsSchema = new mongoose.Schema({
     email: String,
     phone: String,
     linkedinUrl: String,
+    portfolioUrl: String,
     currentRole: String,
+    hourlyRate: Number,
     industry: { type: String },
     experience: { type: String },
     gender: String,
@@ -21,7 +23,6 @@ const ContactsSchema = new mongoose.Schema({
     preferredDuration: String,
     location: String,
     introduction: String,
-    // Technologys: [String],diretly add from form
     password: String,
     contactType: String,
     experienceYears: String,
@@ -38,20 +39,9 @@ const ContactsSchema = new mongoose.Schema({
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
     availability: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interviewavailability' }],
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    // createdDate: {
-    //     type: Date,
-    //     default: Date.now
-    // },
     createdBy: {
         type: String,
     },
-    // ModifiedDate: {
-    //     type: Date,
-    //     default: Date.now
-    // },
-    // ModifiedBy: {
-    //     type: String
-    // }
 },{ timestamps: true,strict: false  });
 
 

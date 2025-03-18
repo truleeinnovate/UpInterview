@@ -8,8 +8,7 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     status: { type: String, enum: ['new', 'contacted', 'inprogress', 'active', 'inactive', 'blacklisted'], default: 'new' },
 
     requestedRate: {
-        min: { type: Number, required: true }, // Min hourly rate
-        max: { type: Number, required: true }, // Max hourly rate
+        hourlyRate: { type: Number, required: true }
     },
     finalRate: { type: Number }, // Final agreed rate per hour
     currency: { type: String, default: 'USD' }, // Currency code (e.g., USD, EUR)
