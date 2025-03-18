@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { config } from '../../../../config.js';
 import InterviewStatusIndicator from './InterviewStatusIndicator';
 import FeedbackStatusChangeModal from './FeedbackStatusChangeModal';
 import maleImage from "../../../Dashboard-Part/Images/man.png";
@@ -21,7 +22,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const fetchInterviewers = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
 
       console.log('✅ response:', response.data);
 
@@ -280,14 +281,12 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                 </button>
               ))}
             </div>
-            {activeTab === 'Feedback' && (
-              <button
-                className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700"
-                onClick={handleChangeStatus}
-              >
-                Change Status
-              </button>
-            )}
+            <button
+              className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700"
+              onClick={handleChangeStatus}
+            >
+              Change Status
+            </button>
           </div>
           <div>
 
@@ -372,7 +371,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                         <div className="flex gap-20">
                           <span className="text-gray-700 font-medium w-32">Technology</span>
                           <div className="text-gray-600">
-                            {interviewer.Technologys.map((technology, index) => (
+                            {interviewer.Technologys?.map((technology, index) => (
                               <div key={index}>{technology}</div>
                             ))}
                           </div>
@@ -381,7 +380,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                         <div className="flex gap-20">
                           <span className="text-gray-700 font-medium w-32">Skills</span>
                           <span className="text-gray-600">
-                            {interviewer.Skills.join(", ")}
+                            {interviewer.Skills?.join(", ")}
                           </span>
                         </div>
 

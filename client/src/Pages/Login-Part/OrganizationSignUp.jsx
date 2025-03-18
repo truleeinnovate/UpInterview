@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { fetchMasterData } from '../../utils/fetchMasterData';
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
@@ -28,30 +27,7 @@ export const Organization = () => {
   const employeesOptions = ["Employees", "11-20"];
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // const [objectsData, setObjectsData] = useState([]);
-  // const [tabsData, setTabsData] = useState([]);
   const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   const fetchObjectsData = async () => {
-  //     try {
-  //       const data = await fetchMasterData('api/objects');
-  //       setObjectsData(data.objects || []);
-  //     } catch (error) {
-  //       console.error('Error fetching objects data:', error);
-  //     }
-  //   };
-  //   const fetchTabsData = async () => {
-  //     try {
-  //       const data = await fetchMasterData('api/tabs');
-  //       setTabsData(data.tabs || []);
-  //     } catch (error) {
-  //       console.error('Error fetching tabs data:', error);
-  //     }
-  //   };
-  //   fetchObjectsData();
-  //   fetchTabsData();
-  // }, []);
 
   const toggleDropdownEmployees = () => {
     setShowDropdownEmployees(!showDropdownEmployees);
@@ -71,149 +47,6 @@ export const Organization = () => {
     setShowDropdownCountry(false);
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (selectedPassword !== selectedConfirmPassword) {
-  //     setErrorMessage("Passwords do not match!");
-  //     return;
-  //   }
-  //   try {
-  //     // Ensure objectsData and tabsData are arrays
-  //     if (!Array.isArray(objectsData) || !Array.isArray(tabsData)) {
-  //       throw new Error("Objects data or tabs data is not available");
-  //     }
-  //     // Create organization
-  //     const formData = {
-  //       firstName: selectedFirstName,
-  //       lastName: selectedLastName,
-  //       Email: selectedEmail,
-  //       Phone: selectedPhone,
-  //       username: selectedUsername,
-  //       jobTitle: selectedJobTitle,
-  //       company: selectedCompany,
-  //       employees: selectedEmployees,
-  //       country: selectedCountry,
-  //       password: selectedPassword,
-  //       contactType: 'Organization'
-  //     };
-
-  //     const response = await axios.post(`${config.REACT_APP_API_URL}/organization`, formData);
-
-  //     Cookies.set('userId', response.data.user._id, { expires: 7 });
-  //     Cookies.set('organizationId', response.data.organization._id, { expires: 7 });
-
-  //     const organizationId = response.data.organization._id;
-  //     const userId = response.data.user._id; // Ensure user ID is correctly retrieved
-
-  //     // Construct accessBody from objectsData and tabsData
-  //     const accessBody = objectsData.map(tab => ({
-  //       ObjName: tab,
-  //       Access: 'Public',
-  //       GrantAccess: false
-  //     }));
-
-  //     // Save default sharing settings
-  //     await axios.post(`${config.REACT_APP_API_URL}/api/sharing-settings`, {
-  //       Name: 'sharingSettingDefaultName',
-  //       organizationId: organizationId,
-  //       accessBody: accessBody
-  //     });
-
-  //     // Create default profiles
-  //     const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter"];
-  //     let adminProfileId = "";
-  //     for (let i = 0; i < profileNames.length; i++) {
-  //       const profileTabs = tabsData.map(tab => ({
-  //         name: tab,
-  //         status: profileNames[i] === "Admin" ? 'Visible' : 'Hidden'
-  //       }));
-  //       const profileObjects = objectsData.map(object => ({
-  //         name: object,
-  //         permissions: {
-  //           View: true,
-  //           Create: true,
-  //           Edit: true,
-  //           Delete: profileNames[i] === "Admin"
-  //         }
-  //       }));
-
-  //       const profileResponse = await axios.post(`${config.REACT_APP_API_URL}/api/profiles`, {
-  //         label: profileNames[i],
-  //         Name: profileNames[i],
-  //         Description: `Default profile description for ${profileNames[i]}`,
-  //         Tabs: profileTabs,
-  //         Objects: profileObjects,
-  //         organizationId: organizationId
-  //       });
-
-  //       if (profileNames[i] === "Admin") {
-  //         adminProfileId = profileResponse.data._id;
-  //       }
-  //     }
-
-  //     // Create default roles
-  //     const roles = [
-  //       { label: "Admin", name: "Admin" },
-  //       { label: "CEO", name: "CEO" },
-  //       { label: "HR Manager", name: "HR_Manager" },
-  //       { label: "HR Lead", name: "HR_Lead" },
-  //       { label: "Recruiter", name: "Recruiter" },
-  //     ];
-
-  //     let adminRoleId = "";
-  //     let ceoRoleId = "";
-  //     let hrManagerRoleId = "";
-  //     let hrLeadRoleId = "";
-
-  //     for (let i = 0; i < roles.length; i++) {
-  //       let reportsToRoleId = null;
-
-  //       if (roles[i].name === "CEO") {
-  //         reportsToRoleId = adminRoleId;
-  //       } else if (roles[i].name === "HR_Manager") {
-  //         reportsToRoleId = ceoRoleId;
-  //       } else if (roles[i].name === "HR_Lead") {
-  //         reportsToRoleId = hrManagerRoleId;
-  //       } else if (roles[i].name === "Recruiter") {
-  //         reportsToRoleId = hrLeadRoleId;
-  //       }
-
-  //       const roleData = {
-  //         label: roles[i].label,
-  //         roleName: roles[i].name,
-  //         description: `Default role description for ${roles[i].name}`,
-  //         organizationId: organizationId,
-  //       };
-
-  //       if (reportsToRoleId) {
-  //         roleData.reportsToRoleId = reportsToRoleId;
-  //       }
-
-  //       const roleResponse = await axios.post(`${config.REACT_APP_API_URL}/rolesdata`, roleData);
-
-  //       if (roles[i].name === "Admin") {
-  //         adminRoleId = roleResponse.data._id;
-  //       } else if (roles[i].name === "CEO") {
-  //         ceoRoleId = roleResponse.data._id;
-  //       } else if (roles[i].name === "HR_Manager") {
-  //         hrManagerRoleId = roleResponse.data._id;
-  //       } else if (roles[i].name === "HR_Lead") {
-  //         hrLeadRoleId = roleResponse.data._id;
-  //       }
-  //     }
-
-  //     await axios.put(`${config.REACT_APP_API_URL}/users/${userId}`, {
-  //       RoleId: adminRoleId,
-  //       ProfileId: adminProfileId
-  //     });
-
-  //     navigate('/subscription-plans');
-  //   } catch (error) {
-  //     console.error('Error saving organization:', error.response?.data || error.message);
-  //     setErrorMessage(`An error occurred while saving the organization: ${error.response?.data?.message || error.message || 'Unknown error'}`);
-  //   }
-  // };
-
   const organizationData = {
     firstName: selectedFirstName,
     lastName: selectedLastName,
@@ -229,7 +62,6 @@ export const Organization = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Password validation regex
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     if (!passwordRegex.test(selectedPassword)) {
@@ -244,11 +76,6 @@ export const Organization = () => {
  // Clear error if validation passes
  setErrorMessage("");
     try {
-      // const response = await fetch(`${config.REACT_APP_API_URL}/Organization/Signup`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(organizationData),
-      // });
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
 
       const data = response.data;

@@ -3,6 +3,7 @@ import React from "react";
 import { IoClose } from "react-icons/io5";
 import axios from 'axios';
 import toast from "react-hot-toast";
+import { config } from '../../../../config.js';
 
 const FeedbackStatusChangeModal = ({
   showStatusModal,
@@ -13,7 +14,7 @@ const FeedbackStatusChangeModal = ({
   onClose,
 }) => {
 
-  console.log('check 4 :', newStatus)
+  console.log('check 4 :', newStatus);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ const FeedbackStatusChangeModal = ({
     const updatedComments = newStatus.comments;
 
     try {
-        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`, {
+        const response = await axios.patch(`${config.REACT_APP_API_URL}/outsourceInterviewers`, {
             contactId: interviewer._id,
             givenBy: interviewer._id,
             status: updatedStatus,
@@ -61,8 +62,8 @@ const FeedbackStatusChangeModal = ({
 
           {/* Form */}
           <form className="p-6 h-full" onSubmit={handleFormSubmit}>
-            <div className="grid grid-cols-[auto_1fr] gap-x-[10ch] mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="flex items-center mb-4">
+              <label className="block text-sm font-medium text-gray-700 w-[50%]">
                 Select New Status <span className="text-red-500">*</span>
               </label>
               <select
@@ -71,7 +72,7 @@ const FeedbackStatusChangeModal = ({
                 onChange={(e) =>
                   setNewStatus({ ...newStatus, status: e.target.value })
                 }
-                className={`w-full border-b-2 focus:outline-none text-gray-700`}
+                className="block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
               >
                 <option value="" hidden>
                   New
@@ -88,8 +89,8 @@ const FeedbackStatusChangeModal = ({
               </select>
             </div>
 
-            <div className="grid grid-cols-[auto_1fr] gap-x-[19ch] mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="flex items-center mb-4">
+              <label className="block text-sm font-medium text-gray-700 w-[50%]">
                 Rating <span className="text-red-500">*</span>
               </label>
               <input
@@ -102,24 +103,24 @@ const FeedbackStatusChangeModal = ({
                     rating: parseFloat(e.target.value),
                   })
                 }
-                className="w-full text-gray-700 border-b-2 focus:outline-none focus:border-teal-500"
+                className="block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
                 step="0.1"
                 min="0"
                 max="5"
               />
             </div>
 
-            <div className="grid grid-cols-[auto_1fr] gap-x-[20ch] mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="flex mb-4">
+              <label className="block text-sm font-medium text-gray-700 w-[49%]">
                 Notes
               </label>
-              <div>
+              <div className="w-full">
                 <textarea
                   value={newStatus.comments || ""}
                   onChange={(e) =>
                     setNewStatus({ ...newStatus, comments: e.target.value })
                   }
-                  className="w-full p-2 border rounded-md h-40 resize-none focus:outline-none focus:ring-2 focus:ring-teal-700 mt-2"
+                  className="block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm h-40"
                   placeholder="Enter your notes here..."
                   maxLength={250}
                 ></textarea>

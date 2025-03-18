@@ -4,7 +4,7 @@ import { fetchFilterData } from "../utils/dataUtils";
 import { usePermissions } from "./PermissionsContext";
 import Cookies from "js-cookie";
 import { fetchMasterData } from '../utils/fetchMasterData.js';
-
+import { config } from '../config.js'
 
 const CustomContext = createContext();
 
@@ -38,7 +38,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
         setUserProfile(response.data);
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -54,7 +54,7 @@ const CustomProvider = ({ children }) => {
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
     try {
-      const url = `${process.env.REACT_APP_API_URL}/interview-questions/get-questions`;
+      const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
       const response = await axios.get(url);
 
       const formattedList = response.data.questions.map((question) => ({
@@ -99,7 +99,7 @@ const CustomProvider = ({ children }) => {
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
       setCreatedLists(response.data.reverse());
     } catch (error) {
       // console.error("Error fetching lists:", error);
@@ -115,7 +115,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const getQuestions = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/suggested-questions/questions`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
 
         if (response.data.success) {
           const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
@@ -140,7 +140,7 @@ const CustomProvider = ({ children }) => {
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
       const candidatesWithImages = filteredCandidates.map((candidate) => {
         if (candidate.ImageData && candidate.ImageData.filename) {
-          const imageUrl = `${process.env.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
+          const imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
           return { ...candidate, imageUrl };
         }
         return candidate;
@@ -221,7 +221,7 @@ const CustomProvider = ({ children }) => {
 
         // Process image URL if exists
         if (team.ImageData && team.ImageData.filename) {
-          const imageUrl = `${process.env.REACT_APP_API_URL}/${team.ImageData.path.replace(/\\/g, '/')}`;
+          const imageUrl = `${config.REACT_APP_API_URL}/${team.ImageData.path.replace(/\\/g, '/')}`;
           processedTeam.imageUrl = imageUrl;
         }
 
@@ -275,11 +275,11 @@ const CustomProvider = ({ children }) => {
           }
           try {
             const candidateResponse = await axios.get(
-              `${process.env.REACT_APP_API_URL}/candidate/${interview.CandidateId}`
+              `${config.REACT_APP_API_URL}/candidate/${interview.CandidateId}`
             );
             const candidate = candidateResponse.data;
             if (candidate.ImageData && candidate.ImageData.filename) {
-              candidate.imageUrl = `${process.env.REACT_APP_API_URL
+              candidate.imageUrl = `${config.REACT_APP_API_URL
                 }/${candidate.ImageData.path.replace(/\\/g, "/")}`;
             }
             return {
@@ -315,7 +315,7 @@ const CustomProvider = ({ children }) => {
   const [interviewers, setInterviewers] = useState([]);
   const fetchoutsourceInterviewers = useCallback(async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
       const reversedData = response.data.reverse();
       setInterviewers(reversedData);
     } catch (err) {
@@ -365,7 +365,7 @@ const CustomProvider = ({ children }) => {
   //   const fetchNotificationData = async () => {
   //     try {
   //       const response = await axios.get(
-  //         `${process.env.REACT_APP_API_URL}/notification?userId=${userId}`
+  //         `${config.REACT_APP_API_URL}/notification?userId=${userId}`
   //       );
   //       setNotificationsData(response.data);
   //     } catch (error) {

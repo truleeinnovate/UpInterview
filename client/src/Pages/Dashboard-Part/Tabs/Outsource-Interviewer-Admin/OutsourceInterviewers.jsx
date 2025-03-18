@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import maleImage from "../../../Dashboard-Part/Images/man.png";
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
-import axios from 'axios';
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
 import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';

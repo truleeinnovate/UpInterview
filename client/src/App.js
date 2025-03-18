@@ -14,6 +14,7 @@ import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 import LinkedInCallback from './Components/LinkedInCallback';
 import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
+import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
 
 const App = () => {
   const location = useLocation();
@@ -40,6 +41,7 @@ const App = () => {
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
+          <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
         </Routes>
       </div>
     </React.Fragment>
