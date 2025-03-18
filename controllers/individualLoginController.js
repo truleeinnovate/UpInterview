@@ -353,25 +353,25 @@ exports.individualLogin = async (req, res) => {
     }
 
     // <-----------------------OutsourceInterviewer------------------------------->
-    // const newInterviewer = new OutsourceInterviewer({
-    //   ownerId: savedUser._id,
-    //   contactId: savedContact._id,
-    //   requestedRate: {
-    //     hourlyRate: contactData.hourlyRate
-    //   },
-    //   finalRate: null,
-    //   feedback: [{
-    //     givenBy: savedUser._id,
-    //     rating: 4.5,
-    //     comments: "",
-    //     createdAt: new Date()
-    //   }],
-    //   createdBy: savedUser._id,
-    //   currency: 'USD'
-    // });
+    const newInterviewer = new OutsourceInterviewer({
+      ownerId: savedUser._id,
+      contactId: savedContact._id,
+      requestedRate: {
+        hourlyRate: contactData.hourlyRate
+      },
+      finalRate: null,
+      feedback: [{
+        givenBy: savedUser._id,
+        rating: 4.5,
+        comments: "",
+        createdAt: new Date()
+      }],
+      createdBy: savedUser._id,
+      currency: 'USD'
+    });
 
-    // const savedInterviewer = await newInterviewer.save();
-    // console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
+    const savedInterviewer = await newInterviewer.save();
+    console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
     // <-----------------------OutsourceInterviewer------------------------------->
 
 
