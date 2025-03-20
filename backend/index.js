@@ -4,14 +4,19 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = 5001;
+
+console.log('process.env.PORT frontend api link:', process.env.PORT);
+
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
+console.log('process.env.MONGODB_URI frontend api link:', process.env.MONGODB_URI);
+
 // MongoDB Connection
-mongoose.connect('mongodb+srv://smb:smb123@candidatetable.wewzvjo.mongodb.net/testdb?retryWrites=true&w=majority&appName=CandidateTable', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
