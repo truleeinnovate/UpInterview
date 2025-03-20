@@ -11,7 +11,7 @@ app.get('*', (req, res) => {
 });
  
 // Use process.env.PORT if available, otherwise default to 3000
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5001;
  
 // Start the server
 app.listen(port, () => {
