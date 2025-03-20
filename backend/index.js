@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(bodyParser.json());
 
-console.log('process.env.MONGODB_URI frontend api link:', process.env.MONGODB_URI);
+console.log('process.env.MONGODB_URI backend api link:', process.env.MONGODB_URI);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
