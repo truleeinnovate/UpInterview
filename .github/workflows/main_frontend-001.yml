@@ -30,7 +30,7 @@ jobs:
 
       - name: Zip artifact for deployment
         working-directory: ./frontend
-        run: zip -r release.zip build/ node_modules/ package.json # Include node_modules and package.json
+        run: zip -r release.zip build/ node_modules/ package.json server.js
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -62,4 +62,4 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
-          clean: true # Keep this to avoid conflicts
+          clean: true
