@@ -62,5 +62,4 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
-          startup-command: '/home/site/wwwroot/node_modules/.bin/serve -s build -l $PORT'
-          clean: true
+          clean: true # Keep this to avoid conflicts
