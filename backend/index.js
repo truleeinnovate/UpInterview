@@ -5,12 +5,15 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-console.log('process.env.PORT frontend api link:', process.env.PORT);
+console.log('process.env.PORT for backend port:', process.env.PORT);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000; // Keep 5000 unless you intentionally want 5001
 
+console.log('process.env.FRONTEND_URL for backend cors:', process.env.FRONTEND_URL);
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Dynamic CORS origin
+}));
 app.use(bodyParser.json());
 
 console.log('process.env.MONGODB_URI backend api link:', process.env.MONGODB_URI);
