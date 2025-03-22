@@ -38,11 +38,13 @@ const User = mongoose.model('User', userSchema);
 // Signup Route
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
+  console.log('Received signup request:', req.body);
   try {
     const user = new User({ name, email, password });
     await user.save();
     res.json({ success: true });
   } catch (error) {
+    console.error('Signup error:', error);
     res.status(400).json({ success: false, message: error.message });
   }
 });

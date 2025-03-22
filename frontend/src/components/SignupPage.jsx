@@ -14,6 +14,7 @@ function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form data being sent:', formData);
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/signup`, formData);
       if (response.data.success) {
