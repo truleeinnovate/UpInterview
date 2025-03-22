@@ -15,15 +15,22 @@ function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form data being sent:', formData);
+  
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/signup`, formData);
       if (response.data.success) {
         navigate('/dashboard', { state: { name: formData.name } });
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      if (error.response) {
+        console.error('Signup error:', error.response.data.message);
+        alert(error.response.data.message);
+      } else {
+        console.error('Signup error:', error);
+        alert('An unexpected error occurred. Please try again.');
+      }
     }
-  };  
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-100 to-gray-300 flex items-center justify-center">

@@ -29,7 +29,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 // User Schema
 const userSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, unique: true },
+  email: { type: String },
   password: String,
 });
 
@@ -38,14 +38,28 @@ const User = mongoose.model('User', userSchema);
 // Signup Route
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
-  console.log('Received signup request :', req.body);
+  console.log('Received signup request:', req.body);
+
   try {
+    // Check if a user with this email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already in use. Please use a different email.',
+      });
+    }
+
+    // If no duplicate, create and save the new user
     const user = new User({ name, email, password });
     await user.save();
     res.json({ success: true });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.',
+    });
   }
 });
 
