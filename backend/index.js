@@ -38,7 +38,7 @@ const User = mongoose.model('User', userSchema);
 // Signup Route
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
-  console.log('Received signup request:', req.body);
+  console.log('Received signup request :', req.body);
   try {
     const user = new User({ name, email, password });
     await user.save();
