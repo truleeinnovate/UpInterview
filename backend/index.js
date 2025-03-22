@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000; // Keep 5000 unless you intentionally wan
 console.log('process.env.FRONTEND_URL for backend cors:', process.env.FRONTEND_URL);
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Dynamic CORS origin
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
 }));
 app.use(bodyParser.json());
 
