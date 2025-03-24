@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-
+ 
 console.log('process.env.PORT for backend port:', process.env.PORT);
 
 const PORT = process.env.PORT || 5000; // Keep 5000 unless you intentionally want 5001
