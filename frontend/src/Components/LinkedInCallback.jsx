@@ -14,13 +14,13 @@ const LinkedInCallback = () => {
         console.log('1. LinkedIn callback received');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        
+
         console.log('2. Fetching user details with code:', code);
         const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, { code });
         console.log('3. User details received:', response.data);
 
         const { userInfo } = response.data;
-    
+
         console.log('4.0: LinkedIn data received:', userInfo);
 
         console.log('4. LinkedIn complete data:', {
@@ -29,7 +29,7 @@ const LinkedInCallback = () => {
           picture: userInfo.pictureUrl,
           profileUrl: userInfo.profileUrl
         });
-    
+
         if (response.data.existingUser) {
           console.log('4a. User exists - redirecting to login');
           navigate('/home');

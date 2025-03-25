@@ -91,22 +91,22 @@ app.get('/technology', async (req, res) => {
 
 // <------------------------------api's-------------------------------------->
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
-app.use('/linkedin', linkedinAuthRoutes);
+app.use('/api/linkedin', linkedinAuthRoutes);
 
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
-app.use("/Individual", individualLoginRoutes);
+app.use("/api/Individual", individualLoginRoutes);
 
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
-app.use('/',SubscriptionRouter);
+app.use('/api/',SubscriptionRouter);
 
 const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
-app.use('/',CustomerSubscriptionRouter)
+app.use('/api/',CustomerSubscriptionRouter)
 
 const organizationRoutes = require('./routes/organizationRoutes.js');
-app.use('/Organization', organizationRoutes);
+app.use('/api/Organization', organizationRoutes);
 
 const emailCommonRouter = require('./routes/emailCommonRoutes.js')
-app.use('/emailCommon',emailCommonRouter)
+app.use('/api/emailCommon',emailCommonRouter)
 
 const Cardrouter = require("./routes/Carddetailsroutes.js");
-app.use('/',Cardrouter)
+app.use('/api/',Cardrouter)
