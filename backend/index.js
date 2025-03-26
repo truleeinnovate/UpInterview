@@ -10,9 +10,15 @@ const PORT = process.env.PORT || 5000;
 
 console.log('process.env.FRONTEND_URL for backend cors:', process.env.FRONTEND_URL);
 // Middleware
+// app.use(cors({
+//   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+// }));
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net',
+  credentials: true
 }));
+
 app.use(bodyParser.json());
 
 console.log('process.env.MONGODB_URI backend api link:', process.env.MONGODB_URI);
@@ -90,8 +96,9 @@ app.get('/technology', async (req, res) => {
 // -------------------------------------------------------------------------->
 
 // <------------------------------api's-------------------------------------->
-const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
-app.use('/linkedin', linkedinAuthRoutes);
+app.use('/linkedin', require('./routes/linkedinAuthRoute.js'));
+// const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
+// app.use('/linkedin', linkedinAuthRoutes);
 
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 app.use("/Individual", individualLoginRoutes);

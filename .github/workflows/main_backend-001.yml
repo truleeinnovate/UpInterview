@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -26,15 +26,18 @@ jobs:
           npm install
           npm run build --if-present
 
-      - name: Zip artifact for deployment
-        working-directory: ./backend  # Ensure only backend files are zipped
-        run: zip -r release.zip .  # Zip the current directory (backend)
+      - name: Create Deployment Structure
+        run: |
+          mkdir -p deploy/backend
+          cp -r backend/* deploy/backend/
+          cd deploy
+          zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./backend/release.zip  # Specify exact path to the ZIP file
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -49,12 +52,8 @@ jobs:
         with:
           name: node-app
 
-      # Optional: Uncomment if you need to inspect/modify the ZIP contents
-      # - name: Unzip artifact for deployment
-      #   run: unzip release.zip
-
-      - name: Delay to Avoid SCM Conflict
-        run: sleep 30  # Wait 30 seconds to avoid SCM restart conflicts
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -62,6 +61,6 @@ jobs:
         with:
           app-name: 'backend-001'
           slot-name: 'Production'
-          package: ./release.zip  # Deploy the ZIP directly
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1538A423DB434915BF49499792B1E04C }}
-          clean: true  # Clear previous deployment to avoid conflicts
+          clean: true
