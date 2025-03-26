@@ -15,8 +15,10 @@ console.log('process.env.FRONTEND_URL for backend cors:', process.env.FRONTEND_U
 // }));
 
 app.use(cors({
-  origin: 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net',
-  credentials: true
+  origin: 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net', // Frontend ka exact URL
+  methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  credentials: true // Agar cookies ya auth headers bhejna hai
 }));
 
 app.use(bodyParser.json());
