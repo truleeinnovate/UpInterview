@@ -36,12 +36,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.cache/.install-state.gz" ]; then
-            npm ci --prefer-offline --no-audit
-          else
-            echo "Dependencies are cached. Skipping installation."
-          fi
-      
+          # Use npm install instead of npm ci to resolve version mismatches
+          npm install --prefer-offline --no-audit
+
       - name: Build application
         working-directory: ./frontend
         env:
@@ -73,9 +70,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     
     steps:
       - name: Download artifact from build job
