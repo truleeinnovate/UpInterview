@@ -3,40 +3,33 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
- 
-console.log('process.env.PORT for backend port:', process.env.PORT);
-
-const PORT = process.env.PORT || 5000;
-
-console.log('process.env.FRONTEND_URL for backend cors:', process.env.FRONTEND_URL);
-// Middleware
-// app.use(cors({
-//   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-// }));
-
-app.use(cors({
-  origin: 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net', // Frontend ka exact URL
-  methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-  credentials: true // Agar cookies ya auth headers bhejna hai
-}));
-
 app.use(bodyParser.json());
 
-console.log('process.env.MONGODB_URI backend api link:', process.env.MONGODB_URI);
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log(err));
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.use((req, res, next) => {
+  console.log('CORS headers set for:', req.method, req.url);
+  next();
 });
 
+const port = process.env.PORT;
+console.log('port:', port);
+const mongoUri = process.env.MONGODB_URI;
+console.log('mongoUri:', mongoUri);
+
+const corsOptions = {
+  origin: ['https://www.app.upinterview.io', 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net'],
+  credentials: true,
+};
+console.log('corsOptions:', corsOptions);
+
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
+ 
+app.use(cors(corsOptions));
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
 
 // <--------------------------------master data----------------------------------
 // skills master data
@@ -98,9 +91,9 @@ app.get('/technology', async (req, res) => {
 // -------------------------------------------------------------------------->
 
 // <------------------------------api's-------------------------------------->
-app.use('/linkedin', require('./routes/linkedinAuthRoute.js'));
-// const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
-// app.use('/linkedin', linkedinAuthRoutes);
+// app.use('/linkedin', require('./routes/linkedinAuthRoute.js'));
+const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
+app.use('/linkedin', linkedinAuthRoutes);
 
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 app.use("/Individual", individualLoginRoutes);
