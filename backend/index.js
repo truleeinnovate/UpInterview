@@ -5,7 +5,18 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
+// Enhanced CORS handling - applied before routes
 app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   console.log('CORS headers set for:', req.method, req.url);
   next();
 });
@@ -16,8 +27,9 @@ const mongoUri = process.env.MONGODB_URI;
 console.log('mongoUri:', mongoUri);
 
 const corsOptions = {
-  origin: ['https://www.app.upinterview.io', 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net'],
+  origin: ['https://www.app.upinterview.io', 'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net', 'http://localhost:3000'],
   credentials: true,
+  optionsSuccessStatus: 200
 };
 console.log('corsOptions:', corsOptions);
 

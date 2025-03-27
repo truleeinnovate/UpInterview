@@ -11,15 +11,30 @@ router.post('/check-user', async (req, res) => {
 
     // Exchange code for token with available scopes
     console.log('Backend: 2. Exchanging code for token');
-    const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
-      params: {
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: config.REACT_APP_REDIRECT_URI,
-        client_id: config.REACT_APP_CLIENT_ID,
-        client_secret: config.REACT_APP_CLIENT_SECRET
-      }
-    });
+    let tokenResponse;
+    try {
+      tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+        params: {
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: config.REACT_APP_REDIRECT_URI,
+          client_id: config.REACT_APP_CLIENT_ID,
+          client_secret: config.REACT_APP_CLIENT_SECRET
+        }
+      });
+    } catch (error) {
+      console.error('Token exchange error:', error.response?.data || error.message);
+      return res.status(500).json({ error: 'Failed to exchange LinkedIn code for token' });
+    }
+    // const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+    //   params: {
+    //     grant_type: 'authorization_code',
+    //     code,
+    //     redirect_uri: config.REACT_APP_REDIRECT_URI,
+    //     client_id: config.REACT_APP_CLIENT_ID,
+    //     client_secret: config.REACT_APP_CLIENT_SECRET
+    //   }
+    // });
 
     const accessToken = tokenResponse.data.access_token;
 

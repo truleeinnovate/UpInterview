@@ -6,7 +6,8 @@ import { config } from '../config.js';
 const LinkedInCallback = () => {
   console.log('navigated to call back');
   const navigate = useNavigate();
-  const [error] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -14,9 +15,25 @@ const LinkedInCallback = () => {
         console.log('1. LinkedIn callback received');
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
+        
+        if (!code) {
+          throw new Error('No authorization code received from LinkedIn');
+        }
 
         console.log('2. Fetching user details with code:', code);
-        const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, { code });
+        
+        // Add timeout to the request
+        const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, 
+          { code },
+          {
+            timeout: 20000, // 20 second timeout
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            withCredentials: false // Important for CORS - don't send credentials for now
+          }
+        );
+        
         console.log('3. User details received:', response.data);
 
         const { userInfo } = response.data;
@@ -49,18 +66,35 @@ const LinkedInCallback = () => {
         }
       } catch (error) {
         console.error('Error in LinkedIn callback:', error);
+        setError(error.message || 'Failed to process LinkedIn login');
+      } finally {
+        setLoading(false);
       }
     };
 
     handleCallback();
   }, [navigate]);
 
+  // Redirect to login page after 5 seconds if there's an error
+  useEffect(() => {
+    let timer;
+    if (error) {
+      timer = setTimeout(() => {
+        navigate('/');
+      }, 5000);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [error, navigate]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       {error ? (
         <div className="text-red-500 text-center p-4">
           <p>{error}</p>
-          <p className="text-sm mt-2">Redirecting to login page...</p>
+          <p className="text-sm mt-2">Redirecting to login page in 5 seconds...</p>
         </div>
       ) : (
         <div className="text-center">
