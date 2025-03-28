@@ -24,7 +24,7 @@ const App = () => {
   const shouldRenderLogo = ['/organization', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
   return (
-    <React.Fragment>
+    <React.Fragment> 
       {shouldRenderNavbar && <Navbar />}
       {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
