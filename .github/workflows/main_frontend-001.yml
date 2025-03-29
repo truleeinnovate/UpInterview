@@ -146,6 +146,7 @@ jobs:
           mkdir -p release
           cp -r build release/
           cp package.json release/
+          cp -r node_modules release/
           cp server.js release/
           cp yarn.lock release/  # Include generated yarn.lock for consistency
           cd release && zip -r ../release.zip . -x "*.map"
