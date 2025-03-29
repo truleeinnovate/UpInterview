@@ -1,3 +1,102 @@
+# name: Build and deploy Node.js app to Azure Web App - frontend-001
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: read
+
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 1
+
+#       - name: Set up Node.js version
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '20.x'
+#           cache: 'npm'
+#           cache-dependency-path: './frontend/package-lock.json'
+
+#       # Restore/cache node_modules to avoid reinstalling dependencies
+#       # - name: Restore cache
+#       #   uses: actions/cache@v3
+#       #   with:
+#       #     path: './frontend/node_modules'
+#       #     key: ${{ runner.os }}-node-${{ hashFiles('./frontend/package-lock.json') }}
+#       #     restore-keys: |
+#       #       ${{ runner.os }}-node-
+
+#       - name: Install dependencies
+#         working-directory: ./frontend
+#         run: |
+#           # Use npm install instead of npm ci to resolve version mismatches
+#           # npm install --prefer-offline --no-audit
+#           # We will use yarn
+#           yarn add react-select
+#           yarn install --production --ignore-optional --network-timeout 300000
+          
+#       - name: Build application
+#         working-directory: ./frontend
+#         env:
+#           CI: false
+#           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+#         run: |
+#           yarn build
+      
+#       # - name: Prune development dependencies
+#       #   working-directory: ./frontend
+#       #   run: npm prune --production
+
+#       - name: Zip artifact for deployment
+#         working-directory: ./frontend
+#         run: |
+#           # Only include necessary files, exclude source maps and other large files
+#           mkdir -p release
+#           cp -r build release/
+#           cp package.json release/
+#           cp server.js release/
+#           cd release && zip -r ../release.zip . -x "*.map" -x "node_modules/typescript/*" -x "node_modules/eslint*/*" -x "node_modules/@types/*"
+
+#       - name: Upload artifact for deployment job
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: node-app
+#           path: ./frontend/release.zip
+#           retention-days: 1
+
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: build
+    
+#     steps:
+#       - name: Download artifact from build job
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: node-app
+
+#       - name: Unzip artifact for deployment
+#         run: unzip release.zip
+      
+#       - name: 'Deploy to Azure Web App'
+#         id: deploy-to-webapp
+#         uses: azure/webapps-deploy@v3
+#         with:
+#           app-name: 'frontend-001'
+#           slot-name: 'production'
+#           package: .
+#           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
+#           clean: true
+
+
+
+
 name: Build and deploy Node.js app to Azure Web App - frontend-001
 
 on:
@@ -17,52 +116,38 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Set up Node.js version
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache: 'yarn'  # Still use Yarn cache, but it’ll build from scratch initially
+          cache-dependency-path: './frontend/package.json'  # Use package.json since no yarn.lock
 
-      # Restore/cache node_modules to avoid reinstalling dependencies
-      # - name: Restore cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: './frontend/node_modules'
-      #     key: ${{ runner.os }}-node-${{ hashFiles('./frontend/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-node-
+      - name: Install Yarn
+        run: npm install -g yarn  # Ensure Yarn is available
 
       - name: Install dependencies
         working-directory: ./frontend
         run: |
-          # Use npm install instead of npm ci to resolve version mismatches
-          # npm install --prefer-offline --no-audit
-          # We will use yarn
-          yarn add react-select
           yarn install --production --ignore-optional --network-timeout 300000
-          
+          # Generates yarn.lock implicitly during install
+
       - name: Build application
         working-directory: ./frontend
         env:
           CI: false
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-        run: |
-          yarn build
-      
-      # - name: Prune development dependencies
-      #   working-directory: ./frontend
-      #   run: npm prune --production
+        run: yarn build
 
       - name: Zip artifact for deployment
         working-directory: ./frontend
         run: |
-          # Only include necessary files, exclude source maps and other large files
           mkdir -p release
           cp -r build release/
           cp package.json release/
           cp server.js release/
-          cd release && zip -r ../release.zip . -x "*.map" -x "node_modules/typescript/*" -x "node_modules/eslint*/*" -x "node_modules/@types/*"
+          cp yarn.lock release/  # Include generated yarn.lock for consistency
+          cd release && zip -r ../release.zip . -x "*.map"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -84,7 +169,7 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
