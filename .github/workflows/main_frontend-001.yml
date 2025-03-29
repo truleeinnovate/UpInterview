@@ -40,8 +40,8 @@ jobs:
           # npm install --prefer-offline --no-audit
           # We will use yarn
           yarn add react-select
-          yarn install
-
+          yarn install --production --ignore-optional --network-timeout 300000
+          
       - name: Build application
         working-directory: ./frontend
         env:
@@ -62,7 +62,6 @@ jobs:
           cp -r build release/
           cp package.json release/
           cp server.js release/
-          cp -r node_modules release/
           cd release && zip -r ../release.zip . -x "*.map" -x "node_modules/typescript/*" -x "node_modules/eslint*/*" -x "node_modules/@types/*"
 
       - name: Upload artifact for deployment job
