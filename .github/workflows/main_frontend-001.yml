@@ -129,6 +129,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: |
+          yarn add react-select
           yarn install --production --ignore-optional --network-timeout 300000
           # Generates yarn.lock implicitly during install
 
