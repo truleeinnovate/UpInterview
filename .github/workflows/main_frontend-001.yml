@@ -39,6 +39,7 @@ jobs:
           # Use npm install instead of npm ci to resolve version mismatches
           # npm install --prefer-offline --no-audit
           # We will use yarn
+          yarn add react-select
           yarn install
 
       - name: Build application
