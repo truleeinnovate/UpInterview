@@ -37,7 +37,7 @@ jobs:
         working-directory: ./frontend
         run: |
           # Use npm install instead of npm ci to resolve version mismatches
-          # npm install --production
+          npm install --production
           
       - name: Build application
         working-directory: ./frontend
