@@ -179,3 +179,7 @@ jobs:
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
           clean: true
+
+      - name: yarn install --production --ignore-optional --network-timeout 300000
+        run: |
+         yarn install --production --ignore-optional --network-timeout 300000
