@@ -122,5 +122,6 @@ app.use('/Organization', organizationRoutes);
 const emailCommonRouter = require('./routes/emailCommonRoutes.js')
 app.use('/emailCommon',emailCommonRouter)
 
+
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 app.use('/',Cardrouter)
