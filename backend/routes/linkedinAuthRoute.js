@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { Users } = require('../models/Users');
-const config = require('../config');
+const config = require('../config.js');
 
 // Add CORS middleware for this route
 router.use((req, res, next) => {
