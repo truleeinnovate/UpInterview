@@ -16,10 +16,12 @@ const corsOptions = {
   origin: [
     'https://www.app.upinterview.io',
     'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://localhost:5000'
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 console.log('corsOptions:', corsOptions);
 
@@ -102,6 +104,7 @@ app.get('/industries', async (req, res) => {
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
+    console.log('All Roles:', roles);
     res.json(roles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -111,6 +114,7 @@ app.get('/roles', async (req, res) => {
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
+    console.log('All Technologies:', technology);
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });

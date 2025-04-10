@@ -5,6 +5,8 @@ const LocationMasterSchema = new mongoose.Schema({
   TimeZone: String,
   CreatedBy: String,
   ModifiedBy: String
+}, {
+  collection: 'LocationMaster'
 });
 
 const LocationMaster = mongoose.model('LocationMaster', LocationMasterSchema);

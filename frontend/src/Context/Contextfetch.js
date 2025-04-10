@@ -60,18 +60,24 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchMasterData = async () => {
       try {
-        const [locationsRes, industriesRes, rolesRes] = await Promise.all([
+        const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
           axios.get(`${config.REACT_APP_API_URL}/industries`),
-          axios.get(`${config.REACT_APP_API_URL}/roles`)
+          axios.get(`${config.REACT_APP_API_URL}/roles`),
+          axios.get(`${config.REACT_APP_API_URL}/skills`),
+          axios.get(`${config.REACT_APP_API_URL}/technology`)
         ]);
 
         setLocations(locationsRes.data);
         setIndustries(industriesRes.data);
         setCurrentRole(rolesRes.data);
+        setSkills(skillsRes.data);
+        setTechnology(TechnologyRes.data);
         console.log("CurrentRole 2:", CurrentRole);
         console.log("industries 2:", industries);
         console.log("locations 2:", locations);
+        console.log("skills 2:", skills);
+        console.log("tehc 2:", technologies);
       } catch (error) {
         console.error("Error fetching master data:", error);
       } finally {

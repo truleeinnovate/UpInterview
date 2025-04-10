@@ -22,19 +22,10 @@ const TechnologyMasterSchema = new Schema({
     ModifiedBy: {
         type: String
     }
-}, { collection: 'TechnologyMaster' });
-
-TechnologyMasterSchema.pre('save', function(next) {
-    // Only set CreatedDate if it is a new document
-    if (this.isNew) {
-        this.CreatedDate = Date.now();
-    }
-    // Always update the ModifiedDate
-    this.ModifiedDate = Date.now();
-    next();
+}, {
+    collection: 'TechnologyMaster' // 👈 Exact collection name in your DB
 });
 
 const TechnologyMaster = mongoose.model('TechnologyMaster', TechnologyMasterSchema);
 
-
-module.exports = { TechnologyMaster};
+module.exports = { TechnologyMaster };
