@@ -1,14 +1,13 @@
-
 const express = require('express');
-const CustomerSubscriptionRouter = express.Router();
+const router = express.Router();
 const { createSubscriptionControllers,updateCustomerSubscriptionControllers,getAllCustomerSubscription, getBasedTentIdCustomerSubscription } = require('../controllers/CustomerSubscriptionControllers.js');
 
-CustomerSubscriptionRouter.post('/create-customer-subscription', createSubscriptionControllers);
+router.post('/create-customer-subscription', createSubscriptionControllers);
 
-CustomerSubscriptionRouter.post("/update-customer-subscription",updateCustomerSubscriptionControllers);
+router.post("/update-customer-subscription",updateCustomerSubscriptionControllers);
 
-CustomerSubscriptionRouter.get('/get-CustomerSubscription',getAllCustomerSubscription);
+router.get('/get-CustomerSubscription',getAllCustomerSubscription);
 
-CustomerSubscriptionRouter.get("/subscriptions/:ownerId",getBasedTentIdCustomerSubscription)
+router.get("/subscriptions/:ownerId",getBasedTentIdCustomerSubscription)
 
-module.exports =CustomerSubscriptionRouter;
+module.exports = router;

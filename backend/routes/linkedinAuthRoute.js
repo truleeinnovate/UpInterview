@@ -4,10 +4,28 @@ const axios = require('axios');
 const { Users } = require('../models/Users');
 const config = require('../config');
 
+// Add CORS middleware for this route
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 router.post('/check-user', async (req, res) => {
   try {
     console.log('Backend: 1. Received user check request');
     const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'No authorization code provided' });
+    }
 
     // Exchange code for token with available scopes
     console.log('Backend: 2. Exchanging code for token');
@@ -20,21 +38,19 @@ router.post('/check-user', async (req, res) => {
           redirect_uri: config.REACT_APP_REDIRECT_URI,
           client_id: config.REACT_APP_CLIENT_ID,
           client_secret: config.REACT_APP_CLIENT_SECRET
+        },
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json'
         }
       });
     } catch (error) {
       console.error('Token exchange error:', error.response?.data || error.message);
-      return res.status(500).json({ error: 'Failed to exchange LinkedIn code for token' });
+      return res.status(500).json({ 
+        error: 'Failed to exchange LinkedIn code for token',
+        details: error.response?.data || error.message
+      });
     }
-    // const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
-    //   params: {
-    //     grant_type: 'authorization_code',
-    //     code,
-    //     redirect_uri: config.REACT_APP_REDIRECT_URI,
-    //     client_id: config.REACT_APP_CLIENT_ID,
-    //     client_secret: config.REACT_APP_CLIENT_SECRET
-    //   }
-    // });
 
     const accessToken = tokenResponse.data.access_token;
 
@@ -42,8 +58,10 @@ router.post('/check-user', async (req, res) => {
     console.log('Backend: 3. Getting user info from LinkedIn');
     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json'
+      },
+      timeout: 10000
     });
 
     console.log('Backend: 4. Processing user info');
@@ -51,7 +69,7 @@ router.post('/check-user', async (req, res) => {
       firstName: userInfoResponse.data.given_name,
       lastName: userInfoResponse.data.family_name,
       email: userInfoResponse.data.email,
-      pictureUrl: userInfoResponse.data.picture || null, // OpenID Connect profile picture
+      pictureUrl: userInfoResponse.data.picture || null,
       profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`
     };
 
@@ -70,7 +88,9 @@ router.post('/check-user', async (req, res) => {
       response: error.response?.data,
       status: error.response?.status
     });
-    res.status(500).json({ 
+    
+    const statusCode = error.response?.status || 500;
+    res.status(statusCode).json({ 
       error: 'Failed to process LinkedIn data',
       details: error.response?.data || error.message
     });

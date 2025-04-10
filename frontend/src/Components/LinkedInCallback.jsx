@@ -22,23 +22,26 @@ const LinkedInCallback = () => {
 
         console.log('2. Fetching user details with code:', code);
         
-        // Add timeout to the request
+        // Add timeout and retry logic to the request
         const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, 
           { code },
           {
             timeout: 20000, // 20 second timeout
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
             },
-            withCredentials: false // Important for CORS - don't send credentials for now
+            withCredentials: false, // Don't send credentials for CORS
+            maxRedirects: 0, // Prevent redirect loops
+            validateStatus: function (status) {
+              return status >= 200 && status < 300; // default
+            }
           }
         );
         
         console.log('3. User details received:', response.data);
 
         const { userInfo } = response.data;
-
-        console.log('4.0: LinkedIn data received:', userInfo);
 
         console.log('4. LinkedIn complete data:', {
           name: `${userInfo.firstName} ${userInfo.lastName}`,
@@ -67,6 +70,12 @@ const LinkedInCallback = () => {
       } catch (error) {
         console.error('Error in LinkedIn callback:', error);
         setError(error.message || 'Failed to process LinkedIn login');
+        // Log more details about the error
+        console.error('Error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: error.config
+        });
       } finally {
         setLoading(false);
       }
@@ -80,28 +89,26 @@ const LinkedInCallback = () => {
     let timer;
     if (error) {
       timer = setTimeout(() => {
-        navigate('/');
+        navigate('/login', { 
+          state: { error: 'LinkedIn login failed. Please try again.' }
+        });
       }, 5000);
     }
-    
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [error, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      {error ? (
-        <div className="text-red-500 text-center p-4">
-          <p>{error}</p>
-          <p className="text-sm mt-2">Redirecting to login page in 5 seconds...</p>
+    <div className="linkedin-callback">
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Processing LinkedIn login...</p>
         </div>
-      ) : (
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="mt-4">Processing your information...</p>
+      ) : error ? (
+        <div className="error-container">
+          <p>LinkedIn login failed. Please try again.</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

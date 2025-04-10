@@ -1,4 +1,6 @@
-// controllers/paymentController.js
+const express = require('express');
+const router = express.Router();
+
 const PaymentCard = require('../models/Carddetails.js');
 const { validatePaymentDetails } = require('../utils/ValidationCardPayment.js');
 const PaymentGateway = require('../utils/PaymentDateway.js');
@@ -131,4 +133,8 @@ const getallPaymentDetails = async(req,res) => {
   }
 }
 
-module.exports = {  submitPaymentDetails,getallPaymentDetails };
+// Register routes
+router.post('/submit-payment', submitPaymentDetails);
+router.post('/get-all-payment-details', getallPaymentDetails);
+
+module.exports = router;
