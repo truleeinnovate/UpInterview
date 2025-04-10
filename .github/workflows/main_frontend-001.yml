@@ -21,44 +21,28 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-
-      # Restore/cache node_modules to avoid reinstalling dependencies
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: './frontend/node_modules'
-          key: ${{ runner.os }}-node-${{ hashFiles('./frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Install dependencies
         working-directory: ./frontend
         run: |
           # Use npm install instead of npm ci to resolve version mismatches
-          npm install --prefer-offline --no-audit
-
+          npm install --production
+          
       - name: Build application
         working-directory: ./frontend
         env:
           CI: false
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-        run: npm run build --if-present
-      
-      - name: Prune development dependencies
-        working-directory: ./frontend
-        run: npm prune --production
+        run: |
+          npm run build
 
       - name: Zip artifact for deployment
         working-directory: ./frontend
         run: |
-          # Only include necessary files, exclude source maps and other large files
+          # Only include build
           mkdir -p release
           cp -r build release/
-          cp package.json release/
-          cp -r node_modules release/
-          cd release && zip -r ../release.zip . -x "*.map" -x "node_modules/typescript/*" -x "node_modules/eslint*/*" -x "node_modules/@types/*"
+          cd release && zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -88,3 +72,4 @@ jobs:
           slot-name: 'production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
+          clean: true
