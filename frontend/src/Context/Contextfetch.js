@@ -34,9 +34,6 @@ const CustomProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);
   const [industries, setIndustries] = useState([]);
   const [CurrentRole, setCurrentRole] = useState([]);
-  console.log("CurrentRole 1:", CurrentRole);
-  console.log("industries 1:", industries);
-  console.log("locations 1:", locations);
 
   // users data 
   const [userProfile, setUserProfile] = useState(null);
@@ -73,11 +70,6 @@ const CustomProvider = ({ children }) => {
         setCurrentRole(rolesRes.data);
         setSkills(skillsRes.data);
         setTechnology(TechnologyRes.data);
-        console.log("CurrentRole 2:", CurrentRole);
-        console.log("industries 2:", industries);
-        console.log("locations 2:", locations);
-        console.log("skills 2:", skills);
-        console.log("tehc 2:", technologies);
       } catch (error) {
         console.error("Error fetching master data:", error);
       } finally {

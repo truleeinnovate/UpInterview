@@ -12,18 +12,26 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('1. LinkedIn callback received');
+        console.log('Frontend: 1. LinkedIn callback received', {
+          source: 'Browser',
+          currentUrl: window.location.href,
+          searchParams: window.location.search
+        });
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        
+
         if (!code) {
           throw new Error('No authorization code received from LinkedIn');
         }
 
-        console.log('2. Fetching user details with code:', code);
-        
+        console.log('Frontend: 2. Fetching user details with code', {
+          source: 'Local API',
+          apiEndpoint: `${config.REACT_APP_API_URL}/linkedin/check-user`,
+          codeLength: code.length
+        });
+
         // Add timeout and retry logic to the request
-        const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`, 
+        const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code },
           {
             timeout: 20000, // 20 second timeout
@@ -38,23 +46,45 @@ const LinkedInCallback = () => {
             }
           }
         );
-        
-        console.log('3. User details received:', response.data);
+
+        console.log('Frontend: 3. User details received', {
+          source: 'API Response',
+          existingUser: response.data.existingUser,
+          userInfo: {
+            firstName: response.data.userInfo.firstName,
+            lastName: response.data.userInfo.lastName,
+            email: response.data.userInfo.email
+          }
+        });
 
         const { userInfo } = response.data;
 
-        console.log('4. LinkedIn complete data:', {
-          name: `${userInfo.firstName} ${userInfo.lastName}`,
-          email: userInfo.email,
-          picture: userInfo.pictureUrl,
-          profileUrl: userInfo.profileUrl
+        console.log('Frontend: 4. LinkedIn complete data', {
+          source: 'Processed Data',
+          data: {
+            name: `${userInfo.firstName} ${userInfo.lastName}`,
+            email: userInfo.email,
+            picture: userInfo.pictureUrl,
+            profileUrl: userInfo.profileUrl
+          }
         });
 
         if (response.data.existingUser) {
-          console.log('4a. User exists - redirecting to login');
+          console.log('Frontend: 4a. User exists - redirecting to login', {
+            source: 'Navigation',
+            destination: '/home'
+          });
           navigate('/home');
         } else {
-          console.log('4b. New user - navigating to profile3');
+          console.log('Frontend: 4b. New user - navigating to profile3', {
+            source: 'Navigation',
+            destination: '/profile3',
+            data: {
+              firstName: userInfo.firstName,
+              lastName: userInfo.lastName,
+              email: userInfo.email
+            }
+          });
           navigate('/profile3', {
             state: {
               linkedInData: {
@@ -68,7 +98,15 @@ const LinkedInCallback = () => {
           });
         }
       } catch (error) {
-        console.error('Error in LinkedIn callback:', error);
+        console.error('Frontend: Error in LinkedIn callback', {
+          source: 'Error Handling',
+          message: error.message || 'Failed to process LinkedIn login',
+          errorDetails: {
+            status: error.response?.status,
+            data: error.response?.data,
+            config: error.config
+          }
+        });
         setError(error.message || 'Failed to process LinkedIn login');
         // Log more details about the error
         console.error('Error details:', {
@@ -88,8 +126,13 @@ const LinkedInCallback = () => {
   useEffect(() => {
     let timer;
     if (error) {
+      console.log('Frontend: Error redirecting to login', {
+        source: 'Error Recovery',
+        destination: '/login',
+        error: error
+      });
       timer = setTimeout(() => {
-        navigate('/login', { 
+        navigate('/login', {
           state: { error: 'LinkedIn login failed. Please try again.' }
         });
       }, 5000);

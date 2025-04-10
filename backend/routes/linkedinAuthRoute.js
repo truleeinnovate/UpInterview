@@ -20,7 +20,12 @@ router.use((req, res, next) => {
 
 router.post('/check-user', async (req, res) => {
   try {
-    console.log('Backend: 1. Received user check request');
+    console.log('Backend: 1. Received user check request', {
+      source: 'Local Server',
+      requestOrigin: req.headers.origin,
+      requestMethod: req.method,
+      requestPath: req.path
+    });
     const { code } = req.body;
 
     if (!code) {
@@ -28,7 +33,10 @@ router.post('/check-user', async (req, res) => {
     }
 
     // Exchange code for token with available scopes
-    console.log('Backend: 2. Exchanging code for token');
+    console.log('Backend: 2. Exchanging code for token', {
+      source: 'LinkedIn API',
+      requestMethod: 'POST'
+    });
     let tokenResponse;
     try {
       tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
@@ -45,7 +53,10 @@ router.post('/check-user', async (req, res) => {
         }
       });
     } catch (error) {
-      console.error('Token exchange error:', error.response?.data || error.message);
+      console.error('Token exchange error:', {
+        source: 'LinkedIn API',
+        error: error.response?.data || error.message
+      });
       return res.status(500).json({ 
         error: 'Failed to exchange LinkedIn code for token',
         details: error.response?.data || error.message
@@ -55,7 +66,11 @@ router.post('/check-user', async (req, res) => {
     const accessToken = tokenResponse.data.access_token;
 
     // Get user info from OpenID Connect userinfo endpoint
-    console.log('Backend: 3. Getting user info from LinkedIn');
+    console.log('Backend: 3. Getting user info from LinkedIn', {
+      source: 'LinkedIn API',
+      requestMethod: 'GET',
+      endpoint: 'https://api.linkedin.com/v2/userinfo'
+    });
     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -64,7 +79,15 @@ router.post('/check-user', async (req, res) => {
       timeout: 10000
     });
 
-    console.log('Backend: 4. Processing user info');
+    console.log('Backend: 4. Processing user info', {
+      source: 'Backend Processing',
+      userInfo: {
+        firstName: userInfoResponse.data.given_name,
+        lastName: userInfoResponse.data.family_name,
+        email: userInfoResponse.data.email
+      }
+    });
+
     const userInfo = {
       firstName: userInfoResponse.data.given_name,
       lastName: userInfoResponse.data.family_name,
@@ -73,10 +96,28 @@ router.post('/check-user', async (req, res) => {
       profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`
     };
 
-    console.log('Backend: 5. Checking if user exists in database');
+    console.log('Backend: 5. Checking database for existing user', {
+      source: 'MongoDB Database',
+      query: { Email: userInfo.email }
+    });
     const existingUser = await Users.findOne({ Email: userInfo.email });
+    console.log('Backend: 5.1 Database response', {
+      source: 'MongoDB Database',
+      found: Boolean(existingUser),
+      userId: existingUser?._id
+    });
     
-    console.log('Backend: 6. Sending response with user info:', userInfo);
+    console.log('Backend: 6. Sending response with user info', {
+      source: 'Backend Response',
+      data: {
+        existingUser: Boolean(existingUser),
+        userInfo: {
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email
+        }
+      }
+    });
     res.json({
       existingUser: Boolean(existingUser),
       userInfo
@@ -84,6 +125,7 @@ router.post('/check-user', async (req, res) => {
 
   } catch (error) {
     console.error('Backend Error:', {
+      source: 'Error Handling',
       message: error.message,
       response: error.response?.data,
       status: error.response?.status

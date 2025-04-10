@@ -149,21 +149,27 @@ const MultiStepForm = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
-
+  
+    console.log("🚀 Starting form submission...");
+  
     const userData = {
       Name: basicDetailsData.Name,
       UserName: basicDetailsData.UserName,
       isFreelancer: Freelancer,
       Email: basicDetailsData.Email,
     };
-
+  
+    console.log("🧾 User Data:", userData);
+  
     const contactData = {
       ...basicDetailsData,
       ...additionalDetailsData,
       ...interviewDetailsData,
       LetUsKnowYourProfession: profession
     };
-
+  
+    console.log("📞 Contact Data:", contactData);
+  
     const availabilityData = Object.keys(availabilityDetailsData.Availability || times)
       .map((day) => ({
         day,
@@ -175,7 +181,9 @@ const MultiStepForm = () => {
           })),
       }))
       .filter((dayData) => dayData.timeSlots.length > 0);
-
+  
+    console.log("📅 Availability Data:", availabilityData);
+  
     try {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
         userData,
@@ -183,19 +191,25 @@ const MultiStepForm = () => {
         availabilityData,
         Freelancer,
       });
-
+  
+      console.log("✅ Signup Response:", response.data);
+  
       const contactId = response.data.contactId;
-
+  
+      // Handle image upload (manual or LinkedIn)
       if (file) {
+        console.log("📸 Uploading manual image...");
         const imageData = new FormData();
         imageData.append("image", file);
         imageData.append("type", "contact");
         imageData.append("id", contactId);
-
+  
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        console.log("✅ Manual image uploaded");
       } else if (linkedInData?.pictureUrl && !filePreview) {
+        console.log("🔗 Fetching LinkedIn image...");
         const response = await fetch(linkedInData.pictureUrl);
         const blob = await response.blob();
         const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
@@ -203,22 +217,27 @@ const MultiStepForm = () => {
         imageData.append("image", imageFile);
         imageData.append("type", "contact");
         imageData.append("id", contactId);
+  
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        console.log("✅ LinkedIn image uploaded");
       }
-
+  
+      // Set cookies and navigate
       Cookies.set("userId", response.data.userId, { expires: 7 });
       if (Cookies.get("organizationId")) {
         Cookies.remove("organizationId");
       }
+  
+      console.log("🎉 Redirecting to subscription-plans");
       setLoading(false);
       navigate("/subscription-plans");
     } catch (error) {
-      console.error("Error saving data:", error.response?.data || error.message);
+      console.error("❌ Error saving data:", error.response?.data || error.message);
       setLoading(false);
     }
-  };
+  };  
 
   const handlePrevStep = () => {
     if (currentStep === 0) {
