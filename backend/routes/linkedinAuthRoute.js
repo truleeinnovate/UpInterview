@@ -26,11 +26,15 @@ router.post('/check-user', async (req, res) => {
       requestMethod: req.method,
       requestPath: req.path
     });
-    const { code } = req.body;
+    const { code, redirectUri } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'No authorization code provided' });
     }
+
+    // Get the redirect URI from request body or use default
+    const redirectUriToUse = redirectUri || config.REACT_APP_REDIRECT_URI;
+    console.log('Backend: Using redirect URI:', redirectUriToUse);
 
     // Exchange code for token with available scopes
     console.log('Backend: 2. Exchanging code for token', {
@@ -43,7 +47,7 @@ router.post('/check-user', async (req, res) => {
         params: {
           grant_type: 'authorization_code',
           code,
-          redirect_uri: config.REACT_APP_REDIRECT_URI,
+          redirect_uri: redirectUriToUse,
           client_id: config.REACT_APP_CLIENT_ID,
           client_secret: config.REACT_APP_CLIENT_SECRET
         },

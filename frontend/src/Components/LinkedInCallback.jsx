@@ -9,6 +9,8 @@ const LinkedInCallback = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('config.REACT_APP_API_URL :-', config.REACT_APP_API_URL);
+
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -32,7 +34,7 @@ const LinkedInCallback = () => {
 
         // Add timeout and retry logic to the request
         const response = await axios.post(`${config.REACT_APP_API_URL}/linkedin/check-user`,
-          { code },
+          { code, redirectUri: window.location.origin + '/callback' },
           {
             timeout: 20000, // 20 second timeout
             headers: {
@@ -108,12 +110,6 @@ const LinkedInCallback = () => {
           }
         });
         setError(error.message || 'Failed to process LinkedIn login');
-        // Log more details about the error
-        console.error('Error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          config: error.config
-        });
       } finally {
         setLoading(false);
       }
@@ -149,7 +145,8 @@ const LinkedInCallback = () => {
         </div>
       ) : error ? (
         <div className="error-container">
-          <p>LinkedIn login failed. Please try again.</p>
+          <p>Error: {error}</p>
+          <p>Redirecting to login page...</p>
         </div>
       ) : null}
     </div>
