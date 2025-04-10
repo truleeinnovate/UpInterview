@@ -31,6 +31,12 @@ const CustomProvider = ({ children }) => {
   const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
   const [myQuestionsList, setMyQuestionsList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locations, setLocations] = useState([]);
+  const [industries, setIndustries] = useState([]);
+  const [CurrentRole, setCurrentRole] = useState([]);
+  console.log("CurrentRole 1:", CurrentRole);
+  console.log("industries 1:", industries);
+  console.log("locations 1:", locations);
 
   // users data 
   const [userProfile, setUserProfile] = useState(null);
@@ -50,6 +56,31 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
+  // Fetch master data
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        const [locationsRes, industriesRes, rolesRes] = await Promise.all([
+          axios.get(`${config.REACT_APP_API_URL}/locations`),
+          axios.get(`${config.REACT_APP_API_URL}/industries`),
+          axios.get(`${config.REACT_APP_API_URL}/roles`)
+        ]);
+
+        setLocations(locationsRes.data);
+        setIndustries(industriesRes.data);
+        setCurrentRole(rolesRes.data);
+        console.log("CurrentRole 2:", CurrentRole);
+        console.log("industries 2:", industries);
+        console.log("locations 2:", locations);
+      } catch (error) {
+        console.error("Error fetching master data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMasterData();
+  }, []);
 
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
@@ -333,31 +364,8 @@ const CustomProvider = ({ children }) => {
   const [college] = useState([]);
   const [companies] = useState([]);
   const [technologies, setTechnology] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [CurrentRole, setCurrentRole] = useState([]);
-  const [industries, setIndustries] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const skillsData = await fetchMasterData('skills');
-        setSkills(skillsData);
-        const technologyData = await fetchMasterData('technology');
-        setTechnology(technologyData);
-        const locationsData = await fetchMasterData('locations');
-        setLocations(locationsData);
-        const industriesData = await fetchMasterData('industries');
-        setIndustries(industriesData);
-        const rolesData = await fetchMasterData('roles');
-        setCurrentRole(rolesData);
-      } catch (error) {
-        console.error("Error fetching master data:", error);
-      }
-    };
-  
-    fetchData();
-  }, []);
-  
+
   // notifications
   const [notificationsData] = useState([]);
 
@@ -458,4 +466,3 @@ const CustomProvider = ({ children }) => {
 const useCustomContext = () => useContext(CustomContext);
 
 export { useCustomContext, CustomProvider };
-

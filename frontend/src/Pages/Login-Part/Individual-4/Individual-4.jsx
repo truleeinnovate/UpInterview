@@ -35,7 +35,6 @@ const FooterButtons = ({ onNext, onPrev, currentStep, isFreelancer }) => {
 };
 
 const MultiStepForm = () => {
-  console.log('a new console from login-4');
   const navigate = useNavigate();
   const location = useLocation();
   const { Freelancer, profession, linkedInData } = location.state || {};

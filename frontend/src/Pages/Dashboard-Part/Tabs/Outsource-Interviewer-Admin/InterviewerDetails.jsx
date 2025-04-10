@@ -11,6 +11,8 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const interviewer = selectedInterviewersData.contactId;
 
+  console.log('selectedInterviewersData:', selectedInterviewersData)
+
   const [timeZone] = useState(interviewer.TimeZone || "Not Provided");
   const [selectedDuration, setSelectedDuration] = useState(interviewer.PreferredDuration + " mints" || "Not Provided");
   const [activeTab, setActiveTab] = useState('Details');

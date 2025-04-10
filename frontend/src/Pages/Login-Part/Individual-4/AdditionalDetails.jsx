@@ -17,6 +17,10 @@ const AdditionalDetails = ({
         CurrentRole
     } = useCustomContext();
 
+    console.log("CurrentRole:", CurrentRole);
+    console.log("industries:", industries);
+    console.log("locations:", locations);
+
     const resumeInputRef = useRef(null);
     const coverLetterInputRef = useRef(null);
     const [coverLetterName, setCoverLetterName] = useState('');
