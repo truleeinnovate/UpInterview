@@ -64,14 +64,15 @@ const organizationRoutes = require('./routes/organizationRoutes.js');
 const emailCommonRouter = require('./routes/emailCommonRoutes.js');
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 
+
 // Register all routes
 app.use('/linkedin', linkedinAuthRoutes);
 app.use("/Individual", individualLoginRoutes);
-app.use('/subscription', SubscriptionRouter);
-app.use('/customer-subscription', CustomerSubscriptionRouter);
+app.use('/',SubscriptionRouter);
+app.use('/',CustomerSubscriptionRouter)
 app.use('/Organization', organizationRoutes);
-app.use('/emailCommon', emailCommonRouter);
-app.use('/card', Cardrouter);
+app.use('/emailCommon',emailCommonRouter)
+app.use('/',Cardrouter)
 
 // Master Data Endpoints
 app.get('/skills', async (req, res) => {
