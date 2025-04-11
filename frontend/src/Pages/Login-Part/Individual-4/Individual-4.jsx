@@ -167,9 +167,9 @@ const MultiStepForm = () => {
       ...interviewDetailsData,
       LetUsKnowYourProfession: profession
     };
-  
+
     console.log("📞 Contact Data:", contactData);
-  
+
     const availabilityData = Object.keys(availabilityDetailsData.Availability || times)
       .map((day) => ({
         day,
@@ -183,7 +183,7 @@ const MultiStepForm = () => {
       .filter((dayData) => dayData.timeSlots.length > 0);
   
     console.log("📅 Availability Data:", availabilityData);
-  
+
     try {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
         userData,
