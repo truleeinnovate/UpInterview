@@ -16,8 +16,8 @@ import { motion } from 'framer-motion';
 import Loading from '../../../../../Components/Loading.js';
 import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
-import { MdKeyboardArrowDown } from "react-icons/md";
-import { MdKeyboardArrowUp } from "react-icons/md";
+// import { MdKeyboardArrowDown } from "react-icons/md";
+// import { MdKeyboardArrowUp } from "react-icons/md";
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
@@ -138,11 +138,11 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               className="cursor-pointer mr-3 text-2xl"
               onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
             >
-              {isStatusDropdownOpen ? (
+              {/* {isStatusDropdownOpen ? (
                 <MdKeyboardArrowUp />
               ) : (
                 <MdKeyboardArrowDown />
-              )}
+              )} */}
             </div>
           </div>
           {isStatusDropdownOpen && (
@@ -177,11 +177,11 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               className="cursor-pointer mr-3 text-2xl"
               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
             >
-              {isTechDropdownOpen ? (
+              {/* {isTechDropdownOpen ? (
                 <MdKeyboardArrowUp />
               ) : (
                 <MdKeyboardArrowDown />
-              )}
+              )} */}
             </div>
           </div>
           {isTechDropdownOpen && (

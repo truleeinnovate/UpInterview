@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaTimes, FaExternalLinkAlt, FaBuilding, FaBriefcase, FaMapMarkerAlt, FaClock, FaDollarSign } from 'react-icons/fa';
+// import { FaTimes, FaExternalLinkAlt, FaBuilding, FaBriefcase, FaMapMarkerAlt, FaClock, FaDollarSign } from 'react-icons/fa';
 import { useParams, Link, useNavigate,useLocation  } from 'react-router-dom';
 import {
   Plus,
@@ -115,7 +115,7 @@ const PositionSlideDetails = () => {
             onClick={() => navigate('/position')}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <FaTimes className="w-5 h-5 text-gray-500" />
+            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
           </button>
         </div>
       </div>
@@ -150,21 +150,21 @@ const PositionSlideDetails = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <FaBuilding className="w-4 h-4 text-blue-600" />
+                    {/* <FaBuilding className="w-4 h-4 text-blue-600" /> */}
                     <span className="text-sm">Company Name</span>
                   </div>
                   <p className="text-sm font-medium text-gray-800">{position.companyname}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <FaMapMarkerAlt className="w-4 h-4 text-red-500" />
+                    {/* <FaMapMarkerAlt className="w-4 h-4 text-red-500" /> */}
                     <span className="text-sm">Location</span>
                   </div>
                   <p className="text-sm font-medium text-gray-800">{position.Location || 'Not Disclosed'}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <FaDollarSign className="w-4 h-4 text-custom-blue" />
+                    {/* <FaDollarSign className="w-4 h-4 text-custom-blue" /> */}
                     <span className="text-sm">Salary Range</span>
                   </div>
                   <p className="text-sm font-medium text-gray-800">
@@ -182,7 +182,7 @@ const PositionSlideDetails = () => {
 
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
 
-                    <FaBriefcase className="w-4 h-4 text-gray-500" />
+                    {/* <FaBriefcase className="w-4 h-4 text-gray-500" /> */}
                     <p className="text-sm text-gray-600">Experience</p>
                   </div>
                   <p className="font-medium text-gray-800">{position?.minexperience + " - " + position?.maxexperience + " years" || "Not Disclosed"}</p>

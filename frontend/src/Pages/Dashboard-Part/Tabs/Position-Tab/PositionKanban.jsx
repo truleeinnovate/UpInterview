@@ -1,11 +1,11 @@
 // Import necessary dependencies and components
 
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaMapMarkerAlt, FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
+// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaMapMarkerAlt, FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { IoTimeSharp } from "react-icons/io5";
+// import { IoTimeSharp } from "react-icons/io5";
 import { format, parseISO, isValid } from 'date-fns';
-import { FaBuilding, } from 'react-icons/fa';
+// import { FaBuilding, } from 'react-icons/fa';
 
 const formatCreatedDate = (date) => {
   return date && isValid(parseISO(date))
@@ -71,7 +71,7 @@ const PositionKanban = ({ positions}) => {
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
-                <FaEye className="w-4 h-4" />
+                {/* <FaEye className="w-4 h-4" /> */}
               </button>
 
 
@@ -88,7 +88,7 @@ const PositionKanban = ({ positions}) => {
                 className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 title="Edit"
               >
-                <FaPencilAlt className="w-4 h-4" />
+                {/* <FaPencilAlt className="w-4 h-4" /> */}
               </button>
               {/* <button
                 onClick={() => window.open(`/candidates/${position._id}`, '_blank')}
@@ -104,11 +104,11 @@ const PositionKanban = ({ positions}) => {
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-1.5 text-gray-600">
-                <FaBuilding className="w-4 h-4 text-gray-500" />
+                {/* <FaBuilding className="w-4 h-4 text-gray-500" /> */}
                 <span className="truncate"> {position?.companyname || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-1.5 text-gray-600">
-                <FaBriefcase className="w-4 h-4 text-gray-500" />
+                {/* <FaBriefcase className="w-4 h-4 text-gray-500" /> */}
                 <span className="truncate">
                   {position?.minexperience && position?.maxexperience
                     ? `${position.minexperience} - ${position.maxexperience} years`
@@ -126,12 +126,12 @@ const PositionKanban = ({ positions}) => {
             <div className="grid grid-cols-2 gap-2">
 
               <div className="flex items-center gap-1.5 text-gray-600">
-                <IoTimeSharp className="w-4 h-4 text-gray-500" />
+                {/* <IoTimeSharp className="w-4 h-4 text-gray-500" /> */}
                 {formatCreatedDate(position?.createdDate)}
               </div>
 
               <div className="flex items-center gap-1.5 text-gray-600">
-                <FaMapMarkerAlt className="w-4 h-4 text-red-500" />
+                {/* <FaMapMarkerAlt className="w-4 h-4 text-red-500" /> */}
                 <span>{position?.Location || 'Not disclosed'}</span>
               </div>
             </div>

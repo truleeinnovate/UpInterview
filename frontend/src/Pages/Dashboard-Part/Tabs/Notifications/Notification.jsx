@@ -11,8 +11,8 @@ import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBa
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
-import { FaWhatsapp } from "react-icons/fa6";
-import { MdEmail } from "react-icons/md";
+// import { FaWhatsapp } from "react-icons/fa6";
+// import { MdEmail } from "react-icons/md";
 
 const Notification = ({ isassesmentProfileDetails, objectId, candidateId, category }) => {
   console.log("ObjectId", objectId);
@@ -208,12 +208,12 @@ const Notification = ({ isassesmentProfileDetails, objectId, candidateId, catego
         >
           <div className="flex items-start">
             <div className="w-16">
-              {notification.notificationType === "email" && (
+              {/* {notification.notificationType === "email" && (
                 <MdEmail className="text-3xl mt-2 text-blue-500" />
               )}
               {notification.notificationType === "whatsapp" && (
                 <FaWhatsapp className="text-3xl mt-2 text-green-500" />
-              )}
+              )} */}
             </div>
             <div className="ml-4">
               <p>{notification.body}</p>

@@ -1,4 +1,4 @@
-import { RiCloseCircleLine } from "react-icons/ri";
+// import { RiCloseCircleLine } from "react-icons/ri";
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
 import { config } from '../../../config.js'
@@ -153,9 +153,9 @@ const isUpgrading = location.state?.isUpgrading || false;
                     <h2 className="text-xl font-semibold mb-2">
                         Upgrade to a Basic Membership
                     </h2>
-                    <RiCloseCircleLine
+                    {/* <RiCloseCircleLine
                         onClick={() => navigate("/subscription-plans")}
-                        className="h-7 w-7" />
+                        className="h-7 w-7" /> */}
                 </div>
                 <p className="text-gray-500  text-md mb-2">
                     Get all access and an extra 20% off when you subscribe annually

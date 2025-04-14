@@ -1,21 +1,21 @@
 
 // Import necessary dependencies and icons
 import React, { useCallback, useEffect, useState } from 'react';
-import {FaTable, FaColumns, FaFilter, FaSearch,} from 'react-icons/fa';
+// import {FaTable, FaColumns, FaFilter, FaSearch,} from 'react-icons/fa';
 
-import { MdOutlineLocalPhone } from "react-icons/md";
-import { MdKeyboardArrowDown } from "react-icons/md";
-import { MdKeyboardArrowUp } from "react-icons/md";
+// import { MdOutlineLocalPhone } from "react-icons/md";
+// import { MdKeyboardArrowDown } from "react-icons/md";
+// import { MdKeyboardArrowUp } from "react-icons/md";
 import classNames from 'classnames';
 import axios from 'axios';
 import Tooltip from "@mui/material/Tooltip";
-import { IoIosArrowBack } from "react-icons/io";
-import { IoIosArrowForward } from "react-icons/io";
-import { FiFilter } from "react-icons/fi";
-import { LuFilterX } from "react-icons/lu";
+// import { IoIosArrowBack } from "react-icons/io";
+// import { IoIosArrowForward } from "react-icons/io";
+// import { FiFilter } from "react-icons/fi";
+// import { LuFilterX } from "react-icons/lu";
 import { useNavigate } from 'react-router-dom';
-import { TbLayoutGridRemove } from "react-icons/tb";
-import { FaList } from "react-icons/fa";
+// import { TbLayoutGridRemove } from "react-icons/tb";
+// import { FaList } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import PositionKanban from './PositionKanban';
@@ -151,11 +151,11 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               className="cursor-pointer mr-3 text-2xl"
               onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
             >
-              {isStatusDropdownOpen ? (
+              {/* {isStatusDropdownOpen ? (
                 <MdKeyboardArrowUp />
               ) : (
                 <MdKeyboardArrowDown />
-              )}
+              )} */}
             </div>
           </div>
           {isStatusDropdownOpen && (
@@ -190,11 +190,11 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               className="cursor-pointer mr-3 text-2xl"
               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
             >
-              {isTechDropdownOpen ? (
+              {/* {isTechDropdownOpen ? (
                 <MdKeyboardArrowUp />
               ) : (
                 <MdKeyboardArrowDown />
-              )}
+              )} */}
             </div>
           </div>
           {isTechDropdownOpen && (
@@ -452,7 +452,7 @@ const navigate = useNavigate();
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                         }`}
                       >
-                        <FaList className="w-4 h-4" />
+                        {/* <FaList className="w-4 h-4" /> */}
                       </button>
                       <button
                         onClick={() => setView('kanban')}
@@ -462,7 +462,7 @@ const navigate = useNavigate();
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                         }`}
                       >
-                        <TbLayoutGridRemove className="w-4 h-4" />
+                        {/* <TbLayoutGridRemove className="w-4 h-4" /> */}
                       </button>
                     </div>
         
@@ -470,7 +470,7 @@ const navigate = useNavigate();
                     
                     {/* // flex-1 order-1 sm:order-2 */}
                       <div className="relative flex-1">
-                        <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                        {/* <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" /> */}
                         <input
                           type="text"
                           placeholder="Search positions..."
@@ -488,7 +488,7 @@ const navigate = useNavigate();
                     className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""}`}
                     onClick={prevPage}
                   >
-                    <IoIosArrowBack className="text-custom-blue" />
+                    {/* <IoIosArrowBack className="text-custom-blue" /> */}
                   </span>
                 </Tooltip>
                
@@ -497,7 +497,7 @@ const navigate = useNavigate();
                     className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length ? " cursor-not-allowed" : ""}`}
                     onClick={nextPage}
                   >
-                    <IoIosArrowForward className="text-custom-blue" />
+                    {/* <IoIosArrowForward className="text-custom-blue" /> */}
                   </span>
                 </Tooltip>
               </div>
@@ -510,11 +510,11 @@ const navigate = useNavigate();
                       pointerEvents: positions.length === 0 ? "none" : "auto",
                     }}
                   >
-                    {isFilterActive ? (
+                    {/* {isFilterActive ? (
                       <LuFilterX className="text-custom-blue" />
                     ) : (
                       <FiFilter className="text-custom-blue" />
-                    )}
+                    )} */}
                   </span>
                 </Tooltip>
              

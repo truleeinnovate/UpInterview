@@ -1,5 +1,5 @@
 import React from 'react'
-import {  FaEye, FaUserCircle, FaPencilAlt,  FaEllipsisV } from 'react-icons/fa';
+// import {  FaEye, FaUserCircle, FaPencilAlt,  FaEllipsisV } from 'react-icons/fa';
 import { Menu } from '@headlessui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -118,7 +118,7 @@ const location = useLocation();
             <td className="px-4 py-2 text-sm text-gray-500   whitespace-nowrap">
               <Menu as="div" className="relative ">
                 <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                  <FaEllipsisV className="w-4 h-4 text-gray-500" />
+                  {/* <FaEllipsisV className="w-4 h-4 text-gray-500" /> */}
                 </Menu.Button>
                 <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
                 ${index >= positions.length - 4 
@@ -135,7 +135,7 @@ const location = useLocation();
                           active ? 'bg-gray-50' : ''
                         } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                       >
-                        <FaEye className="w-4 h-4 text-blue-600" />
+                        {/* <FaEye className="w-4 h-4 text-blue-600" /> */}
                         View Details
                       </button>
                     )}
@@ -163,7 +163,7 @@ const location = useLocation();
                           active ? 'bg-gray-50' : ''
                         } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                       >
-                        <FaPencilAlt className="w-4 h-4 text-green-600" />
+                        {/* <FaPencilAlt className="w-4 h-4 text-green-600" /> */}
                         Edit
                       </button>
                     )}

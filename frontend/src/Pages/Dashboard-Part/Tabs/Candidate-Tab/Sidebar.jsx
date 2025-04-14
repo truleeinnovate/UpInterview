@@ -1,6 +1,6 @@
 import React from 'react';
-import { FaUser, FaEnvelope, FaPhone, FaRegBuilding, FaPencilAlt, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
-import { RiGraduationCapFill } from "react-icons/ri";
+// import { FaUser, FaEnvelope, FaPhone, FaRegBuilding, FaPencilAlt, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
+// import { RiGraduationCapFill } from "react-icons/ri";
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
@@ -30,7 +30,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
                 className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
                 title="Back to Dashboard"
               >
-                <FaArrowLeft className="w-3.5 h-3.5" />
+                {/* <FaArrowLeft className="w-3.5 h-3.5" /> */}
               </button>
               <h2 className="text-lg font-bold  text-custom-blue">
                 Profile
@@ -41,20 +41,20 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
                 onClick={() => onEdit(candidate)}
                 className="p-1.5 rounded-full bg-custom-bg text-custom-blue  transition-colors"
               >
-                {editMode ? <FaCheck className="w-3.5 h-3.5" /> : <FaPencilAlt className="w-3.5 h-3.5" />}
+                {/* {editMode ? <FaCheck className="w-3.5 h-3.5" /> : <FaPencilAlt className="w-3.5 h-3.5" />} */}
               </button>
               <button
                onClick={() => onClose()}
                 className="sm:block md:block lg:hidden xl:hidden 2xl:hidden p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <FaTimes className="w-3.5 h-3.5" />
+                {/* <FaTimes className="w-3.5 h-3.5" /> */}
               </button>
             </div>
           </div>
 
           <div className="mb-3">
             <div className="w-16 h-16 bg-custom-blue rounded-full mx-auto flex items-center justify-center mb-2 shadow-lg">
-              <FaUser className="w-8 h-8 text-custom-bg opacity-75" />
+              {/* <FaUser className="w-8 h-8 text-custom-bg opacity-75" /> */}
             </div>
            
               <h3 className="text-center font-bold text-lg">{candidate?.FirstName || ''} {candidate.LastName || 'N/A'}</h3>
@@ -69,7 +69,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-100">
             <div className="space-y-2">
               <div className="flex items-center">
-                <FaEnvelope className="text-gray-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                {/* <FaEnvelope className="text-gray-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" /> */}
                 <div className="min-w-0 flex-1 pb-2 pt-2">
                 
                     <span className="block truncate text-sm">{candidate?.Email || '?'}</span>
@@ -78,7 +78,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
               </div>
               
               <div className="flex items-center">
-                <FaPhone className="text-green-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                {/* <FaPhone className="text-green-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" /> */}
                 <div className="min-w-0 flex-1  pb-2 pt-2">
                 
                     <span className="block truncate text-sm">{candidate?.Phone || 'N/A'}</span>
@@ -87,7 +87,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
               </div>
 
               <div className="flex items-center">
-              <RiGraduationCapFill  className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+              {/* <RiGraduationCapFill  className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" /> */}
                 <div className="min-w-0 flex-1 pb-2 pt-2">
               
                     <span className="block truncate text-sm">{candidate?.HigherQualification ||'?'}</span>
@@ -98,7 +98,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
 
               
               <div className="flex items-center">
-                <FaRegBuilding  className="text-blue-600 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0"  />
+                {/* <FaRegBuilding  className="text-blue-600 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0"  /> */}
                 <div className="min-w-0 flex-1  pb-2 pt-2">
                     <span className="block truncate text-sm">{candidate?.UniversityCollege ||'?'}</span>
                 </div>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import { FaMinus, FaPlus } from 'react-icons/fa';
-import { MdOutlineCancel } from 'react-icons/md';
-import { IoIosCopy } from 'react-icons/io';
+// import { FaMinus, FaPlus } from 'react-icons/fa';
+// import { MdOutlineCancel } from 'react-icons/md';
+// import { IoIosCopy } from 'react-icons/io';
 
 const Availability = ({
     times,
@@ -237,12 +237,12 @@ const Availability = ({
                                                     </div>
                                                 </div>
                                             </div>
-                                            {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
+                                            {/* {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
                                                 <MdOutlineCancel
                                                     className="text-2xl cursor-pointer ml-12"
                                                     onClick={() => handleRemoveTimeSlot(day, index)}
                                                 />
-                                            )}
+                                            )} */}
                                         </div>
                                     ))
                                 ) : (
@@ -285,12 +285,12 @@ const Availability = ({
                                                     </div>
                                                 </div>
                                             </div>
-                                            {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
+                                            {/* {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
                                                 <MdOutlineCancel
                                                     className="text-2xl cursor-pointer ml-12"
                                                     onClick={() => handleRemoveTimeSlot(day, index)}
                                                 />
-                                            )}
+                                            )} */}
                                         </div>
                                     ))
                                 ) : (
@@ -301,14 +301,14 @@ const Availability = ({
 
                         {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
                             <>
-                                <FaPlus
+                                {/* <FaPlus
                                     className="text-2xl cursor-pointer mx-5"
                                     onClick={() => handleAddTimeSlot(day)}
                                 />
                                 <IoIosCopy
                                     className="text-2xl cursor-pointer"
                                     onClick={(e) => handleCopy(e, day)}
-                                />
+                                /> */}
                                 {showPopup && selectedDay === day && (
                                     <div
                                         className="absolute bg-white p-4 rounded-lg w-72 shadow-md border"
@@ -318,10 +318,10 @@ const Availability = ({
                                             <h2 className="text-lg font-semibold mb-2 mr-2">
                                                 Duplicate Time Entries
                                             </h2>
-                                            <MdOutlineCancel
+                                            {/* <MdOutlineCancel
                                                 className="text-2xl cursor-pointer"
                                                 onClick={() => setShowPopup(false)}
-                                            />
+                                            /> */}
                                         </div>
                                         <div>
                                             {Object.keys(times).map(dayOption => (

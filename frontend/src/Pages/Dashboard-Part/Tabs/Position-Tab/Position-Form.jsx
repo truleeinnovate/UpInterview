@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { validateForm, validateRoundPopup } from "../../../../utils/PositionValidation.js";
 import { Search } from "lucide-react";
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
-import { FaPlus, FaTrash } from 'react-icons/fa';
+// import { FaPlus, FaTrash } from 'react-icons/fa';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import axios from 'axios';
@@ -1059,7 +1059,7 @@ const [isEdit,setIsEdit] = useState(false);
                           onClick={() => setIsModalOpen(true)}
                           className="flex items-center justify-center text-sm bg-custom-blue text-white py-1 rounded w-28"
                         >
-                          <FaPlus className="text-md mr-2" />
+                          {/* <FaPlus className="text-md mr-2" /> */}
                           Add Skills
                         </button>
                       </div>
@@ -1080,7 +1080,7 @@ const [isEdit,setIsEdit] = useState(false);
                                 <FaEdit />
                               </button>
                               <button type="button" onClick={() => handleDelete(index)} className="text-md">
-                                <FaTrash fill='red' />
+                                {/* <FaTrash fill='red' /> */}
                               </button>
                             </div>
                           </div>

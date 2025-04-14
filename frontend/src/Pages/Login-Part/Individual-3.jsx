@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaTimes } from 'react-icons/fa';
+// import { FaTimes } from 'react-icons/fa';
 import Slideshow from './Slideshow';
 
 const Profile3 = () => {
@@ -109,7 +109,7 @@ const Popup = ({ onClose, onConfirm }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-15">
             <div className="relative bg-white p-5 rounded-lg border border-custom-blue shadow-lg h-48 text-center" style={{ width: "45%" }}>
                 <div onClick={onClose} className="absolute top-2 right-2 cursor-pointer">
-                    <FaTimes className="text-gray-500" size={20} />
+                    {/* <FaTimes className="text-gray-500" size={20} /> */}
                 </div>
                 <p className='mt-6 text-lg'>Do you want to be an outsource interviewer (freelancer)?</p>
                 <div className="mt-10 flex justify-between">

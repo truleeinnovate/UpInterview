@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaCircle, FaDotCircle } from "react-icons/fa";
+// import { FaCircle, FaDotCircle } from "react-icons/fa";
 
 const images = [
   "https://images.unsplash.com/photo-1518640027989-a30d5d7e498e?ixlib=rb-0.3.5&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjE0NTg5fQ&s=f9575732a498c98486879d7000ab1d47",
@@ -60,7 +60,7 @@ const Slideshow = () => {
       <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 flex space-x-2 p-2 rounded-lg z-20">
         {images.map((_, index) => (
           <div key={index} className="text-white text-xl">
-            {index === currentIndex ? <FaDotCircle /> : <FaCircle />}
+            {/* {index === currentIndex ? <FaDotCircle /> : <FaCircle />} */}
           </div>
         ))}
       </div>

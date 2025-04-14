@@ -1,7 +1,7 @@
 import React from 'react';
 import { format,parseISO, isValid } from 'date-fns';
-import { FaBuilding, FaCalendarAlt, FaClock, FaUsers } from 'react-icons/fa';
-import { PiSuitcaseSimpleBold  } from "react-icons/pi";
+// import { FaBuilding, FaCalendarAlt, FaClock, FaUsers } from 'react-icons/fa';
+// import { PiSuitcaseSimpleBold  } from "react-icons/pi";
 const AppliedPositions = ({ positions, onViewDetails }) => {
   return (
     <div className="space-y-8">
@@ -45,15 +45,15 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2 text-gray-600">
-                <FaBuilding className="w-4 h-4" />
+                {/* <FaBuilding />className="w-4 h-4" /> */}
                 <span className="text-sm">{position.positionInfo.companyname}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
-                <PiSuitcaseSimpleBold  className="w-4 h-4" />
+                {/* <PiSuitcaseSimpleBold  className="w-4 h-4" /> */}
                 <span className="text-sm">Exp {position.positionInfo.minexperience}-{position.positionInfo.maxexperience}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
-                <FaCalendarAlt className="w-4 h-4" />
+                {/* <FaCalendarAlt className="w-4 h-4" /> */}
                 <span className="text-sm">
                 {position.applicationDate && isValid(parseISO(position.applicationDate))
                     ? format(parseISO(position.applicationDate), 'MMM dd, yyyy')
@@ -61,7 +61,7 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
-                <FaClock className="w-4 h-4" />
+                {/* <FaClock className="w-4 h-4" /> */}
                 <span className="text-sm">Full Time</span>
               </div>
             </div>

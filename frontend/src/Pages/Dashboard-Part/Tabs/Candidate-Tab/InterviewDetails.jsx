@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import Modal from 'react-modal';
-import {
-  FaTimes,
-  FaStar,
-  FaUser,
-  FaCalendarAlt,
-  FaClock,
-  FaCheckCircle,
-  FaBuilding,
-  FaCode,
-  FaLaptopCode,
-  FaComments,
-  FaDownload,
-  FaEnvelope,
-  FaEdit,
-  FaSave,
-  FaTrash,
-  FaPlus
-} from 'react-icons/fa';
+// import {
+//   FaTimes,
+//   FaStar,
+//   FaUser,
+//   FaCalendarAlt,
+//   FaClock,
+//   FaCheckCircle,
+//   FaBuilding,
+//   FaCode,
+//   FaLaptopCode,
+//   FaComments,
+//   FaDownload,
+//   FaEnvelope,
+//   FaEdit,
+//   FaSave,
+//   FaTrash,
+//   FaPlus
+// } from 'react-icons/fa';
 
 Modal.setAppElement('#root');
 
@@ -96,7 +96,7 @@ Status: ${round.status}
           <div>
             <div className="flex items-center gap-3 mb-1">
               <div className="p-2 bg-blue-50 rounded-lg">
-                <FaBuilding className="w-5 h-5 text-blue-600" />
+                {/* <FaBuilding className="w-5 h-5 text-blue-600" /> */}
               </div>
               <h3 className="text-xl font-bold text-gray-800">{interview?.positionId?.companyname || "N/A"}</h3>
             </div>
@@ -108,13 +108,13 @@ Status: ${round.status}
               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
               title="Download Consolidated Feedback"
             >
-              <FaDownload className="w-5 h-5" />
+              {/* <FaDownload className="w-5 h-5" /> */}
             </button>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <FaTimes className="w-5 h-5 text-gray-500" />
+              {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
             </button>
           </div>
         </div>
@@ -137,7 +137,7 @@ Status: ${round.status}
             }}
             className="flex items-center gap-2 px-3 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
           >
-            <FaPlus className="w-4 h-4" />
+            {/* <FaPlus className="w-4 h-4" /> */}
             <span>Add Round</span>
           </button>
         </div>
@@ -149,13 +149,13 @@ Status: ${round.status}
                 <div className="flex justify-between items-start">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-white rounded-lg shadow-sm">
-                      {round.roundTitle.includes('Technical') ? (
+                      {/* {round.roundTitle.includes('Technical') ? (
                         <FaCode className="w-5 h-5 text-blue-600" />
                       ) : round.roundTitle.includes('System') ? (
                         <FaLaptopCode className="w-5 h-5 text-purple-600" />
                       ) : (
                         <FaComments className="w-5 h-5 text-green-600" />
-                      )}
+                      )} */}
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-800">{round?.roundTitle}</h4>
@@ -186,7 +186,7 @@ Status: ${round.status}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           title="Email Feedback"
                         >
-                          <FaEnvelope className="w-4 h-4" />
+                          {/* <FaEnvelope className="w-4 h-4" /> */}
                         </button>
                         {/* <button
                           onClick={() => {
@@ -213,7 +213,7 @@ Status: ${round.status}
               <div className="p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 mb-4">
                   <div className="flex items-center gap-2 text-gray-600">
-                    <FaCalendarAlt className="w-4 h-4" />
+                    {/* <FaCalendarAlt className="w-4 h-4" /> */}
                     <span className="text-sm">
                       {round?.dateTime
                         ? (() => {
@@ -235,7 +235,7 @@ Status: ${round.status}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
-                    <FaClock className="w-4 h-4" />
+                    {/* <FaClock className="w-4 h-4" /> */}
                     <span className="text-sm">{round?.duration}</span>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ Status: ${round.status}
                     <div className="space-y-2">
                       {['Problem-solving', 'Technical knowledge', 'Communication'].map((strength, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                          <FaCheckCircle className="w-4 h-4 text-green-500" />
+                          {/* <FaCheckCircle className="w-4 h-4 text-green-500" /> */}
                           <span>{strength}</span>
                         </div>
                       ))}
@@ -330,7 +330,7 @@ Status: ${round.status}
               onClick={() => setIsEditModalOpen(false)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <FaTimes className="w-5 h-5 text-gray-500" />
+              {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
             </button>
           </div>
 
@@ -410,7 +410,7 @@ Status: ${round.status}
               onClick={handleSaveEdit}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
-              <FaSave className="w-4 h-4" />
+              {/* <FaSave className="w-4 h-4" /> */}
               <span>Save Changes</span>
             </button>
           </div>

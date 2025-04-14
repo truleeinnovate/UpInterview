@@ -18,11 +18,11 @@ import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
-import { IoIosCloseCircleOutline } from "react-icons/io";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa";
+// import { IoIosCloseCircleOutline } from "react-icons/io";
+// import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import Cookies from 'js-cookie';
-import { FiPlus } from "react-icons/fi";
+// import { FiPlus } from "react-icons/fi";
 
 // const MyQuestionsList = ({ interviewQuestionsList, setInterviewQuestionsList, section, questionBankPopupVisibility }) => {
 // changes made by shashank
@@ -421,7 +421,7 @@ const MyQuestionsList = ({
         <div className="flex justify-between items-center p-2 border-b-[1px] border-[gray]">
           <h3 className="font-medium">Filters</h3>
           <button onClick={() => closeFilter()}>
-            <IoIosCloseCircleOutline />
+            {/* <IoIosCloseCircleOutline /> */}
           </button>
         </div>
         <div className="p-2">
@@ -433,7 +433,7 @@ const MyQuestionsList = ({
           >
             <h3 className="font-medium">Difficulty Level</h3>
             <button>
-              {isFilterByDifficultyOpen ? <FaAngleUp /> : <FaAngleDown />}
+              {/* {isFilterByDifficultyOpen ? <FaAngleUp /> : <FaAngleDown />} */}
             </button>
           </div>
           <ul>
@@ -466,7 +466,7 @@ const MyQuestionsList = ({
           >
             <h3 className="font-medium">Question Type</h3>
             <button>
-              {isQuestionTypeFilterOpen ? <FaAngleUp /> : <FaAngleDown />}
+              {/* {isQuestionTypeFilterOpen ? <FaAngleUp /> : <FaAngleDown />} */}
             </button>
           </div>
           <ul>
@@ -530,7 +530,7 @@ return (
         className="text-md absolute top-[-50px] right-0 bg-custom-blue text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
         onClick={toggleSidebar}
       >
-        <FiPlus /> Add Question
+        {/* <FiPlus /> Add Question */}
       </button>
     </div>
 
@@ -584,7 +584,7 @@ return (
             className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
             onClick={openListPopup}
           >
-            <FiPlus size={14} /> Create New List
+            {/* <FiPlus size={14} /> Create New List */}
           </button>
         </div>
         <div className="relative">

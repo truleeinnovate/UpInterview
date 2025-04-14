@@ -1,7 +1,7 @@
 
-import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
+// import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
 import Modal from 'react-modal';
-import { RiGraduationCapFill } from "react-icons/ri";
+// import { RiGraduationCapFill } from "react-icons/ri";
 import { useEffect, useState } from 'react';
 
 Modal.setAppElement('#root');
@@ -148,7 +148,7 @@ const CandidateFullscreen = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <FaEnvelope className="w-5 h-5 text-gray-500" />
+                      {/* <FaEnvelope className="w-5 h-5 text-gray-500" /> */}
                     </div>
                     {/* {isEditing ? (
                       <input
@@ -163,7 +163,7 @@ const CandidateFullscreen = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <FaPhone className="w-5 h-5 text-gray-500" />
+                      {/* <FaPhone className="w-5 h-5 text-gray-500" /> */}
                     </div>
                     {/* {isEditing ? (
                       <input
@@ -199,7 +199,7 @@ const CandidateFullscreen = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <RiGraduationCapFill className="w-5 h-5" />
+                      {/* <RiGraduationCapFill className="w-5 h-5" /> */}
                     </div>
 
                     <div>
@@ -217,7 +217,7 @@ const CandidateFullscreen = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
-                        <FaUniversity  className="w-5 h-5" />
+                        {/* <FaUniversity  className="w-5 h-5" /> */}
                         </div>
                         <div>
                       <p className="text-sm text-gray-500">University</p>

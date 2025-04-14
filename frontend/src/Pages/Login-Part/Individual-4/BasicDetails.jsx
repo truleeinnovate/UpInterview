@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { MdArrowDropDown } from "react-icons/md";
-import { ImCancelCircle } from "react-icons/im";
+// import { MdArrowDropDown } from "react-icons/md";
+// import { ImCancelCircle } from "react-icons/im";
 // import noImage from '../Dashboard-Part/Images/no-photo.png';
 import noImage from '../../Dashboard-Part/Images/no-photo.png';
 import InfoBox from './InfoBox.jsx';
@@ -177,7 +177,7 @@ const BasicDetails = ({
                         {file ? file.name : 'LinkedIn Profile Photo'}
                       </span>
                       <button onClick={handleDeleteImage} type="button" className="text-red-500">
-                        <ImCancelCircle className="text-lg" />
+                        {/* <ImCancelCircle className="text-lg" /> */}
                       </button>
                     </div>
                   )}
@@ -293,7 +293,7 @@ const BasicDetails = ({
             className="block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
           />
           <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500" onClick={toggleDropdowngender}>
-            <MdArrowDropDown className="text-lg" />
+            {/* <MdArrowDropDown className="text-lg" /> */}
           </div>
         </div>
 

@@ -1,9 +1,9 @@
 
-import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
+// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
 import { useState, useRef, useEffect, useCallback } from "react";
 
 import { Menu } from '@headlessui/react';
-import { MdOutlineLocalPhone } from "react-icons/md";
+// import { MdOutlineLocalPhone } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 
 
@@ -134,7 +134,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                         <td className="px-4 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <FaEnvelope className="w-3 h-3" />
+                              {/* <FaEnvelope className="w-3 h-3" /> */}
                               <span>{candidate.Email || 'N/A'}</span>
                             </div>
                           </div>
@@ -143,7 +143,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                         <td className="px-4 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <MdOutlineLocalPhone className="w-4 h-4" />
+                              {/* <MdOutlineLocalPhone className="w-4 h-4" /> */}
                               <span>{candidate.Phone || 'N/A'}</span>
                             </div>
                           </div>
@@ -193,7 +193,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                           <Menu as="div" className="relative">
                             <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                              <FaEllipsisV className="w-4 h-4 text-gray-500" />
+                              {/* <FaEllipsisV className="w-4 h-4 text-gray-500" /> */}
                             </Menu.Button>
                             <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
                   ${index >= candidates.length - 4
@@ -210,7 +210,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    <FaEye className="w-4 h-4 text-blue-600" />
+                                    {/* <FaEye className="w-4 h-4 text-blue-600" /> */}
                                     View Details
                                   </button>
                                 )}
@@ -223,7 +223,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    <FaUserCircle className="w-4 h-4 text-purple-600" />
+                                    {/* <FaUserCircle className="w-4 h-4 text-purple-600" /> */}
                                     360° View
                                   </button>
                                 )}
@@ -236,7 +236,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    <FaPencilAlt className="w-4 h-4 text-green-600" />
+                                    {/* <FaPencilAlt className="w-4 h-4 text-green-600" /> */}
                                     Edit
                                   </button>
                                 )}

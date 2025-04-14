@@ -11,7 +11,7 @@ import Sidebar from './Sidebar';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import AddCandidateForm from './AddCandidateForm';
-import { FaUser } from 'react-icons/fa';
+// import { FaUser } from 'react-icons/fa';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 const tabs = [
   { id: 'interviews', name: 'Interviews', icon: '👥' },
@@ -122,7 +122,7 @@ const MainContent = () => {
             <div className="sm:block md:block lg:hidden xl:hidden 2xl:hidden    w-8 h-8  bg-custom-blue rounded-full  flex items-center justify-center pt-2 pl-2 pb-1 mb-2 shadow-lg"
               onClick={() => setSlideShow(true)}
             >
-                        <FaUser className="w-4 h-4  text-custom-bg opacity-75 " />
+                        {/* <FaUser className="w-4 h-4  text-custom-bg opacity-75 " /> */}
                       </div>
           </div>
 

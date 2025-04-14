@@ -12,7 +12,7 @@ import axios from "axios";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
 import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
-import { FaChevronUp, FaSearch } from 'react-icons/fa';
+// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
@@ -845,7 +845,7 @@ const validateForm = () => {
 
                             />
                             <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                              <FaSearch className="text-gray-600 text-lg" />
+                              {/* <FaSearch className="text-gray-600 text-lg" /> */}
                             </div>
                             {showDropdown && (
                               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
@@ -1228,7 +1228,7 @@ const validateForm = () => {
                                     className="flex justify-between items-center w-full"
                                   >
                                     <span className="font-medium">{section.SectionName}</span>
-                                    <FaChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'}`} />
+                                    {/* <FaChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'}`} /> */}
                                   </button>
 
                                   {expandedSections[section._id] && (

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import Modal from 'react-modal';
-import { FaTimes, FaPlus, FaCamera, FaTrash, FaExpand, FaCompress, FaFileUpload, FaFile } from 'react-icons/fa';
+// import { FaTimes, FaPlus, FaCamera, FaTrash, FaExpand, FaCompress, FaFileUpload, FaFile } from 'react-icons/fa';
 import classNames from 'classnames';
 import { format } from "date-fns";
-import { FaEdit } from "react-icons/fa";
+// import { FaEdit } from "react-icons/fa";
 import axios from 'axios';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import CustomDatePicker from '../../../../utils/CustomDatePicker';
@@ -564,17 +564,17 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {isFullScreen ? (
+                {/* {isFullScreen ? (
                   <FaCompress className="w-5 h-5 text-gray-500" />
                 ) : (
                   <FaExpand className="w-5 h-5 text-gray-500" />
-                )}
+                )} */}
               </button>
               <button
                 onClick={handleClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <FaTimes className="w-5 h-5 text-gray-500" />
+                {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
               </button>
             </div>
           </div>
@@ -601,12 +601,12 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 />
               ): (
                     <>
-                      <FaCamera className="w-8 h-8 text-gray-300 mb-1" />
+                      {/* <FaCamera className="w-8 h-8 text-gray-300 mb-1" /> */}
                       <p className="text-xs text-gray-400">Upload Photo</p>
                     </>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                    <FaCamera className="w-6 h-6 text-white" />
+                    {/* <FaCamera className="w-6 h-6 text-white" /> */}
                   </div>
                 </div>
                 <input
@@ -625,7 +625,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     }}
                     className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                   >
-                    <FaTrash className="w-3 h-3" />
+                    {/* <FaTrash className="w-3 h-3" /> */}
                   </button>
                 )}
               </div>
@@ -642,7 +642,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
                   {selectedResume ? (
                     <div className="text-center px-4">
-                      <FaFile className="w-8 h-8 text-blue-500 mx-auto mb-1" />
+                      {/* <FaFile className="w-8 h-8 text-blue-500 mx-auto mb-1" /> */}
                       <p className="text-sm text-gray-700 font-medium truncate max-w-[180px]">
                         {selectedResume.name}
                       </p>
@@ -652,13 +652,13 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     </div>
                   ) : (
                     <>
-                      <FaFileUpload className="w-8 h-8 text-gray-300 mb-1" />
+                      {/* <FaFileUpload className="w-8 h-8 text-gray-300 mb-1" /> */}
                       <p className="text-xs text-gray-400">Upload Resume</p>
                       <p className="text-xs text-gray-400">PDF or Word document</p>
                     </>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
-                    <FaFileUpload className="w-6 h-6 text-white" />
+                    {/* <FaFileUpload className="w-6 h-6 text-white" /> */}
                   </div>
                 </div>
                 <input
@@ -677,7 +677,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     }}
                     className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                   >
-                    <FaTrash className="w-3 h-3" />
+                    {/* <FaTrash className="w-3 h-3" /> */}
                   </button>
                 )}
               </div>
@@ -922,10 +922,10 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                         <div className="w-1/3 px-2">{entry.expertise}</div>
                         <div className="w-full flex justify-end space-x-2 -mt-5">
                           <button onClick={() => handleEdit(index)} className="text-custom-blue text-md">
-                            <FaEdit />
+                            {/* <FaEdit /> */}
                           </button>
                           <button type="button" onClick={() => handleDelete(index)} className="text-red-500 text-md">
-                            <FaTrash />
+                            {/* <FaTrash /> */}
                           </button>
                         </div>
                       </div>
@@ -938,7 +938,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                         <header className="flex justify-between items-center w-full border-b py-3 px-4">
                           <h2 className="text-lg font-bold">Select Skills</h2>
                           <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
-                            <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" />
+                            {/* <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" /> */}
                           </button>
                         </header>
                         <div>

@@ -1,10 +1,10 @@
 // Import necessary dependencies and components
 
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaUniversity , FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
+// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaUniversity , FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { RiGraduationCapFill } from "react-icons/ri";
-// Status badge component for displaying   candidate status
+// import { RiGraduationCapFill } from "react-icons/ri";
+// Status badge component for displaying candidate status
 // const StatusBadge = ({ status }) => {
 //   const styles = {
 //     active: 'bg-green-100 text-green-800',
@@ -57,7 +57,7 @@ const CandidateList = ({ candidates, onView, onEdit,navigate }) => (
               <div className="ml-3">
                 <h4 className="text-sm font-medium text-gray-900">{candidate?.FirstName || '?'} { candidate?.LastName || '?'}</h4>
                 <p className="text-sm text-gray-500 flex items-center gap-1">
-                  <FaBriefcase className="w-3 h-3" />
+                  {/* <FaBriefcase className="w-3 h-3" /> */}
                   {candidate.CurrentRole || 'position'}
                 </p>
               </div>
@@ -69,21 +69,21 @@ const CandidateList = ({ candidates, onView, onEdit,navigate }) => (
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
-                <FaEye className="w-4 h-4" />
+                {/* <FaEye className="w-4 h-4" /> */}
               </button>
               <button
                onClick={() => candidate?._id && navigate(`/candidate/${candidate._id}`)} 
                 className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                 title="360° View"
               >
-                <FaUserCircle className="w-4 h-4" />
+                {/* <FaUserCircle className="w-4 h-4" /> */}
               </button>
               <button
                 onClick={() => onEdit(candidate)}
                 className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 title="Edit"
               >
-                <FaPencilAlt className="w-4 h-4" />
+                {/* <FaPencilAlt className="w-4 h-4" /> */}
               </button>
               {/* <button
                 onClick={() => window.open('/candidate', '_blank')}
@@ -99,21 +99,21 @@ const CandidateList = ({ candidates, onView, onEdit,navigate }) => (
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-1.5 text-gray-600">
-                <FaEnvelope className="w-4 h-4" />
+                {/* <FaEnvelope className="w-4 h-4" /> */}
                 <span className="truncate">{candidate?.Email || "?"}</span>
               </div>
               <div className="flex items-center gap-1.5 text-gray-600">
-                <FaPhone className="w-4 h-4" />
+                {/* <FaPhone className="w-4 h-4" /> */}
                 <span>{candidate?.Phone || "N/A"}</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-1.5 text-gray-600">
-            <RiGraduationCapFill className="w-4 h-4" />
+            {/* <RiGraduationCapFill className="w-4 h-4" /> */}
               <span>{candidate?.HigherQualification || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-1.5 text-gray-600">
-            <FaUniversity  className="w-4 h-4" />
+            {/* <FaUniversity  className="w-4 h-4" /> */}
               <span>{candidate?.UniversityCollege || 'N/A'}</span>
             </div>
           </div>

@@ -14,7 +14,7 @@ import {
   User,
   ExternalLink
 } from 'lucide-react';
-import { FaChevronUp, FaSearch } from 'react-icons/fa';
+// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 
@@ -432,7 +432,7 @@ const PositionRoundCard = ({
                                 className="flex justify-between items-center w-full"
                               >
                                 <span className="font-medium text-gray-800">{section.SectionName}</span>
-                                <FaChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'} text-gray-500`} />
+                                {/* <FaChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'} text-gray-500`} /> */}
                               </button>
 
                               {expandedSections[section._id] && (

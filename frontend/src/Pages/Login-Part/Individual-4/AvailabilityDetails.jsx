@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import TimezoneSelect from 'react-timezone-select';
-import { GiCancel } from "react-icons/gi";
-import { IoIosCopy } from "react-icons/io";
-import { FaPlus, FaMinus } from "react-icons/fa6";
+// import { GiCancel } from "react-icons/gi";
+// import { IoIosCopy } from "react-icons/io";
+// import { FaPlus, FaMinus } from "react-icons/fa6";
 
 const AvailabilityDetails = ({
     selectedTimezone,
@@ -155,7 +155,7 @@ const AvailabilityDetails = ({
                                                             placeholderText="Start Time"
                                                             className="p-2 border border-gray-400 rounded w-24 text-sm text-center outline-none focus:ring-0"
                                                         />
-                                                        <FaMinus className="text-xs text-gray-600" />
+                                                        {/* <FaMinus className="text-xs text-gray-600" /> */}
                                                         <DatePicker
                                                             selected={timeSlot.endTime}
                                                             onChange={(date) => handleTimeChange(day, index, "endTime", date)}
@@ -166,21 +166,21 @@ const AvailabilityDetails = ({
                                                             placeholderText="End Time"
                                                             className="p-2 border border-gray-400 rounded w-24 text-sm text-center outline-none focus:ring-0"
                                                         />
-                                                        <GiCancel
+                                                        {/* <GiCancel
                                                             className={`text-xl cursor-pointer text-red-500 ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}`}
                                                             onClick={() => handleRemoveTimeSlot(day, index)}
-                                                        />
+                                                        /> */}
                                                     </>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-                                    <FaPlus
+                                    {/* <FaPlus
                                         className="text-xl cursor-pointer mt-2"
                                         onClick={() => handleAddTimeSlot(day)}
-                                    />
+                                    /> */}
                                     <div className="relative">
-                                        <IoIosCopy
+                                        {/* <IoIosCopy
                                             className="text-xl cursor-pointer mt-2"
                                             onClick={() => {
                                                 if (showPopup && selectedDay === day) {
@@ -191,7 +191,7 @@ const AvailabilityDetails = ({
                                                     setShowPopup(true);
                                                 }
                                             }}
-                                        />
+                                        /> */}
                                         {showPopup && selectedDay === day && (
                                             <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-50">
                                                 <div className="bg-white p-3 rounded-lg w-72 shadow-md border text-sm">

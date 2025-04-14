@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { BsThreeDotsVertical } from 'react-icons/bs';
+// import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+// import { BsThreeDotsVertical } from 'react-icons/bs';
 import maleImage from "../../../Dashboard-Part/Images/man.png";
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
@@ -369,7 +369,7 @@ const OutsourceInterviewers = () => {
                         } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
                       onClick={prevPage}
                     >
-                      <IoIosArrowBack className="text-custom-blue" />
+                      {/* <IoIosArrowBack className="text-custom-blue" /> */}
                     </span>
                   </Tooltip>
 
@@ -379,7 +379,7 @@ const OutsourceInterviewers = () => {
                         } ${activeArrow === "next" ? "text-blue-500" : ""}`}
                       onClick={nextPage}
                     >
-                      <IoIosArrowForward className="text-custom-blue" />
+                      {/* <IoIosArrowForward className="text-custom-blue" /> */}
 
                     </span>
                   </Tooltip>
@@ -507,7 +507,7 @@ const OutsourceInterviewers = () => {
                                     <td className="py-2 px-6">{interviewer.status}</td>
                                     <td className="py-2 px-6">
                                       <button className="text-gray-700 hover:text-gray-600">
-                                        <BsThreeDotsVertical />
+                                        {/* <BsThreeDotsVertical /> */}
                                       </button>
                                     </td>
                                   </tr>
@@ -540,7 +540,7 @@ const OutsourceInterviewers = () => {
                                 <div className="relative">
                                   <div className="float-right">
                                     <button className="text-gray-700 hover:text-gray-600">
-                                      <BsThreeDotsVertical />
+                                      {/* <BsThreeDotsVertical /> */}
                                     </button>
                                   </div>
                                 </div>

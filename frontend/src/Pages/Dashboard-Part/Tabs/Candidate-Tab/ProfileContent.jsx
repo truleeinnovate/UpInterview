@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import InterviewRounds from './InterviewRounds';
 import Timeline from './Timeline';
 import Documents from './Documents';
-import { FaTimes } from 'react-icons/fa';
+// import { FaTimes } from 'react-icons/fa';
 import classNames from 'classnames';
 
 const tabs = [
@@ -42,7 +42,7 @@ const ProfileContent = ({ candidate, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <FaTimes className="w-5 h-5 text-gray-500" />
+            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import { IoClose } from "react-icons/io5";
+// import { IoClose } from "react-icons/io5";
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { config } from '../../../../config.js';
@@ -56,7 +56,7 @@ const FeedbackStatusChangeModal = ({
               onClick={onClose}
               className="text-white hover:text-gray-200"
             >
-              <IoClose size={20} />
+              {/* <IoClose size={20} /> */}
             </button>
           </div>
 

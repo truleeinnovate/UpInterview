@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
+// import { FaSearch } from 'react-icons/fa';
 
 const AssessmentDetails = ({ roundDetails, onCancel, onPrevious, onSave, roundNumber, isLastRound }) => {
   const [formData, setFormData] = useState({
@@ -102,7 +102,7 @@ const AssessmentDetails = ({ roundDetails, onCancel, onPrevious, onSave, roundNu
                       className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-teal-500"
                     />
                     <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                      <FaSearch className="text-gray-600 text-lg" />
+                      {/* <FaSearch className="text-gray-600 text-lg" /> */}
                     </div>
                   </div>
                 </div>
