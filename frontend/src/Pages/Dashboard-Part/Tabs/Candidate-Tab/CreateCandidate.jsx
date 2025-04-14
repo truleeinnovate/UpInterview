@@ -7,7 +7,7 @@ import range from "lodash/range";
 import "react-phone-input-2/lib/style.css";
 import axios from "axios";
 import { format, getYear } from 'date-fns';
-import { validateCandidateForm, getErrorMessage } from '../../../../utils/CandidateValidation.js';
+import { validateCandidateForm, getErrorMessage } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 
 import { ReactComponent as IoArrowBack } from '../../../../icons/IoArrowBack.svg';

@@ -68,7 +68,16 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     return { formIsValid, newErrors };
 };
 
+ const countryCodes = [
+    { value: '+1', label: '🇺🇸 +1 (USA)' },
+    { value: '+44', label: '🇬🇧 +44 (UK)' },
+    { value: '+91', label: '🇮🇳 +91 (India)' },
+    // Add more countries as needed
+  ];
+  
+
 module.exports = {
     validateCandidateForm,
-    getErrorMessage
+    getErrorMessage,
+    countryCodes
 };

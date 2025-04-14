@@ -3,7 +3,7 @@ const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Wallet = require('../models/WalletTopup.js');
-const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('../utils/CustomerSubscriptionInvoiceContollers.js');
+const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 
 // Function to handle subscription creation
 const createSubscriptionControllers = async (req, res) => {
@@ -21,7 +21,6 @@ const createSubscriptionControllers = async (req, res) => {
     if (isNaN(numericTotalAmount)) {
       return res.status(400).json({ message: 'Total amount must be a valid number.' });
     }
-
 
     const plan = await SubscriptionPlan.findById(subscriptionPlanId);
     // const plan = await SubscriptionPlan.findById({ _id: subscriptionPlanId });

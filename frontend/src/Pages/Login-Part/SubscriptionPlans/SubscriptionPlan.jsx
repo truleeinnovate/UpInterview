@@ -34,7 +34,7 @@ const SubscriptionPlan = () => {
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const [subscriptionData, setSubscriptionData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   // this will check that that plans is already set or not
   useEffect(() => {
     const fetchData = async () => {
@@ -48,7 +48,7 @@ const SubscriptionPlan = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 

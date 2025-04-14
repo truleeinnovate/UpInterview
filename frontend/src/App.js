@@ -16,6 +16,15 @@ import LinkedInCallback from './Components/LinkedInCallback.jsx';
 import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
 import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
 
+// tabs
+import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
+import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/MainContent.jsx';
+
+import Position from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx";
+import PositionForm from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx";
+import PositionSlideDetails from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx";
+import RoundFormPosition from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx";
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
@@ -42,6 +51,18 @@ const App = () => {
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
+
+          {/* tabs */}
+          <Route path="/candidate" element={<CandidateTab />} />
+          <Route path="/candidate/:id" element={<CandidateTabDetails />} />
+
+          <Route path="/position" element={<Position />} />
+          <Route path="/position/new-position" element={<PositionForm />} />
+          <Route path="/position/edit-position/:id" element={<PositionForm />} />
+          <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
+          <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+          <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+          
         </Routes>
       </div>
     </React.Fragment>

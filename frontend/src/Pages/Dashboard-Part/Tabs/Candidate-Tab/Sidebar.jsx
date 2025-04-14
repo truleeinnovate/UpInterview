@@ -1,0 +1,130 @@
+import React from 'react';
+import { FaUser, FaEnvelope, FaPhone, FaRegBuilding, FaPencilAlt, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { RiGraduationCapFill } from "react-icons/ri";
+import { useNavigate } from 'react-router-dom';
+
+const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
+  
+  const navigate = useNavigate();
+
+  if (!candidate) return null;
+
+  return (
+    <aside className={`
+      fixed lg:relative  lg:block xl:relative 2xl:relative
+      w-[100%] sm:w-[100%] md:w-[100%] lg:w-[25%] xl:w-[25%] 2xl:w-[25%]
+       h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen
+      md:pt-3
+      bg-white
+      shadow-md lg:shadow-lg 
+      transition-transform duration-300
+      z-40
+      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0'}
+    `}>
+      <div className="h-full overflow-y-auto ">
+        <div className="px-9 py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() =>navigate('/candidate')}
+                className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                title="Back to Dashboard"
+              >
+                <FaArrowLeft className="w-3.5 h-3.5" />
+              </button>
+              <h2 className="text-lg font-bold  text-custom-blue">
+                Profile
+              </h2>
+            </div>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => onEdit(candidate)}
+                className="p-1.5 rounded-full bg-custom-bg text-custom-blue  transition-colors"
+              >
+                {editMode ? <FaCheck className="w-3.5 h-3.5" /> : <FaPencilAlt className="w-3.5 h-3.5" />}
+              </button>
+              <button
+               onClick={() => onClose()}
+                className="sm:block md:block lg:hidden xl:hidden 2xl:hidden p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <FaTimes className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <div className="w-16 h-16 bg-custom-blue rounded-full mx-auto flex items-center justify-center mb-2 shadow-lg">
+              <FaUser className="w-8 h-8 text-custom-bg opacity-75" />
+            </div>
+           
+              <h3 className="text-center font-bold text-lg">{candidate?.FirstName || ''} {candidate.LastName || 'N/A'}</h3>
+
+          
+              <p className="text-center text-base  pt-1 pb-2 text-gray-600">{candidate.CurrentRole || 'position'}</p>
+           
+          </div>
+        </div>
+
+        <div className="px-9 py-2 space-y-2  sm:mb-36  lg:md:10">
+          <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-100">
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <FaEnvelope className="text-gray-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1 pb-2 pt-2">
+                
+                    <span className="block truncate text-sm">{candidate?.Email || '?'}</span>
+                 
+                </div>
+              </div>
+              
+              <div className="flex items-center">
+                <FaPhone className="text-green-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1  pb-2 pt-2">
+                
+                    <span className="block truncate text-sm">{candidate?.Phone || 'N/A'}</span>
+                
+                </div>
+              </div>
+
+              <div className="flex items-center">
+              <RiGraduationCapFill  className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1 pb-2 pt-2">
+              
+                    <span className="block truncate text-sm">{candidate?.HigherQualification ||'?'}</span>
+         
+                </div>
+              </div>
+              
+
+              
+              <div className="flex items-center">
+                <FaRegBuilding  className="text-blue-600 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0"  />
+                <div className="min-w-0 flex-1  pb-2 pt-2">
+                    <span className="block truncate text-sm">{candidate?.UniversityCollege ||'?'}</span>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+
+          <div className="bg-white  rounded-lg p-3 sm:p-4 shadow-sm border  border-gray-100">
+            <h3 className="font-bold mb-2 sm:mb-3 text-gray-700 text-lg text-center sm:text-base">Skills</h3>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {candidate.skills?.map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-2 sm:px-3 py-1 bg-custom-bg text-custom-blue rounded-full sm:text-sm text-base font-medium border border-blue-100 shadow-sm"
+                >
+                  {skill.skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;

@@ -8,9 +8,9 @@ const app = express();
 app.use(bodyParser.json());
 
 const port = process.env.PORT;
-console.log('port:', port);
+// console.log('port:', port);
 const mongoUri = process.env.MONGODB_URI;
-console.log('mongoUri:', mongoUri);
+// console.log('mongoUri:', mongoUri);
 
 const corsOptions = {
   origin: [
@@ -23,7 +23,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
-console.log('corsOptions:', corsOptions);
+// console.log('corsOptions:', corsOptions);
 
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully'))
@@ -44,7 +44,7 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
   
-  console.log('CORS headers set for:', req.method, req.url);
+  // console.log('CORS headers set for:', req.method, req.url);
   next();
 });
 
@@ -54,6 +54,9 @@ const { LocationMaster } = require('./models/MasterSchemas/LocationMaster.js');
 const { Industry } = require('./models/MasterSchemas/industries.js');
 const { RoleMaster } = require('./models/MasterSchemas/RoleMaster.js');
 const { TechnologyMaster } = require('./models/MasterSchemas/TechnologyMaster.js');
+const { HigherQualification } = require('./models/higherqualification.js');
+const { University_CollegeName } = require('./models/college.js')
+const { Company } = require('./models/company.js');
 
 // API Routes
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
@@ -63,7 +66,6 @@ const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.
 const organizationRoutes = require('./routes/organizationRoutes.js');
 const emailCommonRouter = require('./routes/emailCommonRoutes.js');
 const Cardrouter = require("./routes/Carddetailsroutes.js");
-
 
 // Register all routes
 app.use('/linkedin', linkedinAuthRoutes);
@@ -105,7 +107,6 @@ app.get('/industries', async (req, res) => {
 app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
-    console.log('All Roles:', roles);
     res.json(roles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -115,12 +116,40 @@ app.get('/roles', async (req, res) => {
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');
-    console.log('All Technologies:', technology);
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
+app.get('/qualification', async (req, res) => {
+  try {
+    const higherqualifications = await HigherQualification.find({}, 'QualificationName');
+    res.json(higherqualifications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+app.get('/universitycollege', async (req, res) => {
+  try {
+    const universityCollegeNames = await University_CollegeName.find({}, 'University_CollegeName');
+    res.json(universityCollegeNames);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.get('/company', async (req, res) => {
+  try {
+    const CompanyNames = await Company.find({});
+    res.json(CompanyNames);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -131,3 +160,464 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+
+
+// this is common code for datautils
+const { Candidate } = require('./models/candidate.js');
+const { Position } = require('./models/position.js');
+const TeamMember = require('./models/TeamMembers.js');
+const Assessment = require('./models/assessment.js');
+const { Interview } = require('./models/Interview.js');
+const { MockInterview } = require('./models/mockinterview.js');
+const { Users } = require("./models/Users.js")
+const Role = require('./models/RolesData.js');
+const Profile = require('./models/Profile.js');
+const { TenantQuestions } = require('./models/myQuestionList.js');
+const SharingRule = require('./models/SharingRules.js');
+
+app.post('/api/sharing-rules', async (req, res) => {
+  const { label, name, objectName, ruleType, recordsOwnedBy, recordsOwnedById, shareWith, shareWithId, access, description, orgId } = req.body;
+
+  const newSharingRule = new SharingRule({
+    label,
+    name,
+    objectName,
+    ruleType,
+    recordsOwnedBy,
+    recordsOwnedById,
+    shareWith,
+    shareWithId,
+    access,
+    description,
+    orgId
+  });
+
+  try {
+    const savedRule = await newSharingRule.save();
+    res.status(201).json(savedRule);
+  } catch (error) {
+    console.error('Error saving sharing rule:', error); // Log the error
+    res.status(500).json({ message: 'Error saving sharing rule', error: error.message });
+  }
+});
+
+
+
+app.get('/api/from/sharing-rules', async (req, res) => {
+  const { orgId } = req.query; // Get the organization ID from query parameters
+
+  try {
+    // Query the database for sharing rules with the specified organization ID
+    const sharingRules = await SharingRule.find({ orgId });
+
+    // Return the sharing rules as a JSON response
+    res.status(200).json(sharingRules);
+  } catch (error) {
+    console.error('Error fetching sharing rules:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+// this sharing rule fetch used in datautils function
+app.get('/api/sharing-rules', async (req, res) => {
+  const { orgId, objectName, shareWithId } = req.query;
+
+  // Ensure shareWithId is an array
+  const shareWithIdArray = Array.isArray(shareWithId) ? shareWithId : [shareWithId];
+
+  try {
+    // Validate required parameters
+    if (!objectName || !shareWithIdArray.length) {
+      return res.status(400).json({ message: 'Missing required query parameters' });
+    }
+
+    // Query the database for sharing rules
+    const sharingRules = await SharingRule.find({
+      orgId,
+      objectName,
+      shareWithId: { $in: shareWithIdArray }
+    });
+
+    res.status(200).json(sharingRules);
+  } catch (error) {
+    console.error('Error fetching sharing rules:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// this is common code for datautils
+const modelMapping = {
+  'candidate': Candidate,
+  'position': Position,
+  'team': TeamMember,
+  'assessment': Assessment,
+  'interview': Interview,
+  'mockinterview': MockInterview,
+  'users': Users,
+  'rolesdata': Role,
+  'profiles': Profile,
+  'tenentquestions': TenantQuestions
+};
+
+app.get('/api/:model', async (req, res) => {
+  const { model } = req.params;
+  const { tenantId, ownerId } = req.query;
+
+  // Get the correct model based on the endpoint
+  const DataModel = modelMapping[model.toLowerCase()];
+
+  if (!DataModel) {
+    return res.status(400).json({ message: 'Invalid model' });
+  }
+
+  if (!ownerId) {
+    return res.status(200).json([]);
+  }
+
+  try {
+    let query = DataModel.find(tenantId ? { tenantId } : { ownerId });
+
+    // Handle specific models with additional population
+    switch (model.toLowerCase()) {
+      case 'team':
+        query = query
+          .populate('contactId')
+          .populate({
+            path: 'contactId',
+            populate: {
+              path: 'availability',
+              model: 'Interviewavailability',
+            },
+          });
+        break;
+
+      case 'tenentquestions':
+        const questions = await TenantQuestions.find()
+          .populate({
+            path: 'suggestedQuestionId',
+            model: 'suggestedQuestions',
+          })
+          .populate({
+            path: 'tenantListId',
+            model: 'TenantQuestionsListNames',
+            select: 'label name ownerId tenantId',
+          })
+          .exec();
+
+        // Group questions by label
+        const groupedQuestions = questions.reduce((acc, question) => {
+          const questionData = question.isCustom
+            ? question // Use the question data directly if custom
+            : question.suggestedQuestionId;
+
+          if (!questionData) return acc;
+
+          question.tenantListId.forEach((list) => {
+            const label = list.label;
+            if (!acc[label]) {
+              acc[label] = [];
+            }
+            acc[label].push({
+              ...questionData._doc,
+              label,
+              listId: list._id,
+            });
+          });
+
+          return acc;
+        }, {});
+
+        return res.status(200).json(groupedQuestions);
+
+      // case 'assessment':
+      // query = query
+      //   .populate({
+      //     path: 'Sections.Questions',
+      //     model: 'assessmentQuestions',
+      //   });
+
+      // break;
+
+      case 'position':
+        query = query
+          .populate({
+            path: 'rounds.interviewers',
+            model: 'Contacts',
+            select: 'name email',
+          })
+
+        // .populate({
+        //   path: 'rounds.questions.questionId',
+        //   model: 'Questions',
+        // });
+
+        break;
+
+      case 'interview':
+        query = query
+          .populate({
+            path: 'candidateId',
+            model: 'Candidate',
+          })
+          .populate({
+            path: 'positionId',
+            model: 'Position',
+          })
+          .populate({
+            path: 'templateId',
+            model: 'InterviewTemplate',
+          });
+
+        const interviews = await query.exec();
+        const interviewIds = interviews.map(interview => interview._id);
+
+        // Fetch rounds separately
+        const roundsData = await InterviewRounds.find({ interviewId: { $in: interviewIds } })
+          .populate({
+            path: "interviewers",
+            model: "Contacts",
+            select: "name email",
+          })
+        // .populate({ 
+        //   path: "assessmentId",
+        //   model: "assessment",
+        //   select: "Sections",
+        //   populate: {
+        //     path: "Sections.Questions",
+        //     model: "assessmentQuestions",
+        //     select: "snapshot",
+        //   },
+        // });
+
+        // Fetch interview questions separately using interviewId and roundId
+        const interviewQuestionData = await interviewQuestions.find({
+          interviewId: { $in: interviewIds }
+        }).select("roundId snapshot");
+
+        // Map rounds and attach matching questions
+        // Map rounds and attach all matching questions
+        const roundsWithQuestions = roundsData.map(round => {
+          const matchingQuestions = interviewQuestionData.filter(q => q.roundId.equals(round._id));
+
+          return {
+            ...round._doc,
+            questions: matchingQuestions, // Attach all question data instead of selecting fields
+          };
+        });
+
+        // Merge rounds into the interviews
+        const interviewsWithRounds = interviews.map(interview => {
+          const interviewRounds = roundsWithQuestions.filter(round => round.interviewId.equals(interview._id));
+          return {
+            ...interview._doc,
+            rounds: interviewRounds,
+          };
+        });
+
+        return res.status(200).json(interviewsWithRounds);
+    }
+
+
+
+    const data = await query.exec();
+    if (!data || data.length === 0) {
+      return res.status(200).json([]);
+    }
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(`Error fetching data for ${model}:`, error);
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+app.get('/getUsersByRoleId', async (req, res) => {
+  const { organizationId, roleId } = req.query;
+  try {
+    // Build the query object
+    const query = { organizationId };
+    if (roleId) {
+      query.RoleId = { $in: Array.isArray(roleId) ? roleId : [roleId] };
+    }
+    // Fetch users based on the query
+    const users = await Users.find(query);
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users by organization and role:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+app.post('/rolesdata', async (req, res) => {
+  const { roleName, reportsToRoleId, description, organizationId } = req.body;
+
+  const newRole = new Role({
+    roleName,
+    reportsToRoleId,
+    description,
+    organizationId,
+  });
+
+  try {
+    const savedRole = await newRole.save();
+    res.status(201).json(savedRole);
+  } catch (error) {
+    res.status(500).json({ message: 'Error saving role', error: error.message });
+  }
+});
+// this is realted to data utils i think
+app.get('/rolesdata/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const role = await Role.findById(id);
+    if (!role) {
+      return res.status(404).json({ message: 'Role not found' });
+    }
+    res.status(200).json(role);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching role', error: error.message });
+  }
+});
+//this is related to roles main page get
+app.get('/rolesdata', async (req, res) => {
+  const { organizationId } = req.query; // Use query parameters
+  console.log("333333333");
+  try {
+    const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
+    if (!roles || roles.length === 0) {
+      return res.status(404).json({ message: 'No roles found for this organization' });
+    }
+    res.status(200).json(roles);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching roles', error: error.message });
+  }
+});
+
+app.get('/api/rolesdata/:organizationId', async (req, res) => {
+
+  const { organizationId } = req.params;
+  try {
+    const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
+    if (!roles || roles.length === 0) {
+      return res.status(404).json({ message: 'No roles found for this organization' });
+    }
+    res.status(200).json(roles);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching roles', error: error.message });
+  }
+});
+
+// tabs 
+const candidateRoutes = require('./routes/candidateRoutes.js');
+app.use('/candidate', candidateRoutes);
+
+// const positionRoutes = require('./routes/positionRoutes');
+// app.use('/position', positionRoutes);
+
+
+// const { Contacts } = require('./models/Contacts.js')
+// // used in navbar for  fetchProfileImage
+// app.get('/contacts/:userId', async (req, res) => {
+//   try {
+//     const userId = req.params.userId; // Keep it as a string
+
+//     const contact = await Contacts.findOne({ OwnerId: userId }); // Compare as string
+//     // if (!contact) {
+//     //   return res.status(404).json({ message: 'Contact not found' });
+//     // }
+
+//     res.json(contact);
+//   } catch (err) {
+//     console.error('Error fetching contact:', err);
+//     res.status(500).json({ message: err.message });
+//   }
+// });
+
+// // in contextfetch for fetchUserProfile
+// const { Users } = require("./models/Users.js")
+app.get('/auth/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await Users.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete('/users/:id/image', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await Users.findById(id);
+    if (!user) {
+      return res.status(404).send('User not found.');
+    }
+
+    const imagePath = user.ImageData?.path;
+    user.ImageData = undefined;
+    await user.save();
+
+    if (imagePath) {
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Error deleting image file:', err);
+        }
+      });
+    }
+
+    res.status(200).send('Image deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+app.put('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { Name, Firstname, CountryCode, UserId, Email, Phone, LinkedinUrl, Gender, isFreelancer, ImageData, ModifiedBy } = req.body;
+
+  try {
+    const updatedUser = await Users.findByIdAndUpdate(
+      id,
+      { Name, Firstname, CountryCode, UserId, Email, Phone, LinkedinUrl, Gender, isFreelancer, ImageData },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// const feedbackRouter = require('./routes/feedbackRoute.js')
+// const interviewQuestionsRoute = require('./routes/interviewQuestions.js')
+// const TenentQuestionsListNamesRoute = require('./routes/TenentQuestionsListNames.js')
+
+// app.use('/interview-questions', interviewQuestionsRoute)
+// app.use('/tenant-list', TenentQuestionsListNamesRoute)
+// app.use('/feedback', feedbackRouter)
+
+// const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js')
+// app.use('/suggested-questions', suggestedQuestionRouter)
+
+
+// const outsourceInterviewerRoutes = require('./routes/outsourceInterviewerRoutes.js');
+// app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
+
+// const teamRoutes = require('./routes/teamRoutes.js');
+// app.use('/teammember', teamRoutes);
+// const InterviewRoutes = require('./routes/interviewRoutes.js');
+// app.use('/interview', InterviewRoutes);
+// const interviewAvailabilityRoutes = require('./routes/interviewAvailabilityRoutes.js');
+// app.use('/interviewavailability', interviewAvailabilityRoutes);
+// const outsourceInterviewRequestRoutes = require('./routes/outsourceInterviewRequestRoutes.js');
+// app.use('/interviewrequest', outsourceInterviewRequestRoutes);
+// const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
+// app.use('/candidateposition', candidatePositionRoutes);

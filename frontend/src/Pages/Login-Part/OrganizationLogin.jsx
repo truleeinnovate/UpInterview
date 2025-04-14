@@ -5,6 +5,8 @@ import { usePermify } from '@permify/react-role';
 import axios from 'axios';
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import Slideshow from './Slideshow';
+import Cookies from 'js-cookie';
+
 
 const Admin = () => {
   const [Email, setEmail] = useState("");
@@ -44,16 +46,16 @@ const Admin = () => {
         );
 
         if (response.data.success) {
-            // // Store authentication data
-            // if (response.data.userId) {
-            //     Cookies.set('userId', response.data.userId, { expires: 7 });
-            // }
-            // if (response.data.organizationId) {
-            //     Cookies.set('organizationId', response.data.organizationId, { expires: 7 });
-            // }
-            // if (response.data.token) {
-            //     Cookies.set('token', response.data.token, { expires: 7 });
-            // }
+            // Store authentication data
+            if (response.data.userId) {
+                Cookies.set('userId', response.data.userId, { expires: 7 });
+            }
+            if (response.data.organizationId) {
+                Cookies.set('organizationId', response.data.organizationId, { expires: 7 });
+            }
+            if (response.data.token) {
+                Cookies.set('token', response.data.token, { expires: 7 });
+            }
 
             navigate('/home');
         } else {

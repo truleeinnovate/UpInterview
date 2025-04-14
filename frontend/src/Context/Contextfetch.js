@@ -35,6 +35,13 @@ const CustomProvider = ({ children }) => {
   const [industries, setIndustries] = useState([]);
   const [CurrentRole, setCurrentRole] = useState([]);
 
+    // master data fetch
+    const [skills, setSkills] = useState([]);
+    const [qualification, setQualification] = useState([]);
+    const [college, setCollege] = useState([]);
+    const [companies, setCompanies] = useState([]);
+    const [technologies, setTechnology] = useState([]);
+
   // users data 
   const [userProfile, setUserProfile] = useState(null);
 
@@ -57,12 +64,15 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchMasterData = async () => {
       try {
-        const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes] = await Promise.all([
+        const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
           axios.get(`${config.REACT_APP_API_URL}/industries`),
           axios.get(`${config.REACT_APP_API_URL}/roles`),
           axios.get(`${config.REACT_APP_API_URL}/skills`),
-          axios.get(`${config.REACT_APP_API_URL}/technology`)
+          axios.get(`${config.REACT_APP_API_URL}/technology`),
+          axios.get(`${config.REACT_APP_API_URL}/qualification`),
+          axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
+          axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
 
         setLocations(locationsRes.data);
@@ -70,6 +80,9 @@ const CustomProvider = ({ children }) => {
         setCurrentRole(rolesRes.data);
         setSkills(skillsRes.data);
         setTechnology(TechnologyRes.data);
+        setQualification(QualificationRes.data);
+        setCollege(CollegeRes.data);
+        setCompanies(CompanyRes.data);
       } catch (error) {
         console.error("Error fetching master data:", error);
       } finally {
@@ -163,10 +176,16 @@ const CustomProvider = ({ children }) => {
   // candidate
   const sharingPermissionscandidate = useMemo(() => sharingPermissionscontext.candidate || {}, [sharingPermissionscontext]);
   const [candidateData, setCandidateData] = useState([]);
+
   const fetchCandidateData = useCallback(async () => {
+    console.log("📡 [fetchCandidateData] Fetching candidate data...");
     setLoading(true);
+  
     try {
+      console.log('[fetchCandidateData] Permissions:', sharingPermissionscandidate);
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
+      console.log("✅ [fetchCandidateData] Fetched candidates:", filteredCandidates);
+  
       const candidatesWithImages = filteredCandidates.map((candidate) => {
         if (candidate.ImageData && candidate.ImageData.filename) {
           const imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
@@ -174,16 +193,25 @@ const CustomProvider = ({ children }) => {
         }
         return candidate;
       });
+
+      console.log("🖼️ [fetchCandidateData] Candidates with image URLs:", candidatesWithImages);
+
       // Reverse the data to show the most recent first
       const reversedData = candidatesWithImages.reverse();
+      console.log("🔁 [fetchCandidateData] Reversed candidate data:", reversedData);
+
       setCandidateData(reversedData);
+      console.log("📥 [fetchCandidateData] Data set in state.");
     } catch (error) {
-      // console.error('Error fetching candidate data:', error);
+      console.error("❌ [fetchCandidateData] Error fetching candidate data:", error);
     } finally {
       setLoading(false);
+      console.log("✅ [fetchCandidateData] Loading set to false.");
     }
   }, [sharingPermissionscandidate]);
+
   useEffect(() => {
+    console.log("🚀 [useEffect] Triggering fetchCandidateData on mount");
     fetchCandidateData();
   }, [fetchCandidateData]);
 
@@ -356,12 +384,7 @@ const CustomProvider = ({ children }) => {
     fetchoutsourceInterviewers();
   }, [fetchoutsourceInterviewers]);
 
-  // master data fetch
-  const [skills, setSkills] = useState([]);
-  const [qualification] = useState([]);
-  const [college] = useState([]);
-  const [companies] = useState([]);
-  const [technologies, setTechnology] = useState([]);
+
 
 
   // notifications

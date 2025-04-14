@@ -44,16 +44,54 @@ const BasicDetails = ({
   };
 
   const handleInputChange = (e, fieldName) => {
-    const { value } = e.target;
+    let { value } = e.target;
+  
+    // Update form data
     setBasicDetailsData((prev) => ({
       ...prev,
       [fieldName]: value,
     }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [fieldName]: '',
-    }));
+  
+    // Special handling for portfolio URL
+    if (fieldName === 'portfolioUrl') {
+      // If value starts with http:// or https://, clear error immediately
+      if (value.startsWith('http://') || value.startsWith('https://')) {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [fieldName]: '',
+        }));
+      } else {
+        // Else, show a custom error
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [fieldName]: 'Please enter a valid URL starting with http:// or https://',
+        }));
+      }
+    } else {
+      // For other fields, clear any previous error
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [fieldName]: '',
+      }));
+    }
   };
+
+  const handlePortfolioValidation = () => {
+    const value = basicDetailsData.portfolioUrl.trim();
+  
+    if (!value || value === 'https://' || value.length < 6) {
+      setErrors((prev) => ({
+        ...prev,
+        portfolioUrl: 'Please enter a valid portfolio URL.',
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        portfolioUrl: '',
+      }));
+    }
+  };
+  
 
   const handleDateChange = (date) => {
     if (!date) {
@@ -373,7 +411,7 @@ const BasicDetails = ({
               />
             </svg>
           </div>
-          <input
+          {/* <input
             id="portfolio_url"
             type="url"
             name="portfolio_url"
@@ -382,7 +420,19 @@ const BasicDetails = ({
             className={`block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.portfolioUrl ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="https://yourportfolio.com"
+          /> */}
+          <input
+            id="portfolio_url"
+            type="text"
+            name="portfolio_url"
+            value={basicDetailsData.portfolioUrl}
+            onChange={(e) => handleInputChange(e, 'portfolioUrl')}
+            onBlur={handlePortfolioValidation}
+            className={`block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.portfolioUrl ? 'border-red-500' : 'border-gray-300'
+              }`}
+            placeholder="yourname.github.io / behance.net/yourname"
           />
+
         </div>
         {errors.portfolioUrl && (
           <p className="text-red-500 text-sm sm:text-xs">{errors.portfolioUrl}</p>

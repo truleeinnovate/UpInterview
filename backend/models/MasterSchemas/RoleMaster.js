@@ -6,7 +6,11 @@ const RoleMasterSchema = new mongoose.Schema({
   CreatedBy: String,
   ModifiedDate: { type: Date, default: Date.now }
 }, {
-  collection: 'rolemasters' // this is to show the roles data from the data base of azure from rolesmaster table not from the RoleMaster (mansoor)
+  //for local
+  collection: 'RoleMaster'
+
+  // for deployment
+  // collection: 'rolemasters' // this is to show the roles data from the data base of azure from rolesmaster table not from the RoleMaster (mansoor)
 });
 
 const RoleMaster = mongoose.model('RoleMaster', RoleMasterSchema);

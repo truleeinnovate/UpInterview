@@ -76,6 +76,7 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
 const fetchFilterData = async (endpoint, sharingPermissions) => {
     const userId = Cookies.get('userId');
     const organizationId = Cookies.get('organizationId');
+    console.log(`[fetchFilterData] Endpoint: ${endpoint}, userId: ${userId}, organizationId: ${organizationId}`);
     // console.log("Organizationid", organizationId)
     const organization = Cookies.get('organization');
     // console.log("organization", organization)
@@ -111,9 +112,11 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
 
         // const response = await axios.get(url);
         if (!userId) return [];
+        console.log(`[fetchFilterData] Calling: ${process.env.REACT_APP_API_URL}/api/${endpoint}`);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/${endpoint}`, {
             params: { tenantId: organizationId, ownerId: userId }
         });
+        console.log(`[fetchFilterData] Response:`, response.data);
         if (response.data) {
             const data = response.data;
             // console.log("Fetched data from server:", data);
@@ -168,6 +171,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
                 // console.log("FilteredData4", filteredData);
             }
         }
+        console.log(`[fetchFilterData] Filtered data:`, filteredData);
         return filteredData;
     } catch (error) {
         console.error(`Error fetching data from ${endpoint}:`, error);
