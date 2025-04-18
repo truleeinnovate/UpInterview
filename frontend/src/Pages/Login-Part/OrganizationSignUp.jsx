@@ -50,9 +50,9 @@ export const Organization = () => {
   const organizationData = {
     firstName: selectedFirstName,
     lastName: selectedLastName,
-    Email: selectedEmail,
-    Phone: selectedPhone,
-    username: selectedUsername,
+    email: selectedEmail,
+    phone: selectedPhone,
+    profileId: selectedUsername,
     jobTitle: selectedJobTitle,
     company: selectedCompany,
     employees: selectedEmployees,
@@ -172,7 +172,7 @@ export const Organization = () => {
                   htmlFor="Email"
                   className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-2.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                 >
-                  Email
+                  Work Email
                 </label>
               </div>
               <div className="relative">
@@ -300,6 +300,7 @@ export const Organization = () => {
                   Username
                 </label>
               </div>
+              
               {/* Create Password Field */}
               <div className="relative">
                 <input

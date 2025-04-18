@@ -33,7 +33,7 @@ const CustomProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
   const [industries, setIndustries] = useState([]);
-  const [CurrentRole, setCurrentRole] = useState([]);
+  const [currentRole, setCurrentRole] = useState([]);
 
     // master data fetch
     const [skills, setSkills] = useState([]);
@@ -178,13 +178,10 @@ const CustomProvider = ({ children }) => {
   const [candidateData, setCandidateData] = useState([]);
 
   const fetchCandidateData = useCallback(async () => {
-    console.log("📡 [fetchCandidateData] Fetching candidate data...");
     setLoading(true);
   
     try {
-      console.log('[fetchCandidateData] Permissions:', sharingPermissionscandidate);
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
-      console.log("✅ [fetchCandidateData] Fetched candidates:", filteredCandidates);
   
       const candidatesWithImages = filteredCandidates.map((candidate) => {
         if (candidate.ImageData && candidate.ImageData.filename) {
@@ -194,24 +191,18 @@ const CustomProvider = ({ children }) => {
         return candidate;
       });
 
-      console.log("🖼️ [fetchCandidateData] Candidates with image URLs:", candidatesWithImages);
-
       // Reverse the data to show the most recent first
       const reversedData = candidatesWithImages.reverse();
-      console.log("🔁 [fetchCandidateData] Reversed candidate data:", reversedData);
 
       setCandidateData(reversedData);
-      console.log("📥 [fetchCandidateData] Data set in state.");
     } catch (error) {
       console.error("❌ [fetchCandidateData] Error fetching candidate data:", error);
     } finally {
       setLoading(false);
-      console.log("✅ [fetchCandidateData] Loading set to false.");
     }
   }, [sharingPermissionscandidate]);
 
   useEffect(() => {
-    console.log("🚀 [useEffect] Triggering fetchCandidateData on mount");
     fetchCandidateData();
   }, [fetchCandidateData]);
 
@@ -469,7 +460,7 @@ const CustomProvider = ({ children }) => {
         technologies,
         locations,
         industries,
-        CurrentRole,
+        currentRole,
         // notifications
         notificationsData,
         // interview

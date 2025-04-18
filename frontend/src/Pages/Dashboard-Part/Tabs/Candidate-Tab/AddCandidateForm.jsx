@@ -13,15 +13,13 @@ const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
 
 Modal.setAppElement('#root');
 
-// eslint-disable-next-line react/prop-types
 const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit  }) => {
-  // onSave
+
   const {
     skills,
     college,
     qualification,
   } = useCustomContext ();
-  // console.log("selectedCandidate ", selectedCandidate);
   
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);

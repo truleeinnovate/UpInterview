@@ -1,22 +1,22 @@
 const mongoose = require('mongoose');
 
 const UsersSchema = new mongoose.Schema({
-  Name: { type: String },
-  Firstname: { type: String },
-  UserName: { type: String },
-  Email: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
+  email: { type: String },
   password: { type: String },
   isFreelancer: String,
   isAddedTeam: String,
-  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
-  RoleId: { type: String },
-  ProfileId: { type: String },
-  CreatedDate: { type: Date, default: Date.now },
-  CreatedBy: { type: String },
-  ModifiedDate: { type: Date, default: Date.now },
-  ModifiedBy: { type: String },
-});
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+  roleId: { type: String },
+  profileId: String,//user id we have changed it to profileid
+  createdBy: { type: String },
+  modifiedBy: { type: String },
+  isProfileCompleted: { type: Boolean },
+},{ timestamps: true });
 
 const Users = mongoose.model('Users', UsersSchema);
 
-module.exports = { Users };
+module.exports = {
+  Users,
+};

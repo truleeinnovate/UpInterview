@@ -1,4 +1,4 @@
-// import { RiCloseCircleLine } from "react-icons/ri";
+import { RiCloseCircleLine } from "react-icons/ri";
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
 import { config } from '../../../config.js'
@@ -6,7 +6,7 @@ import { config } from '../../../config.js'
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { handlePaymentInputChange,handleMembershipChange,validateCardFields } from "../../../utils/PaymentpageValidations.js";
-// import { useCustomContext } from "../../../Context/Contextfetch";
+import { useCustomContext } from "../../../Context/Contextfetch";
 import toast from "react-hot-toast";
 
 const CardDetails = () => {
@@ -16,9 +16,9 @@ const CardDetails = () => {
 
 const location = useLocation();
 const isUpgrading = location.state?.isUpgrading || false;
-//   const {
-//     userProfile,
-//   } = useCustomContext();
+  const {
+    userProfile,
+  } = useCustomContext();
   
     const [cardDetails, setCardDetails] = useState({
         cardHolderName: "",
@@ -75,7 +75,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                 userType: planDetails.user?.userType || ""
             }));
         }
-    }, [planDetails, ownerId, tenantId]);
+    }, [planDetails]);
 
 
     const handleSubmit = async (e) => {
@@ -117,7 +117,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                     transactionId
 
                 });
-                await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
+                const response = await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
                     ownerId,
                     tenantId,
                     // ccEmail: "shaikmansoor1200@gmail.com",
@@ -153,9 +153,9 @@ const isUpgrading = location.state?.isUpgrading || false;
                     <h2 className="text-xl font-semibold mb-2">
                         Upgrade to a Basic Membership
                     </h2>
-                    {/* <RiCloseCircleLine
+                    <RiCloseCircleLine
                         onClick={() => navigate("/subscription-plans")}
-                        className="h-7 w-7" /> */}
+                        className="h-7 w-7" />
                 </div>
                 <p className="text-gray-500  text-md mb-2">
                     Get all access and an extra 20% off when you subscribe annually

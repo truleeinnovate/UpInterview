@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import TimezoneSelect from 'react-timezone-select';
-// import { GiCancel } from "react-icons/gi";
-// import { IoIosCopy } from "react-icons/io";
-// import { FaPlus, FaMinus } from "react-icons/fa6";
+import { GiCancel } from "react-icons/gi";
+import { IoIosCopy } from "react-icons/io";
+import { FaPlus, FaMinus } from "react-icons/fa6";
 
 const AvailabilityDetails = ({
     selectedTimezone,
@@ -20,7 +20,7 @@ const AvailabilityDetails = ({
     const [selectedDay, setSelectedDay] = useState(null);
     const [selectedDays, setSelectedDays] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(availabilityDetailsData.PreferredDuration || null);
+    const [selectedOption, setSelectedOption] = useState(availabilityDetailsData.preferredDuration || null);
 
     const handlePaste = () => {
         const copiedTimes = times[selectedDay];
@@ -70,7 +70,7 @@ const AvailabilityDetails = ({
         }
         setAvailabilityDetailsData((prev) => ({
             ...prev,
-            Availability: newTimes,
+            availability: newTimes,
         }));
     };
 
@@ -78,11 +78,11 @@ const AvailabilityDetails = ({
         setSelectedOption(option);
         setErrors((prevErrors) => ({
             ...prevErrors,
-            PreferredDuration: "",
+            preferredDuration: "",
         }));
         setAvailabilityDetailsData((prev) => ({
             ...prev,
-            PreferredDuration: option,
+            preferredDuration: option,
         }));
     };
 
@@ -90,11 +90,11 @@ const AvailabilityDetails = ({
         setSelectedTimezone(timezone);
         setErrors((prevErrors) => ({
             ...prevErrors,
-            TimeZone: "",
+            timeZone: "",
         }));
         setAvailabilityDetailsData((prev) => ({
             ...prev,
-            TimeZone: timezone.value,
+            timeZone: timezone.value,
         }));
     };
 
@@ -106,7 +106,7 @@ const AvailabilityDetails = ({
                 {/* Time Zone */}
                 <div className="mb-6">
                     <label
-                        htmlFor="TimeZone"
+                        htmlFor="timeZone"
                         className="block text-sm font-medium text-gray-900 mb-1"
                     >
                         Time Zone <span className="text-red-500">*</span>
@@ -117,8 +117,8 @@ const AvailabilityDetails = ({
                             onChange={handleTimezoneChange}
                             className="mt-1 text-sm"
                         />
-                        {errors.TimeZone && (
-                            <p className="text-red-500 text-sm mt-2">{errors.TimeZone}</p>
+                        {errors.timeZone && (
+                            <p className="text-red-500 text-sm mt-2">{errors.timeZone}</p>
                         )}
                     </div>
                 </div>
@@ -155,7 +155,7 @@ const AvailabilityDetails = ({
                                                             placeholderText="Start Time"
                                                             className="p-2 border border-gray-400 rounded w-24 text-sm text-center outline-none focus:ring-0"
                                                         />
-                                                        {/* <FaMinus className="text-xs text-gray-600" /> */}
+                                                        <FaMinus className="text-xs text-gray-600" />
                                                         <DatePicker
                                                             selected={timeSlot.endTime}
                                                             onChange={(date) => handleTimeChange(day, index, "endTime", date)}
@@ -166,21 +166,21 @@ const AvailabilityDetails = ({
                                                             placeholderText="End Time"
                                                             className="p-2 border border-gray-400 rounded w-24 text-sm text-center outline-none focus:ring-0"
                                                         />
-                                                        {/* <GiCancel
+                                                        <GiCancel
                                                             className={`text-xl cursor-pointer text-red-500 ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}`}
                                                             onClick={() => handleRemoveTimeSlot(day, index)}
-                                                        /> */}
+                                                        />
                                                     </>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-                                    {/* <FaPlus
+                                    <FaPlus
                                         className="text-xl cursor-pointer mt-2"
                                         onClick={() => handleAddTimeSlot(day)}
-                                    /> */}
+                                    />
                                     <div className="relative">
-                                        {/* <IoIosCopy
+                                        <IoIosCopy
                                             className="text-xl cursor-pointer mt-2"
                                             onClick={() => {
                                                 if (showPopup && selectedDay === day) {
@@ -191,7 +191,7 @@ const AvailabilityDetails = ({
                                                     setShowPopup(true);
                                                 }
                                             }}
-                                        /> */}
+                                        />
                                         {showPopup && selectedDay === day && (
                                             <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-50">
                                                 <div className="bg-white p-3 rounded-lg w-72 shadow-md border text-sm">
@@ -250,7 +250,7 @@ const AvailabilityDetails = ({
             {/* Right Side: Preferred Duration */}
             <div className="flex-1">
                 <label
-                    htmlFor="PreferredInterviewDuration"
+                    htmlFor="preferredDuration"
                     className="block text-sm font-medium text-gray-900 mb-1"
                 >
                     Preferred Interview Duration <span className="text-red-500">*</span>
@@ -268,8 +268,8 @@ const AvailabilityDetails = ({
                         ))}
                     </ul>
                 </div>
-                {errors.PreferredDuration && (
-                    <p className="text-red-500 text-sm mt-2">{errors.PreferredDuration}</p>
+                {errors.preferredDuration && (
+                    <p className="text-red-500 text-sm mt-2">{errors.preferredDuration}</p>
                 )}
             </div>
         </div>

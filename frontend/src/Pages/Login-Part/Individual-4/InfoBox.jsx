@@ -4,12 +4,12 @@ export default function InfoBox({ title, description, icon }) {
   return (
     <div className="relative group">
       {/* Main container */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/80 to-orange-50/80 p-4 sm:p-5 rounded-lg border border-orange-100/50">
-        <div className="relative z-10 flex items-start gap-3">
+      <div className="relative overflow-hidden p-4 sm:p-5 rounded-lg border border-custom-blue">
+        <div className="relative z-10 flex items-center gap-3">
           {/* Icon container */}
           {icon && (
             <div className="flex-shrink-0 p-2 bg-white rounded-lg shadow-sm">
-              <div className="w-5 h-5 text-orange-500">
+              <div className="w-5 h-5 text-custom-blue">
                 {icon}
               </div>
             </div>
@@ -17,7 +17,7 @@ export default function InfoBox({ title, description, icon }) {
           
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-orange-500 mb-1">
+            <h2 className="text-lg font-semibold text-custom-blue mb-1">
               {title}
             </h2>
             <p className="text-sm text-gray-600">
@@ -35,7 +35,7 @@ export default function InfoBox({ title, description, icon }) {
       </div>
 
       {/* Bottom accent */}
-      <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-orange-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out"></div>
+      <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-custom-blue to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out"></div>
     </div>
   );
 }

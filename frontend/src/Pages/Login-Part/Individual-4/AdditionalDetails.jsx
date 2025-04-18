@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-// import { MdArrowDropDown } from "react-icons/md";
-// import { FaSearch } from 'react-icons/fa';
+import { MdArrowDropDown } from "react-icons/md";
+import { FaSearch } from 'react-icons/fa';
 import InfoBox from './InfoBox.jsx';
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 
@@ -14,12 +14,8 @@ const AdditionalDetails = ({
     const {
         locations,
         industries,
-        CurrentRole
+        currentRole
     } = useCustomContext();
-
-    console.log("CurrentRole:", CurrentRole);
-    console.log("industries:", industries);
-    console.log("locations:", locations);
 
     const resumeInputRef = useRef(null);
     const coverLetterInputRef = useRef(null);
@@ -56,16 +52,16 @@ const AdditionalDetails = ({
     };
 
     const handleRoleSelect = (role) => {
-        handleChange({ target: { name: 'CurrentRole', value: role } });
+        handleChange({ target: { name: 'currentRole', value: role } });
         setShowDropdownCurrentRole(false);
 
         setErrors((prevErrors) => ({
             ...prevErrors,
-            CurrentRole: '',
+            currentRole: '',
         }));
     };
 
-    const filteredCurrentRoles = CurrentRole.filter(role =>
+    const filteredCurrentRoles = currentRole?.filter(role =>
         role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
     );
 
@@ -114,7 +110,7 @@ const AdditionalDetails = ({
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            [name]: '',
+            yearsOfExperience: '',
         }));
     };
 
@@ -157,29 +153,29 @@ const AdditionalDetails = ({
 
                 {/* current role */}
                 <div>
-                    <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="currentRole" className="block text-sm font-medium text-gray-700 mb-1">
                         Current Role <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <input
-                            name="CurrentRole"
+                            name="currentRole"
                             type="text"
-                            id="CurrentRole"
-                            value={additionalDetailsData.CurrentRole}
+                            id="currentRole"
+                            value={additionalDetailsData.currentRole}
                             onClick={toggleCurrentRole}
                             placeholder="Senior Software Engineer"
                             autoComplete="off"
-                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.currentRole ? 'border-red-500' : 'border-gray-300'}`}
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            {/* <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} /> */}
+                            <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
                         </div>
                         {showDropdownCurrentRole && (
                             <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
+                                        <FaSearch className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Current Role"
@@ -189,7 +185,7 @@ const AdditionalDetails = ({
                                         />
                                     </div>
                                 </div>
-                                {filteredCurrentRoles.length > 0 ? (
+                                {filteredCurrentRoles?.length > 0 ? (
                                     filteredCurrentRoles.map((role) => (
                                         <div
                                             key={role._id}
@@ -205,26 +201,26 @@ const AdditionalDetails = ({
                             </div>
                         )}
                     </div>
-                    {errors.CurrentRole && <p className="text-red-500 text-sm sm:text-xs">{errors.CurrentRole}</p>}
+                    {errors.currentRole && <p className="text-red-500 text-sm sm:text-xs">{errors.currentRole}</p>}
                 </div>
 
                 {/* Experience */}
                 <div>
-                    <label htmlFor="YearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">
                         Years of Experience <span className="text-red-500">*</span>
                     </label>
                     <div>
                         <input
                             type="number"
-                            name="YearsOfExperience"
+                            name="yearsOfExperience"
                             autoComplete="off"
-                            value={additionalDetailsData.YearsOfExperience}
+                            value={additionalDetailsData.yearsOfExperience}
                             placeholder="5 years"
                             onChange={handleChange}
-                            id="YearsOfExperience" min="1" max="15"
-                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.YearsOfExperience ? 'border-red-500' : 'border-gray-300'}`}
+                            id="yearsOfExperience" min="1" max="15"
+                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.yearsOfExperience ? 'border-red-500' : 'border-gray-300'}`}
                         />
-                        {errors.YearsOfExperience && <p className="text-red-500 text-sm sm:text-xs">{errors.YearsOfExperience}</p>}
+                        {errors.yearsOfExperience && <p className="text-red-500 text-sm sm:text-xs">{errors.yearsOfExperience}</p>}
                     </div>
                 </div>
 
@@ -324,13 +320,13 @@ const AdditionalDetails = ({
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            {/* <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} /> */}
+                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} />
                         </div>
                         {showDropdownIndustry && (
                             <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
+                                        <FaSearch className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Industry"
@@ -381,13 +377,13 @@ const AdditionalDetails = ({
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            {/* <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} /> */}
+                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
                         </div>
                         {showDropdownLocation && (
                             <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
+                                        <FaSearch className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Location"
@@ -425,23 +421,23 @@ const AdditionalDetails = ({
 
             </div>
 
-            {/* CoverLetterdescription */}
+            {/* coverLetterdescription */}
             <div className="col-span-2 sm:col-span-6">
                 <p className="flex justify-center mb-3">(OR)</p>
                 <div>
                     <textarea
-                        name="CoverLetterdescription"
+                        name="coverLetterdescription"
                         type="text"
                         rows={5}
-                        id="CoverLetterdescription"
-                        value={additionalDetailsData.CoverLetterdescription}
-                        onChange={(e) => handleInputChangeintro(e, 'CoverLetterdescription')}
+                        id="coverLetterdescription"
+                        value={additionalDetailsData.coverLetterdescription}
+                        onChange={(e) => handleInputChangeintro(e, 'coverLetterdescription')}
                         placeholder="I am a technical interviewer..."
                         autoComplete="off"
                         className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
                     />
                     <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
-                        {additionalDetailsData.CoverLetterdescription.length}/2000
+                        {additionalDetailsData.coverLetterdescription?.length}/2000
                     </p>
                 </div>
             </div>

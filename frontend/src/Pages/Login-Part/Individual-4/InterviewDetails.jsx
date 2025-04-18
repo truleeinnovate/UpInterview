@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react'
-// import { MdArrowDropDown } from "react-icons/md";
-// import { FaSearch } from 'react-icons/fa';
-// import { IoPersonOutline } from "react-icons/io5";
+import { MdArrowDropDown } from "react-icons/md";
+import { FaSearch } from 'react-icons/fa';
+import { IoPersonOutline } from "react-icons/io5";
+import { Trash2, X } from 'lucide-react';
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import InfoBox from './InfoBox.jsx';
 
@@ -35,11 +36,11 @@ const InterviewDetails = ({
             setSelectedTechnologyies(updatedCandidates);
             setInterviewDetailsData((prev) => ({
                 ...prev,
-                Technology: updatedCandidates.map((t) => t.TechnologyMasterName),
+                technologies: updatedCandidates.map((t) => t.TechnologyMasterName),
             }));
         }
         setTechpopup(false);
-        setErrors((prevErrors) => ({ ...prevErrors, Technology: "" }));
+        setErrors((prevErrors) => ({ ...prevErrors, technologies: "" }));
     };
 
     const handleRemoveTechnology = (index) => {
@@ -49,7 +50,7 @@ const InterviewDetails = ({
 
         setInterviewDetailsData((prev) => ({
             ...prev,
-            Technology: updatedCandidates.map((t) => t.TechnologyMasterName),
+            technologies: updatedCandidates.map((t) => t.TechnologyMasterName),
         }));
     };
 
@@ -58,7 +59,7 @@ const InterviewDetails = ({
 
         setInterviewDetailsData((prev) => ({
             ...prev,
-            Technology: [],
+            technologies: [],
         }));
     };
 
@@ -74,12 +75,20 @@ const InterviewDetails = ({
         setSelectedSkills([]);
     };
 
-    const handleChangeforExp = (event) => {
-        const { name, value } = event.target;
-        setInterviewDetailsData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
+    const handleChangeforExp = (e) => {
+        const value = e.target.value;
+        setInterviewDetailsData((prev) => {
+            return {
+                ...prev,
+                expectedRatePerMockInterview: value,
+            };
+        });
+        setErrors((prevErrors) => {
+            const errorMessage =
+                value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
+            console.log("Error Message:", errorMessage);
+            return { ...prevErrors, expectedRatePerMockInterview: errorMessage };
+        });
     };
 
     const handleSelectSkill = (skill) => {
@@ -88,11 +97,11 @@ const InterviewDetails = ({
             setSelectedSkills(updatedSkills);
             setInterviewDetailsData((prev) => ({
                 ...prev,
-                Skills: updatedSkills.map((s) => s.SkillName),
+                skills: updatedSkills.map((s) => s.SkillName),
             }));
         }
         setShowSkillsPopup(false);
-        setErrors((prevErrors) => ({ ...prevErrors, Skills: "" }));
+        setErrors((prevErrors) => ({ ...prevErrors, skills: "" }));
     };
 
     const handleRadioChange = (e) => {
@@ -100,27 +109,27 @@ const InterviewDetails = ({
         setPreviousExperienceConductingInterviews(value);
         setInterviewDetailsData((prev) => ({
             ...prev,
-            PreviousExperienceConductingInterviews: value,
-            PreviousExperienceConductingInterviewsYears: value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
+            previousExperienceConductingInterviews: value,
+            previousExperienceConductingInterviewsYears: value === "no" ? "" : prev.previousExperienceConductingInterviewsYears,
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            PreviousExperienceConductingInterviews: "",
-            PreviousExperienceConductingInterviewsYears: value === "no" ? "" : prevErrors.PreviousExperienceConductingInterviewsYears,
+            previousExperienceConductingInterviews: "",
+            previousExperienceConductingInterviewsYears: value === "no" ? "" : prevErrors.previousExperienceConductingInterviewsYears,
         }));
     };
 
-    const ExpertiseLevel_ConductingInterviews = (e) => {
+    const expertiseLevel_ConductingInterviews = (e) => {
         const value = e.target.value;
         setInterviewDetailsData((prev) => {
             return {
                 ...prev,
-                ExpertiseLevel_ConductingInterviews: value,
+                expertiseLevel_ConductingInterviews: value,
             };
         });
         setErrors((prevErrors) => ({
             ...prevErrors,
-            ExpertiseLevel_ConductingInterviews: "",
+            expertiseLevel_ConductingInterviews: "",
         }));
     };
 
@@ -128,11 +137,11 @@ const InterviewDetails = ({
         const value = e.target.value;
         setInterviewDetailsData((prev) => ({
             ...prev,
-            PreviousExperienceConductingInterviewsYears: value,
+            previousExperienceConductingInterviewsYears: value,
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            PreviousExperienceConductingInterviewsYears: value ? "" : "Years of experience is required",
+            previousExperienceConductingInterviewsYears: value ? "" : "Years of experience is required",
         }));
     };
 
@@ -140,7 +149,11 @@ const InterviewDetails = ({
         const { value } = event.target;
         setInterviewDetailsData((prevData) => ({
             ...prevData,
-            NoShowPolicy: value,
+            noShowPolicy: value,
+        }));
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            noShowPolicy: "",
         }));
     };
 
@@ -167,8 +180,8 @@ const InterviewDetails = ({
     const handleInterviewFormatChange = (event) => {
         const { value, checked } = event.target;
         setInterviewDetailsData((prevData) => {
-            let updatedFormats = Array.isArray(prevData.InterviewFormatWeOffer)
-                ? [...prevData.InterviewFormatWeOffer]
+            let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
+                ? [...prevData.interviewFormatWeOffer]
                 : [];
             if (checked) {
                 updatedFormats.push(value);
@@ -180,12 +193,12 @@ const InterviewDetails = ({
             }
             return {
                 ...prevData,
-                InterviewFormatWeOffer: updatedFormats,
+                interviewFormatWeOffer: updatedFormats,
             };
         });
     };
 
-    const filteredTechnologies = technologies.filter((tech) =>
+    const filteredTechnologies = technologies?.filter((tech) =>
         tech.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
     );
 
@@ -205,39 +218,38 @@ const InterviewDetails = ({
                 />
             </div>
 
-            <div className="col-span-1 sm:col-span-6">
 
-                {/* Technology Section */}
-                <div>
-                    <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Your Comfortable Technologies <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <input
-                            placeholder="Select Multiple Technologies"
-                            readOnly
-                            onClick={() => setTechpopup((prev) => !prev)}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.Technology ? "border-red-500" : "border-gray-300"
-                                }`}
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            {/* <MdArrowDropDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} /> */}
-                        </div>
-                        {showTechPopup && (
-                            <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                    <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                        <input
-                                            type="text"
-                                            placeholder="Search Technology"
-                                            value={searchTermTechnology}
-                                            onChange={(e) => setSearchTermTechnology(e.target.value)}
-                                            className="pl-8 focus:border-black focus:outline-none w-full"
-                                        />
-                                    </div>
+            {/* Technology Section */}
+            <div className="col-span-1 sm:col-span-6">
+                <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Your Comfortable Technologies <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                    <input
+                        placeholder="Select Multiple Technologies"
+                        readOnly
+                        onClick={() => setTechpopup((prev) => !prev)}
+                        className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.technologies ? "border-red-500" : "border-gray-300"
+                            }`}
+                    />
+                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <MdArrowDropDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
+                    </div>
+                    {showTechPopup && (
+                        <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                            <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                    <FaSearch className="absolute ml-1 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search Technology"
+                                        value={searchTermTechnology}
+                                        onChange={(e) => setSearchTermTechnology(e.target.value)}
+                                        className="pl-8 focus:border-black focus:outline-none w-full"
+                                    />
                                 </div>
-                                {/* {services
+                            </div>
+                            {/* {services
                                         .filter((service) =>
                                             service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
                                         )
@@ -251,125 +263,176 @@ const InterviewDetails = ({
                                             </div>
                                         ))} */}
 
-                                {filteredTechnologies.map((tech) => (
-                                    <div
-                                        key={tech._id}
-                                        onClick={() => handleSelectedTechnology(tech)}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                        {tech.TechnologyMasterName}
-                                    </div>
-                                ))}
+                            {filteredTechnologies.map((tech) => (
+                                <div
+                                    key={tech._id}
+                                    onClick={() => handleSelectedTechnology(tech)}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                                >
+                                    {tech.TechnologyMasterName}
+                                </div>
+                            ))}
+
+                        </div>
+                    )}
+                    {errors.technologies && <p className="text-red-500 text-sm sm:text-xs">{errors.technologies}</p>}
+                </div>
+            </div>
+
+            {/* Display Selected Technologies */}
+            <div className="col-span-2 sm:col-span-6 p-4 rounded-md border border-gray-200">
+                {selectedTechnologyies.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center">No technologies selected</p>
+                ) : (
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                                <IoPersonOutline className="h-4 w-4 text-gray-500 mr-2" />
+                                <span className="text-sm text-gray-700">
+                                    {selectedTechnologyies.length} technologie{selectedTechnologyies.length !== 1 ? "s" : ""} selected
+                                </span>
                             </div>
-                        )}
-                        {errors.Technology && <p className="text-red-500 text-sm sm:text-xs">{errors.Technology}</p>}
-                    </div>
-                    {/* Display Selected Technologies */}
-                    <div className="mt-5 mb-5 relative">
-                        {selectedTechnologyies.map((candidate, index) => (
-                            <div
-                                key={index}
-                                className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]"
-                            >
-                                <div className="flex items-center justify-between gap-2 text-custom-blue">
-                                    <div className="flex">
-                                        <span className="sm:w-5 w-8">
-                                            {/* <IoPersonOutline className="pt-1 text-lg" /> */}
+                            {selectedTechnologyies.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={clearRemoveTechnology}
+                                    className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Clear All
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Selected Technologies */}
+                        <div className="flex flex-wrap gap-2">
+                            {selectedTechnologyies.map((candidate, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                    style={{ minWidth: '150px', maxWidth: '250px' }} // Inline styles for better control
+                                >
+                                    <div className="flex-1 overflow-hidden">
+                                        <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                            {candidate.TechnologyMasterName}
                                         </span>
-                                        {candidate.TechnologyMasterName}
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveTechnology(index)}
-                                        className="ml-2 text-red-500 rounded px-2"
+                                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                        title="Remove technology"
                                     >
-                                        X
+                                        <X className="h-4 w-4" />
                                     </button>
                                 </div>
-                            </div>
-                        ))}
-                        {selectedTechnologyies.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={clearRemoveTechnology}
-                                className="text-red-500 border border-custom-blue rounded px-2 sm:px-1 sm:text-xs absolute top-1 text-sm right-0"
-                                title="Clear All"
-                            >
-                                X
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* skills */}
-                <div>
-                    <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Skills <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative" ref={skillsPopupRef}>
-                        <input
-                            onClick={toggleSkillsPopup}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.Skills ? 'border-red-500' : 'border-gray-300'} `} placeholder="Select Multiple Skills"
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            {/* <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} /> */}
+                            ))}
                         </div>
-                        {showSkillsPopup && (
-                            <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                    <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
-                                        <input
-                                            type="text"
-                                            placeholder="Search Skills"
-                                            value={searchTermSkills}
-                                            onChange={(e) => setSearchTermSkills(e.target.value)}
-                                            className="pl-8  focus:border-black focus:outline-none w-full"
-                                        />
-                                    </div>
-                                </div>
-                                {skills.filter(skill =>
-                                    skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                ).length > 0 ? (
-                                    skills.filter(skill =>
-                                        skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                    ).map((skill) => (
-                                        <div
-                                            key={skill._id}
-                                            onClick={() => handleSelectSkill(skill)}
-                                            className="cursor-pointer hover:bg-gray-200 p-2"
-                                        >
-                                            {skill.SkillName}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-2 text-gray-500">No skills found</div>
-                                )}
-                            </div>
-                        )}
-                        {errors.Skills && <p className="text-red-500 text-sm sm:text-xs">{errors.Skills}</p>}
                     </div>
+                )}
+            </div>
 
-                    <div className="mt-5 mb-5 relative">
-                        {selectedSkills.map((skill, index) => (
-                            <div key={index} className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]">
-                                <div className="flex items-center justify-between gap-2 text-custom-blue">
-                                    <div className="flex">
-                                        <span className="sm:w-5 w-8">
-                                            {/* <IoPersonOutline className="pt-1 text-lg" /> */}
-                                        </span>
+            {/* skills */}
+            <div className="col-span-1 sm:col-span-6">
+                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Skills <span className="text-red-500">*</span>
+                </label>
+                <div className="relative" ref={skillsPopupRef}>
+                    <input
+                        onClick={toggleSkillsPopup}
+                        className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skills ? 'border-red-500' : 'border-gray-300'} `} placeholder="Select Multiple Skills"
+                    />
+                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} />
+                    </div>
+                    {showSkillsPopup && (
+                        <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                            <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                    <FaSearch className="absolute ml-1 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search Skills"
+                                        value={searchTermSkills}
+                                        onChange={(e) => setSearchTermSkills(e.target.value)}
+                                        className="pl-8  focus:border-black focus:outline-none w-full"
+                                    />
+                                </div>
+                            </div>
+                            {skills?.filter(skill =>
+                                skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
+                            ).length > 0 ? (
+                                skills?.filter(skill =>
+                                    skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
+                                ).map((skill) => (
+                                    <div
+                                        key={skill._id}
+                                        onClick={() => handleSelectSkill(skill)}
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                    >
                                         {skill.SkillName}
                                     </div>
-                                    <button type="button" onClick={() => handleRemoveSkill(index)} className="ml-2 text-red-500 rounded px-2">X</button>
-                                </div>
-                            </div>
-                        ))}
-                        {selectedSkills.length > 0 && (
-                            <button type="button" onClick={clearSkills} className="text-red-500 border border-custom-blue rounded sm:px-1 sm:text-xs px-2 absolute top-1 text-sm right-0" title="Clear All">X</button>
-                        )}
-                    </div>
+                                ))
+                            ) : (
+                                <div className="p-2 text-gray-500">No skills found</div>
+                            )}
+                        </div>
+                    )}
+                    {errors.skills && <p className="text-red-500 text-sm sm:text-xs">{errors.skills}</p>}
                 </div>
+            </div>
 
+            {/* Display Selected Skills */}
+            <div className="col-span-2 sm:col-span-6 p-4 rounded-md border border-gray-200">
+                {selectedSkills.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center">No skills selected</p>
+                ) : (
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                                <IoPersonOutline className="h-4 w-4 text-gray-500 mr-2" />
+                                <span className="text-sm text-gray-700">
+                                    {selectedSkills.length} skill{selectedSkills.length !== 1 ? "s" : ""} selected
+                                </span>
+                            </div>
+                            {selectedSkills.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={clearSkills}
+                                    className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Clear All
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Selected Skills */}
+                        <div className="flex flex-wrap gap-2">
+                            {selectedSkills.map((skill, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                    style={{ minWidth: '150px', maxWidth: '250px' }}
+                                >
+                                    <div className="flex-1 overflow-hidden">
+                                        <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                            {skill.SkillName}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveSkill(index)}
+                                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                        title="Remove skill"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="col-span-2 sm:col-span-6 space-y-6">
@@ -403,29 +466,29 @@ const InterviewDetails = ({
                             <span className="ml-2">No</span>
                         </label>
                     </div>
-                    {errors.PreviousExperienceConductingInterviews && (
-                        <p className="text-red-500 text-sm sm:text-xs">{errors.PreviousExperienceConductingInterviews}</p>
+                    {errors.previousExperienceConductingInterviews && (
+                        <p className="text-red-500 text-sm sm:text-xs">{errors.previousExperienceConductingInterviews}</p>
                     )}
                 </div>
 
                 {/* Conditional Experience Years */}
                 {previousExperienceConductingInterviews === "yes" && (
                     <div>
-                        <label htmlFor="PreviousExperienceConductingInterviewsYears" className="block text-sm font-medium text-gray-900 mb-2">
+                        <label htmlFor="previousExperienceConductingInterviewsYears" className="block text-sm font-medium text-gray-900 mb-2">
                             How many years of experience do you have in conducting interviews? <span className="text-red-500">*</span>
                         </label>
                         <input
                             type='number'
-                            id="PreviousExperienceConductingInterviewsYears"
-                            name="PreviousExperienceConductingInterviewsYears"
+                            id="previousExperienceConductingInterviewsYears"
+                            name="previousExperienceConductingInterviewsYears"
                             min="1"
                             max="15"
-                            value={interviewDetailsData.PreviousExperienceConductingInterviewsYears}
+                            value={interviewDetailsData.previousExperienceConductingInterviewsYears || ""}
                             onChange={handleChangeExperienceYears}
-                            className={`block w-1/2 pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.PreviousExperienceConductingInterviewsYears ? "border-red-500" : "border-gray-400"}`}
+                            className={`block w-1/2 pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.previousExperienceConductingInterviewsYears ? "border-red-500" : "border-gray-400"}`}
                         />
-                        {errors.PreviousExperienceConductingInterviewsYears && (
-                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.PreviousExperienceConductingInterviewsYears}</p>
+                        {errors.previousExperienceConductingInterviewsYears && (
+                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.previousExperienceConductingInterviewsYears}</p>
                         )}
                     </div>
                 )}
@@ -439,16 +502,16 @@ const InterviewDetails = ({
                                 <input
                                     type="radio"
                                     className="form-radio text-gray-600"
-                                    name="ExpertiseLevel_ConductingInterviews"
+                                    name="expertiseLevel_ConductingInterviews"
                                     value={level}
-                                    checked={interviewDetailsData.ExpertiseLevel_ConductingInterviews === level}
-                                    onChange={ExpertiseLevel_ConductingInterviews}
+                                    checked={interviewDetailsData.expertiseLevel_ConductingInterviews === level}
+                                    onChange={expertiseLevel_ConductingInterviews}
                                 />
                                 <span className="ml-2 capitalize">{level.replace("-", " ")} ({index * 3}-{(index + 1) * 3} years)</span>
                             </label>
                         ))}
                     </div>
-                    {errors.ExpertiseLevel_ConductingInterviews && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.ExpertiseLevel_ConductingInterviews}</p>}
+                    {errors.expertiseLevel_ConductingInterviews && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.expertiseLevel_ConductingInterviews}</p>}
                 </div>
 
                 {/* Expected Rate Per Hour */}
@@ -505,7 +568,7 @@ const InterviewDetails = ({
                                     id="format_technical"
                                     type="checkbox"
                                     value="technical"
-                                    checked={interviewDetailsData.InterviewFormatWeOffer.includes("technical")}
+                                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes("technical")}
                                     onChange={handleInterviewFormatChange}
                                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                 />
@@ -525,7 +588,7 @@ const InterviewDetails = ({
                                     id="format_system_design"
                                     type="checkbox"
                                     value="system_design"
-                                    checked={interviewDetailsData.InterviewFormatWeOffer.includes("system_design")}
+                                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes("system_design")}
                                     onChange={handleInterviewFormatChange}
                                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                 />
@@ -545,7 +608,7 @@ const InterviewDetails = ({
                                     id="format_behavioral"
                                     type="checkbox"
                                     value="behavioral"
-                                    checked={interviewDetailsData.InterviewFormatWeOffer.includes("behavioral")}
+                                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes("behavioral")}
                                     onChange={handleInterviewFormatChange}
                                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                 />
@@ -565,7 +628,7 @@ const InterviewDetails = ({
                                     id="format_mock"
                                     type="checkbox"
                                     value="mock"
-                                    checked={interviewDetailsData.InterviewFormatWeOffer.includes("mock")}
+                                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes("mock")}
                                     onChange={handleInterviewFormatChange}
                                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                 />
@@ -582,68 +645,102 @@ const InterviewDetails = ({
 
                 {/* Expected Rate Per Mock Interview */}
                 {isReady && (
+                    // <div>
+                    //     <label className="block text-sm font-medium text-gray-900 mb-2">
+                    //         Expected rate per mock interview <span className="text-red-500">*</span>
+                    //     </label>
+                    //     <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    //         {["Min", "Max"].map((label, index) => (
+                    //             <div key={index} className="w-full">
+                    //                 <div className="flex items-center gap-2">
+                    //                     {/* Min/Max Label */}
+                    //                     <span className="text-gray-900 text-sm mb-1">{label}:</span>
+
+                    //                     {/* Input Field with $ Symbol Inside */}
+                    //                     <div className="relative flex-1">
+                    //                         <input
+                    //                             type="number"
+                    //                             name={`ExpectedRatePerMockInterview${label}`}
+                    //                             min="1"
+                    //                             max="100"
+                    //                             value={interviewDetailsData[`ExpectedRatePerMockInterview${label}`]}
+                    //                             onChange={handleChangeforExp}
+                    //                             className={`block border rounded-md bg-white pl-3 pr-6 py-2 text-sm text-gray-900 w-full focus:outline-none ${errors[`ExpectedRatePerMockInterview${label}`] ? "border-red-500" : "border-gray-400"
+                    //                                 } appearance-none`}
+                    //                         />
+                    //                         {/* Dollar Symbol Inside Input (After Value) */}
+                    //                         <span className="absolute inset-y-0 right-3 flex items-center text-gray-500 pointer-events-none">$</span>
+                    //                     </div>
+                    //                 </div>
+
+                    //                 {/* Error Message Below Input */}
+                    //                 {errors[`ExpectedRatePerMockInterview${label}`] && (
+                    //                     <p className="text-red-500 text-sm sm:text-xs mt-1 ml-9">{errors[`ExpectedRatePerMockInterview${label}`]}</p>
+                    //                 )}
+                    //             </div>
+                    //         ))}
+                    //     </div>
+                    // </div>
+
                     <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                            Expected rate per mock interview <span className="text-red-500">*</span>
+                        <label
+                            htmlFor="hourly_rate"
+                            className="block text-sm font-medium text-gray-900 mb-2"
+                        >
+                            Expected rate per mock interview (USD) <span className="text-red-500">*</span>
                         </label>
-                        <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {["Min", "Max"].map((label, index) => (
-                                <div key={index} className="w-full">
-                                    <div className="flex items-center gap-2">
-                                        {/* Min/Max Label */}
-                                        <span className="text-gray-900 text-sm mb-1">{label}:</span>
 
-                                        {/* Input Field with $ Symbol Inside */}
-                                        <div className="relative flex-1">
-                                            <input
-                                                type="number"
-                                                name={`ExpectedRatePerMockInterview${label}`}
-                                                min="1"
-                                                max="100"
-                                                value={interviewDetailsData[`ExpectedRatePerMockInterview${label}`]}
-                                                onChange={handleChangeforExp}
-                                                className={`block border rounded-md bg-white pl-3 pr-6 py-2 text-sm text-gray-900 w-full focus:outline-none ${errors[`ExpectedRatePerMockInterview${label}`] ? "border-red-500" : "border-gray-400"
-                                                    } appearance-none`}
-                                            />
-                                            {/* Dollar Symbol Inside Input (After Value) */}
-                                            <span className="absolute inset-y-0 right-3 flex items-center text-gray-500 pointer-events-none">$</span>
-                                        </div>
-                                    </div>
+                        <div className="relative">
+                            {/* Dollar Symbol */}
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500 sm:text-sm">$</span>
+                            </div>
 
-                                    {/* Error Message Below Input */}
-                                    {errors[`ExpectedRatePerMockInterview${label}`] && (
-                                        <p className="text-red-500 text-sm sm:text-xs mt-1 ml-9">{errors[`ExpectedRatePerMockInterview${label}`]}</p>
-                                    )}
-                                </div>
-                            ))}
+                            {/* Hourly Rate Input */}
+                            <input
+                                id="expectedRatePerMockInterview"
+                                type="number"
+                                name="expectedRatePerMockInterview"
+                                min="20"
+                                max="500"
+                                value={interviewDetailsData.expectedRatePerMockInterview}
+                                onChange={handleChangeforExp}
+                                className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.expectedRatePerMockInterview ? "border-red-500" : "border-gray-300"
+                                    }`}
+                                placeholder="75"
+                            />
                         </div>
+
+                        {/* Error Message */}
+                        {errors.expectedRatePerMockInterview && (
+                            <p className="mt-1.5 text-sm text-red-600">{errors.expectedRatePerMockInterview}</p>
+                        )}
                     </div>
                 )}
 
                 {/* No-Show Policy */}
-                {isReady && (
-                    <div>
-                        <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
-                            Policy for No-Show Cases <span className="text-red-500">*</span>
-                        </p>
-                        <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                            {["25%", "50%", "75%", "100%"].map((policy) => (
-                                <label key={policy} className="inline-flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="NoShowPolicy"
-                                        value={policy}
-                                        checked={interviewDetailsData.NoShowPolicy === policy}
-                                        onChange={handleNoShow}
-                                        className="form-radio text-gray-600"
-                                    />
-                                    <span className="ml-2">Charge {policy} without rescheduling</span>
-                                </label>
-                            ))}
-                        </div>
-                        {errors.NoShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.NoShowPolicy}</p>}
+                <div>
+                    <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
+                        Policy for No-Show Cases <span className="text-red-500">*</span>
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
+                        {["25%", "50%", "75%", "100%"].map((policy) => (
+                            <label key={policy} className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    name="noShowPolicy"
+                                    value={policy}
+                                    checked={interviewDetailsData.noShowPolicy === policy}
+                                    onChange={handleNoShow}
+                                    className="form-radio text-gray-600"
+                                />
+                                <span className="ml-2">Charge {policy} without rescheduling</span>
+                            </label>
+                        ))}
                     </div>
-                )}
+                    {errors.noShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>}
+                </div>
+
 
                 {/* Professional Title */}
                 <div className="sm:col-span-6 col-span-2">

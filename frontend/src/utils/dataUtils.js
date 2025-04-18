@@ -60,15 +60,12 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
         });
         const users = usersResponse.data;
 
-        // console.log("Users:", users.length);
         if (users !== undefined && users.length > 0) {
             users.forEach(user => {
-                // console.log("User ID:", user._id);
                 sharingRuleUserIds.add(user._id.toString());
             });
         }
     }
-    // console.log("sharingRuleUserIds", sharingRuleUserIds)
     return sharingRuleUserIds;
 };
 
@@ -76,10 +73,7 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
 const fetchFilterData = async (endpoint, sharingPermissions) => {
     const userId = Cookies.get('userId');
     const organizationId = Cookies.get('organizationId');
-    console.log(`[fetchFilterData] Endpoint: ${endpoint}, userId: ${userId}, organizationId: ${organizationId}`);
-    // console.log("Organizationid", organizationId)
     const organization = Cookies.get('organization');
-    // console.log("organization", organization)
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");
         return [];
@@ -93,45 +87,32 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
             const currentUser = currentUserResponse.data;
             currentUserRoleId = currentUser.RoleId;
         }
-        // console.log("currentUserRoleId", currentUserRoleId)
         const sharingRuleUserIds = await getSharingRulesUserIds(currentUserRoleId, sharingPermissions, userId, organizationId);
-        // console.log("sharingRuleUserIds", sharingRuleUserIds)
 
         // Fetch role details if needed
         let currentUserRole;
         if (currentUserRoleId) {
             const roleResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata/${currentUserRoleId}`);
             currentUserRole = roleResponse.data.roleName;
-            // console.log("currentUserRole", currentUserRole)
         }
         // if (organizationId) {
         //     const queryParam = organization === 'true' ? `tenantId=${organizationId}` : `ownerId=${userId}`;
         //     const url = `${process.env.REACT_APP_API_URL}/api/${endpoint}?${queryParam}`;
-        //     // console.log("url", url)
         // }
 
         // const response = await axios.get(url);
         if (!userId) return [];
-        console.log(`[fetchFilterData] Calling: ${process.env.REACT_APP_API_URL}/api/${endpoint}`);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/${endpoint}`, {
             params: { tenantId: organizationId, ownerId: userId }
         });
-        console.log(`[fetchFilterData] Response:`, response.data);
         if (response.data) {
             const data = response.data;
-            // console.log("Fetched data from server:", data);
 
             if (organization === 'true') {
-                // console.log("Sharing Permissions:", sharingPermissions);
-                // console.log("Data before filtering:", data);
-
 
                 if (sharingPermissions.Access === 'Private' && sharingPermissions.GrantAccess === true && currentUserRole !== 'Admin') {
                     const sharingRuleUserIds = await getSharingRulesUserIds(currentUserRoleId, sharingPermissions, userId, organizationId);
-                    // console.log("sharingRuleUserIds", sharingRuleUserIds)
-                    // console.log("sharingRuleUserIds11:", JSON.stringify(sharingRuleUserIds));
                     const visibleUserIds = [userId];
-                    // console.log("sharingRuleUserIds22:", JSON.stringify(sharingRuleUserIds));
                     const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
                     const allRoles = allRolesResponse.data;
 
@@ -144,10 +125,8 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
 
                     visibleUserIds.push(...visibleUsers.map(user => user._id));
 
-                    // console.log("Sharing Rule User IDs:", JSON.stringify(sharingRuleUserIds));
                     if (sharingRuleUserIds !== undefined && sharingRuleUserIds.size > 0) {
                         sharingRuleUserIds.forEach(uid => {
-                            // console.log("User ID:", uid);
                             if (!visibleUserIds.includes(uid.toString())) {
                                 visibleUserIds.push(uid.toString());
                             }
@@ -156,22 +135,17 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
                     filteredData = data.filter(item =>
                         item.ownerId && (visibleUserIds.includes(item.ownerId))
                     );
-                    // console.log("FilteredData0", JSON.stringify(filteredData));
                 } else if (currentUserRole === 'Admin' || sharingPermissions.Access === 'Public') {
                     filteredData = data;
-                    // console.log("FilteredData1", filteredData);
                 } else if (sharingPermissions.Access === 'Private' && sharingPermissions.GrantAccess === false) {
                     filteredData = data.filter(item => item.ownerId === userId);
-                    // console.log("FilteredData3", filteredData);
                 } else {
                     console.log('error');
                 }
             } else {
                 filteredData = data
-                // console.log("FilteredData4", filteredData);
             }
         }
-        console.log(`[fetchFilterData] Filtered data:`, filteredData);
         return filteredData;
     } catch (error) {
         console.error(`Error fetching data from ${endpoint}:`, error);

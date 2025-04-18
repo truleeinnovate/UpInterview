@@ -66,9 +66,9 @@ exports.individualLogin = async (req, res) => {
     console.log("Sending email to user...");
     await loginSendEmail({
       body: {
-        email: savedContact.Email,
+        email: savedContact.email,
         ownerId: savedUser._id,
-        name: savedContact.Name,
+        name: savedContact.name,
       },
     }, { json: () => { } });
     console.log("Email successfully sent.");
