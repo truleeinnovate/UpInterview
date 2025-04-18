@@ -68,7 +68,7 @@ const emailCommonRouter = require('./routes/emailCommonRoutes.js');
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 
 // Register all routes
-app.use('/linkedin', linkedinAuthRoutes);
+app.use('/linkedin', linkedinAuthRoutes); 
 app.use("/Individual", individualLoginRoutes);
 app.use('/',SubscriptionRouter);
 app.use('/',CustomerSubscriptionRouter)
