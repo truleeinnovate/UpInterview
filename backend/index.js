@@ -63,7 +63,7 @@ const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
 const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
-const organizationRoutes = require('./routes/organizationRoutes.js');
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
 const emailCommonRouter = require('./routes/emailCommonRoutes.js');
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 

@@ -8,6 +8,7 @@ const Profile3 = () => {
     const navigate = useNavigate();
     const [showPopup, setShowPopup] = useState(false);
     const location = useLocation();
+    console.log('5. Profile3 received LinkedIn data:', location.state?.linkedInData);
 
     const toggleActiveState = (tab) => {
         setSelectedTab((prevTab) => (prevTab === tab ? '' : tab));
@@ -30,7 +31,12 @@ const Profile3 = () => {
 
     const navigateToNext = (Freelancer) => {
         const professionName = selectedTab === 'technical' ? 'Technical_Expert/Developer' : 'HR/Recruiter';
-        navigate('/profile4', {
+        console.log('6. Navigating to Profile4 with data:', { 
+          Freelancer, 
+          profession: professionName, 
+          linkedInData: location.state?.linkedInData 
+        });
+        navigate('/profile4', { 
           state: { 
             Freelancer, 
             profession: professionName,
@@ -96,7 +102,7 @@ const Popup = ({ onClose, onConfirm }) => {
 
     const handleSelect = (value) => {
         setSelectedOption(value);
-        setTimeout(() => onConfirm(value), 300);
+        setTimeout(() => onConfirm(value), 300); // Small delay to show the selection effect
     };
 
     return (
