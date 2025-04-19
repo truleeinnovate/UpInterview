@@ -221,7 +221,7 @@ const InterviewDetails = ({
 
             {/* Technology Section */}
             <div className="col-span-1 sm:col-span-6">
-                <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-3">
                     Select Your Comfortable Technologies <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -249,20 +249,6 @@ const InterviewDetails = ({
                                     />
                                 </div>
                             </div>
-                            {/* {services
-                                        .filter((service) =>
-                                            service.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                                        )
-                                        .map((service) => (
-                                            <div
-                                                key={service._id}
-                                                onClick={() => handleSelectedTechnology(service)}
-                                                className="cursor-pointer hover:bg-gray-200 p-2"
-                                            >
-                                                {service.TechnologyMasterName}
-                                            </div>
-                                        ))} */}
-
                             {filteredTechnologies.map((tech) => (
                                 <div
                                     key={tech._id}
@@ -280,7 +266,7 @@ const InterviewDetails = ({
             </div>
 
             {/* Display Selected Technologies */}
-            <div className="col-span-2 sm:col-span-6 p-4 rounded-md border border-gray-200">
+            <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
                 {selectedTechnologyies.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center">No technologies selected</p>
                 ) : (
@@ -334,7 +320,7 @@ const InterviewDetails = ({
 
             {/* skills */}
             <div className="col-span-1 sm:col-span-6">
-                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
                     Select Skills <span className="text-red-500">*</span>
                 </label>
                 <div className="relative" ref={skillsPopupRef}>
@@ -383,7 +369,7 @@ const InterviewDetails = ({
             </div>
 
             {/* Display Selected Skills */}
-            <div className="col-span-2 sm:col-span-6 p-4 rounded-md border border-gray-200">
+            <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
                 {selectedSkills.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center">No skills selected</p>
                 ) : (
@@ -483,6 +469,7 @@ const InterviewDetails = ({
                             name="previousExperienceConductingInterviewsYears"
                             min="1"
                             max="15"
+                            placeholder="Enter years of experience"
                             value={interviewDetailsData.previousExperienceConductingInterviewsYears || ""}
                             onChange={handleChangeExperienceYears}
                             className={`block w-1/2 pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.previousExperienceConductingInterviewsYears ? "border-red-500" : "border-gray-400"}`}

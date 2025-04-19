@@ -356,10 +356,10 @@ const registerOrganization = async (req, res) => {
         console.log("Calling email sending controller...");
         // await loginSendEmail({
         //     body: {
-        //         email: savedContact.Email,
+        //         email: savedContact.email,
         //         ownerId: savedUser._id,
         //         tenantId: savedOrganization._id,
-        //         name: savedContact.Name,
+        //         name: savedContact.lastName,
         //     },
         // }, { json: () => { } });  
 
@@ -374,63 +374,6 @@ const registerOrganization = async (req, res) => {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
-// const organizationUserCreation = async (req, res) => {
-//     try {
-//         const { UserData, contactData } = req.body; // Extract user and contact data
-//         console.log("Received user and contact data:", UserData, contactData);
-        
-
-//         if (!UserData || !contactData) {
-//             return res.status(400).json({ message: "User and Contact data are required" });
-//         }
-
-//         const { firstName, name, email, tenantId, roleId, isAddedTeam, isProfileCompleted } = UserData;
-
-//         // Check if user already exists
-//         const existingUser = await Users.findOne({ email });
-//         if (existingUser) {
-//             return res.status(400).json({ message: "Email already registered" });
-//         }
-
-
-//         // Create new user
-//         const newUser = new Users({
-//             name,
-//             firstName,
-//             email,
-//             tenantId,
-//             roleId,
-//             // ProfileId,
-//             isProfileCompleted,
-//             isAddedTeam,
-//         });
-
-//         const savedUser = await newUser.save();
-//         const savedUserId = savedUser._id; // Get the newly created user's ID
-
-//         if (!savedUserId) {
-//             throw new Error("User creation failed, no ID returned.");
-//         }
-
-//         // Now create a contact and set the ownerId to savedUserId
-//         const newContact = new Contacts({
-//             ...contactData,
-//             ownerId: savedUserId, // Assign user ID as ownerId
-//         });
-
-//         const savedContact = await newContact.save();
-
-//         res.status(201).json({
-//             message: "User and Contact created successfully",
-//             userId: savedUserId,
-//             contactId: savedContact._id,
-//         });
-
-//     } catch (error) {
-//         console.error("Error in organization registration:", error);
-//         res.status(500).json({ message: "Internal server error", error: error.message });
-//     }
-// };
 
 const organizationUserCreation = async (req, res) => {
     try {

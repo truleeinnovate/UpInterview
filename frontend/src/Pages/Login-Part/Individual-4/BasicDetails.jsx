@@ -6,7 +6,7 @@ import { ImCancelCircle } from 'react-icons/im';
 import noImage from '../../Dashboard-Part/Images/no-photo.png';
 import InfoBox from './InfoBox.jsx';
 import { format } from 'date-fns';
-import { validateEmail, validateProfileId, validatePortfolioUrl } from '../../../utils/IndividualValidation.js';
+import { validateEmail, validateProfileId } from '../../../utils/IndividualValidation.js';
 
 const BasicDetails = ({
   basicDetailsData,
@@ -94,9 +94,6 @@ const BasicDetails = ({
       handleProfileIdValidation(value);
     } else if (name === 'email') {
       handleEmailValidation(value);
-    } else if (name === 'portfolioUrl') {
-      const errorMessage = validatePortfolioUrl(value);
-      setErrors((prev) => ({ ...prev, portfolioUrl: errorMessage }));
     }
   };
 
@@ -110,9 +107,6 @@ const BasicDetails = ({
     } else if (name === 'profileId') {
       clearTimeout(profileIdTimeoutRef.current);
       handleProfileIdValidation(value);
-    } else if (name === 'portfolioUrl') {
-      const errorMessage = validatePortfolioUrl(value);
-      setErrors((prev) => ({ ...prev, portfolioUrl: errorMessage }));
     }
   };
 
@@ -247,7 +241,7 @@ const BasicDetails = ({
       {/* Email */}
       <div className="sm:col-span-6 col-span-2">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Work Email <span className="text-red-500">*</span>
+          Email Address <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -363,7 +357,7 @@ const BasicDetails = ({
             value={basicDetailsData.profileId}
             onChange={handleChange}
             onBlur={handleBlur}
-            placeholder="yourprofileid"
+            placeholder="profileId"
             className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.profileId ? 'border-red-500' : 'border-gray-300'
               }`}
             autoComplete="profileId"
@@ -525,7 +519,7 @@ const BasicDetails = ({
       {/* Portfolio URL */}
       <div className="sm:col-span-6 col-span-2">
         <label htmlFor="portfolio_url" className="block text-sm font-medium text-gray-700 mb-1 mt-6">
-          Portfolio URL <span className="text-red-500">*</span>
+          Portfolio URL
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -549,12 +543,10 @@ const BasicDetails = ({
             value={basicDetailsData.portfolioUrl}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.portfolioUrl ? 'border-red-500' : 'border-gray-300'
-              }`}
-            placeholder="yourname.github.io / behance.net/yourname"
+            className="block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
+            placeholder="portfolio.com/yourname"
           />
         </div>
-        {errors.portfolioUrl && <p className="text-red-500 text-sm sm:text-xs">{errors.portfolioUrl}</p>}
       </div>
     </div>
   );

@@ -1,7 +1,3 @@
-// IndividualValidation.js
-import axios from 'axios';
-
-// Helper function to validate email
 export const validateEmail = async (email, checkEmailExists) => {
   let errorMessage = '';
 
@@ -24,7 +20,6 @@ export const validateEmail = async (email, checkEmailExists) => {
   return errorMessage;
 };
 
-// Helper function to validate profile ID
 export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
   let suggestedProfileId = '';
@@ -51,18 +46,6 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
   return { errorMessage, suggestedProfileId };
 };
 
-// Helper function to validate portfolio URL
-export const validatePortfolioUrl = (portfolioUrl) => {
-  const value = portfolioUrl?.trim() || '';
-  if (!value || value === 'https://' || value.length < 6) {
-    return 'Please enter a valid portfolio URL.';
-  }
-  if (!value.startsWith('http://') && !value.startsWith('https://')) {
-    return 'Please enter a valid URL starting with http:// or https://';
-  }
-  return '';
-};
-
 export const validateSteps = (step, params, setErrors, checkProfileIdExists, checkEmailExists) => {
   let hasError = false;
   const errors = {};
@@ -78,7 +61,6 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
       errors.phone = 'Phone number must be a valid 10-digit number';
     }
     errors.linkedinUrl = !formData?.linkedinUrl ? 'LinkedIn URL is required' : '';
-    errors.portfolioUrl = validatePortfolioUrl(formData?.portfolioUrl);
   }
 
   if (step === 1) {

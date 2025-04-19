@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer }) => {
+const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer, completed }) => {
   const location = useLocation();
   const { Freelancer } = location.state || {};
 
@@ -9,7 +9,7 @@ const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer })
   const showAllSteps = Freelancer || isInternalInterviewer;
   const stepsToShow = showLimitedSteps ? 2 : showAllSteps ? 4 : 2;
 
-  const completed = Array(stepsToShow).fill(false).map((_, index) => index < currentStep);
+  // const completed = Array(stepsToShow).fill(false).map((_, index) => index < currentStep);
 
   const steps = [
     { name: 'Basic Details', path: '/signup/basic-details', icon: 'user' },
@@ -30,10 +30,11 @@ const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer })
                   className={`
                     w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold
                     transition-all duration-300 transform
-                    ${currentStep === index
-                      ? 'bg-orange-500 text-white scale-110 ring-2 ring-orange-100'
-                      : completed[index]
-                        ? 'bg-orange-500 text-white'
+                    ${
+                      currentStep === index
+                        ? 'bg-orange-500 text-white scale-110 ring-2 ring-orange-100'
+                        : completed[index]
+                        ? 'bg-custom-blue text-white' // Custom blue for completed steps
                         : 'bg-gray-100 text-gray-400'
                     }
                   `}
@@ -44,7 +45,9 @@ const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer })
                 {index < stepsToShow - 1 && (
                   <div className="flex-shrink-0 mx-2">
                     <svg
-                      className={`w-5 h-5 ${completed[index] ? 'text-orange-500' : 'text-gray-300'}`}
+                      className={`w-5 h-5 ${
+                        completed[index] ? 'text-custom-blue' : 'text-gray-300'
+                      }`}
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"

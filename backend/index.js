@@ -113,6 +113,17 @@ app.get('/roles', async (req, res) => {
   }
 });
 
+// POST endpoint to insert roles
+app.post('/roles', async (req, res) => {
+  try {
+    const roles = req.body; // Expecting an array of role objects
+    const insertedRoles = await RoleMaster.insertMany(roles, { ordered: false });
+    res.status(201).json({ message: 'Roles inserted successfully', data: insertedRoles });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.get('/technology', async (req, res) => {
   try {
     const technology = await TechnologyMaster.find({}, 'TechnologyMasterName');

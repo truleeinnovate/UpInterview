@@ -530,6 +530,8 @@ const MultiStepForm = () => {
   const showLimitedSteps = isProfileComplete && roleName !== "Internal_Interviewer";
   const isInternalInterviewer = roleName === "Internal_Interviewer";
 
+  const [completed, setCompleted] = useState([false, false, false, false]);
+
   const handleNextStep = async () => {
     let params = {};
     let isValid = false;
@@ -576,6 +578,12 @@ const MultiStepForm = () => {
       console.log("Validation failed. Errors:", errors);
       return;
     }
+
+    setCompleted((prev) => {
+      const updated = [...prev];
+      updated[currentStep] = true; // Mark this step as completed
+      return updated;
+    });
 
     // For non-freelancer or limited steps profile (EXCLUDING internal interviewers), save at step 1
     if (
@@ -745,6 +753,7 @@ const MultiStepForm = () => {
                   currentStep={currentStep}
                   showLimitedSteps={showLimitedSteps}
                   isInternalInterviewer={isInternalInterviewer}
+                  completed={completed}
                 />
 
                 {currentStep === 0 && (
