@@ -213,7 +213,7 @@ const saltRounds = 10;
 const registerOrganization = async (req, res) => { 
     try {
         const {
-            firstName, lastName, email, phone, profileId, jobTitle,
+            firstName, lastName, email, phone, countryCode, profileId, jobTitle,
             company, employees, country, password
         } = req.body;
 
@@ -263,9 +263,9 @@ const registerOrganization = async (req, res) => {
             phone,
             profileId,
             currentRole: jobTitle,
-            company,
-            employees,
-            countryCode: country,
+            company: company,
+            employees: employees,
+            countryCode: countryCode,
             tenantId: savedOrganization._id,
             ownerId: savedUser._id
         });

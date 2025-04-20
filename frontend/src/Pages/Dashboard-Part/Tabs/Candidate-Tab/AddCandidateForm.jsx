@@ -1,28 +1,127 @@
 import { useState, useRef, useEffect } from 'react';
 import Modal from 'react-modal';
-// import { FaTimes, FaPlus, FaCamera, FaTrash, FaExpand, FaCompress, FaFileUpload, FaFile } from 'react-icons/fa';
 import classNames from 'classnames';
 import { format } from "date-fns";
-// import { FaEdit } from "react-icons/fa";
 import axios from 'axios';
+import { MdArrowDropDown } from "react-icons/md";
+import { FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import CustomDatePicker from '../../../../utils/CustomDatePicker';
-import { validateCandidateForm,getErrorMessage,countryCodes } from '../../../../utils/CandidateValidation';
+import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
-const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i); 
 
-Modal.setAppElement('#root');
+// Reusable CustomDropdown Component
+const CustomDropdown = ({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+  error,
+  placeholder,
+  optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
+  optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
 
-const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit  }) => {
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
 
+  const handleSelect = (option) => {
+    const selectedValue = optionValue ? option[optionValue] : option;
+    onChange({ target: { name, value: selectedValue } });
+    setShowDropdown(false);
+    setSearchTerm('');
+  };
+
+  const filteredOptions = options?.filter(option => {
+    const displayValue = optionKey ? option[optionKey] : option;
+    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div ref={dropdownRef}>
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      <div className="relative">
+        <input
+          name={name}
+          type="text"
+          id={name}
+          value={value}
+          onClick={toggleDropdown}
+          placeholder={placeholder}
+          autoComplete="off"
+          className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          readOnly
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+          <MdArrowDropDown className="text-lg" onClick={toggleDropdown} />
+        </div>
+        {showDropdown && (
+          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+            <div className="border-b">
+              <div className="flex items-center border rounded px-2 py-1 m-2">
+                <FaSearch className="absolute ml-1 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder={`Search ${label}`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 focus:border-black focus:outline-none w-full"
+                />
+              </div>
+            </div>
+            {filteredOptions?.length > 0 ? (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={option._id || index}
+                  onClick={() => handleSelect(option)}
+                  className="cursor-pointer hover:bg-gray-200 p-2"
+                >
+                  {optionKey ? option[optionKey] : option}
+                </div>
+              ))
+            ) : (
+              <div className="p-2 text-gray-500">No options found</div>
+            )}
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+    </div>
+  );
+};
+
+// Main AddCandidateForm Component
+const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
   const {
     skills,
     college,
     qualification,
-  } = useCustomContext ();
-  
+    currentRole,
+  } = useCustomContext();
+
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
+  const currentRoleDropdownRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
   const [file, setFile] = useState(null);
@@ -42,6 +141,25 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit  }) => {
   const expertiseOptions = ["Basic", "Medium", "Expert"];
   const [filePreview, setFilePreview] = useState(null);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
+  const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
+  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState('');
+
+  const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
+  const genderOptions = ["Male", "Female"];
+  const experienceOptions = [
+    "0-1 Years",
+    "1-2 years",
+    "2-3 years",
+    "3-4 years",
+    "4-5 years",
+    "5-6 years",
+    "6-7 years",
+    "7-8 years",
+    "8-9 years",
+    "9-10 years",
+    "10+ years",
+  ];
+
   const [formData, setFormData] = useState({
     FirstName: '',
     LastName: '',
@@ -53,27 +171,21 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit  }) => {
     UniversityCollege: '',
     CurrentExperience: '',
     RelevantExperience: '',
-    CountryCode:'',
+    CountryCode: '',
     skills: [],
-    // ImageData: null,
     resume: null,
-    CurrentRole:'',
+    CurrentRole: '',
   });
   const [errors, setErrors] = useState({});
-    const userId = Cookies.get("userId");
-  // const [startDate, setStartDate] = useState(null);
-
-
-  // console.log("startDate  ", startDate); 
-  
+  const userId = Cookies.get("userId");
 
   useEffect(() => {
     if (isEdit && selectedCandidate) {
-      const dob = selectedCandidate.Date_Of_Birth
+      const dob = selectedCandidate.Date_Of_Birth;
       const phone = selectedCandidate.Phone || '';
-const countryCode = phone.startsWith('+') ? phone.split(' ')[0] : '';
-const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
-  
+      const countryCode = phone.startsWith('+') ? phone.split(' ')[0] : '';
+      const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
+
       setFormData({
         FirstName: selectedCandidate.FirstName || '',
         LastName: selectedCandidate.LastName || '',
@@ -89,13 +201,12 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
         ImageData: selectedCandidate.imageUrl || null,
         resume: selectedCandidate.resume || null,
         CurrentRole: selectedCandidate.CurrentRole || '',
-        CountryCode:countryCode || '',
+        CountryCode: countryCode || '',
       });
-
 
       if (selectedCandidate.resume?.filename) {
         setSelectedResume({
-          url: `/uploads/${selectedCandidate.resume.filename}`,
+          url: `/Uploads/${selectedCandidate.resume.filename}`,
           name: selectedCandidate.resume.filename,
         });
       } else {
@@ -106,20 +217,31 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     }
   }, [isEdit, selectedCandidate]);
 
+  const toggleCurrentRole = () => {
+    setShowDropdownCurrentRole(!showDropdownCurrentRole);
+  };
 
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
+  const handleRoleSelect = (role) => {
+    handleChange({ target: { name: 'CurrentRole', value: role } });
+    setShowDropdownCurrentRole(false);
+  };
+
+  const filteredCurrentRoles = currentRole?.filter(role =>
+    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (currentRoleDropdownRef.current && !currentRoleDropdownRef.current.contains(event.target)) {
+        setShowDropdownCurrentRole(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleDelete = (index) => {
     setDeleteIndex(index);
@@ -139,12 +261,11 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
   const cancelDelete = () => {
     setDeleteIndex(null);
   };
-  
+
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
-  }
-
+  };
 
   const handleAddEntry = () => {
     if (editingIndex !== null) {
@@ -162,41 +283,24 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
       setAllSelectedSkills([selectedSkill]);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        skills: updatedEntries, 
+        skills: updatedEntries,
       }));
     } else {
-
       const newEntry = {
         skill: selectedSkill,
         experience: selectedExp,
         expertise: selectedLevel,
       };
-  
+
       const updatedEntries = [...entries, newEntry];
-  
+
       setEntries(updatedEntries);
       setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
-  
-     
+
       setFormData((prevFormData) => ({
         ...prevFormData,
-        skills: updatedEntries, // Update skills in formData
+        skills: updatedEntries,
       }));
-
-
-      // setEntries([
-      //   ...entries,
-      //   {
-      //     skill: selectedSkill,
-      //     experience: selectedExp,
-      //     expertise: selectedLevel,
-      //   },
-      // ]);
-      // setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
-      // setFormData((prevFormData) => ({
-      //   ...prevFormData,
-      //   skills: updatedEntries, // Update skills in formData
-      // }));
     }
 
     setErrors((prevErrors) => ({
@@ -215,7 +319,6 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     setEditingIndex(index);
     setIsModalOpen(true);
   };
-
 
   const resetForm = () => {
     setSelectedSkill("");
@@ -242,8 +345,6 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     return false;
   };
 
-
-  // Handle Image Upload & Preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -254,7 +355,6 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     }
   };
 
-  // Handle Resume Upload
   const handleResumeChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -263,13 +363,11 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     }
   };
 
-  // Remove Image
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
   };
 
-  // Remove Resume
   const removeResume = () => {
     setResumeFile(null);
     setSelectedResume(null);
@@ -278,16 +376,13 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-     // Validation Logic
-  let errorMessage = getErrorMessage(name, value);
+    let errorMessage = getErrorMessage(name, value);
 
-  // Restrict non-numeric input for experience fields
-  if (name === "CurrentExperience" || name === "RelevantExperience") {
-    if (!/^\d*$/.test(value)) {
-      return; // Prevent updating state if input is not a number
+    if (name === "CurrentExperience" || name === "RelevantExperience") {
+      if (!/^\d*$/.test(value)) {
+        return;
+      }
     }
-  }
-
 
     setFormData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: errorMessage }));
@@ -296,21 +391,13 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
   const handleDateChange = (date) => {
     setFormData((prevData) => ({
       ...prevData,
-      Date_Of_Birth: date ? new Date(date).toISOString() : "", 
+      Date_Of_Birth: date ? new Date(date).toISOString() : "",
     }));
-    // setStartDate(date); 
-  
-    // setErrors((prevErrors) => ({
-    //   ...prevErrors,
-    //   Date_Of_Birth: getErrorMessage("Date_Of_Birth", date),
-    // }));
   };
 
   const handleClose = () => {
-    // Reset form data
-    resetFormData()
-      onClose();
-
+    resetFormData();
+    onClose();
   };
 
   const userName = Cookies.get("userName");
@@ -318,94 +405,9 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
   const handleAddCandidate = async (e) => {
     e.preventDefault();
     const orgId = Cookies.get("organizationId");
-    const { formIsValid, newErrors } = validateCandidateForm (
-      formData,
-      entries || [],
-      errors || {}
-    );
-  
-    if (!formIsValid) {
-      setErrors(newErrors);
-      return;
-    }
-    
-      const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
-        const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-
-        const data = {
-          FirstName: formData.FirstName,
-          LastName: formData.LastName,
-          Email: formData.Email,
-          Phone: fullPhoneNumber,
-          CurrentExperience: formData.CurrentExperience,
-          RelevantExperience:formData.RelevantExperience,
-          HigherQualification: formData.HigherQualification,
-          Gender: formData.Gender,
-          UniversityCollege: formData.UniversityCollege,
-          Date_Of_Birth: formData.Date_Of_Birth,
-          skills: entries.map((entry) => ({
-            skill: entry.skill,
-            experience: entry.experience,
-            expertise: entry.expertise,
-          })),
-          resume: null,
-          CurrentRole:formData.CurrentRole,
-      
-          CreatedBy: `${userName} at ${currentDateTime}`,
-          LastModifiedById: `${userName} at ${currentDateTime}`,
-          ownerId: userId,
-        };
-    
-        if (orgId) {
-          data.tenantId = orgId;
-        }
-    
-
-    // if (imageFile) data.append("ImageData", imageFile);
-    // if (resumeFile) data.append("resume", resumeFile);
-  
-    try {
-      console.log("Submitting new candidate...", formData);
-      let candidateId;
-      
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data, {
-        // headers: { "Content-Type": "multipart/form-data" },
-      });
-
-       candidateId = await response.data.data._id;
-            if (file) {
-              const imageData = new FormData();
-              imageData.append("image", file);
-              imageData.append("type", "candidate");
-              imageData.append("id", candidateId);
-      
-              await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-                headers: { "Content-Type": "multipart/form-data" },
-              });
-            } 
-            // else if (!isImageUploaded && !filePreview && candidateEdit) {
-            //   await axios.delete(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}/image`);
-            // }
-  
-      if (response.status === 200 || response.status === 201) {
-        console.log("Candidate added successfully:", response.data);
-
-        resetFormData();
-      }
-    } catch (error) {
-      console.error("Failed to add candidate:", error);
-    }
-  };
-
-
-
-  const handleSubmit = async(e) => {
-    e.preventDefault();
-    const orgId = Cookies.get("organizationId");
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries || [],
-      // selectedPosition || "", 
       errors || {}
     );
 
@@ -414,10 +416,6 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
       return;
     }
 
-    console.log("before form data", formData);
-    
-
- 
     const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
@@ -427,7 +425,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
       Email: formData.Email,
       Phone: fullPhoneNumber,
       CurrentExperience: formData.CurrentExperience,
-      RelevantExperience:formData.RelevantExperience,
+      RelevantExperience: formData.RelevantExperience,
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
@@ -438,8 +436,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
         expertise: entry.expertise,
       })),
       resume: null,
-      CurrentRole:formData.CurrentRole,
-  
+      CurrentRole: formData.CurrentRole,
       CreatedBy: `${userName} at ${currentDateTime}`,
       LastModifiedById: `${userName} at ${currentDateTime}`,
       ownerId: userId,
@@ -450,27 +447,85 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     }
 
     try {
-
-      console.log("before update api", formData);
       let candidateId;
-      let response; 
+
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
+
+      candidateId = await response.data.data._id;
+      if (file) {
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "candidate");
+        imageData.append("id", candidateId);
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      if (response.status === 200 || response.status === 201) {
+        resetFormData();
+      }
+    } catch (error) {
+      console.error("Failed to add candidate:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const orgId = Cookies.get("organizationId");
+    const { formIsValid, newErrors } = validateCandidateForm(
+      formData,
+      entries || [],
+      errors || {}
+    );
+
+    if (!formIsValid) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
+    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+
+    const data = {
+      FirstName: formData.FirstName,
+      LastName: formData.LastName,
+      Email: formData.Email,
+      Phone: fullPhoneNumber,
+      CurrentExperience: formData.CurrentExperience,
+      RelevantExperience: formData.RelevantExperience,
+      HigherQualification: formData.HigherQualification,
+      Gender: formData.Gender,
+      UniversityCollege: formData.UniversityCollege,
+      Date_Of_Birth: formData.Date_Of_Birth,
+      skills: entries.map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      })),
+      resume: null,
+      CurrentRole: formData.CurrentRole,
+      CreatedBy: `${userName} at ${currentDateTime}`,
+      LastModifiedById: `${userName} at ${currentDateTime}`,
+      ownerId: userId,
+    };
+
+    if (orgId) {
+      data.tenantId = orgId;
+    }
+
+    try {
+      let candidateId;
+      let response;
 
       if (isEdit && selectedCandidate?._id) {
-        // **PATCH request for editing**
         response = await axios.patch(
           `${process.env.REACT_APP_API_URL}/candidate/${selectedCandidate._id}`,
-          data,
-          // {
-          //   headers: { "Content-Type": "multipart/form-data" },
-          // }
+          data
         );
-        console.log("Candidate updated:", response.data);
       } else {
-        // **POST request for adding new candidate**
-        response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data, {
-          // headers: { "Content-Type": "multipart/form-data" },
-        });
-        console.log("Candidate added:", response.data);
+        response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
       }
 
       candidateId = await response.data.data._id;
@@ -483,23 +538,19 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
         await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-    
       } else if (!isImageUploaded && !filePreview && isEdit) {
         await axios.delete(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}/image`);
       }
-  
+
       if (response.status === 200 || response.status === 201) {
         onClose();
         resetFormData();
       }
-
     } catch (error) {
       console.error("Error adding candidate:", error);
     }
-    
   };
 
-  
   const resetFormData = () => {
     setFormData({
       FirstName: '',
@@ -515,7 +566,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
       skills: [],
       CurrentRole: '',
     });
-  
+
     setErrors({});
     setEntries([]);
     setSelectedSkill("");
@@ -526,21 +577,12 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
     removeImage();
     removeResume();
   };
-  
-  
-
-
-  // 'sm': {'max': '639px'},
-  // 'md': {'min': '640px', 'max': '1023px'},
-  // 'lg': {'min': '1024px', 'max': '1279px'},
-  // 'xl': {'min': '1280px', 'max': '1535px'},
-  // '2xl': {'min': '1536px'},
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
     {
       'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
     }
   );
 
@@ -562,17 +604,13 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {/* {isFullScreen ? (
-                  <FaCompress className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <FaExpand className="w-5 h-5 text-gray-500" />
-                )} */}
+                {/* Icon placeholder */}
               </button>
               <button
                 onClick={handleClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+                {/* Icon placeholder */}
               </button>
             </div>
           </div>
@@ -592,19 +630,18 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                       className="w-full h-full object-cover"
                     />
                   ) : isEdit && formData?.ImageData?.path ? (
-                  <img 
-                  src={`http://localhost:5000/${formData.ImageData.path}`} 
-                  alt={formData.FirstName || "Candidate"} 
-                  onError={(e) => { e.target.src = "/default-profile.png"; }} // Fallback image if error
-                />
-              ): (
+                    <img
+                      src={`http://localhost:5000/${formData.ImageData.path}`}
+                      alt={formData.FirstName || "Candidate"}
+                      onError={(e) => { e.target.src = "/default-profile.png"; }}
+                    />
+                  ) : (
                     <>
-                      {/* <FaCamera className="w-8 h-8 text-gray-300 mb-1" /> */}
                       <p className="text-xs text-gray-400">Upload Photo</p>
                     </>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                    {/* <FaCamera className="w-6 h-6 text-white" /> */}
+                    {/* Icon placeholder */}
                   </div>
                 </div>
                 <input
@@ -623,7 +660,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     }}
                     className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                   >
-                    {/* <FaTrash className="w-3 h-3" /> */}
+                    {/* Icon placeholder */}
                   </button>
                 )}
               </div>
@@ -640,7 +677,6 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
                   {selectedResume ? (
                     <div className="text-center px-4">
-                      {/* <FaFile className="w-8 h-8 text-blue-500 mx-auto mb-1" /> */}
                       <p className="text-sm text-gray-700 font-medium truncate max-w-[180px]">
                         {selectedResume.name}
                       </p>
@@ -650,13 +686,12 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     </div>
                   ) : (
                     <>
-                      {/* <FaFileUpload className="w-8 h-8 text-gray-300 mb-1" /> */}
                       <p className="text-xs text-gray-400">Upload Resume</p>
                       <p className="text-xs text-gray-400">PDF or Word document</p>
                     </>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
-                    {/* <FaFileUpload className="w-6 h-6 text-white" /> */}
+                    {/* Icon placeholder */}
                   </div>
                 </div>
                 <input
@@ -675,7 +710,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     }}
                     className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                   >
-                    {/* <FaTrash className="w-3 h-3" /> */}
+                    {/* Icon placeholder */}
                   </button>
                 )}
               </div>
@@ -684,22 +719,20 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
             </div>
           </div>
 
-          <form  className="space-y-6">
+          <form className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name 
+                  First Name
                 </label>
                 <input
                   type="text"
                   name="FirstName"
-                  // required
                   value={formData.FirstName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  "
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
                   placeholder="Enter First Name"
                 />
-                {/* {errors.FirstName && <p className="text-red-500 text-xs pt-1">{errors.FirstName}</p>} */}
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -708,10 +741,9 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 <input
                   type="text"
                   name="LastName"
-                  // required
                   value={formData.LastName}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent ${errors.LastName && 'border border-red-500'}`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent ${errors.LastName && 'border-red-500'}`}
                   placeholder="Enter Last Name"
                 />
                 {errors.LastName && <p className="text-red-500 text-xs pt-1">{errors.LastName}</p>}
@@ -725,7 +757,7 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                   name="Email"
                   value={formData.Email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent  ${errors.Email && 'border border-red-500'}`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent ${errors.Email && 'border-red-500'}`}
                   placeholder="Enter email address"
                 />
                 {errors.Email && <p className="text-red-500 text-xs pt-1">{errors.Email}</p>}
@@ -734,8 +766,13 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone *
                 </label>
-                <div className="flex gap-2 ">
-                  <select name="CountryCode" value={formData.CountryCode} onChange={handleChange} className="px-1 py-2 md:w-16 border rounded-lg ">
+                <div className="flex gap-2">
+                  <select
+                    name="CountryCode"
+                    value={formData.CountryCode}
+                    onChange={handleChange}
+                    className="px-1 py-2 md:w-16 border rounded-lg"
+                  >
                     {countryCodes.map(code => (
                       <option key={code.value} value={code.value}>{code.label}</option>
                     ))}
@@ -745,388 +782,361 @@ const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
                     name="Phone"
                     value={formData.Phone}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent  ${errors.Phone && 'border border-red-500'}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent ${errors.Phone && 'border-red-500'}`}
                     placeholder="Enter Phone number"
                   />
                 </div>
-                {errors.Phone && <p className="text-red-500 text-xs pt-1 ">{errors.Phone}</p>}
+                {errors.Phone && <p className="text-red-500 text-xs pt-1">{errors.Phone}</p>}
               </div>
-              <div >
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Date of Birth 
+                  Date of Birth
                 </label>
                 <CustomDatePicker
-                selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
-                  // selectedDate={startDate instanceof Date && !isNaN(startDate) ? startDate : null}
-                  // selectedDate={startDate}
+                  selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
                   onChange={handleDateChange}
-                  // errors={errors.Date_Of_Birth}
                 />
               </div>
 
+              <CustomDropdown
+                label="Gender"
+                name="Gender"
+                value={formData.Gender}
+                options={genderOptions}
+                onChange={handleChange}
+                error={errors.Gender}
+                placeholder="Select Gender"
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender *
+              <div ref={currentRoleDropdownRef}>
+                <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Role <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="Gender"
-                  // required
-                  value={formData.Gender}
-                  onChange={handleChange}
-                  className= {`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent  ${errors.Gender && 'border border-red-500'}`}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Engineering">Male</option>
-                  <option value="Product">Female</option>
-                </select>
-                {errors.Gender && <p className="text-red-500 text-xs pt-1">{errors.Gender}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Role 
-                </label>
-                <input
-                  type="text"
-                  name="CurrentRole"
-                  value={formData.CurrentRole}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-black rounded-lg "
-                  placeholder="Enter current role"
-                />
+                <div className="relative">
+                  <input
+                    name="CurrentRole"
+                    type="text"
+                    id="CurrentRole"
+                    value={formData.CurrentRole}
+                    onClick={toggleCurrentRole}
+                    placeholder="Select Current Role"
+                    autoComplete="off"
+                    className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
+                    readOnly
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                    <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
+                  </div>
+                  {showDropdownCurrentRole && (
+                    <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+                      <div className="border-b">
+                        <div className="flex items-center border rounded px-2 py-1 m-2">
+                          <FaSearch className="absolute ml-1 text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Search Current Role"
+                            value={searchTermCurrentRole}
+                            onChange={(e) => setSearchTermCurrentRole(e.target.value)}
+                            className="pl-8 focus:border-black focus:outline-none w-full"
+                          />
+                        </div>
+                      </div>
+                      {filteredCurrentRoles?.length > 0 ? (
+                        filteredCurrentRoles.map((role) => (
+                          <div
+                            key={role._id}
+                            onClick={() => handleRoleSelect(role.RoleName)}
+                            className="cursor-pointer hover:bg-gray-200 p-2"
+                          >
+                            {role.RoleName}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-gray-500">No roles found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {errors.CurrentRole && <p className="text-red-500 text-xs pt-1">{errors.CurrentRole}</p>}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Higher Qualification *
-                </label>
-                <select
-                  name="HigherQualification"
-                  // required
-                  value={formData.HigherQualification}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${errors.HigherQualification && 'border border-red-500'}`}
-                >
-                  <option value="">Select Higher Qualification</option>
-                  {qualification.map((qualification) => (
-                    <option key={qualification._id} value={qualification.QualificationName}>
-                      {qualification.QualificationName}
-                    </option>
-                  ))}
-                </select>
-                {errors.HigherQualification && <p className="text-red-500 text-xs pt-1">{errors.HigherQualification}</p>}
+              <CustomDropdown
+                label="Higher Qualification"
+                name="HigherQualification"
+                value={formData.HigherQualification}
+                options={qualification}
+                onChange={handleChange}
+                error={errors.HigherQualification}
+                placeholder="Select Higher Qualification"
+                optionKey="QualificationName"
+                optionValue="QualificationName"
+              />
 
-              </div>
+              <CustomDropdown
+                label="University College"
+                name="UniversityCollege"
+                value={formData.UniversityCollege}
+                options={college}
+                onChange={handleChange}
+                error={errors.UniversityCollege}
+                placeholder="Select University College"
+                optionKey="University_CollegeName"
+                optionValue="University_CollegeName"
+              />
 
+              <CustomDropdown
+                label="Current Experience"
+                name="CurrentExperience"
+                value={formData.CurrentExperience}
+                options={experienceCurrentOptions}
+                onChange={handleChange}
+                error={errors.CurrentExperience}
+                placeholder="Select Current Experience"
+                optionKey={null}
+                optionValue={null}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  University College *
-                </label>
-                <select
-                  name="UniversityCollege"
-                  // required
-                  value={formData.UniversityCollege}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg   ${errors.UniversityCollege && 'border border-red-500'}`}
-                >
-                  <option value="">Select University College</option>
-
-                  {/* Dynamically populate dropdown with university/college names */}
-                  {college.map((university) => (
-                    <option key={university._id} value={university.University_CollegeName}>
-                      {university.University_CollegeName}
-                    </option>
-                  ))}
-                </select>
-                {errors.UniversityCollege && <p className="text-red-500 text-xs pt-1">{errors.UniversityCollege}</p>}
-
-              </div>
-
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Experience *
-                </label>
-                <select
-    name="CurrentExperience"
-    value={formData.CurrentExperience}
-    onChange={handleChange}
-    className={`w-full px-3 py-2 border border-gray-300 rounded-lg     ${errors.CurrentExperience && 'border border-red-500'}`}
-  >
-    <option value="">Select Current Experience</option>
-    {experienceCurrentOptions.map((exp) => (
-      <option key={exp} value={exp}>
-        {exp} {exp === 1 ? 'Year' : 'Years'}
-      </option>
-    ))}
-  </select>
-                {errors.CurrentExperience && <p className="text-red-500 text-xs pt-1">{errors.CurrentExperience}</p>}
-
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Relevant Experience 
-                </label>
-                <select
-    name="RelevantExperience"
-    value={formData.RelevantExperience}
-    onChange={handleChange}
-    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent  ${errors.RelevantExperience && 'border border-red-500'}`}
-  >
-    <option value="">Select Relevant Experience</option>
-    {experienceCurrentOptions.map((exp) => (
-      <option key={exp} value={exp}>
-        {exp} {exp === 1 ? 'Year' : 'Years'}
-      </option>
-    ))}
-  </select>
-                {/* {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>} */}
-
-              </div>
-
+              <CustomDropdown
+                label="Relevant Experience"
+                name="RelevantExperience"
+                value={formData.RelevantExperience}
+                options={experienceCurrentOptions}
+                onChange={handleChange}
+                error={errors.RelevantExperience}
+                placeholder="Select Relevant Experience"
+                optionKey={null}
+                optionValue={null}
+              />
             </div>
 
-              <div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center mb-2">
-                    <label htmlFor="Skills" className="text-sm font-medium text-gray-900" >
-                      Skills <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center text-sm bg-custom-blue text-white px-4 py-2  rounded w-28"
-                  >
-                    {/* <FaPlus className="text-md mr-2" /> */}
-                    <span className='text-xl'>+ </span> Add Skills
-                  </button>
+            <div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center mb-2">
+                  <label htmlFor="Skills" className="text-sm font-medium text-gray-900">
+                    Skills <span className="text-red-500">*</span>
+                  </label>
                 </div>
-                {errors.skills && (
-                  <p className="text-red-500 text-sm">{errors.skills}</p>
-                )}
-                <div>
-                  <div className="space-y-2 mb-4 mt-5">
-                    {entries.map((entry, index,) => (
-                      <div key={index} className="flex flex-wrap -mx-2 border p-3 rounded-lg items-center bg-blue-100">
-                        <div className="w-1/3 px-2">{entry.skill}</div>
-                        <div className="w-1/3 px-2">{entry.experience}</div>
-                        <div className="w-1/3 px-2">{entry.expertise}</div>
-                        <div className="w-full flex justify-end space-x-2 -mt-5">
-                          <button onClick={() => handleEdit(index)} className="text-custom-blue text-md">
-                            {/* <FaEdit /> */}
-                          </button>
-                          <button type="button" onClick={() => handleDelete(index)} className="text-red-500 text-md">
-                            {/* <FaTrash /> */}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
 
-                  {isModalOpen && (
-                    <div className="w-[100%] h-[130%] right-0 top-0  absolute bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg shadow-lg w-80 relative">
-                        <header className="flex justify-between items-center w-full border-b py-3 px-4">
-                          <h2 className="text-lg font-bold">Select Skills</h2>
-                          <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
-                            {/* <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" /> */}
-                          </button>
-                        </header>
-                        <div>
-                          {currentStep === 0 && (
-                            <div>
-                              <div className="max-h-56 overflow-y-auto">
-                                <div className="mt-3 ml-4 mb-3">
-                                  <div>
-                                    <input
-                                      type="text"
-                                      placeholder="Search skills..."
-                                      value={searchTerm}
-                                      onChange={(e) => setSearchTerm(e.target.value)}
-                                      className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
-                                    />
-                                    <div className="min-h-56">
-                                      {skills.length > 0 ? (
-                                        skills.map(skill => (
-                                          <label key={skill._id} className="block mb-1">
-                                            <input
-                                              type="radio"
-                                              value={skill.SkillName}
-                                              checked={selectedSkill === skill.SkillName}
-                                              disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
-                                              onChange={(e) => setSelectedSkill(e.target.value)}
-                                              className="mr-3"
-                                            />
-                                            {skill.SkillName}
-                                          </label>
-                                        ))
-                                      ) : (
-                                        <p className="text-gray-500">No skills available</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {currentStep === 1 && (
-                            <div>
-                              <div className="max-h-56 overflow-y-auto">
-                                <div className="mt-3 ml-4 mb-3">
-                                  {experienceOptions.map(exp => (
-                                    <label key={exp} className="block mb-1">
-                                      <input
-                                        type="radio"
-                                        name="experience"
-                                        value={exp}
-                                        checked={selectedExp === exp}
-                                        onChange={(e) => setSelectedExp(e.target.value)}
-                                        className="mr-3"
-                                      />
-                                      {exp}
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {currentStep === 2 && (
-                            <div>
-                              <div className="min-h-56 overflow-y-auto">
-                                <div className="mt-3 ml-4 mb-3">
-                                  {expertiseOptions.map(exp => (
-                                    <label key={exp} className="block mb-1">
-                                      <input
-                                        type="radio"
-                                        name="expertise"
-                                        value={exp}
-                                        checked={selectedLevel === exp}
-                                        onChange={(e) => setSelectedLevel(e.target.value)}
-                                        className="mr-3"
-                                      />
-                                      {exp}
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <footer className="flex justify-end border-t py-2 px-4">
-                          {currentStep === 0 && (
-                            <button
-                              onClick={() => {
-                                setCurrentStep(1);
-                                setSearchTerm("");
-                              }}
-                              className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              disabled={!isNextEnabled()}
-                            >
-                              Next
-                            </button>
-                          )}
-                          {currentStep === 1 && (
-                            <div className="flex justify-between gap-4">
-                              <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                Back
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setCurrentStep(2)}
-                                className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                disabled={!isNextEnabled()}
-                              >
-                                Next
-                              </button>
-                            </div>
-                          )}
-                          {currentStep === 2 && (
-                            <div className="flex justify-between gap-4">
-                              <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                Back
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleAddEntry}
-                                className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                disabled={!isNextEnabled()}
-                              >
-                                {editingIndex !== null ? 'Update' : 'Add'}
-                              </button>
-                            </div>
-                          )}
-                        </footer>
-                      </div>
-                    </div>
-                  )}
-
-                  {deleteIndex !== null && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
-                      <div className="bg-white p-5 rounded shadow-lg">
-                        <p>Are you sure you want to delete this Skill?</p>
-                        <div className="flex justify-end space-x-2 mt-4">
-                          <button
-                            onClick={confirmDelete}
-                            className="bg-red-500 text-white px-4 py-2 rounded"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={cancelDelete}
-                            className="bg-gray-300 text-black px-4 py-2 rounded"
-                          >
-                            No
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-
-
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center justify-center text-sm bg-custom-blue text-white px-4 py-2 rounded w-28"
+                >
+                  <span className='text-xl'>+ </span> Add Skills
+                </button>
               </div>
+              {errors.skills && (
+                <p className="text-red-500 text-sm">{errors.skills}</p>
+              )}
+              <div>
+                <div className="space-y-2 mb-4 mt-5">
+                  {entries.map((entry, index) => (
+                    <div key={index} className="flex flex-wrap -mx-2 border p-3 rounded-lg items-center bg-blue-100">
+                      <div className="w-1/3 px-2">{entry.skill}</div>
+                      <div className="w-1/3 px-2">{entry.experience}</div>
+                      <div className="w-1/3 px-2">{entry.expertise}</div>
+                      <div className="w-full flex justify-end space-x-2 -mt-5">
+                        <button onClick={() => handleEdit(index)} className="text-custom-blue text-md">
+                          {/* Icon placeholder */}
+                        </button>
+                        <button type="button" onClick={() => handleDelete(index)} className="text-red-500 text-md">
+                          {/* Icon placeholder */}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
+                {deleteIndex !== null && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
+                    <div className="bg-white p-5 rounded shadow-lg">
+                      <p>Are you sure you want to delete this Skill?</p>
+                      <div className="flex justify-end space-x-2 mt-4">
+                        <button
+                          onClick={confirmDelete}
+                          className="bg-red-500 text-white px-4 py-2 rounded"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={cancelDelete}
+                          className="bg-gray-300 text-black px-4 py-2 rounded"
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="flex justify-end gap-3 pt-6">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2  text-custom-blue border border-custom-blue  rounded-lg transition-colors"
+                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors"
               >
                 Cancel
               </button>
-               <button
-                // type="submit"
+              <button
                 onClick={handleSubmit}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
               >
-                {/* <FaPlus className="w-4 h-4" /> */}
                 save
               </button>
-            
-             {!isEdit && <button
-                type="button"
-                onClick={handleAddCandidate}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors flex items-center gap-2"
-              >
-                {/* <FaPlus className="w-4 h-4" /> */}
-                <span className='text-xl'>+ </span> Add Candidate
-              </button> }
+
+              {!isEdit && (
+                <button
+                  type="button"
+                  onClick={handleAddCandidate}
+                  className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <span className='text-xl'>+ </span> Add Candidate
+                </button>
+              )}
             </div>
-            
-
-
           </form>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="w-[100%] h-full right-0 top-0 absolute bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-80 relative">
+            <header className="flex justify-between items-center w-full border-b py-3 px-4">
+              <h2 className="text-lg font-bold">Select Skills</h2>
+              <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
+                {/* Icon placeholder */}
+              </button>
+            </header>
+            <div>
+              {currentStep === 0 && (
+                <div>
+                  <div className="max-h-56 overflow-y-auto">
+                    <div className="mt-3 ml-4 mb-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Search skills..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
+                        />
+                        <div className="min-h-56">
+                          {skills.length > 0 ? (
+                            skills.map(skill => (
+                              <label key={skill._id} className="block mb-1">
+                                <input
+                                  type="radio"
+                                  value={skill.SkillName}
+                                  checked={selectedSkill === skill.SkillName}
+                                  disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
+                                  onChange={(e) => setSelectedSkill(e.target.value)}
+                                  className="mr-3"
+                                />
+                                {skill.SkillName}
+                              </label>
+                            ))
+                          ) : (
+                            <p className="text-gray-500">No skills available</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {currentStep === 1 && (
+                <div>
+                  <div className="max-h-56 overflow-y-auto">
+                    <div className="mt-3 ml-4 mb-3">
+                      {experienceOptions.map(exp => (
+                        <label key={exp} className="block mb-1">
+                          <input
+                            type="radio"
+                            name="experience"
+                            value={exp}
+                            checked={selectedExp === exp}
+                            onChange={(e) => setSelectedExp(e.target.value)}
+                            className="mr-3"
+                          />
+                          {exp}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {currentStep === 2 && (
+                <div>
+                  <div className="min-h-56 overflow-y-auto">
+                    <div className="mt-3 ml-4 mb-3">
+                      {expertiseOptions.map(exp => (
+                        <label key={exp} className="block mb-1">
+                          <input
+                            type="radio"
+                            name="expertise"
+                            value={exp}
+                            checked={selectedLevel === exp}
+                            onChange={(e) => setSelectedLevel(e.target.value)}
+                            className="mr-3"
+                          />
+                          {exp}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <footer className="flex justify-end border-t py-2 px-4">
+              {currentStep === 0 && (
+                <button
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setSearchTerm("");
+                  }}
+                  className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!isNextEnabled()}
+                >
+                  Next
+                </button>
+              )}
+              {currentStep === 1 && (
+                <div className="flex justify-between gap-4">
+                  <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!isNextEnabled()}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+              {currentStep === 2 && (
+                <div className="flex justify-between gap-4">
+                  <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddEntry}
+                    className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!isNextEnabled()}
+                  >
+                    {editingIndex !== null ? 'Update' : 'Add'}
+                  </button>
+                </div>
+              )}
+            </footer>
+          </div>
+        </div>
+      )}
+
     </Modal>
   );
 };

@@ -178,6 +178,22 @@ const BasicDetails = ({
     }));
   };
 
+  const genderDropdownRef = useRef(null); 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (genderDropdownRef.current && !genderDropdownRef.current.contains(event.target)) {
+        setShowDropdownGender(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearTimeout(emailTimeoutRef.current);
+      clearTimeout(profileIdTimeoutRef.current);
+    };
+  }, []);
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
       {/* Info box */}
@@ -395,7 +411,7 @@ const BasicDetails = ({
       </div>
 
       {/* Gender */}
-      <div className="sm:col-span-3 relative">
+      <div className="sm:col-span-3 relative" ref={genderDropdownRef}>
         <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
           Gender
         </label>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MdArrowDropDown } from "react-icons/md";
 import { FaSearch } from 'react-icons/fa';
 import InfoBox from './InfoBox.jsx';
@@ -133,6 +133,29 @@ const AdditionalDetails = ({
         }));
     };
 
+    const currentRoleDropdownRef = useRef(null); // Ref for currentRole dropdown
+    const industryDropdownRef = useRef(null); // Ref for industry dropdown
+    const locationDropdownRef = useRef(null); // Ref for location dropdown
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                (currentRoleDropdownRef.current && !currentRoleDropdownRef.current.contains(event.target)) &&
+                (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) &&
+                (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target))
+            ) {
+                setShowDropdownCurrentRole(false);
+                setShowDropdownIndustry(false);
+                setShowDropdownLocation(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
 
@@ -152,7 +175,7 @@ const AdditionalDetails = ({
             <div className="sm:col-span-6 col-span-1 space-y-4">
 
                 {/* current role */}
-                <div>
+                <div ref={currentRoleDropdownRef}>
                     <label htmlFor="currentRole" className="block text-sm font-medium text-gray-700 mb-1">
                         Current Role <span className="text-red-500">*</span>
                     </label>
@@ -303,7 +326,7 @@ const AdditionalDetails = ({
             <div className="sm:col-span-6 col-span-1 space-y-4">
 
                 {/* Industry */}
-                <div>
+                <div ref={industryDropdownRef}>
                     <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
                         Industry <span className="text-red-500">*</span>
                     </label>
@@ -360,7 +383,7 @@ const AdditionalDetails = ({
                 </div>
 
                 {/* Location */}
-                <div>
+                <div ref={locationDropdownRef}>
                     <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                         Location <span className="text-red-500">*</span>
                     </label>

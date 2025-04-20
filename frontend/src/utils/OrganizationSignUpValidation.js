@@ -22,7 +22,6 @@ export const validateEmail = async (email, checkEmailExists) => {
 
 export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
-  let suggestedProfileId = '';
 
   if (!profileId) {
     errorMessage = 'Profile ID is required';
@@ -35,7 +34,6 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
       const exists = await checkProfileIdExists(profileId);
       if (exists) {
         errorMessage = 'Profile ID already taken';
-        suggestedProfileId = `${profileId}${Math.floor(Math.random() * 100)}`;
       }
     } catch (err) {
       console.error('Error checking profile ID:', err);
@@ -43,7 +41,7 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
     }
   }
 
-  return { errorMessage, suggestedProfileId };
+  return errorMessage;
 };
 
 export const validatePhone = (phone, countryCode) => {
@@ -121,22 +119,13 @@ export const validateOrganizationSignup = async (formData, setErrors, checkEmail
   const errors = {};
 
   errors.email = await validateEmail(formData.email, checkEmailExists);
-
-  const { errorMessage: profileIdError } = await validateProfileId(formData.profileId, checkProfileIdExists);
-  errors.profileId = profileIdError;
-
+  errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
-
   errors.phone = validatePhone(formData.phone, formData.countryCode);
-
   errors.jobTitle = validateJobTitle(formData.jobTitle);
-
   errors.company = validateCompany(formData.company);
-
   errors.employees = validateEmployees(formData.employees);
-
   errors.country = validateCountry(formData.country);
-
   errors.password = validatePassword(formData.password);
 
   setErrors((prev) => ({ ...prev, ...errors }));

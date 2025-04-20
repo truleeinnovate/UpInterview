@@ -521,8 +521,8 @@ app.get('/api/rolesdata/:organizationId', async (req, res) => {
 const candidateRoutes = require('./routes/candidateRoutes.js');
 app.use('/candidate', candidateRoutes);
 
-// const positionRoutes = require('./routes/positionRoutes');
-// app.use('/position', positionRoutes);
+const positionRoutes = require('./routes/positionRoutes');
+app.use('/position', positionRoutes);
 
 
 // const { Contacts } = require('./models/Contacts.js')

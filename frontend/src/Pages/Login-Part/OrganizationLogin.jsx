@@ -201,7 +201,7 @@ const Admin = () => {
                   <button
                     type="button"
                     className="bg-white text-custom-blue rounded-full px-16 py-2 border border-gray-400"
-                    onClick={() => navigate('/organization')}
+                    onClick={() => navigate('/')}
                   >
                     Cancel
                   </button>

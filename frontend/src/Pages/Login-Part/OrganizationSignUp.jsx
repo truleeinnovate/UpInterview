@@ -35,13 +35,12 @@ export const Organization = () => {
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
-  const [suggestedProfileId, setSuggestedProfileId] = useState('');
-  const countryOptions = ["India", "UK"];
+  const countryOptions = ["India", "UK", "USA", "UAE"];
   const countryCodeOptions = [
     { country: "India", code: "+91" },
     { country: "UK", code: "+44" }
   ];
-  const employeesOptions = ["5-10", "10-20", "50-100", "100-500", "500-1000"];
+  const employeesOptions = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
@@ -50,6 +49,30 @@ export const Organization = () => {
   const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
+  
+  // to click outside of dropdown
+  const employeesDropdownRef = useRef(null);
+  const countryDropdownRef = useRef(null);
+  const countryCodeDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        (employeesDropdownRef.current && !employeesDropdownRef.current.contains(event.target)) &&
+        (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) &&
+        (countryCodeDropdownRef.current && !countryCodeDropdownRef.current.contains(event.target))
+      ) {
+        setShowDropdownEmployees(false);
+        setShowDropdownCountry(false);
+        setShowDropdownCountryCode(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const checkEmailExists = useCallback(async (email) => {
     if (!email) return false;
@@ -77,11 +100,6 @@ export const Organization = () => {
     }
   }, []);
 
-  const generateProfileId = (email) => {
-    if (!email) return '';
-    return email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  };
-
   const handleEmailValidation = async (email) => {
     if (!email) {
       setErrors((prev) => ({ ...prev, email: '' }));
@@ -92,27 +110,19 @@ export const Organization = () => {
     setIsCheckingEmail(true);
     const errorMessage = await validateEmail(email, checkEmailExists);
     setErrors((prev) => ({ ...prev, email: errorMessage }));
-
-    if (!errorMessage && email && !selectedProfileId) {
-      const generatedProfileId = generateProfileId(email);
-      setSelectedProfileId(generatedProfileId);
-    }
-
     setIsCheckingEmail(false);
   };
 
   const handleProfileIdValidation = async (profileId) => {
     if (!profileId) {
       setErrors((prev) => ({ ...prev, profileId: '' }));
-      setSuggestedProfileId('');
       setIsCheckingProfileId(false);
       return;
     }
-
+  
     setIsCheckingProfileId(true);
-    const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
+    const errorMessage = await validateProfileId(profileId, checkProfileIdExists); // This returns { errorMessage, suggestedProfileId }
     setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-    setSuggestedProfileId(suggestedProfileId || '');
     setIsCheckingProfileId(false);
   };
 
@@ -123,7 +133,6 @@ export const Organization = () => {
     } else if (field === 'profileId') {
       setSelectedProfileId(value);
       setErrors((prev) => ({ ...prev, profileId: '' }));
-      setSuggestedProfileId('');
     } else if (field === 'firstName') {
       setSelectedFirstName(value);
     } else if (field === 'lastName') {
@@ -207,9 +216,9 @@ export const Organization = () => {
     setSelectedCountry(option);
     setShowDropdownCountry(false);
     setErrors((prev) => ({ ...prev, country: '' }));
-    const matchingCode = countryCodeOptions.find((item) => item.country === option)?.code || "+91";
-    setSelectedCountryCode(matchingCode);
-    setErrors((prev) => ({ ...prev, phone: validatePhone(selectedPhone, matchingCode) }));
+    // const matchingCode = countryCodeOptions.find((item) => item.country === option)?.code || "+91";
+    // setSelectedCountryCode(matchingCode);
+    // setErrors((prev) => ({ ...prev, phone: validatePhone(selectedPhone, matchingCode) }));
   };
 
   const toggleDropdownCountryCode = () => {
@@ -220,10 +229,9 @@ export const Organization = () => {
     setSelectedCountryCode(code);
     setShowDropdownCountryCode(false);
     setErrors((prev) => ({ ...prev, phone: validatePhone(selectedPhone, code) }));
-    // Sync country field with country code
-    const matchingCountry = countryCodeOptions.find((item) => item.code === code)?.country || "India";
-    setSelectedCountry(matchingCountry);
-    setErrors((prev) => ({ ...prev, country: '' }));
+    // const matchingCountry = countryCodeOptions.find((item) => item.code === code)?.country || "India";
+    // setSelectedCountry(matchingCountry);
+    // setErrors((prev) => ({ ...prev, country: '' }));
   };
 
   const organizationData = {
@@ -244,8 +252,6 @@ export const Organization = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
-
     const isValid = await validateOrganizationSignup(
       organizationData,
       setErrors,
@@ -253,16 +259,15 @@ export const Organization = () => {
       checkProfileIdExists
     );
 
-    // Client-side password match validation
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
     if (confirmPasswordError) {
       setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
-      toast.error("Please fix the errors in the form");
+      console.error("Please fix the errors in the form");
       return;
     }
 
     if (!isValid) {
-      toast.error("Please fix the errors in the form");
+      console.error("Please fix the errors in the form");
       return;
     }
 
@@ -296,7 +301,7 @@ export const Organization = () => {
         `}
             </style>
             <p className="text-xl font-medium mb-6 mt-4 text-center">Sign Up</p>
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit} noValidate>
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
                   <input
@@ -306,6 +311,8 @@ export const Organization = () => {
                     placeholder=" "
                     value={selectedFirstName}
                     onChange={(e) => handleChange('firstName', e.target.value)}
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="first_name"
@@ -319,8 +326,11 @@ export const Organization = () => {
                     type="text"
                     id="last_name"
                     className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    placeholder=" "
                     value={selectedLastName}
                     onChange={(e) => handleChange('lastName', e.target.value)}
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="last_name"
@@ -339,6 +349,8 @@ export const Organization = () => {
                   placeholder=" "
                   value={selectedJobTitle}
                   onChange={(e) => handleChange('jobTitle', e.target.value)}
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 <label
                   htmlFor="job_title"
@@ -350,13 +362,15 @@ export const Organization = () => {
               </div>
               <div className="relative">
                 <input
-                  type="email"
+                  type="text"
                   id="Email"
                   className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                   placeholder=" "
                   value={selectedEmail}
                   onChange={(e) => handleChange('email', e.target.value)}
                   onBlur={(e) => handleBlur('email', e.target.value)}
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 <label
                   htmlFor="Email"
@@ -372,7 +386,7 @@ export const Organization = () => {
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
               <div className="relative flex gap-2">
-                <div className="relative w-1/4">
+                <div className="relative w-1/4" ref={countryCodeDropdownRef}>
                   <input
                     type="text"
                     id="country_code"
@@ -381,6 +395,8 @@ export const Organization = () => {
                     value={selectedCountryCode}
                     onClick={toggleDropdownCountryCode}
                     readOnly
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="country_code"
@@ -395,14 +411,14 @@ export const Organization = () => {
                     <MdArrowDropDown className="text-lg text-gray-500 mt-[14px] mr-3 cursor-pointer" />
                   </div>
                   {showDropdownCountryCode && (
-                    <div className matchingCountry="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1">
+                    <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0">
                       {countryCodeOptions.map((option) => (
                         <div
                           key={option.code}
                           className="py-2 px-4 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleCountryCodeSelect(option.code)}
                         >
-                          {option.code} ({option.country})
+                          {option.code}
                         </div>
                       ))}
                     </div>
@@ -417,8 +433,9 @@ export const Organization = () => {
                     value={selectedPhone}
                     onChange={(e) => handleChange('phone', e.target.value)}
                     maxLength={selectedCountryCode === '+91' ? 10 : 11}
-                    pattern="[0-9]*"
                     inputMode="numeric"
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="Phone"
@@ -426,7 +443,7 @@ export const Organization = () => {
                   >
                     Phone
                   </label>
-                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  {errors.phone && <p className="text-red-500 text-xs mt-1 w-64">{errors.phone}</p>}
                 </div>
               </div>
               <div className="relative">
@@ -437,6 +454,8 @@ export const Organization = () => {
                   placeholder=" "
                   value={selectedCompany}
                   onChange={(e) => handleChange('company', e.target.value)}
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 <label
                   htmlFor="company"
@@ -446,7 +465,8 @@ export const Organization = () => {
                 </label>
                 {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
               </div>
-              <div className="relative">
+              {/* employees */}
+              <div className="relative" ref={employeesDropdownRef}>
                 <div className="relative">
                   <input
                     type="text"
@@ -456,6 +476,8 @@ export const Organization = () => {
                     value={selectedEmployees}
                     onClick={toggleDropdownEmployees}
                     readOnly
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="employees"
@@ -471,7 +493,7 @@ export const Organization = () => {
                   </div>
                 </div>
                 {showDropdownEmployees && (
-                  <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1">
+                  <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0">
                     {employeesOptions.map((option) => (
                       <div
                         key={option}
@@ -485,7 +507,7 @@ export const Organization = () => {
                 )}
                 {errors.employees && <p className="text-red-500 text-xs mt-1">{errors.employees}</p>}
               </div>
-              <div className="relative">
+              <div className="relative" ref={countryDropdownRef}>
                 <div className="relative">
                   <input
                     type="text"
@@ -495,6 +517,8 @@ export const Organization = () => {
                     value={selectedCountry}
                     onClick={toggleDropdownCountry}
                     readOnly
+                    autoComplete="off"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="country"
@@ -510,7 +534,7 @@ export const Organization = () => {
                   </div>
                 </div>
                 {showDropdownCountry && (
-                  <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1">
+                  <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0">
                     {countryOptions.map((option) => (
                       <div
                         key={option}
@@ -530,43 +554,24 @@ export const Organization = () => {
                   id="profileId"
                   className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.profileId ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                   placeholder=" "
-                  autoComplete="off"
                   value={selectedProfileId}
                   onChange={(e) => handleChange('profileId', e.target.value)}
                   onBlur={(e) => handleBlur('profileId', e.target.value)}
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 <label
                   htmlFor="profileId"
                   className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                 >
-                 Profile ID / UserName
+                  Profile ID / UserName
                 </label>
                 {isCheckingProfileId && (
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                   </div>
                 )}
-                {errors.profileId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.profileId}
-                    {suggestedProfileId && errors.profileId.includes('already taken') && (
-                      <span className="text-gray-600 ml-2">
-                        Try this:{' '}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedProfileId(suggestedProfileId);
-                            setSuggestedProfileId('');
-                            setErrors((prev) => ({ ...prev, profileId: '' }));
-                          }}
-                          className="text-blue-500 hover:underline"
-                        >
-                          {suggestedProfileId}
-                        </button>
-                      </span>
-                    )}
-                  </p>
-                )}
+                {errors.profileId && <p className="text-red-500 text-xs mt-1">{errors.profileId}</p>}
               </div>
               <div className="relative">
                 <div className="relative">
@@ -575,10 +580,11 @@ export const Organization = () => {
                     id="create_password"
                     className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
-                    autoComplete="new-password"
                     value={selectedPassword}
                     onChange={(e) => handleChange('password', e.target.value)}
                     onBlur={(e) => handleBlur('password', e.target.value)}
+                    autoComplete="new-password"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="create_password"
@@ -594,7 +600,7 @@ export const Organization = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                {errors.password && <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>}
               </div>
               <div className="relative">
                 <div className="relative">
@@ -606,7 +612,8 @@ export const Organization = () => {
                     value={selectedConfirmPassword}
                     onChange={(e) => handleChange('confirmPassword', e.target.value)}
                     onBlur={(e) => handleBlur('confirmPassword', e.target.value)}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
+                    spellCheck="false"
                   />
                   <label
                     htmlFor="confirm_password"
@@ -644,3 +651,5 @@ export const Organization = () => {
     </>
   );
 };
+
+export default Organization;
