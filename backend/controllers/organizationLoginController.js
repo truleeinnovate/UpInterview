@@ -211,6 +211,7 @@ const mangoose = require("mongoose");
 const saltRounds = 10;
 
 const registerOrganization = async (req, res) => { 
+  let savedOrganization = null;
   try {
       console.log('Starting organization registration process...');
       const {
@@ -237,7 +238,7 @@ const registerOrganization = async (req, res) => {
       }
       console.log('No existing user found for email:', email);
 
-      // Check if profileId is unique (if required)
+      // Check if profileId is植物unique
       console.log('Checking if profileId is unique:', profileId);
       const existingProfile = await Users.findOne({ profileId });
       if (existingProfile) {
@@ -270,7 +271,7 @@ const registerOrganization = async (req, res) => {
           company, employees, country, password: hashedPassword
       });
 
-      const savedOrganization = await organization.save();
+      savedOrganization = await organization.save();
       console.log('Organization saved successfully with ID:', savedOrganization._id);
 
       // Create new user
@@ -282,9 +283,10 @@ const registerOrganization = async (req, res) => {
           profileId,
           phone,
           tenantId: savedOrganization._id,
-          password: hashedPassword
+          password: hashedPassword,
+          _id: undefined // Explicitly ensure _id is not set
       });
-
+      console.log('New user object:', JSON.stringify(newUser, null, 2));
       const savedUser = await newUser.save();
       console.log('User saved successfully with ID:', savedUser._id);
 
@@ -411,9 +413,17 @@ const registerOrganization = async (req, res) => {
       console.error('Error in organization registration:', error);
       if (error.code === 11000) {
           console.log('Duplicate key error detected:', error.message);
-          return res.status(400).json({ message: 'Email or profile ID already registered' });
+          if (savedOrganization) {
+              console.log('Cleaning up organization with ID:', savedOrganization._id);
+              await Organization.deleteOne({ _id: savedOrganization._id });
+          }
+          return res.status(400).json({ message: 'Duplicate email or profile ID detected' });
       }
-      console.error('Unexpected error:', error.message);
+      console.error('Unexpected error:', error.message, error.stack);
+      if (savedOrganization) {
+          console.log('Cleaning up organization with ID:', savedOrganization._id);
+          await Organization.deleteOne({ _id: savedOrganization._id });
+      }
       res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };

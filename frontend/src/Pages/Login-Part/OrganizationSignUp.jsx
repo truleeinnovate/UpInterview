@@ -249,41 +249,58 @@ export const Organization = () => {
     contactType: 'Organization'
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log('Submitting organization signup form...');
+    if (isSubmitting) {
+        console.log('Form submission already in progress, ignoring...');
+        return;
+    }
+
+    setIsSubmitting(true);
+
     const isValid = await validateOrganizationSignup(
-      organizationData,
-      setErrors,
-      checkEmailExists,
-      checkProfileIdExists
+        organizationData,
+        setErrors,
+        checkEmailExists,
+        checkProfileIdExists
     );
 
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
     if (confirmPasswordError) {
-      setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
-      console.error("Please fix the errors in the form");
-      return;
+        setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
+        console.error('Form validation failed: Confirm password error');
+        setIsSubmitting(false);
+        return;
     }
 
     if (!isValid) {
-      console.error("Please fix the errors in the form");
-      return;
+        console.error('Form validation failed: Invalid data');
+        setIsSubmitting(false);
+        return;
     }
 
     try {
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
-      const data = response.data;
+        console.log('Sending POST request to /Organization/Signup with data:', organizationData);
+        const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
+        console.log('Response received:', response.data);
+        const data = response.data;
 
-      Cookies.set('userId', data.user._id, { expires: 7 });
-      Cookies.set('organizationId', data.organization._id, { expires: 7 });
-      toast.success("Organization created successfully!");
-      navigate('/subscription-plans');
+        Cookies.set('userId', data.user._id, { expires: 7 });
+        Cookies.set('organizationId', data.organization._id, { expires: 7 });
+        toast.success('Organization created successfully!');
+        navigate('/subscription-plans');
     } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.response?.data?.message || "Something went wrong");
+        console.error('Error in signup request:', error);
+        toast.error(error.response?.data?.message || 'Something went wrong');
+    } finally {
+        console.log('Form submission completed');
+        setIsSubmitting(false);
     }
-  };
+};
 
   return (
     <>
