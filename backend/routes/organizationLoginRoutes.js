@@ -9,6 +9,4 @@ router.post('/new-user-Creation', organizationUserCreation);
 
 router.get('/:tenantId', getUsersByTenant);
 
-
-
 module.exports = router;
