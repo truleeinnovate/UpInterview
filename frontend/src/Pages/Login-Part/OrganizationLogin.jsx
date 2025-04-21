@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -69,10 +69,12 @@ const Admin = () => {
       );
 
       if (response.data.success) {
-        const { userId, organizationId, token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
+        const { ownerId, tenantId, token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
+        console.log("organization login",response.data);
+        
 
-        if (userId) Cookies.set('userId', userId, { expires: 7 });
-        if (organizationId) Cookies.set('organizationId', organizationId, { expires: 7 });
+        if (ownerId) Cookies.set('userId', ownerId, { expires: 7 });
+        if (tenantId) Cookies.set('organizationId', tenantId, { expires: 7 });
         if (token) Cookies.set('token', token, { expires: 7 });
 
         // Check profile status

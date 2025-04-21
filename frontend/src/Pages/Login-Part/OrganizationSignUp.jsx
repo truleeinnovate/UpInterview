@@ -49,7 +49,7 @@ export const Organization = () => {
   const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
-  
+
   // to click outside of dropdown
   const employeesDropdownRef = useRef(null);
   const countryDropdownRef = useRef(null);
@@ -67,7 +67,7 @@ export const Organization = () => {
         setShowDropdownCountryCode(false);
       }
     };
-  
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -119,7 +119,7 @@ export const Organization = () => {
       setIsCheckingProfileId(false);
       return;
     }
-  
+
     setIsCheckingProfileId(true);
     const errorMessage = await validateProfileId(profileId, checkProfileIdExists); // This returns { errorMessage, suggestedProfileId }
     setErrors((prev) => ({ ...prev, profileId: errorMessage }));
@@ -256,51 +256,51 @@ export const Organization = () => {
 
     console.log('Submitting organization signup form...');
     if (isSubmitting) {
-        console.log('Form submission already in progress, ignoring...');
-        return;
+      console.log('Form submission already in progress, ignoring...');
+      return;
     }
 
     setIsSubmitting(true);
 
     const isValid = await validateOrganizationSignup(
-        organizationData,
-        setErrors,
-        checkEmailExists,
-        checkProfileIdExists
+      organizationData,
+      setErrors,
+      checkEmailExists,
+      checkProfileIdExists
     );
 
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
     if (confirmPasswordError) {
-        setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
-        console.error('Form validation failed: Confirm password error');
-        setIsSubmitting(false);
-        return;
+      setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
+      console.error('Form validation failed: Confirm password error');
+      setIsSubmitting(false);
+      return;
     }
 
     if (!isValid) {
-        console.error('Form validation failed: Invalid data');
-        setIsSubmitting(false);
-        return;
+      console.error('Form validation failed: Invalid data');
+      setIsSubmitting(false);
+      return;
     }
 
     try {
-        console.log('Sending POST request to /Organization/Signup with data:', organizationData);
-        const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
-        console.log('Response received:', response.data);
-        const data = response.data;
+      console.log('Sending POST request to /Organization/Signup with data:', organizationData);
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
+      console.log('Response received:', response.data);
+      const data = response.data;
 
-        Cookies.set('userId', data.user._id, { expires: 7 });
-        Cookies.set('organizationId', data.organization._id, { expires: 7 });
-        toast.success('Organization created successfully!');
-        navigate('/subscription-plans');
+      Cookies.set('userId', data.tenantId, { expires: 7 });
+      Cookies.set('organizationId', data.tenantId, { expires: 7 });
+      toast.success('Organization created successfully!');
+      navigate('/subscription-plans');
     } catch (error) {
-        console.error('Error in signup request:', error);
-        toast.error(error.response?.data?.message || 'Something went wrong');
+      console.error('Error in signup request:', error);
+      toast.error(error.response?.data?.message || 'Something went wrong');
     } finally {
-        console.log('Form submission completed');
-        setIsSubmitting(false);
+      console.log('Form submission completed');
+      setIsSubmitting(false);
     }
-};
+  };
 
   return (
     <>
@@ -460,7 +460,7 @@ export const Organization = () => {
                   >
                     Phone
                   </label>
-                  {errors.phone && <p className="text-red-500 text-xs mt-1 w-64">{errors.phone}</p>}
+                  {errors.phone && <p className="text-red-500 text-xs mt-1 w-44">{errors.phone}</p>}
                 </div>
               </div>
               <div className="relative">
@@ -593,9 +593,11 @@ export const Organization = () => {
               <div className="relative">
                 <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="text"
                     id="create_password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer ${!showPassword ? 'password-mask' : ''
+                      }`}
                     placeholder=" "
                     value={selectedPassword}
                     onChange={(e) => handleChange('password', e.target.value)}
@@ -605,7 +607,7 @@ export const Organization = () => {
                   />
                   <label
                     htmlFor="create_password"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-3"
                   >
                     Create Password
                   </label>
@@ -613,6 +615,7 @@ export const Organization = () => {
                     type="button"
                     className="absolute top-3 right-3 flex items-center text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -622,9 +625,11 @@ export const Organization = () => {
               <div className="relative">
                 <div className="relative">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type="text"
                     id="confirm_password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer ${!showConfirmPassword ? 'password-mask' : ''
+                      }`}
                     placeholder=" "
                     value={selectedConfirmPassword}
                     onChange={(e) => handleChange('confirmPassword', e.target.value)}
@@ -634,7 +639,7 @@ export const Organization = () => {
                   />
                   <label
                     htmlFor="confirm_password"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-3"
                   >
                     Confirm Password
                   </label>
@@ -642,6 +647,7 @@ export const Organization = () => {
                     type="button"
                     className="absolute top-3 right-3 flex items-center text-gray-500"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>

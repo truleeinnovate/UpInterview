@@ -581,7 +581,7 @@ const MultiStepForm = () => {
 
     setCompleted((prev) => {
       const updated = [...prev];
-      updated[currentStep] = true; // Mark this step as completed
+      updated[currentStep] = true;
       return updated;
     });
 

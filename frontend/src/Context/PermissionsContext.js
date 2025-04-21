@@ -13,16 +13,16 @@ export const PermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     const initialize = async () => {
-      const userId = Cookies.get("userId");
-      const organizationId = Cookies.get('organizationId');
+      const ownerId = Cookies.get("userId");
+      const tenantId = Cookies.get('organizationId');
 
        let profileResponse,sharesetting;
       try {
-        const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);
+        const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${ownerId}`);
         if (matchedUser.data && matchedUser.data.Name) {
           Cookies.set("userName", matchedUser.data.Name);
         }
-        if (matchedUser.data && matchedUser.data.organizationId) {
+        if (matchedUser.data && matchedUser.data.tenantId) {
           setOrganization(true);
           Cookies.set("organization", "true");
         } else {
@@ -44,7 +44,7 @@ export const PermissionsProvider = ({ children }) => {
           } else {
             profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/${matchedUser.data.ProfileId}`);
             const sharingResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/sharing-settings`);
-            sharesetting = sharingResponse.data.filter(profile => profile.organizationId === organizationId);
+            sharesetting = sharingResponse.data.filter(profile => profile.organizationId === tenantId);
           }
 
           const newObjectPermissions = {
