@@ -1,7 +1,7 @@
 
-import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
+// import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
 import Modal from 'react-modal';
-import { RiGraduationCapFill } from "react-icons/ri";
+// import { RiGraduationCapFill } from "react-icons/ri";
 
 Modal.setAppElement('#root');
 
@@ -46,14 +46,14 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               title="Open in Fullscreen"
             >
-              <FaExternalLinkAlt className="w-5 h-5 text-gray-500" />
+              {/* <FaExternalLinkAlt className="w-5 h-5 text-gray-500" /> */}
             </button>
           )}
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <FaTimes className="w-5 h-5 text-gray-500" />
+            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
           </button>
         </div>
       </div>
@@ -118,7 +118,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <RiGraduationCapFill className="w-5 h-5" />
+                      {/* <RiGraduationCapFill className="w-5 h-5" /> */}
                     </div>
 
                     <div>

@@ -16,6 +16,14 @@ import Tooltip from "@mui/material/Tooltip";
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateDetails';
 
+// import FaList from '../../icons/FaList.svg?react';
+// import TbLayoutGridRemove from '../../icons/TbLayoutGridRemove.svg?react';
+import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
+import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
+import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
+import { ReactComponent as LuFilter } from '../../../../icons/LuFilter.svg';
+import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
+
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import CandidateTable from './CandidateTable';
 
@@ -485,7 +493,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
 
               {/* // flex-1 order-1 sm:order-2 */}
               <div className="relative flex-1 ">
-                {/* <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" /> */}
+                <IoMdSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search candidates..."
@@ -503,7 +511,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                     className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""}`}
                     onClick={prevPage}
                   >
-                    {/* <IoIosArrowBack className="text-custom-blue" /> */}
+                    <IoIosArrowBack className="text-custom-blue" />
                   </span>
                 </Tooltip>
 
@@ -512,7 +520,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                     className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length ? " cursor-not-allowed" : ""}`}
                     onClick={nextPage}
                   >
-                    {/* <IoIosArrowForward className="text-custom-blue" /> */}
+                    <IoIosArrowForward className="text-custom-blue" />
                   </span>
                 </Tooltip>
               </div>
@@ -525,11 +533,11 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                       pointerEvents: candidateData.length === 0 ? "none" : "auto",
                     }}
                   >
-                    {/* {isFilterActive ? (
+                    {isFilterActive ? (
                       <LuFilterX className="text-custom-blue" />
                     ) : (
-                      <FiFilter className="text-custom-blue" />
-                    )} */}
+                      <LuFilter className="text-custom-blue" />
+                    )}
                   </span>
                 </Tooltip>
 

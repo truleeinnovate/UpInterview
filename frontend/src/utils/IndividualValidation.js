@@ -80,6 +80,13 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     errors.hourlyRate = !formData2.hourlyRate ? 'Hourly rate is required' : '';
     errors.noShowPolicy = !formData2.noShowPolicy ? "No-show policy selection is required" : "";
 
+    // Validate bio: optional, but if non-empty, must be >= 20 characters
+    if (formData2.bio && formData2.bio.length < 20) {
+      errors.bio = 'Bio must be at least 20 characters';
+    } else if (formData2.bio && formData2.bio.length > 500) {
+      errors.bio = 'Bio cannot exceed 500 characters';
+    }
+    
     // Validate Interview Previous Experience Years if "Yes" is selected
     if (InterviewPreviousExperience === "yes") {
       errors.previousExperienceConductingInterviewsYears = !formData2.previousExperienceConductingInterviewsYears ? 'Experience years is required' : '';

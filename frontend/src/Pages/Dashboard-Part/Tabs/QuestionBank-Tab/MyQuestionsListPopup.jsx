@@ -3,7 +3,7 @@ import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "re
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import axios from "axios";
 import Cookies from "js-cookie";
-// import { FaSearch } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
@@ -256,7 +256,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                             <div className="absolute w-full -mt-3 z-10 rounded-md bg-white shadow-md max-h-60 overflow-y-auto">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        {/* <FaSearch className="absolute ml-1 text-gray-500" /> */}
+                                        <FaSearch className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search list"

@@ -157,8 +157,13 @@ const InterviewDetails = ({
     };
 
     const handleBioChange = (e) => {
-        setInterviewDetailsData({ ...interviewDetailsData, bio: e.target.value });
-    };
+        const value = e.target.value;
+        setInterviewDetailsData({ ...interviewDetailsData, bio: value });
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          bio: "",
+        }));
+      };
 
     const handleHourlyRateChange = (e) => {
         const value = e.target.value;
@@ -201,7 +206,7 @@ const InterviewDetails = ({
         tech.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
     );
 
-    const techPopupRef = useRef(null); // Ref for technologies dropdown
+    const techPopupRef = useRef(null);
     const skillsPopupRef = useRef(null);
 
     useEffect(() => {
@@ -777,18 +782,17 @@ const InterviewDetails = ({
                     <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
                         Professional Bio
                     </label>
-
                     <div className="relative">
                         <textarea
                             id="bio"
                             rows="5"
                             value={interviewDetailsData.bio}
                             onChange={handleBioChange}
-                            className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.bio ? 'border-red-500' : 'border-gray-300'
+                                }`}
                             placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
                             maxLength={500}
                         ></textarea>
-
                         {bioLength > 0 && (
                             <p
                                 className={`absolute -bottom-6 right-0 text-xs ${bioLength > 500
@@ -802,12 +806,11 @@ const InterviewDetails = ({
                             </p>
                         )}
                     </div>
-
-                    <div className="flex justify-between mt-1.5">
+                    <div className="flex justify-between mt-2">
                         {errors.bio ? (
-                            <p className="text-sm text-red-600">{errors.bio.message}</p>
+                            <p className="text-sm text-red-600">{errors.bio}</p>
                         ) : (
-                            <p className="text-xs text-gray-500">Minimum 20 characters</p>
+                            <p className="text-xs text-gray-500">Min 20 characters</p>
                         )}
                     </div>
                 </div>

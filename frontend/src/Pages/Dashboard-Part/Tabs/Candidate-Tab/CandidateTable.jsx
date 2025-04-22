@@ -1,6 +1,7 @@
 
 // import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
 import { useState, useRef, useEffect, useCallback } from "react";
+import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 
 import { Menu } from '@headlessui/react';
 // import { MdOutlineLocalPhone } from "react-icons/md";
@@ -193,7 +194,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                           <Menu as="div" className="relative">
                             <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                              {/* <FaEllipsisV className="w-4 h-4 text-gray-500" /> */}
+                              <FiMoreHorizontal className="w-4 h-4 text-gray-500" />
                             </Menu.Button>
                             <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
                   ${index >= candidates.length - 4

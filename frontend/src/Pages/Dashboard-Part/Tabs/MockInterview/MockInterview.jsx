@@ -27,7 +27,7 @@ import { useMemo } from 'react';
 import CancelPopup from "./ScheduleCancelPopup.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import MockinterviewTable from "./MockinterviewTable.jsx";
-import { FaSearch } from 'react-icons/fa';
+// import { FaSearch } from 'react-icons/fa';
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
@@ -567,16 +567,11 @@ const MockInterview = () => {
                   <h1 className="text-lg font-semibold">Mock Interviews</h1>
 
 
-                  {objectPermissions.Create && (
                     <Button
                       onClick={() => navigate('/mockinterview-create')}
                      className="bg-custom-blue hover:bg-custom-blue/90 text-white"
                     >
-                      {/* { ( */}
-
                       Add  interview
-
-                      {/* )} */}
 
                       {/* {interviewDropdown && (
                   <div className="absolute mt-5 right-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5">
@@ -605,7 +600,6 @@ const MockInterview = () => {
                   </div>
                 )} */}
                     </Button>
-                  )}
                </motion.div>
 
                 {/* 2 */}
@@ -651,7 +645,7 @@ const MockInterview = () => {
 
                     <div className="relative flex-1">
 
-                      <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                      {/* <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" /> */}
 
 
                       <input

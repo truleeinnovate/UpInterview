@@ -19,7 +19,7 @@ const Profile1 = () => {
     setSelectedOption("organization");
 
     if (state?.from === "signup") {
-      navigate('/organization');
+      navigate('/organizationSignUp');
     } else if (state?.from === "login") {
       navigate('/organizationLogin');
     }

@@ -70,8 +70,8 @@ const Admin = () => {
 
       if (response.data.success) {
         const { ownerId, tenantId, token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
-        console.log("organization login",response.data);
-        
+        console.log("organization login", response.data);
+
 
         if (ownerId) Cookies.set('userId', ownerId, { expires: 7 });
         if (tenantId) Cookies.set('organizationId', tenantId, { expires: 7 });
@@ -128,9 +128,8 @@ const Admin = () => {
                   <input
                     type="email"
                     id="email"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${
-                      errors.email ? 'border-red-500' : 'border-gray-300'
-                    } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={email}
                     onChange={(e) => {
@@ -154,9 +153,8 @@ const Admin = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${
-                      errors.password ? 'border-red-500' : 'border-gray-300'
-                    } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={password}
                     onChange={(e) => {
@@ -211,11 +209,8 @@ const Admin = () => {
 
                 {/* Signup Link */}
                 <div className="flex justify-center mt-4">
-                  <p
-                    className="text-sm text-custom-blue cursor-pointer"
-                    onClick={() => navigate('/organization')}
-                  >
-                    If not registered | Sign Up
+                  <p className="text-sm mb-4">
+                    If not registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organizationSignUp')}>Sign Up</span>
                   </p>
                 </div>
               </form>

@@ -5,9 +5,9 @@ import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as WiTime4 } from '../../../../icons/WiTime4.svg';
 import { ReactComponent as MdCancel } from '../../../../icons/MdCancel.svg';
 import { ReactComponent as GrPowerReset } from '../../../../icons/GrPowerReset.svg';
-import {  FaEye, FaPencilAlt,  FaEllipsisV } from 'react-icons/fa';
-import { IoMdTimer } from "react-icons/io";
-import { MdOutlineCancel } from "react-icons/md";
+// import {  FaEye, FaPencilAlt,  FaEllipsisV } from 'react-icons/fa';
+// import { IoMdTimer } from "react-icons/io";
+// import { MdOutlineCancel } from "react-icons/md";
 import { useLocation, useNavigate } from 'react-router-dom';
 const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterviewDataView,onRescheduleClick,onCancel}) => {
 
@@ -58,26 +58,6 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                           <div className="shadow12"></div>
                                           <div className="shadow12"></div>
                                           <div className="shadow12"></div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ) : mockinterviewData.length === 0 ? (
-                                    <tr>
-                                      <td colSpan="7" className="py-10 text-center">
-                                        <div className="flex flex-col items-center justify-center p-5">
-                                          <p className="text-9xl rotate-180 text-blue-500">
-                                            <CgInfo />
-                                          </p>
-                                          <p className="text-center text-lg font-normal">
-                                            You don't have mockinterview yet. Create new
-                                            mockinterview.
-                                          </p>
-                                          <p
-                                            // onClick={toggleSidebar}
-                                            className="mt-3 cursor-pointer text-white bg-blue-400 px-4 py-1 rounded-md"
-                                          >
-                                            Add Schedule
-                                          </p>
                                         </div>
                                       </td>
                                     </tr>
@@ -180,7 +160,7 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                                       <td className="px-4 py-2 text-sm text-gray-500   whitespace-nowrap">
                                                         <Menu as="div" className="relative ">
                                                           <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                                                            <FaEllipsisV className="w-4 h-4 text-gray-500" />
+                                                            {/* <FaEllipsisV className="w-4 h-4 text-gray-500" /> */}
                                                           </Menu.Button>
                                                           <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
                                                           ${index >= mockinterviews.length - 4 
@@ -199,7 +179,7 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                                                     active ? 'bg-gray-50' : ''
                                                                   } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                 >
-                                                                  <FaEye className="w-4 h-4 text-blue-600" />
+                                                                  {/* <FaEye className="w-4 h-4 text-blue-600" /> */}
                                                                   View Details
                                                                 </button>
                                                               )}
@@ -215,7 +195,7 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                                                     active ? 'bg-gray-50' : ''
                                                                   } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                 >
-                                                                  <FaPencilAlt className="w-4 h-4 text-green-600" />
+                                                                  {/* <FaPencilAlt className="w-4 h-4 text-green-600" /> */}
                                                                   Edit
                                                                 </button>
                                                               )}
@@ -229,7 +209,7 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                                                     active ? 'bg-gray-50' : ''
                                                                   } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                 >
-                                                                  <IoMdTimer className="w-4 h-4 text-custom-blue" />
+                                                                  {/* <IoMdTimer className="w-4 h-4 text-custom-blue" /> */}
                                                                   Reschedule
                                                                 </button>
                                                               )}
@@ -243,7 +223,7 @@ const MockinterviewTable = ({mockinterviews,mockinterviewData,loading,mockinterv
                                                                     active ? 'bg-gray-50' : ''
                                                                   } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                 >
-                                                                  <MdOutlineCancel className="w-4 h-4 text-red-500" />
+                                                                  {/* <MdOutlineCancel className="w-4 h-4 text-red-500" /> */}
                                                                   Cancel
                                                                 </button>
                                                               )}

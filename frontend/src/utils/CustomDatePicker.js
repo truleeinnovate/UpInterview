@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react';
 import DatePicker from "react-datepicker";
 import { getYear, format } from "date-fns";
@@ -33,9 +34,8 @@ const CustomDatePicker = ({ selectedDate, onChange, errors }) => {
   return (
     <div className="relative w-full">
       <DatePicker
-       selected={startDate instanceof Date && !isNaN(startDate) ? startDate : null}
+        selected={startDate instanceof Date && !isNaN(startDate) ? startDate : null}
         onChange={(date) => handleDateChange(date)}
-        dateFormat="MMMM d, yyyy"
         maxDate={new Date()}
         calendarClassName="bg-white shadow-lg border border-gray-200 rounded-lg calendar-container"
         dayClassName={(date) =>
@@ -100,8 +100,8 @@ const CustomDatePicker = ({ selectedDate, onChange, errors }) => {
           <input
             type="text"
             readOnly
+            placeholder='DD-MM-YYYY'
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Select date of birth"
           />
         }
          popperClassName="date-picker-popper custom-width-popper"
@@ -128,6 +128,7 @@ const CustomDatePicker = ({ selectedDate, onChange, errors }) => {
         onChangeRaw={(e) => e.preventDefault()}
         preventOpenOnFocus
         showPopperArrow={false}
+        placeholderText="DD-MM-YYYY"
       />
       {errors && (
         <p className="text-red-500 text-sm mt-1">{errors}</p>

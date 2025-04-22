@@ -2,7 +2,7 @@
 // import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
 import Modal from 'react-modal';
 // import { RiGraduationCapFill } from "react-icons/ri";
-
+import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
 Modal.setAppElement('#root');
 
 const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
@@ -60,14 +60,14 @@ const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               title="Open in Fullscreen"
             >
-              {/* <FaExternalLinkAlt className="w-5 h-5 text-gray-500" /> */}
+              <ExternalLink className="w-5 h-5 text-gray-500" />
             </button>
           )}
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
       </div>
@@ -129,7 +129,7 @@ const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      {/* <FaEnvelope className="w-5 h-5 text-gray-500" /> */}
+                      <Mail className="w-5 h-5 text-gray-500" />
                     </div>
                     {/* {isEditing ? (
                       <input
@@ -144,7 +144,7 @@ const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      {/* <FaPhone className="w-5 h-5 text-gray-500" /> */}
+                      <Phone className="w-5 h-5 text-gray-500" />
                     </div>
                     {/* {isEditing ? (
                       <input
@@ -180,7 +180,7 @@ const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      {/* <RiGraduationCapFill className="w-5 h-5" /> */}
+                      <GraduationCap className="w-5 h-5" />
                     </div>
 
                     <div>
@@ -198,7 +198,7 @@ const CandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
-                        {/* <FaUniversity  className="w-5 h-5" /> */}
+                        <School className="w-5 h-5" />
                         </div>
                         <div>
                       <p className="text-sm text-gray-500">University</p>

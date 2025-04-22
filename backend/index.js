@@ -632,3 +632,34 @@ app.put('/users/:id', async (req, res) => {
 // app.use('/interviewrequest', outsourceInterviewRequestRoutes);
 // const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
 // app.use('/candidateposition', candidatePositionRoutes);
+
+// mock interview
+const mockInterviewRoutes = require('./routes/mockinterviewRoutes.js');
+app.use('/', mockInterviewRoutes);
+
+// this codes need to change in to routers and controllers,this will use in login pages and user creation page
+app.get('/check-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const user = await Users.findOne({  email });
+    res.json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: "Error checking email", error: error.message });
+  }
+});
+
+app.get('/check-username', async (req, res) => {
+  try {
+    const { profileId } = req.query;
+    if (!profileId) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+    const user = await Users.findOne({ profileId });
+    res.json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: "Error checking username", error: error.message });
+  }
+});

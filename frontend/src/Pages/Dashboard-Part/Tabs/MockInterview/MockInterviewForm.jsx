@@ -6,9 +6,8 @@ import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 // import PopupComponent from "../Interviews/OutsourceOption";
-import Sidebar from "../Interviews/OutsourceOption.jsx";
 import Cookies from "js-cookie";
-import { AiOutlineClose } from "react-icons/ai";
+// import { AiOutlineClose } from "react-icons/ai";
 // import Candidate2MiniTab from "./Candidate2MiniTab.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
@@ -17,7 +16,7 @@ import { useCustomContext } from "../../../../Context/Contextfetch.js";
 
 import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
-import OutsourceOption from "../Interviews/OutsourceOption.jsx";
+// import OutsourceOption from "../Interviews/OutsourceOption.jsx";
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -1302,7 +1301,7 @@ const handleRoleSelect = (role) => {
                                 onClick={handleRemoveFile}
                                 className="text-gray-500 text-sm ml-5"
                               >
-                                <AiOutlineClose />
+                                {/* <AiOutlineClose /> */}
                               </button>
                             )}
                           </div>
@@ -1780,7 +1779,7 @@ const handleRoleSelect = (role) => {
               </div>
             )
           }
-          {
+          {/* {
             sidebarOpen && (
               <>
                 <OutsourceOption
@@ -1791,7 +1790,7 @@ const handleRoleSelect = (role) => {
                 />
               </>
             )
-          }
+          } */}
 
 
 

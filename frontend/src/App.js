@@ -25,12 +25,16 @@ import PositionForm from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form
 import PositionSlideDetails from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx";
 import RoundFormPosition from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx";
 
+import MockInterview from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterview.jsx';
+import MockInterviewDetails from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx';
+import MockSchedulelater from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm.jsx';
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
-  const shouldRenderLogo = ['/organization', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
+  const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
   return (
     <React.Fragment> 
@@ -46,7 +50,7 @@ const App = () => {
           <Route path="/profile4" element={<Login4 />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/organization" element={<Organization />} />
+          <Route path="/organizationSignUp" element={<Organization />} />
           <Route path="/organizationLogin" element={<OrganizationLogin />} />
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
@@ -63,6 +67,11 @@ const App = () => {
           <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
           <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
           
+          <Route path="/mockinterview" element={<MockInterview />} />
+          <Route path="/mockinterview-create" element={<MockSchedulelater />} />
+          <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
+          <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+
         </Routes>
       </div>
     </React.Fragment>

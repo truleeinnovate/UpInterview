@@ -488,7 +488,7 @@ const BasicDetails = ({
               onChange={(e) => handleInputChange(e, 'phone')}
               autoComplete="off"
               maxLength="10"
-              placeholder="Enter 10-digit number"
+              placeholder="Enter phone number"
               className={`block w-full pl-10 px-1 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
