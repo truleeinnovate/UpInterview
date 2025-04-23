@@ -626,15 +626,42 @@ app.get('/check-email', async (req, res) => {
   }
 });
 
-app.get('/check-username', async (req, res) => {
+// app.get('/check-profileId', async (req, res) => {
+//   try {
+//     const { profileId } = req.query;
+//     if (!profileId) {
+//       return res.status(400).json({ message: "Username is required" });
+//     }
+//     const user = await Users.findOne({ profileId });
+//     res.json({ exists: !!user });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error checking username", error: error.message });
+//   }
+// });
+
+router.get('/check-profileId', async (req, res) => {
+  const { profileId } = req.query;
+  
   try {
-    const { profileId } = req.query;
-    if (!profileId) {
-      return res.status(400).json({ message: "Username is required" });
-    }
     const user = await Users.findOne({ profileId });
     res.json({ exists: !!user });
   } catch (error) {
-    res.status(500).json({ message: "Error checking username", error: error.message });
+    res.status(500).json({ error: 'Error checking profileId' });
   }
 });
+
+// router.get('/suggest-profileIds', async (req, res) => {
+//   const { prefix } = req.query;
+//   const MAX_SUGGESTIONS = 5;
+  
+//   try {
+//     const users = await User.find({
+//       profileId: new RegExp(`^${prefix}`)
+//     }).limit(MAX_SUGGESTIONS);
+    
+//     const suggestions = users.map(u => u.profileId);
+//     res.json({ suggestions });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Error fetching suggestions' });
+//   }
+// });

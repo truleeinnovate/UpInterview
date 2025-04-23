@@ -23,7 +23,7 @@ const BasicDetails = ({
 }) => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
-  const [suggestedProfileId, setSuggestedProfileId] = useState('');
+  const [suggestedProfileIds, setSuggestedProfileIds] = useState('');
   const emailInputRef = useRef(null);
   const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
@@ -32,7 +32,10 @@ const BasicDetails = ({
   // Generate profileId from email
   const generateProfileId = (email) => {
     if (!email) return '';
-    return email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    // Remove all special characters except dots, then convert to lowercase
+    return email.split('@')[0]
+      .replace(/[^a-zA-Z0-9.]/g, '')
+      .toLowerCase();
   };
 
   // Real-time email validation
@@ -46,15 +49,15 @@ const BasicDetails = ({
 
       if (!errorMessage && email) {
         const generatedProfileId = generateProfileId(email);
-        if (
-          !basicDetailsData.profileId ||
-          basicDetailsData.profileId === generatedProfileId
-        ) {
+        // Only update profileId if it's empty or matches the generated pattern
+        if (!basicDetailsData.profileId ||
+          basicDetailsData.profileId === generatedProfileId) {
           setBasicDetailsData((prev) => ({
             ...prev,
             profileId: generatedProfileId,
           }));
-          setErrors((prev) => ({ ...prev, profileId: '' }));
+          // Immediately validate the generated profileId
+          handleProfileIdValidation(generatedProfileId);
         }
       }
 
@@ -70,7 +73,7 @@ const BasicDetails = ({
     profileIdTimeoutRef.current = setTimeout(async () => {
       const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
       setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-      setSuggestedProfileId(suggestedProfileId || '');
+      setSuggestedProfileIds(suggestedProfileId || '');
       setIsCheckingProfileId(false);
     }, 500);
   };
@@ -90,7 +93,7 @@ const BasicDetails = ({
     }));
 
     if (name === 'profileId') {
-      setSuggestedProfileId('');
+      setSuggestedProfileIds('');
       handleProfileIdValidation(value);
     } else if (name === 'email') {
       handleEmailValidation(value);
@@ -178,7 +181,7 @@ const BasicDetails = ({
     }));
   };
 
-  const genderDropdownRef = useRef(null); 
+  const genderDropdownRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (genderDropdownRef.current && !genderDropdownRef.current.contains(event.target)) {
@@ -296,7 +299,7 @@ const BasicDetails = ({
       {/* First Name */}
       <div className="sm:col-span-3">
         <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-          First Name <span className="text-red-500">*</span>
+          First Name
         </label>
         <input
           type="text"
@@ -309,7 +312,6 @@ const BasicDetails = ({
             }`}
           autoComplete="given-name"
         />
-        {errors.firstName && <p className="text-red-500 text-sm sm:text-xs">{errors.firstName}</p>}
       </div>
 
       {/* Last Name */}
@@ -371,9 +373,14 @@ const BasicDetails = ({
             name="profileId"
             id="profileId"
             value={basicDetailsData.profileId}
-            onChange={handleChange}
+            onChange={(e) => {
+              // Only allow letters, numbers and dots
+              const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, '');
+              setBasicDetailsData(prev => ({ ...prev, profileId: value }));
+              handleProfileIdValidation(value);
+            }}
             onBlur={handleBlur}
-            placeholder="profileId"
+            placeholder="profile.id"
             className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.profileId ? 'border-red-500' : 'border-gray-300'
               }`}
             autoComplete="profileId"
@@ -387,24 +394,27 @@ const BasicDetails = ({
         {errors.profileId && (
           <p className="text-red-500 text-sm mt-1">
             {errors.profileId}
-            {suggestedProfileId && errors.profileId.includes('already taken') && (
-              <span className="text-gray-600 ml-2">
-                Try this:{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBasicDetailsData((prev) => ({
-                      ...prev,
-                      profileId: suggestedProfileId,
-                    }));
-                    setSuggestedProfileId('');
-                    setErrors((prev) => ({ ...prev, profileId: '' }));
-                  }}
-                  className="text-blue-500 hover:underline"
-                >
-                  {suggestedProfileId}
-                </button>
-              </span>
+            {suggestedProfileIds.length > 0 && (
+              <div className="text-gray-600 mt-1">
+                Try one of these:
+                {suggestedProfileIds.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => {
+                      setBasicDetailsData((prev) => ({
+                        ...prev,
+                        profileId: suggestion,
+                      }));
+                      setSuggestedProfileIds([]);
+                      setErrors((prev) => ({ ...prev, profileId: '' }));
+                    }}
+                    className="block text-blue-500 hover:underline"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             )}
           </p>
         )}

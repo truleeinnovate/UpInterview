@@ -26,13 +26,19 @@ const mongoose = require('mongoose');
 const UsersSchema = new mongoose.Schema({
     lastName: { type: String },
     firstName: { type: String },
-    email: { type: String},
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
     password: { type: String },
     isFreelancer: String,
     isAddedTeam: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
     roleId: { type: String },
-    profileId: { type: String},
+    profileId: { type: String, unique: true, index: true },
     createdBy: { type: String },
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },

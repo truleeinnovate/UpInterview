@@ -22,20 +22,25 @@ export const validateEmail = async (email, checkEmailExists) => {
 
 export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
-  let suggestedProfileId = '';
+  let suggestedProfileIds = [];
 
   if (!profileId) {
     errorMessage = 'Profile ID is required';
   } else if (profileId.length < 4) {
     errorMessage = 'Profile ID must be at least 4 characters';
-  } else if (!/^[a-zA-Z0-9_]+$/.test(profileId)) {
-    errorMessage = 'Only letters, numbers, and underscores allowed';
+  } else if (!/^[a-zA-Z0-9.]+$/.test(profileId)) {
+    errorMessage = 'Only letters, numbers, and dots allowed';
   } else if (checkProfileIdExists) {
     try {
       const exists = await checkProfileIdExists(profileId);
       if (exists) {
         errorMessage = 'Profile ID already taken';
-        suggestedProfileId = `${profileId}${Math.floor(Math.random() * 100)}`;
+        // Generate 3 random suggestions
+        suggestedProfileIds = [
+          `${profileId}${Math.floor(Math.random() * 100)}`,
+          `${profileId}.${Math.floor(Math.random() * 10)}`,
+          `${profileId.split('.')[0]}${Math.floor(Math.random() * 100)}`
+        ];
       }
     } catch (err) {
       console.error('Error checking Profile ID:', err);
@@ -43,7 +48,7 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
     }
   }
 
-  return { errorMessage, suggestedProfileId };
+  return { errorMessage, suggestedProfileIds };
 };
 
 export const validateSteps = (step, params, setErrors, checkProfileIdExists, checkEmailExists) => {
@@ -52,7 +57,6 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
 
   if (step === 0) {
     const { formData } = params;
-    errors.firstName = !formData?.firstName ? 'First Name is required' : '';
     errors.lastName = !formData?.lastName ? 'Last Name is required' : '';
     errors.email = !formData?.email ? 'Email is required' : '';
     errors.profileId = !formData?.profileId ? 'Profile ID is required' : '';
