@@ -17,7 +17,7 @@ const corsOptions = {
     'https://www.app.upinterview.io',
     'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net',
     'http://localhost:3000',
-    'http://localhost:5000'
+    'http://localhost:5000',
   ],
   credentials: true,
   optionsSuccessStatus: 200,
