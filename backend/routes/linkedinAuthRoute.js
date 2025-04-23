@@ -160,7 +160,6 @@ router.post('/check-user', async (req, res) => {
       requestPath: req.path,
       requestBody: req.body
     });
-    
     const { code, redirectUri } = req.body;
 
     if (!code) {
@@ -173,26 +172,52 @@ router.post('/check-user', async (req, res) => {
       return res.status(400).json({ error: 'No redirectUri provided' });
     }
 
-    // Exchange code for token
-    console.log('Backend: 2. Exchanging code for token');
-    const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+    console.log('Backend: 2. Exchanging code for token', {
+      source: 'LinkedIn API',
+      requestMethod: 'POST',
       params: {
         grant_type: 'authorization_code',
-        code,
+        code: code.substring(0, 10) + '...', // Log partial code for security
         redirect_uri: config.REACT_APP_REDIRECT_URI,
-        client_id: config.REACT_APP_CLIENT_ID,
-        client_secret: config.REACT_APP_CLIENT_SECRET
-      },
-      timeout: 10000,
-      headers: {
-        'Accept': 'application/json'
+        client_id: config.REACT_APP_CLIENT_ID
       }
     });
 
+    let tokenResponse;
+    try {
+      tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+        params: {
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: config.REACT_APP_REDIRECT_URI,
+          client_id: config.REACT_APP_CLIENT_ID,
+          client_secret: config.REACT_APP_CLIENT_SECRET
+        },
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+    } catch (error) {
+      console.error('Token exchange error:', {
+        source: 'LinkedIn API',
+        error: error.response?.data || error.message,
+        status: error.response?.status
+      });
+      return res.status(500).json({ 
+        error: 'Failed to exchange LinkedIn code for token',
+        details: error.response?.data || error.message
+      });
+    }
+
     const accessToken = tokenResponse.data.access_token;
 
-    // Get user info
-    console.log('Backend: 3. Getting user info from LinkedIn');
+    console.log('Backend: 3. Getting user info from LinkedIn', {
+      source: 'LinkedIn API',
+      requestMethod: 'GET',
+      endpoint: 'https://api.linkedin.com/v2/userinfo'
+    });
+
     const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -201,41 +226,67 @@ router.post('/check-user', async (req, res) => {
       timeout: 10000
     });
 
-    // Prepare user info
+    console.log('Backend: 4. Processing user info', {
+      source: 'Backend Processing',
+      userInfo: {
+        firstName: userInfoResponse.data.given_name,
+        lastName: userInfoResponse.data.family_name,
+        email: userInfoResponse.data.email
+      }
+    });
+
     const userInfo = {
       firstName: userInfoResponse.data.given_name,
       lastName: userInfoResponse.data.family_name,
-      email: userInfoResponse.data.email.toLowerCase(), // Normalize email
+      email: userInfoResponse.data.email,
       pictureUrl: userInfoResponse.data.picture || null,
       profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`
     };
 
-    console.log('Backend: 4. Checking database for existing user', {
-      email: userInfo.email
+    console.log('Backend: 5. Checking database for existing user', {
+      source: 'MongoDB Database',
+      query: { Email: userInfo.email }
     });
 
-    // FIXED QUERY - using lowercase 'email'
+    // const existingUser = await Users.findOne({ Email: userInfo.email });
+    
     const existingUser = await Users.findOne({ 
-      email: userInfo.email 
+      email: userInfo.email.toLowerCase() // Use lowercase 'email' and normalize input
     });
 
-    console.log('Backend: 5. Database response', {
-      exists: !!existingUser,
+    console.log('Backend: 5.1 Database response', {
+      source: 'MongoDB Database',
+      found: Boolean(existingUser),
       userId: existingUser?._id
     });
 
-    res.json({
-      existingUser: !!existingUser,
-      userInfo
+    console.log('Backend: 6. Sending response with user info', {
+      source: 'Backend Response',
+      data: {
+        existingUser: Boolean(existingUser),
+        userInfo: {
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email
+        }
+      }
     });
 
-  } catch (error) {
-    console.error('Error in check-user:', {
-      message: error.message,
-      stack: error.stack,
-      response: error.response?.data
+    res.json({
+      existingUser: Boolean(existingUser),
+      userInfo
     });
-    res.status(500).json({ 
+  } catch (error) {
+    console.error('Backend Error:', {
+      source: 'Error Handling',
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      stack: error.stack
+    });
+
+    const statusCode = error.response?.status || 500;
+    res.status(statusCode).json({ 
       error: 'Failed to process LinkedIn data',
       details: error.response?.data || error.message
     });
