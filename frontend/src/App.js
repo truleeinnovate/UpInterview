@@ -53,7 +53,7 @@ const App = () => {
       {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
       {shouldRenderLogo && <Logo />}
-      <div className={!shouldRenderNavbar ? 'mt-16' : 'mt-16'}>
+      <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
         <Routes>
           <Route path="/" element={<Login1 />} />
           <Route path="/profile1" element={<Login2 />} />

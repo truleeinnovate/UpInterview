@@ -15,7 +15,7 @@ const Login_1 = () => {
 	return (
 		<React.Fragment>
 			<div className='container mx-auto'>
-				<div className='flex float-end mt-6'>
+				<div className='flex float-end'>
 					<div className='border rounded text-white bg-blue-300 mr-5 p-2 w-32 text-center cursor-pointer' onClick={Login}>
 						Login
 					</div>

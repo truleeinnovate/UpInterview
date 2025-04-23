@@ -3,9 +3,7 @@ import axios from "axios";
 import { fetchFilterData } from "../utils/dataUtils.js";
 import { usePermissions } from "./PermissionsContext.js";
 import Cookies from "js-cookie";
-import { fetchMasterData } from '../utils/fetchMasterData.js';
 import { config } from '../config.js'
-
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {

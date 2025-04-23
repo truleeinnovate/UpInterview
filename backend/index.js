@@ -639,7 +639,7 @@ app.get('/check-email', async (req, res) => {
 //   }
 // });
 
-router.get('/check-profileId', async (req, res) => {
+app.get('/check-profileId', async (req, res) => {
   const { profileId } = req.query;
   
   try {

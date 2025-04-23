@@ -1,16 +1,126 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable react/prop-types */
+import { useEffect, useState, useRef } from 'react';
 import AssessmentDetails from './AssessmentType';
 import TechnicalType from './TechnicalType';
 import Cookies from 'js-cookie';
 import { format } from 'date-fns';
 import { validateForm, validateRoundPopup } from "../../../../utils/PositionValidation.js";
-import { Search } from "lucide-react";
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
-// import { FaPlus, FaTrash } from 'react-icons/fa';
+import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
+import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
+// Reusable CustomDropdown Component
+const CustomDropdown = ({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+  error,
+  placeholder,
+  optionKey,
+  optionValue,
+  disableSearch = false,
+  hideLabel = false,
+  disabledError = false,
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleSelect = (option) => {
+    const selectedValue = optionValue ? option[optionValue] : option;
+    onChange({ target: { name, value: selectedValue } });
+    setShowDropdown(false);
+    setSearchTerm('');
+  };
+
+  const filteredOptions = options?.filter(option => {
+    const displayValue = optionKey ? option[optionKey] : option;
+    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div ref={dropdownRef}>
+      {!hideLabel && (
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+          {label} {disabledError && <span className="text-red-500">*</span>}
+        </label>
+      )}
+      <div className="relative">
+        <input
+          name={name}
+          type="text"
+          id={name}
+          value={value}
+          onClick={toggleDropdown}
+          placeholder={placeholder}
+          autoComplete="off"
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          readOnly
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+          <ChevronDown className="text-lg" onClick={toggleDropdown} />
+        </div>
+        {showDropdown && (
+          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+            {!disableSearch && (
+              <div className="border-b">
+                <div className="flex items-center border rounded px-2 py-1 m-2">
+                  <Search className="absolute ml-1 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder={`Search ${label}`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 focus:border-black focus:outline-none w-full"
+                  />
+                </div>
+              </div>
+            )}
+            {filteredOptions?.length > 0 ? (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={option._id || index}
+                  onClick={() => handleSelect(option)}
+                  className="cursor-pointer hover:bg-gray-200 p-2"
+                >
+                  {optionKey ? option[optionKey] : option}
+                </div>
+              ))
+            ) : (
+              <div className="p-2 text-gray-500">No options found</div>
+            )}
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+    </div>
+  );
+};
+
+
 
 const RoundModal = ({ isOpen, onClose, onNext, currentRoundNumber }) => {
   const [formData, setFormData] = useState({
@@ -142,6 +252,7 @@ const PositionForm = () => {
   // position details states
   const {
     companies,
+    locations,
     templates,
     skills,
     positions
@@ -502,8 +613,8 @@ const [isEdit,setIsEdit] = useState(false);
   const confirmDelete = () => {
     if (deleteIndex !== null) {
       const updatedEntries = entries.filter((_, index) => index !== deleteIndex);
-      setEntries(updatedEntries); // ✅ Remove the deleted skill from state
-      setDeleteIndex(null); // ✅ Reset delete index after deletion
+      setEntries(updatedEntries); // 
+      setDeleteIndex(null); // 
     }
   };
   
@@ -828,39 +939,25 @@ const [isEdit,setIsEdit] = useState(false);
 
                       {/* Company Name */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Company Name <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={formData.companyName}
-                            readOnly
-                            onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                            placeholder="Select a company"
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.companyname ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                              }`}
-                          />
-                          {errors.companyname && <p className="text-red-500">{errors.companyname}</p>}
-                          {showDropdownCompany && (
-                            <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {companies.map((company) => (
-                                <div
-                                  key={company._id}
-                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleCompanySelect(company)}
-                                >
-                                  {company.CompanyName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                      <CustomDropdown
+                        label="Company Name"
+                        name="companyName"
+                        value={formData.companyName}
+                        options={companies}
+                        onChange={(e) => {
+                          setFormData({ ...formData, companyName: e.target.value });
+                        }}
+                        error={errors.companyname}
+                        disabledError={true}
+                        placeholder="Select a company"
+                        optionKey="companyName"
+                        optionValue="companyName"
+                      />
                       </div>
                     </div>
 
                     {/* Experience */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Experience <span className="text-red-500">*</span>
@@ -868,8 +965,12 @@ const [isEdit,setIsEdit] = useState(false);
                         <div className="grid grid-cols-2 gap-4">
                           {/* Min Experience */}
                           <div>
+                          <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Min</label>
-                            <select
+                            <input
+                              type="number"
+                              min="1"
+                              max="15"
                               value={formData.minexperience ?? ""}
                               onChange={(e) => {
                                 const minExp = e.target.value ? parseInt(e.target.value) : null;
@@ -881,28 +982,27 @@ const [isEdit,setIsEdit] = useState(false);
                                   maxexperience: null, // Reset max when min changes
                                 });
 
-                                // Remove error only if a valid option is selected
-                                if (minExp) {
-                                  setErrors((prevErrors) => ({ ...prevErrors, minexperience: "" }));
+                                // Clear error if valid
+                                if (minExp !== null) {
+                                  setErrors((prev) => ({ ...prev, minexperience: "" }));
                                 }
                               }}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                                }`}
-                            >
-                              <option value="">Select min exp</option>
-                              {[...Array(10)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>
-                                  {i + 1}
-                                </option>
-                              ))}
-                            </select>
-                            {errors.minexperience && <p className="text-red-500">{errors.minexperience}</p>}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                              placeholder=""
+                            />
+                          
+                          </div>
+                          {errors.minexperience && <p className="text-red-500">{errors.minexperience}</p>}
                           </div>
 
                           {/* Max Experience */}
                           <div>
+                          <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Max</label>
-                            <select
+                            <input
+                              type="number"
+                              min="1"
+                              max="15"
                               value={formData.maxexperience ?? ""}
                               onChange={(e) => {
                                 const maxExp = e.target.value ? parseInt(e.target.value) : null;
@@ -910,73 +1010,60 @@ const [isEdit,setIsEdit] = useState(false);
                                 // Update state
                                 setFormData({ ...formData, maxexperience: maxExp });
 
-                                // Remove error only if a valid option is selected
-                                if (maxExp) {
-                                  setErrors((prevErrors) => ({ ...prevErrors, maxexperience: "" }));
+                                // Clear error if valid
+                                if (maxExp !== null) {
+                                  setErrors((prev) => ({ ...prev, maxexperience: "" }));
                                 }
                               }}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                                }`}
-                              disabled={!formData.minexperience} // Disable until Min is selected
-                            >
-                              <option value="">Select max exp</option>
-                              {[...Array(10)]
-                                .map((_, i) => i + 1)
-                                .filter((num) => num > formData.minexperience)
-                                .map((num) => (
-                                  <option key={num} value={num}>
-                                    {num}
-                                  </option>
-                                ))}
-                            </select>
-                            {errors.maxexperience && <p className="text-red-500">{errors.maxexperience}</p>}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                              placeholder=""
+                            />
+                            
+                          </div>
+                          {errors.maxexperience && <p className="text-red-500 ">{errors.maxexperience}</p>}
                           </div>
                         </div>
                       </div>
 
 
                       {/* max and min salary  */}
-                      <div>
+                      <div >
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Salary
                            {/* <span className="text-red-500">*</span> */}
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                           {/* Min Experience */}
-                          <div>
+                          <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Min</label>
-                            <input
-                            type="number"
-                            value={formData.minSalary}
-                            onChange={(e) => {
-                              setFormData({ ...formData, minSalary: e.target.value });
-                            }}
-                            // readOnly
-                            // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                            placeholder="Select a min Salary"
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none"
-                          />
-                            {/* {errors.minexperience && <p className="text-red-500">{errors.minexperience}</p>} */}
+                            <div className="relative w-full">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                              <input
+                                type="number"
+                                min={1}
+                                value={formData.minSalary ?? ""}
+                                onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                                className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                              />
+                            </div>
                           </div>
 
                           {/* Max Experience */}
-                          <div>
+                          <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Max</label>
-                            <input
-                            type="number"
-                            value={formData.maxSalary}
-                            onChange={(e) => {
-                              setFormData({ ...formData, maxSalary: e.target.value });
-                            }}
-                            // readOnly
-                            // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                            placeholder="Select a max Salary"
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none"
-                          />
-                            {/* {errors.maxexperience && <p className="text-red-500">{errors.maxexperience}</p>} */}
+                            <div className="relative w-full">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                              <input
+                                type="number"
+                                min={1}
+                                value={formData.maxSalary ?? ""}
+                                onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
+                                className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </div>
                     </div>
 
                     
@@ -984,14 +1071,15 @@ const [isEdit,setIsEdit] = useState(false);
 
                     {/* <div> */}
                        
-                        <div className="grid grid-cols-1 w-1/2 sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                           <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                           No of Positions
                         </label>
-                            {/* <label className="block text-xs text-gray-500 mb-1">Min</label> */}
+                            
                             <input
                             type="number"
+                            min={0}
                             value={formData.NoofPositions}
                             onChange={(e) => {
                               setFormData({ ...formData, NoofPositions: e.target.value });
@@ -1003,46 +1091,53 @@ const [isEdit,setIsEdit] = useState(false);
                           />
                           </div>
 
-                          {/* Max Experience */}
+                          {/* location */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                            <input
-                            type="text"
-                            value={formData.Location}
-                            onChange={(e) => {
-                              setFormData({ ...formData, Location: e.target.value });
-                            }}
-                            // readOnly
-                            // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                            placeholder="Select a Location "
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none"
-                          />
+                        <CustomDropdown
+                        label="Location"
+                        name="location"
+                        value={formData.Location}
+                        options={locations}
+                        onChange={(e) => {
+                          setFormData({ ...formData, Location: e.target.value });
+                        }}
+                        disabledError={false}
+                        placeholder="Select a location"
+                        optionKey="location"
+                        optionValue="location"
+                      />
                           </div>
                         </div>
                       {/* </div> */}
 
                     {/* Job Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Job Description <span className="text-red-500">*</span>
-                      </label>
+                      <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Job Description <span className="text-red-500">*</span></label>
                       <textarea
+                        id="jobDescription"
+                        name="jobDescription"
                         value={formData.jobDescription}
                         onChange={(e) => {
                           const value = e.target.value;
                           setFormData({ ...formData, jobDescription: value });
-
-                          // Remove validation error when user starts typing
                           if (value.trim() !== "") {
-                            setErrors((prevErrors) => ({ ...prevErrors, jobdescription: "" }));
+                            setErrors((prev) => ({ ...prev, jobdescription: "" }));
                           }
                         }}
-                        rows={4}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.jobdescription ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                          }`}
-                        placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                        className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                        placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                        rows={10}
+                        minLength={250}
+                        maxLength={1000}
                       />
-                      {errors.jobdescription && <p className="text-red-500">{errors.jobdescription}</p>}
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-sm text-gray-500">
+                          {formData.jobDescription.length > 0 && formData.jobDescription.length < 250 &&
+                            `Minimum ${250 - formData.jobDescription.length} more characters needed`}
+                        </span>
+                        <span className="text-sm text-gray-500">{formData.jobDescription.length}/1000</span>
+                      </div>
+                      {errors.jobdescription && <p className="text-red-500 text-xs pt-1">{errors.jobdescription}</p>}
                     </div>
 
                     {/* skills */}
@@ -1080,7 +1175,7 @@ const [isEdit,setIsEdit] = useState(false);
                                 <FaEdit />
                               </button>
                               <button type="button" onClick={() => handleDelete(index)} className="text-md">
-                                {/* <FaTrash fill='red' /> */}
+                                <FaTrash fill='red' />
                               </button>
                             </div>
                           </div>
@@ -1250,8 +1345,21 @@ const [isEdit,setIsEdit] = useState(false);
                     </div>
 
                     {/* template */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="grid grid-cols-2">
+                    <CustomDropdown
+                        label="Select Template"
+                        name="template"
+                        value={formData.template?.templateName || ""}
+                        options={templates}
+                        onChange={(e) => {
+                          setFormData({ ...formData, template: e.target.value });
+                        }}
+                        disabledError={false}
+                        placeholder="Select Template"
+                        optionKey="templateName"
+                        optionValue="templateName"
+                      />
+                      {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Template
                       </label>
                       <div className="relative w-1/2 sm:w-full md:w-full">
@@ -1280,7 +1388,7 @@ const [isEdit,setIsEdit] = useState(false);
                             </div>
                           )}
                         
-                      </div>
+                      </div> */}
                     </div>
 
                     <div>
@@ -1467,6 +1575,81 @@ export default PositionForm;
   //       // }
   //     }
 
+  //   } catch (error) {
+  //     console.error("Error saving position:", error);
+  //   }
+  // };
+
+  // const handleSubmit = async (e, actionType = "", skipValidation = false) => {
+  //   if (e) {
+  //     e.preventDefault();
+  //   }
+
+  //   if (!skipValidation) {
+  //     const { formIsValid, newErrors } = validateForm(formData, entries, formData.rounds);
+  //     if (!formIsValid) {
+  //       setErrors(newErrors);
+  //       return;
+  //     }
+  //   }
+
+  //   setErrors({});
+  //   const userId = Cookies.get("userId");
+  //   const userName = Cookies.get("userName");
+  //   const orgId = Cookies.get("organizationId");
+  //   const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+
+  //   let basicdetails = {
+  //     ...formData,
+  //     companyname: formData.companyName,
+  //     minexperience: parseInt(formData.experienceMin) || 0,
+  //     maxexperience: parseInt(formData.experienceMax) || 0,
+  //     ownerId: userId,
+  //     tenantId: orgId,
+  //     CreatedBy: `${userName} at ${currentDateTime}`,
+  //     LastModifiedById: userId,
+  //     skills: entries.map(entry => ({
+  //       skill: entry.skill,
+  //       experience: entry.experience,
+  //       expertise: entry.expertise,
+  //     })),
+  //     additionalNotes: formData.additionalNotes,
+  //     jobDescription: formData.jobDescription.trim(),
+  //     rounds: formData.rounds
+  //   };
+
+  //   console.log('basic details in the handle submit before submit :', basicdetails);
+
+  //   try {
+  //     let response;
+  //     if (positionId) {
+  //       console.log("Updating existing position with ID:", positionId);
+  //       response = await axios.patch(
+  //         `${process.env.REACT_APP_API_URL}/position/${positionId}`,
+  //         basicdetails
+  //       );
+  //       console.log("Updated response:", response.data);
+  //     } else {
+  //       console.log("Creating new position...");
+  //       response = await axios.post(
+  //         `${process.env.REACT_APP_API_URL}/position`,
+  //         basicdetails
+  //       );
+  //       console.log("New position response:", response.data.data);
+  //       setPositionId(response.data.data._id);
+  //     }
+
+  //     if (response.status === 201 || response.status === 200) {
+  //       if (actionType === "BasicDetailsSave") {
+  //         onClose();
+  //       }
+  //       if (actionType === "BasicDetailsSave&AddRounds") {
+  //         setIsRoundModalOpen(true);
+  //       }
+  //       if (actionType === "BasicDetailsSave&Next") {
+  //         handleNextNavigation();
+  //       }
+  //     }
   //   } catch (error) {
   //     console.error("Error saving position:", error);
   //   }

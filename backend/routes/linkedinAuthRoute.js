@@ -248,11 +248,7 @@ router.post('/check-user', async (req, res) => {
       query: { Email: userInfo.email }
     });
 
-    // const existingUser = await Users.findOne({ Email: userInfo.email });
-    
-    const existingUser = await Users.findOne({ 
-      email: userInfo.email.toLowerCase() // Use lowercase 'email' and normalize input
-    });
+    const existingUser = await Users.findOne({ Email: userInfo.email });
 
     console.log('Backend: 5.1 Database response', {
       source: 'MongoDB Database',
