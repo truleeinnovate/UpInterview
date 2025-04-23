@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
+import { PiNotificationBold } from "react-icons/pi";
+import { FaArrowRight } from "react-icons/fa";
+import { AiTwotoneSchedule } from "react-icons/ai";
+import { FaCaretDown, FaCaretUp } from "react-icons/fa";
+import { CgProfile } from "react-icons/cg";
+import { FaBell } from "react-icons/fa";
+import { IoHome } from "react-icons/io5";
+import { IoMdInformationCircleOutline } from "react-icons/io";
 import { NavLink } from "react-router-dom";
+import { IoMdSearch } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./Navbar-Sidebar.scss";
 import Cookies from 'js-cookie';
+import { FaBars } from "react-icons/fa";
+import { CiCreditCard1 } from "react-icons/ci";
+import { LiaWalletSolid } from "react-icons/lia";
+import { MdAppSettingsAlt } from "react-icons/md";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import NotificationPanel from '../../Pages/Push-Notification/NotificationPanel.jsx';
-import {
-  ChevronUp, ChevronDown, Calendar, Wallet, Bell, ArrowRight, User,
-  CreditCard, Home, Info, Search, Settings, List, ArrowUp, ArrowDown
-} from 'lucide-react';
 
 const Navbar = () => {
   const userId = Cookies.get("userId");
@@ -27,6 +37,7 @@ const Navbar = () => {
   const [isAdditionalDropdownOpen, setIsAdditionalDropdownOpen] = useState(false);
   const [isLegalDropdownOpen, setIsLegalDropdownOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const organization = Cookies.get("organization") === 'true';
 
   const assessmentRef = useRef(null);
   const moreRef = useRef(null);
@@ -203,9 +214,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-30" onClick={handleGettingToggle}>
               {isGettingDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -217,9 +228,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-[88px]" onClick={handleDetailToggle}>
               {isDetailDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -231,9 +242,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer" onClick={handleQuestionToggle}>
               {isQuestionDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -245,9 +256,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-[88px]" onClick={handleFunctionToggle}>
               {isFunctionDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -259,9 +270,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-[114px]" onClick={handleContactToggle}>
               {isContactDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -273,9 +284,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-[85px]" onClick={handleAdditionalToggle}>
               {isAdditionalDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -287,9 +298,9 @@ const Navbar = () => {
             </div>
             <div className="cursor-pointer ml-[30px]" onClick={handleLegalToggle}>
               {isLegalDropdownOpen ? (
-                <ChevronUp className="ml-10 text-custom-blue" />
+                <FaCaretUp className="ml-10 text-custom-blue" />
               ) : (
-                <ChevronDown className="ml-10 text-custom-blue" />
+                <FaCaretDown className="ml-10 text-custom-blue" />
               )}
             </div>
           </div>
@@ -313,7 +324,7 @@ const Navbar = () => {
           <div key={i} className="flex text-sm border-b w-full justify-between bg-gray-100">
             <div className="flex item-center mt-2">
               <div className={`w-10 ml-3 mt-1 ${i === 2 ? "w-14 mr-5" : ""}`}>
-                {i === 2 ? <Calendar className="text-xl text-custom-blue" /> : <Bell className="text-xl text-custom-blue" />}
+                {i === 2 ? <AiTwotoneSchedule className="text-xl text-custom-blue" /> : <PiNotificationBold className="text-xl text-custom-blue" />}
               </div>
               <div>
                 <p className="font-bold text-custom-blue">{i === 2 ? "Interview Scheduled" : "New Interview Requests"}</p>
@@ -322,7 +333,7 @@ const Navbar = () => {
               </div>
             </div>
             <div className={`text-xl mt-12 mr-2 ${i === 2 ? "mt-28" : ""}`}>
-              <ArrowRight className="text-custom-blue" />
+              <FaArrowRight className="text-custom-blue" />
             </div>
           </div>
         ))}
@@ -341,7 +352,7 @@ const Navbar = () => {
           {profileImage ? (
             <img src={profileImage} alt="Profile" className="w-7 h-7 rounded-full" />
           ) : (
-            <User className="text-custom-blue text-xl" />
+            <CgProfile className="text-custom-blue text-xl" />
           )}
         </p>
         <span className="font-medium ml-1">{userName}</span>
@@ -368,11 +379,11 @@ const Navbar = () => {
       </div>
       <div className="px-2 py-1">
         {[
-          { to: "/billing", label: "Billing", icon: <CreditCard /> },
+          { to: "/billing", label: "Billing", icon: <CiCreditCard1 /> },
           {
-            to: "/wallet-transcations", label: "My Wallet", icon: <Wallet />
+            to: "/wallet-transcations", label: "My Wallet", icon: <LiaWalletSolid />
           },
-          { to: "/connected_apps", label: "App Settings", icon: <Settings /> },
+          { to: "/connected_apps", label: "App Settings", icon: <MdAppSettingsAlt /> },
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
@@ -403,7 +414,7 @@ const Navbar = () => {
             <div className="flex-col hidden sm:flex md:flex lg:hidden xl:hidden 2xl:hidden">
               <div className="flex items-center justify-between w-full">
                 <button className="sidebar-icon12" onClick={toggleSidebar}>
-                  <List />
+                  <FaBars />
                 </button>
                 <div className="flex-1 flex justify-center -mr-20">
                   <img src={logo} alt="Logo" className="w-20 md:w-24 hidden sm:block md:block" />
@@ -411,13 +422,13 @@ const Navbar = () => {
                 <div className="flex space-x-2">
                   <div className="icon-container border">
                     <NavLink to="/home" className="text-custom-blue">
-                      <Home />
+                      <IoHome />
                     </NavLink>
                   </div>
                   <div className="icon-container border" ref={outlineRef}>
                     <div className="relative">
                       <p className="font-medium text-custom-blue " onClick={toggleOutlineDropdown}>
-                        <Info />
+                        <IoMdInformationCircleOutline />
                       </p>
                       {outlineDropdown && outlineDropdownContent}
                     </div>
@@ -425,7 +436,7 @@ const Navbar = () => {
                   <div className="icon-container border" ref={notificationRef}>
                     <div className="relative">
                       <p className="font-medium text-custom-blue" onClick={toggleNotificationDropdown}>
-                        <Bell />
+                        <FaBell />
                       </p>
                       {notificationDropdown && notificationDropdownContent}
                     </div>
@@ -436,7 +447,7 @@ const Navbar = () => {
                         {profileImage ? (
                           <img src={profileImage} alt="Profile" className="w-12 h-7 rounded-full" />
                         ) : (
-                          <User className="text-custom-blue" />
+                          <CgProfile className="text-custom-blue" />
                         )}
                       </p>
                       {profileDropdown && profileDropdownContent}
@@ -446,14 +457,14 @@ const Navbar = () => {
               </div>
               <div className="search search-small-width mx-auto mt-2">
                 <input type="text" placeholder="Search" className="rounded-full border h-7" />
-                <button type="submit" className="text-custom-blue"><Search /></button>
+                <button type="submit" className="text-custom-blue"><IoMdSearch /></button>
               </div>
             </div>
 
             <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
               <div className="relative hidden lg:block xl:block 2xl:block" ref={interviewRef} >
                 <button className="font-medium flex items-center" onClick={toggleInterviewDropdown} >
-                  Interviews &nbsp; {interviewDropdown ? <ArrowUp /> : <ArrowDown />}
+                  Interviews &nbsp; {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                 </button>
                 {interviewDropdown && (
                   <div className="absolute mt-2 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -480,7 +491,7 @@ const Navbar = () => {
               <div className="relative hidden lg:block xl:block 2xl:block" ref={assessmentRef}>
                 <button className="font-medium flex items-center" onClick={toggleAssessmentDropdown}>
                   Assessments&nbsp;
-                  {assessmentDropdown ? <ArrowUp /> : <ArrowDown />}
+                  {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                 </button>
                 {assessmentDropdown && (
                   <div className="absolute mt-2 z-10 w-44 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -506,7 +517,7 @@ const Navbar = () => {
               <div className="relative hidden lg:block xl:block 2xl:block" ref={moreRef}>
                 <button className="font-medium flex items-center" onClick={toggleMoreDropdown}>
                   More&nbsp;
-                  {moreDropdown ? <ArrowUp /> : <ArrowDown />}
+                  {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                 </button>
                 {moreDropdown && (
                   <div className="absolute p-2 z-10 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 border">
@@ -517,9 +528,9 @@ const Navbar = () => {
                       <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/position" onClick={() => { setMoreDropdown(false); }} >
                         Positions
                       </NavLink>
-                      {/* <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/team" onClick={() => { setMoreDropdown(false); }} >
+                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/team" onClick={() => { setMoreDropdown(false); }} >
                         Teams
-                      </NavLink> */}
+                      </NavLink>
                     </div>
                   </div>
                 )}
@@ -529,17 +540,17 @@ const Navbar = () => {
             <div className="flex space-x-2  sm:hidden md:hidden">
               <div className="search w-60">
                 <input type="text" placeholder="Search" className="rounded-full border h-8" />
-                <button type="submit" className="text-custom-blue"><Search /></button>
+                <button type="submit" className="text-custom-blue"><IoMdSearch /></button>
               </div>
               <div className="text-xl border rounded-md p-2 text-custom-blue">
                 <NavLink to="/home">
-                  <Home />
+                  <IoHome />
                 </NavLink>
               </div>
               <div className="text-xl border rounded-md p-2" ref={outlineRef} >
                 <div className="relative">
                   <p className="font-medium text-custom-blue" onClick={toggleOutlineDropdown}>
-                    <Info />
+                    <IoMdInformationCircleOutline />
                   </p>
                   {outlineDropdown && outlineDropdownContent}
                 </div>
@@ -558,7 +569,7 @@ const Navbar = () => {
                     {profileImage ? (
                       <img src={profileImage} alt="Profile" className="w-7 h-7 rounded-full object-cover" />
                     ) : (
-                      <User className="text-custom-blue" />
+                      <CgProfile className="text-custom-blue" />
                     )}
                   </p>
                   {profileDropdown && profileDropdownContent}
@@ -577,7 +588,7 @@ const Navbar = () => {
               <button
                 className="font-medium flex items-center mb-2"
                 onClick={toggleInterviewDropdown}>
-                Interviews &nbsp; {interviewDropdown ? <ArrowUp /> : <ArrowDown />}
+                Interviews &nbsp; {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
               </button>
               {interviewDropdown && (
                 <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -636,7 +647,7 @@ const Navbar = () => {
                 className="font-medium flex items-center mb-2"
                 onClick={toggleAssessmentDropdown}>
                 Assessments&nbsp;
-                {assessmentDropdown ? <ArrowUp /> : <ArrowDown />}
+                {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
               </button>
               {assessmentDropdown && (
                 <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -696,7 +707,7 @@ const Navbar = () => {
                 className="font-medium flex items-center mb-2"
                 onClick={toggleMoreDropdown}>
                 More&nbsp;
-                {moreDropdown ? <ArrowUp /> : <ArrowDown />}
+                {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
               </button>
               {moreDropdown && (
                 <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">

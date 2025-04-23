@@ -10,6 +10,7 @@ const LinkedInCallback = () => {
   const [loading, setLoading] = useState(true);
 
   console.log('config.REACT_APP_API_URL :-', config.REACT_APP_API_URL);
+  console.log('config.REACT_APP_REDIRECT_URI :-', config.REACT_APP_REDIRECT_URI);
 
   useEffect(() => {
     const handleCallback = async () => {
