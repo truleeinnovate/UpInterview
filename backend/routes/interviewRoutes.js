@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { createInterview,saveInterviewRound } = require('../controllers/interviewController.js');
+const { createInterview,saveInterviewRound } = require('../controllers/interviewController');
 
 // router.get('/', getAllInterviews);
 // router.get('/:id',getInterviewBasedOnInterviewId)

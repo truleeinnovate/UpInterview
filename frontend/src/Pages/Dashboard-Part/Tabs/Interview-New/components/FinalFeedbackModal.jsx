@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 
 const FinalFeedbackModal = ({ onClose, interviewId }) => {
-  const { addFinalFeedback } = useInterviewContext();
   
   const [feedback, setFeedback] = useState('');
   const [recommendation, setRecommendation] = useState('Hire');
@@ -34,7 +32,7 @@ const FinalFeedbackModal = ({ onClose, interviewId }) => {
       return;
     }
     
-    addFinalFeedback(interviewId, feedback, recommendation);
+    // addFinalFeedback(interviewId, feedback, recommendation);
     onClose();
   };
 

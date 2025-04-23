@@ -57,7 +57,7 @@ const { TechnologyMaster } = require('./models/MasterSchemas/TechnologyMaster.js
 const { HigherQualification } = require('./models/higherqualification.js');
 const { University_CollegeName } = require('./models/college.js')
 const { Company } = require('./models/company.js');
-
+ 
 // API Routes
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
@@ -270,6 +270,7 @@ const modelMapping = {
   'tenentquestions': TenantQuestions
 };
 
+const { InterviewRounds } = require('./models/InterviewRounds.js');
 app.get('/api/:model', async (req, res) => {
   const { model } = req.params;
   const { tenantId, ownerId } = req.query;
@@ -376,7 +377,7 @@ app.get('/api/:model', async (req, res) => {
           })
           .populate({
             path: 'templateId',
-            model: 'InterviewTemplate',
+            model: 'InterviewTemplate', 
           });
 
         const interviews = await query.exec();
@@ -427,8 +428,6 @@ app.get('/api/:model', async (req, res) => {
 
         return res.status(200).json(interviewsWithRounds);
     }
-
-
 
     const data = await query.exec();
     if (!data || data.length === 0) {
@@ -524,27 +523,29 @@ app.use('/candidate', candidateRoutes);
 const positionRoutes = require('./routes/positionRoutes');
 app.use('/position', positionRoutes);
 
+const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
+app.use('/', pushNotificationRoutes);
 
-// const { Contacts } = require('./models/Contacts.js')
-// // used in navbar for  fetchProfileImage
-// app.get('/contacts/:userId', async (req, res) => {
-//   try {
-//     const userId = req.params.userId; // Keep it as a string
+const AssessmentRouter = require('./routes/assessmentRoutes.js');
+app.use('/assessments', AssessmentRouter);
 
-//     const contact = await Contacts.findOne({ OwnerId: userId }); // Compare as string
-//     // if (!contact) {
-//     //   return res.status(404).json({ message: 'Contact not found' });
-//     // }
+const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoutes.js");
+app.use('/schedule-assessment', scheduledAssessmentRouter);
 
-//     res.json(contact);
-//   } catch (err) {
-//     console.error('Error fetching contact:', err);
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js')
+const interviewQuestions = require('./models/interviewQuestions.js');
+app.use('/suggested-questions', suggestedQuestionRouter)
 
-// // in contextfetch for fetchUserProfile
-// const { Users } = require("./models/Users.js")
+const interviewQuestionsRoute = require('./routes/interviewQuestionsRoutes.js')
+app.use('/interview-questions', interviewQuestionsRoute)
+
+const TenentQuestionsListNamesRoute = require('./routes/TenentQuestionsListNames.js')
+app.use('/tenant-list', TenentQuestionsListNamesRoute);
+
+const interviewTemplateRoutes = require('./routes/interviewTemplateRoutes');
+app.use('/interviewTemplates', interviewTemplateRoutes);
+
+// in contextfetch for fetchUserProfile
 app.get('/auth/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -606,32 +607,6 @@ app.put('/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
-// const feedbackRouter = require('./routes/feedbackRoute.js')
-// const interviewQuestionsRoute = require('./routes/interviewQuestions.js')
-// const TenentQuestionsListNamesRoute = require('./routes/TenentQuestionsListNames.js')
-
-// app.use('/interview-questions', interviewQuestionsRoute)
-// app.use('/tenant-list', TenentQuestionsListNamesRoute)
-// app.use('/feedback', feedbackRouter)
-
-// const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js')
-// app.use('/suggested-questions', suggestedQuestionRouter)
-
-
-// const outsourceInterviewerRoutes = require('./routes/outsourceInterviewerRoutes.js');
-// app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
-
-// const teamRoutes = require('./routes/teamRoutes.js');
-// app.use('/teammember', teamRoutes);
-// const InterviewRoutes = require('./routes/interviewRoutes.js');
-// app.use('/interview', InterviewRoutes);
-// const interviewAvailabilityRoutes = require('./routes/interviewAvailabilityRoutes.js');
-// app.use('/interviewavailability', interviewAvailabilityRoutes);
-// const outsourceInterviewRequestRoutes = require('./routes/outsourceInterviewRequestRoutes.js');
-// app.use('/interviewrequest', outsourceInterviewRequestRoutes);
-// const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
-// app.use('/candidateposition', candidatePositionRoutes);
 
 // mock interview
 const mockInterviewRoutes = require('./routes/mockinterviewRoutes.js');

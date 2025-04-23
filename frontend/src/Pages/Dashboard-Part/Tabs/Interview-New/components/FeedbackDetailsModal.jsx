@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import { X, Star, User, Users } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +10,6 @@ function FeedbackDetailsModal({
   roundName = "Interview Round",
   isOpen = true
 }) {
-  const { getInterviewerById } = useInterviewContext();
   const modalRef = useRef(null);
   
   // Handle click outside to close
@@ -34,8 +32,8 @@ function FeedbackDetailsModal({
   
   // Get interviewer if this is individual feedback
   const interviewer = feedback.interviewerId 
-    ? getInterviewerById(feedback.interviewerId) 
-    : null;
+    // ? getInterviewerById(feedback.interviewerId) 
+    // : null;
 
   const renderStarRating = (rating) => {
     return (

@@ -398,6 +398,30 @@ const CustomProvider = ({ children }) => {
   //   }
   // }, [userId]);
 
+  const [assessmentData, setAssessmentData] = useState([]);
+  const assessmentPermissions = useMemo(() => sharingPermissionscontext.assessment || {}, [sharingPermissionscontext]);
+
+  const fetchAssessmentData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const filteredAssessments = await fetchFilterData(
+        "assessment",
+        assessmentPermissions
+      );
+      // Reverse the data to show the most recent first
+      const reversedData = filteredAssessments.reverse();
+      setAssessmentData(reversedData);
+    } catch (error) {
+      console.error("Error fetching assessment data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [assessmentPermissions]);
+
+  useEffect(() => {
+    fetchAssessmentData();
+  }, [fetchAssessmentData]);
+
   return (
     <CustomContext.Provider
       value={{
@@ -451,6 +475,10 @@ const CustomProvider = ({ children }) => {
         // outsource interviewers
         interviewers,
         fetchoutsourceInterviewers,
+
+        // assessment
+        assessmentData,
+        fetchAssessmentData,
 
         // master data
         skills,

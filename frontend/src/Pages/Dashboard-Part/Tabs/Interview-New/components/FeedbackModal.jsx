@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Star, Users } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 
 function FeedbackModal({ onClose, interviewId, round }) {
-  const { addDetailedFeedback, getInterviewerById } = useInterviewContext();
   const modalRef = useRef(null);
   
   const [overallRating, setOverallRating] = useState(3);
@@ -23,8 +21,9 @@ function FeedbackModal({ onClose, interviewId, round }) {
 
   // Get interviewers for this round
   const interviewers = round.interviewers
-    .map(id => getInterviewerById(id))
-    .filter(Boolean);
+    // .map(id => getInterviewerById(id))
+    // .filter(Boolean);
+    
 
   // Handle click outside to close
   useEffect(() => {
@@ -110,7 +109,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
       isConsolidated: isConsolidatedFeedback
     };
     
-    addDetailedFeedback(interviewId, round.id, feedback);
+    // addDetailedFeedback(interviewId, round.id, feedback);
     onClose();
   };
 

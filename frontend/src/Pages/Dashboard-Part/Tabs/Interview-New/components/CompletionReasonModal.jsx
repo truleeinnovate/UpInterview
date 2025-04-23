@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { X, AlertTriangle, Clock } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
@@ -14,7 +13,6 @@ const CompletionReasonModal = ({
   interviewId,
   interview
 }) => {
-  const { getInterviewById, updateRound, getInterviewerById } = useInterviewContext();
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const [pendingRoundActions, setPendingRoundActions] = useState({});
@@ -138,9 +136,9 @@ const CompletionReasonModal = ({
               <h3 className="text-md font-medium text-foreground">Pending Rounds</h3>
               
               {pendingRounds.map(round => {
-                const interviewers = round.interviewers
-                  .map(id => getInterviewerById(id))
-                  .filter(Boolean);
+                // const interviewers = round.interviewers
+                //   .map(id => getInterviewerById(id))
+                //   .filter(Boolean);
                 
                 return (
                   <div key={round.id} className="border border-border rounded-md p-4 bg-secondary/50">
@@ -161,7 +159,7 @@ const CompletionReasonModal = ({
                           </div>
                         </div>
                         
-                        {interviewers.length > 0 && (
+                        {/* {interviewers.length > 0 && (
                           <div className="mt-2">
                             <p className="text-sm text-muted-foreground mb-1">Interviewers:</p>
                             <div className="flex flex-wrap gap-2">
@@ -175,7 +173,7 @@ const CompletionReasonModal = ({
                               ))}
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
                       
                       <div className="ml-4">

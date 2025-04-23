@@ -29,6 +29,17 @@ import MockInterview from './Pages/Dashboard-Part/Tabs/MockInterview/MockIntervi
 import MockInterviewDetails from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx';
 import MockSchedulelater from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm.jsx';
 
+import InterviewList from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList.jsx';
+import InterviewDetail from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail.jsx';
+import InterviewForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm.jsx';
+import RoundForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm.jsx';
+
+import QuestionBank from './Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
+
+import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx";
+import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
+import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails.jsx";
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
@@ -37,7 +48,7 @@ const App = () => {
   const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
   return (
-    <React.Fragment> 
+    <React.Fragment>
       {shouldRenderNavbar && <Navbar />}
       {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
@@ -66,12 +77,26 @@ const App = () => {
           <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
           <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
           <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
-          
+
           <Route path="/mockinterview" element={<MockInterview />} />
           <Route path="/mockinterview-create" element={<MockSchedulelater />} />
           <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
           <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
 
+          <Route path="/interviewList" element={<InterviewList />} />
+          <Route path="/interviews/new" element={<InterviewForm />} />
+          <Route path="/interviews/:id" element={<InterviewDetail />} />
+          <Route path="/interviews/:id/edit" element={<InterviewForm />} />
+          <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
+
+          <Route path="/questionBank" element={<QuestionBank />} />
+
+          {/* assessment */}
+          <Route path="/assessments" element={<Assessment />} />
+          <Route path="/assessment/new" element={<AssessmentForm />} />
+          <Route path="/assessment-details" element={<AssessmentDetails />} />
+          <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
+          <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
         </Routes>
       </div>
     </React.Fragment>

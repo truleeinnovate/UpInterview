@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Briefcase, Clock, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';

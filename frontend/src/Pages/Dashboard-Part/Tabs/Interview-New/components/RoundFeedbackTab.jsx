@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Star, User, Users, Eye, ExternalLink } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import FeedbackDetailsModal from './FeedbackDetailsModal';
@@ -8,7 +7,6 @@ import FeedbackSidebar from './FeedbackSidebar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 
 function RoundFeedbackTab({ round, interviewId }) {
-  const { getInterviewerById } = useInterviewContext();
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [sidebarFeedback, setSidebarFeedback] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -136,8 +134,8 @@ function RoundFeedbackTab({ round, interviewId }) {
           <div className="space-y-3">
             {individualFeedbacks.map((feedback, index) => {
               const interviewer = feedback.interviewerId 
-                ? getInterviewerById(feedback.interviewerId) 
-                : null;
+                // ? getInterviewerById(feedback.interviewerId) 
+                // : null;
               
               return (
                 <div key={index} className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md">

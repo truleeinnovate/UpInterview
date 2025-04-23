@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import { X, ExternalLink, Star, User, Users } from 'lucide-react';
-import { useInterviewContext } from '../../../../../Context/InterviewContext';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +10,6 @@ function FeedbackSidebar({
   roundName = "Interview Round",
   onOpenInNew
 }) {
-  const { getInterviewerById } = useInterviewContext();
   const sidebarRef = useRef(null);
   
   // Handle click outside to close - must be before any conditional returns
@@ -35,8 +33,8 @@ function FeedbackSidebar({
   
   // Get interviewer if this is individual feedback
   const interviewer = feedback.interviewerId 
-    ? getInterviewerById(feedback.interviewerId) 
-    : null;
+    // ? getInterviewerById(feedback.interviewerId) 
+    // : null;
 
   const renderStarRating = (rating) => {
     return (

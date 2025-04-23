@@ -1,6 +1,6 @@
 
 const express = require('express')
-const { AddQuestion, GetQuestions, DeleteQuestions, GetQuestionsBasedOnId } = require('../controllers/interviewQuestions.js')
+const { AddQuestion, GetQuestions, DeleteQuestions, GetQuestionsBasedOnId } = require('../controllers/interviewQuestionsControllers')
 
 const router = express.Router()
 

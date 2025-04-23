@@ -1,6 +1,6 @@
 
 const express = require('express')
-const { createQuestion, getQuestions } = require('../controllers/suggestedQuestions.js')
+const { createQuestion, getQuestions } = require('../controllers/suggestedQuestionsControllers')
 
 const router = express.Router()
 

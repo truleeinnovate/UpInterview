@@ -1,199 +1,3 @@
-// const bcrypt = require('bcrypt');
-// const {Organization} = require('../models/Organization');
-// const {Users} = require('../models/Users');
-// const {Contacts} = require('../models/Contacts');
-// const SharingSettings = require('../models/SharingSettings');
-// const Profile = require('../models/Profile');
-// const Role = require('../models/RolesData.js');
-// const Tabs = require('../models/Tabs');  // Import Tabs model
-// const Objects = require('../models/Objects');  // Import Objects model
-// const { loginSendEmail } = require("./loginEmailCommonController");
-
-// const saltRounds = 10;
-
-// const organizationLoginController = {
-//     async registerOrganization(req, res) {
-//         try {
-//             const {
-//                 firstName, lastName, Email, Phone, username, jobTitle,
-//                 company, employees, country, password
-//             } = req.body;
-
-//             // Check if organization already exists
-//             const existingOrganization = await Organization.findOne({ Email });
-//             if (existingOrganization) {
-//                 return res.status(400).json({ message: 'Email already registered' });
-//             }
-
-//             // Fetch tabs and objects data from DB
-//             const tabsData = await Tabs.findOne({});
-//             const objectsData = await Objects.findOne({});
-
-//             if (!tabsData || !objectsData) {
-//                 return res.status(500).json({ message: 'Tabs or Objects data not found' });
-//             }
-
-//             // Hash password
-//             const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-//             // Create new organization
-//             const organization = new Organization({
-//                 firstName, lastName, Email, Phone, username, jobTitle,
-//                 company, employees, country, password: hashedPassword
-//             });
-
-//             const savedOrganization = await organization.save();
-
-//             // Create new user
-//             const newUser = new Users({
-//                 Name: `${firstName} ${lastName}`,
-//                 Firstname: firstName,
-//                 Email,
-//                 UserId: username,
-//                 Phone,
-//                 organizationId: savedOrganization._id,
-//                 password: hashedPassword
-//             });
-
-//             const savedUser = await newUser.save();
-//             await savedUser.save();
-
-//             // Create new contact
-//             const contact = new Contacts({
-//                 Name: `${firstName} ${lastName}`,
-//                 Firstname: firstName,
-//                 Email,
-//                 Phone,
-//                 UserId: username,
-//                 CurrentRole: jobTitle,
-//                 company,
-//                 employees,
-//                 CountryCode: country,
-//                 ownerId: savedUser._id
-//             });
-
-//            const savedContact = await contact.save();
-
-//             // Create default sharing settings
-//             const accessBody = objectsData.objects.map(obj => ({
-//                 ObjName: obj,
-//                 Access: 'Public',
-//                 GrantAccess: false
-//             }));
-
-//             const sharingSettings = new SharingSettings({
-//                 Name: 'sharingSettingDefaultName',
-//                 organizationId: savedOrganization._id,
-//                 accessBody
-//             });
-
-//             await sharingSettings.save();
-
-//             // Create default profiles
-//             const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter"];
-//             let adminProfileId = "";
-
-//             for (let profileName of profileNames) {
-//                 const profileTabs = tabsData.tabs.map(tab => ({
-//                     name: tab,
-//                     status: profileName === "Admin" ? 'Visible' : 'Hidden'
-//                 }));
-
-//                 const profileObjects = objectsData.objects.map(object => ({
-//                     name: object,
-//                     permissions: {
-//                         View: true,
-//                         Create: true,
-//                         Edit: true,
-//                         Delete: profileName === "Admin"
-//                     }
-//                 }));
-
-//                 const profile = new Profile({
-//                     label: profileName,
-//                     Name: profileName,
-//                     Description: `Default profile description for ${profileName}`,
-//                     Tabs: profileTabs,
-//                     Objects: profileObjects,
-//                     organizationId: savedOrganization._id
-//                 });
-
-//                 const savedProfile = await profile.save();
-//                 if (profileName === "Admin") {
-//                     adminProfileId = savedProfile._id;
-//                 }
-//             }
-
-//             // Create default roles
-//             const roles = [
-//                 { label: "Admin", name: "Admin" },
-//                 { label: "CEO", name: "CEO" },
-//                 { label: "HR Manager", name: "HR_Manager" },
-//                 { label: "HR Lead", name: "HR_Lead" },
-//                 { label: "Recruiter", name: "Recruiter" }
-//             ];
-
-//             let roleIds = {};
-//             for (let role of roles) {
-//                 let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
-
-//                 const newRole = new Role({
-//                     roleName: role.name,
-//                     reportsToRoleId: reportsToRoleId || null,
-//                     description: `Default role description for ${role.name}`,
-//                     organizationId: savedOrganization._id
-//                 });
-
-//                 const savedRole = await newRole.save();
-//                 roleIds[role.name] = savedRole._id;
-//             }
-
-//             // Assign Admin Role and Profile to the User
-//             await Users.findByIdAndUpdate(savedUser._id, {
-//                 RoleId: roleIds["Admin"],
-//                 ProfileId: adminProfileId
-//             });
-
-//             console.log("Calling email sending controller...");
-//                 await loginSendEmail({
-//                   body: {
-//                     email: savedContact.Email,
-//                     ownerId :savedUser._id,
-//                     tenantId: savedOrganization._id,
-//                     name: savedContact.Name,
-//                   },
-//                 }, { json: () => {} });
-
-//             res.status(201).json({
-//                 message: "Organization registered successfully",
-//                 organization: savedOrganization,
-//                 user: savedUser
-//             });
-
-//         } catch (error) {
-//             console.error('Error in organization registration:', error);
-//             res.status(500).json({ message: 'Internal server error', error: error.message });
-//         }
-//     }
-// };
-
-// module.exports = organizationLoginController;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const bcrypt = require('bcrypt');
 const { Organization } = require('../models/Organization');
@@ -206,7 +10,7 @@ const Tabs = require('../models/Tabs');
 const Objects = require('../models/Objects');
 const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
-const mangoose = require("mongoose");
+const RolesPermissionObject = require('../models/rolesPermissionObject');
 
 const saltRounds = 10;
 
@@ -338,38 +142,87 @@ const registerOrganization = async (req, res) => {
     }
 
     // Create default roles
-    console.log('Creating default roles...');
-    const roles = [
-      { label: "Admin", name: "Admin" },
-      { label: "CEO", name: "CEO" },
-      { label: "HR Manager", name: "HR_Manager" },
-      { label: "HR Lead", name: "HR_Lead" },
-      { label: "Recruiter", name: "Recruiter" },
-      { label: "Internal Interviewer", name: "Internal_Interviewer" }
-    ];
+    // console.log('Creating default roles...');
+    // const roles = [
+    //   { label: "Admin", name: "Admin" },
+    //   { label: "CEO", name: "CEO" },
+    //   { label: "HR Manager", name: "HR_Manager" },
+    //   { label: "HR Lead", name: "HR_Lead" },
+    //   { label: "Recruiter", name: "Recruiter" },
+    //   { label: "Internal Interviewer", name: "Internal_Interviewer" }
+    // ];
 
+    // let roleIds = {};
+    // for (let role of roles) {
+    //   console.log(`Creating role: ${role.name}`);
+    //   let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
+
+    //   const newRole = new Role({
+    //     roleName: role.name,
+    //     reportsToRoleId: reportsToRoleId || null,
+    //     description: `Default role description for ${role.name}`,
+    //     organizationId: savedOrganization._id
+    //   });
+
+    //   const savedRole = await newRole.save();
+    //   console.log(`Role ${role.name} saved with ID:`, savedRole._id);
+    //   roleIds[role.name] = savedRole._id;
+    // }
+    // console.log('Role IDs:', roleIds);
+
+    // // Assign Admin Role and Profile to the User
+    // console.log('Assigning Admin role and profile to user:', savedUser._id);
+    // await Users.findByIdAndUpdate(savedUser._id, {
+    //   RoleId: roleIds["Admin"],
+    //   ProfileId: adminProfileId
+    // });
+    // console.log('Admin role and profile assigned successfully');
+
+
+
+
+
+
+    // Create default roles from RolesPermissionObject
+    console.log('Creating default roles from RolesPermissionObject...');
+    const rolesPermissionObjects = await RolesPermissionObject.find({});
     let roleIds = {};
-    for (let role of roles) {
-      console.log(`Creating role: ${role.name}`);
-      let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
+
+    for (let roleObj of rolesPermissionObjects) {
+      const { label, roleName, objects, level } = roleObj;
+
+      console.log(`Creating role: ${roleName}`);
+
+      // Prepare the role objects with permissions
+      const roleObjects = objects.map(obj => ({
+        objectName: obj.objectName,
+        permissions: obj.permissions
+      }));
 
       const newRole = new Role({
-        roleName: role.name,
-        reportsToRoleId: reportsToRoleId || null,
-        description: `Default role description for ${role.name}`,
-        organizationId: savedOrganization._id
+        label,
+        roleName,
+        description: `Default role description for ${roleName}`,
+        tenantId: savedOrganization._id,
+        objects: roleObjects,
+        level,
+        inherits: [], // Empty array by default - can be populated later
+        isDefault: true
       });
 
       const savedRole = await newRole.save();
-      console.log(`Role ${role.name} saved with ID:`, savedRole._id);
-      roleIds[role.name] = savedRole._id;
+      console.log(`Role ${roleName} saved with ID:`, savedRole._id);
+      roleIds[roleName] = savedRole._id;
     }
+
+    console.log('Role IDs:', roleIds);
+
     console.log('Role IDs:', roleIds);
 
     // Assign Admin Role and Profile to the User
     console.log('Assigning Admin role and profile to user:', savedUser._id);
     await Users.findByIdAndUpdate(savedUser._id, {
-      RoleId: roleIds["Admin"],
+      roleId: roleIds["Admin"],
       ProfileId: adminProfileId
     });
     console.log('Admin role and profile assigned successfully');
@@ -525,7 +378,7 @@ const loginOrganization = async (req, res) => {
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
       contactDataFromOrg
-  });
+    });
 
   } catch (error) {
     console.error('Error during login:', error);
@@ -540,32 +393,25 @@ const getUsersByTenant = async (req, res) => {
   try {
     const { tenantId } = req.params;
 
-    // Validate tenantId
-    // if (!mongoose.Types.ObjectId.isValid(tenantId)) {
-    //   return res.status(400).json({ message: 'Invalid tenant ID' });
-    // }
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Invalid tenant ID' });
+    }
 
-    // Get all users for the tenant
     const users = await Users.find({ tenantId }).lean();
-
-    // If no users found, return empty array
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
 
-    // Get all necessary data in parallel for better performance
     const [contacts, roles] = await Promise.all([
       Contacts.find({ tenantId }).lean(),
-      Role.find({ organizationId: tenantId }).lean()
+      Role.find({ tenantId }).lean() // ✅ Fix: using correct field
     ]);
 
-    // Create a map of roleId to role for quick lookup
     const roleMap = roles.reduce((acc, role) => {
       acc[role._id.toString()] = role;
       return acc;
     }, {});
 
-    // Create a map of ownerId to contact for quick lookup
     const contactMap = contacts.reduce((acc, contact) => {
       if (contact.ownerId) {
         acc[contact.ownerId.toString()] = contact;
@@ -573,7 +419,6 @@ const getUsersByTenant = async (req, res) => {
       return acc;
     }, {});
 
-    // Combine the data
     const combinedUsers = users.map(user => {
       const contact = contactMap[user._id.toString()] || {};
       const role = user.roleId ? roleMap[user.roleId] : {};
@@ -583,13 +428,13 @@ const getUsersByTenant = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        countryCode: user.countryCode,
+        gender: user.gender,
         phone: contact.phone || '',
         roleId: user.roleId,
         roleName: role.roleName || '',
         label: role.label || '',
-        imageUrl: contact.imageData ?
-          `${process.env.API_URL}/${contact.imageData.path.replace(/\\/g, '/')}` :
-          null,
+        imageData: contact.imageData || '',
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       };
@@ -602,6 +447,15 @@ const getUsersByTenant = async (req, res) => {
   }
 };
 
+const getRolesByTenant = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const roles = await Role.find({ tenantId });
+    res.status(200).json(roles);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
 
 // reset password 
 const resetPassword = async (req, res) => {
@@ -652,5 +506,5 @@ const resetPassword = async (req, res) => {
 
 
 
-module.exports = { registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant };
+module.exports = { registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant };
 

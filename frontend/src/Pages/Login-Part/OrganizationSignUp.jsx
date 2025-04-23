@@ -293,7 +293,7 @@ export const Organization = () => {
       console.log('Response received:', response.data);
       const data = response.data;
 
-      Cookies.set('userId', data.tenantId, { expires: 7 });
+      Cookies.set('userId', data.ownerId, { expires: 7 });
       Cookies.set('organizationId', data.tenantId, { expires: 7 });
       toast.success('Organization created successfully!');
       navigate('/subscription-plans');

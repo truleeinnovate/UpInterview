@@ -27,8 +27,6 @@ import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import CandidateTable from './CandidateTable';
 
-
-
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,

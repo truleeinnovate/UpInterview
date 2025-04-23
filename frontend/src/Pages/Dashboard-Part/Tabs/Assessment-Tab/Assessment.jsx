@@ -1,23 +1,35 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
+import { useState, useRef, useEffect, useCallback } from "react";
+import "../../../../index.css";
+import "../styles/tabs.scss";
 import Tooltip from "@mui/material/Tooltip";
-import { ReactComponent as TbLayoutGridRemove } from '../../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as FaList } from '../../../../../icons/FaList.svg';
-import { ReactComponent as IoIosArrowBack } from '../../../../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../../../../icons/IoIosArrowForward.svg';
-import { ReactComponent as LuFilterX } from '../../../../../icons/LuFilterX.svg';
-import { ReactComponent as FiFilter } from '../../../../../icons/FiFilter.svg';
-import InterviewTable from '../components/InterviewTable';
-import KanbanBoard from '../components/KanbanBoard';
-import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
+// import Sidebar from "./AssessmentForm/NewAssessment.jsx";
+import { Plus, Search } from 'lucide-react';
+// import EditAssessment from "./EditAssessment.jsx";
+import ShareAssessment from "./ShareAssessment.jsx";
 import { motion } from 'framer-motion';
-import Loading from '../../../../../Components/Loading.js';
-import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
-import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
-import { MdKeyboardArrowDown } from "react-icons/md";
-import { MdKeyboardArrowUp } from "react-icons/md";
+import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+
+import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
+import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
+import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
+import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
+import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
+import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
+import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
+import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
+import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
+import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
+import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
+import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
+import { useCustomContext } from "../../../../Context/Contextfetch.js";
+
+import AssessmentTable from './AssessmentTable.jsx';
+import AssessmentKanban from './AssessmentKanban.jsx';
+import Loading from '../../../../Components/Loading.js';
+import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
+
+
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
@@ -29,6 +41,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const [isTechMainChecked, setTechMainChecked] = useState(false);
   const [selectedStatusOptions, setSelectedStatusOptions] = useState([]);
   const [selectedTechOptions, setSelectedTechOptions] = useState([]);
+
   const isAnyOptionSelected = selectedStatusOptions.length > 0 || selectedTechOptions.length > 0;
   const handleUnselectAll = () => {
     setSelectedStatusOptions([]);
@@ -252,72 +265,96 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   );
 };
 
-function InterviewList() {
+const Assessment = () => {
   const {
-    interviewData,
-    loading,
+    assessmentData,
+    fetchAssessmentData,
+    loading
   } = useCustomContext();
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [selectPositionView, setSelectPositionView] = useState(false);
-  const handleView = (candidate) => {
-    if (!candidate) return; // Prevents error if candidate is undefined
-    setSelectedCandidate(candidate);
-    setSelectCandidateView(true);
+
+
+  useEffect(() => {
+    document.title = "Assessment Tab";
+  }, []);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  // const [selectedAssessment, setSelectedAssessment] = useState(null);
+  const [showAssessmentDetails, setShowAssessmentDetails] = useState(false);
+  const [recipientEmail] = useState("");
+  //shashank -[16/01/2025]
+  const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false)
+  const [linkExpiryDays, setLinkExpiryDays] = useState(3)
+
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
   };
-  const handleViewPosition = (position) => {
-    setSelectedPosition(position);
-    setSelectPositionView(true);
+
+  const handleOutsideClick = useCallback((event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      closeSidebar();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    } else {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [sidebarOpen, handleOutsideClick]);
+
+  const navigate = useNavigate();
+  const handleView = (assessment) => {
+    navigate(`/assessment-details/${assessment._id}`);
   };
+  const handleShareClick =  async(assessment) => {
+    setIsShareOpen(assessment); // Open the modal
+  };
+
+
+  const handleDataAdded = () => {
+    fetchAssessmentData();
+    setCurrentPage(0);
+  };
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
-    experience: { min: '', max: '' },
+    experience: [],
   });
 
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
   }, []);
 
-  const [viewMode, setViewMode] = useState("list");
-  const handleListViewClick = () => {
-    setViewMode("list");
-  };
-  const handleKanbanViewClick = () => {
-    setViewMode("kanban");
-  };
+  const FilteredData = () => {
+    if (!Array.isArray(assessmentData)) return [];
+    return assessmentData.filter((user) => {
+      const fieldsToSearch = [user.AssessmentTitle, user.Position].filter(
+        (field) => field !== null && field !== undefined
+      );
 
-  const [searchQuery, setSearchQuery] = useState("");
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return (
+        matchesSearchQuery
+        //  && matchesStatus && matchesTech && matchesExperience
+      );
+    });
+  };
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
   };
-
-  const FilteredData = () => {
-    return interviewData.filter((interview) => {
-      const fieldsToSearch = [
-        interview.candidateId?.FirstName,
-        interview.candidateId?.LastName,
-        interview.candidateId?.Email,
-        interview.positionId?.title,
-        interview.positionId?.companyname,
-        interview.interviewTitle,
-        interview.interviewType,
-        interview.status,
-        interview.CreatedDate,
-      ];
-  
-      const matchFound = fieldsToSearch.some((field) => {
-        if (!field) return false; // Ensure field is not null or undefined
-        return field.toString().toLowerCase().includes(searchQuery.toLowerCase());
-      });
-  
-      return matchFound;
-    });
-  };
-  
-
 
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
@@ -338,40 +375,87 @@ function InterviewList() {
     }
   };
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, interviewData.length);
-  const currentFilteredRows = FilteredData()
-    .slice(startIndex, endIndex)
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
-  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [viewMode, setViewMode] = useState("table");
+  const handleListViewClick = () => {
+    setViewMode("table");
+  };
+  const handleKanbanViewClick = () => {
+    setViewMode("kanban");
+  };
+
   const [isMenuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
+
+  const handleEdit = (assessment) => {
+
+    navigate(`/assessment/edit/${assessment._id}`);
+  };
+
+  // const handleCloseProfile = () => {
+  //   setShowAssessmentDetails(false);
+  // };
+  const handleCloseShare = () => {
+    setIsShareOpen(false);
+  };
+
+  // const handleCloseEdit = () => {
+  //   setSelectedAssessment(null);
+  // };
+  // Detect screen size and set view mode to "kanban" for sm
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setViewMode("kanban");
+      } else {
+        setViewMode("table");
+      }
+    };
+
+    // Set initial view mode based on current window size
+    handleResize();
+
+    // Add event listener to handle window resize
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const [isFilterActive, setIsFilterActive] = useState(false);
+
   const handleFilterIconClick = () => {
-    if (interviewData.length !== 0) {
+    if (assessmentData.length !== 0) {
       setIsFilterActive((prev) => !prev);
       toggleMenu();
     }
   };
+
   return (
     <div className=" bg-background">
       <main className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8">
         <div className="sm:px-0">
+
           <motion.div
             className="flex justify-between items-center mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <h1 className="text-2xl font-semibold text-custom-blue">Interviews</h1>
+            <h1 className="text-2xl font-semibold text-custom-blue">My Assessments</h1>
 
-            <Link to="/interviews/new">
-              <Button variant="default" size="sm" className="bg-custom-blue hover:bg-custom-blue/90">
+            <Link to="/assessment/new">
+              <Button variant="default" size="sm" className="bg-custom-blue hover:bg-custom-blue/90 text-white">
                 <Plus className="h-4 w-4 mr-1" />
-                New Interview
+                New
               </Button>
             </Link>
-            
           </motion.div>
           {/* 2 */}
           <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end mb-4">
@@ -379,7 +463,7 @@ function InterviewList() {
               <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
                 <span onClick={handleListViewClick}>
                   <FaList
-                    className={`text-xl mr-4 ${viewMode === "list" ? "text-custom-blue" : ""
+                    className={`text-xl mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
                       }`}
                   />
                 </span>
@@ -405,7 +489,7 @@ function InterviewList() {
                       id="search"
                       name="search"
                       className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
-                      placeholder="Search interviews..."
+                      placeholder="Search assessment..."
                       type="search"
                       value={searchQuery}
                       onChange={handleSearchInputChange}
@@ -446,8 +530,8 @@ function InterviewList() {
                   <span
                     onClick={handleFilterIconClick}
                     style={{
-                      opacity: interviewData.length === 0 ? 0.2 : 1,
-                      pointerEvents: interviewData.length === 0 ? "none" : "auto",
+                      opacity: assessmentData.length === 0 ? 0.2 : 1,
+                      pointerEvents: assessmentData.length === 0 ? "none" : "auto",
                     }}
                   >
                     {isFilterActive ? (
@@ -460,99 +544,105 @@ function InterviewList() {
               </div>
             </div>
           </motion.div>
-
           {loading ? (
             <Loading />
           ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              {currentFilteredRows.length === 0 ? (
-                <div className="text-center py-12 bg-card rounded-lg shadow-sm border border-border">
-                  {currentFilteredRows.length === 0 ? (
-                    <p className="text-muted-foreground">No interviews match your search criteria.</p>
-                  ) : (
-                    <p className="text-muted-foreground">No interviews found. Create your first interview.</p>
+            <motion.div className="bg-white">
+
+              {viewMode === 'table' ?
+                <div className="flex relative w-full overflow-hidden">
+                  <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
+                    }`} >
+                    <AssessmentTable
+                      assessments={currentFilteredRows}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onShare={handleShareClick}
+                    />
+                  </div>
+
+                  {isMenuOpen && (
+                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                      <OffcanvasMenu
+                        isOpen={isMenuOpen}
+                        closeOffcanvas={handleFilterIconClick}
+                        onFilterChange={handleFilterChange}
+                      />
+                    </div>
                   )}
                 </div>
-              ) : (
-                viewMode === 'kanban' ? (
-                  <div className="flex relative w-full overflow-hidden">
-                    <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                      }`} >
-                      <KanbanBoard interviews={currentFilteredRows}
-                        onView={handleView}
-                        onViewPosition={handleViewPosition}
 
-
+                :
+                <div className="flex relative w-full overflow-hidden">
+                  <div className={` transition-all duration-300 ${isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
+                    }`} >
+                    <AssessmentKanban
+                      assessments={currentFilteredRows}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onShare={handleShareClick}
+                    />
+                  </div>
+                  {isMenuOpen && (
+                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                      <OffcanvasMenu
+                        isOpen={isMenuOpen}
+                        closeOffcanvas={handleFilterIconClick}
+                        onFilterChange={handleFilterChange}
                       />
                     </div>
-
-                    {isMenuOpen && (
-                      <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                        <OffcanvasMenu
-                          isOpen={isMenuOpen}
-                          closeOffcanvas={handleFilterIconClick}
-                          onFilterChange={handleFilterChange}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                ) : (
-                  // <div className="bg-card shadow-sm overflow-hidden rounded-lg border border-border">
-                  //   <InterviewTable
-                  //     interviews={currentFilteredRows}
-                  //     onView={handleView}
-                  //     onViewPosition={handleViewPosition}
-
-                  //   />
-
-                  // </div>
-                  <div className="flex relative w-full overflow-hidden">
-                    <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                      }`} >
-                      <InterviewTable
-                        interviews={currentFilteredRows}
-                        onView={handleView}
-                        onViewPosition={handleViewPosition}
-
-                      />
-                    </div>
-
-                    {isMenuOpen && (
-                      <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                        <OffcanvasMenu
-                          isOpen={isMenuOpen}
-                          closeOffcanvas={handleFilterIconClick}
-                          onFilterChange={handleFilterChange}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                )
-              )}
+                  )}
+                </div>
+              }
             </motion.div>
           )}
         </div>
       </main>
-      {selectCandidateView === true && (
-        <CandidateDetails
-          candidate={selectedCandidate}
-          onClose={() => setSelectCandidateView(null)}
+      {/* 
+      {selectedAssessment && (
+        <EditAssessment
+          onClose={handleCloseEdit}
+          candidate1={selectedAssessment}
         />
-      )}
-      {selectPositionView === true && (
-        <PositionSlideDetails
-          position={selectedPosition}
-          onClose={() => setSelectPositionView(null)}
+      )} */}
+
+      {/* {showAssessmentDetails && (
+        <AssessmentProfileDetails
+          // assessmentId={}
+          // fetchAssessmentData={fetchAssessmentData}
+          // isOpen={isMenuOpen}
+          // onOutsideClick={handleOutsideClick}
+          // linkExpiryDays={linkExpiryDays}
+          assessment={showAssessmentDetails}
+          onCloseprofile={handleCloseProfile}
+        />
+      )} */}
+
+      {/* {sidebarOpen && (
+        <>
+          <Sidebar
+            fetchAssessmentData={fetchAssessmentData}
+            showLinkExpiryDay={showLinkExpiryDay}
+            setShowLinkExpiryDays={setShowLinkExpiryDays}
+            linkExpiryDays={linkExpiryDays}
+            setLinkExpiryDays={setLinkExpiryDays}
+            onClose={closeSidebar}
+            onOutsideClick={handleOutsideClick}
+            onDataAdded={handleDataAdded}
+          />
+        </>
+      )} */}
+
+      {isShareOpen && (
+        <ShareAssessment
+          linkExpiryDays={linkExpiryDays}
+          isOpen={isShareOpen}
+          onCloseshare={handleCloseShare}
+          assessmentId={isShareOpen._id}
         />
       )}
     </div>
   );
-}
+};
 
-export default InterviewList;
+export default Assessment;

@@ -1,4 +1,4 @@
-const { Interview } = require('../models/Interview.js');
+const { Interview } = require('../models/Interview');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const InterviewTemplate = require('../models/InterviewTemplate.js');
 
@@ -7,10 +7,10 @@ const { Users } = require('../models/Users');
 const { Candidate } = require('../models/candidate');
 const { encrypt, generateOTP } = require('../utils/generateOtp');
 const sendEmail = require('../utils/sendEmail');
-const TeamsOtpSchema = require('../models/teamOtp.js');
+const TeamsOtpSchema = require('../models/teamOtp');
 const interviewQuestions = require('../models/interviewQuestions');
 const { Position } = require('../models/position.js');
-const Assessment = require("../models/assessment.js");
+const Assessment = require("../models/assessment");
 
 
 //shashank-[14/02/2025]
