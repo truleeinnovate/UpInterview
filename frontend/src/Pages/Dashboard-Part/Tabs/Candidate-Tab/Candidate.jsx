@@ -1,18 +1,9 @@
 // Import necessary dependencies and icons
 import React, { useCallback, useEffect, useState } from 'react';
-// import { FaSearch, } from 'react-icons/fa';
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-// import { MdKeyboardArrowDown } from "react-icons/md";
-// import { MdKeyboardArrowUp } from "react-icons/md";
-
 import CandidateKanban from './CandidateKanban';
-
 import Tooltip from "@mui/material/Tooltip";
-// import { IoIosArrowBack } from "react-icons/io";
-// import { IoIosArrowForward } from "react-icons/io";
-// import { FiFilter } from "react-icons/fi";
-// import { LuFilterX } from "react-icons/lu";
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateDetails';
 

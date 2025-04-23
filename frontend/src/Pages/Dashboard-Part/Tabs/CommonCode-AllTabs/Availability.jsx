@@ -1,8 +1,5 @@
 // import React, { useEffect, useState } from 'react';
 // import DatePicker from 'react-datepicker';
-// // import { FaMinus, FaPlus } from 'react-icons/fa';
-// // import { MdOutlineCancel } from 'react-icons/md';
-// // import { IoIosCopy } from 'react-icons/io';
 
 // const Availability = ({
 //     times,
@@ -373,9 +370,7 @@
 
 import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import { FaPlus, FaMinus } from 'react-icons/fa6';
-import { GiCancel } from 'react-icons/gi';
-import { IoIosCopy } from 'react-icons/io';
+import { Minus, Plus, XCircle, Copy } from 'lucide-react';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const Availability = ({
@@ -581,7 +576,7 @@ const Availability = ({
                           placeholderText="Start Time"
                           className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
                         />
-                        <FaMinus className="text-xs text-gray-600" />
+                        <Minus className="text-xs text-gray-600" />
                         <DatePicker
                           selected={parseTimeString(timeSlot.endTime)}
                           onChange={(date) =>
@@ -596,7 +591,7 @@ const Availability = ({
                         />
                         {from !== 'teamProfileDetails' &&
                           from !== 'ScheduleLaterInternalInterview' && (
-                            <GiCancel
+                            <XCircle
                               className={`text-xl w-12 cursor-pointer text-red-500 ${
                                 timeSlot.startTime && timeSlot.endTime
                                   ? 'visible'
@@ -622,7 +617,7 @@ const Availability = ({
                         placeholderText="Start Time"
                         className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
                       />
-                      <FaMinus className="text-xs text-gray-600" />
+                      <Minus className="text-xs text-gray-600" />
                       <DatePicker
                         selected={null}
                         onChange={(date) =>
@@ -635,7 +630,7 @@ const Availability = ({
                         placeholderText="End Time"
                         className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
                       />
-                      <GiCancel
+                      <XCircle
                         className="text-xl w-12 cursor-pointer text-red-500 invisible"
                       />
                     </div>
@@ -644,11 +639,11 @@ const Availability = ({
                 {from !== 'teamProfileDetails' &&
                   from !== 'ScheduleLaterInternalInterview' && (
                     <>
-                      <FaPlus
+                      <Plus
                         className="text-xl cursor-pointer"
                         onClick={() => handleAddTimeSlot(day)}
                       />
-                      <IoIosCopy
+                      <Copy
                         className="text-xl cursor-pointer"
                         onClick={(e) => handleCopy(e, day)}
                       />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { FaEye, FaPencilAlt, FaEllipsisV } from 'react-icons/fa';
+import { MoreVertical, Eye, Pencil } from 'lucide-react';
 import { Menu } from '@headlessui/react';
 
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -239,7 +239,7 @@ function InterviewTable({ interviews, onView,onViewPosition }) {
                               className="p-1 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none"
                               onClick={(e) => e.stopPropagation()} // Fix click event issue
                             >
-                              <FaEllipsisV className="w-4 h-4 text-gray-500" />
+                              <MoreVertical className="w-4 h-4 text-gray-500" />
                             </Menu.Button>
 
                             <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
@@ -249,7 +249,7 @@ function InterviewTable({ interviews, onView,onViewPosition }) {
                                     to={`/interviews/${interview._id}`}
                                     className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-50' : ''}`}
                                   >
-                                    <FaEye className="w-4 h-4 text-blue-600" />
+                                    <Eye className="w-4 h-4 text-blue-600" />
                                     View Details
                                   </Link>
                                 )}
@@ -260,7 +260,7 @@ function InterviewTable({ interviews, onView,onViewPosition }) {
                                     to={`/interviews/${interview._id}/edit`}
                                     className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-50' : ''}`}
                                   >
-                                    <FaPencilAlt className="w-4 h-4 text-green-600" />
+                                    <Pencil className="w-4 h-4 text-green-600" />
                                     Edit
                                   </Link>
                                 )}

@@ -1,16 +1,11 @@
-
-import { FaUserCircle, FaEye, FaPencilAlt, FaShareAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
-
 import { Menu } from '@headlessui/react';
-import { MdOutlineLocalPhone } from "react-icons/md";
-import { useNavigate } from 'react-router-dom';
-
+// import { useNavigate } from 'react-router-dom';
+import { MoreVertical, Eye, Pencil, Share2 } from 'lucide-react';
 
 import React from 'react'
 
-const CandidateTable = ({ assessments, onView, onEdit,onShare }) => {
-
-    const navigate = useNavigate();
+const CandidateTable = ({ assessments, onView, onEdit, onShare }) => {
+    // const navigate = useNavigate();
     return (
         <div className="w-full h-[calc(100vh-12rem)] flex flex-col">
             <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
@@ -102,10 +97,10 @@ const CandidateTable = ({ assessments, onView, onEdit,onShare }) => {
                                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                                                     <Menu as="div" className="relative">
                                                         <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                                                            <FaEllipsisV className="w-4 h-4 text-gray-500" />
+                                                            <MoreVertical className="w-4 h-4 text-gray-500" />
                                                         </Menu.Button>
                                                         <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
-                  ${index >= assessment.length - 4
+                                                            ${index >= assessment.length - 4
                                                             && "-top-44" // Open upward for last four candidates
                                                             // : "top-full"
                                                             }`}
@@ -119,7 +114,7 @@ const CandidateTable = ({ assessments, onView, onEdit,onShare }) => {
                                                                         className={`${active ? 'bg-gray-50' : ''
                                                                             } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                     >
-                                                                        <FaEye className="w-4 h-4 text-blue-600" />
+                                                                        <Eye className="w-4 h-4 text-blue-600" />
                                                                         View Details
                                                                     </button>
                                                                 )}
@@ -145,7 +140,7 @@ const CandidateTable = ({ assessments, onView, onEdit,onShare }) => {
                                                                         className={`${active ? 'bg-gray-50' : ''
                                                                             } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                     >
-                                                                        <FaPencilAlt className="w-4 h-4 text-green-600" />
+                                                                        <Pencil className="w-4 h-4 text-green-600" />
                                                                         Edit
                                                                     </button>
                                                                 )}
@@ -153,12 +148,12 @@ const CandidateTable = ({ assessments, onView, onEdit,onShare }) => {
                                                             <Menu.Item>
                                                                 {({ active }) => (
                                                                     <button
-                                                                    onClick={() => onShare(assessment)} 
+                                                                        onClick={() => onShare(assessment)}
                                                                         className={`${active ? 'bg-gray-50' : ''
                                                                             } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                                                     >
-                                                                        <FaShareAlt className="w-4 h-4 text-green-600" />
-                                                                    Share
+                                                                        <Share2 className="w-4 h-4 text-green-600" />
+                                                                        Share
                                                                     </button>
                                                                 )}
                                                             </Menu.Item>

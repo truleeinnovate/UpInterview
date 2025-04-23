@@ -16,8 +16,8 @@ import { motion } from 'framer-motion';
 import Loading from '../../../../../Components/Loading.js';
 import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
-import { MdKeyboardArrowDown } from "react-icons/md";
-import { MdKeyboardArrowUp } from "react-icons/md";
+import { ChevronUp, ChevronDown } from 'lucide-react';
+
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
@@ -139,9 +139,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
             >
               {isStatusDropdownOpen ? (
-                <MdKeyboardArrowUp />
+                <ChevronUp />
               ) : (
-                <MdKeyboardArrowDown />
+                <ChevronDown />
               )}
             </div>
           </div>
@@ -178,9 +178,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
             >
               {isTechDropdownOpen ? (
-                <MdKeyboardArrowUp />
+                <ChevronUp />
               ) : (
-                <MdKeyboardArrowDown />
+                <ChevronDown />
               )}
             </div>
           </div>
@@ -371,7 +371,7 @@ function InterviewList() {
                 New Interview
               </Button>
             </Link>
-            
+
           </motion.div>
           {/* 2 */}
           <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end mb-4">

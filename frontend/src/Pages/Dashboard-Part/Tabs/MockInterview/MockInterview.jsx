@@ -3,31 +3,25 @@ import "../../../../index.css";
 import "../styles/tabs.scss";
 import Tooltip from "@mui/material/Tooltip";
 import MockProfileDetails from "./MockProfileDetails";
-import Sidebar from "./MockInterviewForm.jsx";
 import ReschedulePopup from "./ReschedulePopup.jsx";
 import { motion } from 'framer-motion';
+import { Search } from 'lucide-react';
 
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
 import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
 import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
-import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
-import { ReactComponent as WiTime4 } from '../../../../icons/WiTime4.svg';
-import { ReactComponent as MdCancel } from '../../../../icons/MdCancel.svg';
-import { ReactComponent as GrPowerReset } from '../../../../icons/GrPowerReset.svg';
 import { usePermissions } from '../../../../Context/PermissionsContext.js';
 import { useMemo } from 'react';
 import CancelPopup from "./ScheduleCancelPopup.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import MockinterviewTable from "./MockinterviewTable.jsx";
-// import { FaSearch } from 'react-icons/fa';
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
@@ -645,7 +639,7 @@ const MockInterview = () => {
 
                     <div className="relative flex-1">
 
-                      {/* <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" /> */}
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
 
 
                       <input

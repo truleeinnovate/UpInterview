@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
-// import { MdKeyboardArrowUp, MdKeyboardArrowDown } from "react-icons/md";
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 const Sidebar = () => {
     const organization = Cookies.get("organization") === 'true';
@@ -45,7 +45,7 @@ const Sidebar = () => {
                         >
                             <span className="flex-1 ms-3 whitespace-nowrap">Billing Details</span>
                             <span>
-                                {/* {showBillingDetails ? <MdKeyboardArrowUp className="text-2xl" /> : <MdKeyboardArrowDown className="text-2xl" />} */}
+                                {showBillingDetails ? <ChevronUp className="text-2xl" /> : <ChevronDown className="text-2xl" />}
                             </span>
                         </div>
                         {showBillingDetails && (

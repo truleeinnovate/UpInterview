@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { fetchFilterData } from '../../../../utils/dataUtils.js';
-import { usePermissions } from '../../../../Context/PermissionsContext.js';
-import { useMemo } from 'react';
+// import { fetchFilterData } from '../../../../utils/dataUtils.js';
+// import { usePermissions } from '../../../../Context/PermissionsContext.js';
+// import { useMemo } from 'react';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
-import Cookies from 'js-cookie'
-import toast from "react-hot-toast";
-import { IoMdClose } from "react-icons/io";
-import { FiX } from "react-icons/fi";
+// import Cookies from 'js-cookie'
+// import toast from "react-hot-toast";
+import { X } from 'lucide-react';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
 
@@ -236,7 +235,7 @@ const handleShareClick = async () => {
                 className="text-white hover:text-gray-200 transition-colors"
                 onClick={onCloseshare}
               >
-                <IoMdClose className="text-2xl" />
+                <X className="text-2xl" />
               </button>
             </div>
 
@@ -331,7 +330,7 @@ const handleShareClick = async () => {
                           onClick={() => handleCandidateRemove(candidate._id)}
                           className="ml-2 text-blue-600 hover:text-blue-800"
                         >
-                          <FiX size={14} />
+                          <X size={14} />
                         </button>
                       </div>
                     ))}

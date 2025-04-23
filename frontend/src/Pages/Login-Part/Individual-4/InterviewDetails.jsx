@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { MdArrowDropDown } from "react-icons/md";
-import { FaSearch } from 'react-icons/fa';
-import { IoPersonOutline } from "react-icons/io5";
+import { ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Trash2, X } from 'lucide-react';
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import InfoBox from './InfoBox.jsx';
@@ -257,13 +257,13 @@ const InterviewDetails = ({
                             }`}
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <MdArrowDropDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
+                        <ChevronDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
                     </div>
                     {showTechPopup && (
                         <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                             <div className="border-b">
                                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <FaSearch className="absolute ml-1 text-gray-500" />
+                                    <Search className="absolute ml-1 text-gray-500" />
                                     <input
                                         type="text"
                                         placeholder="Search Technology"
@@ -297,7 +297,7 @@ const InterviewDetails = ({
                     <div>
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center">
-                                <IoPersonOutline className="h-4 w-4 text-gray-500 mr-2" />
+                                <User className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
                                     {selectedTechnologyies.length} technologie{selectedTechnologyies.length !== 1 ? "s" : ""} selected
                                 </span>
@@ -353,13 +353,13 @@ const InterviewDetails = ({
                         className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skills ? 'border-red-500' : 'border-gray-300'} `} placeholder="Select Multiple Skills"
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} />
+                        <ChevronDown className="text-lg" onClick={toggleSkillsPopup} />
                     </div>
                     {showSkillsPopup && (
                         <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                             <div className="border-b">
                                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <FaSearch className="absolute ml-1 text-gray-500" />
+                                    <Search className="absolute ml-1 text-gray-500" />
                                     <input
                                         type="text"
                                         placeholder="Search Skills"
@@ -400,7 +400,7 @@ const InterviewDetails = ({
                     <div>
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center">
-                                <IoPersonOutline className="h-4 w-4 text-gray-500 mr-2" />
+                                <User className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
                                     {selectedSkills.length} skill{selectedSkills.length !== 1 ? "s" : ""} selected
                                 </span>

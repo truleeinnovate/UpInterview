@@ -1,14 +1,8 @@
 import React from 'react'
 import { DndContext, closestCenter } from '@dnd-kit/core';
-
-// import { FaHourglassEnd } from "react-icons/fa";
 import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
-
-// import { FaEye, FaPencilAlt, FaUserTie, FaClock } from 'react-icons/fa';
-// import { IoMdTimer } from "react-icons/io";
-// import { MdComputer } from "react-icons/md";
-// import { MdOutlineCancel } from "react-icons/md";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Eye, Pencil, Timer, XCircle, Laptop, Hourglass, UserCheck, Clock } from 'lucide-react';
 
 const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mockinterviewDataView, onRescheduleClick, onCancel }) => {
 
@@ -92,7 +86,7 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="View Details"
                     >
-                      {/* <FaEye className="w-4 h-4" /> */}
+                      <Eye className="w-4 h-4" />
                     </button>
 
 
@@ -109,7 +103,7 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
                       className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                       title="Edit"
                     >
-                      {/* <FaPencilAlt className="w-4 h-4" /> */}
+                      <Pencil className="w-4 h-4" />
                     </button>
 
 
@@ -118,7 +112,7 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
                       className="p-1.5  hover:bg-gray-50 rounded-lg transition-colors"
                       title="Open in New Tab"
                     >
-                      {/* <IoMdTimer className="w-4 h-4 text-custom-blue" /> */}
+                      <Timer className="w-4 h-4 text-custom-blue" />
                     </button>
 
                     <button
@@ -126,7 +120,7 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
                       className="p-1.5 text-red-500 hover:bg-gray-50 rounded-lg transition-colors"
                       title="Open in New Tab"
                     >
-                      {/* <MdOutlineCancel className="w-4 h-4 " /> */}
+                      <XCircle className="w-4 h-4 " />
                     </button>
 
                   </div>
@@ -138,13 +132,13 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      {/* <MdComputer className="w-4 h-4 text-gray-500" /> */}
+                      <Laptop className="w-4 h-4 text-gray-500" />
                       <div>{mockinterview?.technology || "N/A"}</div>
                     </div>
 
 
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      {/* <FaHourglassEnd  className="w-4 h-4 text-gray-500" /> */}
+                      <Hourglass  className="w-4 h-4 text-gray-500" />
                       <span>{mockinterview?.rounds?.status || "N/A"}</span>
                     </div>
                     <div>
@@ -155,13 +149,13 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      {/* <FaUserTie className="w-4 h-4 text-gray-500" /> */}
+                      <UserCheck className="w-4 h-4 text-gray-500" />
                       <span>{mockinterview.interviewer}</span>
                     </div>
 
 
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      {/* <FaClock className="w-4 h-4 text-gray-500" /> */}
+                      <Clock className="w-4 h-4 text-gray-500" />
                       <span>{mockinterview?.createdDate.split(" ")[0] || "N/A"}</span>
                     </div>
                     <div>
@@ -172,7 +166,7 @@ const MockInterviewKanban = ({ mockinterviews, mockinterviewData, loading, mocki
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      {/* <IoMdTimer className="w-4 h-4 text-gray-500" /> */}
+                      <Timer className="w-4 h-4 text-gray-500" />
                       <span>{mockinterview?.rounds?.duration || "N/A"} mints</span>
                     </div>
                     <div>

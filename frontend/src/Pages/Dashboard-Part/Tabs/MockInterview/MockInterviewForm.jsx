@@ -7,13 +7,11 @@ import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 // import PopupComponent from "../Interviews/OutsourceOption";
 import Cookies from "js-cookie";
-// import { AiOutlineClose } from "react-icons/ai";
 // import Candidate2MiniTab from "./Candidate2MiniTab.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
 import toast from "react-hot-toast";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-
 import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 // import OutsourceOption from "../Interviews/OutsourceOption.jsx";
@@ -1301,7 +1299,7 @@ const handleRoleSelect = (role) => {
                                 onClick={handleRemoveFile}
                                 className="text-gray-500 text-sm ml-5"
                               >
-                                {/* <AiOutlineClose /> */}
+                                <X />
                               </button>
                             )}
                           </div>

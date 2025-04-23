@@ -3,13 +3,9 @@ import React, { useState } from "react";
 // import "../styles/tabs.scss";
 import MyQuestionListMain from "./MyQuestionsList.jsx"
 import SuggesstedQuestions from "./SuggesstedQuestionsMain.jsx";
-import { IoIosCloseCircleOutline } from "react-icons/io";
-import { TbArrowsMaximize } from "react-icons/tb";
-import { FiMinimize } from "react-icons/fi";
 import Popup from "reactjs-popup";
-import { FaCaretUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
-
+import { Minimize, Maximize, XCircle, ChevronUp } from 'lucide-react';
 
 // const QuestionBank = ({section,closeQuestionBank,questionBankPopupVisibility,setQuestionBankPopupVisibility}) => {
 //change done by Shashank on -[08/01/2025]
@@ -45,11 +41,11 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
                 <>
                   {questionBankPopupVisibility ? (
                     <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200" onClick={() => setQuestionBankPopupVisibility(false)}>
-                      <FiMinimize className="text-xl transition-transform duration-200 hover:scale-110" />
+                      <Minimize className="text-xl transition-transform duration-200 hover:scale-110" />
                     </button>
                   ) : (
                     <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200" onClick={() => setQuestionBankPopupVisibility(true)}>
-                      <TbArrowsMaximize className="text-xl transition-transform duration-200 hover:scale-110" />
+                      <Maximize className="text-xl transition-transform duration-200 hover:scale-110" />
                     </button>
                   )}
                 </>
@@ -78,13 +74,13 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
                   offsetX={-130}
                   trigger={
                     <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200">
-                      <IoIosCloseCircleOutline className="text-xl transition-transform duration-200 hover:scale-110" />
+                      <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
                     </button>
                   }
                 >
                   {close => (
                     <div className="mt-3 relative bg-white text-black w-[300px] rounded-md shadow-lg p-4 border border-gray-200">
-                      <FaCaretUp className="absolute right-4 -top-3 text-white text-2xl" />
+                      <ChevronUp className="absolute right-4 -top-3 text-white text-2xl" />
                       <div className="flex flex-col gap-4">
                         <h2 className="font-medium text-center text-gray-700">Are you sure to close the form?</h2>
                         <div className="flex gap-4 justify-center">
@@ -114,7 +110,7 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
                   className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200"
                   onClick={() => closeQuestionBank()}
                 >
-                  <IoIosCloseCircleOutline className="text-xl transition-transform duration-200 hover:scale-110" />
+                  <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
                 </button>
               )}
             </div>

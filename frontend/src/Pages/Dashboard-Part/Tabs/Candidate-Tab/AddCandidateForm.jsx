@@ -4,8 +4,8 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import { format } from "date-fns";
 import axios from 'axios';
-import { MdArrowDropDown } from "react-icons/md";
-import { FaSearch } from 'react-icons/fa';
+import { ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
@@ -82,14 +82,14 @@ const CustomDropdown = ({
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-          <MdArrowDropDown className="text-lg" onClick={toggleDropdown} />
+          <ChevronDown className="text-lg" onClick={toggleDropdown} />
         </div>
         {showDropdown && (
           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
             {!disableSearch && (
               <div className="border-b">
                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <FaSearch className="absolute ml-1 text-gray-500" />
+                  <Search className="absolute ml-1 text-gray-500" />
                   <input
                     type="text"
                     placeholder={`Search ${label}`}
@@ -856,13 +856,13 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
+                      <ChevronDown className="text-lg" onClick={toggleCurrentRole} />
                     </div>
                     {showDropdownCurrentRole && (
                       <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                         <div className="border-b">
                           <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <FaSearch className="absolute ml-1 text-gray-500" />
+                            <Search className="absolute ml-1 text-gray-500" />
                             <input
                               type="text"
                               placeholder="Search Current Role"

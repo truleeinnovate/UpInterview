@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Tab } from "@headlessui/react";
-import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md";
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import {
   UserPlusIcon,
   PaperAirplaneIcon,
@@ -519,9 +519,9 @@ function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
                     onClick={() => toggleArrow1(index)}
                   >
                     {toggleStates[index] ? (
-                      <MdOutlineKeyboardArrowUp className="text-xl" />
+                      <ChevronUp className="text-xl" />
                     ) : (
-                      <MdOutlineKeyboardArrowDown className="text-xl" />
+                      <ChevronDown className="text-xl" />
                     )}
                   </button>
                 </div>

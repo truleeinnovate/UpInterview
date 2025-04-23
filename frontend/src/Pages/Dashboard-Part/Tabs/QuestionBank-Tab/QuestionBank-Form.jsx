@@ -9,7 +9,7 @@ import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateQuestionBankData } from "../../../../utils/questionBankValidation.js";
 import Cookies from "js-cookie";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
-import { FaSearch } from 'react-icons/fa';
+import { Search } from 'lucide-react';
 
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as IoArrowBack } from "../../../../icons/IoArrowBack.svg";
@@ -673,7 +673,7 @@ const Interviewcq = ({
                         <div className="absolute bg-white shadow rounded border-gray-300 w-full -mt-3 max-h-60 overflow-y-auto z-10">
                           <div className="border-b">
                             <div className="flex items-center border rounded px-2 py-1 m-2">
-                              <FaSearch className="absolute ml-1 text-gray-500" />
+                              <Search className="absolute ml-1 text-gray-500" />
                               <input
                                 type="text"
                                 placeholder="Search Skills"
@@ -1217,6 +1217,7 @@ export default Interviewcq;
 // import Cookies from "js-cookie";
 // import MyQuestionList from "./MyQuestionsListPopup.jsx";
 // import { FaSearch } from 'react-icons/fa';
+
 
 
 // import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";

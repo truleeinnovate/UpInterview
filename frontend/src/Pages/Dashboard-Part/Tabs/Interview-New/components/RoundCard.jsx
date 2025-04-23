@@ -1,5 +1,4 @@
 import React, { useState,useEffect } from 'react';
-import PropTypes from 'prop-types';
 import {
   Calendar,
   Clock,
@@ -10,12 +9,11 @@ import {
   ChevronDown,
   ChevronUp,
   MessageSquare,
-  Users,
   User,
   ExternalLink
 } from 'lucide-react';
 
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
+// import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import RejectionModal from './RejectionModal';
 import FeedbackModal from './FeedbackModal';
@@ -24,7 +22,6 @@ import { Button } from '../../CommonCode-AllTabs/ui/button';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
-import { FaChevronUp} from 'react-icons/fa';
 
 const RoundCard = ({
   round,
@@ -436,7 +433,7 @@ const RoundCard = ({
                                 className="flex justify-between items-center w-full"
                               >
                                 <span className="font-medium text-gray-800">{section.SectionName}</span>
-                                <FaChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'} text-gray-500`} />
+                                <ChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'} text-gray-500`} />
                               </button>
 
                               {expandedSections[section._id] && (

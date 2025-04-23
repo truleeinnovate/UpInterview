@@ -1,5 +1,5 @@
 import React from 'react';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { AlertCircle } from 'lucide-react';
 
 const ConfirmationPopup = ({
   isOpen,
@@ -22,7 +22,7 @@ const ConfirmationPopup = ({
     >
       <div className="absolute top-0 bg-white p-8 rounded-lg shadow-lg mt-16">
         <div className="text-center">
-          <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400" />
+          <AlertCircle className="mx-auto mb-4 h-14 w-14 text-gray-400" />
           <h3 className="mb-5 text-lg font-normal text-gray-500">{title}</h3>
           <p className="mb-5 text-gray-500">{message}</p>
           <div className="flex justify-center gap-4">

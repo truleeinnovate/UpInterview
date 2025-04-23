@@ -1,13 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { toast } from 'react-toastify';
-import { IoIosCloseCircleOutline, IoMdClose } from "react-icons/io";
-import { FaPlus, FaAngleDown, FaAngleUp } from "react-icons/fa6";
 import Popup from "reactjs-popup";
-import { FaSearch } from "react-icons/fa";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
-// import Tooltip from "@mui/material/Tooltip";
 import { Tooltip } from "@mui/material";
+import { XCircle, ChevronUp, ChevronDown, Search, X, Plus } from 'lucide-react';
 
 import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBack.svg";
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
@@ -433,7 +430,7 @@ const SuggestedQuestionsComponent = ({
                 <div className="flex justify-between items-center p-2 border-b-[1px] border-[gray]">
                     <h3 className="font-medium">Filters</h3>
                     <button onClick={() => closeFilter()}>
-                        <IoIosCloseCircleOutline />
+                        <XCircle />
                     </button>
                 </div>
                 {/* filter by question type */}
@@ -444,7 +441,7 @@ const SuggestedQuestionsComponent = ({
                     >
                         <h3 className="font-medium">Question Type</h3>
                         <button>
-                            {filtrationData[0].isOpen ? <FaAngleUp /> : <FaAngleDown />}
+                            {filtrationData[0].isOpen ? <ChevronUp /> : <ChevronDown />}
                         </button>
                     </div>
                     {filtrationData[0].isOpen && (
@@ -479,7 +476,7 @@ const SuggestedQuestionsComponent = ({
                     >
                         <h3 className="font-medium">Difficulty Level</h3>
                         <button>
-                            {filtrationData[1].isOpen ? <FaAngleUp /> : <FaAngleDown />}
+                            {filtrationData[1].isOpen ? <ChevronUp /> : <ChevronDown />}
                         </button>
                     </div>
                     {filtrationData[1].isOpen && (
@@ -514,7 +511,7 @@ const SuggestedQuestionsComponent = ({
                     >
                         <h3 className="font-medium">Experiences</h3>
                         <button>
-                            {filtrationData[2].isOpen ? <FaAngleUp /> : <FaAngleDown />}
+                            {filtrationData[2].isOpen ? <ChevronUp /> : <ChevronDown />}
                         </button>
                     </div>
                     {filtrationData[2].isOpen && (
@@ -563,7 +560,7 @@ const SuggestedQuestionsComponent = ({
                             }  relative flex items-center rounded-md border`}
                     >
                         <span className="text-custom-blue p-2">
-                            <FaSearch />
+                            <Search />
                         </span>
                         <input
                             onChange={(e) => setSkillInput(e.target.value)}
@@ -587,7 +584,7 @@ const SuggestedQuestionsComponent = ({
                             } relative flex items-center rounded-md border`}
                     >
                         <span className={`p-2 text-[#227a8a]`}>
-                            <FaSearch />
+                            <Search />
                         </span>
                         <input
                             type="search"
@@ -759,7 +756,7 @@ const SuggestedQuestionsComponent = ({
                           className="cursor-pointer hover:text-red-500 transition-colors"
                           onClick={() => onClickCrossIcon(skill)}
                         >
-                          <IoMdClose size={14} />
+                          <X size={14} />
                         </button>
                       </li>
                     ))}
@@ -785,7 +782,7 @@ const SuggestedQuestionsComponent = ({
                               onClickRemoveSelectedFilterItem(index, filterItem)
                             }
                           >
-                            <IoMdClose size={14} />
+                            <X size={14} />
                           </button>
                         </li>
                       )
@@ -919,7 +916,7 @@ const SuggestedQuestionsComponent = ({
                               className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue hover:bg-blue-50 transition-colors"
                               onClick={() => toggleDropdown(item._id)}
                             >
-                              <FaPlus />
+                              <Plus />
                             </button>
                             {dropdownOpen === item._id && (
                               <MyQuestionList

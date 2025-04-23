@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MdArrowDropDown } from "react-icons/md";
-import { FaSearch } from 'react-icons/fa';
 import InfoBox from './InfoBox.jsx';
+import { ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 
 const AdditionalDetails = ({
@@ -192,13 +192,13 @@ const AdditionalDetails = ({
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
+                            <ChevronDown className="text-lg" onClick={toggleCurrentRole} />
                         </div>
                         {showDropdownCurrentRole && (
                             <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <FaSearch className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Current Role"
@@ -343,13 +343,13 @@ const AdditionalDetails = ({
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} />
+                            <ChevronDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} />
                         </div>
                         {showDropdownIndustry && (
                             <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <FaSearch className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Industry"
@@ -400,13 +400,13 @@ const AdditionalDetails = ({
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <MdArrowDropDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
+                            <ChevronDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
                         </div>
                         {showDropdownLocation && (
                             <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <FaSearch className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500" />
                                         <input
                                             type="text"
                                             placeholder="Search Location"
