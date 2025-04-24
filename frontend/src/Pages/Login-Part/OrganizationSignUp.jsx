@@ -46,8 +46,6 @@ export const Organization = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
-  const emailInputRef = useRef(null);
-  const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
 
@@ -80,59 +78,6 @@ export const Organization = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  // const checkEmailExists = useCallback(async (email) => {
-  //   if (!email) return false;
-  //   try {
-  //     const response = await axios.get(
-  //       `${config.REACT_APP_API_URL}/check-email?email=${email}`
-  //     );
-  //     return response.data.exists;
-  //   } catch (error) {
-  //     console.error("Email check error:", error);
-  //     return false;
-  //   }
-  // }, []);
-
-  // const checkProfileIdExists = useCallback(async (profileId) => {
-  //   if (!profileId) return false;
-  //   try {
-  //     const response = await axios.get(
-  //       `${config.REACT_APP_API_URL}/check-username?username=${profileId}`
-  //     );
-  //     return response.data.exists;
-  //   } catch (error) {
-  //     console.error("Profile ID check error:", error);
-  //     return false;
-  //   }
-  // }, []);
-
-  // const handleEmailValidation = async (email) => {
-  //   if (!email) {
-  //     setErrors((prev) => ({ ...prev, email: '' }));
-  //     setIsCheckingEmail(false);
-  //     return;
-  //   }
-
-  //   setIsCheckingEmail(true);
-  //   const errorMessage = await validateEmail(email, checkEmailExists);
-  //   setErrors((prev) => ({ ...prev, email: errorMessage }));
-  //   setIsCheckingEmail(false);
-  // };
-
-  // const handleProfileIdValidation = async (profileId) => {
-  //   if (!profileId) {
-  //     setErrors((prev) => ({ ...prev, profileId: '' }));
-  //     setIsCheckingProfileId(false);
-  //     return;
-  //   }
-
-  //   setIsCheckingProfileId(true);
-  //   const errorMessage = await validateProfileId(profileId, checkProfileIdExists);
-  //   setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-  //   setIsCheckingProfileId(false);
-  // };
-
   const handleChange = (field, value) => {
     if (field === 'email') {
       setSelectedEmail(value);
@@ -448,31 +393,6 @@ export const Organization = () => {
                 </label>
                 {errors.jobTitle && <p className="text-red-500 text-xs mt-1">{errors.jobTitle}</p>}
               </div>
-              {/* <div className="relative">
-                <input
-                  type="text"
-                  id="Email"
-                  className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                  placeholder=" "
-                  value={selectedEmail}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  onBlur={(e) => handleBlur('email', e.target.value)}
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-                <label
-                  htmlFor="Email"
-                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                >
-                  Work Email
-                </label>
-                {isCheckingEmail && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  </div>
-                )}
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-              </div> */}
               <div className="relative">
                 <input
                   type="email"
@@ -659,31 +579,6 @@ export const Organization = () => {
                 )}
                 {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
               </div>
-              {/* <div className="relative">
-                <input
-                  type="text"
-                  id="profileId"
-                  className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.profileId ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                  placeholder=" "
-                  value={selectedProfileId}
-                  onChange={(e) => handleChange('profileId', e.target.value)}
-                  onBlur={(e) => handleBlur('profileId', e.target.value)}
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-                <label
-                  htmlFor="profileId"
-                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                >
-                  Profile ID / UserName
-                </label>
-                {isCheckingProfileId && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  </div>
-                )}
-                {errors.profileId && <p className="text-red-500 text-xs mt-1">{errors.profileId}</p>}
-              </div> */}
               <div className="relative">
                 <input
                   type="text"

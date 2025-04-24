@@ -46,7 +46,7 @@ const BasicDetails = ({
 
     emailTimeoutRef.current = setTimeout(async () => {
       let errorMessage = '';
-      
+
       if (!email) {
         errorMessage = 'Email is required';
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -68,8 +68,8 @@ const BasicDetails = ({
       if (!errorMessage && email) {
         const generatedProfileId = generateProfileId(email);
         // Only update profileId if it's empty or matches the generated pattern
-        if (!basicDetailsData.profileId || 
-            basicDetailsData.profileId === generateProfileId(basicDetailsData.email)) {
+        if (!basicDetailsData.profileId ||
+          basicDetailsData.profileId === generateProfileId(basicDetailsData.email)) {
           setBasicDetailsData((prev) => ({
             ...prev,
             profileId: generatedProfileId,
@@ -261,6 +261,19 @@ const BasicDetails = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (basicDetailsData.email) {
+      const profileId = basicDetailsData.email.split('@')[0].replace(/[^a-zA-Z0-9.]/g, '');
+  
+      setBasicDetailsData(prev => ({
+        ...prev,
+        profileId,
+      }));
+  
+      handleProfileIdValidation(profileId);
+    }
+  }, [basicDetailsData.email, setBasicDetailsData, handleProfileIdValidation]);
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
       {/* Info box */}
@@ -321,8 +334,8 @@ const BasicDetails = ({
         </div>
       </div>
 
-    {/* Email Field */}
-    <div className="sm:col-span-6 col-span-2">
+      {/* Email Field */}
+      <div className="sm:col-span-6 col-span-2">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
           Email Address <span className="text-red-500">*</span>
         </label>
@@ -341,9 +354,8 @@ const BasicDetails = ({
             value={basicDetailsData.email}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="your.email@example.com"
             autoComplete="email"
           />
@@ -421,12 +433,14 @@ const BasicDetails = ({
         />
       </div>
 
-     {/* Profile ID Field */}
-     <div className="sm:col-span-3">
+      {/* Profile ID Field */}
+      <div className="sm:col-span-3">
         <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-1">
           Profile ID <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
+
+        {/* This wrapper controls the width for both input and dropdown */}
+        <div className="relative inline-block w-full max-w-md">
           <input
             ref={profileIdInputRef}
             type="text"
@@ -434,7 +448,6 @@ const BasicDetails = ({
             id="profileId"
             value={basicDetailsData.profileId}
             onChange={(e) => {
-              // Only allow letters, numbers and dots
               const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, '');
               setBasicDetailsData(prev => ({ ...prev, profileId: value }));
               handleProfileIdValidation(value);
@@ -442,9 +455,8 @@ const BasicDetails = ({
             onBlur={handleBlur}
             onFocus={handleProfileIdFocus}
             placeholder="profile.id"
-            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-              errors.profileId ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.profileId ? 'border-red-500' : 'border-gray-300'
+              }`}
             autoComplete="profileId"
           />
           {isCheckingProfileId && (
@@ -452,28 +464,31 @@ const BasicDetails = ({
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
             </div>
           )}
+
+          {showSuggestions && suggestedProfileIds.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
+              <div className="py-1">
+                <p className="px-3 py-1 text-xs text-gray-500">Try one of these:</p>
+                {suggestedProfileIds.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => selectSuggestion(suggestion)}
+                    className="block w-full text-left px-3 py-1 text-sm text-blue-600 hover:bg-blue-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
         {errors.profileId && (
           <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>
         )}
-        {showSuggestions && suggestedProfileIds.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
-            <div className="py-1">
-              <p className="px-3 py-1 text-xs text-gray-500">Try one of these:</p>
-              {suggestedProfileIds.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => selectSuggestion(suggestion)}
-                  className="block w-full text-left px-3 py-1 text-sm text-blue-600 hover:bg-blue-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
 
       {/* Gender */}
       <div className="sm:col-span-3 relative" ref={genderDropdownRef}>
