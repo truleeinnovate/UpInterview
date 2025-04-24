@@ -265,14 +265,18 @@ const BasicDetails = ({
     if (basicDetailsData.email) {
       const profileId = basicDetailsData.email.split('@')[0].replace(/[^a-zA-Z0-9.]/g, '');
   
-      setBasicDetailsData(prev => ({
-        ...prev,
-        profileId,
-      }));
+      // Only update if the profileId is different from the current one
+      if (basicDetailsData.profileId !== profileId) {
+        setBasicDetailsData(prev => ({
+          ...prev,
+          profileId,
+        }));
   
-      handleProfileIdValidation(profileId);
+        handleProfileIdValidation(profileId);
+      }
     }
-  }, [basicDetailsData.email, setBasicDetailsData, handleProfileIdValidation]);
+  }, [basicDetailsData.email, basicDetailsData.profileId, setBasicDetailsData, handleProfileIdValidation]);
+  
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
