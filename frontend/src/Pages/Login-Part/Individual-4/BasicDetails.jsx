@@ -272,7 +272,7 @@ const BasicDetails = ({
   
       handleProfileIdValidation(profileId);
     }
-  }, [basicDetailsData.email]);
+  }, []);
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
