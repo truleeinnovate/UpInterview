@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-
-import { FaTrash, FaExpand, FaCompress, FaSearch } from 'react-icons/fa';
 import { ReactComponent as FaTimes } from '../../../../../../icons/FaTimes.svg';
 import classNames from 'classnames';
 import Modal from 'react-modal';
-import { MdArrowDropDown } from 'react-icons/md';
+import { Maximize2, Minimize2, Search, ChevronDown } from 'lucide-react';
+
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { IoPersonOutline } from "react-icons/io5";
 // import { ReactComponent as FaEdit } from '../../../../../icons/FaEdit.svg';
 import axios from 'axios';
 import { isEmptyObject, validateAdvancedForm } from '../../../../../../utils/MyProfileValidations';
@@ -266,9 +264,9 @@ const EditAdvacedDetails = () => {
       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
     >
       {isFullScreen ? (
-        <FaCompress className="w-5 h-5 text-gray-500" />
+        <Minimize2 className="w-5 h-5 text-gray-500" />
       ) : (
-        <FaExpand className="w-5 h-5 text-gray-500" />
+        <Maximize2 className="w-5 h-5 text-gray-500" />
       )}
     </button>
     <button
@@ -309,13 +307,13 @@ const EditAdvacedDetails = () => {
                     readOnly
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <MdArrowDropDown className="text-lg" onClick={toggleCurrentRole} />
+                    <ChevronDown className="text-lg" onClick={toggleCurrentRole} />
                   </div>
                   {showDropdownCurrentRole && (
                     <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                       <div className="border-b">
                         <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <FaSearch className="absolute ml-1 text-gray-500" />
+                          <Search className="absolute ml-1 text-gray-500" />
                           <input
                             type="text"
                             placeholder="Search Current Role"
@@ -362,7 +360,7 @@ const EditAdvacedDetails = () => {
                     readOnly
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <MdArrowDropDown
+                    <ChevronDown
                       className="text-lg"
                       onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
                     />
@@ -371,7 +369,7 @@ const EditAdvacedDetails = () => {
                     <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                       <div className="border-b">
                         <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <FaSearch className="absolute ml-1 text-gray-500" />
+                          <Search className="absolute ml-1 text-gray-500" />
                           <input
                             type="text"
                             placeholder="Search Industry"
@@ -430,7 +428,7 @@ const EditAdvacedDetails = () => {
                     readOnly
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <MdArrowDropDown
+                    <ChevronDown
                       className="text-lg"
                       onClick={() => setShowDropdownLocation(!showDropdownLocation)}
                     />
@@ -439,7 +437,7 @@ const EditAdvacedDetails = () => {
                     <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
                       <div className="border-b">
                         <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <FaSearch className="absolute ml-1 text-gray-500" />
+                          <Search className="absolute ml-1 text-gray-500" />
                           <input
                             type="text"
                             placeholder="Search Location"

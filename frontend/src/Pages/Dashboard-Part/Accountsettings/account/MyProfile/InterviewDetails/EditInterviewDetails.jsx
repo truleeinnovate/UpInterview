@@ -1,30 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-import { FaTrash, FaExpand, FaCompress, FaSearch } from 'react-icons/fa';
 import { ReactComponent as FaTimes } from '../../../../../../icons/FaTimes.svg';
 import classNames from 'classnames';
 import Modal from 'react-modal';
-import { MdArrowDropDown } from 'react-icons/md';
-// import { useCustomContext } from '../../../../../../Context/Contextfetch';
-// import { IoPersonOutline } from "react-icons/io5";
-// import { ReactComponent as FaEdit } from '../../../../../icons/FaEdit.svg';
+import { Maximize2, Minimize2, Search, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import { fetchMasterData } from '../../../../../../utils/fetchMasterData';
 import { isEmptyObject, validateInterviewForm } from '../../../../../../utils/MyProfileValidations';
-
 import { ReactComponent as Technology } from '../../../../../../icons/technology.svg';
 import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { useNavigate, useParams } from 'react-router-dom';
-
-
 
 const EditInterviewDetails = () => {
 
   const {
     skills,
     contacts,
-    setContacts
   } = useCustomContext();
   const popupRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -461,9 +453,9 @@ const EditInterviewDetails = () => {
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 {isFullScreen ? (
-                  <FaCompress className="w-5 h-5 text-gray-500" />
+                  <Minimize2 className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <FaExpand className="w-5 h-5 text-gray-500" />
+                  <Maximize2 className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
@@ -496,13 +488,13 @@ const EditInterviewDetails = () => {
                       className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <MdArrowDropDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
+                      <ChevronDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
                     </div>
                     {showTechPopup && (
                       <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                         <div className="border-b">
                           <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <FaSearch className="absolute ml-1 text-gray-500" />
+                            <Search className="absolute ml-1 text-gray-500" />
                             <input
                               type="text"
                               placeholder="Search Technology"
@@ -571,13 +563,13 @@ const EditInterviewDetails = () => {
 
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <MdArrowDropDown className="text-lg" onClick={toggleSkillsPopup} />
+                      <ChevronDown className="text-lg" onClick={toggleSkillsPopup} />
                     </div>
                     {showSkillsPopup && (
                       <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                         <div className="border-b">
                           <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <FaSearch className="absolute ml-1 text-gray-500" />
+                            <Search className="absolute ml-1 text-gray-500" />
                             <input
                               type="text"
                               placeholder="Search Skills"

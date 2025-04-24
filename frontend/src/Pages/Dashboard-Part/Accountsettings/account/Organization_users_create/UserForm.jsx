@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { TbCameraPlus } from "react-icons/tb";
-import { MdUpdate, MdArrowDropDown } from "react-icons/md";
-import { ImCancelCircle } from "react-icons/im";
-import { FaExpand, FaCompress, } from 'react-icons/fa';
 import axios from "axios";
 import Cookies from 'js-cookie';
-import { IoArrowBack } from "react-icons/io5";
-import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
+import {
+  Camera,
+  History,
+  ChevronDown,
+  XCircle,
+  Maximize,
+  Minimize,
+} from 'lucide-react';
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm, validateEmail } from "../../../../../utils/AppUserValidation";
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
@@ -330,9 +333,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           <div className="flex items-center gap-2">
             <button onClick={toggleFullWidth} className="p-1 rounded-full hover:bg-white/10">
               {isFullScreen ? (
-                <FaCompress className="w-5 h-5 text-gray-500" />
+                <Minimize className="w-5 h-5 text-gray-500" />
               ) : (
-                <FaExpand className="w-5 h-5 text-gray-500" />
+                <Maximize className="w-5 h-5 text-gray-500" />
               )}
             </button>
             <button onClick={handleClose} className="sm:hidden">
@@ -357,17 +360,17 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200">
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button type="button" onClick={handleReplaceImage} className="text-white hover:text-blue-400" disabled={isSubmitting}>
-                            <MdUpdate className="text-2xl" />
+                            <History className="text-2xl" />
                           </button>
                           <button type="button" onClick={handleDeleteImage} className="text-white hover:text-red-400" disabled={isSubmitting}>
-                            <ImCancelCircle className="text-2xl" />
+                            <XCircle className="text-2xl" />
                           </button>
                         </div>
                       </div>
                     </>
                   ) : (
                     <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50" disabled={isSubmitting}>
-                      <TbCameraPlus className="text-4xl text-gray-400" />
+                      <Camera className="text-4xl text-gray-400" />
                       <span className="text-sm text-gray-500 mt-2">Upload Photo</span>
                     </button>
                   )}
@@ -475,7 +478,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue cursor-pointer ${isSubmitting ? 'opacity-50' : ''}`}
                       disabled={isSubmitting}
                     />
-                    <MdArrowDropDown className="absolute right-3 top-3 text-xl text-gray-500" />
+                    <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
                     {showDropdownRole && (
                       <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
                         <div className="p-2 border-b">
