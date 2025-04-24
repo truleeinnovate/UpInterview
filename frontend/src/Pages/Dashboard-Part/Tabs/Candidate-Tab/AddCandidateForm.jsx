@@ -82,14 +82,14 @@ const CustomDropdown = ({
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-          <ChevronDown className="text-lg" onClick={toggleDropdown} />
+          <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
         </div>
         {showDropdown && (
           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
             {!disableSearch && (
               <div className="border-b">
                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <Search className="absolute ml-1 text-gray-500" />
+                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                   <input
                     type="text"
                     placeholder={`Search ${label}`}
@@ -610,7 +610,7 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
         <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-custom-blue">
+              <h2 className="text-2xl font-semibold text-custom-blue">
                 Add New Candidate
               </h2>
               <div className="flex items-center gap-2">
@@ -856,13 +856,13 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown className="text-lg" onClick={toggleCurrentRole} />
+                      <ChevronDown className="text-lg w-5 h-5" onClick={toggleCurrentRole} />
                     </div>
                     {showDropdownCurrentRole && (
                       <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                         <div className="border-b">
                           <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <Search className="absolute ml-1 text-gray-500" />
+                            <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                             <input
                               type="text"
                               placeholder="Search Current Role"
@@ -963,9 +963,9 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center text-sm bg-custom-blue text-white px-3 py-1 rounded"
+                    className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded"
                   >
-                    <FaPlus className="mr-2" /> Add Skills
+                    <FaPlus className="mr-1 w-5 h-5" /> Add Skills
                   </button>
                 </div>
                 {errors.skills && (

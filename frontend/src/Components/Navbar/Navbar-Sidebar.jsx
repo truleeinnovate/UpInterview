@@ -523,15 +523,15 @@ const Navbar = () => {
                 {moreDropdown && (
                   <div className="absolute p-2 z-10 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 border">
                     <div className="space-y-1">
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/candidate" onClick={() => { setMoreDropdown(false); }} >
+                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/candidates" onClick={() => { setMoreDropdown(false); }} >
                         Candidates
                       </NavLink>
                       <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/position" onClick={() => { setMoreDropdown(false); }} >
                         Positions
                       </NavLink>
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/team" onClick={() => { setMoreDropdown(false); }} >
+                      {/* <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/team" onClick={() => { setMoreDropdown(false); }} >
                         Teams
-                      </NavLink>
+                      </NavLink> */}
                     </div>
                   </div>
                 )}

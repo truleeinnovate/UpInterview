@@ -191,7 +191,7 @@ const Admin = () => {
                 </div>
 
                 {/* Login & Cancel Buttons */}
-                <div className="flex flex-col items-center">
+                {/* <div className="flex flex-col items-center">
                   <button
                     type="submit"
                     className="bg-custom-blue text-white rounded-full px-16 py-2 mb-2"
@@ -205,7 +205,23 @@ const Admin = () => {
                   >
                     Cancel
                   </button>
+                </div> */}
+                <div className="flex flex-col space-y-2">
+                  <button
+                    type="submit"
+                    className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300"
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
                 </div>
+
 
                 {/* Signup Link */}
                 <div className="flex justify-center mt-4">

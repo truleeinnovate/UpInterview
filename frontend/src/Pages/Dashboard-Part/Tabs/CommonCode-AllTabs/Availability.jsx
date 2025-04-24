@@ -1,377 +1,5 @@
-// import React, { useEffect, useState } from 'react';
-// import DatePicker from 'react-datepicker';
-
-// const Availability = ({
-//     times,
-//     onTimesChange,
-//     availabilityError,
-//     onAvailabilityErrorChange,
-//     from,
-//     availabilityData
-// }) => {
-
-//     console.log("Availability Data (Raw):", availabilityData);
-
-//     // Format data for better readability (if applicable)
-//     const formattedData = availabilityData?.map((entry) => ({
-//         contact: entry.contact || "No contact ID",
-//         days: entry.days?.map((day) => ({
-//             day: day.day,
-//             timeSlots: day.timeSlots?.map((slot) => ({
-//                 startTime: new Date(slot.startTime).toLocaleString(),
-//                 endTime: new Date(slot.endTime).toLocaleString(),
-//             })),
-//         })),
-//     }));
-
-//     // Log formatted data
-//     console.log("Availability Data (Formatted):", formattedData);
-
-//     const [showPopup, setShowPopup] = useState(false);
-//     const [selectedDay, setSelectedDay] = useState(null);
-//     const [selectedDays, setSelectedDays] = useState([]);
-
-//     // All days of the week
-//     const allDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-//     const handleAddTimeSlot = (day) => {
-//         const newTimes = {
-//             ...times,
-//             [day]: [...(times[day] || []), { startTime: null, endTime: null }]
-//         };
-//         console.log('Updated times after adding slot:', newTimes);
-//         onTimesChange(newTimes);
-//     };
-
-//     // const handleRemoveTimeSlot = (day, index) => {
-//     //     const newTimes = {
-//     //         ...times,
-//     //         [day]: times[day].filter((_, i) => i !== index)
-//     //     };
-//     //     console.log('Updated times after removing slot:', newTimes);
-//     //     onTimesChange(newTimes);
-//     // };
-
-//     const handleCopy = (e, day) => {
-//         e.stopPropagation();
-//         setSelectedDay(day);
-//         setSelectedDays([]);
-//         setShowPopup(true);
-//     };
-
-//     const handlePaste = () => {
-//         const sourceTimeSlots = times[selectedDay] || [];
-//         const newTimes = { ...times };
-
-//         selectedDays.forEach(targetDay => {
-//             newTimes[targetDay] = [...sourceTimeSlots];
-//         });
-
-//         onTimesChange(newTimes);
-//         setShowPopup(false);
-//         setSelectedDays([]);
-//     };
-
-//     // const updateTimeSlot = (day, index, field, date) => {
-//     //     const formatTime = (date) => {
-//     //         if (!date || isNaN(date.getTime())) return null;
-//     //         const hours = date.getHours().toString().padStart(2, '0');
-//     //         const minutes = date.getMinutes().toString().padStart(2, '0');
-//     //         return `${hours}:${minutes}`;
-//     //     };
-
-//     //     const newTimes = {
-//     //         ...times,
-//     //         [day]: times[day].map((slot, i) =>
-//     //             i === index ? { ...slot, [field]: formatTime(date) } : slot
-//     //         )
-//     //     };
-
-//     //     console.log('Updated times after time slot change:', newTimes);
-//     //     onTimesChange(newTimes);
-//     // };
-
-//     // const updateTimeSlot = (day, index, field, date) => {
-//     //     if (!date || isNaN(date.getTime())) return; // Exit early if date is invalid
-
-//     //     const formatTime = (date) => {
-//     //         if (!date || isNaN(date.getTime())) return null;
-//     //         const hours = date.getHours().toString().padStart(2, '0');
-//     //         const minutes = date.getMinutes().toString().padStart(2, '0');
-//     //         return `${hours}:${minutes}`;
-//     //     };
-
-//     //     const newTimes = {
-//     //         ...times,
-//     //         [day]: times[day].map((slot, i) =>
-//     //             i === index ? { ...slot, [field]: formatTime(date) } : slot
-//     //         )
-//     //     };
-
-//     //     console.log('Updated times after time slot change:', newTimes);
-//     //     onTimesChange(newTimes);
-//     // };
-
-
-//     useEffect(() => {
-//         if (availabilityData?.length > 0) {
-//             const updatedTimes = {};
-
-//             // Go through the availability data and build the times object
-//             availabilityData.forEach((availabilityItem) => {
-//                 availabilityItem.days.forEach((dayItem) => {
-//                     if (!updatedTimes[dayItem.day]) {
-//                         updatedTimes[dayItem.day] = [];
-//                     }
-
-//                     dayItem.timeSlots.forEach((slot) => {
-//                         const existingSlot = updatedTimes[dayItem.day].find(
-//                             (existingSlot) =>
-//                                 existingSlot.startTime === slot.startTime &&
-//                                 existingSlot.endTime === slot.endTime
-//                         );
-
-//                         if (!existingSlot) {
-//                             updatedTimes[dayItem.day].push(slot);
-//                         }
-//                     });
-//                 });
-//             });
-
-//             onTimesChange(updatedTimes);
-//         }
-//     }, [availabilityData, onTimesChange]);
-
-//     // const parseTimeString = (timeString) => {
-//     //     if (!timeString) return null;
-//     //     const [hours, minutes] = timeString.split(":").map(Number);
-//     //     const date = new Date();
-//     //     date.setHours(hours);
-//     //     date.setMinutes(minutes);
-//     //     date.setSeconds(0);
-//     //     return date;
-//     // };
-
-//     // const parseTimeString = (timeString) => {
-//     //     if (!timeString) return null;  // Return null if timeString is invalid or empty
-//     //     const [hours, minutes] = timeString.split(":").map(Number);
-
-//     //     if (isNaN(hours) || isNaN(minutes)) return null;  // Check if time values are NaN
-
-//     //     const date = new Date();
-//     //     date.setHours(hours);
-//     //     date.setMinutes(minutes);
-//     //     date.setSeconds(0);
-//     //     return date;
-//     // };
-
-//     // Utility function to parse time strings into Date objects
-//     const parseTimeString = (timeString) => {
-//         return timeString ? new Date(timeString) : null;
-//     };
-
-//     // Utility function to update a specific time slot
-//     const updateTimeSlot = (day, index, field, value) => {
-//         const updatedTimes = { ...times };
-//         updatedTimes[day][index][field] = value;
-//         onTimesChange(updatedTimes);
-//     };
-
-//     // Utility function to handle removal of time slots
-//     const handleRemoveTimeSlot = (day, index) => {
-//         const updatedTimes = { ...times };
-//         updatedTimes[day].splice(index, 1);
-//         onTimesChange(updatedTimes);
-//     };
-
-
-//     return (
-//         <div>
-//             {allDays.map((day) => (
-//                 <div key={day}>
-//                     <div className={`flex space-y-8
-//                         ${from === 'teamProfileDetails' ? 'justify-start' : ''}
-//                         ${from === "createTeams" ? 'justify-center' : ''}`}
-//                     >
-//                         <span className="w-24 mr-10 mt-7">{day}</span>
-//                         <div>
-//                             {/* Conditionally render content based on `from` */}
-//                             {from === 'teamProfileDetails' || from === 'ScheduleLaterInternalInterview' ? (
-//                                 // Show "Unavailable" if from === 'teamProfileDetails' and from === 'ScheduleLaterInternalInterview'
-//                                 (times[day] && times[day].length > 0) ? (
-//                                     times[day].map((timeSlot, index) => (
-//                                         <div key={index} className={`flex items-center -mt-2 justify-center ${index > 0 ? 'mt-5' : ''}`}>
-//                                             <div className="w-28 mr-5">
-//                                                 <div className="border-2 border-black">
-//                                                     <div className="flex justify-center">
-//                                                         <DatePicker
-//                                                             selected={parseTimeString(timeSlot.startTime) || new Date()}
-//                                                             onChange={(date) => updateTimeSlot(day, index, 'startTime', date)}
-//                                                             showTimeSelect
-//                                                             showTimeSelectOnly
-//                                                             timeIntervals={15}
-//                                                             dateFormat="h:mm aa"
-//                                                             placeholderText="Start Time"
-//                                                             className="p-2 w-full"
-//                                                         />
-//                                                     </div>
-//                                                 </div>
-//                                             </div>
-//                                             <span>-</span>
-//                                             <div className="max-w-sm w-28 ml-5">
-//                                                 <div className="border-2 border-black">
-//                                                     <div className="flex justify-center">
-//                                                         <DatePicker
-//                                                             selected={parseTimeString(timeSlot.endTime) || new Date()} // Default to current date if invalid
-//                                                             onChange={(date) => updateTimeSlot(day, index, 'endTime', date)}
-//                                                             showTimeSelect
-//                                                             showTimeSelectOnly
-//                                                             timeIntervals={15}
-//                                                             dateFormat="h:mm aa"
-//                                                             placeholderText="End Time"
-//                                                             className="w-full p-2"
-//                                                         />
-//                                                     </div>
-//                                                 </div>
-//                                             </div>
-//                                             {/* {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
-//                                                 <MdOutlineCancel
-//                                                     className="text-2xl cursor-pointer ml-12"
-//                                                     onClick={() => handleRemoveTimeSlot(day, index)}
-//                                                 />
-//                                             )} */}
-//                                         </div>
-//                                     ))
-//                                 ) : (
-//                                     <div className="text-gray-500 ml-[95px] text-md">Unavailable</div>
-//                                 )
-//                             ) : (
-//                                 (times[day] && times[day].length > 0) ? (
-//                                     times[day].map((timeSlot, index) => (
-//                                         <div key={index} className={`flex items-center -mt-2 justify-center ${index > 0 ? 'mt-5' : ''}`}>
-//                                             <div className="w-28 mr-5">
-//                                                 <div className="border-2 border-black">
-//                                                     <div className="flex justify-center">
-//                                                         <DatePicker
-//                                                             selected={parseTimeString(timeSlot.startTime)}
-//                                                             onChange={(date) => updateTimeSlot(day, index, 'startTime', date)}
-//                                                             showTimeSelect
-//                                                             showTimeSelectOnly
-//                                                             timeIntervals={15}
-//                                                             dateFormat="h:mm aa"
-//                                                             placeholderText="Start Time"
-//                                                             className="p-2 w-full"
-//                                                         />
-//                                                     </div>
-//                                                 </div>
-//                                             </div>
-//                                             <span>-</span>
-//                                             <div className="max-w-sm w-28 ml-5">
-//                                                 <div className="border-2 border-black">
-//                                                     <div className="flex justify-center">
-//                                                         <DatePicker
-//                                                             selected={parseTimeString(timeSlot.endTime)}
-//                                                             onChange={(date) => updateTimeSlot(day, index, 'endTime', date)}
-//                                                             showTimeSelect
-//                                                             showTimeSelectOnly
-//                                                             timeIntervals={15}
-//                                                             dateFormat="h:mm aa"
-//                                                             placeholderText="End Time"
-//                                                             className="w-full p-2"
-//                                                         />
-//                                                     </div>
-//                                                 </div>
-//                                             </div>
-//                                             {/* {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
-//                                                 <MdOutlineCancel
-//                                                     className="text-2xl cursor-pointer ml-12"
-//                                                     onClick={() => handleRemoveTimeSlot(day, index)}
-//                                                 />
-//                                             )} */}
-//                                         </div>
-//                                     ))
-//                                 ) : (
-//                                     from !== "teamProfileDetails" && handleAddTimeSlot(day)
-//                                 )
-//                             )}
-//                         </div>
-
-//                         {from !== "teamProfileDetails" && from !== "ScheduleLaterInternalInterview" && (
-//                             <>
-//                                 {/* <FaPlus
-//                                     className="text-2xl cursor-pointer mx-5"
-//                                     onClick={() => handleAddTimeSlot(day)}
-//                                 />
-//                                 <IoIosCopy
-//                                     className="text-2xl cursor-pointer"
-//                                     onClick={(e) => handleCopy(e, day)}
-//                                 /> */}
-//                                 {showPopup && selectedDay === day && (
-//                                     <div
-//                                         className="absolute bg-white p-4 rounded-lg w-72 shadow-md border"
-//                                         style={{ top: '100%', transform: 'translate(-90%, 10px)', zIndex: 1000 }}
-//                                     >
-//                                         <div className="flex justify-between">
-//                                             <h2 className="text-lg font-semibold mb-2 mr-2">
-//                                                 Duplicate Time Entries
-//                                             </h2>
-//                                             {/* <MdOutlineCancel
-//                                                 className="text-2xl cursor-pointer"
-//                                                 onClick={() => setShowPopup(false)}
-//                                             /> */}
-//                                         </div>
-//                                         <div>
-//                                             {Object.keys(times).map(dayOption => (
-//                                                 <label key={dayOption} className="block">
-//                                                     <input
-//                                                         type="checkbox"
-//                                                         value={dayOption}
-//                                                         checked={selectedDays.includes(dayOption)}
-//                                                         disabled={dayOption === selectedDay}
-//                                                         onChange={(e) => {
-//                                                             const value = e.target.value;
-//                                                             setSelectedDays(prev =>
-//                                                                 prev.includes(value)
-//                                                                     ? prev.filter(item => item !== value)
-//                                                                     : [...prev, value]
-//                                                             );
-//                                                         }}
-//                                                         className="mr-2"
-//                                                     />
-//                                                     {dayOption}
-//                                                 </label>
-//                                             ))}
-//                                         </div>
-//                                         <button
-//                                             onClick={handlePaste}
-//                                             className="mt-4 bg-custom-blue text-white py-1 px-4 rounded"
-//                                         >
-//                                             Duplicate
-//                                         </button>
-//                                         <button
-//                                             onClick={() => setShowPopup(false)}
-//                                             className="mt-4 ml-2 bg-gray-500 text-white py-1 px-4 rounded"
-//                                         >
-//                                             Cancel
-//                                         </button>
-//                                     </div>
-//                                 )}
-//                             </>
-//                         )}
-//                     </div>
-//                 </div>
-//             ))}
-//         </div>
-//     );
-// };
-
-// export default Availability;
-
-
-import React, { useEffect, useState } from 'react';
-import DatePicker from 'react-datepicker';
-import { Minus, Plus, XCircle, Copy } from 'lucide-react';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Minus, XCircle, Plus, Copy } from 'lucide-react';
 
 const Availability = ({
   times,
@@ -385,6 +13,7 @@ const Availability = ({
   const [showPopup, setShowPopup] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const dayMap = {
     Sun: 'Sunday',
@@ -398,145 +27,142 @@ const Availability = ({
 
   const allDays = Object.keys(dayMap).map((shortDay) => dayMap[shortDay]);
 
-  useEffect(() => {
-    if (availabilityData?.length > 0) {
-      const updatedTimes = {};
-      availabilityData.forEach((availabilityItem) => {
-        availabilityItem.days.forEach((dayItem) => {
-          const shortDay = Object.keys(dayMap).find(
-            (key) => dayMap[key] === dayItem.day
-          );
-          if (shortDay && !updatedTimes[shortDay]) {
-            updatedTimes[shortDay] = dayItem.timeSlots.map((slot) => ({
-              startTime: slot.startTime ? new Date(slot.startTime) : null,
-              endTime: slot.endTime ? new Date(slot.endTime) : null,
-            }));
-          }
+  // Generate time options with 15-minute intervals
+  const generateTimeOptions = useMemo(() => {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
         });
-      });
-      onTimesChange(updatedTimes);
-    } else {
-      // Initialize empty slots for all days if no availabilityData
-      const initialTimes = {};
-      Object.keys(dayMap).forEach((shortDay) => {
-        if (!times[shortDay]) {
-          initialTimes[shortDay] = [{ startTime: null, endTime: null }];
-        }
-      });
-      if (Object.keys(initialTimes).length > 0) {
-        onTimesChange({ ...times, ...initialTimes });
+        options.push({ value: timeString, label: displayTime });
       }
     }
-  }, [availabilityData, onTimesChange, times]);
+    return options;
+  }, []);
 
-  const handleAddTimeSlot = (day) => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.time-dropdown') && !event.target.closest('.time-input')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Initialize times for all days with at least one empty slot
+  useEffect(() => {
+    const initialTimes = { ...times };
+    let updated = false;
+    Object.keys(dayMap).forEach((shortDay) => {
+      if (!initialTimes[shortDay] || !Array.isArray(initialTimes[shortDay]) || initialTimes[shortDay].length === 0) {
+        initialTimes[shortDay] = [{ startTime: null, endTime: null }];
+        updated = true;
+      }
+    });
+    if (updated && typeof onTimesChange === 'function') {
+      onTimesChange(initialTimes);
+    }
+  }, [onTimesChange, times]);
+
+  const handleAddTimeSlot = useCallback((day) => {
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
     const currentSlots = times[shortDay] || [];
-    const newSlots =
-      currentSlots.length === 1 &&
-      currentSlots[0].startTime === 'unavailable'
-        ? [{ startTime: null, endTime: null }]
-        : [...currentSlots, { startTime: null, endTime: null }];
+    const newSlots = [...currentSlots, { startTime: null, endTime: null }];
     const newTimes = {
       ...times,
       [shortDay]: newSlots,
     };
-    onTimesChange(newTimes);
+    onTimesChange?.(newTimes);
+    setAvailabilityDetailsData?.((prev) => ({
+      ...prev,
+      availability: newTimes,
+    }));
+  }, [times, onTimesChange, setAvailabilityDetailsData]);
 
-    if (setAvailabilityDetailsData) {
-      setAvailabilityDetailsData((prev) => ({
-        ...prev,
-        availability: newTimes,
-      }));
-    }
-  };
-
-  const handleRemoveTimeSlot = (day, index) => {
+  const handleRemoveTimeSlot = useCallback((day, index) => {
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
     const newTimes = { ...times };
     const currentSlots = newTimes[shortDay];
 
     if (currentSlots.length > 1) {
-      // Remove the specific slot
       newTimes[shortDay] = currentSlots.filter((_, i) => i !== index);
     } else {
-      // Clear the slot but keep inputs
       newTimes[shortDay] = [{ startTime: null, endTime: null }];
     }
 
-    onTimesChange(newTimes);
+    onTimesChange?.(newTimes);
+    setAvailabilityDetailsData?.((prev) => ({
+      ...prev,
+      availability: newTimes,
+    }));
+  }, [times, onTimesChange, setAvailabilityDetailsData]);
 
-    if (setAvailabilityDetailsData) {
-      setAvailabilityDetailsData((prev) => ({
-        ...prev,
-        availability: newTimes,
-      }));
-      if (
-        Object.values(newTimes).some((dayTimes) =>
-          dayTimes.some(
-            (slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable'
-          )
-        )
-      ) {
-        onAvailabilityErrorChange((prev) => ({ ...prev, TimeSlot: '' }));
-      }
-    }
-  };
-
-  const updateTimeSlot = (day, index, field, date) => {
+  const updateTimeSlot = useCallback((day, index, field, value) => {
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
-    const newTimes = {
-      ...times,
-      [shortDay]: times[shortDay].map((slot, i) =>
-        i === index ? { ...slot, [field]: date } : slot
-      ),
-    };
-    onTimesChange(newTimes);
+    const newTimes = { ...times };
 
-    if (setAvailabilityDetailsData) {
-      setAvailabilityDetailsData((prev) => ({
-        ...prev,
-        availability: newTimes,
-      }));
-      if (
-        newTimes[shortDay][index].startTime &&
-        newTimes[shortDay][index].endTime
-      ) {
-        onAvailabilityErrorChange((prev) => ({ ...prev, TimeSlot: '' }));
+    // Ensure the time slot exists
+    if (!newTimes[shortDay]) {
+      newTimes[shortDay] = [{ startTime: null, endTime: null }];
+    }
+    if (!newTimes[shortDay][index]) {
+      newTimes[shortDay][index] = { startTime: null, endTime: null };
+    }
+
+    // Update the time
+    newTimes[shortDay][index][field] = value;
+
+    // Validate end time is after start time
+    if (field === 'startTime' && newTimes[shortDay][index].endTime) {
+      if (value >= newTimes[shortDay][index].endTime) {
+        newTimes[shortDay][index].endTime = null;
       }
     }
-  };
 
-  const handleCopy = (e, day) => {
+    onTimesChange?.(newTimes);
+    setAvailabilityDetailsData?.((prev) => ({
+      ...prev,
+      availability: newTimes,
+    }));
+    setOpenDropdown(null);
+  }, [times, onTimesChange, setAvailabilityDetailsData]);
+
+  const getDisplayTime = useCallback((timeValue) => {
+    if (!timeValue) return '';
+    const option = generateTimeOptions.find((opt) => opt.value === timeValue);
+    return option ? option.label : timeValue;
+  }, [generateTimeOptions]);
+
+  const handleCopy = useCallback((e, day) => {
     e.stopPropagation();
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
     setSelectedDay(shortDay);
     setSelectedDays([]);
     setShowPopup(true);
-  };
+  }, []);
 
-  const handlePaste = () => {
+  const handlePaste = useCallback(() => {
     const sourceTimeSlots = times[selectedDay] || [];
     const newTimes = { ...times };
     selectedDays.forEach((targetDay) => {
       newTimes[targetDay] = sourceTimeSlots.map((slot) => ({ ...slot }));
     });
-    onTimesChange(newTimes);
-
-    if (setAvailabilityDetailsData) {
-      setAvailabilityDetailsData((prev) => ({
-        ...prev,
-        availability: newTimes,
-      }));
-    }
-
+    onTimesChange?.(newTimes);
+    setAvailabilityDetailsData?.((prev) => ({
+      ...prev,
+      availability: newTimes,
+    }));
     setShowPopup(false);
     setSelectedDays([]);
-  };
-
-  const parseTimeString = (time) => {
-    return time && time !== 'unavailable' ? new Date(time) : null;
-  };
+  }, [times, selectedDay, selectedDays, onTimesChange, setAvailabilityDetailsData]);
 
   return (
     <div>
@@ -548,159 +174,168 @@ const Availability = ({
       )}
       <div className="border border-gray-300 p-4 rounded-lg w-full">
         {allDays.map((day) => {
-          const shortDay = Object.keys(dayMap).find(
-            (key) => dayMap[key] === day
-          );
+          const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
           return (
-            <div key={day} className="relative mb-2">
-              <div className="flex space-x-3 items-center">
-                <p className="border border-gray-400 rounded w-20 h-9 pt-2 text-center text-sm">
+            <div key={day} className="mb-4 last:mb-0">
+              <div className="flex gap-2">
+                <p className="border border-gray-300 rounded items-center w-16 h-9 flex justify-center text-sm font-medium bg-gray-50">
                   {shortDay}
                 </p>
-                <div className="flex flex-col flex-1">
-                  {times[shortDay]?.length > 0 ? (
-                    times[shortDay].map((timeSlot, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-3"
-                      >
-                        <DatePicker
-                          selected={parseTimeString(timeSlot.startTime)}
-                          onChange={(date) =>
-                            updateTimeSlot(day, index, 'startTime', date)
-                          }
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={15}
-                          dateFormat="h:mm aa"
-                          placeholderText="Start Time"
-                          className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
-                        />
-                        <Minus className="text-xs text-gray-600" />
-                        <DatePicker
-                          selected={parseTimeString(timeSlot.endTime)}
-                          onChange={(date) =>
-                            updateTimeSlot(day, index, 'endTime', date)
-                          }
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={15}
-                          dateFormat="h:mm aa"
-                          placeholderText="End Time"
-                          className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
-                        />
-                        {from !== 'teamProfileDetails' &&
-                          from !== 'ScheduleLaterInternalInterview' && (
-                            <XCircle
-                              className={`text-xl w-12 cursor-pointer text-red-500 ${
-                                timeSlot.startTime && timeSlot.endTime
-                                  ? 'visible'
-                                  : 'invisible'
-                              }`}
-                              onClick={() => handleRemoveTimeSlot(day, index)}
-                            />
+                <div className="flex-1 flex flex-wrap gap-2">
+                  {(times[shortDay] || []).map((timeSlot, index) => {
+                    const showXCircle =
+                      from !== 'teamProfileDetails' &&
+                      from !== 'ScheduleLaterInternalInterview' &&
+                      (times[shortDay]?.length > 1 || index > 0 || (timeSlot.startTime && timeSlot.endTime));
+
+                    return (
+                      <div key={`${shortDay}-${index}`} className="flex items-center gap-1">
+                        {/* Start Time Input */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={getDisplayTime(timeSlot.startTime) || 'Start Time'}
+                            onClick={() => setOpenDropdown(`${shortDay}-${index}-startTime`)}
+                            readOnly
+                            className="time-input p-2 border border-gray-300 rounded text-sm w-[100px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                            style={{ color: timeSlot.startTime ? 'black' : '#9CA3AF' }}
+                          />
+                          {openDropdown === `${shortDay}-${index}-startTime` && (
+                            <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
+                              {generateTimeOptions.map((option) => (
+                                <div
+                                  key={`start-${option.value}`}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  onClick={() => updateTimeSlot(day, index, 'startTime', option.value)}
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
                           )}
+                        </div>
+                        <span className="text-gray-500">
+                          <Minus className="w-4" />
+                        </span>
+                        {/* End Time Input */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={getDisplayTime(timeSlot.endTime) || 'End Time'}
+                            onClick={() => setOpenDropdown(`${shortDay}-${index}-endTime`)}
+                            readOnly
+                            className="time-input p-2 border border-gray-300 rounded text-sm w-[100px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                            style={{ color: timeSlot.endTime ? 'black' : '#9CA3AF' }}
+                          />
+                          {openDropdown === `${shortDay}-${index}-endTime` && (
+                            <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
+                              {generateTimeOptions.map((option) => (
+                                <div
+                                  key={`end-${option.value}`}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  onClick={() => updateTimeSlot(day, index, 'endTime', option.value)}
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1">
+                          {showXCircle && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTimeSlot(day, index)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              aria-label="Remove time slot"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          )}
+                          {index === 0 &&
+                            from !== 'teamProfileDetails' &&
+                            from !== 'ScheduleLaterInternalInterview' && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddTimeSlot(day)}
+                                  className="p-1"
+                                  aria-label="Add time slot"
+                                >
+                                  <Plus className="w-5 h-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopy(e, day);
+                                  }}
+                                  className="p-1"
+                                  aria-label="Copy time slots"
+                                >
+                                  <Copy className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    // Always show one empty slot if none exist
-                    <div className="flex items-center space-x-3 mb-1">
-                      <DatePicker
-                        selected={null}
-                        onChange={(date) =>
-                          updateTimeSlot(day, 0, 'startTime', date)
-                        }
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        dateFormat="h:mm aa"
-                        placeholderText="Start Time"
-                        className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
-                      />
-                      <Minus className="text-xs text-gray-600" />
-                      <DatePicker
-                        selected={null}
-                        onChange={(date) =>
-                          updateTimeSlot(day, 0, 'endTime', date)
-                        }
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        dateFormat="h:mm aa"
-                        placeholderText="End Time"
-                        className="p-2 border border-gray-400 rounded text-sm text-center outline-none focus:ring-0"
-                      />
-                      <XCircle
-                        className="text-xl w-12 cursor-pointer text-red-500 invisible"
-                      />
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-                {from !== 'teamProfileDetails' &&
-                  from !== 'ScheduleLaterInternalInterview' && (
-                    <>
-                      <Plus
-                        className="text-xl cursor-pointer"
-                        onClick={() => handleAddTimeSlot(day)}
-                      />
-                      <Copy
-                        className="text-xl cursor-pointer"
-                        onClick={(e) => handleCopy(e, day)}
-                      />
-                    </>
-                  )}
-                {showPopup && selectedDay === shortDay && (
-                  <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-50">
-                    <div className="bg-white p-3 rounded-lg w-72 shadow-md border text-sm">
-                      <h2 className="text-lg font-semibold p-2">
-                        Duplicate Time Entries
-                      </h2>
-                      <div className="space-y-2">
-                        {Object.keys(dayMap).map((dayOption) => (
-                          <label key={dayOption} className="block">
-                            <input
-                              type="checkbox"
-                              value={dayOption}
-                              checked={selectedDays.includes(dayOption)}
-                              disabled={dayOption === selectedDay}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                setSelectedDays((prev) =>
-                                  prev.includes(value)
-                                    ? prev.filter((item) => item !== value)
-                                    : [...prev, value]
-                                );
-                              }}
-                              className="mr-2"
-                            />
-                            {dayOption}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex gap-2 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setShowPopup(false)}
-                          className="bg-white border border-custom-blue text-custom-blue py-1 px-4 rounded"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handlePaste}
-                          className="bg-custom-blue text-white py-1 px-4 rounded"
-                        >
-                          Duplicate
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Copy Time Slots Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white p-4 rounded-lg w-80 shadow-lg border">
+            <h2 className="text-lg font-semibold mb-3">Duplicate Time Slots</h2>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {Object.keys(dayMap).map((dayOption) => (
+                <label key={dayOption} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    value={dayOption}
+                    checked={selectedDays.includes(dayOption)}
+                    disabled={dayOption === selectedDay}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSelectedDays((prev) =>
+                        prev.includes(value)
+                          ? prev.filter((item) => item !== value)
+                          : [...prev, value]
+                      );
+                    }}
+                    className="mr-2 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm">{dayOption}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePaste}
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                disabled={selectedDays.length === 0}
+              >
+                Duplicate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -316,8 +316,6 @@ function InterviewList() {
       return matchFound;
     });
   };
-  
-
 
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
@@ -344,15 +342,18 @@ function InterviewList() {
 
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
+
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
+
   const handleFilterIconClick = () => {
     if (interviewData.length !== 0) {
       setIsFilterActive((prev) => !prev);
       toggleMenu();
     }
   };
+
   return (
     <div className=" bg-background">
       <main className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8">

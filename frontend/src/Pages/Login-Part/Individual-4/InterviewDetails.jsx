@@ -12,7 +12,14 @@ const InterviewDetails = ({
     selectedTechnologyies,
     setSelectedTechnologyies,
     interviewDetailsData,
-    setInterviewDetailsData
+    setInterviewDetailsData,
+
+    selectedSkills,
+    setSelectedSkills,
+    previousInterviewExperience,
+    setPreviousInterviewExperience,
+    isMockInterviewSelected,
+    setIsMockInterviewSelected,
 }) => {
 
     const {
@@ -21,12 +28,12 @@ const InterviewDetails = ({
     } = useCustomContext();
 
     const [showTechPopup, setTechpopup] = useState(false);
-    const [previousExperienceConductingInterviews, setPreviousExperienceConductingInterviews] = useState('');
+    // const [previousInterviewExperience, setpreviousInterviewExperience] = useState('');
     const [searchTermTechnology, setSearchTermTechnology] = useState('');
     const [searchTermSkills, setSearchTermSkills] = useState('');
     const [showSkillsPopup, setShowSkillsPopup] = useState(false);
-    const [selectedSkills, setSelectedSkills] = useState([])
-    const [isReady, setIsReady] = useState(null);
+    // const [selectedSkills, setSelectedSkills] = useState([])
+    // const [isReady, setIsReady] = useState(null);
     const bioLength = interviewDetailsData.bio?.length || 0;
 
     const handleSelectedTechnology = (technology) => {
@@ -62,9 +69,42 @@ const InterviewDetails = ({
         }));
     };
 
-    const toggleSkillsPopup = () => {
-        setShowSkillsPopup((prev) => !prev);
+    const toggleTechPopup = () => {
+        setTechpopup(prev => {
+            const newState = !prev;
+            if (newState) {
+                setShowSkillsPopup(false);
+            }
+            return newState;
+        });
     };
+
+    const toggleSkillsPopup = () => {
+        setShowSkillsPopup(prev => {
+            const newState = !prev;
+            if (newState) {
+                setTechpopup(false);
+            }
+            return newState;
+        });
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                (techPopupRef.current && !techPopupRef.current.contains(event.target)) &&
+                (skillsPopupRef.current && !skillsPopupRef.current.contains(event.target))
+            ) {
+                setTechpopup(false);
+                setShowSkillsPopup(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleRemoveSkill = (index) => {
         setSelectedSkills(selectedSkills.filter((_, i) => i !== index));
@@ -105,18 +145,20 @@ const InterviewDetails = ({
 
     const handleRadioChange = (e) => {
         const value = e.target.value;
-        setPreviousExperienceConductingInterviews(value);
+        setPreviousInterviewExperience(value);
         setInterviewDetailsData((prev) => ({
-            ...prev,
-            previousExperienceConductingInterviews: value,
-            previousExperienceConductingInterviewsYears: value === "no" ? "" : prev.previousExperienceConductingInterviewsYears,
+          ...prev,
+          previousInterviewExperience: value,
+          previousInterviewExperienceYears: value === "no" ? "" : prev.previousInterviewExperienceYears,
         }));
+        // Clear the error for previousInterviewExperience
         setErrors((prevErrors) => ({
-            ...prevErrors,
-            previousExperienceConductingInterviews: "",
-            previousExperienceConductingInterviewsYears: value === "no" ? "" : prevErrors.previousExperienceConductingInterviewsYears,
+          ...prevErrors,
+          previousInterviewExperience: "", // Clear the error when a radio button is selected
+          // Also clear previousInterviewExperienceYears if "no" is selected
+          previousInterviewExperienceYears: value === "no" ? "" : prevErrors.previousInterviewExperienceYears,
         }));
-    };
+      };
 
     const expertiseLevel_ConductingInterviews = (e) => {
         const value = e.target.value;
@@ -136,11 +178,11 @@ const InterviewDetails = ({
         const value = e.target.value;
         setInterviewDetailsData((prev) => ({
             ...prev,
-            previousExperienceConductingInterviewsYears: value,
+            previousInterviewExperienceYears: value,
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            previousExperienceConductingInterviewsYears: value ? "" : "Years of experience is required",
+            previousInterviewExperienceYears: value ? "" : "Years of experience is required",
         }));
     };
 
@@ -160,10 +202,10 @@ const InterviewDetails = ({
         const value = e.target.value;
         setInterviewDetailsData({ ...interviewDetailsData, bio: value });
         setErrors((prevErrors) => ({
-          ...prevErrors,
-          bio: "",
+            ...prevErrors,
+            bio: "",
         }));
-      };
+    };
 
     const handleHourlyRateChange = (e) => {
         const value = e.target.value;
@@ -192,14 +234,15 @@ const InterviewDetails = ({
             } else {
                 updatedFormats = updatedFormats.filter((format) => format !== value);
             }
-            if (value === "mock") {
-                setIsReady(checked);
-            }
             return {
                 ...prevData,
                 interviewFormatWeOffer: updatedFormats,
             };
         });
+
+        if (value === "mock") {
+            setIsMockInterviewSelected(checked);
+        }
     };
 
     const filteredTechnologies = technologies?.filter((tech) =>
@@ -252,18 +295,18 @@ const InterviewDetails = ({
                     <input
                         placeholder="Select Multiple Technologies"
                         readOnly
-                        onClick={() => setTechpopup((prev) => !prev)}
+                        onClick={toggleTechPopup}
                         className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.technologies ? "border-red-500" : "border-gray-300"
                             }`}
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <ChevronDown className="text-lg" onClick={() => setTechpopup((prev) => !prev)} />
+                        <ChevronDown className="text-lg" onClick={toggleTechPopup} />
                     </div>
                     {showTechPopup && (
                         <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                             <div className="border-b">
                                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <Search className="absolute ml-1 text-gray-500" />
+                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                                     <input
                                         type="text"
                                         placeholder="Search Technology"
@@ -359,7 +402,7 @@ const InterviewDetails = ({
                         <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                             <div className="border-b">
                                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <Search className="absolute ml-1 text-gray-500" />
+                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                                     <input
                                         type="text"
                                         placeholder="Search Skills"
@@ -457,9 +500,9 @@ const InterviewDetails = ({
                             <input
                                 type="radio"
                                 className="form-radio text-gray-600"
-                                name="previousExperienceConductingInterviews"
+                                name="previousInterviewExperience"
                                 value="yes"
-                                checked={previousExperienceConductingInterviews === "yes"}
+                                checked={previousInterviewExperience === "yes"}
                                 onChange={handleRadioChange}
                             />
                             <span className="ml-2">Yes</span>
@@ -468,38 +511,38 @@ const InterviewDetails = ({
                             <input
                                 type="radio"
                                 className="form-radio text-gray-600"
-                                name="previousExperienceConductingInterviews"
+                                name="previousInterviewExperience"
                                 value="no"
-                                checked={previousExperienceConductingInterviews === "no"}
+                                checked={previousInterviewExperience === "no"}
                                 onChange={handleRadioChange}
                             />
                             <span className="ml-2">No</span>
                         </label>
                     </div>
-                    {errors.previousExperienceConductingInterviews && (
-                        <p className="text-red-500 text-sm sm:text-xs">{errors.previousExperienceConductingInterviews}</p>
+                    {errors.previousInterviewExperience && (
+                        <p className="text-red-500 text-sm sm:text-xs">{errors.previousInterviewExperience}</p>
                     )}
                 </div>
 
                 {/* Conditional Experience Years */}
-                {previousExperienceConductingInterviews === "yes" && (
+                {previousInterviewExperience === "yes" && (
                     <div>
-                        <label htmlFor="previousExperienceConductingInterviewsYears" className="block text-sm font-medium text-gray-900 mb-2">
+                        <label htmlFor="previousInterviewExperienceYears" className="block text-sm font-medium text-gray-900 mb-2">
                             How many years of experience do you have in conducting interviews? <span className="text-red-500">*</span>
                         </label>
                         <input
                             type='number'
-                            id="previousExperienceConductingInterviewsYears"
-                            name="previousExperienceConductingInterviewsYears"
+                            id="previousInterviewExperienceYears"
+                            name="previousInterviewExperienceYears"
                             min="1"
                             max="15"
                             placeholder="Enter years of experience"
-                            value={interviewDetailsData.previousExperienceConductingInterviewsYears || ""}
+                            value={interviewDetailsData.previousInterviewExperienceYears || ""}
                             onChange={handleChangeExperienceYears}
-                            className={`block w-1/2 pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.previousExperienceConductingInterviewsYears ? "border-red-500" : "border-gray-400"}`}
+                            className={`block w-1/2 pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.previousInterviewExperienceYears ? "border-red-500" : "border-gray-400"}`}
                         />
-                        {errors.previousExperienceConductingInterviewsYears && (
-                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.previousExperienceConductingInterviewsYears}</p>
+                        {errors.previousInterviewExperienceYears && (
+                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.previousInterviewExperienceYears}</p>
                         )}
                     </div>
                 )}
@@ -655,7 +698,7 @@ const InterviewDetails = ({
                 </div>
 
                 {/* Expected Rate Per Mock Interview */}
-                {isReady && (
+                {isMockInterviewSelected && (
                     // <div>
                     //     <label className="block text-sm font-medium text-gray-900 mb-2">
                     //         Expected rate per mock interview <span className="text-red-500">*</span>

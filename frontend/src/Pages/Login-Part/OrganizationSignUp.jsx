@@ -798,12 +798,18 @@ export const Organization = () => {
                 </div>
               </div>
               <div className="flex justify-center mb-5">
-                <button
+                {/* <button
                   type="submit"
                   className="px-8 py-2 bg-custom-blue text-white rounded-3xl"
                 >
                   Save
-                </button>
+                </button> */}
+                <button
+                    type="submit"
+                    className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 hover:bg-blue-600"
+                  >
+                    Save
+                  </button>
               </div>
             </form>
           </div>

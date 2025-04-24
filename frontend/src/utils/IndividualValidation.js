@@ -79,7 +79,7 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     const { selectedCandidates, selectedSkills, InterviewPreviousExperience, expertiseLevel, formData2 } = params;
     errors.technologies = !selectedCandidates.length ? 'Technology is required' : '';
     errors.skills = !selectedSkills.length ? 'Skill is required' : '';
-    errors.previousExperienceConductingInterviews = !InterviewPreviousExperience ? 'Previous Experience is required' : '';
+    errors.previousInterviewExperience = !InterviewPreviousExperience ? 'Previous Experience is required' : '';
     errors.expertiseLevel_ConductingInterviews = !expertiseLevel ? 'Expertise Level is required' : '';
     errors.hourlyRate = !formData2.hourlyRate ? 'Hourly rate is required' : '';
     errors.noShowPolicy = !formData2.noShowPolicy ? "No-show policy selection is required" : "";
@@ -93,7 +93,7 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     
     // Validate Interview Previous Experience Years if "Yes" is selected
     if (InterviewPreviousExperience === "yes") {
-      errors.previousExperienceConductingInterviewsYears = !formData2.previousExperienceConductingInterviewsYears ? 'Experience years is required' : '';
+      errors.previousInterviewExperienceYears = !formData2.previousInterviewExperienceYears ? 'Experience years is required' : '';
     }
     
     // Validate Mock Interview Fields Only if "Yes" is Selected

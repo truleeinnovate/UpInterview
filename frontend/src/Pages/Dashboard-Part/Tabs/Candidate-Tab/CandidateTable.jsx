@@ -2,6 +2,7 @@
 // import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
+import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
 
 import { Menu } from '@headlessui/react';
 // import { MdOutlineLocalPhone } from "react-icons/md";
@@ -46,7 +47,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
       <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden border border-border rounded-lg">
+            <div className={`overflow-hidden rounded-lg ${candidates.length > 0 ? 'border border-border' : ''}`}>
               <table className="min-w-full divide-y divide-border">
                 {/* Table header */}
                 <thead className="bg-gray-50 border-b">
@@ -79,14 +80,14 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                       Current Experience
                     </th>
                     {/* <th 
-              className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('Status')}
-            >
-              <div className="flex items-center gap-2">
-                Status
-                <FaSort className="w-4 h-4" />
-              </div>
-            </th> */}
+                      className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('Status')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Status
+                        <FaSort className="w-4 h-4" />
+                      </div>
+                    </th> */}
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Skills/Technology
                     </th>
@@ -97,8 +98,14 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                 </thead>
                 {/* Table body */}
                 <tbody className="divide-y divide-gray-200">
-                  {candidates.map((candidate, index) => candidate ?
-                    (
+                  {candidates.length === 0 ? (
+                    <tr>
+                      <td colSpan={isAssessmentContext ? 8 : 7} className="text-center py-8 text-gray-500">
+                        No candidates found.
+                      </td>
+                    </tr>
+                  ) : (
+                    candidates.map((candidate, index) => candidate ? (
                       <tr key={index} className="hover:bg-gray-50">
                         {/* Candidate profile column */}
                         {isAssessmentContext && (
@@ -135,7 +142,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                         <td className="px-4 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 text-sm text-gray-600">
-                              {/* <FaEnvelope className="w-3 h-3" /> */}
+                              <Mail className="w-3 h-3" />
                               <span>{candidate.Email || 'N/A'}</span>
                             </div>
                           </div>
@@ -211,7 +218,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    {/* <FaEye className="w-4 h-4 text-blue-600" /> */}
+                                    <Eye className="w-4 h-4 text-blue-600" />
                                     View Details
                                   </button>
                                 )}
@@ -220,11 +227,11 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                               <Menu.Item>
                                 {({ active }) => (
                                   <button
-                                    onClick={() => candidate?._id && navigate(`/candidate/${candidate._id}`)}
+                                    onClick={() => candidate?._id && navigate(`/candidates/${candidate._id}`)}
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    {/* <FaUserCircle className="w-4 h-4 text-purple-600" /> */}
+                                    <UserCircle className="w-4 h-4 text-purple-600" />
                                     360° View
                                   </button>
                                 )}
@@ -237,7 +244,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
-                                    {/* <FaPencilAlt className="w-4 h-4 text-green-600" /> */}
+                                    <Pencil className="w-4 h-4 text-green-600" />
                                     Edit
                                   </button>
                                 )}
@@ -259,14 +266,14 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                           </Menu>
                         </td>
                       </tr>
-                    ) : null)}
+                    ) : null)
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   )
 }

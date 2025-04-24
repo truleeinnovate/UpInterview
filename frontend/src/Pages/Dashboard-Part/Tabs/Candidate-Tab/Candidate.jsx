@@ -1,5 +1,6 @@
 // Import necessary dependencies and icons
 import React, { useCallback, useEffect, useState } from 'react';
+import { Plus } from "lucide-react";
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
 import CandidateKanban from './CandidateKanban';
@@ -431,52 +432,51 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
 
   return (
     <main className="bg-background">
-     <main className={isAssessmentContext ? '' : 'max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8'}>
-
+      <main className={isAssessmentContext ? '' : 'max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8'}>
 
         <div className="mb-3">
           <div className="flex sm:flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row  justify-between items-start sm:items-center gap-2 mb-3">
-          {!isAssessmentContext && (
-            <h1 className="text-2xl   font-bold text-custom-blue">
-              Candidates
-            </h1>
-          )}
             {!isAssessmentContext && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="w-full sm:w-full md:w-[25%] xl:w-[20%] lg:w-[15%] 2xl:w-[10%] px-3 py-2.5 bg-custom-blue text-white rounded-lg  text-base"
-            >
-              Add Candidate
-            </button>
-              )}
+              <h1 className="text-2xl font-semibold text-custom-blue">
+                Candidates
+              </h1>
+            )}
+            {!isAssessmentContext && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Candidate
+              </button>
+            )}
           </div>
 
           <div className="flex md:flex-row xl:w-row lg:w-row 2xl:w-row sm:flex-row items-stretch sm:items-center gap-2 justify-between">
-          {isAssessmentContext ? (
+            {isAssessmentContext ? (
               <p className='font-semibold text-lg float-start'>Candidates</p>
             ) : (
-            <div className="flex items-center gap-1 order-1 sm:order-1">
-              <button
-                onClick={() => setView('table')}
-                className={`p-[1px] rounded-lg transition-colors ${view === 'table'
-                  ? 'text-custom-blue'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                <FaList className='w-7 h-7' />
-              </button>
-              <button
-                onClick={() => setView('kanban')}
-                className={`p-[2px] rounded-lg transition-colors ${view === 'kanban'
-                  ? 'text-custom-blue'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                <TbLayoutGridRemove className='w-6 h-6' />
-
-              </button>
-            </div>
-                  )}
+              <div className="flex items-center gap-1 order-1 sm:order-1">
+                <button
+                  onClick={() => setView('table')}
+                  className={`p-[1px] rounded-lg transition-colors ${view === 'table'
+                    ? 'text-custom-blue'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  <FaList className='w-7 h-7' />
+                </button>
+                <button
+                  onClick={() => setView('kanban')}
+                  className={`p-[2px] rounded-lg transition-colors ${view === 'kanban'
+                    ? 'text-custom-blue'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  <TbLayoutGridRemove className='w-5 h-5' />
+                </button>
+              </div>
+            )}
 
             <div className="flex order-2 sm:order-2  items-center ">
 
@@ -492,7 +492,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                 />
               </div>
 
-      
+
               <div className="flex items-center ml-2 space-x-1">
                 <span>{currentPage + 1} / {totalPages}</span>
                 <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>

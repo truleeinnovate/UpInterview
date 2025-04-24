@@ -13,6 +13,7 @@ const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
 
 const saltRounds = 10;
+const mongoose = require('mongoose');
 
 const registerOrganization = async (req, res) => {
   let savedOrganization = null;
@@ -503,8 +504,279 @@ const resetPassword = async (req, res) => {
 };
 
 
+// get organization details
+const getBasedIdOrganizations = async (req, res) => {
+  try {
+    const { id } = req.params; // This is the _id of the organization
+    console.log("Requested Organization ID:", id);
+
+    if (!id) {
+      return res.status(400).json({ message: 'Organization ID is required.' });
+    }
+
+    // ✅ Fetch the organization by _id
+    const organization = await Organization.findById(id).lean();
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found.' });
+    }
+
+    // ✅ Respond with the full organization object
+    return res.status(200).json(organization);
+
+  } catch (error) {
+    console.error('Error fetching organization:', error);
+    return res.status(500).json({ message: 'An error occurred.', error });
+  }
+};
 
 
+//related to subdomain
 
-module.exports = { registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant };
+// Check subdomain availability
+const checkSubdomainAvailability = async (req, res) => {
+  try {
+    const { subdomain } = req.body;
+
+    if (!subdomain) {
+      return res.status(400).json({ message: 'Subdomain is required' });
+    }
+
+    // Validate subdomain format
+    const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+    if (!subdomainRegex.test(subdomain)) {
+      return res.status(400).json({
+        available: false,
+        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+      });
+    }
+
+    // Check if subdomain already exists
+    const existingOrganization = await Organization.findOne({ subdomain });
+
+    if (existingOrganization) {
+      return res.status(200).json({
+        available: false,
+        message: `${subdomain} is already taken`
+      });
+    }
+
+    return res.status(200).json({
+      available: true,
+      message: `${subdomain} is available`
+    });
+  } catch (error) {
+    console.error('Error checking subdomain availability:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update organization subdomain
+const updateSubdomain = async (req, res) => {
+  try {
+    const { organizationId, subdomain, baseDomain, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+
+    if (!organizationId || !subdomain) {
+      return res.status(400).json({ message: 'Organization ID and subdomain are required' });
+    }
+
+    // Validate organizationId
+    if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+      return res.status(400).json({ message: 'Invalid organization ID format' });
+    }
+
+    // Validate subdomain format
+    const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+    if (!subdomainRegex.test(subdomain)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+      });
+    }
+
+    // Check if subdomain already exists for other organizations
+    const existingOrganization = await Organization.findOne({
+      subdomain,
+      _id: { $ne: organizationId }
+    });
+
+    if (existingOrganization) {
+      return res.status(400).json({
+        success: false,
+        message: `${subdomain} is already taken by another organization`
+      });
+    }
+
+    // Update organization with new subdomain
+    const fullDomain = `${subdomain}.${baseDomain || 'app.upinterview.io'}`;
+    const updatedOrganization = await Organization.findByIdAndUpdate(
+      organizationId,
+      {
+        subdomain,
+        fullDomain,
+        subdomainStatus,
+        subdomainAddedDate,
+        subdomainLastVerified
+
+      },
+      { new: true }
+    );
+
+    if (!updatedOrganization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Subdomain updated successfully',
+      organization: {
+        //id: updatedOrganization._id,
+        subdomain: updatedOrganization.subdomain,
+        fullDomain: updatedOrganization.fullDomain,
+        subdomainStatus: updatedOrganization.subdomainStatus,
+        subdomainAddedDate: updatedOrganization.subdomainAddedDate,
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified
+      }
+    });
+  } catch (error) {
+    console.error('Error updating subdomain:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get organization subdomain
+const getOrganizationSubdomain = async (req, res) => {
+  try {
+    const { organizationId } = req.params;
+
+    if (!organizationId) {
+      return res.status(400).json({ message: 'Organization ID is required' });
+    }
+
+    // Validate organizationId
+    if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+      return res.status(400).json({ message: 'Invalid organization ID format' });
+    }
+
+    const organization = await Organization.findById(organizationId);
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      organization: {
+        //id: organization._id,
+        subdomain: organization.subdomain || null,
+        fullDomain: organization.fullDomain || null,
+        subdomainStatus: organization.subdomainStatus || null,
+        subdomainAddedDate: organization.subdomainAddedDate || null,
+        subdomainLastVerified: organization.subdomainLastVerified || null
+      }
+    });
+  } catch (error) {
+    console.error('Error getting organization subdomain:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Activate subdomain
+const activateSubdomain = async (req, res) => {
+  try {
+    const { organizationId, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+
+    if (!organizationId) {
+      return res.status(400).json({ message: 'Organization ID is required' });
+    }
+
+    // Validate organizationId
+    if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+      return res.status(400).json({ message: 'Invalid organization ID format' });
+    }
+
+    const updatedOrganization = await Organization.findByIdAndUpdate(
+      organizationId,
+      {
+        subdomainStatus,
+        subdomainLastVerified
+      },
+      { new: true }
+    );
+
+    if (!updatedOrganization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Subdomain activated successfully',
+      organization: {
+        //id: updatedOrganization._id,
+
+        subdomainStatus: updatedOrganization.subdomainStatus,
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified
+      }
+    });
+  } catch (error) {
+    console.error('Error activating subdomain:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Deactivate subdomain
+const deactivateSubdomain = async (req, res) => {
+  try {
+    const { organizationId } = req.body;
+
+    if (!organizationId) {
+      return res.status(400).json({ message: 'Organization ID is required' });
+    }
+
+    // Validate organizationId
+    if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+      return res.status(400).json({ message: 'Invalid organization ID format' });
+    }
+
+    const updatedOrganization = await Organization.findByIdAndUpdate(
+      organizationId,
+      {
+        subdomain: null,
+        fullDomain: null,
+        subdomainStatus: null,
+        subdomainAddedDate: null,
+        subdomainLastVerified: null
+      },
+      { new: true }
+    );
+
+    if (!updatedOrganization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Subdomain deactivated successfully',
+      organization: {
+        //id: updatedOrganization._id,
+        subdomain: updatedOrganization.subdomain,
+        fullDomain: updatedOrganization.fullDomain,
+        subdomainStatus: updatedOrganization.subdomainStatus,
+        subdomainAddedDate: updatedOrganization.subdomainAddedDate,
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified
+      }
+    });
+  } catch (error) {
+    console.error('Error deactivating subdomain:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = {
+  registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
+  updateSubdomain,
+  getOrganizationSubdomain,
+  activateSubdomain,
+  deactivateSubdomain
+};
 

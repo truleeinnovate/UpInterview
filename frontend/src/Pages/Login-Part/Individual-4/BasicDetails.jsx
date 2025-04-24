@@ -29,10 +29,11 @@ const BasicDetails = ({
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   // Generate profileId from email
   const generateProfileId = (email) => {
     if (!email) return '';
-    // Remove all special characters except dots, then convert to lowercase
     return email.split('@')[0]
       .replace(/[^a-zA-Z0-9.]/g, '')
       .toLowerCase();
@@ -44,14 +45,31 @@ const BasicDetails = ({
     setIsCheckingEmail(true);
 
     emailTimeoutRef.current = setTimeout(async () => {
-      const errorMessage = await validateEmail(email, checkEmailExists);
+      let errorMessage = '';
+      
+      if (!email) {
+        errorMessage = 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorMessage = 'Invalid email format';
+      } else {
+        try {
+          const exists = await checkEmailExists(email);
+          if (exists) {
+            errorMessage = 'Email already registered';
+          }
+        } catch (err) {
+          console.error('Error checking email:', err);
+          errorMessage = 'Error verifying email';
+        }
+      }
+
       setErrors((prev) => ({ ...prev, email: errorMessage }));
 
       if (!errorMessage && email) {
         const generatedProfileId = generateProfileId(email);
         // Only update profileId if it's empty or matches the generated pattern
-        if (!basicDetailsData.profileId ||
-          basicDetailsData.profileId === generatedProfileId) {
+        if (!basicDetailsData.profileId || 
+            basicDetailsData.profileId === generateProfileId(basicDetailsData.email)) {
           setBasicDetailsData((prev) => ({
             ...prev,
             profileId: generatedProfileId,
@@ -71,9 +89,36 @@ const BasicDetails = ({
     setIsCheckingProfileId(true);
 
     profileIdTimeoutRef.current = setTimeout(async () => {
-      const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
+      let errorMessage = '';
+      let suggestions = [];
+
+      if (!profileId) {
+        errorMessage = 'Profile ID is required';
+      } else if (profileId.length < 4) {
+        errorMessage = 'Profile ID must be at least 4 characters';
+      } else if (!/^[a-zA-Z0-9.]+$/.test(profileId)) {
+        errorMessage = 'Only letters, numbers, and dots allowed';
+      } else {
+        try {
+          const exists = await checkProfileIdExists(profileId);
+          if (exists) {
+            errorMessage = 'Profile ID already taken';
+            // Generate 3 random suggestions
+            suggestions = [
+              `${profileId}${Math.floor(Math.random() * 100)}`,
+              `${profileId}.${Math.floor(Math.random() * 10)}`,
+              `${profileId.split('.')[0]}${Math.floor(Math.random() * 100)}`
+            ];
+          }
+        } catch (err) {
+          console.error('Error checking Profile ID:', err);
+          errorMessage = 'Error verifying Profile ID';
+        }
+      }
+
       setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-      setSuggestedProfileIds(suggestedProfileId || '');
+      setSuggestedProfileIds(suggestions);
+      setShowSuggestions(suggestions.length > 0);
       setIsCheckingProfileId(false);
     }, 500);
   };
@@ -93,7 +138,7 @@ const BasicDetails = ({
     }));
 
     if (name === 'profileId') {
-      setSuggestedProfileIds('');
+      setShowSuggestions(false);
       handleProfileIdValidation(value);
     } else if (name === 'email') {
       handleEmailValidation(value);
@@ -110,7 +155,26 @@ const BasicDetails = ({
     } else if (name === 'profileId') {
       clearTimeout(profileIdTimeoutRef.current);
       handleProfileIdValidation(value);
+      setShowSuggestions(false);
     }
+  };
+
+  // Handle focus for profileId to show suggestions if available
+  const handleProfileIdFocus = () => {
+    if (suggestedProfileIds.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // Select a suggested profile ID
+  const selectSuggestion = (suggestion) => {
+    setBasicDetailsData((prev) => ({
+      ...prev,
+      profileId: suggestion,
+    }));
+    setSuggestedProfileIds([]);
+    setShowSuggestions(false);
+    setErrors((prev) => ({ ...prev, profileId: '' }));
   };
 
   // Clean up timeouts
@@ -257,19 +321,14 @@ const BasicDetails = ({
         </div>
       </div>
 
-      {/* Email */}
-      <div className="sm:col-span-6 col-span-2">
+    {/* Email Field */}
+    <div className="sm:col-span-6 col-span-2">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
           Email Address <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
+            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
             </svg>
@@ -282,8 +341,9 @@ const BasicDetails = ({
             value={basicDetailsData.email}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+            className={`block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
             placeholder="your.email@example.com"
             autoComplete="email"
           />
@@ -361,8 +421,8 @@ const BasicDetails = ({
         />
       </div>
 
-      {/* Profile ID */}
-      <div className="sm:col-span-3">
+     {/* Profile ID Field */}
+     <div className="sm:col-span-3">
         <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-1">
           Profile ID <span className="text-red-500">*</span>
         </label>
@@ -380,9 +440,11 @@ const BasicDetails = ({
               handleProfileIdValidation(value);
             }}
             onBlur={handleBlur}
+            onFocus={handleProfileIdFocus}
             placeholder="profile.id"
-            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.profileId ? 'border-red-500' : 'border-gray-300'
-              }`}
+            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+              errors.profileId ? 'border-red-500' : 'border-gray-300'
+            }`}
             autoComplete="profileId"
           />
           {isCheckingProfileId && (
@@ -392,31 +454,24 @@ const BasicDetails = ({
           )}
         </div>
         {errors.profileId && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.profileId}
-            {suggestedProfileIds.length > 0 && (
-              <div className="text-gray-600 mt-1">
-                Try one of these:
-                {suggestedProfileIds.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => {
-                      setBasicDetailsData((prev) => ({
-                        ...prev,
-                        profileId: suggestion,
-                      }));
-                      setSuggestedProfileIds([]);
-                      setErrors((prev) => ({ ...prev, profileId: '' }));
-                    }}
-                    className="block text-blue-500 hover:underline"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-          </p>
+          <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>
+        )}
+        {showSuggestions && suggestedProfileIds.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
+            <div className="py-1">
+              <p className="px-3 py-1 text-xs text-gray-500">Try one of these:</p>
+              {suggestedProfileIds.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => selectSuggestion(suggestion)}
+                  className="block w-full text-left px-3 py-1 text-sm text-blue-600 hover:bg-blue-50"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

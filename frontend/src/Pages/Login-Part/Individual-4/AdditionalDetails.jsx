@@ -48,7 +48,36 @@ const AdditionalDetails = ({
     };
 
     const toggleCurrentRole = () => {
-        setShowDropdownCurrentRole(!showDropdownCurrentRole);
+        setShowDropdownCurrentRole(prev => {
+            const newState = !prev;
+            if (newState) {
+                setShowDropdownIndustry(false);
+                setShowDropdownLocation(false);
+            }
+            return newState;
+        });
+    };
+
+    const toggleIndustry = () => {
+        setShowDropdownIndustry(prev => {
+            const newState = !prev;
+            if (newState) {
+                setShowDropdownCurrentRole(false);
+                setShowDropdownLocation(false);
+            }
+            return newState;
+        });
+    };
+
+    const toggleLocation = () => {
+        setShowDropdownLocation(prev => {
+            const newState = !prev;
+            if (newState) {
+                setShowDropdownCurrentRole(false);
+                setShowDropdownIndustry(false);
+            }
+            return newState;
+        });
     };
 
     const handleRoleSelect = (role) => {
@@ -198,7 +227,7 @@ const AdditionalDetails = ({
                             <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                                         <input
                                             type="text"
                                             placeholder="Search Current Role"
@@ -338,18 +367,18 @@ const AdditionalDetails = ({
                             value={additionalDetailsData.industry}
                             placeholder="Information Technology"
                             autoComplete="off"
-                            onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
+                            onClick={toggleIndustry}
                             className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? 'border-red-500' : 'border-gray-300'}`}
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <ChevronDown className="text-lg" onClick={() => setShowDropdownIndustry(!showDropdownIndustry)} />
+                            <ChevronDown className="text-lg" onClick={toggleIndustry} />
                         </div>
                         {showDropdownIndustry && (
                             <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                                         <input
                                             type="text"
                                             placeholder="Search Industry"
@@ -395,18 +424,18 @@ const AdditionalDetails = ({
                             value={additionalDetailsData.location}
                             placeholder="Delhi,India"
                             autoComplete="off"
-                            onClick={() => setShowDropdownLocation(!showDropdownLocation)}
+                            onClick={toggleLocation}
                             className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.location ? 'border-red-500' : 'border-gray-300'}`}
                             readOnly
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <ChevronDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
+                            <ChevronDown className="text-lg" onClick={toggleLocation} />
                         </div>
                         {showDropdownLocation && (
                             <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500" />
+                                        <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                                         <input
                                             type="text"
                                             placeholder="Search Location"

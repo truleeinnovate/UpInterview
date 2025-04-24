@@ -45,7 +45,7 @@ const CustomDropdown = ({
 
   const filteredOptions = options?.filter(option => {
     const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    return displayValue?.toString().toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   useEffect(() => {

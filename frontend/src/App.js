@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import Cookies from "js-cookie";
 import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
 import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx';
@@ -40,12 +41,49 @@ import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.js
 import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
 import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails.jsx";
 
+//-----------------------------------account settings
+import UsersLayout from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx';
+import UserForm from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm.jsx';
+import UserProfileDetails from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails.jsx';
+import BasicDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx';
+import BasicDetailsEditPage from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx';
+import EditAdvacedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx';
+import EditInterviewDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails.jsx';
+import EditAvailabilityDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails.jsx';
+import AdvancedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx';
+import AvailabilityUser from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser.jsx';
+import InterviewUserDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx';
+import { CompanyProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile.jsx';
+import { BillingDetails } from './Pages/Dashboard-Part/Accountsettings/account/billing/Billing.jsx';
+import { Subscription } from './Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription.jsx';
+import { Wallet } from './Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet.jsx';
+import { Security } from './Pages/Dashboard-Part/Accountsettings/account/Security.jsx';
+import { Usage } from './Pages/Dashboard-Part/Accountsettings/account/Usage.jsx';
+import { NotificationsDetails } from './Pages/Dashboard-Part/Accountsettings/account/Notifications.jsx';
+import { HrmsAtsApi } from './Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi.jsx';
+import { Webhooks } from './Pages/Dashboard-Part/Accountsettings/integrations/Webhooks.jsx';
+import { Sharing } from './Pages/Dashboard-Part/Accountsettings/account/Sharing.jsx';
+import { InterviewerGroups } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups.jsx';
+import { CompanyEditProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit.jsx';
+import { InterviewerGroupFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup.jsx';
+import { InterviewGroupDetails } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails.jsx';
+import { WalletTransactionPopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup.jsx';
+import { WalletBalancePopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup.jsx';
+import { Role } from './Pages/Dashboard-Part/Accountsettings/account/Roles/Role.jsx';
+import { RoleFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup.jsx';
+import SettingsPage from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
+import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx';
+import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
+//-----------------------------------account settings
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
   const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
+
+  const organization = Cookies.get("organization") === "true";
 
   return (
     <React.Fragment>
@@ -68,8 +106,8 @@ const App = () => {
           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
           {/* tabs */}
-          <Route path="/candidate" element={<CandidateTab />} />
-          <Route path="/candidate/:id" element={<CandidateTabDetails />} />
+          <Route path="/candidates" element={<CandidateTab />} />
+          <Route path="/candidates/:id" element={<CandidateTabDetails />} />
 
           <Route path="/position" element={<Position />} />
           <Route path="/position/new-position" element={<PositionForm />} />
@@ -97,6 +135,122 @@ const App = () => {
           <Route path="/assessment-details" element={<AssessmentDetails />} />
           <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
           <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
+
+          {/* ---------------------------account settings------------------- */}
+
+          <Route path="/account-settings" element={<SettingsPage />}>
+
+            {/* <Route index element={<Navigate to="profile" replace />} /> */}
+
+            {/* Default route based on organization status */}
+
+            <Route index element={
+              organization ?
+                <>
+                  <Navigate to="profile" replace />
+                  <Navigate to="my-profile/basic" replace />
+                </>
+                :
+                <Navigate to="my-profile/basic" replace />
+            } />
+
+            {/* Company Profile (Org Only) */}
+
+            {
+              organization &&
+
+              <Route path="profile" element={<CompanyProfile />} >
+
+                <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
+              </Route>
+            }
+
+            {/* My Profile & Sub-tabs */}
+            <Route path="my-profile" element={<MyProfile />}>
+              {/* Default to /basic */}
+              {/* <Route index element={<Navigate to="basic" replace />} /> */}
+              <Route index element={<Navigate to="basic" replace />} />
+              {/* Sub-tabs under my-profile */}
+              <Route path="basic" element={<BasicDetails />} />
+              <Route path="advanced" element={<AdvancedDetails />} />
+              <Route path="interview" element={<InterviewUserDetails />} />
+              <Route path="availability" element={<AvailabilityUser />} />
+
+              {/* Edit forms under each sub-tab */}
+              <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
+              <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
+              <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
+              <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+            </Route>
+
+            {/* Wallet Section */}
+            <Route path="wallet" element={<Wallet />} >
+
+              <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
+
+              <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+
+            </Route>
+
+            {/* Interviewer Groups (Org Only) */}
+            {
+              organization &&
+              <Route path="interviewer-groups" element={<InterviewerGroups />} >
+
+                <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
+
+                <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
+
+                <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
+
+              </Route>
+            }
+
+            {/* Users Section (Org Only) */}
+            {
+              organization &&
+              <Route path="users" element={<UsersLayout />}>
+                <Route index element={null} />
+                <Route path="new" element={<UserForm mode="create" />} />
+                <Route path="edit/:id" element={<UserForm mode="edit" />} />
+                <Route path="details/:id" element={<UserProfileDetails />} />
+              </Route>
+            }
+
+
+
+            {/* other tabs */}
+            <Route path="billing" element={<BillingDetails />} />
+            <Route path="subscription" element={<Subscription />} />
+            {/* <Route path="wallet" element={<Wallet />} /> */}
+            <Route path="security" element={<Security />} />
+            <Route path="notifications" element={<NotificationsDetails />} />
+            <Route path="usage" element={<Usage />} />
+
+
+
+
+            {/* Org-Only Tabs */}
+            {
+              organization &&
+
+              <>              <Route path="roles" element={<Role />} >
+                <Route index element={null} />
+                <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+              </Route>
+
+                <Route path="sharing" element={<Sharing />} />
+                <Route path="sub-domain" element={<DomainManagement />} />
+                <Route path="webhooks" element={<Webhooks />} />
+                <Route path="hrms-ats" element={<HrmsAtsApi />} />
+              </>
+
+            }
+
+          </Route>
+
+          {/* ---------------------------account settings------------------- */}
+
         </Routes>
       </div>
     </React.Fragment>
