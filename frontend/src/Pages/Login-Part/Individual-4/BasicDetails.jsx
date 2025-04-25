@@ -19,7 +19,7 @@ const BasicDetails = ({
   setFilePreview,
   linkedInData,
   // checkProfileIdExists,
-  checkEmailExists,
+  // checkEmailExists,
 }) => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
@@ -53,10 +53,10 @@ const BasicDetails = ({
         errorMessage = 'Invalid email format';
       } else {
         try {
-          const exists = await checkEmailExists(email);
-          if (exists) {
-            errorMessage = 'Email already registered';
-          }
+          // const exists = await checkEmailExists(email);
+          // if (exists) {
+          //   errorMessage = 'Email already registered';
+          // }
         } catch (err) {
           console.error('Error checking email:', err);
           errorMessage = 'Error verifying email';

@@ -97,16 +97,16 @@ const MultiStepForm = () => {
   //   }
   // }, []);
 
-  const checkEmailExists = useCallback(async (email) => {
-    if (!email) return false;
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-email?email=${email}`);
-      return response.data.exists;
-    } catch (error) {
-      console.error("Email check error:", error);
-      return false;
-    }
-  }, []);
+  // const checkEmailExists = useCallback(async (email) => {
+  //   if (!email) return false;
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-email?email=${email}`);
+  //     return response.data.exists;
+  //   } catch (error) {
+  //     console.error("Email check error:", error);
+  //     return false;
+  //   }
+  // }, []);
 
   // if user created from organization default data will display from here
   useEffect(() => {
@@ -191,7 +191,7 @@ const MultiStepForm = () => {
         params,
         setErrors,
         // checkProfileIdExists,
-        checkEmailExists
+        // checkEmailExists
       );
 
     } else if (currentStep === 1) {
@@ -414,7 +414,7 @@ const MultiStepForm = () => {
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
                     // checkProfileIdExists={checkProfileIdExists}
-                    checkEmailExists={checkEmailExists}
+                    // checkEmailExists={checkEmailExists}
                   />
                 )}
 
