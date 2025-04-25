@@ -190,7 +190,7 @@ const MultiStepForm = () => {
         currentStep,
         params,
         setErrors,
-        checkProfileIdExists,
+        // checkProfileIdExists,
         checkEmailExists
       );
 
@@ -413,7 +413,7 @@ const MultiStepForm = () => {
                     filePreview={filePreview}
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
-                    checkProfileIdExists={checkProfileIdExists}
+                    // checkProfileIdExists={checkProfileIdExists}
                     checkEmailExists={checkEmailExists}
                   />
                 )}

@@ -18,7 +18,7 @@ const BasicDetails = ({
   filePreview,
   setFilePreview,
   linkedInData,
-  checkProfileIdExists,
+  // checkProfileIdExists,
   checkEmailExists,
 }) => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -100,16 +100,16 @@ const BasicDetails = ({
         errorMessage = 'Only letters, numbers, and dots allowed';
       } else {
         try {
-          const exists = await checkProfileIdExists(profileId);
-          if (exists) {
-            errorMessage = 'Profile ID already taken';
-            // Generate 3 random suggestions
-            suggestions = [
-              `${profileId}${Math.floor(Math.random() * 100)}`,
-              `${profileId}.${Math.floor(Math.random() * 10)}`,
-              `${profileId.split('.')[0]}${Math.floor(Math.random() * 100)}`
-            ];
-          }
+          // const exists = await checkProfileIdExists(profileId);
+          // if (exists) {
+          //   errorMessage = 'Profile ID already taken';
+          //   // Generate 3 random suggestions
+          //   suggestions = [
+          //     `${profileId}${Math.floor(Math.random() * 100)}`,
+          //     `${profileId}.${Math.floor(Math.random() * 10)}`,
+          //     `${profileId.split('.')[0]}${Math.floor(Math.random() * 100)}`
+          //   ];
+          // }
         } catch (err) {
           console.error('Error checking Profile ID:', err);
           errorMessage = 'Error verifying Profile ID';
