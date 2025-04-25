@@ -1,7 +1,17 @@
 import React from 'react';
 import { format,parseISO, isValid } from 'date-fns';
-// import { FaTimes, FaBuilding, FaUsers, FaClock, FaMapMarkerAlt, FaDollarSign, FaCheckCircle, FaExternalLinkAlt } from 'react-icons/fa';
+// import { FaTimes, FaBuilding, FaUsers, FaMapMarkerAlt, FaDollarSign, FaCheckCircle, FaExternalLinkAlt } from 'react-icons/fa';
 // import { PiSuitcaseSimpleBold  } from "react-icons/pi";
+import {
+  X,
+  Briefcase,
+  Building2,
+  MapPin,
+  DollarSign,
+  ExternalLink,
+  CheckCircle2,
+  Users
+} from "lucide-react";
 const PositionDetails = ({ position, onClose }) => {
   return (
     <div className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-2xl border-l border-gray-200 transform transition-transform duration-300 z-50 overflow-y-auto">
@@ -15,7 +25,7 @@ const PositionDetails = ({ position, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
       </div>
@@ -35,7 +45,7 @@ const PositionDetails = ({ position, onClose }) => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
-                  {/* <PiSuitcaseSimpleBold className="w-5 h-5 text-purple-600" /> */}
+                  <Briefcase className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Experience</p>
@@ -50,21 +60,21 @@ const PositionDetails = ({ position, onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-gray-600 mb-1">
-                  {/* <FaBuilding className="w-4 h-4 text-gray-500" /> */}
+                  <Building2 className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">Company name</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800">{position?.positionInfo?.companyname || "N/A"}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-gray-600 mb-1">
-                  {/* <FaMapMarkerAlt className="w-4 h-4 text-red-500" /> */}
+                  <MapPin className="w-4 h-4 text-red-500" />
                   <span className="text-sm">Location</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800">{position?.positionInfo.Location || "Not disclosed"}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-gray-600 mb-1">
-                  {/* <FaDollarSign className="w-4 h-4 text-custom-blue" /> */}
+                  <DollarSign className="w-4 h-4 text-custom-blue" />
                   <span className="text-sm">Salary Range</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800">{position.positionInfo?.minSalary && position.positionInfo?.maxSalary
@@ -77,7 +87,7 @@ const PositionDetails = ({ position, onClose }) => {
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-gray-600 mb-1">
-                  {/* <FaExternalLinkAlt className="w-4 h-4 text-custom-blue" /> */}
+                  <ExternalLink className="w-4 h-4 text-custom-blue" />
                   <span className="text-sm">No of Positions</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800">{position?.positionInfo?.NoofPositions || "N/A"}</p>
@@ -108,7 +118,7 @@ const PositionDetails = ({ position, onClose }) => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                  {/* <FaCheckCircle className="w-4 h-4 text-green-600" /> */}
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
@@ -130,7 +140,7 @@ const PositionDetails = ({ position, onClose }) => {
 
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  {/* <FaUsers className="w-4 h-4 text-blue-600" /> */}
+                  <Users className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
@@ -148,7 +158,7 @@ const PositionDetails = ({ position, onClose }) => {
 
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  {/* <FaBuilding className="w-4 h-4 text-gray-400" /> */}
+                  <Building2 className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">

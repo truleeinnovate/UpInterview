@@ -1,27 +1,21 @@
 
-// Import necessary dependencies and icons
 import React, { useCallback, useEffect, useState } from 'react';
-// import {FaTable, FaColumns, FaFilter, FaSearch,} from 'react-icons/fa';
-
-// import { MdOutlineLocalPhone } from "react-icons/md";
-// import { MdKeyboardArrowDown } from "react-icons/md";
-// import { MdKeyboardArrowUp } from "react-icons/md";
-import classNames from 'classnames';
-import axios from 'axios';
+import { Plus } from "lucide-react";
+import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
+import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
 import Tooltip from "@mui/material/Tooltip";
-// import { IoIosArrowBack } from "react-icons/io";
-// import { IoIosArrowForward } from "react-icons/io";
-// import { FiFilter } from "react-icons/fi";
-// import { LuFilterX } from "react-icons/lu";
 import { useNavigate } from 'react-router-dom';
-// import { TbLayoutGridRemove } from "react-icons/tb";
-// import { FaList } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import PositionKanban from './PositionKanban';
 import PositionSlideDetails from './PositionSlideDetails';
 import PositionForm from './Position-Form';
 import PositionTable from './PositionTable';
+import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
+import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
+import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
+import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
+import { ReactComponent as LuFilter } from '../../../../icons/LuFilter.svg';
 
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -434,10 +428,11 @@ const navigate = useNavigate();
                     <h1 className="text-2xl  font-bold  text-custom-blue  ">
                       Positions
                     </h1>
-                    <button 
-                    onClick={() => navigate('/position/new-position')}
-                      className="w-full sm:w-full md:w-[25%] xl:w-[20%] lg:w-[15%] 2xl:w-[10%] px-3 py-2.5 bg-custom-blue text-white rounded-lg  text-sm"
+                    <button
+                      onClick={() => navigate('/position/new-position')}
+                      className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
                     >
+                      <Plus className="h-4 w-4 mr-2" />
                       Add Position
                     </button>
                   </div>
@@ -446,13 +441,13 @@ const navigate = useNavigate();
                     <div className="flex items-center gap-1 order-1  sm:hidden">
                       <button
                         onClick={() => setView('table')}
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        className={`p-[1px] rounded-lg transition-colors ${
                           view === 'table' 
                             ? ' text-custom-blue' 
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                         }`}
                       >
-                        {/* <FaList className="w-4 h-4" /> */}
+                        <FaList className="w-7 h-7" />
                       </button>
                       <button
                         onClick={() => setView('kanban')}
@@ -462,7 +457,7 @@ const navigate = useNavigate();
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                         }`}
                       >
-                        {/* <TbLayoutGridRemove className="w-4 h-4" /> */}
+                        <TbLayoutGridRemove className="w-5 h-5" />
                       </button>
                     </div>
         
@@ -470,7 +465,7 @@ const navigate = useNavigate();
                     
                     {/* // flex-1 order-1 sm:order-2 */}
                       <div className="relative flex-1">
-                        {/* <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" /> */}
+                <IoMdSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
                         <input
                           type="text"
                           placeholder="Search positions..."
@@ -488,7 +483,7 @@ const navigate = useNavigate();
                     className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""}`}
                     onClick={prevPage}
                   >
-                    {/* <IoIosArrowBack className="text-custom-blue" /> */}
+                    <IoIosArrowBack className="text-custom-blue" />
                   </span>
                 </Tooltip>
                
@@ -497,7 +492,7 @@ const navigate = useNavigate();
                     className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length ? " cursor-not-allowed" : ""}`}
                     onClick={nextPage}
                   >
-                    {/* <IoIosArrowForward className="text-custom-blue" /> */}
+                    <IoIosArrowForward className="text-custom-blue" />
                   </span>
                 </Tooltip>
               </div>
@@ -510,11 +505,11 @@ const navigate = useNavigate();
                       pointerEvents: positions.length === 0 ? "none" : "auto",
                     }}
                   >
-                    {/* {isFilterActive ? (
+                    {isFilterActive ? (
                       <LuFilterX className="text-custom-blue" />
                     ) : (
-                      <FiFilter className="text-custom-blue" />
-                    )} */}
+                      <LuFilter className="text-custom-blue" />
+                    )}
                   </span>
                 </Tooltip>
              

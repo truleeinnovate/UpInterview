@@ -258,3 +258,104 @@ const App = () => {
 };
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { Suspense, lazy } from 'react';
+// import { Routes, Route, useLocation } from 'react-router-dom';
+// import { CustomProvider } from './Context/Contextfetch.js';
+// import { PermissionsProvider } from './Context/PermissionsContext.js';
+
+// const Login1 = lazy(() => import('./Pages/Login-Part/Individual-1.jsx'));
+// const Login2 = lazy(() => import('./Pages/Login-Part/Individual-2.jsx'));
+// const Login3 = lazy(() => import('./Pages/Login-Part/Individual-3.jsx'));
+// const Login4 = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4.jsx'));
+// const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx'));
+// const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home.jsx'));
+// const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp.jsx'));
+// const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogin.jsx'));
+// const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback.jsx'));
+// const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx'));
+
+// const Navbar = lazy(() => import('./Components/Navbar/Navbar-Sidebar.jsx'));
+// const Settingssidebar = lazy(() => import('./Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx'));
+// const AppSettings = lazy(() => import('./Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx'));
+// const Logo = lazy(() => import('./Pages/Login-Part/Logo.jsx'));
+
+// const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx'));
+// const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/MainContent.jsx'));
+
+// function App() {
+//   const location = useLocation();
+
+//   // <-----------this pages will not get the context and permissions contexts
+//   const publicRoutes = ['/', '/profile1', '/profile3', '/callback', '/organizationSignUp', '/organizationLogin', '/subscription-plans', '/payment-details', '/home'];
+//   // --------------------------->
+
+//   const isPublic = publicRoutes.includes(location.pathname);
+
+//   // <-----------this pages will not get the navbar
+//   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+//   // --------------------------->
+
+//   // <-----------this pages will get the sidebar
+//   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
+//   // --------------------------->
+
+//   // <-----------this pages will get the app settings sidebar
+//   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
+//   // --------------------------->
+
+//   // <-----------this pages will get the logo
+//   const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
+//   // --------------------------->
+
+//   return (
+//     <React.Fragment>
+//       {shouldRenderNavbar && <Navbar />}
+//       {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
+//       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
+//       {shouldRenderLogo && <Logo />}
+//       <Suspense fallback={<div>Loading...</div>}>
+//         {isPublic ? (
+//           <Routes>
+//             <Route path="/" element={<Login1 />} />
+//             <Route path="/profile1" element={<Login2 />} />
+//             <Route path="/callback" element={<LinkedInCallback />} />
+//             <Route path="/profile3" element={<Login3 />} />
+//             <Route path="/organizationSignUp" element={<OrganizationSignUp />} />
+//             <Route path="/organizationLogin" element={<OrganizationLogin />} />
+//             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
+//             <Route path="/payment-details" element={<CardDetails />} />
+//             <Route path="/home" element={<Home />} />
+//           </Routes>
+//         ) : (
+//           <PermissionsProvider>
+//             <CustomProvider>
+//               <Routes>
+//                 <Route path="/profile4" element={<Login4 />} />
+//                 <Route path="/candidates" element={<CandidateTab />} />
+//                 <Route path="/candidates/:id" element={<CandidateTabDetails />} />
+//               </Routes>
+//             </CustomProvider>
+//           </PermissionsProvider>
+//         )}
+//       </Suspense>
+//     </React.Fragment>
+//   );
+// }
+
+// export default App;

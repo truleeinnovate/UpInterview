@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaCircle, FaDotCircle } from "react-icons/fa";
 import img1 from '../Dashboard-Part/Images/slideshow1.png';
 import img2 from '../Dashboard-Part/Images/slideshow2.png';
@@ -26,7 +26,8 @@ const Slideshow = () => {
   }, []);
 
   return (
-    <div className="relative h-[532px] bg-gradient-to-r from-pink-400 via-purple-500 to-blue-700 overflow-hidden">
+    <>
+    <div className="relative sm:h-[532px] md:h-screen lg:h-screen xl:h-screen 2xl:h-screen 3xl:h-screen w-full overflow-hidden bg-gradient-to-r from-pink-400 via-purple-500 to-blue-700">
       {/* Left Arrow */}
       {/* <div
         className="absolute top-1/2 left-4 text-3xl text-white opacity-50 hover:opacity-100 cursor-pointer z-10"
@@ -37,14 +38,11 @@ const Slideshow = () => {
 
       {/* Images */}
       {images.map((image, index) => (
-        <img
-          key={index}
-          src={image}
-          alt="slide"
-          className={`absolute top-0 left-0 w-full h-[532px] object-cover transition-opacity duration-1000 ${
-            index === currentIndex ? "opacity-100 z-0" : "opacity-0"
-          }`}
-        />
+        <div key={index} className={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ${
+          index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+        }`}>
+          <img src={image} alt="slide" className="w-full h-full" />
+        </div>
       ))}
 
       {/* Right Arrow */}
@@ -56,7 +54,7 @@ const Slideshow = () => {
       </div> */}
 
       {/* Dots */}
-      <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 flex space-x-2 p-2 rounded-lg z-20">
+      <div className="absolute bottom-14 left-1/2 transform -translate-x-1/2 flex space-x-2 p-2 rounded-lg z-20">
         {images.map((_, index) => (
           <div key={index} className="text-white text-xl">
             {index === currentIndex ? <FaDotCircle /> : <FaCircle />}
@@ -64,6 +62,7 @@ const Slideshow = () => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,11 +1,8 @@
-
-// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaEnvelope, FaEllipsisV } from 'react-icons/fa';
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
 
 import { Menu } from '@headlessui/react';
-// import { MdOutlineLocalPhone } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 
 

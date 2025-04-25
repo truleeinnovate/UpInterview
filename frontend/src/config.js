@@ -15,9 +15,6 @@
 //   state: Math.random().toString(36).substring(7)
 // };
 
-console.log('process.env.REACT_APP_API_URL frontend api link:', process.env.REACT_APP_API_URL);
-console.log('process.env.REACT_APP_REDIRECT_URI frontend api link:', process.env.REACT_APP_REDIRECT_URI);
-
 export const config = {
   REACT_APP_CLIENT_ID: "86vj2ix33jf4aq",
   REACT_APP_CLIENT_SECRET: "WPL_AP1.dEr0dEfWdtgyK9ER.5Fe8uA==",

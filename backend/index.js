@@ -613,18 +613,18 @@ const mockInterviewRoutes = require('./routes/mockinterviewRoutes.js');
 app.use('/', mockInterviewRoutes);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
-app.get('/check-email', async (req, res) => {
-  try {
-    const { email } = req.query;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-    const user = await Users.findOne({  email });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res.status(500).json({ message: "Error checking email", error: error.message });
-  }
-});
+// app.get('/check-email', async (req, res) => {
+//   try {
+//     const { email } = req.query;
+//     if (!email) {
+//       return res.status(400).json({ message: "Email is required" });
+//     }
+//     const user = await Users.findOne({  email });
+//     res.json({ exists: !!user });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error checking email", error: error.message });
+//   }
+// });
 
 // app.get('/check-profileId', async (req, res) => {
 //   try {
@@ -639,29 +639,13 @@ app.get('/check-email', async (req, res) => {
 //   }
 // });
 
-app.get('/check-profileId', async (req, res) => {
-  const { profileId } = req.query;
-  
-  try {
-    const user = await Users.findOne({ profileId });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res.status(500).json({ error: 'Error checking profileId' });
-  }
-});
-
-// router.get('/suggest-profileIds', async (req, res) => {
-//   const { prefix } = req.query;
-//   const MAX_SUGGESTIONS = 5;
+// app.get('/check-profileId', async (req, res) => {
+//   const { profileId } = req.query;
   
 //   try {
-//     const users = await User.find({
-//       profileId: new RegExp(`^${prefix}`)
-//     }).limit(MAX_SUGGESTIONS);
-    
-//     const suggestions = users.map(u => u.profileId);
-//     res.json({ suggestions });
+//     const user = await Users.findOne({ profileId });
+//     res.json({ exists: !!user });
 //   } catch (error) {
-//     res.status(500).json({ error: 'Error fetching suggestions' });
+//     res.status(500).json({ error: 'Error checking profileId' });
 //   }
 // });

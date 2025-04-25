@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
-// import { FaTimes, FaExternalLinkAlt, FaBuilding, FaBriefcase, FaMapMarkerAlt, FaClock, FaDollarSign } from 'react-icons/fa';
-import { useParams, Link, useNavigate,useLocation  } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
+  X,
+  Briefcase,
+  Building2,
+  MapPin,
+  DollarSign,
   Plus,
   LayoutList,
   LayoutGrid,
@@ -27,15 +31,12 @@ const PositionSlideDetails = () => {
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState('vertical');
-  const [showFinalFeedbackModal, setShowFinalFeedbackModal] = useState(false);
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [position,setPosition] = useState(null);
+  const [position, setPosition] = useState(null);
 
- // Count internal and external interviewers across all rounds
- const allInterviewerIds = new Set();
- const internalInterviewerIds = new Set();
- const externalInterviewerIds = new Set();
+  // Count internal and external interviewers across all rounds
+  const allInterviewerIds = new Set();
+  const internalInterviewerIds = new Set();
+  const externalInterviewerIds = new Set();
 
 
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const PositionSlideDetails = () => {
 
 
   useEffect(() => {
-    const foundPosition  = positions.find(pos => pos._id === id)
+    const foundPosition = positions.find(pos => pos._id === id)
     if (foundPosition) {
       setPosition(foundPosition);
       // Safely set rounds, defaulting to an empty array if rounds is undefined
@@ -52,10 +53,10 @@ const PositionSlideDetails = () => {
       setPosition(null); // Ensure position is null if not found
       setRounds([]); // Reset rounds to empty array
     }
-  },[positions,id])
+  }, [positions, id])
 
   console.log("position ", position);
-  
+
 
 
   const handleAddRound = () => {
@@ -63,12 +64,12 @@ const PositionSlideDetails = () => {
   };
 
   const handleEditRound = (round) => {
-    
+
     navigate(`/position/view-details/${id}/rounds/${round._id}`);
   };
 
   const canEditRound = (round) => {
-    return  round.status !== 'Completed'; // position?.status === 'Draft' &&
+    return round.status !== 'Completed'; // position?.status === 'Draft' &&
   };
 
   const handleSelectRound = (roundId) => {
@@ -96,7 +97,7 @@ const PositionSlideDetails = () => {
   if (!position) return null;
 
   const content = (
-    
+
     <div className="max-w-7xl mx-auto  sm:px-6 lg:px-8 xl:px-8 2xl:px-8  bg-white shadow overflow-hidden sm:rounded-lg mb-4">
       <div className=" top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
         <h2 className="text-xl font-bold text-gray-800">Position Details</h2>
@@ -115,14 +116,14 @@ const PositionSlideDetails = () => {
             onClick={() => navigate('/position')}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
       </div>
 
       <div className="flex-1">
-        
-          {/* <div className="flex items-center justify-center mb-4">
+
+        {/* <div className="flex items-center justify-center mb-4">
             <div className="relative">
 
               <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
@@ -136,84 +137,84 @@ const PositionSlideDetails = () => {
             </div>
           </div> */}
 
-          <div className="space-y-6 mt-4">
-            <div className="text-center mb-4">
+        <div className="space-y-6 mt-4">
+          <div className="text-center mb-4">
 
-              <h3 className="text-2xl font-bold text-gray-900">{position?.companyname || ''}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{position?.companyname || ''}</h3>
 
-              <p className="text-gray-600 mt-1">{position.title || 'position'}</p>
+            <p className="text-gray-600 mt-1">{position.title || 'position'}</p>
 
-            </div>
+          </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-800">Job Details</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    {/* <FaBuilding className="w-4 h-4 text-blue-600" /> */}
-                    <span className="text-sm">Company Name</span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-800">{position.companyname}</p>
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-800">Job Details</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-gray-600 mb-1">
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm">Company Name</span>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    {/* <FaMapMarkerAlt className="w-4 h-4 text-red-500" /> */}
-                    <span className="text-sm">Location</span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-800">{position.Location || 'Not Disclosed'}</p>
+                <p className="text-sm font-medium text-gray-800">{position.companyname}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-gray-600 mb-1">
+                  <MapPin className="w-4 h-4 text-red-500" />
+                  <span className="text-sm">Location</span>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    {/* <FaDollarSign className="w-4 h-4 text-custom-blue" /> */}
-                    <span className="text-sm">Salary Range</span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-800">
-                    {position?.minSalary && position?.maxSalary
-                      ? `${position.minSalary} - ${position.maxSalary}`
-                      : position?.minSalary
-                        ? `${position.minSalary} - Not Disclosed`
-                        : position?.maxSalary
-                          ? `0 - ${position.maxSalary}`
-                          : "Not Disclosed"}
-                  </p>
+                <p className="text-sm font-medium text-gray-800">{position.Location || 'Not Disclosed'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-gray-600 mb-1">
+                  <DollarSign className="w-4 h-4 text-custom-blue" />
+                  <span className="text-sm">Salary Range</span>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm font-medium text-gray-800">
+                  {position?.minSalary && position?.maxSalary
+                    ? `${position.minSalary} - ${position.maxSalary}`
+                    : position?.minSalary
+                      ? `${position.minSalary} - Not Disclosed`
+                      : position?.maxSalary
+                        ? `0 - ${position.maxSalary}`
+                        : "Not Disclosed"}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
 
 
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                <div className="flex items-center gap-2 text-gray-600 mb-1">
 
-                    {/* <FaBriefcase className="w-4 h-4 text-gray-500" /> */}
-                    <p className="text-sm text-gray-600">Experience</p>
-                  </div>
-                  <p className="font-medium text-gray-800">{position?.minexperience + " - " + position?.maxexperience + " years" || "Not Disclosed"}</p>
-
+                  <Briefcase className="w-4 h-4 text-gray-500" />
+                  <p className="text-sm text-gray-600">Experience</p>
                 </div>
+                <p className="font-medium text-gray-800">{position?.minexperience + " - " + position?.maxexperience + " years" || "Not Disclosed"}</p>
+
               </div>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-800">Job Description</h4>
-              <div className="flex flex-wrap gap-2">
-                {position?.jobDescription}
-              </div>
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-800">Job Description</h4>
+            <div className="flex flex-wrap gap-2">
+              {position?.jobDescription}
             </div>
+          </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills</h4>
-              <div className="flex flex-wrap gap-2">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills</h4>
+            <div className="flex flex-wrap gap-2">
 
-                {position.skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
-                  >
-                    {skill.skill}
-                  </span>
-                ))}
-              </div>
+              {position.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
+                >
+                  {skill.skill}
+                </span>
+              ))}
             </div>
+          </div>
 
-            {/* {candidate.interviews && candidate.interviews.length > 0 && (
+          {/* {candidate.interviews && candidate.interviews.length > 0 && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Latest Interview</h4>
                 <div className="space-y-3">
@@ -227,28 +228,28 @@ const PositionSlideDetails = () => {
                 </div>
               </div>
             )} */}
+        </div>
+      </div>
+
+
+      {/* Interviewers summary */}
+      <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="flex items-center mb-2">
+          <Users className="h-5 w-5 text-gray-500 mr-2" />
+          <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+            <span className="font-medium">{internalInterviewerIds.size}</span> Internal
+          </div>
+          <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+            <span className="font-medium">{externalInterviewerIds.size}</span> Outsourced
+          </div>
+          <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+            <span className="font-medium">{allInterviewerIds.size}</span> Total
           </div>
         </div>
-     
-
-            {/* Interviewers summary */}
-            <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-center mb-2">
-                    <Users className="h-5 w-5 text-gray-500 mr-2" />
-                    <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      <span className="font-medium">{internalInterviewerIds.size}</span> Internal
-                    </div>
-                    <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                      <span className="font-medium">{externalInterviewerIds.size}</span> Outsourced
-                    </div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                      <span className="font-medium">{allInterviewerIds.size}</span> Total
-                    </div>
-                  </div>
-                </div>
+      </div>
 
       {/* Interview Rounds Table Header */}
       <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
@@ -288,7 +289,7 @@ const PositionSlideDetails = () => {
             <Link
               // onClick={() => navigate(`position/edit-position/${position._id}`)}
               to={`/position/edit-position/${position._id}`}
-              state={{ from: location.pathname }} 
+              state={{ from: location.pathname }}
               className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <Edit className="h-4 w-4 mr-1" />
@@ -299,14 +300,14 @@ const PositionSlideDetails = () => {
 
 
         <InterviewProgress
-                    rounds={rounds}
-                    interviewId={id}
-                    currentRoundId={activeRound}
-                    viewMode={roundsViewMode}
-                    onSelectRound={handleSelectRound}
-                  />
+          rounds={rounds}
+          interviewId={id}
+          currentRoundId={activeRound}
+          viewMode={roundsViewMode}
+          onSelectRound={handleSelectRound}
+        />
 
-        
+
         {rounds.length > 0 && (
           <div className="mt-6">
             {roundsViewMode === 'horizontal' ? (
@@ -326,7 +327,7 @@ const PositionSlideDetails = () => {
                 interviewData={null}
                 canEditRound={canEditRound}
                 onEditRound={handleEditRound}
-                // positionData={position}
+              // positionData={position}
               />
             )}
           </div>
@@ -363,7 +364,7 @@ const PositionSlideDetails = () => {
   // }
 
   return (
-    <div  className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {content}
     </div>
   );

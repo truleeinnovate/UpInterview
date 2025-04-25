@@ -466,7 +466,7 @@ const BasicDetails = ({
           )}
 
           {showSuggestions && suggestedProfileIds.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
+            <div className="absolute z-10 mt-7 w-full bg-white shadow-lg rounded-md border border-gray-200">
               <div className="py-1">
                 <p className="px-3 py-1 text-xs text-gray-500">Try one of these:</p>
                 {suggestedProfileIds.map((suggestion) => (

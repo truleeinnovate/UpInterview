@@ -32,7 +32,7 @@ const UsersSchema = new mongoose.Schema({
     isAddedTeam: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
     roleId: { type: String },
-    profileId: { type: String, unique: true, index: true },
+    profileId: { type: String },
     createdBy: { type: String },
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },

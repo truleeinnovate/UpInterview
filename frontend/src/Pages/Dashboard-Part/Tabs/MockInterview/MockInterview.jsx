@@ -6,6 +6,7 @@ import MockProfileDetails from "./MockProfileDetails";
 import ReschedulePopup from "./ReschedulePopup.jsx";
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
@@ -24,7 +25,6 @@ import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import MockinterviewTable from "./MockinterviewTable.jsx";
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -553,7 +553,7 @@ const MockInterview = () => {
       
 
                <motion.div
-                        className="flex justify-between items-center mb-6"
+                        className="flex justify-between items-center mb-3"
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
@@ -561,39 +561,15 @@ const MockInterview = () => {
                   <h1 className="text-lg font-semibold">Mock Interviews</h1>
 
 
-                    <Button
-                      onClick={() => navigate('/mockinterview-create')}
-                     className="bg-custom-blue hover:bg-custom-blue/90 text-white"
-                    >
-                      Add  interview
+                
 
-                      {/* {interviewDropdown && (
-                  <div className="absolute mt-5 right-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5">
-                    <div className="space-y-1">
-                      <p
-                        className="block px-4 py-1 hover:bg-gray-200 hover:text-gray-800 rounded-md"
-                        onClick={() => {
-                          setinterviewDropdown(false);
-                          setInterviewType('ScheduleforLater');
-                          toggleSidebar();
-                        }}
-                      >
-                        Schedule for Later
-                      </p>
-                      <p
-                        className="block px-4 py-1 hover:bg-gray-200 hover:text-gray-800 rounded-md"
-                        onClick={() => {
-                          setinterviewDropdown(false);
-                          setInterviewType('InstantInterview');
-                          toggleSidebar();
-                        }}
-                      >
-                        Instant Interview
-                      </p>
-                    </div>
-                  </div>
-                )} */}
-                    </Button>
+                          <button
+                                    onClick={() => navigate('/mockinterview-create')}
+                                    className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add  interview
+                                  </button>
                </motion.div>
 
                 {/* 2 */}
@@ -615,7 +591,6 @@ const MockInterview = () => {
                         }`}
                     >
                       <FaList className="w-4 h-4" />
-
                     </button> */}
 
                      <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
@@ -639,7 +614,7 @@ const MockInterview = () => {
 
                     <div className="relative flex-1">
 
-                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
 
 
                       <input

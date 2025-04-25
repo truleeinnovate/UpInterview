@@ -437,7 +437,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
         <div className="mb-3">
           <div className="flex sm:flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row  justify-between items-start sm:items-center gap-2 mb-3">
             {!isAssessmentContext && (
-              <h1 className="text-2xl font-semibold text-custom-blue">
+              <h1 className="text-2xl font-bold text-custom-blue">
                 Candidates
               </h1>
             )}

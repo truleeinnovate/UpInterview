@@ -38,7 +38,6 @@ const Navbar = () => {
   const [isAdditionalDropdownOpen, setIsAdditionalDropdownOpen] = useState(false);
   const [isLegalDropdownOpen, setIsLegalDropdownOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const organization = Cookies.get("organization") === 'true';
 
   const assessmentRef = useRef(null);
   const moreRef = useRef(null);
@@ -210,7 +209,7 @@ const Navbar = () => {
           <div className="flex justify-between mr-4 mt-2">
             <div className="cursor-pointer">
               <label className="inline-flex items-center ml-5">
-                <span className="ml-3 text-custom-blue"> Getting Started</span>
+                <span className="ml-3 text-custom-blue">Getting Started</span>
               </label>
             </div>
             <div className="cursor-pointer ml-30" onClick={handleGettingToggle}>
@@ -400,8 +399,6 @@ const Navbar = () => {
       </div>
     </div>
   );
-
-
 
   return (
     <>
@@ -753,6 +750,7 @@ const Navbar = () => {
           </div>
         </div>
       )}
+      {/* <div className="h-[55px] md:h-[95px] sm:h-[87px]"></div> */}
     </>
   );
 };

@@ -8,6 +8,7 @@ import { validateForm, validateRoundPopup } from "../../../../utils/PositionVali
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
+import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import axios from 'axios';
@@ -88,7 +89,7 @@ const CustomDropdown = ({
             {!disableSearch && (
               <div className="border-b">
                 <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <Search className="absolute ml-1 text-gray-500" />
+                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                   <input
                     type="text"
                     placeholder={`Search ${label}`}
@@ -120,15 +121,12 @@ const CustomDropdown = ({
   );
 };
 
-
-
 const RoundModal = ({ isOpen, onClose, onNext, currentRoundNumber }) => {
   const [formData, setFormData] = useState({
     roundName: '',
     interviewType: ''
   });
   const [errors, setErrors] = useState({});
- const navigate = useNavigate();
   if (!isOpen) return null;
 
   const handleNext = () => {
@@ -249,6 +247,7 @@ const DeleteConfirmationModal = ({ isOpen, roundNumber, onConfirm, onCancel }) =
 const PositionForm = () => {
     const { id } = useParams();
     const location = useLocation();
+    
   // position details states
   const {
     companies,
@@ -257,6 +256,12 @@ const PositionForm = () => {
     skills,
     positions
   } = useCustomContext();
+
+  useEffect(() => {
+    console.log('companies:', companies);
+    console.log('locations:', locations);
+  }, [companies,locations]);
+
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
@@ -950,8 +955,8 @@ const [isEdit,setIsEdit] = useState(false);
                         error={errors.companyname}
                         disabledError={true}
                         placeholder="Select a company"
-                        optionKey="companyName"
-                        optionValue="companyName"
+                        optionKey="CompanyName"
+                        optionValue="CompanyName"
                       />
                       </div>
                     </div>
@@ -1094,18 +1099,18 @@ const [isEdit,setIsEdit] = useState(false);
                           {/* location */}
                           <div>
                         <CustomDropdown
-                        label="Location"
-                        name="location"
-                        value={formData.Location}
-                        options={locations}
-                        onChange={(e) => {
-                          setFormData({ ...formData, Location: e.target.value });
-                        }}
-                        disabledError={false}
-                        placeholder="Select a location"
-                        optionKey="location"
-                        optionValue="location"
-                      />
+  label="Location"
+  name="location"
+  value={formData.Location}
+  options={locations}
+  onChange={(e) => {
+    setFormData({ ...formData, Location: e.target.value });
+  }}
+  disabledError={false}
+  placeholder="Select a location"
+  optionKey="LocationName"
+  optionValue="LocationName"
+/>
                           </div>
                         </div>
                       {/* </div> */}
@@ -1154,8 +1159,7 @@ const [isEdit,setIsEdit] = useState(false);
                           onClick={() => setIsModalOpen(true)}
                           className="flex items-center justify-center text-sm bg-custom-blue text-white py-1 rounded w-28"
                         >
-                          {/* <FaPlus className="text-md mr-2" /> */}
-                          Add Skills
+                          <FaPlus className="mr-1 w-5 h-5" /> Add Skills
                         </button>
                       </div>
                       {errors.skills && (
@@ -1480,252 +1484,3 @@ const [isEdit,setIsEdit] = useState(false);
 export default PositionForm;
 
 
-
-
-  // const handleSubmit = async (e, actionType = "", skipValidation = false) => {
-  //   if (e) {
-  //     e.preventDefault();
-  //   }
-
-  //   if (!skipValidation) {
-  //     const { formIsValid, newErrors } = validateForm(formData, entries, formData.rounds);
-  //     if (!formIsValid) {
-  //       setErrors(newErrors);
-  //       return;
-  //     }
-  //   }
-
-  //   setErrors({});
-  //   const userId = Cookies.get("userId");
-  //   const userName = Cookies.get("userName");
-  //   const orgId = Cookies.get("organizationId");
-  //   const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-
-  //   const basicdetails = {
-  //     ...formData,
-  //     companyname: formData.companyName,
-  //     minexperience: parseInt(formData.experienceMin) || 0,
-  //     maxexperience: parseInt(formData.experienceMax) || 0,
-  //     ownerId: userId,
-  //     tenantId: orgId,
-  //     CreatedBy: `${userName} at ${currentDateTime}`,
-  //     LastModifiedById: userId,
-  //     skills: entries.map(entry => ({
-  //       skill: entry.skill,
-  //       experience: entry.experience,
-  //       expertise: entry.expertise
-  //     })),
-  //     additionalNotes: formData.additionalNotes,
-  //     jobDescription: formData.jobDescription.trim(),
-  //     // rounds: formData.rounds?.map(round => ({
-  //     //   roundName: round.roundName,
-  //     //   interviewType: round.interviewType,
-  //     //   interviewMode: round.interviewMode || "Virtual",
-  //     //   duration: round.duration || "30",
-  //     //   instructions: round.instructions || "",
-  //     //   selectedTemplate: round.selectedTemplate || "",
-  //     // })) || [],
-  //   };
-
-  //   try {
-  //     let response;
-  //     if (positionId) {
-  //       console.log("Updating existing position with ID:", positionId);
-  //       response = await axios.patch(
-  //         `${process.env.REACT_APP_API_URL}/position/${positionId}`,
-  //         basicdetails
-  //       );
-  //       console.log("Updated response:", response.data);
-  //       console.log("Updated Position Data:", response.data.data);
-  //     } else {
-  //       console.log("Creating new position...");
-  //       response = await axios.post(
-  //         `${process.env.REACT_APP_API_URL}/position`,
-  //         basicdetails
-  //       );
-  //       console.log("New position response:", response.data.data);
-  //       setPositionId(response.data.data._id);
-  //     }
-
-  //     // if (response.status === 201 || response.status === 200) {
-  //     //   if (openRoundModal) {
-  //     //     // console.log("Opening Round Modal...");
-  //     //     setIsRoundModalOpen(true);
-  //     //     setInsertIndex(0);
-  //     //   } else if (positionId) {
-  //     //     // console.log("Skipping Round Modal, Moving to Next Step...");
-  //     //     handleNextNavigation();
-  //     //   } else {
-  //     //     // console.log("Closing form...");
-  //     //     onClose();
-  //     //   }
-  //     // }
-
-  //     if (response.status === 201 || response.status === 200) {
-  //       if (actionType === "BasicDetailsSave") {
-  //         onClose();
-  //       }
-  //       // if (openRoundModal) {
-  //       //   console.log("Opening Round Modal...");
-  //       //   setIsRoundModalOpen(true);
-  //       //   setInsertIndex(0);
-  //       // } else {
-  //       //   console.log("Skipping Round Modal, Moving to Next Step...");
-  //       //   handleNextNavigation();
-  //       // }
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error saving position:", error);
-  //   }
-  // };
-
-  // const handleSubmit = async (e, actionType = "", skipValidation = false) => {
-  //   if (e) {
-  //     e.preventDefault();
-  //   }
-
-  //   if (!skipValidation) {
-  //     const { formIsValid, newErrors } = validateForm(formData, entries, formData.rounds);
-  //     if (!formIsValid) {
-  //       setErrors(newErrors);
-  //       return;
-  //     }
-  //   }
-
-  //   setErrors({});
-  //   const userId = Cookies.get("userId");
-  //   const userName = Cookies.get("userName");
-  //   const orgId = Cookies.get("organizationId");
-  //   const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-
-  //   let basicdetails = {
-  //     ...formData,
-  //     companyname: formData.companyName,
-  //     minexperience: parseInt(formData.experienceMin) || 0,
-  //     maxexperience: parseInt(formData.experienceMax) || 0,
-  //     ownerId: userId,
-  //     tenantId: orgId,
-  //     CreatedBy: `${userName} at ${currentDateTime}`,
-  //     LastModifiedById: userId,
-  //     skills: entries.map(entry => ({
-  //       skill: entry.skill,
-  //       experience: entry.experience,
-  //       expertise: entry.expertise,
-  //     })),
-  //     additionalNotes: formData.additionalNotes,
-  //     jobDescription: formData.jobDescription.trim(),
-  //     rounds: formData.rounds
-  //   };
-
-  //   console.log('basic details in the handle submit before submit :', basicdetails);
-
-  //   try {
-  //     let response;
-  //     if (positionId) {
-  //       console.log("Updating existing position with ID:", positionId);
-  //       response = await axios.patch(
-  //         `${process.env.REACT_APP_API_URL}/position/${positionId}`,
-  //         basicdetails
-  //       );
-  //       console.log("Updated response:", response.data);
-  //     } else {
-  //       console.log("Creating new position...");
-  //       response = await axios.post(
-  //         `${process.env.REACT_APP_API_URL}/position`,
-  //         basicdetails
-  //       );
-  //       console.log("New position response:", response.data.data);
-  //       setPositionId(response.data.data._id);
-  //     }
-
-  //     if (response.status === 201 || response.status === 200) {
-  //       if (actionType === "BasicDetailsSave") {
-  //         onClose();
-  //       }
-  //       if (actionType === "BasicDetailsSave&AddRounds") {
-  //         setIsRoundModalOpen(true);
-  //       }
-  //       if (actionType === "BasicDetailsSave&Next") {
-  //         handleNextNavigation();
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saving position:", error);
-  //   }
-  // };
-
-  // const handleSubmit = async (e, actionType = "", skipValidation = false) => {
-  //   if (e) {
-  //     e.preventDefault();
-  //   }
-
-  //   if (!skipValidation) {
-  //     const { formIsValid, newErrors } = validateForm(formData, entries, formData.rounds);
-  //     if (!formIsValid) {
-  //       setErrors(newErrors);
-  //       return;
-  //     }
-  //   }
-
-  //   setErrors({});
-  //   const userId = Cookies.get("userId");
-  //   const userName = Cookies.get("userName");
-  //   const orgId = Cookies.get("organizationId");
-  //   const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-
-  //   let basicdetails = {
-  //     ...formData,
-  //     companyname: formData.companyName,
-  //     minexperience: parseInt(formData.experienceMin) || 0,
-  //     maxexperience: parseInt(formData.experienceMax) || 0,
-  //     ownerId: userId,
-  //     tenantId: orgId,
-  //     CreatedBy: `${userName} at ${currentDateTime}`,
-  //     LastModifiedById: userId,
-  //     skills: entries.map(entry => ({
-  //       skill: entry.skill,
-  //       experience: entry.experience,
-  //       expertise: entry.expertise,
-  //     })),
-  //     additionalNotes: formData.additionalNotes,
-  //     jobDescription: formData.jobDescription.trim(),
-  //     rounds: formData.rounds
-  //   };
-
-  //   console.log('basic details in the handle submit before submit :', basicdetails);
-
-  //   try {
-  //     let response;
-  //     if (positionId) {
-  //       console.log("Updating existing position with ID:", positionId);
-  //       response = await axios.patch(
-  //         `${process.env.REACT_APP_API_URL}/position/${positionId}`,
-  //         basicdetails
-  //       );
-  //       console.log("Updated response:", response.data);
-  //     } else {
-  //       console.log("Creating new position...");
-  //       response = await axios.post(
-  //         `${process.env.REACT_APP_API_URL}/position`,
-  //         basicdetails
-  //       );
-  //       console.log("New position response:", response.data.data);
-  //       setPositionId(response.data.data._id);
-  //     }
-
-  //     if (response.status === 201 || response.status === 200) {
-  //       if (actionType === "BasicDetailsSave") {
-  //         onClose();
-  //       }
-  //       if (actionType === "BasicDetailsSave&AddRounds") {
-  //         setIsRoundModalOpen(true);
-  //       }
-  //       if (actionType === "BasicDetailsSave&Next") {
-  //         handleNextNavigation();
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saving position:", error);
-  //   }
-  // };

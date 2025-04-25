@@ -86,16 +86,16 @@ const MultiStepForm = () => {
 
   console.log("basicDetailsData", basicDetailsData);
 
-  const checkProfileIdExists = useCallback(async (profileId) => {
-    if (!profileId) return false;
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
-      return response.data.exists;
-    } catch (error) {
-      console.error("ProfileId check error:", error);
-      return false;
-    }
-  }, []);
+  // const checkProfileIdExists = useCallback(async (profileId) => {
+  //   if (!profileId) return false;
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
+  //     return response.data.exists;
+  //   } catch (error) {
+  //     console.error("ProfileId check error:", error);
+  //     return false;
+  //   }
+  // }, []);
 
   const checkEmailExists = useCallback(async (email) => {
     if (!email) return false;

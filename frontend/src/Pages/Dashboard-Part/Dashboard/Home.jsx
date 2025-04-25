@@ -38,13 +38,16 @@ import { ReactComponent as FaBuildingUser } from '../../../icons/FaBuildingUser.
 import { ReactComponent as BsBuildingCheck } from '../../../icons/BsBuildingCheck.svg';
 import { ReactComponent as MdOutlineSchedule } from '../../../icons/MdOutlineSchedule.svg';
 import { ReactComponent as FaArrowRight } from '../../../icons/FaArrowRight.svg';
-import { usePermissions } from "../../../Context/PermissionsContext.js";
+// import { usePermissions } from "../../../Context/PermissionsContext.js";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Home = () => {
+  useEffect(() => {
+    console.log("Home");
+  }, []);
   const freelancer = Cookies.get("freelancer");
-    const { sharingPermissionscontext,objectPermissionscontext } = usePermissions();
+    // const { sharingPermissionscontext, objectPermissionscontext } = usePermissions();
   
 
   const apps = [
@@ -233,7 +236,7 @@ const Home = () => {
   const [upcomingInterviews, setUpcomingInterviews] = useState([]);
   const [roundsData, setRoundsData] = useState({});
 
-  const interviewPermissions = useMemo(() => sharingPermissionscontext.interviews || {}, [sharingPermissionscontext]);
+  // const interviewPermissions = useMemo(() => sharingPermissionscontext.interviews || {}, [sharingPermissionscontext]);
 
   // useEffect(() => {
   //   const fetchRoundsData = async (roundIds) => {
