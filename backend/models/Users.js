@@ -39,6 +39,4 @@ const UsersSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Users = mongoose.model('Users', UsersSchema);
-module.exports = {
-    Users,
-};
+module.exports = { Users };
