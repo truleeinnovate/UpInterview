@@ -155,6 +155,7 @@ router.post('/check-user', async (req, res) => {
   try {
     console.log('Backend: 1. Received user check request', {
       source: 'Local Server',
+      requestOrigin部分: 'Local Server',
       requestOrigin: req.headers.origin,
       requestMethod: req.method,
       requestPath: req.path,
@@ -265,19 +266,19 @@ router.post('/check-user', async (req, res) => {
       emails: allEmails
     });
 
-    // Check for existing user with normalized email
+    // Check for existing user with normalized email (use lowercase 'email')
     console.log('Backend: 5.2 Checking database for existing user', {
       source: 'MongoDB Database',
-      query: { Email: loginEmail }
+      query: { email: loginEmail }
     });
 
-    const existingUser = await Users.findOne({ Email: loginEmail });
+    const existingUser = await Users.findOne({ email: loginEmail });
 
     console.log('Backend: 5.3 Database response', {
       source: 'MongoDB Database',
       found: Boolean(existingUser),
       userId: existingUser?._id,
-      matchedEmail: existingUser?.Email,
+      matchedEmail: existingUser?.email,
       loginEmail: loginEmail
     });
 
