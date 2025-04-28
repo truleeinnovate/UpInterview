@@ -62,7 +62,7 @@ const Availability = ({
     const initialTimes = { ...times };
     let updated = false;
     Object.keys(dayMap).forEach((shortDay) => {
-      if (!initialTimes[shortDay] || !Array.isArray(initialTimes[shortDay]) || initialTimes[shortDay].length === 0) {
+      if (!initialTimes[shortDay] || !Array.isArray(initialTimes[shortDay])) {
         initialTimes[shortDay] = [{ startTime: null, endTime: null }];
         updated = true;
       }
@@ -109,7 +109,6 @@ const Availability = ({
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
     const newTimes = { ...times };
 
-    // Ensure the time slot exists
     if (!newTimes[shortDay]) {
       newTimes[shortDay] = [{ startTime: null, endTime: null }];
     }
@@ -117,10 +116,8 @@ const Availability = ({
       newTimes[shortDay][index] = { startTime: null, endTime: null };
     }
 
-    // Update the time
     newTimes[shortDay][index][field] = value;
 
-    // Validate end time is after start time
     if (field === 'startTime' && newTimes[shortDay][index].endTime) {
       if (value >= newTimes[shortDay][index].endTime) {
         newTimes[shortDay][index].endTime = null;
@@ -189,7 +186,7 @@ const Availability = ({
                       (times[shortDay]?.length > 1 || index > 0 || (timeSlot.startTime && timeSlot.endTime));
 
                     return (
-                      <div key={`${shortDay}-${index}`} className="flex items-center gap-1">
+                      <div key={`${shortDay}-${index}`} className="flex items-center gap-2">
                         {/* Start Time Input */}
                         <div className="relative">
                           <input
@@ -241,18 +238,21 @@ const Availability = ({
                             </div>
                           )}
                         </div>
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-1">
-                          {showXCircle && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveTimeSlot(day, index)}
-                              className="text-red-500 hover:text-red-700 p-1"
-                              aria-label="Remove time slot"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          )}
+                        {/* Action Buttons - Always reserve space */}
+                        <div className="flex items-center gap-2 w-24">
+                          {/* Always reserve space for XCircle button */}
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            {showXCircle ? (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTimeSlot(day, index)}
+                                className="text-red-500 hover:text-red-700 p-1"
+                                aria-label="Remove time slot"
+                              >
+                                <XCircle className="w-5 h-5" />
+                              </button>
+                            ) : null}
+                          </div>
                           {index === 0 &&
                             from !== 'teamProfileDetails' &&
                             from !== 'ScheduleLaterInternalInterview' && (
@@ -260,18 +260,15 @@ const Availability = ({
                                 <button
                                   type="button"
                                   onClick={() => handleAddTimeSlot(day)}
-                                  className="p-1"
+                                  className="p-1 hover:text-gray-700"
                                   aria-label="Add time slot"
                                 >
                                   <Plus className="w-5 h-5" />
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopy(e, day);
-                                  }}
-                                  className="p-1"
+                                  onClick={(e) => handleCopy(e, day)}
+                                  className="p-1 hover:text-gray-700"
                                   aria-label="Copy time slots"
                                 >
                                   <Copy className="w-5 h-5" />

@@ -177,7 +177,7 @@ router.post('/check-user', async (req, res) => {
       requestMethod: 'POST',
       params: {
         grant_type: 'authorization_code',
-        code: code.substring(0, 10) + '...', // Log partial code for security
+        code: code.substring(0, 10) + '...',
         redirect_uri: config.REACT_APP_REDIRECT_URI,
         client_id: config.REACT_APP_CLIENT_ID
       }
@@ -243,17 +243,51 @@ router.post('/check-user', async (req, res) => {
       profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`
     };
 
-    console.log('Backend: 5. Checking database for existing user', {
-      source: 'MongoDB Database',
-      query: { Email: userInfo.email }
+    // Normalize email for comparison (trim whitespace, convert to lowercase)
+    const loginEmail = userInfo.email?.trim().toLowerCase();
+    console.log('Backend: 4.1 Normalized login email', {
+      source: 'Backend Processing',
+      originalEmail: userInfo.email,
+      normalizedEmail: loginEmail
     });
 
-    const existingUser = await Users.findOne({ Email: userInfo.email });
+    // Fetch all emails from the Users collection
+    console.log('Backend: 5. Fetching all emails from database', {
+      source: 'MongoDB Database',
+      collection: 'Users'
+    });
 
-    console.log('Backend: 5.1 Database response', {
+    const allUsers = await Users.find({}, { Email: 1 }).lean();
+    const allEmails = allUsers.map(user => user.Email?.trim().toLowerCase());
+    console.log('Backend: 5.1 All emails in database', {
+      source: 'MongoDB Database',
+      totalUsers: allUsers.length,
+      emails: allEmails
+    });
+
+    // Check for existing user with normalized email
+    console.log('Backend: 5.2 Checking database for existing user', {
+      source: 'MongoDB Database',
+      query: { Email: loginEmail }
+    });
+
+    const existingUser = await Users.findOne({ Email: loginEmail });
+
+    console.log('Backend: 5.3 Database response', {
       source: 'MongoDB Database',
       found: Boolean(existingUser),
-      userId: existingUser?._id
+      userId: existingUser?._id,
+      matchedEmail: existingUser?.Email,
+      loginEmail: loginEmail
+    });
+
+    // Additional check for case-insensitive matching
+    const emailExistsInList = allEmails.includes(loginEmail);
+    console.log('Backend: 5.4 Case-insensitive email check', {
+      source: 'Backend Processing',
+      loginEmail: loginEmail,
+      existsInDatabase: emailExistsInList,
+      matched: emailExistsInList ? 'Email found in database' : 'Email not found in database'
     });
 
     console.log('Backend: 6. Sending response with user info', {

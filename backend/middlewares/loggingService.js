@@ -128,10 +128,6 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
                 requestMethod: req.method,
                 responseStatusCode: res.statusCode.toString(),
 
-
-
-
-
                 code: res.statusCode.toString(),
                 message: (res.statusCode >= 400 ? 'Error occurred' : 'Request succeeded'), //responseData.message ||
                 serverName: 'InterviewSaaS-Server',
