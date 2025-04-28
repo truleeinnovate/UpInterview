@@ -5,10 +5,10 @@ import Cookies from 'js-cookie'
 
 export function DomainManagement() {
   const [subdomain, setSubdomain] = useState('')
-  const [isChecking, setIsChecking] = useState(false)
-  const [availability, setAvailability] = useState(null)
+  const [isChecking, setIsChecking] = useState(false);
+  const [availability, setAvailability] = useState(null);
   const baseDomain = 'app.upinterview.io'
-  const [activeDomain, setActiveDomain] = useState(null)
+  const [activeDomain, setActiveDomain] = useState(null);
   const [isEditing, setIsEditing] = useState(false)
   const [newSubdomain, setNewSubdomain] = useState('')
   const [newAvailability, setNewAvailability] = useState(null)

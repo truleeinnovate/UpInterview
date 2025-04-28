@@ -14,13 +14,6 @@ const qualificationSchema = new mongoose.Schema({
     // ModifiedBy: String,
 });
 
-const QualificationHistorySchema = new mongoose.Schema({
-    qualificationId: { type: mongoose.Schema.Types.ObjectId, ref: 'HigherQualification' },
-    QualificationName: String,
-    ModifiedDate: { type: Date, default: Date.now },
-    ModifiedBy: String,
-});
-
 qualificationSchema.pre('save', function(next) {
     if (this.isNew) {
         this.CreatedDate = Date.now();
@@ -29,6 +22,5 @@ qualificationSchema.pre('save', function(next) {
 });
 
 const HigherQualification = mongoose.model("HigherQualification", qualificationSchema);
-const HigherQualificationHistory = mongoose.model("HigherQualificationHistory", QualificationHistorySchema);
 
-module.exports = { HigherQualification, HigherQualificationHistory };
+module.exports = { HigherQualification };

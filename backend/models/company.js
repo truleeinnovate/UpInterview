@@ -12,13 +12,6 @@ const companySchema = new mongoose.Schema({
     CreatedBy: String,
 });
 
-const CompanyHistorySchema = new mongoose.Schema({
-    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
-    CompanyName: String,
-    ModifiedDate: { type: Date, default: Date.now },
-    ModifiedBy: String,
-});
-
 companySchema.pre('save', function(next) {
     if (this.isNew) {
         this.CreatedDate = Date.now();
@@ -27,6 +20,5 @@ companySchema.pre('save', function(next) {
 });
 
 const Company = mongoose.model("Company", companySchema);
-const CompanyHistory = mongoose.model("CompanyHistory", CompanyHistorySchema);
 
-module.exports = { Company, CompanyHistory };
+module.exports = { Company };

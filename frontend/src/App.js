@@ -76,6 +76,10 @@ import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProf
 import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
 //-----------------------------------account settings
 
+// for subdomain
+import SubdomainChecker from './SubdomainChecker.jsx';
+import NotFound from './NotFound.jsx';
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
@@ -92,6 +96,7 @@ const App = () => {
       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
       {shouldRenderLogo && <Logo />}
       <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
+        <SubdomainChecker />
         <Routes>
           <Route path="/" element={<Login1 />} />
           <Route path="/profile1" element={<Login2 />} />
@@ -250,6 +255,9 @@ const App = () => {
           </Route>
 
           {/* ---------------------------account settings------------------- */}
+
+          {/* ---------------------------for subdomain------------------- */}
+          <Route path="/404" element={<NotFound />} />
 
         </Routes>
       </div>

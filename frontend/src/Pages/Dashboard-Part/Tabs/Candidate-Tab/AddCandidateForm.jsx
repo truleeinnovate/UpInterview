@@ -618,11 +618,13 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                   onClick={() => setIsFullScreen(!isFullScreen)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
+                  {/* Icon placeholder */}
                 </button>
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
+                  {/* Icon placeholder */}
                 </button>
               </div>
             </div>
