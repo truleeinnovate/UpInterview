@@ -257,8 +257,8 @@ router.post('/check-user', async (req, res) => {
       collection: 'Users'
     });
 
-    const allUsers = await Users.find({}, { Email: 1 }).lean();
-    const allEmails = allUsers.map(user => user.Email?.trim().toLowerCase());
+    const allUsers = await Users.find({}, { email: 1 }).lean();
+    const allEmails = allUsers.map(user => user.email?.trim().toLowerCase());
     console.log('Backend: 5.1 All emails in database', {
       source: 'MongoDB Database',
       totalUsers: allUsers.length,
