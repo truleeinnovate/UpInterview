@@ -48,6 +48,20 @@ app.use((req, res, next) => {
   next();
 });
 
+const { checkSubdomainExists } = require('./controllers/organizationLoginController');
+app.use(checkSubdomainExists);
+
+const path = require('path');
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// This should be after all API routes and the checkSubdomainExists middleware
+app.get('*', (req, res) => {
+  // If checkSubdomainExists did not return a 404, serve the React app
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
+
 // Master Data Routes
 const { Skills } = require('./models/MasterSchemas/skills.js');
 const { LocationMaster } = require('./models/MasterSchemas/LocationMaster.js');

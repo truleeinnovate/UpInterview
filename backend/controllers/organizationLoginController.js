@@ -781,19 +781,19 @@ const checkSubdomainExists = async (req, res, next) => {
     // Extract subdomain from host (e.g., 'xyz' from 'xyz.app.upinterview.io')
     const subdomain = host.split(`.${baseDomain}`)[0];
 
-    // If no subdomain or host doesn't include base domain, proceed to next middleware
+    // Allow requests to the base domain (app.upinterview.io) to proceed
     if (!subdomain || subdomain === baseDomain || host === baseDomain) {
       return next();
     }
 
-    // Check if subdomain exists in the database
-    const organization = await Organization.findOne({ subdomain });
+    // Check if subdomain exists in the database and is active
+    const organization = await Organization.findOne({ 
+      subdomain, 
+      subdomainStatus: 'active' 
+    });
 
     if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: `Subdomain ${subdomain} not found`,
-      });
+      return res.status(404).send('Not Found'); // Return 404 to trigger browser's default 404 page
     }
 
     // Optionally, attach organization data to the request for downstream use
@@ -801,7 +801,7 @@ const checkSubdomainExists = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error checking subdomain existence:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).send('Internal Server Error');
   }
 };
 

@@ -78,7 +78,6 @@ import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account
 
 // for subdomain
 import SubdomainChecker from './SubdomainChecker.jsx';
-import NotFound from './NotFound.jsx';
 
 const App = () => {
   const location = useLocation();
@@ -255,9 +254,6 @@ const App = () => {
           </Route>
 
           {/* ---------------------------account settings------------------- */}
-
-          {/* ---------------------------for subdomain------------------- */}
-          <Route path="/404" element={<NotFound />} />
 
         </Routes>
       </div>

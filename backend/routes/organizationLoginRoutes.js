@@ -13,11 +13,11 @@ const {
   getOrganizationSubdomain,
   activateSubdomain,
   deactivateSubdomain,
-  checkSubdomainExists,
+  // checkSubdomainExists,
 } = require('../controllers/organizationLoginController');
 
 // Apply subdomain check middleware to all routes or specific routes
-router.use(checkSubdomainExists);
+// router.use(checkSubdomainExists);
 
 // Existing routes
 router.post('/Signup', registerOrganization);
@@ -34,13 +34,5 @@ router.post('/update-subdomain', updateSubdomain);
 router.get('/subdomain/:organizationId', getOrganizationSubdomain);
 router.post('/activate-subdomain', activateSubdomain);
 router.post('/deactivate-subdomain', deactivateSubdomain);
-
-router.get('/verify-subdomain/:subdomain', checkSubdomainExists, (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Subdomain is valid',
-    organization: req.organization,
-  });
-});
 
 module.exports = router;
