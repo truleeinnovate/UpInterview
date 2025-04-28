@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { PiNotificationBold } from "react-icons/pi";
 import { FaArrowRight } from "react-icons/fa";
@@ -28,7 +27,6 @@ const Navbar = () => {
   const userName = Cookies.get("userName");
   const { logout } = useAuth0();
   const [assessmentDropdown, setAssessmentDropdown] = useState(false);
-  const [moreDropdown, setMoreDropdown] = useState(false);
   const [interviewDropdown, setInterviewDropdown] = useState(false);
   const [isDetailDropdownOpen, setIsDetailDropdownOpen] = useState(false);
   const [isGettingDropdownOpen, setIsGettingDropdownOpen] = useState(false);
@@ -40,7 +38,6 @@ const Navbar = () => {
   const [profileImage, setProfileImage] = useState(null);
 
   const assessmentRef = useRef(null);
-  const moreRef = useRef(null);
   const interviewRef = useRef(null);
   const navigate = useNavigate();
 
@@ -51,19 +48,15 @@ const Navbar = () => {
         const contact = response.data;
         if (contact.ImageData && contact.ImageData.filename) {
           const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`;
-          console.log('Image URL:', imageUrl);
           setProfileImage(imageUrl);
-        } else {
-          console.warn('No image data found for userId:', userId);
         }
-
       } catch (error) {
         // console.error('Error fetching profile image:', error);
       }
     };
 
     fetchProfileImage();
-  }, []);
+  }, [userId]);
 
   const handleGettingToggle = () => {
     setIsGettingDropdownOpen(!isGettingDropdownOpen);
@@ -87,18 +80,14 @@ const Navbar = () => {
     setIsLegalDropdownOpen(!isLegalDropdownOpen);
   };
 
-
   const notifications = () => {
     navigate("/notifications");
   };
 
   const handleSettingsClick = () => {
-    // if (organization) {
-    //   navigate('/user_details');
-    // } else {
     navigate('/account-settings');
-    // }
   };
+
   const [outlineDropdown, setOutlineDropdown] = useState(false);
   const [notificationDropdown, setNotificationDropdown] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
@@ -114,15 +103,13 @@ const Navbar = () => {
       notificationRef.current && !notificationRef.current.contains(event.target) &&
       profileRef.current && !profileRef.current.contains(event.target) &&
       interviewRef.current && !interviewRef.current.contains(event.target) &&
-      assessmentRef.current && !assessmentRef.current.contains(event.target) &&
-      moreRef.current && !moreRef.current.contains(event.target)
+      assessmentRef.current && !assessmentRef.current.contains(event.target)
     ) {
       setOutlineDropdown(false);
       setNotificationDropdown(false);
       setProfileDropdown(false);
       setInterviewDropdown(false);
       setAssessmentDropdown(false);
-      setMoreDropdown(false);
     }
   };
 
@@ -139,7 +126,6 @@ const Navbar = () => {
     setProfileDropdown(false);
     setInterviewDropdown(false);
     setAssessmentDropdown(false);
-    setMoreDropdown(false);
   };
 
   const toggleNotificationDropdown = () => {
@@ -148,7 +134,6 @@ const Navbar = () => {
     setProfileDropdown(false);
     setInterviewDropdown(false);
     setAssessmentDropdown(false);
-    setMoreDropdown(false);
   };
 
   const toggleProfileDropdown = () => {
@@ -157,7 +142,6 @@ const Navbar = () => {
     setNotificationDropdown(false);
     setInterviewDropdown(false);
     setAssessmentDropdown(false);
-    setMoreDropdown(false);
   };
 
   const toggleInterviewDropdown = () => {
@@ -166,7 +150,6 @@ const Navbar = () => {
     setNotificationDropdown(false);
     setProfileDropdown(false);
     setAssessmentDropdown(false);
-    setMoreDropdown(false);
   };
 
   const toggleAssessmentDropdown = () => {
@@ -175,16 +158,6 @@ const Navbar = () => {
     setNotificationDropdown(false);
     setProfileDropdown(false);
     setInterviewDropdown(false);
-    setMoreDropdown(false);
-  };
-
-  const toggleMoreDropdown = () => {
-    setMoreDropdown(prev => !prev);
-    setOutlineDropdown(false);
-    setNotificationDropdown(false);
-    setProfileDropdown(false);
-    setInterviewDropdown(false);
-    setAssessmentDropdown(false);
   };
 
   const toggleSidebar = () => {
@@ -380,15 +353,13 @@ const Navbar = () => {
       <div className="px-2 py-1">
         {[
           { to: "/billing", label: "Billing", icon: <CiCreditCard1 /> },
-          {
-            to: "/wallet-transcations", label: "My Wallet", icon: <LiaWalletSolid />
-          },
+          { to: "/wallet-transcations", label: "My Wallet", icon: <LiaWalletSolid /> },
           { to: "/connected_apps", label: "App Settings", icon: <MdAppSettingsAlt /> },
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
             className="flex items-center py-2 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-            activeclassname="bg-gray-200 text-gray-800"
+            activeClassName="bg-gray-200 text-gray-800"
             to={to}
             onClick={() => setProfileDropdown(false)}
           >
@@ -408,7 +379,6 @@ const Navbar = () => {
             <div>
               <img src={logo} alt="Logo" className="w-24 hidden lg:block xl:block 2xl:block ml-3" />
             </div>
-            {/* Navbar icons for small and medium screens */}
             <div className="flex-col hidden sm:flex md:flex lg:hidden xl:hidden 2xl:hidden">
               <div className="flex items-center justify-between w-full">
                 <button className="sidebar-icon12" onClick={toggleSidebar}>
@@ -425,7 +395,7 @@ const Navbar = () => {
                   </div>
                   <div className="icon-container border" ref={outlineRef}>
                     <div className="relative">
-                      <p className="font-medium text-custom-blue " onClick={toggleOutlineDropdown}>
+                      <p className="font-medium text-custom-blue" onClick={toggleOutlineDropdown}>
                         <IoMdInformationCircleOutline />
                       </p>
                       {outlineDropdown && outlineDropdownContent}
@@ -460,28 +430,40 @@ const Navbar = () => {
             </div>
 
             <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
-              <div className="relative hidden lg:block xl:block 2xl:block" ref={interviewRef} >
-                <button className="font-medium flex items-center" onClick={toggleInterviewDropdown} >
-                  Interviews &nbsp; {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+              <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidates">
+                  Candidates
+                </NavLink>
+              </p>
+              <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/position">
+                  Positions
+                </NavLink>
+              </p>
+              <div className="relative hidden lg:block xl:block 2xl:block" ref={interviewRef}>
+                <button className="font-medium flex items-center" onClick={toggleInterviewDropdown}>
+                  Interviews&nbsp;
+                  {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                 </button>
                 {interviewDropdown && (
                   <div className="absolute mt-2 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                     <div className="space-y-1">
-                      <NavLink className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/interviewList" onClick={() => { setInterviewDropdown(false); }} >
+                      <NavLink
+                        className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+                        activeClassName="bg-gray-200 text-gray-800"
+                        to="/interviewList"
+                        onClick={() => setInterviewDropdown(false)}
+                      >
                         Interviews
                       </NavLink>
-                      {/* <NavLink className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/outsource-interviewers" onClick={() => { setInterviewDropdown(false); }} >
-                        Outsource Interviewers - admin
-                      </NavLink>
-                      <NavLink className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/outsourceinterviewrequest" onClick={() => { setInterviewDropdown(false); }} >
-                        Interview Request
-                      </NavLink> */}
-                      <NavLink className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/mockinterview" onClick={() => { setInterviewDropdown(false); }} >
+                      <NavLink
+                        className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+                        activeClassName="bg-gray-200 text-gray-800"
+                        to="/mockinterview"
+                        onClick={() => setInterviewDropdown(false)}
+                      >
                         Mock Interviews
                       </NavLink>
-                      {/* <NavLink className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/videocallbutton" onClick={() => { setInterviewDropdown(false); }} >
-                        Start Interview
-                      </NavLink> */}
                     </div>
                   </div>
                 )}
@@ -494,48 +476,33 @@ const Navbar = () => {
                 {assessmentDropdown && (
                   <div className="absolute mt-2 z-10 w-44 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                     <div className="space-y-1">
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" onClick={() => { setAssessmentDropdown(false); }} activeclassname="bg-gray-200 text-gray-800" to="/assessments" >
+                      <NavLink
+                        className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+                        activeClassName="bg-gray-200 text-gray-800"
+                        to="/assessments"
+                        onClick={() => setAssessmentDropdown(false)}
+                      >
                         Assessments
                       </NavLink>
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/questionBank" onClick={() => { setAssessmentDropdown(false); }} >
+                      <NavLink
+                        className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+                        activeClassName="bg-gray-200 text-gray-800"
+                        to="/questionBank"
+                        onClick={() => setAssessmentDropdown(false)}
+                      >
                         Question Bank
                       </NavLink>
-                      {/* <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/assessmenttest" onClick={() => { setAssessmentDropdown(false); }} >
-                        Assessment Test
-                      </NavLink> */}
                     </div>
                   </div>
                 )}
               </div>
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
-                <NavLink activeclassname="bg-gray-200 text-custom-blue" to="/analytics" >
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/analytics">
                   Analytics
                 </NavLink>
               </p>
-              <div className="relative hidden lg:block xl:block 2xl:block" ref={moreRef}>
-                <button className="font-medium flex items-center" onClick={toggleMoreDropdown}>
-                  More&nbsp;
-                  {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                </button>
-                {moreDropdown && (
-                  <div className="absolute p-2 z-10 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 border">
-                    <div className="space-y-1">
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/candidates" onClick={() => { setMoreDropdown(false); }} >
-                        Candidates
-                      </NavLink>
-                      <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/position" onClick={() => { setMoreDropdown(false); }} >
-                        Positions
-                      </NavLink>
-                      {/* <NavLink className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md" activeclassname="bg-gray-200 text-gray-800" to="/team" onClick={() => { setMoreDropdown(false); }} >
-                        Teams
-                      </NavLink> */}
-                    </div>
-                  </div>
-                )}
-              </div>
             </nav>
-            {/* Navbar icons for big screens */}
-            <div className="flex space-x-2  sm:hidden md:hidden">
+            <div className="flex space-x-2 sm:hidden md:hidden">
               <div className="search w-60">
                 <input type="text" placeholder="Search" className="rounded-full border h-8" />
                 <button type="submit" className="text-custom-blue"><IoMdSearch /></button>
@@ -545,7 +512,7 @@ const Navbar = () => {
                   <IoHome />
                 </NavLink>
               </div>
-              <div className="text-xl border rounded-md p-2" ref={outlineRef} >
+              <div className="text-xl border rounded-md p-2" ref={outlineRef}>
                 <div className="relative">
                   <p className="font-medium text-custom-blue" onClick={toggleOutlineDropdown}>
                     <IoMdInformationCircleOutline />
@@ -555,10 +522,9 @@ const Navbar = () => {
               </div>
               <div className="text-xl border rounded-md" ref={notificationRef}>
                 <div className="relative">
-                  <p className="">
+                  <p>
                     <NotificationPanel />
                   </p>
-                  {/* {notificationDropdown && notificationDropdownContent} */}
                 </div>
               </div>
               <div className="text-xl border rounded-md px-1 py-1 flex items-center" ref={profileRef}>
@@ -574,26 +540,44 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
-      {/* Sidebar for tab and mobile */}
       {isSidebarOpen && (
         <div className="fixed inset-0 top-[70px] bg-gray-800 bg-opacity-75 z-40 block lg:hidden xl:hidden 2xl:hidden">
           <div className="fixed mt-4 left-0 w-64 bg-white h-full z-50">
+            <p className="text-base font-medium p-4">
+              <NavLink
+                activeClassName="bg-gray-200 text-custom-blue"
+                to="/candidates"
+                onClick={toggleSidebar}
+              >
+                Candidates
+              </NavLink>
+            </p>
+            <p className="text-base font-medium p-4">
+              <NavLink
+                activeClassName="bg-gray-200 text-custom-blue"
+                to="/position"
+                onClick={toggleSidebar}
+              >
+                Positions
+              </NavLink>
+            </p>
             <div className="relative p-4" ref={interviewRef}>
               <button
                 className="font-medium flex items-center mb-2"
-                onClick={toggleInterviewDropdown}>
-                Interviews &nbsp; {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                onClick={toggleInterviewDropdown}
+              >
+                Interviews&nbsp;
+                {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
               </button>
               {interviewDropdown && (
                 <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                   <div className="space-y-1">
                     <NavLink
                       className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
+                      activeClassName="bg-gray-200 text-gray-800"
                       to="/interviewList"
                       onClick={() => {
                         setInterviewDropdown(false);
@@ -602,20 +586,9 @@ const Navbar = () => {
                     >
                       Interviews
                     </NavLink>
-                    {/* <NavLink
-                      className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/outsourceinterview"
-                      onClick={() => {
-                        setInterviewDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Outsource Interviews
-                    </NavLink> */}
                     <NavLink
                       className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
+                      activeClassName="bg-gray-200 text-gray-800"
                       to="/mockinterview"
                       onClick={() => {
                         setInterviewDropdown(false);
@@ -624,26 +597,15 @@ const Navbar = () => {
                     >
                       Mock Interviews
                     </NavLink>
-                    {/* <NavLink
-                      className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/videocallbutton"
-                      onClick={() => {
-                        setInterviewDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Start Interview
-                    </NavLink> */}
                   </div>
                 </div>
               )}
             </div>
-
             <div className="relative p-4" ref={assessmentRef}>
               <button
                 className="font-medium flex items-center mb-2"
-                onClick={toggleAssessmentDropdown}>
+                onClick={toggleAssessmentDropdown}
+              >
                 Assessments&nbsp;
                 {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
               </button>
@@ -652,18 +614,18 @@ const Navbar = () => {
                   <div className="space-y-1">
                     <NavLink
                       className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+                      activeClassName="bg-gray-200 text-gray-800"
+                      to="/assessments"
                       onClick={() => {
                         setAssessmentDropdown(false);
                         toggleSidebar();
                       }}
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/assessment"
                     >
                       Assessments
                     </NavLink>
                     <NavLink
                       className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
+                      activeClassName="bg-gray-200 text-gray-800"
                       to="/questionBank"
                       onClick={() => {
                         setAssessmentDropdown(false);
@@ -672,85 +634,22 @@ const Navbar = () => {
                     >
                       Question Bank
                     </NavLink>
-                    {/* <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/assessmenttest"
-                      onClick={() => {
-                        setAssessmentDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Assessment Test
-                    </NavLink> */}
                   </div>
                 </div>
               )}
             </div>
-
             <p className="text-base font-medium p-4">
               <NavLink
-                activeclassname="bg-gray-200"
+                activeClassName="bg-gray-200 text-custom-blue"
                 to="/analytics"
-                onClick={() => {
-                  toggleSidebar();
-                }}
+                onClick={toggleSidebar}
               >
                 Analytics
               </NavLink>
             </p>
-
-            <div className="relative p-4" ref={moreRef}>
-              <button
-                className="font-medium flex items-center mb-2"
-                onClick={toggleMoreDropdown}>
-                More&nbsp;
-                {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-              </button>
-              {moreDropdown && (
-                <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                  <div className="space-y-1">
-                    <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/candidate"
-                      onClick={() => {
-                        setMoreDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Candidates
-                    </NavLink>
-                    <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/position"
-                      onClick={() => {
-                        setMoreDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Positions
-                    </NavLink>
-                    <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeclassname="bg-gray-200 text-gray-800"
-                      to="/team"
-                      onClick={() => {
-                        setMoreDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Teams
-                    </NavLink>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
-      {/* <div className="h-[55px] md:h-[95px] sm:h-[87px]"></div> */}
     </>
   );
 };
