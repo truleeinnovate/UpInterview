@@ -4,7 +4,7 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import { format } from "date-fns";
 import axios from 'axios';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { Search } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
@@ -14,6 +14,8 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Minimize, Expand } from 'lucide-react';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -122,13 +124,17 @@ const CustomDropdown = ({
 };
 
 // Main AddCandidateForm Component
-const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
+const AddCandidateForm = ({ mode }) => {
   const {
     skills,
     college,
     qualification,
     currentRole,
+    candidateData,
   } = useCustomContext();
+
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -191,7 +197,10 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
   const userId = Cookies.get("userId");
 
   useEffect(() => {
-    if (isEdit && selectedCandidate) {
+
+    const selectedCandidate = candidateData.find(candidate => candidate._id === id);
+
+    if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
       const phone = selectedCandidate.Phone || '';
       const countryCode = phone.startsWith('+') ? phone.split(' ')[0] : '';
@@ -226,7 +235,7 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
 
       setEntries(selectedCandidate.skills || []);
     }
-  }, [isEdit, selectedCandidate]);
+  }, [id, candidateData]);
 
   const toggleCurrentRole = () => {
     setShowDropdownCurrentRole(!showDropdownCurrentRole);
@@ -407,8 +416,21 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
   };
 
   const handleClose = () => {
-    resetFormData();
-    onClose();
+    // resetFormData();
+    // onClose();
+    // navigate('/candidate');
+
+    switch (mode) {
+      case 'Edit':
+        navigate(`/candidate`);
+        break;
+      case 'Candidate Edit':
+        navigate(`/candidate/${id}`);
+        break;
+      default: // Create mode
+        navigate('/candidate');
+    }
+
   };
 
   const userName = Cookies.get("userName");
@@ -426,6 +448,7 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
       setErrors(newErrors);
       return;
     }
+    console.log('erros: ', errors);
 
     const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
@@ -530,9 +553,9 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
       let candidateId;
       let response;
 
-      if (isEdit && selectedCandidate?._id) {
+      if (id) {
         response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/candidate/${selectedCandidate._id}`,
+          `${process.env.REACT_APP_API_URL}/candidate/${id}`,
           data
         );
       } else {
@@ -549,12 +572,21 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
         await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-      } else if (!isImageUploaded && !filePreview && isEdit) {
+      } else if (!isImageUploaded && !filePreview && id) {
         await axios.delete(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}/image`);
       }
 
       if (response.status === 200 || response.status === 201) {
-        onClose();
+        switch (mode) {
+          case 'Edit':
+            navigate(`/candidate`);
+            break;
+          case 'Candidate Edit':
+            navigate(`/candidate/${id || candidateId}`);
+            break;
+          default: // Create mode
+            navigate('/candidate');
+        }
         resetFormData();
       }
     } catch (error) {
@@ -602,8 +634,8 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
   return (
     <>
       <Modal
-        isOpen={isOpen}
-        onRequestClose={onClose}
+        isOpen={true}
+        // onRequestClose={onClose}
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
@@ -618,13 +650,16 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                   onClick={() => setIsFullScreen(!isFullScreen)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {/* Icon placeholder */}
+                  {isFullScreen ? (
+                    <Minimize className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <Expand className="w-5 h-5 text-gray-500" />
+                  )}
                 </button>
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  {/* Icon placeholder */}
+                > <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -643,7 +678,7 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                         alt="Candidate"
                         className="w-full h-full object-cover"
                       />
-                    ) : isEdit && formData?.ImageData?.path ? (
+                    ) : id && formData?.ImageData?.path ? (
                       <img
                         src={`http://localhost:5000/${formData.ImageData.path}`}
                         alt={formData.FirstName || "Candidate"}
@@ -1029,7 +1064,7 @@ const AddCandidateForm = ({ isOpen, onClose, selectedCandidate, isEdit }) => {
                   save
                 </button>
 
-                {!isEdit && (
+                {!id && (
                   <button
                     type="button"
                     onClick={handleAddCandidate}

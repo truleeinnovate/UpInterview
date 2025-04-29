@@ -19,7 +19,10 @@ import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Int
 
 // tabs
 import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
-import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/MainContent.jsx';
+import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent.jsx';
+import AddCandidateForm from './Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm.jsx';
+import CandidateDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx';
+import CandidateFullscreen from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen.jsx';
 
 import Position from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx";
 import PositionForm from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx";
@@ -106,8 +109,20 @@ const App = () => {
           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
           {/* tabs */}
-          <Route path="/candidates" element={<CandidateTab />} />
-          <Route path="/candidates/:id" element={<CandidateTabDetails />} />
+
+          <Route path="/candidate" element={<CandidateTab />} >
+          <Route index element={null} />
+          <Route path="new" element={<AddCandidateForm mode="Create" />} />
+          <Route path="view-details/:id" element={<CandidateDetails />} />
+          <Route path="edit/:id" element={<AddCandidateForm mode="Edit"/>} />
+          </Route >
+
+          <Route path="/candidate/:id" element={<CandidateTabDetails />} >
+          <Route index element={null} />
+          <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
+          </Route>
+
+          <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen  />} />
 
           <Route path="/position" element={<Position />} />
           <Route path="/position/new-position" element={<PositionForm />} />

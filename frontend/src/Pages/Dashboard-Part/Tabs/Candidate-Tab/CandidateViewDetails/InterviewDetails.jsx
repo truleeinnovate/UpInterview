@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import Modal from 'react-modal';
+
 // import {
 //   FaTimes,
 //   FaStar,
@@ -20,6 +21,26 @@ import Modal from 'react-modal';
 //   FaPlus
 // } from 'react-icons/fa';
 
+
+import {
+  X,
+  Star,
+  User,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  Building,
+  Code,
+  Laptop2,
+  MessageCircle,
+  Download,
+  Mail,
+  Edit,
+  Save,
+  Plus
+} from 'lucide-react';
+
+
 Modal.setAppElement('#root');
 
 const InterviewDetails = ({ interview, onClose, onEdit }) => {
@@ -33,7 +54,7 @@ const InterviewDetails = ({ interview, onClose, onEdit }) => {
     status: ''
   });
 
-  console.log("interview InterviewDetails", interview);
+  // console.log("interview InterviewDetails", interview);
 
 
   const handleEmailFeedback = (round) => {
@@ -96,7 +117,7 @@ Status: ${round.status}
           <div>
             <div className="flex items-center gap-3 mb-1">
               <div className="p-2 bg-blue-50 rounded-lg">
-                {/* <FaBuilding className="w-5 h-5 text-blue-600" /> */}
+                <Building className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-800">{interview?.positionId?.companyname || "N/A"}</h3>
             </div>
@@ -108,13 +129,13 @@ Status: ${round.status}
               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
               title="Download Consolidated Feedback"
             >
-              {/* <FaDownload className="w-5 h-5" /> */}
+              <Download className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
         </div>
@@ -137,7 +158,7 @@ Status: ${round.status}
             }}
             className="flex items-center gap-2 px-3 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
           >
-            {/* <FaPlus className="w-4 h-4" /> */}
+            <Plus className="w-4 h-4" />
             <span>Add Round</span>
           </button>
         </div>
@@ -150,11 +171,11 @@ Status: ${round.status}
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-white rounded-lg shadow-sm">
                       {/* {round.roundTitle.includes('Technical') ? (
-                        <FaCode className="w-5 h-5 text-blue-600" />
+                        <Code className="w-5 h-5 text-blue-600" />
                       ) : round.roundTitle.includes('System') ? (
-                        <FaLaptopCode className="w-5 h-5 text-purple-600" />
+                        <Laptop2 className="w-5 h-5 text-purple-600" />
                       ) : (
-                        <FaComments className="w-5 h-5 text-green-600" />
+                        <MessageCircle className="w-5 h-5 text-green-600" />
                       )} */}
                     </div>
                     <div>
@@ -177,7 +198,7 @@ Status: ${round.status}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Edit Round"
                     >
-                      <FaEdit className="w-4 h-4" />
+                      <Edit className="w-4 h-4" />
                     </button> */}
                     {round.feedback && (
                       <>
@@ -186,7 +207,7 @@ Status: ${round.status}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           title="Email Feedback"
                         >
-                          {/* <FaEnvelope className="w-4 h-4" /> */}
+                          <Mail className="w-4 h-4" />
                         </button>
                         {/* <button
                           onClick={() => {
@@ -202,7 +223,7 @@ Status: ${round.status}
                           className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="Download Feedback"
                         >
-                          <FaDownload className="w-4 h-4" />
+                          <Download className="w-4 h-4" />
                         </button> */}
                       </>
                     )}
@@ -213,7 +234,7 @@ Status: ${round.status}
               <div className="p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 mb-4">
                   <div className="flex items-center gap-2 text-gray-600">
-                    {/* <FaCalendarAlt className="w-4 h-4" /> */}
+                    <Calendar className="w-4 h-4" />
                     <span className="text-sm">
                       {round?.dateTime
                         ? (() => {
@@ -235,8 +256,8 @@ Status: ${round.status}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
-                    {/* <FaClock className="w-4 h-4" /> */}
-                    <span className="text-sm">{round?.duration}</span>
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">{round?.duration || 'N/A'}</span>
                   </div>
                 </div>
 
@@ -248,7 +269,7 @@ Status: ${round.status}
                       <h5 className="font-medium text-gray-800">Feedback</h5>
                       <div className="flex items-center gap-1"> 
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <FaStar 
+                          <Star 
                             key={star} 
                             className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`} 
                           />
@@ -266,7 +287,7 @@ Status: ${round.status}
                     <div className="space-y-2">
                       {['Problem-solving', 'Technical knowledge', 'Communication'].map((strength, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                          {/* <FaCheckCircle className="w-4 h-4 text-green-500" /> */}
+                          <CheckCircle2 className="w-4 h-4 text-green-500" />
                           <span>{strength}</span>
                         </div>
                       ))}
@@ -330,7 +351,7 @@ Status: ${round.status}
               onClick={() => setIsEditModalOpen(false)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
@@ -410,7 +431,7 @@ Status: ${round.status}
               onClick={handleSaveEdit}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
-              {/* <FaSave className="w-4 h-4" /> */}
+              <Save className="w-4 h-4" />
               <span>Save Changes</span>
             </button>
           </div>

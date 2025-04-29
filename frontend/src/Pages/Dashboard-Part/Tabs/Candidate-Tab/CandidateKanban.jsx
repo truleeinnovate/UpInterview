@@ -2,8 +2,9 @@
 
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { Eye, UserCircle, Pencil } from 'lucide-react';
-// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaUniversity , FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+
+
 // import { RiGraduationCapFill } from "react-icons/ri";
 // Status badge component for displaying candidate status
 // const StatusBadge = ({ status }) => {
@@ -11,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 //     active: 'bg-green-100 text-green-800',
 //     onhold: 'bg-yellow-100 text-yellow-800',
 //     rejected: 'bg-red-100 text-red-800'
-//   };
+//   }; 
 
 //   return (
 //     <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
@@ -19,8 +20,10 @@ import { useNavigate } from 'react-router-dom';
 //     </span>
 //   );
 // };
-
+ 
 // Candidate list component for displaying candidates in a grid layout
+
+
 const CandidateList = ({ candidates, onView, onEdit, navigate }) => (
   <div className="w-full bg-gray-50 rounded-xl p-4 min-h-screen">
     <div className="flex items-center justify-between mb-4">
@@ -29,7 +32,7 @@ const CandidateList = ({ candidates, onView, onEdit, navigate }) => (
         {candidates.length} candidates
       </span>
     </div>
-
+ 
     {candidates.length === 0 ? (
       <div className="flex justify-center items-center h-full py-20 text-gray-500 text-lg">
         No candidates found.
@@ -71,21 +74,21 @@ const CandidateList = ({ candidates, onView, onEdit, navigate }) => (
 
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => onView(candidate)}
+                  onClick={() => navigate(`view-details/${candidate?._id}`)}
                   className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="View Details"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => candidate?._id && navigate(`/candidates/${ candidate._id }`)}
+                  onClick={() => candidate?._id && navigate(`/candidate/${ candidate._id }`)}
                   className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                   title="360° View"
                 >
                   <UserCircle className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => onEdit(candidate)}
+                  onClick={() => navigate(`edit/${candidate?._id}`)}
                   className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                   title="Edit"
                 >
@@ -153,7 +156,6 @@ const CandidateList = ({ candidates, onView, onEdit, navigate }) => (
     )}
   </div>
 );
-
 
 // Main Kanban component with drag-and-drop functionality
 const CandidateKanban = ({ candidates, onView, onEdit }) => {

@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
-
 import { Menu } from '@headlessui/react';
 import { useNavigate } from 'react-router-dom';
-
-
 import React from 'react'
+import { useCustomContext } from "../../../../Context/Contextfetch";
 
 const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSelectCandidates }) => {
+  const {
+    candidateData,
+    loading,
+    // fetchCandidates
+  } = useCustomContext();
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
-
+  const navigate = useNavigate();
   const handleSelectCandidate = (candidateId) => {
     setSelectedCandidates((prevSelected) => {
       const isSelected = prevSelected.includes(candidateId);
@@ -38,7 +41,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
     }
   };
 
-  const navigate = useNavigate();
+
   return (
     <div className="w-full h-[calc(100vh-12rem)] flex flex-col">
       <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
@@ -195,14 +198,14 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                           </div>
                         </td>
                         {/* Actions column */}
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 ">
                           <Menu as="div" className="relative">
                             <Menu.Button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
                               <FiMoreHorizontal className="w-4 h-4 text-gray-500" />
                             </Menu.Button>
                             <Menu.Items className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10
-                  ${index >= candidates.length - 4
-                              && "-top-44" // Open upward for last four candidates
+                  ${index >= candidates.length - 3
+                              && "-top-32" // Open upward for last four candidates
                               // : "top-full"
                               }`}
                             >
@@ -210,8 +213,8 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                               <Menu.Item>
                                 {({ active }) => (
                                   <button
-                                    onClick={() => onView(candidate)}
-                                    // onClick={() => handleView(candidate)}
+                                    onClick={() => navigate(`view-details/${candidate?._id}`)}
+                                   
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
@@ -224,7 +227,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                               <Menu.Item>
                                 {({ active }) => (
                                   <button
-                                    onClick={() => candidate?._id && navigate(`/candidates/${candidate._id}`)}
+                                    onClick={() => candidate?._id && navigate(`/candidate/${candidate._id}`)}
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >
@@ -237,7 +240,7 @@ const CandidateTable = ({ candidates, onView, onEdit, isAssessmentContext, onSel
                               <Menu.Item>
                                 {({ active }) => (
                                   <button
-                                    onClick={() => onEdit(candidate)}
+                                    onClick={() => navigate(`edit/${candidate?._id}`)}
                                     className={`${active ? 'bg-gray-50' : ''
                                       } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                   >

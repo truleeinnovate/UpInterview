@@ -431,7 +431,7 @@ const Navbar = () => {
 
             <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
-                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidates">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidate">
                   Candidates
                 </NavLink>
               </p>

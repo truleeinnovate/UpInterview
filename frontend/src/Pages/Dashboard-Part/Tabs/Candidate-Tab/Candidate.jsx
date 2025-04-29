@@ -5,8 +5,8 @@ import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
 import CandidateKanban from './CandidateKanban';
 import Tooltip from "@mui/material/Tooltip";
-import AddCandidateForm from './AddCandidateForm';
-import CandidateDetails from './CandidateDetails';
+// import AddCandidateForm from './AddCandidateForm';
+// import CandidateDetails from './CandidateDetails';
 
 // import FaList from '../../icons/FaList.svg?react';
 // import TbLayoutGridRemove from '../../icons/TbLayoutGridRemove.svg?react';
@@ -18,6 +18,7 @@ import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import CandidateTable from './CandidateTable';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -263,7 +264,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
       </div>
     </div>
   );
-};
+}; 
 
 const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {//this props we will use in assessment form
   const {
@@ -271,7 +272,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
     loading,
     // fetchCandidates
   } = useCustomContext();
-  console.log("candidateData ", candidateData)
+  // console.log("candidateData ", candidateData)
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -289,33 +290,10 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
     tech: [],
     experience: { min: '', max: '' },
   });
-
+  const navigate = useNavigate();
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
   }, []);
-  // const  fetchCandidates = async() => {
-  //   // setLoading(true)
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate`);
-
-  //     const candidateresponse = response.data.reverse() || [];
-
-  //     console.log("candidateresponse ", candidateresponse);
-
-  //     setCandidatesData(candidateresponse); 
-  //   } catch (err) {
-  //     console.log("Failed to fetch candidates.",err);
-  //   } 
-  //   // finally {
-  //   //   setLoading(false);
-  //   // }
-  // }
-
-
-
-  // useEffect(() => {
-  //   fetchCandidates();
-  // }, []);
 
 
   const handleEdit = (candidate) => {
@@ -431,6 +409,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
   }
 
   return (
+    <>
     <main className="bg-background">
       <main className={isAssessmentContext ? '' : 'max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8'}>
 
@@ -443,7 +422,10 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
             )}
             {!isAssessmentContext && (
               <button
-                onClick={() => setShowAddForm(true)}
+                onClick={() =>
+                  navigate('new')
+                  // setShowAddForm(true)
+                }
                 className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -591,15 +573,15 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
         </div>
       </main>
 
-      {selectCandidateView === true && (
+      {/* {selectCandidateView === true && (
         <CandidateDetails
           candidate={selectedCandidate}
           onClose={() => setSelectCandidateView(null)}
         />
-      )}
+      )} */}
 
 
-      {showAddForm && <AddCandidateForm
+      {/* {showAddForm && <AddCandidateForm
         isOpen={showAddForm}
         onClose={() => {
           setShowAddForm(false);
@@ -607,13 +589,18 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
           setEditModeOn(false);
           // fetchCandidates();
         }}
+
         selectedCandidate={selectedCandidate}
         isEdit={editModeOn}
 
       // onSave={handleAddCandidate}
-      />}
+      />} */}
 
+     
+<Outlet />
     </main>
+    
+    </>
   );
 };
 

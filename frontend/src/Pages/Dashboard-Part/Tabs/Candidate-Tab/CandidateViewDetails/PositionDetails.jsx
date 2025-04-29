@@ -1,7 +1,5 @@
 import React from 'react';
-import { format,parseISO, isValid } from 'date-fns';
-// import { FaTimes, FaBuilding, FaUsers, FaMapMarkerAlt, FaDollarSign, FaCheckCircle, FaExternalLinkAlt } from 'react-icons/fa';
-// import { PiSuitcaseSimpleBold  } from "react-icons/pi";
+import { format, parseISO, isValid } from 'date-fns';
 import {
   X,
   Briefcase,
@@ -12,13 +10,14 @@ import {
   CheckCircle2,
   Users
 } from "lucide-react";
+
 const PositionDetails = ({ position, onClose }) => {
   return (
     <div className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-2xl border-l border-gray-200 transform transition-transform duration-300 z-50 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-100 p-4 z-10">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-gray-800">{position?.positionInfo?.title ||'N/A'}</h3>
+            <h3 className="text-xl font-bold text-gray-800">{position?.positionInfo?.title || 'N/A'}</h3>
             <p className="text-gray-600">{position?.positionInfo?.companyname || 'N/A'}</p>
           </div>
           <button
@@ -36,7 +35,7 @@ const PositionDetails = ({ position, onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
-                  {/* <FaBuilding className="w-5 h-5 text-blue-600" /> */}
+                  <Building2 className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Company Name</p>
@@ -78,12 +77,12 @@ const PositionDetails = ({ position, onClose }) => {
                   <span className="text-sm">Salary Range</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800">{position.positionInfo?.minSalary && position.positionInfo?.maxSalary
-    ? `${position.positionInfo.minSalary} - ${position.positionInfo.maxSalary}`
-    : position.positionInfo?.minSalary
-    ? `${position.positionInfo.minSalary} - Not Disclosed`
-    : position.positionInfo?.maxSalary
-    ? `0 - ${position.positionInfo.maxSalary}`
-    : "Not Disclosed"}</p>
+                  ? `${position.positionInfo.minSalary} - ${position.positionInfo.maxSalary}`
+                  : position.positionInfo?.minSalary
+                    ? `${position.positionInfo.minSalary} - Not Disclosed`
+                    : position.positionInfo?.maxSalary
+                      ? `0 - ${position.positionInfo.maxSalary}`
+                      : "Not Disclosed"}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -98,7 +97,7 @@ const PositionDetails = ({ position, onClose }) => {
           <div className="space-y-4">
             <h4 className="font-semibold text-gray-800">Required Skills</h4>
             <div className="flex flex-wrap gap-2">
-              {position.positionInfo?.skills?.map((s) =>  (
+              {position.positionInfo?.skills?.map((s) => (
                 <span key={s._id} className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium">
                   {s.skill}
                 </span>
@@ -112,6 +111,9 @@ const PositionDetails = ({ position, onClose }) => {
               {position.positionInfo?.jobdescription}
             </div>
           </div>
+   
+
+   {/* have to add feilds here the static data  */}
 
           <div className="space-y-4">
             <h4 className="font-semibold text-gray-800">Application Progress</h4>
@@ -124,9 +126,9 @@ const PositionDetails = ({ position, onClose }) => {
                   <div className="flex justify-between items-center">
                     <p className="text-sm font-medium text-gray-800">Application Submitted</p>
                     <span className="text-xs text-gray-500">
-                     {position.applicationDate && isValid(parseISO(position.applicationDate))
-                                         ? format(parseISO(position.applicationDate), 'MMM dd, yyyy')
-                                         : 'N/A'}
+                      {position.applicationDate && isValid(parseISO(position.applicationDate))
+                        ? format(parseISO(position.applicationDate), 'MMM dd, yyyy')
+                        : 'N/A'}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-2">
@@ -137,7 +139,7 @@ const PositionDetails = ({ position, onClose }) => {
                   </div>
                 </div>
               </div>
-
+ 
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <Users className="w-4 h-4 text-blue-600" />

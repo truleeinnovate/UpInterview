@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import React from 'react';
 import "./Home.scss";
 import AppViewMore from "./AppViewMore.jsx";
-import CandidateProfileDetails from "../Tabs/Candidate-Tab/CandidateProfileDetails.js";
+// import CandidateProfileDetails from "../Tabs/Candidate-Tab/CandidateProfileDetails.js";
 // import PositionProfileDetails from "../Tabs/Position-Tab/PositionProfileDetails";
 // import TeamProfileDetails from "../Tabs/Team-Tab/TeamProfileDetails";
 // import Internalprofiledetails from "../Tabs/Interviews/Internalprofiledetails";
@@ -1461,9 +1461,9 @@ const Home = () => {
         </div>
       </div>
 
-      {selectedCandidate && (
+      {/* {selectedCandidate && (
         <CandidateProfileDetails candidate={selectedCandidate} onCloseprofile={handleCloseProfile} />
-      )}
+      )} */}
       {/* {selectedPosition && (
         <PositionProfileDetails position={selectedPosition} onCloseprofile={handleClosePositionProfile} />
       )} */}

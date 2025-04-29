@@ -7,6 +7,10 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
+// Subdomain check middleware
+const checkSubdomain = require('./middleware/checkSubdomain');
+app.use(checkSubdomain);
+
 const port = process.env.PORT;
 // console.log('port:', port);
 const mongoUri = process.env.MONGODB_URI;

@@ -28,7 +28,7 @@ import EntityDetailsModal from '../components/EntityDetailsModal';
 import EntityDetailsSidebar from '../components/EntityDetailsSidebar';
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import axios from "axios";
-import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
+// import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
 
 
@@ -659,12 +659,12 @@ const InterviewDetail = () => {
             entityType={entityDetailsModal.type}
           />
         )} */}
-        {selectCandidateView === true && (
+        {/* {selectCandidateView === true && (
           <CandidateDetails
             candidate={selectedCandidate}
             onClose={() => setSelectCandidateView(null)}
           />
-        )}
+        )} */}
                   {selectPositionView === true && (
         <PositionSlideDetails 
           position={selectedPosition} 

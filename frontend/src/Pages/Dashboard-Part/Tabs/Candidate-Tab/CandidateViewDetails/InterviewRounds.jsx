@@ -1,35 +1,32 @@
 import React, { useState } from 'react';
 
 import { format, parseISO, isValid } from 'date-fns';
-// import {
-//   FaChevronDown,
-//   FaChevronUp,
-//   FaBuilding,
-//   FaStar,
-//   FaEye,
-//   FaDownload,
-//   FaEnvelope,
-//   FaExpand,
-//   FaCompress,
-//   FaUser,
-//   FaCalendarAlt,
-//   FaClock,
-//   FaCheckCircle,
-//   FaTimes,
-//   FaCode,
-//   FaLaptopCode,
-//   FaComments
-// } from 'react-icons/fa';
+
+import {
+  ChevronDown ,
+  ChevronUp ,
+  Building,
+  Star ,
+  Eye,
+  Download ,
+  Mail ,
+  Expand ,
+  Minimize,
+  User ,
+  Calendar ,
+  Clock ,
+  CheckCircle2 ,
+  X ,
+  Code ,
+  Laptop2 ,
+  MessageCircle 
+} from 'lucide-react';
+
 import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
-
-
 const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  console.log("interview round details", interview);
-
   if(round.length === 0) {
     return <p className='justify-center items-center'>No Rounds selected</p>
   }
@@ -40,11 +37,11 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
 
   // const getIcon = (roundTitle) => {
   //   if (roundTitle.toLowerCase().includes('Technical')) {
-  //     return <FaCode className="w-5 h-5 text-blue-600" />;
+  //     return <Code className="w-5 h-5 text-blue-600" />;
   //   } else if (roundTitle.toLowerCase().includes('system')) {
-  //     return <FaLaptopCode className="w-5 h-5 text-purple-600" />;
+  //     return <Laptop2 className="w-5 h-5 text-purple-600" />;
   //   }
-  //   return <FaComments className="w-5 h-5 text-green-600" />;
+  //   return <MessageCircle className="w-5 h-5 text-green-600" />;
   // };
 
   const modalClass = isFullScreen
@@ -75,17 +72,17 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {/* {isFullScreen ? (
-                  <FaCompress className="w-5 h-5 text-gray-500" />
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <FaExpand className="w-5 h-5 text-gray-500" />
-                )} */}
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
               </button>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {/* <FaTimes className="w-5 h-5 text-gray-500" /> */}
+                <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
           </div>
@@ -98,7 +95,7 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-50 rounded-lg">
-                    {/* <FaUser className="w-4 h-4 text-blue-600" /> */}
+                    <User className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Interviewer</p>
@@ -107,7 +104,7 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-50 rounded-lg">
-                    {/* <FaCalendarAlt className="w-4 h-4 text-green-600" /> */}
+                    <Calendar className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Date</p>
@@ -132,7 +129,7 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-50 rounded-lg">
-                    {/* <FaClock className="w-4 h-4 text-purple-600" /> */}
+                    <Clock className="w-4 h-4 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Duration</p>
@@ -173,12 +170,12 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-medium text-gray-800">Feedback</h4>
                 <div className="flex items-center gap-1">
-                  {/* {[1, 2, 3, 4, 5].map((star) => (
-                    <FaStar
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
                       key={star}
                       className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
                     />
-                  ))} */}
+                  ))}
                 </div>
               </div>
 
@@ -192,7 +189,7 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   <div className="space-y-2">
                     {['Problem-solving', 'Technical knowledge', 'Communication'].map((strength, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                        {/* <FaCheckCircle className="w-4 h-4 text-green-500" /> */}
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>{strength}</span>
                       </div>
                     ))}
@@ -226,17 +223,12 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
 
 
   // if (!Array.isArray(interviews)) {
-  console.log('Invalid interviews data:', interviews);
   // return <div>No interview data available.</div>;
   // }
   
-
   const toggleInterview = (id) => {
     setExpandedInterview(expandedInterview === id ? null : id);
   };
-
-  console.log("setSelectedInterview ", selectedInterview);
-
 
   const handleViewRound = (interview, round) => {
     setSelectedInterview(interview);
@@ -303,7 +295,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
           <div className="flex items-center justify-between p-4 bg-gray-50">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white rounded-lg shadow-sm">
-                {/* <FaBuilding className="w-5 h-5 text-blue-600" /> */}
+                <Building className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800">{interviews?.positionId?.companyname || "N/A"}</h4>
@@ -316,17 +308,17 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
-                {/* <FaEye className="w-4 h-4" /> */}
+                <Eye className="w-4 h-4" />
               </button>
               <button
                 onClick={() => toggleInterview(interviews?._id)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {/* {expandedInterview === interviews?._id ? (
-                  <FaChevronUp className="w-4 h-4 text-gray-600" />
+                {expandedInterview === interviews?._id ? (
+                  <ChevronUp className="w-4 h-4 text-gray-600" />
                 ) : (
-                  <FaChevronDown className="w-4 h-4 text-gray-600" />
-                )} */}
+                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                )}
               </button>
             </div>
           </div>
@@ -401,7 +393,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                               className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="View Round Details"
                             >
-                              {/* <FaEye className="w-4 h-4" /> */}
+                              <Eye className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -417,31 +409,31 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                         <div className="flex items-center justify-between mb-3">
                           <h6 className="font-medium text-gray-800">{round?.roundTitle}</h6>
                           <div className="flex items-center gap-2">
-                            {/* {round.feedback && (
+                            {round.feedback && (
                               <>
                                 <button
                                   // onClick={() => handleEmailFeedback(interview, round)}
                                   className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                   title="Email Feedback"
                                 >
-                                  <FaEnvelope className="w-4 h-4" />
+                                  <Mail className="w-4 h-4" />
                                 </button>
                                 <button
                                   // onClick={() => downloadFeedback(interview, round)}
                                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                   title="Download Feedback"
                                 >
-                                  <FaDownload className="w-4 h-4" />
+                                  <Download className="w-4 h-4" />
                                 </button>
                               </>
-                            )} */}
+                            )}
                             <div className="flex items-center gap-1">
-                              {/* {[1, 2, 3, 4, 5].map((star) => (
-                                <FaStar
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
                                   key={star}
                                   className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
                                 />
-                              ))} */}
+                              ))}
                             </div>
                           </div>
                         </div>

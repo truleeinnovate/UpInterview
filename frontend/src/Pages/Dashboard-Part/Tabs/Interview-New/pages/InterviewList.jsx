@@ -14,7 +14,7 @@ import KanbanBoard from '../components/KanbanBoard';
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 import { motion } from 'framer-motion';
 import Loading from '../../../../../Components/Loading.js';
-import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
+// import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -540,12 +540,12 @@ function InterviewList() {
           )}
         </div>
       </main>
-      {selectCandidateView === true && (
+      {/* {selectCandidateView === true && (
         <CandidateDetails
           candidate={selectedCandidate}
           onClose={() => setSelectCandidateView(null)}
         />
-      )}
+      )} */}
       {selectPositionView === true && (
         <PositionSlideDetails
           position={selectedPosition}
