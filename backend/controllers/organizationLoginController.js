@@ -15,6 +15,245 @@ const RolesPermissionObject = require('../models/rolesPermissionObject');
 const saltRounds = 10;
 const mongoose = require('mongoose');
 
+// const registerOrganization = async (req, res) => {
+//   let savedOrganization = null;
+//   try {
+//     console.log('Starting organization registration process...');
+//     const {
+//       firstName, lastName, email, phone, countryCode, profileId, jobTitle,
+//       company, employees, country, password
+//     } = req.body;
+//     console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
+
+//     // Fetch tabs and objects data from DB
+//     console.log('Fetching tabs and objects data from database...');
+//     const tabsData = await Tabs.findOne({});
+//     const objectsData = await Objects.findOne({});
+//     console.log('Tabs data:', tabsData ? 'Found' : 'Not found');
+//     console.log('Objects data:', objectsData ? 'Found' : 'Not found');
+
+//     if (!tabsData || !objectsData) {
+//       console.log('Tabs or Objects data not found in database');
+//       return res.status(500).json({ message: 'Tabs or Objects data not found' });
+//     }
+
+//     // Hash password
+//     console.log('Hashing password...');
+//     const hashedPassword = await bcrypt.hash(password, saltRounds);
+//     console.log('Password hashed successfully');
+
+//     // Create new organization
+//     console.log('Creating new organization...');
+//     const organization = new Organization({
+//       firstName, lastName, email, phone, profileId, jobTitle,
+//       company, employees, country, password: hashedPassword
+//     });
+
+//     savedOrganization = await organization.save();
+//     console.log('Organization saved successfully with ID:', savedOrganization._id);
+
+//     // Create new user
+//     console.log('Creating new user...');
+//     const newUser = new Users({
+//       lastName,
+//       firstName,
+//       email,
+//       profileId,
+//       phone,
+//       tenantId: savedOrganization._id,
+//       password: hashedPassword
+//     });
+//     console.log('New user object:', JSON.stringify(newUser, null, 2));
+//     const savedUser = await newUser.save();
+//     console.log('User saved successfully with ID:', savedUser._id);
+
+//     // Create new contact
+//     console.log('Creating new contact...');
+//     const contact = new Contacts({
+//       lastName,
+//       firstName,
+//       email,
+//       phone,
+//       profileId,
+//       currentRole: jobTitle,
+//       company: company,
+//       employees: employees,
+//       countryCode: countryCode,
+//       tenantId: savedOrganization._id,
+//       ownerId: savedUser._id
+//     });
+
+//     const savedContact = await contact.save();
+//     console.log('Contact saved successfully with ID:', savedContact._id);
+
+//     // Create default sharing settings
+//     console.log('Creating default sharing settings...');
+//     const accessBody = objectsData.objects.map(obj => ({
+//       ObjName: obj,
+//       Access: 'Public',
+//       GrantAccess: false
+//     }));
+
+//     const sharingSettings = new SharingSettings({
+//       Name: 'sharingSettingDefaultName',
+//       organizationId: savedOrganization._id,
+//       accessBody
+//     });
+
+//     await sharingSettings.save();
+//     console.log('Sharing settings saved successfully');
+
+//     // Create default profiles
+//     console.log('Creating default profiles...');
+//     const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
+//     let adminProfileId = "";
+
+//     for (let profileName of profileNames) {
+//       console.log(`Creating profile: ${profileName}`);
+//       const profileTabs = tabsData.tabs.map(tab => ({
+//         name: tab,
+//         status: profileName === "Admin" ? 'Visible' : 'Hidden'
+//       }));
+
+//       const profileObjects = objectsData.objects.map(object => ({
+//         name: object,
+//         permissions: {
+//           View: true,
+//           Create: true,
+//           Edit: true,
+//           Delete: profileName === "Admin"
+//         }
+//       }));
+
+//       const profile = new Profile({
+//         label: profileName,
+//         Name: profileName,
+//         Description: `Default profile description for ${profileName}`,
+//         Tabs: profileTabs,
+//         Objects: profileObjects,
+//         organizationId: savedOrganization._id
+//       });
+
+//       const savedProfile = await profile.save();
+//       console.log(`Profile ${profileName} saved with ID:`, savedProfile._id);
+//       if (profileName === "Admin") {
+//         adminProfileId = savedProfile._id;
+//         console.log('Admin profile ID set:', adminProfileId);
+//       }
+//     }
+
+//     // Create default roles
+//     // console.log('Creating default roles...');
+//     // const roles = [
+//     //   { label: "Admin", name: "Admin" },
+//     //   { label: "CEO", name: "CEO" },
+//     //   { label: "HR Manager", name: "HR_Manager" },
+//     //   { label: "HR Lead", name: "HR_Lead" },
+//     //   { label: "Recruiter", name: "Recruiter" },
+//     //   { label: "Internal Interviewer", name: "Internal_Interviewer" }
+//     // ];
+
+//     // let roleIds = {};
+//     // for (let role of roles) {
+//     //   console.log(`Creating role: ${role.name}`);
+//     //   let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
+
+//     //   const newRole = new Role({
+//     //     roleName: role.name,
+//     //     reportsToRoleId: reportsToRoleId || null,
+//     //     description: `Default role description for ${role.name}`,
+//     //     organizationId: savedOrganization._id
+//     //   });
+
+//     //   const savedRole = await newRole.save();
+//     //   console.log(`Role ${role.name} saved with ID:`, savedRole._id);
+//     //   roleIds[role.name] = savedRole._id;
+//     // }
+//     // console.log('Role IDs:', roleIds);
+
+//     // // Assign Admin Role and Profile to the User
+//     // console.log('Assigning Admin role and profile to user:', savedUser._id);
+//     // await Users.findByIdAndUpdate(savedUser._id, {
+//     //   RoleId: roleIds["Admin"],
+//     //   ProfileId: adminProfileId
+//     // });
+//     // console.log('Admin role and profile assigned successfully');
+
+
+
+
+
+
+//     // Create default roles from RolesPermissionObject
+//     console.log('Creating default roles from RolesPermissionObject...');
+//     const rolesPermissionObjects = await RolesPermissionObject.find({});
+//     let roleIds = {};
+
+//     for (let roleObj of rolesPermissionObjects) {
+//       const { label, roleName, objects, level } = roleObj;
+
+//       console.log(`Creating role: ${roleName}`);
+
+//       // Prepare the role objects with permissions
+//       const roleObjects = objects.map(obj => ({
+//         objectName: obj.objectName,
+//         permissions: obj.permissions
+//       }));
+
+//       const newRole = new Role({
+//         label,
+//         roleName,
+//         description: `Default role description for ${roleName}`,
+//         tenantId: savedOrganization._id,
+//         objects: roleObjects,
+//         level,
+//         inherits: [], // Empty array by default - can be populated later
+//         isDefault: true
+//       });
+
+//       const savedRole = await newRole.save();
+//       console.log(`Role ${roleName} saved with ID:`, savedRole._id);
+//       roleIds[roleName] = savedRole._id;
+//     }
+
+//     console.log('Role IDs:', roleIds);
+
+//     console.log('Role IDs:', roleIds);
+
+//     // Assign Admin Role and Profile to the User
+//     console.log('Assigning Admin role and profile to user:', savedUser._id);
+//     await Users.findByIdAndUpdate(savedUser._id, {
+//       roleId: roleIds["Admin"],
+//       ProfileId: adminProfileId
+//     });
+//     console.log('Admin role and profile assigned successfully');
+
+//     console.log('Organization registration completed successfully');
+//     res.status(201).json({
+//       message: "Organization registered successfully",
+//       tenantId: savedOrganization._id,
+//       ownerId: savedUser._id
+//     });
+
+//   } catch (error) {
+//     console.error('Error in organization registration:', error);
+//     if (error.code === 11000) {
+//       console.log('Duplicate key error detected:', error.message);
+//       if (savedOrganization) {
+//         console.log('Cleaning up organization with ID:', savedOrganization._id);
+//         await Organization.deleteOne({ _id: savedOrganization._id });
+//       }
+//       return res.status(400).json({ message: 'Duplicate key error' });
+//     }
+//     console.error('Unexpected error:', error.message, error.stack);
+//     if (savedOrganization) {
+//       console.log('Cleaning up organization with ID:', savedOrganization._id);
+//       await Organization.deleteOne({ _id: savedOrganization._id });
+//     }
+//     res.status(500).json({ message: 'Internal server error', error: error.message });
+//   }
+// };
+
 const registerOrganization = async (req, res) => {
   let savedOrganization = null;
   try {
@@ -109,7 +348,7 @@ const registerOrganization = async (req, res) => {
     let adminProfileId = "";
 
     for (let profileName of profileNames) {
-      console.log(`Creating profile: ${profileName}`);
+      console.log('Creating profile:', profileName);
       const profileTabs = tabsData.tabs.map(tab => ({
         name: tab,
         status: profileName === "Admin" ? 'Visible' : 'Hidden'
@@ -135,7 +374,7 @@ const registerOrganization = async (req, res) => {
       });
 
       const savedProfile = await profile.save();
-      console.log(`Profile ${profileName} saved with ID:`, savedProfile._id);
+      console.log('Profile ${profileName} saved with ID:', savedProfile._id);
       if (profileName === "Admin") {
         adminProfileId = savedProfile._id;
         console.log('Admin profile ID set:', adminProfileId);
@@ -155,18 +394,18 @@ const registerOrganization = async (req, res) => {
 
     // let roleIds = {};
     // for (let role of roles) {
-    //   console.log(`Creating role: ${role.name}`);
+    //   console.log(Creating role: ${role.name});
     //   let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
 
     //   const newRole = new Role({
     //     roleName: role.name,
     //     reportsToRoleId: reportsToRoleId || null,
-    //     description: `Default role description for ${role.name}`,
+    //     description: Default role description for ${role.name},
     //     organizationId: savedOrganization._id
     //   });
 
     //   const savedRole = await newRole.save();
-    //   console.log(`Role ${role.name} saved with ID:`, savedRole._id);
+    //   console.log(Role ${role.name} saved with ID:, savedRole._id);
     //   roleIds[role.name] = savedRole._id;
     // }
     // console.log('Role IDs:', roleIds);
@@ -192,13 +431,15 @@ const registerOrganization = async (req, res) => {
     for (let roleObj of rolesPermissionObjects) {
       const { label, roleName, objects, level } = roleObj;
 
-      console.log(`Creating role: ${roleName}`);
+      console.log('Creating role:', roleName);
 
       // Prepare the role objects with permissions
       const roleObjects = objects.map(obj => ({
         objectName: obj.objectName,
         permissions: obj.permissions
       }));
+      console.log('Role objects:', roleObjects);
+      
 
       const newRole = new Role({
         label,
@@ -210,9 +451,11 @@ const registerOrganization = async (req, res) => {
         inherits: [], // Empty array by default - can be populated later
         isDefault: true
       });
+      console.log('New role created:', newRole);
+      
 
       const savedRole = await newRole.save();
-      console.log(`Role ${roleName} saved with ID:`, savedRole._id);
+      console.log('Role ${roleName} saved with ID:', savedRole._id);
       roleIds[roleName] = savedRole._id;
     }
 
