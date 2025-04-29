@@ -772,44 +772,11 @@ const deactivateSubdomain = async (req, res) => {
   }
 };
 
-const checkSubdomainExists = async (req, res, next) => {
-  try {
-    // Extract the host from the request headers
-    const host = req.headers.host;
-    const baseDomain = 'app.upinterview.io';
-
-    // Extract subdomain from host (e.g., 'xyz' from 'xyz.app.upinterview.io')
-    const subdomain = host.split(`.${baseDomain}`)[0];
-
-    // Allow requests to the base domain (app.upinterview.io) to proceed
-    if (!subdomain || subdomain === baseDomain || host === baseDomain) {
-      return next();
-    }
-
-    // Check if subdomain exists in the database and is active
-    const organization = await Organization.findOne({ 
-      subdomain, 
-      subdomainStatus: 'active' 
-    });
-
-    if (!organization) {
-      return res.status(404).send('Not Found'); // Return 404 to trigger browser's default 404 page
-    }
-
-    // Optionally, attach organization data to the request for downstream use
-    req.organization = organization;
-    next();
-  } catch (error) {
-    console.error('Error checking subdomain existence:', error);
-    res.status(500).send('Internal Server Error');
-  }
-};
-
 module.exports = {
   registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
-  deactivateSubdomain,
-  checkSubdomainExists
+  deactivateSubdomain
 };
+
