@@ -1,47 +1,55 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import { config } from '../../../config.js'
-// import { useCustomContext } from "../../../Context/Contextfetch";
+import { config } from '../../../config.js';
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-
+import { decodeJwt } from '../../utils/jwtDecode'; // Import the utility
+import Cookies from "js-cookie";
 const SubscriptionPlan = () => {
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
 
-  // const {
-  //   userProfile,
-  // } = useCustomContext();
-  const userId = Cookies.get("userId");
-  const orgId = Cookies.get("organizationId");
-  const organization = Cookies.get("organization");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
 
+  useEffect(() => {
+    console.log('tokenPayload', tokenPayload);
+  }, [tokenPayload]);
+
+  // Extract user details from token payload
+  const userId = tokenPayload?.userId;
+  const organization = tokenPayload?.organization?.toString();
+  const orgId = tokenPayload?.organizationId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
-
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
     userType: organization === "true" ? "organization" : "individual",
     tenantId: orgId,
-    ownerId: userId
+    ownerId: userId,
   });
-
 
   const navigate = useNavigate();
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const [subscriptionData, setSubscriptionData] = useState([]);
   const [loading, setLoading] = useState(true);
-  // this will check that that plans is already set or not
+
+  // Fetch subscription data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include token in request headers
+          },
+        });
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        // If subscription exists, set it; otherwise, keep it empty
         if (Subscription_data.subscriptionPlanId) {
           setSubscriptionData(Subscription_data);
         }
@@ -55,22 +63,25 @@ const SubscriptionPlan = () => {
     if (userId) {
       fetchData();
     }
-  }, [userId]);
+  }, [userId, authToken]);
 
-
+  // Fetch subscription plans
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`
+          `${config.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`, // Include token in request headers
+            },
+          }
         );
         const data = response.data;
-
 
         const filteredPlans = data.filter(
           (plan) => plan.subscriptionType === user.userType
         );
-
 
         const formattedPlans = filteredPlans.map((plan) => {
           const monthlyPricing = plan.pricing.find(
@@ -83,40 +94,41 @@ const SubscriptionPlan = () => {
           const calculateDiscountPercentage = (price, discount) =>
             price && discount ? Math.round((discount / price) * 100) : 0;
 
-
           return {
             name: plan.name,
             planId: plan._id,
             monthlyPrice: monthlyPricing?.price || 0,
             annualPrice: annualPricing?.price || 0,
-            isDefault: plan.name === "Pro" ? true : false,
-
+            isDefault: plan.name === "Pro",
             features: plan.features.map(
               (feature) => `${feature.name} (${feature.description})`
             ),
             monthlyBadge:
               monthlyPricing?.discountType === "percentage" &&
-                monthlyPricing?.discount > 0
+              monthlyPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                  monthlyPricing.price,
-                  monthlyPricing.discount
-                )}%`
+                    monthlyPricing.price,
+                    monthlyPricing.discount
+                  )}%`
                 : null,
             annualBadge:
               annualPricing?.discountType === "percentage" &&
-                annualPricing?.discount > 0
+              annualPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                  annualPricing.price,
-                  annualPricing.discount
-                )}%`
+                    annualPricing.price,
+                    annualPricing.discount
+                  )}%`
                 : null,
-
-            monthlyDiscount: monthlyPricing?.discountType === "percentage" &&
-              monthlyPricing?.discount > 0 ? parseInt(monthlyPricing.discount) : null,
-
-            annualDiscount: annualPricing?.discountType === "percentage" &&
-              annualPricing?.discount > 0 ? parseInt(annualPricing?.discount) : null
-
+            monthlyDiscount:
+              monthlyPricing?.discountType === "percentage" &&
+              monthlyPricing?.discount > 0
+                ? parseInt(monthlyPricing.discount)
+                : null,
+            annualDiscount:
+              annualPricing?.discountType === "percentage" &&
+              annualPricing?.discount > 0
+                ? parseInt(annualPricing?.discount)
+                : null,
           };
         });
         setPlans(formattedPlans);
@@ -126,11 +138,10 @@ const SubscriptionPlan = () => {
     };
 
     fetchPlans();
-  }, [user.userType, location.pathname]);
+  }, [user.userType, location.pathname, authToken]);
 
-
+  // Submit selected plan
   const submitPlans = async (plan) => {
-
     if (!plan) {
       toast.success("No plan is selected");
       return;
@@ -158,21 +169,32 @@ const SubscriptionPlan = () => {
     try {
       const subscriptionResponse = await axios.post(
         `${config.REACT_APP_API_URL}/create-customer-subscription`,
-        payload
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include token in request headers
+          },
+        }
       );
 
       console.log(
         "Payment and Subscription submitted successfully",
         subscriptionResponse.data
       );
-      console.log(organization, plan.name, "organization");
-      if ((organization === "false" || !organization) && plan.name === "Base") {
-        await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`, {
-          ownerId: Cookies.get("userId"),
-          tenantId: Cookies.get("organizationId"),
-        });
+      if (organization === "false" && plan.name === "Base") {
+        await axios.post(
+          `${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`,
+          {
+            ownerId: userId,
+            tenantId: orgId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`, // Include token in request headers
+            },
+          }
+        );
 
-        // If upgrading, navigate to a specific page; otherwise, go to home
         navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
       } else {
         navigate("/payment-details", {
@@ -183,21 +205,17 @@ const SubscriptionPlan = () => {
               user,
               invoiceId: subscriptionResponse?.data?.invoiceId,
             },
-            isUpgrading, // Pass the upgrading flag to next page if needed
+            isUpgrading,
           },
         });
       }
-
-
     } catch (error) {
       console.error("Error submitting subscription:", error);
     }
-
   };
 
   const isHighlighted = (plan) =>
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
-
 
   return (
     <div className="h-full w-full flex justify-center items-center">
@@ -205,7 +223,7 @@ const SubscriptionPlan = () => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h4 className="text-2xl sm:text-sm font-bold text-custom-blue">
-            The Right Plan for  {user.userType === "organization" ? "Your Organization" : "You"}
+            The Right Plan for {user.userType === "organization" ? "Your Organization" : "You"}
           </h4>
           <p className="text-custom-blue mt-2 sm:text-xs">
             We have several powerful plans to showcase your business and get
@@ -216,26 +234,28 @@ const SubscriptionPlan = () => {
         {/* Toggle Section */}
         <div className="flex justify-center items-center space-x-2 mb-16">
           <p
-            className={`text-custom-blue ${!isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-              }`}
+            className={`text-custom-blue ${
+              !isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
+            }`}
           >
             Bill Monthly
           </p>
           <div
             onClick={toggleBilling}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-              }`}
+            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+              isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+            }`}
           >
             <div
-              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual
-                ? "translate-x-6 bg-yellow-500"
-                : "translate-x-0 bg-yellow-500"
-                }`}
+              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
+                isAnnual ? "translate-x-6 bg-yellow-500" : "translate-x-0 bg-yellow-500"
+              }`}
             ></div>
           </div>
           <p
-            className={`text-[#217989] ${isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-              }`}
+            className={`text-[#217989] ${
+              isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
+            }`}
           >
             Bill Annually
           </p>
@@ -246,29 +266,35 @@ const SubscriptionPlan = () => {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5
-      ${isHighlighted(plan)
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 ${
+                isHighlighted(plan)
                   ? "-translate-y-6 z-10 bg-[#217989] text-white"
                   : "bg-white text-[#217989]"
-                }`}
+              }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
             >
               <div className="flex justify-between items-center">
-                <h5 className={`text-xl sm:text-md font-semibold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"}`}>
+                <h5
+                  className={`text-xl sm:text-md font-semibold ${
+                    isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                  }`}
+                >
                   {plan.name}
                 </h5>
-                {isAnnual
-                  ? plan.annualBadge && (
+                {isAnnual ? (
+                  plan.annualBadge && (
                     <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
                       {plan.annualBadge}
                     </span>
                   )
-                  : plan.monthlyBadge && (
+                ) : (
+                  plan.monthlyBadge && (
                     <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
                       {plan.monthlyBadge}
                     </span>
-                  )}
+                  )
+                )}
               </div>
               <ul className="mt-4 flex text-xs flex-col gap-1">
                 {plan.features.map((feature, idx) => (
@@ -282,9 +308,13 @@ const SubscriptionPlan = () => {
               </p>
               <button
                 onClick={() => submitPlans(plan)}
-                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
-        ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
-        ${subscriptionData.subscriptionPlanId === plan.planId ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs ${
+                  isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"
+                } ${
+                  subscriptionData.subscriptionPlanId === plan.planId
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
                 disabled={subscriptionData.subscriptionPlanId === plan.planId}
               >
                 {subscriptionData.subscriptionPlanId === plan.planId ? "Subscribed" : "Choose"}
@@ -292,7 +322,6 @@ const SubscriptionPlan = () => {
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
