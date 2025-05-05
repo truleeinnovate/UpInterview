@@ -265,6 +265,11 @@ const registerOrganization = async (req, res) => {
     } = req.body;
     console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
 
+    // Validate required fields
+    if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
     // Fetch tabs and objects data from DB
     console.log('Fetching tabs and objects data from database...');
     const tabsData = await Tabs.findOne({});
@@ -379,48 +384,6 @@ const registerOrganization = async (req, res) => {
       }
     }
 
-    // Create default roles
-    // console.log('Creating default roles...');
-    // const roles = [
-    //   { label: "Admin", name: "Admin" },
-    //   { label: "CEO", name: "CEO" },
-    //   { label: "HR Manager", name: "HR_Manager" },
-    //   { label: "HR Lead", name: "HR_Lead" },
-    //   { label: "Recruiter", name: "Recruiter" },
-    //   { label: "Internal Interviewer", name: "Internal_Interviewer" }
-    // ];
-
-    // let roleIds = {};
-    // for (let role of roles) {
-    //   console.log(Creating role: ${role.name});
-    //   let reportsToRoleId = roleIds[role.name === "Admin" ? null : roles[roles.indexOf(role) - 1]?.name];
-
-    //   const newRole = new Role({
-    //     roleName: role.name,
-    //     reportsToRoleId: reportsToRoleId || null,
-    //     description: Default role description for ${role.name},
-    //     organizationId: savedOrganization._id
-    //   });
-
-    //   const savedRole = await newRole.save();
-    //   console.log(Role ${role.name} saved with ID:, savedRole._id);
-    //   roleIds[role.name] = savedRole._id;
-    // }
-    // console.log('Role IDs:', roleIds);
-
-    // // Assign Admin Role and Profile to the User
-    // console.log('Assigning Admin role and profile to user:', savedUser._id);
-    // await Users.findByIdAndUpdate(savedUser._id, {
-    //   RoleId: roleIds["Admin"],
-    //   ProfileId: adminProfileId
-    // });
-    // console.log('Admin role and profile assigned successfully');
-
-
-
-
-
-
     // Create default roles from RolesPermissionObject
     console.log('Creating default roles from RolesPermissionObject...');
     const rolesPermissionObjects = await RolesPermissionObject.find({});
@@ -433,7 +396,6 @@ const registerOrganization = async (req, res) => {
         objectName: obj.objectName,
         permissions: obj.permissions
       }));
-      
 
       const newRole = new Role({
         label,
@@ -442,15 +404,16 @@ const registerOrganization = async (req, res) => {
         tenantId: savedOrganization._id,
         objects: roleObjects,
         level,
-        inherits: [], // Empty array by default - can be populated later
+        inherits: [],
         isDefault: true
       });
-      
+
       const savedRole = await newRole.save();
       roleIds[roleName] = savedRole._id;
     }
 
     // Assign Admin Role and Profile to the User
+    console.log('Assigning Admin role and profile to user:', savedUser._id);
     await Users.findByIdAndUpdate(savedUser._id, {
       roleId: roleIds["Admin"],
       ProfileId: adminProfileId
@@ -466,12 +429,20 @@ const registerOrganization = async (req, res) => {
     };
     const token = generateToken(payload);
 
+    // Set JWT token in HTTP-only cookie
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
     console.log('Organization registration completed successfully');
     res.status(201).json({
       message: "Organization registered successfully",
       tenantId: savedOrganization._id,
       ownerId: savedUser._id,
-      // token
+      token // Include token in response body
     });
 
   } catch (error) {
@@ -580,6 +551,7 @@ const organizationUserCreation = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 const loginOrganization = async (req, res) => {
   try {
     let { email, password } = req.body;

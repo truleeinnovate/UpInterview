@@ -143,7 +143,6 @@ const  updateCandidatePatchCall = async (req, res) => {
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
-  console.log('getting 3')
 
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;

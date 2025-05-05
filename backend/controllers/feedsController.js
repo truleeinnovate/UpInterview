@@ -3,7 +3,7 @@ const Feeds = require('../models/Feeds.js');
 // Create new feed
 exports.createFeed = async (feedDetails) => { 
     try {
-        console.log('Creating new feed with details:', feedDetails);
+        // console.log('Creating new feed with details:', feedDetails);
         
         // Validate required fields
         const requiredFields = ['tenantId', 'feedType', 'action', 'ownerId', 'parentId', 'parentObject'];
@@ -15,15 +15,15 @@ exports.createFeed = async (feedDetails) => {
         }
 
         const feed = new Feeds(feedDetails); 
-        console.log('Feed model created:', feed);
+        // console.log('Feed model created:', feed);
         
         const savedFeed = await feed.save();
-        console.log('Feed saved successfully:', savedFeed);
+        // console.log('Feed saved successfully:', savedFeed);
         
         return savedFeed;
     } catch (error) { 
-        console.error('Error in createFeed:', error);
-        console.error('Stack trace:', error.stack);
+        // console.error('Error in createFeed:', error);
+        // console.error('Stack trace:', error.stack);
         throw error;
     }  
 }; 

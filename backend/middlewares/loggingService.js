@@ -49,9 +49,9 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
             };
 
             // Create log asynchronously
-            integrationLogController.createIntegrationLog(logDetails)
-                .then(log => console.log('Log created:', log.logId))
-                .catch(error => console.error('Error creating log:', error.message));
+            internalLogController.createLog(logDetails)
+                // .then(log => console.log('Log created:', log.logId))
+                // .catch(error => console.error('Error creating log:', error.message));
         }
 
         return originalJson.call(this, body);
@@ -143,8 +143,8 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
 
             // Log details
             internalLogController.createLog(logDetails)
-                .then(() => console.log('Log created:', logDetails))
-                .catch((error) => console.error('Error creating log:', error.message));
+                // .then(() => console.log('Log created:', logDetails))
+                // .catch((error) => console.error('Error creating log:', error.message));
         }
 
         return originalJson.call(this, body);
