@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { config } from '../../../config.js';
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { decodeJwt } from '../../utils/jwtDecode'; // Import the utility
+import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
 import Cookies from "js-cookie";
 const SubscriptionPlan = () => {
   const location = useLocation();
