@@ -151,6 +151,8 @@ router.use((req, res, next) => {
   next();
 });
 
+const { generateToken } = require('../utils/jwt')
+
 router.post('/check-user', async (req, res) => {
   try {
     console.log('Backend: 1. Received user check request', {
