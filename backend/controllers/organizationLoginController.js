@@ -349,7 +349,6 @@ const registerOrganization = async (req, res) => {
     let adminProfileId = "";
 
     for (let profileName of profileNames) {
-      console.log('Creating profile:', profileName);
       const profileTabs = tabsData.tabs.map(tab => ({
         name: tab,
         status: profileName === "Admin" ? 'Visible' : 'Hidden'
@@ -375,10 +374,8 @@ const registerOrganization = async (req, res) => {
       });
 
       const savedProfile = await profile.save();
-      console.log('Profile ${profileName} saved with ID:', savedProfile._id);
       if (profileName === "Admin") {
         adminProfileId = savedProfile._id;
-        console.log('Admin profile ID set:', adminProfileId);
       }
     }
 
@@ -432,14 +429,10 @@ const registerOrganization = async (req, res) => {
     for (let roleObj of rolesPermissionObjects) {
       const { label, roleName, objects, level } = roleObj;
 
-      console.log('Creating role:', roleName);
-
-      // Prepare the role objects with permissions
       const roleObjects = objects.map(obj => ({
         objectName: obj.objectName,
         permissions: obj.permissions
       }));
-      console.log('Role objects:', roleObjects);
       
 
       const newRole = new Role({
@@ -452,18 +445,12 @@ const registerOrganization = async (req, res) => {
         inherits: [], // Empty array by default - can be populated later
         isDefault: true
       });
-      console.log('New role created:', newRole);
       
-
       const savedRole = await newRole.save();
-      console.log('Role ${roleName} saved with ID:', savedRole._id);
       roleIds[roleName] = savedRole._id;
     }
 
-    console.log('Role IDs:', roleIds);
-
     // Assign Admin Role and Profile to the User
-    console.log('Assigning Admin role and profile to user:', savedUser._id);
     await Users.findByIdAndUpdate(savedUser._id, {
       roleId: roleIds["Admin"],
       ProfileId: adminProfileId
