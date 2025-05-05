@@ -6,26 +6,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
-const path = require('path');
-
-// Subdomain check middleware
-const checkSubdomain = require('./middleware/checkSubdomain');
-console.log('[index.js] Registering checkSubdomain middleware...');
-app.use(checkSubdomain);
-console.log('[index.js] checkSubdomain middleware registered.');
-
-console.log('[index.js] Setting up static file serving for React build folder...');
-app.use(express.static(path.join(__dirname, 'frontend/build')));
-console.log('[index.js] Static file serving enabled for frontend/build.');
-
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
-// });
 
 const port = process.env.PORT;
-// console.log('port:', port);
 const mongoUri = process.env.MONGODB_URI;
-// console.log('mongoUri:', mongoUri);
 
 const corsOptions = {
   origin: [
