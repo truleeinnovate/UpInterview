@@ -6,8 +6,8 @@ exports.createInterviewTemplate = async (req, res) => {
         const template = new InterviewTemplate({
             ...req.body,
             // For now, we'll use a default user ID since auth is not implemented
-            createdBy: req.body.tenantId,
-            tenantId: req.body.tenantId
+            createdBy: req.body.tenantId ,
+            tenantId: req.body.tenantId 
         });
         
         const savedTemplate = await template.save();
@@ -27,7 +27,8 @@ exports.createInterviewTemplate = async (req, res) => {
 exports.getAllTemplates = async (req, res) => {
     try {
         // For now, we'll use a default tenant ID since auth is not implemented
-        const tenantId = "670286b86ebcb318dab2f676";
+        // const tenantId = "670286b86ebcb318dab2f676";
+        const tenantId = req.query.tenantId;
         const templates = await InterviewTemplate.find({ tenantId })
             .sort({ createdAt: -1 });
             
@@ -47,7 +48,8 @@ exports.getAllTemplates = async (req, res) => {
 exports.getTemplateById = async (req, res) => {
     try {
         // For now, we'll use a default tenant ID since auth is not implemented
-        const tenantId = "670286b86ebcb318dab2f676";
+        // const tenantId = "670286b86ebcb318dab2f676";
+        const tenantId = req.query.tenantId;
         const template = await InterviewTemplate.findOne({
             _id: req.params.id,
             tenantId
@@ -72,21 +74,72 @@ exports.getTemplateById = async (req, res) => {
     }
 };
 
-// Update template
+
 exports.updateTemplate = async (req, res) => {
     try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        const tenantId = "670286b86ebcb318dab2f676";
+        // Validate required fields
+        if (!req.body.tenantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tenant ID is required'
+            });
+        }
+
+        // Validate and process rounds if present
+        if (req.body.rounds) {
+            // Validate rounds is an array
+            if (!Array.isArray(req.body.rounds)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Rounds must be an array'
+                });
+            }
+
+            // Process each round
+            const processedRounds = req.body.rounds.map((round, index) => {
+                // Ensure sequence is set - use provided or default to position
+                const sequence = typeof round.sequence === 'number' 
+                    ? round.sequence 
+                    : index + 1;
+
+                // Return the processed round with required fields
+                return {
+                    roundName: round.roundName || `Round ${index + 1}`,
+                    sequence,
+                    interviewDuration: round.interviewDuration || 60,
+                    instructions: round.instructions || '',
+                    interviewMode: round.interviewMode || 'virtual',
+                    interviewerType: round.interviewerType || 'internal',
+                    selectedInterviewersType: round.selectedInterviewersType || 'Individual',
+                    selectedInterviewerIds: round.selectedInterviewerIds || [],
+                    interviewQuestionsList: round.interviewQuestionsList || [],
+                    assessmentId: round.assessmentId || null,
+                    interviewerGroupId: round.interviewerGroupId || null,
+                    interviewers: round.interviewers || [],
+                    minimumInterviewers: round.minimumInterviewers || '1',
+                    // Include any other fields from the original round
+                    ...round
+                };
+            });
+
+            // Replace the rounds in the request body with processed rounds
+            req.body.rounds = processedRounds;
+        }
+
+        // Update the template
         const template = await InterviewTemplate.findOneAndUpdate(
             {
                 _id: req.params.id,
-                tenantId
+                tenantId: req.body.tenantId
             },
             {
                 ...req.body,
                 updatedAt: Date.now()
             },
-            { new: true, runValidators: true }
+            { 
+                new: true, 
+                runValidators: true 
+            }
         );
 
         if (!template) {
@@ -101,9 +154,10 @@ exports.updateTemplate = async (req, res) => {
             data: template
         });
     } catch (error) {
+        console.error('Error updating template:', error);
         res.status(400).json({
             success: false,
-            message: error.message
+            message: error.message || 'Failed to update template'
         });
     }
 };
@@ -112,7 +166,7 @@ exports.updateTemplate = async (req, res) => {
 exports.deleteTemplate = async (req, res) => {
     try {
         // For now, we'll use a default tenant ID since auth is not implemented
-        const tenantId = "670286b86ebcb318dab2f676";
+        // const tenantId = "670286b86ebcb318dab2f676";
         const template = await InterviewTemplate.findOneAndDelete({
             _id: req.params.id,
             tenantId

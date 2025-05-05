@@ -33,12 +33,12 @@ const CustomProvider = ({ children }) => {
   const [industries, setIndustries] = useState([]);
   const [currentRole, setCurrentRole] = useState([]);
 
-    // master data fetch
-    const [skills, setSkills] = useState([]);
-    const [qualification, setQualification] = useState([]);
-    const [college, setCollege] = useState([]);
-    const [companies, setCompanies] = useState([]);
-    const [technologies, setTechnology] = useState([]);
+  // master data fetch
+  const [skills, setSkills] = useState([]);
+  const [qualification, setQualification] = useState([]);
+  const [college, setCollege] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [technologies, setTechnology] = useState([]);
 
   // users data 
   const [userProfile, setUserProfile] = useState(null);
@@ -135,7 +135,7 @@ const CustomProvider = ({ children }) => {
     }
   }, [sharingPermissions]);
 
-  
+
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
@@ -144,13 +144,13 @@ const CustomProvider = ({ children }) => {
     } catch (error) {
       // console.error("Error fetching lists:", error);
     }
-  },[userId]);
+  }, [userId]);
 
   useEffect(() => {
     fetchMyQuestionsData();
     fetchLists();
   }, [fetchMyQuestionsData, fetchLists]);
-  
+
   // Fetch Suggested Questions
   useEffect(() => {
     const getQuestions = async () => {
@@ -177,10 +177,10 @@ const CustomProvider = ({ children }) => {
 
   const fetchCandidateData = useCallback(async () => {
     setLoading(true);
-  
+
     try {
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
-  
+
       const candidatesWithImages = filteredCandidates.map((candidate) => {
         if (candidate.ImageData && candidate.ImageData.filename) {
           const imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
@@ -420,6 +420,52 @@ const CustomProvider = ({ children }) => {
     fetchAssessmentData();
   }, [fetchAssessmentData]);
 
+
+
+  // ranjith  //
+
+  const tenantId = Cookies.get("organizationId");
+
+  // Fetch groups
+  const [groups, setGroups] = useState([]);
+
+  const fetchGroupsData = useCallback(async () => {
+    if (!tenantId) {
+      console.error('No tenantId found in cookies');
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups/data`, {
+        params: {
+          tenantId: tenantId
+        }
+      });
+
+      if (response.data && Array.isArray(response.data)) {
+        setGroups(response.data);
+        console.log('Groups fetched:', response.data);
+      } else {
+        console.error('Invalid groups data format:', response.data);
+        setGroups([]);
+      }
+    } catch (error) {
+
+      console.log("error", error);
+
+      console.error('Error fetching groups:', error.response?.data?.error || error.message);
+      setGroups([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchGroupsData();
+  }, [fetchGroupsData]);
+
   return (
     <CustomContext.Provider
       value={{
@@ -494,6 +540,10 @@ const CustomProvider = ({ children }) => {
         fetchInterviewData,
         // user
         userProfile,
+
+        // groups
+        groups,
+        fetchGroupsData,
       }}
     >
       {children}

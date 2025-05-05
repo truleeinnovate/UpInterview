@@ -24,10 +24,10 @@ import AddCandidateForm from './Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandi
 import CandidateDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx';
 import CandidateFullscreen from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen.jsx';
 
-import Position from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx";
-import PositionForm from "./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx";
-import PositionSlideDetails from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx";
-import RoundFormPosition from "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx";
+import Position from './Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx';
+import PositionForm from './Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx';
+import PositionSlideDetails from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx';
+import RoundFormPosition from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx';
 
 import MockInterview from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterview.jsx';
 import MockInterviewDetails from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx';
@@ -79,6 +79,10 @@ import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProf
 import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
 //-----------------------------------account settings
 
+import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplates.jsx';
+import TemplateDetail from '../src/Pages/InteviewTemplates/TemplateDetail';
+import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
@@ -111,24 +115,29 @@ const App = () => {
           {/* tabs */}
 
           <Route path="/candidate" element={<CandidateTab />} >
-          <Route index element={null} />
-          <Route path="new" element={<AddCandidateForm mode="Create" />} />
-          <Route path="view-details/:id" element={<CandidateDetails />} />
-          <Route path="edit/:id" element={<AddCandidateForm mode="Edit"/>} />
+            <Route index element={null} />
+            <Route path="new" element={<AddCandidateForm mode="Create" />} />
+            <Route path="view-details/:id" element={<CandidateDetails />} />
+            <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
           </Route >
 
           <Route path="/candidate/:id" element={<CandidateTabDetails />} >
-          <Route index element={null} />
-          <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
+            <Route index element={null} />
+            <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
           </Route>
 
-          <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen  />} />
+          <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
+
+          {/* // position UI  */}
 
           <Route path="/position" element={<Position />} />
           <Route path="/position/new-position" element={<PositionForm />} />
           <Route path="/position/edit-position/:id" element={<PositionForm />} />
+
           <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
+
           <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+
           <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
 
           <Route path="/mockinterview" element={<MockInterview />} />
@@ -265,6 +274,11 @@ const App = () => {
           </Route>
 
           {/* ---------------------------account settings------------------- */}
+
+          {/* {/Intervie Templates/} */}
+          <Route path="/interview-templates" element={<InterviewTemplates />} />
+          <Route path="/interview-templates/:id" element={<TemplateDetail />} />
+          <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
 
         </Routes>
       </div>

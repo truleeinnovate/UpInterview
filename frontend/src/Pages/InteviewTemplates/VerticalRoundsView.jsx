@@ -1,0 +1,79 @@
+/* eslint-disable react/prop-types */
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Edit } from 'lucide-react';
+import RoundCard from './RoundCard';
+
+const VerticalRoundsView = ({
+  rounds,
+  onEditRound
+}) => {
+  // Sort rounds by sequence
+  const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
+  
+  // Track expanded rounds
+  const [expandedRounds, setExpandedRounds] = useState({});
+  
+  // Toggle round expansion
+  const toggleRound = (roundId) => {
+    setExpandedRounds(prev => ({
+      ...prev,
+      [roundId]: !prev[roundId]
+    }));
+  };
+  
+  // Check if a round is expanded
+  const isExpanded = (roundId) => !!expandedRounds[roundId];
+
+  return (
+    <div className="space-y-4">
+      {sortedRounds.map((round, index) => (
+        <div key={round._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="flex justify-between items-center p-4 hover:bg-gray-50">
+            <div className="flex items-center flex-1" onClick={() => toggleRound(round._id)} style={{ cursor: 'pointer' }}>
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+                <span className="text-sm font-medium">{index + 1}</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{round.roundName}</h3>
+                <div className="flex items-center mt-1 text-sm text-gray-600">
+                  <span className="mr-2">{round.interviewType}</span>
+                  <span>•</span>
+                  <span className="mx-2">{round.interviewMode}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {/* <button
+                onClick={() => onEditRound(round)}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit 
+              </button> */}
+              <button onClick={() => toggleRound(round._id)} className="p-1">
+                {isExpanded(round._id) ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
+          
+          {isExpanded(round._id) && (
+            <div className="px-4 pb-4">
+              <RoundCard
+                round={round}
+                onEdit={() => onEditRound(round)}
+                hideHeader={true}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default VerticalRoundsView;

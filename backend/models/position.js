@@ -1,5 +1,33 @@
 const mongoose = require("mongoose");
 
+const roundSchema = new mongoose.Schema(
+  {
+
+
+    sequence: Number,
+    roundTitle: String,
+    interviewMode: String,
+    interviewerType: String, // internal or external
+    duration: String,
+    instructions: String,
+    selectedInterviewersType: { type: String },
+    interviewers: [
+      mongoose.Schema.Types.ObjectId,
+    ],
+    //  status: String, // draft - if accept - scheduled, if request sent then (request sent)
+    assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
+    questions: [{
+      questionId: { type: mongoose.Schema.Types.Mixed, required: true },
+      snapshot: { type: mongoose.Schema.Types.Mixed, required: true }
+    }],
+
+  },
+  {
+    timestamps: true // ⏱️ Automatically adds createdAt and updatedAt
+  }
+);
+
+
 const positionSchema = new mongoose.Schema({
   title: String,
   companyname: String,
@@ -15,40 +43,23 @@ const positionSchema = new mongoose.Schema({
     },
   ],
   additionalNotes: String,
-  rounds: [
-    {
-       sequence: Number,
-       roundTitle: String,
-       interviewMode: String,
-       interviewerType: String, // internal or external
-       duration: String,
-       instructions: String,
-       interviewers: [
-           { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
-       ],
-      //  status: String, // draft - if accept - scheduled, if request sent then (request sent)
-       assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
-             questions: [{
-                               questionId: { type: mongoose.Schema.Types.Mixed, required: true },
-                               snapshot: { type: mongoose.Schema.Types.Mixed, required: true }
-                           }],
-    }
-  ],
+
+  rounds: [roundSchema],
   CreatedBy: String,
   LastModifiedById: String,
   ownerId: String,
   tenantId: String,
   createdDate: { type: Date, default: Date.now },
-   // added new feilds ranjith from here
+  // added new feilds ranjith from here
 
-   minSalary:String,
-   maxSalary:String,
-   // EmployementType:String,
-   NoofPositions:Number,
-   Location:String,
-   // workMode:String,
-   
-   // added new feilds ranjith to here
+  minSalary: String,
+  maxSalary: String,
+  // EmployementType:String,
+  NoofPositions: Number,
+  Location: String,
+  // workMode:String,
+
+  // added new feilds ranjith to here
 });
 
 

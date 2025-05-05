@@ -3,6 +3,7 @@ const { Contacts } = require("../models/Contacts.js");
 const availabilityController = require("./interviewAvailabilityController.js");
 const { loginSendEmail } = require("./loginEmailCommonController.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewersSchema.js");
+const { generateToken } = require('../utils/jwt');
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -73,12 +74,21 @@ exports.individualLogin = async (req, res) => {
     }, { json: () => { } });
     console.log("Email successfully sent.");
 
+    // Generate JWT
+    const payload = {
+      userId: savedUser._id.toString(),
+      organization: false,
+      timestamp: new Date().toISOString(),
+    };
+    const token = generateToken(payload);
+
     // Step 5: Send Response
     res.status(200).json({
       success: true,
       message: "User, Contact, Availability, and Email processed successfully",
       userId: savedUser._id,
       contactId: savedContact._id,
+      token
     });
 
   } catch (error) {

@@ -19,7 +19,8 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
-
+import axios from 'axios';
+import Cookies from "js-cookie";
 
 Modal.setAppElement('#root');
 
@@ -42,20 +43,53 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const organizationId = Cookies.get("organizationId");
+
+
+  // useEffect(() => {
+  //   const foundPosition = positions.find(pos => pos._id === id)
+  //  console.log("foundPosition", foundPosition);
+   
+  //   if (foundPosition) {
+  //     setPosition(foundPosition);
+  //     // Safely set rounds, defaulting to an empty array if rounds is undefined
+  //     setRounds(foundPosition.rounds || []);
+  //     setActiveRound(foundPosition.rounds[0]._id);
+  //   } else {
+  //     setPosition(null); // Ensure position is null if not found
+  //     setRounds([]); // Reset rounds to empty array
+  //   }
+  // }, [positions, id])
 
   useEffect(() => {
-    const foundPosition = positions.find(pos => pos._id === id)
-    if (foundPosition) {
-      setPosition(foundPosition);
-      // Safely set rounds, defaulting to an empty array if rounds is undefined
-      setRounds(foundPosition.rounds || []);
-    } else {
-      setPosition(null); // Ensure position is null if not found
-      setRounds([]); // Reset rounds to empty array
-    }
-  }, [positions, id])
+    const fetchPosition = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`,
+          {
+            params: {
+              tenantId: organizationId
+            }
+          }
+        );
 
-  console.log("position ", position);
+        const foundPosition = response.data
+        // console.log("foundPosition", foundPosition);
+        // console.log("foundPosition. rounds", foundPosition.rounds);
+        
+        if (foundPosition) {
+          setPosition(foundPosition || []);
+          setRounds(foundPosition.rounds || []);
+          setActiveRound(foundPosition.rounds[0]._id);
+         
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
+      } 
+    };
+    fetchPosition();
+  }, [id]);
+
+  // console.log("position ", position);
 
 
 
@@ -64,7 +98,6 @@ const PositionSlideDetails = () => {
   };
 
   const handleEditRound = (round) => {
-
     navigate(`/position/view-details/${id}/rounds/${round._id}`);
   };
 
@@ -72,11 +105,22 @@ const PositionSlideDetails = () => {
     return round.status !== 'Completed'; // position?.status === 'Draft' &&
   };
 
-  const handleSelectRound = (roundId) => {
-    setActiveRound(roundId);
-  };
+  // const handleSelectRound = (roundId) => {
+  //   setActiveRound(roundId);
+  // };
+
   const toggleViewMode = () => {
-    setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
+    // setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
+    // setActiveRound(rounds[0]._id);
+    if (roundsViewMode === 'vertical') {
+      setRoundsViewMode('horizontal');
+      if (rounds?.length > 0) {
+        setActiveRound(rounds[0]._id);
+      }
+    } else {
+      setRoundsViewMode('vertical');
+      setActiveRound(null);
+    }
   };
 
 
@@ -257,7 +301,12 @@ const PositionSlideDetails = () => {
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Position Rounds
           </h3>
+
+         
           <div className="flex space-x-2">
+          { rounds.length > 0 &&
+
+          <>
             <button
               onClick={toggleViewMode}
               className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -284,7 +333,8 @@ const PositionSlideDetails = () => {
               <Plus className="h-4 w-4 mr-1" />
               Add Round
             </button>
-
+            </>
+}
 
             <Link
               // onClick={() => navigate(`position/edit-position/${position._id}`)}
@@ -301,10 +351,10 @@ const PositionSlideDetails = () => {
 
         <InterviewProgress
           rounds={rounds}
-          interviewId={id}
-          currentRoundId={activeRound}
-          viewMode={roundsViewMode}
-          onSelectRound={handleSelectRound}
+          // interviewId={id}
+          // currentRoundId={activeRound}
+          // viewMode={roundsViewMode}
+          // onSelectRound={handleSelectRound}
         />
 
 
@@ -318,7 +368,7 @@ const PositionSlideDetails = () => {
                   currentRoundId={activeRound}
                   canEditRound={canEditRound}
                   onEditRound={handleEditRound}
-                  onChangeRound={handleSelectRound}
+                  onChangeRound={setActiveRound}
                 />
               )
             ) : (
@@ -339,7 +389,7 @@ const PositionSlideDetails = () => {
 
             <button
               onClick={handleAddRound}
-              className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue  focus:outline-none focus:ring-2 focus:ring-offset-2 "
             >
               <Plus className="h-4 w-4 mr-1" />
               Add First Round

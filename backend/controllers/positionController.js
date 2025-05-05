@@ -199,11 +199,17 @@ const updatePosition = async (req, res) => {
     }
 
     // Update the position
-    const updatedPosition = await Position.findByIdAndUpdate(
-      positionId,
-      { $set: positionData },
-      { new: true }
-    );
+    // const updatedPosition = await Position.findByIdAndUpdate(
+    //   positionId,
+    //   { $set: positionData },
+    //   { new: true }
+    // );
+
+    // Apply updates
+    Object.assign(currentPosition, positionData);
+
+    // Save to trigger middleware and timestamps
+    const updatedPosition = await currentPosition.save();
 
     if (!updatedPosition) {
       return res.status(404).json({ message: "Position not found." });
@@ -296,9 +302,9 @@ const saveInterviewRoundPosition = async (req, res) => {
       // **Reorder all rounds based on sequence**
       await reorderInterviewRounds(position);
 
-      
+
       console.log("Position rounds", position.rounds[roundIndex]);
-      
+
 
       return res.status(200).json({
         message: "Round updated successfully.",
@@ -450,6 +456,47 @@ const saveInterviewRoundPosition = async (req, res) => {
   }
 };
 
+const getPositionById = async (req, res) => {
+  const { id } = req.params; // Position ID from URL params
+  const { tenantId } = req.query; // Tenant ID from query string
+
+  try {
+    // Validate tenantId (if required)
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: "Tenant ID is required"
+      });
+    }
+
+    // Find position by ID AND tenantId (ensures data isolation)
+    const position = await Position.findOne({
+      _id: id,
+      tenantId: tenantId, // Filter by tenant
+    }).lean(); // Convert to plain JS object for performance
+
+    if (!position) {
+      return res.status(404).json({
+        success: false,
+        message: "Position not found or not accessible for this tenant"
+      });
+    }
+
+    // Success response
+    res.status(200).json(
+
+      position
+    );
+
+  } catch (error) {
+    console.error("Error fetching position:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server Error"
+    });
+  }
+};
+
 
 
 // const updateRounds = async (req, res) => {
@@ -477,6 +524,7 @@ const saveInterviewRoundPosition = async (req, res) => {
 module.exports = {
   createPosition,
   updatePosition,
-  saveInterviewRoundPosition
+  saveInterviewRoundPosition,
+  getPositionById
   // updateRounds
 };

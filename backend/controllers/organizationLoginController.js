@@ -11,6 +11,7 @@ const Objects = require('../models/Objects');
 const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
+const { generateToken } = require('../utils/jwt');
 
 const saltRounds = 10;
 const mongoose = require('mongoose');
@@ -461,8 +462,6 @@ const registerOrganization = async (req, res) => {
 
     console.log('Role IDs:', roleIds);
 
-    console.log('Role IDs:', roleIds);
-
     // Assign Admin Role and Profile to the User
     console.log('Assigning Admin role and profile to user:', savedUser._id);
     await Users.findByIdAndUpdate(savedUser._id, {
@@ -471,11 +470,21 @@ const registerOrganization = async (req, res) => {
     });
     console.log('Admin role and profile assigned successfully');
 
+    // Generate JWT
+    const payload = {
+      userId: savedUser._id.toString(),
+      tenantId: savedOrganization._id.toString(),
+      organization: true,
+      timestamp: new Date().toISOString(),
+    };
+    const token = generateToken(payload);
+
     console.log('Organization registration completed successfully');
     res.status(201).json({
       message: "Organization registered successfully",
       tenantId: savedOrganization._id,
-      ownerId: savedUser._id
+      ownerId: savedUser._id,
+      // token
     });
 
   } catch (error) {
@@ -614,11 +623,21 @@ const loginOrganization = async (req, res) => {
     const contact = await Contacts.findOne({ ownerId: user._id });
     const contactDataFromOrg = contact || null;
 
+    // Generate JWT
+    const payload = {
+      userId: user._id.toString(),
+      tenantId: user.tenantId,
+      organization: true,
+      timestamp: new Date().toISOString(),
+    };
+    const token = generateToken(payload);
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
       ownerId: user._id,
       tenantId: user.tenantId,
+      token,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
       contactDataFromOrg

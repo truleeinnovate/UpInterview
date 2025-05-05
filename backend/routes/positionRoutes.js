@@ -3,6 +3,7 @@ const {
   createPosition,
   updatePosition,
   saveInterviewRoundPosition,
+  getPositionById,
   // updateRounds
 } = require('../controllers/positionController.js');
 const loggingService = require('../middlewares/loggingService');
@@ -14,6 +15,8 @@ router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.Feed
 router.post('/add-rounds',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, saveInterviewRoundPosition);
 
 
-// router.patch("/:id", updateRounds);
+// router.get("/:id", updateRounds);
+
+router.get("/details/:id", getPositionById);
 
 module.exports = router;

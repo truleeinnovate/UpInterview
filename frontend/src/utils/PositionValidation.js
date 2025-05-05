@@ -37,7 +37,7 @@ export const validateForm = (formData, entries, rounds) => {
   let formIsValid = true;
 
   if (!formData.title) {
-    errors.title = "title is required";
+    errors.title = "Title is required";
     formIsValid = false;
   }
 
@@ -56,7 +56,45 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-  if (!formData.jobDescription.trim() || formData.jobDescription.trim().length < 250) {
+  // Validate experience range
+  if (formData.minexperience && formData.maxexperience) {
+    if (parseInt(formData.minexperience) > parseInt(formData.maxexperience)) {
+      errors.minexperience = "Min experience cannot be greater than max";
+      errors.maxexperience = "Max experience cannot be less than min";
+      formIsValid = false;
+    }
+  }
+
+
+ // Salary validation - only validate if at least one salary field is filled
+ if (formData.minSalary || formData.maxSalary) {
+  // Validate minSalary
+  if (formData.minSalary) {
+    if (parseInt(formData.minSalary) < 0) {
+      errors.minsalary = "Minimum salary cannot be negative";
+      formIsValid = false;
+    }
+  }
+
+  // Validate maxSalary
+  if (formData.maxSalary) {
+    if (parseInt(formData.maxSalary) < 0) {
+      errors.maxsalary = "Maximum salary cannot be negative";
+      formIsValid = false;
+    }
+  }
+
+  // Validate relationship between min and max salary
+  if (formData.minSalary && formData.maxSalary) {
+    if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
+      errors.minsalary = "Minimum salary cannot be greater than maximum";
+      errors.maxsalary = "Maximum salary cannot be less than minimum";
+      formIsValid = false;
+    }
+  }
+}
+
+  if (!formData.jobDescription.trim()) {
     errors.jobdescription = "Job description is required";
     formIsValid = false;
   }
@@ -65,6 +103,25 @@ export const validateForm = (formData, entries, rounds) => {
     errors.skills = "At least one skill must be selected";
     formIsValid = false;
   }
+
+    // Add salary validation
+    if (formData.minSalary && formData.maxSalary) {
+      if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
+        errors.minsalary = "Minimum salary cannot be greater than maximum salary";
+        formIsValid = false;
+      } else if (parseInt(formData.maxSalary) < parseInt(formData.minSalary)) {
+        errors.maxsalary = "Maximum salary cannot be less than minimum salary";
+        formIsValid = false;
+      }
+    }
+
+
+
+    // Add No of Positions validation
+    if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
+      errors.noOfPositions = "Number of positions must be greater than 0";
+      formIsValid = false;
+    }
 
   return { formIsValid, newErrors: errors };
 };

@@ -15,6 +15,7 @@ import {
   validatePassword,
   validateConfirmPassword
 } from '../../utils/OrganizationSignUpValidation';
+import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
 export const Organization = () => {
   const [selectedFirstName, setSelectedFirstName] = useState("");
@@ -202,82 +203,83 @@ export const Organization = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log('Submitting organization signup form...');
-    if (isSubmitting) {
-      console.log('Form submission already in progress, ignoring...');
-      return;
-    }
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
+
+    const organizationData = {
+      firstName: selectedFirstName,
+      lastName: selectedLastName,
+      email: selectedEmail,
+      countryCode: selectedCountryCode,
+      phone: selectedPhone,
+      profileId: selectedProfileId,
+      jobTitle: selectedJobTitle,
+      company: selectedCompany,
+      employees: selectedEmployees,
+      country: selectedCountry,
+      password: selectedPassword,
+      contactType: 'Organization',
+    };
 
     const isValid = await validateOrganizationSignup(
       organizationData,
       setErrors,
-      checkEmailExists,
-      checkProfileIdExists
     );
 
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
     if (confirmPasswordError) {
       setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
-      console.error('Form validation failed: Confirm password error');
       setIsSubmitting(false);
       return;
     }
 
     if (!isValid) {
-      console.error('Form validation failed: Invalid data');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      console.log('Sending POST request to /Organization/Signup with data:', organizationData);
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
-      console.log('Response received:', response.data);
-      const data = response.data;
+      const { token } = response.data;
 
-      Cookies.set('userId', data.ownerId, { expires: 7 });
-      Cookies.set('organizationId', data.tenantId, { expires: 7 });
+      // Store JWT in cookies
+      setAuthCookies(token);
+
       toast.success('Organization created successfully!');
       navigate('/subscription-plans');
     } catch (error) {
-      console.error('Error in signup request:', error);
       toast.error(error.response?.data?.message || 'Something went wrong');
     } finally {
-      console.log('Form submission completed');
       setIsSubmitting(false);
     }
   };
 
+  // const checkEmailExists = useCallback(async (email) => {
+  //   if (!email) return false;
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/check-email?email=${email}`
+  //     );
+  //     return response.data.exists;
+  //   } catch (error) {
+  //     console.error("Email check error:", error);
+  //     return false;
+  //   }
+  // }, []);
 
-
-  const checkEmailExists = useCallback(async (email) => {
-    if (!email) return false;
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/check-email?email=${email}`
-      );
-      return response.data.exists;
-    } catch (error) {
-      console.error("Email check error:", error);
-      return false;
-    }
-  }, []);
-
-  const checkProfileIdExists = useCallback(async (profileId) => {
-    if (!profileId) return false;
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/check-username?username=${profileId}`
-      );
-      return response.data.exists;
-    } catch (error) {
-      console.error("Profile ID check error:", error);
-      return false;
-    }
-  }, []);
+  // const checkProfileIdExists = useCallback(async (profileId) => {
+  //   if (!profileId) return false;
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/check-username?username=${profileId}`
+  //     );
+  //     return response.data.exists;
+  //   } catch (error) {
+  //     console.error("Profile ID check error:", error);
+  //     return false;
+  //   }
+  // }, []);
 
   const generateProfileId = (email) => {
     if (!email) return '';
@@ -292,7 +294,7 @@ export const Organization = () => {
     }
 
     setIsCheckingEmail(true);
-    const errorMessage = await validateEmail(email, checkEmailExists);
+    const errorMessage = await validateEmail(email);
     setErrors((prev) => ({ ...prev, email: errorMessage }));
 
     if (!errorMessage && email && !selectedProfileId) {
@@ -312,7 +314,7 @@ export const Organization = () => {
     }
 
     setIsCheckingProfileId(true);
-    const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
+    const { errorMessage, suggestedProfileId } = await validateProfileId(profileId);
     setErrors((prev) => ({ ...prev, profileId: errorMessage }));
     setSuggestedProfileId(suggestedProfileId || '');
     setIsCheckingProfileId(false);

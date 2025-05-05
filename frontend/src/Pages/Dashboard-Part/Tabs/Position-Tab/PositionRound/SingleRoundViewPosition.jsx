@@ -74,12 +74,29 @@ const SingleRoundViewPosition = ({
               ? 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500' 
               : 'text-gray-400 bg-gray-100 cursor-not-allowed'
           }`}
-        >
+        >-
           Next Round
           <ArrowRight className="h-4 w-4 ml-1" />
         </button>
       </div>
-  
+      {/* {sortedRounds.map((round) => (
+      <div className="flex items-center">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+                <span className="text-sm font-medium">{round.sequence}</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{round.roundName
+                }</h3>
+                <div className="flex items-center mt-1 text-sm text-gray-600">
+                  <span className="mr-2">{round.interviewType}</span>
+                  <span>•</span>
+                  <span className="mx-2">{round.interviewMode}</span>
+                </div>
+              </div>
+            </div>
+
+
+))} */}
       <PositionRoundCard
         round={currentRound}
         interviewId={interviewId}
@@ -87,13 +104,15 @@ const SingleRoundViewPosition = ({
         onEdit={() => onEditRound(currentRound)}
         isActive={true}
       />
+      
     </div>
   );
+  
 };
 
 SingleRoundViewPosition.propTypes = {
   rounds: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired, // Changed from `id` to `_id`
+    _id: PropTypes.string.isRequired, 
     sequence: PropTypes.number.isRequired
   })).isRequired,
   interviewId: PropTypes.string,

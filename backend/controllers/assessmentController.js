@@ -1,4 +1,5 @@
 const Assessment = require("../models/assessment");
+const mongoose = require("mongoose")
 const AssessmentQuestionsSchema = require('../models/AssessmentQuestions')
 const { isValidObjectId } = require('mongoose');
 const ScheduledAssessment = require('../models/scheduledAssessmentsSchema');
@@ -362,3 +363,35 @@ exports.getAssignedCandidates = async (req, res) => {
     });
   }
 }; 
+
+
+
+exports.getAssessmentById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid assessment ID format' });
+    }
+
+    // Fetch the assessment
+    const assessment = await Assessment.findById(req.params.id);
+    if (!assessment) {
+      return res.status(404).json({ success: false, message: 'Assessment not found' });
+    }
+
+    // Fetch associated questions with full structure
+    const assessmentQuestions = await AssessmentQuestionsSchema.findOne({ assessmentId: req.params.id }).lean();
+
+    if (!assessmentQuestions) {
+      return res.status(404).json({ success: false, message: 'Questions not found for assessment' });
+    }
+
+    // Return combined data
+    res.status(200).json({
+      ...assessment.toObject(),
+      sections: assessmentQuestions.sections || [], // Return full section/question structure
+    });
+  } catch (error) {
+    console.error("Error fetching assessment:", error);
+    res.status(500).json({ success: false, error: "Internal server error", message: error.message });
+  }
+};

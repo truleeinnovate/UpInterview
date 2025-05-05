@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Slideshow from './Slideshow';
+import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
 const Admin = () => {
   const [email, setEmail] = useState("");
@@ -50,40 +50,32 @@ const Admin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validate inputs on submit (including empty fields)
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
     setErrors({ email: emailError, password: passwordError });
 
-    if (emailError || passwordError) {
-      return;
-    }
+    if (emailError || passwordError) return;
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/Organization/Login`,
-        {
-          email: email.trim().toLowerCase(),
-          password
-        }
-      );
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
       if (response.data.success) {
-        const { ownerId, tenantId, token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
-        console.log("organization login", response.data);
+        const { token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
 
+        // Store JWT in cookies
+        setAuthCookies(token);
 
-        if (ownerId) Cookies.set('userId', ownerId, { expires: 7 });
-        if (tenantId) Cookies.set('organizationId', tenantId, { expires: 7 });
-        if (token) Cookies.set('token', token, { expires: 7 });
-
-        // Check profile status
         if (typeof isProfileCompleted === 'undefined') {
           navigate('/home');
         } else if (isProfileCompleted === true) {
           navigate('/home');
         } else if (isProfileCompleted === false && roleName) {
-          navigate('/profile4', { state: { isProfileComplete: true, roleName, contactDataFromOrg } });
+          navigate('/profile4', {
+            state: { isProfileComplete: true, roleName, contactDataFromOrg },
+          });
         } else {
           navigate('/home');
         }
@@ -91,17 +83,10 @@ const Admin = () => {
         setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
       }
     } catch (error) {
-      if (error.response) {
-        setErrors((prev) => ({
-          ...prev,
-          email: error.response.data.message || 'Login failed. Please try again.'
-        }));
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          email: 'An error occurred. Please check your connection.'
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        email: error.response?.data.message || 'Login failed. Please try again.',
+      }));
     }
   };
 

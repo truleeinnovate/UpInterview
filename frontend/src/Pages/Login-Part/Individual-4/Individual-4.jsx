@@ -12,6 +12,7 @@ import AdditionalDetails from './AdditionalDetails.jsx';
 import InterviewDetails from './InterviewDetails.jsx'
 import AvailabilityDetails from './AvailabilityDetails.jsx'
 import { config } from '../../../config.js';
+import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
 const FooterButtons = ({
   onNext,
@@ -251,7 +252,6 @@ const MultiStepForm = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-
     setLoading(true);
 
     const userData = {
@@ -263,8 +263,6 @@ const MultiStepForm = () => {
       isProfileCompleted: true,
     };
 
-    console.log('User data being submitted:', userData);
-
     const contactData = {
       ...basicDetailsData,
       ...additionalDetailsData,
@@ -272,42 +270,29 @@ const MultiStepForm = () => {
       LetUsKnowYourProfession: profession,
     };
 
-    console.log('Contact data being submitted:', contactData);
-
-    const availabilityData = (isInternalInterviewer || Freelancer) ?
-      Object.keys(availabilityDetailsData.availability || times)
-        .map((day) => ({
-          day,
-          timeSlots: availabilityDetailsData.availability[day]
-            .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== "unavailable")
-            .map((slot) => ({
-              startTime: slot.startTime,
-              endTime: slot.endTime,
-            })),
-        }))
-        .filter((dayData) => dayData.timeSlots.length > 0) : [];
-
-    console.log('Availability data being submitted:', availabilityData);
+    const availabilityData = (isInternalInterviewer || Freelancer)
+      ? Object.keys(availabilityDetailsData.availability || times)
+          .map((day) => ({
+            day,
+            timeSlots: availabilityDetailsData.availability[day]
+              .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable')
+              .map((slot) => ({
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              })),
+          }))
+          .filter((dayData) => dayData.timeSlots.length > 0)
+      : [];
 
     let isProfileCompleteData = {};
-
     if (isProfileComplete) {
       isProfileCompleteData = {
         isProfileComplete: true,
         ownerId: contactDataFromOrg.ownerId,
         contactId: contactDataFromOrg._id,
-        isInternalInterviewer
+        isInternalInterviewer,
       };
     }
-
-    console.log('Making API call to:', `${config.REACT_APP_API_URL}/Individual/Signup`);
-    console.log('Request payload:', {
-      userData,
-      contactData,
-      availabilityData,
-      Freelancer: isInternalInterviewer ? false : Freelancer,
-      isProfileCompleteData,
-    });
 
     try {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
@@ -318,49 +303,37 @@ const MultiStepForm = () => {
         isProfileCompleteData,
       });
 
-      console.log('API response received:', response.data);
+      const { contactId, token } = response.data;
 
-      const contactId = response.data.contactId;
-
-      // Handle image upload (manual or LinkedIn)
+      // Handle image upload
       if (file) {
         const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "contact");
-        imageData.append("id", contactId);
-
+        imageData.append('image', file);
+        imageData.append('type', 'contact');
+        imageData.append('id', contactId);
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else if (linkedInData?.pictureUrl && !filePreview) {
         const response = await fetch(linkedInData.pictureUrl);
         const blob = await response.blob();
-        const imageFile = new File([blob], "linkedin-profile.jpg", { type: "image/jpeg" });
+        const imageFile = new File([blob], 'linkedin-profile.jpg', { type: 'image/jpeg' });
         const imageData = new FormData();
-        imageData.append("image", imageFile);
-        imageData.append("type", "contact");
-        imageData.append("id", contactId);
-
+        imageData.append('image', imageFile);
+        imageData.append('type', 'contact');
+        imageData.append('id', contactId);
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
-      // Set cookies and navigate
-      Cookies.set("userId", response.data.userId, { expires: 7 });
-      if (Cookies.get("organizationId")) {
-        Cookies.remove("organizationId");
-      }
+      // Store JWT in cookies
+      setAuthCookies(token);
 
       setLoading(false);
-      navigate("/subscription-plans");
-
+      navigate('/subscription-plans');
     } catch (error) {
-      console.error('Submission failed:', {
-        error: error.response?.data || error.message,
-        status: error.response?.status,
-        config: error.config
-      });
+      console.error('Submission failed:', error);
       setLoading(false);
     }
   };

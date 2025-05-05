@@ -245,9 +245,9 @@ const DeleteConfirmationModal = ({ isOpen, roundNumber, onConfirm, onCancel }) =
 };
 
 const PositionForm = () => {
-    const { id } = useParams();
-    const location = useLocation();
-    
+  const { id } = useParams();
+  const location = useLocation();
+
   // position details states
   const {
     companies,
@@ -257,32 +257,35 @@ const PositionForm = () => {
     positions
   } = useCustomContext();
 
+
+  console.log("templates", templates);
+  
   useEffect(() => {
     console.log('companies:', companies);
     console.log('locations:', locations);
-  }, [companies,locations]);
+  }, [companies, locations]);
 
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
-    minexperience: 0,
-    maxexperience: 0,
-    maxSalary:"",
-    minSalary:"",
+    minexperience: "",
+    maxexperience: "",
+    maxSalary: "",
+    minSalary: "",
     jobDescription: "",
     additionalNotes: "",
     skills: [],
     template: {},
-    NoofPositions:"",
-    Location:""
+    NoofPositions: "",
+    Location: ""
   });
-const [isEdit,setIsEdit] = useState(false);
- const navigate = useNavigate();
- 
+  const [isEdit, setIsEdit] = useState(false);
+  const navigate = useNavigate();
+
   // console.log("formData ", formData);
-  
+
   // console.log("selectedCandidate  PositionForm", selectedPosition);
-  
+
   const [errors, setErrors] = useState("");
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
   const handleCompanySelect = (company) => {
@@ -308,6 +311,15 @@ const [isEdit,setIsEdit] = useState(false);
   const [positionId, setPositionId] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
+
+
+
+
+  const [deleteIndex, setDeleteIndex] = useState(null);
+  const handleDelete = (index) => {
+    setDeleteIndex(index);
+  };
+
   const handleEdit = (index) => {
     const entry = entries[index];
     setSelectedSkill(entry.skill);
@@ -315,11 +327,12 @@ const [isEdit,setIsEdit] = useState(false);
     setSelectedLevel(entry.expertise);
     setEditingIndex(index);
     setIsModalOpen(true);
+    setCurrentStep(0);
+    const otherSkills = entries.filter((_, i) => i !== index).map(e => e.skill);
+    setAllSelectedSkills(otherSkills);
   };
-  const [deleteIndex, setDeleteIndex] = useState(null);
-  const handleDelete = (index) => {
-    setDeleteIndex(index);
-  };
+
+
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
@@ -351,10 +364,16 @@ const [isEdit,setIsEdit] = useState(false);
     "8-9 years",
     "9-10 years",
     "10+ years",
-  ]; const isNextEnabled = () => {
+  ];
+
+
+  const isNextEnabled = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
-        return selectedSkill !== "";
+        const currentSkill = entries[editingIndex]?.skill;
+        return selectedSkill !== "" && 
+               (selectedSkill === currentSkill || 
+                !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -367,9 +386,13 @@ const [isEdit,setIsEdit] = useState(false);
     }
     return false;
   };
+
+
   const expertiseOptions = ["Basic", "Medium", "Expert"];
+
   const handleAddEntry = () => {
     if (editingIndex !== null) {
+      const oldSkill = entries[editingIndex].skill;
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
@@ -381,29 +404,56 @@ const [isEdit,setIsEdit] = useState(false);
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
+      setAllSelectedSkills(prev => {
+        const newSkills = prev.filter(skill => skill !== oldSkill);
+        newSkills.push(selectedSkill);
+        return newSkills;
+      });
+
+      setEditingIndex(null);
+
+      // setAllSelectedSkills([selectedSkill]);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        skills: updatedEntries,
+      }));
     } else {
-      const newEntries = [
-        ...entries,
-        {
-          skill: selectedSkill,
-          experience: selectedExp,
-          expertise: selectedLevel,
-        },
-      ];
-      setEntries(newEntries);
+      const newEntry = {
+        skill: selectedSkill,
+        experience: selectedExp,
+        expertise: selectedLevel,
+      };
+
+      const updatedEntries = [...entries, newEntry];
+
+      setEntries(updatedEntries);
+      setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        skills: updatedEntries,
+      }));
     }
-    setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
-    // Clear errors if a skill is added
-    setErrors((prevErrors) => ({ ...prevErrors, skills: "" }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      skills: "",
+    }));
+
     resetSkillForm();
   };
+
   const resetSkillForm = () => {
     setSelectedSkill("");
     setSelectedExp("");
     setSelectedLevel("");
     setCurrentStep(0);
     setIsModalOpen(false);
+    // setEditingIndex(null); 
+    // setAllSelectedSkills(entries.map(e => e.skill)); 
   };
+
+
   const cancelDelete = () => {
     setDeleteIndex(null);
   };
@@ -414,10 +464,10 @@ const [isEdit,setIsEdit] = useState(false);
 
       const selectedPosition = positions.find(pos => pos._id === id);
       setIsEdit(true)
-    const matchingTemplate = templates.find(
-      (template) => template.templateName === selectedPosition?.selectedTemplete
-    );
-    setPositionId(id);
+      const matchingTemplate = templates?.find(
+        (template) => template.templateName === selectedPosition?.selectedTemplete
+      );
+      setPositionId(id);
 
       setFormData({
         title: selectedPosition?.title || "",
@@ -431,25 +481,27 @@ const [isEdit,setIsEdit] = useState(false);
         NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
         Location: selectedPosition?.Location || "",
         template: matchingTemplate
-        ? {
+          ? {
             ...matchingTemplate
           }
-        : {}, 
+          : {},
       });
-      
-    const formattedSkills = selectedPosition?.skills?.map(skill => ({
-      skill: skill.skill || "",
-      experience: skill.experience || "",
-      expertise: skill.expertise || "",
-      _id: skill._id || ""
-    })) || [];
 
-    setEntries(formattedSkills);
+      const formattedSkills = selectedPosition?.skills?.map(skill => ({
+        skill: skill.skill || "",
+        experience: skill.experience || "",
+        expertise: skill.expertise || "",
+        _id: skill._id || ""
+      })) || [];
 
-    console.log("matchingTemplate ", matchingTemplate );
+      setEntries(formattedSkills);
+      // setAllSelectedSkills(formattedSkills)
+      setAllSelectedSkills(selectedPosition?.skills?.map(skill => skill.skill) || []);
+
+      console.log("matchingTemplate ", matchingTemplate);
     }
-    
-  }, [isEdit,id,positions]);
+
+  }, [isEdit, id, positions, templates]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
@@ -493,8 +545,10 @@ const [isEdit,setIsEdit] = useState(false);
     let basicdetails = {
       ...dataToSubmit,
       companyname: dataToSubmit.companyName,
-      minexperience: parseInt(dataToSubmit.minexperience) || 0,
-      maxexperience: parseInt(dataToSubmit.maxexperience) || 0,
+      ...(dataToSubmit.minexperience && { minexperience: parseInt(dataToSubmit.minexperience) }),
+  ...(dataToSubmit.maxexperience && { maxexperience: parseInt(dataToSubmit.maxexperience) }),
+      // minexperience: dataToSubmit.minexperience || "",
+      // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
       CreatedBy: `${userName} at ${currentDateTime}`,
@@ -509,7 +563,7 @@ const [isEdit,setIsEdit] = useState(false);
       // rounds: dataToSubmit.rounds || [],
     };
 
-    console.log('basicdetails:', basicdetails);
+    // console.log('basicdetails:', basicdetails);
 
     try {
       let response;
@@ -520,15 +574,15 @@ const [isEdit,setIsEdit] = useState(false);
           `${process.env.REACT_APP_API_URL}/position/${positionId}`,
           basicdetails
         );
-        console.log("Updated response:", response.data);
-    
+        // console.log("Updated response:", response.data);
+
       } else {
         console.log("Creating new position...");
         response = await axios.post(
           `${process.env.REACT_APP_API_URL}/position`,
           basicdetails
         );
-        console.log("New position response:", response.data.data);
+        // console.log("New position response:", response.data.data);
         setPositionId(response.data.data._id);
       }
 
@@ -615,14 +669,35 @@ const [isEdit,setIsEdit] = useState(false);
     setDeleteConfirmation({ isOpen: true, roundIndex: index });
   };
 
+  // const confirmDelete = () => {
+  //   if (deleteIndex !== null) {
+  //     const updatedEntries = entries.filter((_, index) => index !== deleteIndex);
+  //     setEntries(updatedEntries);
+  //     setAllSelectedSkills(updatedEntries.map(e => e.skill));
+  //     setDeleteIndex(null);
+  //   }
+  // };
+
   const confirmDelete = () => {
     if (deleteIndex !== null) {
-      const updatedEntries = entries.filter((_, index) => index !== deleteIndex);
-      setEntries(updatedEntries); // 
-      setDeleteIndex(null); // 
+      const entry = entries[deleteIndex];
+      setAllSelectedSkills(
+        allSelectedSkills.filter((skill) => skill !== entry.skill)
+      );
+      setEntries(entries.filter((_, i) => i !== deleteIndex));
+      setDeleteIndex(null);
     }
   };
-  
+
+  // const confirmDelete = () => {
+  //   if (deleteIndex !== null) {
+  //     const deletedSkill = entries[deleteIndex].skill;
+  //     const updatedEntries = entries.filter((_, index) => index !== deleteIndex);
+  //     setEntries(updatedEntries);
+  //     setAllSelectedSkills(prev => prev.filter(skill => skill !== deletedSkill));
+  //     setDeleteIndex(null);
+  //   }
+  // };
 
   // const confirmDelete = () => {
   //   const index = deleteConfirmation.roundIndex;
@@ -753,12 +828,12 @@ const [isEdit,setIsEdit] = useState(false);
               </div>
             </>
           ) : ( */}
-            {/* // When in Rounds: Show all rounds with plus icons */}
-            {/* <>
+          {/* // When in Rounds: Show all rounds with plus icons */}
+          {/* <>
               {rounds.map((_, index) => (
                 <div key={index} className="flex items-center"> */}
-                  {/* Connector to Round with Plus Icon */}
-                  {/* <div className="flex items-center">
+          {/* Connector to Round with Plus Icon */}
+          {/* <div className="flex items-center">
                     <div className="h-[1px] w-10 bg-teal-200"></div>
                     <div
                       onClick={() => handleAddRoundAtIndex(index)}
@@ -804,8 +879,8 @@ const [isEdit,setIsEdit] = useState(false);
                 </div>
               ))} */}
 
-            {/* Plus icon to add round after current round  */}
-              {/* <div className="flex items-center">
+          {/* Plus icon to add round after current round  */}
+          {/* <div className="flex items-center">
                 <div className="h-[1px] w-10 bg-teal-200"></div>
                 <div
                   onClick={() => handleAddRoundAtIndex(rounds.length)}
@@ -816,8 +891,8 @@ const [isEdit,setIsEdit] = useState(false);
                 <div className="h-[1px] w-10 bg-teal-200"></div>
               </div> */}
 
-              {/* Next Future Round */}
-              {/* {rounds.length < maxRounds && (
+          {/* Next Future Round */}
+          {/* {rounds.length < maxRounds && (
                 <div className="flex items-center">
                   <div className="flex items-center">
                     <span className="whitespace-nowrap px-3 py-1.5 rounded text-sm font-medium bg-gray-50 text-gray-400 border border-gray-200 sm:text-[12px] md:text-[14px]">
@@ -939,25 +1014,25 @@ const [isEdit,setIsEdit] = useState(false);
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.title ? "border-red-500 focus:ring-red-500" : "border-gray-300"
                             }`}
                         />
-                        {errors.title && <p className="text-red-500">{errors.title}</p>}
+                        {errors.title && <p className="text-red-500 text-xs mt-1 ">{errors.title}</p>}
                       </div>
 
                       {/* Company Name */}
                       <div>
-                      <CustomDropdown
-                        label="Company Name"
-                        name="companyName"
-                        value={formData.companyName}
-                        options={companies}
-                        onChange={(e) => {
-                          setFormData({ ...formData, companyName: e.target.value });
-                        }}
-                        error={errors.companyname}
-                        disabledError={true}
-                        placeholder="Select a company"
-                        optionKey="CompanyName"
-                        optionValue="CompanyName"
-                      />
+                        <CustomDropdown
+                          label="Company Name"
+                          name="companyName"
+                          value={formData.companyName}
+                          options={companies}
+                          onChange={(e) => {
+                            setFormData({ ...formData, companyName: e.target.value });
+                          }}
+                          error={errors.companyname}
+                          disabledError={true}
+                          placeholder="Select a company"
+                          optionKey="CompanyName"
+                          optionValue="CompanyName"
+                        />
                       </div>
                     </div>
 
@@ -966,66 +1041,86 @@ const [isEdit,setIsEdit] = useState(false);
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Experience <span className="text-red-500">*</span>
+                        
                         </label>
+
                         <div className="grid grid-cols-2 gap-4">
                           {/* Min Experience */}
                           <div>
-                          <div className="flex flex-row items-center gap-3">
-                            <label className="block text-xs text-gray-500 mb-1">Min</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="15"
-                              value={formData.minexperience ?? ""}
-                              onChange={(e) => {
-                                const minExp = e.target.value ? parseInt(e.target.value) : null;
+                            <div className="flex flex-row items-center gap-3">
+                              <label className="block text-xs text-gray-500 mb-1">Min</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="15"
+                                value={formData.minexperience ?? ""}
+                                onChange={(e) => {
+                                  const minExp = e.target.value ? parseInt(e.target.value) : "";
+                                  
+                                  // Validate min experience is not greater than current max experience
+                                  if (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience) {
+                                    setErrors(prev => ({ 
+                                      ...prev, 
+                                      minexperience: "Min experience cannot be greater than max",
+                                      maxexperience: "Max experience cannot be less than min"
+                                    }));
+                                  } else {
+                                    setErrors(prev => ({ ...prev, minexperience: "", maxexperience: "" }));
+                                  }
+                    
+                                  // Update state
+                                  setFormData({
+                                    ...formData,
+                                    minexperience: minExp,
+                                    // Reset max experience if it's now less than min
+                                    maxexperience: (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience) 
+                                      ? "" 
+                                      : formData.maxexperience
+                                  });
+                                }}
+                                className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
+                                placeholder="Enter min Experience"
+                              />
 
-                                // Update state
-                                setFormData({
-                                  ...formData,
-                                  minexperience: minExp,
-                                  maxexperience: null, // Reset max when min changes
-                                });
-
-                                // Clear error if valid
-                                if (minExp !== null) {
-                                  setErrors((prev) => ({ ...prev, minexperience: "" }));
-                                }
-                              }}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
-                              placeholder=""
-                            />
-                          
-                          </div>
-                          {errors.minexperience && <p className="text-red-500">{errors.minexperience}</p>}
+                            </div>
+                            {errors.minexperience && <p className="text-red-500 text-xs pl-8 mt-1 ">{errors.minexperience}</p>}
                           </div>
 
                           {/* Max Experience */}
                           <div>
-                          <div className="flex flex-row items-center gap-3">
-                            <label className="block text-xs text-gray-500 mb-1">Max</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="15"
-                              value={formData.maxexperience ?? ""}
-                              onChange={(e) => {
-                                const maxExp = e.target.value ? parseInt(e.target.value) : null;
+                            <div className="flex flex-row items-center gap-3">
+                              <label className="block text-xs text-gray-500 mb-1">Max</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="15"
+                                value={formData.maxexperience ?? ""}
+                                onChange={(e) => {
+                                  const maxExp = e.target.value ? parseInt(e.target.value) : "";
+                                  
+                                  // Validate max experience is not less than current min experience
+                                  if (maxExp !== "" && formData.minexperience && maxExp < formData.minexperience) {
+                                    setErrors(prev => ({ 
+                                      ...prev, 
+                                      maxexperience: "Max experience cannot be less than min",
+                                      minexperience: "Min experience cannot be greater than max"
+                                    }));
+                                  } else {
+                                    setErrors(prev => ({ ...prev, maxexperience: "", minexperience: "" }));
+                                  }
+                    
+                                  // Update state
+                                  setFormData({ 
+                                    ...formData, 
+                                    maxexperience: maxExp 
+                                  });
+                                }}
+                                className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
+                                placeholder="Enter max Experience"
+                              />
 
-                                // Update state
-                                setFormData({ ...formData, maxexperience: maxExp });
-
-                                // Clear error if valid
-                                if (maxExp !== null) {
-                                  setErrors((prev) => ({ ...prev, maxexperience: "" }));
-                                }
-                              }}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
-                              placeholder=""
-                            />
-                            
-                          </div>
-                          {errors.maxexperience && <p className="text-red-500 ">{errors.maxexperience}</p>}
+                            </div>
+                            {errors.maxexperience && <p className="text-red-500 text-xs pl-8 mt-1 ">{errors.maxexperience}</p>}
                           </div>
                         </div>
                       </div>
@@ -1035,85 +1130,150 @@ const [isEdit,setIsEdit] = useState(false);
                       <div >
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Salary
-                           {/* <span className="text-red-500">*</span> */}
+                          {/* <span className="text-red-500">*</span> */}
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                           {/* Min Experience */}
+                        
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Min</label>
-                            <div className="relative w-full">
+                            <div className='flex-col'>              
+                              <div className="relative w-full">
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                               <input
                                 type="number"
                                 min={1}
                                 value={formData.minSalary ?? ""}
-                                onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
-                                className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                onChange={(e) => {
+                                  const minSalary = e.target.value;
+                                  
+                                  // Validate min salary is not greater than current max salary
+                                  if (minSalary !== "" && formData.maxSalary && parseInt(minSalary) > parseInt(formData.maxSalary)) {
+                                    setErrors(prev => ({ 
+                                      ...prev, 
+                                      minsalary: "Min salary cannot be greater than max",
+                                      maxsalary: "Max salary cannot be less than min"
+                                    }));
+                                  } else {
+                                    setErrors(prev => ({ ...prev, minsalary: "", maxsalary: "" }));
+                                  }
+                                  
+                                  // Update state
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    minSalary: minSalary === "" ? "" : parseInt(minSalary)
+                                  }));
+                                }}
+                                className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
+
+                              // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                              // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                               />
+                             
                             </div>
+                            {errors.minsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.minsalary}</p>}
+                            </div>
+     
                           </div>
 
                           {/* Max Experience */}
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Max</label>
+                            <div className='flex-col'>   
                             <div className="relative w-full">
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                               <input
                                 type="number"
                                 min={1}
                                 value={formData.maxSalary ?? ""}
-                                onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
-                                className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                onChange={(e) => {
+                                  const maxSalary = e.target.value;
+                                  
+                                  // Validate max salary is not less than current min salary
+                                  if (maxSalary !== "" && formData.minSalary && parseInt(maxSalary) < parseInt(formData.minSalary)) {
+                                    setErrors(prev => ({ 
+                                      ...prev, 
+                                      maxsalary: "Max salary cannot be less than min",
+                                      minsalary: "Min salary cannot be greater than max"
+                                    }));
+                                  } else {
+                                    setErrors(prev => ({ ...prev, maxsalary: "", minsalary: "" }));
+                                  }
+                                  
+                                  // Update state
+                                  setFormData(prev => ({ 
+                                    ...prev, 
+                                    maxSalary: maxSalary === "" ? "" : parseInt(maxSalary)
+                                  }));
+                                }}
+                                className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
+                                // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
+                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                               />
+                                 
+                            </div>
+                            {errors.maxsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.maxsalary}</p>}
                             </div>
                           </div>
                         </div>
-                      </div>
+                   
+                      </div>
+                   
                     </div>
-
                     
-            {/* location  and no of positions  */}
+                    {/* location  and no of positions  */}
 
                     {/* <div> */}
-                       
-                        <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                          <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+
+                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           No of Positions
                         </label>
-                            
-                            <input
-                            type="number"
-                            min={0}
-                            value={formData.NoofPositions}
-                            onChange={(e) => {
-                              setFormData({ ...formData, NoofPositions: e.target.value });
-                            }}
-                            // readOnly
-                            // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                            placeholder="Select no of positions"
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none"
-                          />
-                          </div>
 
-                          {/* location */}
-                          <div>
+                        <input
+                          type="number"
+                          min={1}
+                          value={formData.NoofPositions}
+                          // onChange={(e) => {
+                          //   setFormData({ ...formData, NoofPositions: e.target.value });
+                          // }}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({ ...formData, NoofPositions: value });
+
+                            // Clear error if valid
+                            if (value && parseInt(value) > 0) {
+                              setErrors(prev => ({ ...prev, noOfPositions: "" }));
+                            }
+                          }}
+                          // readOnly
+                          // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
+                          placeholder="Select no of positions"
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.noOfPositions ? "border-red-500" : "border-gray-300"}`}
+                        // className="w-full px-3 py-2 border rounded-md focus:outline-none"
+                        />
+                        {errors.noOfPositions && <p className="text-red-500 text-xs mt-1 ">{errors.noOfPositions}</p>}
+                      </div>
+
+                      {/* location */}
+                      <div>
                         <CustomDropdown
-  label="Location"
-  name="location"
-  value={formData.Location}
-  options={locations}
-  onChange={(e) => {
-    setFormData({ ...formData, Location: e.target.value });
-  }}
-  disabledError={false}
-  placeholder="Select a location"
-  optionKey="LocationName"
-  optionValue="LocationName"
-/>
-                          </div>
-                        </div>
-                      {/* </div> */}
+                          label="Location"
+                          name="location"
+                          value={formData.Location}
+                          options={locations}
+                          onChange={(e) => {
+                            setFormData({ ...formData, Location: e.target.value });
+                          }}
+                          disabledError={false}
+                          placeholder="Select a location"
+                          optionKey="LocationName"
+                          optionValue="LocationName"
+                        />
+                      </div>
+                    </div>
+                    {/* </div> */}
 
                     {/* Job Description */}
                     <div>
@@ -1135,14 +1295,25 @@ const [isEdit,setIsEdit] = useState(false);
                         minLength={250}
                         maxLength={1000}
                       />
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-sm text-gray-500">
-                          {formData.jobDescription.length > 0 && formData.jobDescription.length < 250 &&
-                            `Minimum ${250 - formData.jobDescription.length} more characters needed`}
+                      <div className={`${errors.jobdescription && 'flex justify-between'}`}>
+                        <span>
+                          {errors.jobdescription && <p className="text-red-500 text-xs pt-1 ">{errors.jobdescription}</p>}
                         </span>
-                        <span className="text-sm text-gray-500">{formData.jobDescription.length}/1000</span>
+                        <div className="flex justify-between items-center mt-1">
+
+
+                          <span className="text-sm text-gray-500">
+                            {formData.jobDescription.length > 0 && formData.jobDescription.length < 250 &&
+                              `Minimum ${250 - formData.jobDescription.length} more characters needed`}
+                          </span>
+                          <span className='flex justify-between'>
+
+                            <span className="text-sm text-gray-500">{formData.jobDescription.length}/1000</span>
+                          </span>
+
+                        </div>
                       </div>
-                      {errors.jobdescription && <p className="text-red-500 text-xs pt-1">{errors.jobdescription}</p>}
+
                     </div>
 
                     {/* skills */}
@@ -1163,7 +1334,7 @@ const [isEdit,setIsEdit] = useState(false);
                         </button>
                       </div>
                       {errors.skills && (
-                        <p className="text-red-500 text-sm">{errors.skills}</p>
+                        <p className="text-red-500 text-xs">{errors.skills}</p>
                       )}
 
                       <div className="space-y-2 mb-4 mt-5">
@@ -1217,11 +1388,23 @@ const [isEdit,setIsEdit] = useState(false);
                                                   type="radio"
                                                   value={skill.SkillName}
                                                   checked={selectedSkill === skill.SkillName}
+                                                  // disabled={
+                                                  //   // Disable if:
+                                                  //   // 1. Skill is already selected AND
+                                                  //   // 2. It's not the currently editing skill
+                                                  //   allSelectedSkills.includes(skill.SkillName) && 
+                                                  //   (editingIndex === null || entries[editingIndex]?.skill !== skill.SkillName)
+                                                  // }
                                                   disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
+                                                  // disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
                                                   onChange={(e) => setSelectedSkill(e.target.value)}
                                                   className="mr-3"
                                                 />
                                                 {skill.SkillName}
+                                                {allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName 
+                                                // && <span className="text-gray-400 ml-2">(Already selected)</span>
+
+      }
                                               </label>
                                             ))
                                           ) : (
@@ -1350,7 +1533,7 @@ const [isEdit,setIsEdit] = useState(false);
 
                     {/* template */}
                     <div className="grid grid-cols-2">
-                    <CustomDropdown
+                      <CustomDropdown
                         label="Select Template"
                         name="template"
                         value={formData.template?.templateName || ""}
@@ -1414,11 +1597,11 @@ const [isEdit,setIsEdit] = useState(false);
               </div>
               {/* footer */}
               <div className="flex justify-end mt-4 space-x-3 mb-5">
-                <button className="px-3 py-1 border-custom-blue rounded border" 
-                onClick={() =>{
-                  const previousPage = location.state?.from || "/position";
-                  navigate(previousPage);
-                }}
+                <button className="px-3 py-1 border-custom-blue rounded border"
+                  onClick={() => {
+                    const previousPage = location.state?.from || "/position";
+                    navigate(previousPage);
+                  }}
                 >
                   Cancel
                 </button>

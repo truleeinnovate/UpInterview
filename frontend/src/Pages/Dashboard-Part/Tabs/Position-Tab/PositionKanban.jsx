@@ -1,11 +1,11 @@
 // Import necessary dependencies and components
 
 import { DndContext, closestCenter } from '@dnd-kit/core';
-// import { FaUserCircle, FaEye, FaPencilAlt, FaExternalLinkAlt, FaMapMarkerAlt, FaBriefcase, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
-// import { IoTimeSharp } from "react-icons/io5";
 import { format, parseISO, isValid } from 'date-fns';
-// import { FaBuilding, } from 'react-icons/fa';
+import { Building2, Briefcase, Clock, MapPin } from "lucide-react";
+
+import { Eye, Pencil } from 'lucide-react';
 
 const formatCreatedDate = (date) => {
   return date && isValid(parseISO(date))
@@ -50,14 +50,16 @@ const PositionKanban = ({ positions}) => {
           className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
         >
           {/* position card header */}
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-2">
             <div className="flex items-center">
               <div className="relative">
 
                 {/* <StatusBadge status={position?.Status || "?"} /> */}
               </div>
-              <div className="ml-3">
-                <h4 className="text-sm font-medium text-gray-900">{position?.title || '?'}</h4>
+              <div className=""
+               onClick={() =>  navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }})}
+              >
+                <h4 className="text-sm font-medium text-custom-blue">{position?.title || 'N/A'}</h4>
                 {/* <p className="text-sm text-gray-500 flex items-center gap-1">
                   <FaBriefcase className="w-3 h-3" />
                   {position.companyName || 'position'}
@@ -71,24 +73,15 @@ const PositionKanban = ({ positions}) => {
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
-                {/* <FaEye className="w-4 h-4" /> */}
+                <Eye className="w-4 h-4" />
               </button>
-
-
-              {/* <button
-                onClick={() => position?._id && navigate(`/candidate/${position._id}`)}
-                className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                title="360° View"
-              >
-                <FaUserCircle className="w-4 h-4" />
-              </button> */}
               
               <button
                onClick={() =>   navigate(`/position/edit-position/${position._id}`)}
                 className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 title="Edit"
               >
-                {/* <FaPencilAlt className="w-4 h-4" /> */}
+                <Pencil className="w-4 h-4" />
               </button>
               {/* <button
                 onClick={() => window.open(`/candidates/${position._id}`, '_blank')}
@@ -104,11 +97,11 @@ const PositionKanban = ({ positions}) => {
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-1.5 text-gray-600">
-                {/* <FaBuilding className="w-4 h-4 text-gray-500" /> */}
+                <Building2 className="w-4 h-4 text-gray-500" />
                 <span className="truncate"> {position?.companyname || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-1.5 text-gray-600">
-                {/* <FaBriefcase className="w-4 h-4 text-gray-500" /> */}
+                <Briefcase className="w-4 h-4 text-gray-500" />
                 <span className="truncate">
                   {position?.minexperience && position?.maxexperience
                     ? `${position.minexperience} - ${position.maxexperience} years`
@@ -126,12 +119,12 @@ const PositionKanban = ({ positions}) => {
             <div className="grid grid-cols-2 gap-2">
 
               <div className="flex items-center gap-1.5 text-gray-600">
-                {/* <IoTimeSharp className="w-4 h-4 text-gray-500" /> */}
+                <Clock className="w-4 h-4 text-gray-500" />
                 {formatCreatedDate(position?.createdDate)}
               </div>
 
               <div className="flex items-center gap-1.5 text-gray-600">
-                {/* <FaMapMarkerAlt className="w-4 h-4 text-red-500" /> */}
+                <MapPin className="w-4 h-4 text-red-500" />
                 <span>{position?.Location || 'Not disclosed'}</span>
               </div>
             </div>
@@ -144,7 +137,7 @@ const PositionKanban = ({ positions}) => {
               {position?.skills.slice(0, 3).map((skill, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium"
+                  className="px-2 py-1 bg-custom-bg text-custom-blue rounded-lg text-xs font-medium"
                 >
                   {skill.skill}
                 </span>

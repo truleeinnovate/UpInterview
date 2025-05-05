@@ -627,6 +627,9 @@ app.put('/users/:id', async (req, res) => {
 const mockInterviewRoutes = require('./routes/mockinterviewRoutes.js');
 app.use('/', mockInterviewRoutes);
 
+const groupsRoutes = require('./routes/interviewerGroupRoutes');
+app.use('/groups', groupsRoutes);
+
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {
 //   try {
