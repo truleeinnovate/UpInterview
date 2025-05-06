@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, ArrowLeft, Mail, Phone, ExternalLink, Linkedin, User, IdCard, Gender, Globe, Clock, UserTie, Edit2 } from 'lucide-react';
-import { Maximize, Minimize } from 'lucide-react';
+import { X, ArrowLeft, Mail, Phone, ExternalLink, User, Edit2 } from 'lucide-react';
 import UserForm from './UserForm';
 import maleImage from '../../../Images/man.png';
 import femaleImage from '../../../Images/woman.png';
@@ -154,7 +153,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <UserTie className="w-5 h-5 text-gray-500" />
+                <User className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Role</p>
@@ -308,7 +307,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <UserTie className="w-5 h-5 text-gray-500" />
+                <User className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Role</p>
