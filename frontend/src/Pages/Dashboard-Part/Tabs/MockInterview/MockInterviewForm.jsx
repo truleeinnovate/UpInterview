@@ -15,6 +15,7 @@ import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 // import OutsourceOption from "../Interviews/OutsourceOption.jsx";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -101,9 +102,11 @@ const MockSchedulelater = () => {
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   const [roles, setRoles] = useState([])
 
-  const userId = Cookies.get("userId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload.userId;
 
-  const organizationId = Cookies.get("organizationId");
+  const organizationId = tokenPayload.organizationId;
   const Navigate = useNavigate();
 
   const [showDropdownRole, setShowDropdownRole] = useState(false);

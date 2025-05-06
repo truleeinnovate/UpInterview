@@ -83,6 +83,8 @@ import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplate
 import TemplateDetail from '../src/Pages/InteviewTemplates/TemplateDetail';
 import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
 
+import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
+
 const App = () => {
   const location = useLocation();
   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
@@ -90,7 +92,9 @@ const App = () => {
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
   const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
-  const organization = Cookies.get("organization") === "true";
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const organization = tokenPayload.organization === "true";
 
   return (
     <React.Fragment>

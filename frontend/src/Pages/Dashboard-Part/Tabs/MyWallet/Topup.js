@@ -5,11 +5,14 @@ import axios from 'axios';
 import { decryptData, } from '../../../../utils/PaymentCard';
 import { handleAmountChange } from '../../../../utils/WalletDashboard';
 import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 const Topup = () => {
- const ownerId = Cookies.get("userId");
- const tenantId = Cookies.get("tenantId");
-    
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const ownerId = tokenPayload.userId;
+    const tenantId = tokenPayload.tenantId;
+
     const [paymentData, setPaymentData] = useState({
         balance: '',
         amountToAdd: '',
@@ -22,7 +25,7 @@ const Topup = () => {
     const [errors, setErrors] = useState({});
     const [isChecked, setIsChecked] = useState(false);
     const [cardsData, setCardsData] = useState([]);
-    const [selectedCardIndex, setSelectedCardIndex] = useState(null); 
+    const [selectedCardIndex, setSelectedCardIndex] = useState(null);
     const { encryptedAmount } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -78,7 +81,7 @@ const Topup = () => {
 
         const fetchCardDetails = async () => {
             try {
-                const response = await axios.post(`${process.env.REACT_APP_API_URL}/get-card-details`, { ownerId:ownerId });
+                const response = await axios.post(`${process.env.REACT_APP_API_URL}/get-card-details`, { ownerId: ownerId });
                 const { cards } = response.data.cardDetials[0];
 
 
@@ -218,7 +221,7 @@ const Topup = () => {
         }
     };
 
- 
+
     const isDisabled = errors.amountToAdd ||
 
         parseFloat(paymentData.amountToAdd.replace('$', '').trim()) < decodedAmount;
@@ -230,20 +233,20 @@ const Topup = () => {
 
             <div className='w-full me-10 items-center flex flex-col justify-center px-4'>
 
-                <div 
-               className="border-2   border-gray-400 rounded-md w-full sm:max-w-[98%] md:w-7/12 lg:w-8/12 xl:w-6/12"
-               style={{
-                 maxHeight: "calc(100vh - 100px)", // Adjust based on header/footer
-                 overflow: "hidden",
-               }}
+                <div
+                    className="border-2   border-gray-400 rounded-md w-full sm:max-w-[98%] md:w-7/12 lg:w-8/12 xl:w-6/12"
+                    style={{
+                        maxHeight: "calc(100vh - 100px)", // Adjust based on header/footer
+                        overflow: "hidden",
+                    }}
                 >
                     <div className=" pr-4 border-r-2 p-2 border-gray-300"
-                      style={{
-                        maxHeight: "calc(90vh - 100px)", // Adjust as needed
-                        overflowY: "auto", // Enables scrolling inside
-                      }}
-                     
-                     >
+                        style={{
+                            maxHeight: "calc(90vh - 100px)", // Adjust as needed
+                            overflowY: "auto", // Enables scrolling inside
+                        }}
+
+                    >
                         <div className="flex  pt-2 flex-col w-full gap-3">
                             <div className="flex items-center ">
                                 <label className="block w-2/6">Current Wallet Balance <span className="text-red-500">*</span></label>
@@ -420,8 +423,8 @@ const Topup = () => {
             </div>
 
             {/* Bottom Buttons */}
-            <div 
-           className="flex w-full items-end justify-end gap-4 px-4 py-3 sm:px-10 sm:py-2 fixed bottom-0 right-0 "
+            <div
+                className="flex w-full items-end justify-end gap-4 px-4 py-3 sm:px-10 sm:py-2 fixed bottom-0 right-0 "
             // className="flex  w-full  items-end justify-end pr-10  gap-4  "
             >
                 <button
@@ -431,7 +434,7 @@ const Topup = () => {
                     Cancel
                 </button>
                 <button
-                   
+
                     onClick={handleSubmit}
                     className="px-6 py-2 bg-[#217989] text-[#C7EBF2] rounded-md"
                     disabled={isDisabled}

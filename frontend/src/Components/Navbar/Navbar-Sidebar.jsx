@@ -21,10 +21,14 @@ import { LiaWalletSolid } from "react-icons/lia";
 import { MdAppSettingsAlt } from "react-icons/md";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import NotificationPanel from '../../Pages/Push-Notification/NotificationPanel.jsx';
+import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
 
 const Navbar = () => {
-  const userId = Cookies.get("userId");
-  const userName = Cookies.get("userName");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId =  tokenPayload.userId;
+  const userName = tokenPayload.userName;
   const { logout } = useAuth0();
   const [assessmentDropdown, setAssessmentDropdown] = useState(false);
   const [interviewDropdown, setInterviewDropdown] = useState(false);

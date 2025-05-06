@@ -4,6 +4,7 @@ import { fetchFilterData } from "../utils/dataUtils.js";
 import { usePermissions } from "./PermissionsContext.js";
 import Cookies from "js-cookie";
 import { config } from '../config.js'
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {
@@ -18,7 +19,10 @@ const CustomProvider = ({ children }) => {
   const [popupVisibility, setPopupVisibility] = useState(false);
   const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   const [createdLists, setCreatedLists] = useState([]);
-  const userId = Cookies.get("userId");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId =  tokenPayload.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
@@ -424,7 +428,7 @@ const CustomProvider = ({ children }) => {
 
   // ranjith  //
 
-  const tenantId = Cookies.get("organizationId");
+  const tenantId = tokenPayload.tenantId;
 
   // Fetch groups
   const [groups, setGroups] = useState([]);

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { encryptData } from '../../../../utils/PaymentCard';
 import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
   
 export  const formatDate = (date) => {
@@ -41,9 +42,12 @@ const WalletDashboard = () => {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false); 
   let [maxTransactionAmount, setMaxTransactionAmount] = useState(0);
 
+
   const navigate = useNavigate();
 
-  const ownerId = Cookies.get("userId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const ownerId = tokenPayload.userId;
 
   // Fetch balance and update state
   useEffect(() => {

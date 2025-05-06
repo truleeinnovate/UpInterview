@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 const PermissionsContext = createContext();
 
 export const PermissionsProvider = ({ children }) => {
@@ -13,10 +13,14 @@ export const PermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     const initialize = async () => {
-      const ownerId = Cookies.get("userId");
-      const tenantId = Cookies.get('organizationId');
 
-       let profileResponse,sharesetting;
+      const authToken = Cookies.get("authToken");
+      const tokenPayload = decodeJwt(authToken);
+
+      const ownerId = tokenPayload.userId;
+      const tenantId = tokenPayload.tenantId;
+
+      let profileResponse, sharesetting;
       try {
         const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${ownerId}`);
         if (matchedUser.data && matchedUser.data.Name) {
@@ -36,7 +40,7 @@ export const PermissionsProvider = ({ children }) => {
         }
         if (matchedUser.data) {
           if (!organization) {
-             profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profiles/individualProfile`);
+            profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profiles/individualProfile`);
 
 
             const sharingResponse = await axios.get(`${process.env.REACT_APP_API_URL}/sharingSettings/individual`);

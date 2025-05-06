@@ -13,6 +13,7 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -537,9 +538,13 @@ const PositionForm = () => {
     }
 
     setErrors({});
-    const userId = Cookies.get("userId");
-    const userName = Cookies.get("userName");
-    const orgId = Cookies.get("organizationId");
+
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const userId = tokenPayload.userId;
+
+    const userName = tokenPayload.userName;
+    const orgId = tokenPayload.organizationId;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {

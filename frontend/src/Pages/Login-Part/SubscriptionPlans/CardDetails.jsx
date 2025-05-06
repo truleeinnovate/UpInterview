@@ -5,21 +5,26 @@ import { config } from '../../../config.js'
 
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { handlePaymentInputChange,handleMembershipChange,validateCardFields } from "../../../utils/PaymentpageValidations.js";
+import { handlePaymentInputChange, handleMembershipChange, validateCardFields } from "../../../utils/PaymentpageValidations.js";
 import { useCustomContext } from "../../../Context/Contextfetch";
 import toast from "react-hot-toast";
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 
 const CardDetails = () => {
- const  tenantId = Cookies.get("organizationId");
- const   ownerId = Cookies.get("userId");
+
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
 
 
-const location = useLocation();
-const isUpgrading = location.state?.isUpgrading || false;
-  const {
-    userProfile,
-  } = useCustomContext();
-  
+    const tenantId = tokenPayload.organizationId;
+    const ownerId = tokenPayload.userId;
+
+    const location = useLocation();
+    const isUpgrading = location.state?.isUpgrading || false;
+    const {
+        userProfile,
+    } = useCustomContext();
+
     const [cardDetails, setCardDetails] = useState({
         cardHolderName: "",
         cardNumber: "",
@@ -81,39 +86,39 @@ const isUpgrading = location.state?.isUpgrading || false;
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-         // Validate card fields
-            if (!validateCardFields(setErrors, cardDetails)) {
-                return;
-            }
+        // Validate card fields
+        if (!validateCardFields(setErrors, cardDetails)) {
+            return;
+        }
         try {
             const updatedCardDetails = {
                 ...cardDetails,
                 cardNumber: cardDetails.cardNumber.replace(/-/g, "")
             };
-              // Send the token to your backend to complete the payment
-              const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
-                cardDetails:updatedCardDetails//card creation
-        });
-            const { message,transactionId, status } = paymentResponse.data;
-           
+            // Send the token to your backend to complete the payment
+            const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
+                cardDetails: updatedCardDetails//card creation
+            });
+            const { message, transactionId, status } = paymentResponse.data;
+
             if (status === "paid") {
                 toast.success("Payment successfully compeleted!");
 
-                console.log( "caedssssssssss",{
+                console.log("caedssssssssss", {
                     planDetails,
                     cardDetails,
                     status,
                     totalPaid,
-                    InvoiceId:planDetails.invoiceId,
+                    InvoiceId: planDetails.invoiceId,
                     transactionId
                 });
-                
+
                 const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
                     planDetails,
                     cardDetails,
                     status,
                     totalPaid,
-                    InvoiceId:planDetails.invoiceId,
+                    InvoiceId: planDetails.invoiceId,
                     transactionId
 
                 });
@@ -121,15 +126,15 @@ const isUpgrading = location.state?.isUpgrading || false;
                     ownerId,
                     tenantId,
                     // ccEmail: "shaikmansoor1200@gmail.com",
-                  });  
-                  if (isUpgrading) {
+                });
+                if (isUpgrading) {
                     navigate("/SubscriptionDetails"); // Redirect to upgraded dashboard
                 } else {
                     navigate("/home"); // Default navigation
                 }
 
                 console.log("Payment and Subscription submitted successfully", subscriptionResponse.data);
-            } else if(paymentResponse.data.status === "failed"){
+            } else if (paymentResponse.data.status === "failed") {
                 toast.error("Payment Failed!");
             }
             else {
@@ -176,7 +181,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                             value={cardDetails.cardHolderName}
                             // name
                             onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
                             placeholder="Enter Name"
                             className="w-full p-2 mb-1 border rounded-lg focus:outline-none focus:ring-2 "
                         />
@@ -194,7 +199,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                                 name="cardNumber"
                                 value={cardDetails.cardNumber}
                                 onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
 
                                 placeholder='0000-0000-0000-0000'
                                 className="w-full p-2 mb-1 border rounded-lg focus:outline-none  pr-12"
@@ -219,7 +224,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                                     name="cardexpiry"
                                     value={cardDetails.cardexpiry}
                                     onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
                                     placeholder="MM / YY"
                                     className="p-2 mb-1 border rounded-lg focus:outline-none  "
                                 />
@@ -234,7 +239,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                                     name="cvv"
                                     value={cardDetails.cvv}
                                     onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
                                     placeholder="CVV"
                                     className="p-2 mb-1 border rounded-lg focus:outline-none  "
                                 />
@@ -253,7 +258,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                             name="country"
                             value={cardDetails.country}
                             onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
                             className="w-full p-2 mb-1 border rounded-lg focus:outline-none  "
                         />
                         {errors.country && (
@@ -264,7 +269,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                             name="zipCode"
                             value={cardDetails.zipCode}
                             onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-                               
+
                             placeholder="Zip Code"
                             className="w-full p-2 mb-2 border rounded-lg focus:outline-none  "
                         />
@@ -290,7 +295,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                         <label className="block mb-1  text-lg font-medium text-gray-500">
                             Membership Type
                         </label>
-                        
+
 
                         <div className="flex flex-col gap-4   mb-4">
 
@@ -300,7 +305,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                                         ? "border-[#217989]"
                                         : "border-gray-300"
                                     }`}
-                                onClick={() => handleMembershipChange("monthly",setCardDetails,pricePerMember,planDetails,setTotalPaid)}
+                                onClick={() => handleMembershipChange("monthly", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
                             >
 
                                 <div className="flex  items-center">
@@ -329,7 +334,7 @@ const isUpgrading = location.state?.isUpgrading || false;
                                         ? "border-[#217989]"
                                         : "border-gray-300"
                                     }`}
-                                onClick={() => handleMembershipChange("annual",setCardDetails,pricePerMember,planDetails,setTotalPaid)}
+                                onClick={() => handleMembershipChange("annual", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
 
                             >
 

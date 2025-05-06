@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList,setSelectedLabelnew}, ref) => {
     const {
@@ -29,8 +29,11 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         }
     }, [defaultTenantList]);
 
-    const userId = Cookies.get("userId");
-    const orgId = Cookies.get("organizationId");
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+
+    const userId = tokenPayload.userId;
+    const orgId = tokenPayload.organizationId;
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingSectionId, setEditingSectionId] = useState(null);

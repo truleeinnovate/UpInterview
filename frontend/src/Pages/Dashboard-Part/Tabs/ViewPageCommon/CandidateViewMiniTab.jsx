@@ -8,12 +8,12 @@ import { format } from "date-fns";
 import axios from "axios";
 import EditCandidateForm from "../Candidate-Tab/CreateCandidate.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     const {
         candidateData,
-      } = useCustomContext();
+    } = useCustomContext();
     const candidate = candidateData.find((data) => data._id === CandidatedataId);
 
     // const [candidate, setCandidatesData] = useState([]);
@@ -98,9 +98,12 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
         setShowDropdown(true);
     };
 
-
     const [userData, setUserData] = useState([]);
-    const organizationId = Cookies.get("organizationId");
+
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+
+    const organizationId = tokenPayload.organizationId;
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -505,13 +508,13 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
             </div>
 
             {showNewCandidateContent && (
-               <div
-               className={"fixed inset-0 bg-black bg-opacity-15 z-50"}
-             >
-               <div className="fixed inset-y-0 right-0 z-50 sm:w-full md:w-3/4 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
-                 <EditCandidateForm onClose={handleclose} candidateEditData={candidate} candidateEdit={true} />
-               </div>
-             </div>
+                <div
+                    className={"fixed inset-0 bg-black bg-opacity-15 z-50"}
+                >
+                    <div className="fixed inset-y-0 right-0 z-50 sm:w-full md:w-3/4 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
+                        <EditCandidateForm onClose={handleclose} candidateEditData={candidate} candidateEdit={true} />
+                    </div>
+                </div>
             )}
         </>
     )

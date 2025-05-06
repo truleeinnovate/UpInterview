@@ -21,8 +21,7 @@ import { ReactComponent as IoIosAddCircle } from "../../../../icons/IoIosAddCirc
 import '../styles/tabs.scss'
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
-
-
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
@@ -103,8 +102,11 @@ const Interviewcq = ({
     
   };
 
-  const userId = Cookies.get("userId");
-  const orgId = Cookies.get("organizationId");
+      const authToken = Cookies.get("authToken");
+      const tokenPayload = decodeJwt(authToken);
+
+  const userId = tokenPayload.userId;
+  const orgId = tokenPayload.organizationId;
 
   const handleListSelection = (candidateId) => {
     setSelectedListId(candidateId);

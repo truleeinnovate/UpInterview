@@ -13,7 +13,7 @@ import SuggesstedQuestions from '../Dashboard-Part/Tabs/QuestionBank-Tab/Suggess
 import MyQuestionListMain from "../Dashboard-Part/Tabs/QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
-
+import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 
 function RoundForm() {
   const {
@@ -70,9 +70,11 @@ function RoundForm() {
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
 
+      const authToken = Cookies.get("authToken");
+      const tokenPayload = decodeJwt(authToken);
 
-  const tenantId = Cookies.get("organizationId");
-  const ownerId = Cookies.get("userId");
+      const tenantId = tokenPayload.organizationId;
+      const ownerId = tokenPayload.userId;
 
 
 

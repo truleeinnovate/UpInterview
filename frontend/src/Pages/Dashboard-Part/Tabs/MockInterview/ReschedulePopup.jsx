@@ -3,15 +3,16 @@ import axios from "axios";
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const ReschedulePopup = ({ onClose, MockEditData }) => {
     const {
         fetchMockInterviewData,
-      } = useCustomContext();
+    } = useCustomContext();
 
 
-      console.log("MockEditData", MockEditData);
-      
+    console.log("MockEditData", MockEditData);
+
 
     // date and duration
     const getTodayDate = () => {
@@ -52,6 +53,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
         return `${formattedEndHour}:${formattedEndMinute} ${ampm}`;
     };
+
 
 
     const [selectedDate, setSelectedDate] = useState(getTodayDate());
@@ -129,10 +131,10 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         }
     }, [MockEditData]);
 
-     const userId = Cookies.get("userId");
-    
-      const organizationId = Cookies.get("organizationId");
- 
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const ownerId = tokenPayload.userId;
+    const organizationId = tokenPayload.organizationId;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -144,7 +146,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                 dateTime: dateTime,
                 duration: duration,
                 status: "Reschedule",
-                ownerId: userId, // Ensure these are assigned properly
+                ownerId: ownerId, // Ensure these are assigned properly
                 tenantId: organizationId
             };
 
@@ -152,11 +154,11 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
             const response = await axios.patch(
                 `${process.env.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
                 payload
-              );
+            );
             if (response?.data) {
                 onClose?.();
                 await fetchMockInterviewData();
-              }
+            }
             // Handle the response if needed
             console.log("Mock interview created:", response.data);
 
@@ -291,7 +293,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                     type="date"
                                     className="border p-1 w-full"
                                     min={getTodayDate()}
-                                    value={selectedDate} 
+                                    value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
                                 />
                             </div>

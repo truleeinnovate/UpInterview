@@ -15,6 +15,7 @@ import Cookies from "js-cookie";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 function RoundForm() {
   const {
@@ -23,7 +24,9 @@ function RoundForm() {
     loading
   } = useCustomContext();
   const { interviewId, roundId } = useParams();
-  const userId = Cookies.get("userId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload.userId;
   const [errors, setErrors] = useState({});
   console.log("errors", errors);
 

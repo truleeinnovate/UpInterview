@@ -17,7 +17,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
-
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 function RoundFormPosition() {
   const {
@@ -31,8 +31,11 @@ function RoundFormPosition() {
 
   const positionId = id;
 
-  const userId = Cookies.get("userId");
-  const tenantId = Cookies.get("organizationId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const userId = tokenPayload.userId;
+  const tenantId = tokenPayload.organizationId;
 
   // const orgId = Cookies.get("organizationId");
 

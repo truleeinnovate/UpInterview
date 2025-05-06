@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const getAllSubordinateRoles = async (currentRoleId, allRoles) => {
     let subordinateRoles = [];
@@ -69,11 +70,14 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
     return sharingRuleUserIds;
 };
 
-
 const fetchFilterData = async (endpoint, sharingPermissions) => {
-    const userId = Cookies.get('userId');
-    const organizationId = Cookies.get('organizationId');
-    const organization = Cookies.get('organization');
+
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+
+    const userId = tokenPayload.userId;
+    const organizationId = tokenPayload.organizationId;
+    const organization = tokenPayload.organization;
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");
         return [];

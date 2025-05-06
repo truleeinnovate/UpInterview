@@ -21,7 +21,7 @@ import ConfirmationPopup from "../ConfirmationPopup.jsx";
 // import { handleShareClick as shareAssessment } from '../../../../utils/EmailShare';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
-
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
@@ -35,14 +35,17 @@ const NewAssessment = () => {
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false)
   const [linkExpiryDays, setLinkExpiryDays] = useState(3)
   const { positions, assessmentData } = useCustomContext();
-  const userId = Cookies.get("userId");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload.userId;
 
   const { id } = useParams();
 
   const isEditing = !!id;
   const assessment = isEditing ? assessmentData.find(assessment => assessment._id === id) : null;
 
-  const organizationId = Cookies.get("organizationId");
+  const organizationId = tokenPayload.organizationId;
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [activeTab, setActiveTab] = useState("Details");
   // const [activeTab, setActiveTab] = useState("Questions");
@@ -306,7 +309,7 @@ useEffect(() => {
     }
   };
 
-  const userName = Cookies.get("userName");
+  const userName = tokenPayload.userName;
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
 
@@ -792,11 +795,11 @@ useEffect(() => {
       }
       const reqBody = {
         assessmentId,
-        organizationId: Cookies.get("organizationId"),
+        organizationId,
         expiryAt: new Date(new Date().setDate(new Date().getDate() + linkExpiryDays)),
         status: "scheduled",
         proctoringEnabled: true,
-        createdBy: Cookies.get("userId"),
+        createdBy: userId,
       }
       const scheduleAssessmentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/schedule-assessment/schedule`, reqBody)
       if (scheduleAssessmentResponse.data.success) {

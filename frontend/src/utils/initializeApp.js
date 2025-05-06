@@ -1,5 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { useEffect } from 'react';
+import { decodeJwt } from './AuthCookieManager/jwtDecode';
 
 const getObjectPermissions = (userProfile, objName) => {
   if (!userProfile || !userProfile.Objects) {
@@ -34,8 +36,11 @@ const getSharingPermissions = (sharingSettings, tabName) => {
 };
 
 const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, setOrganization, setFreelancer, setObjectPermissions, setTabPermissions, setSharingPermissions) => {
-  const userId = Cookies.get("userId");
-  console.log("userId initializeApp", userId);
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const userId = tokenPayload.userId;
 
   try {
     const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);
