@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
-import { FaEye, FaPencilAlt, FaEnvelope, FaPhone, FaBriefcase, FaLinkedin, FaIdBadge } from "react-icons/fa";
-import { CgInfo } from "react-icons/cg";
+import { Eye, Pencil, Mail, Phone, Briefcase, Linkedin, Badge, Info } from 'lucide-react';
 import maleImage from "../../../Images/man.png";
 import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
@@ -33,7 +32,7 @@ const KanbanView = ({ currentFilteredRows, handleUserClick, handleEditClick, loa
           <div className="col-span-full py-10 text-center">
             <div className="flex flex-col items-center justify-center p-5">
               <p className="text-9xl rotate-180 text-blue-500">
-                <CgInfo />
+                <Info />
               </p>
               <p className="text-center text-lg font-normal">
                 You don&apos;t have users yet. Create new user.
@@ -95,7 +94,7 @@ const KanbanView = ({ currentFilteredRows, handleUserClick, handleEditClick, loa
                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="View Details"
                   >
-                    <FaEye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => {
@@ -104,7 +103,7 @@ const KanbanView = ({ currentFilteredRows, handleUserClick, handleEditClick, loa
                     className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                     title="Edit"
                   >
-                    <FaPencilAlt className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -113,15 +112,15 @@ const KanbanView = ({ currentFilteredRows, handleUserClick, handleEditClick, loa
               <div className="space-y-2 text-sm">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-1.5 text-gray-600">
-                    <FaEnvelope className="w-4 h-4" />
+                    <Mail className="w-4 h-4" />
                     <span className="truncate">{users?.email || ""}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600">
-                    <FaPhone className="w-4 h-4" />
+                    <Phone className="w-4 h-4" />
                     <span>{users?.phone || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600">
-                    <FaBriefcase className="w-4 h-4" />
+                    <Briefcase className="w-4 h-4" />
                     <span>{users.label || "N/A"}</span>
                   </div>
                 </div>

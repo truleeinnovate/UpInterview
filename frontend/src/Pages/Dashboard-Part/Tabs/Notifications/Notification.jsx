@@ -11,8 +11,6 @@ import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBa
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
-// import { FaWhatsapp } from "react-icons/fa6";
-// import { MdEmail } from "react-icons/md";
 
 const Notification = ({ isassesmentProfileDetails, objectId, candidateId, category }) => {
   console.log("ObjectId", objectId);

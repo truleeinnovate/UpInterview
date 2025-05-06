@@ -3,12 +3,9 @@ import TimezoneSelect from 'react-timezone-select'; // Make sure to install this
 import DatePicker from 'react-datepicker';
 // import "react-datepicker/dist/react-datepicker.css";
 import "react-datepicker/dist/react-datepicker.css";
-import { FaMinus, FaPlus, FaExpand, FaCompress, } from 'react-icons/fa';
-import { GiCancel } from 'react-icons/gi';
-import { IoIosCopy } from 'react-icons/io';
-
-import { ReactComponent as FaTimes } from '../../../../../../icons/FaTimes.svg';
-
+import { Minus, Plus, Maximize, Minimize } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 import classNames from 'classnames';
 import Modal from 'react-modal';
@@ -302,9 +299,9 @@ const EditAvailabilityDetails = () => {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {isFullScreen ? (
-                <FaCompress className="w-5 h-5 text-gray-500" />
+                <Minimize className="w-5 h-5 text-gray-500" />
               ) : (
-                <FaExpand className="w-5 h-5 text-gray-500" />
+                <Maximize className="w-5 h-5 text-gray-500" />
               )}
             </button>
             <button
@@ -315,7 +312,7 @@ const EditAvailabilityDetails = () => {
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <FaTimes className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
         </div>
@@ -379,7 +376,7 @@ const EditAvailabilityDetails = () => {
                                 }}
                                 popperPlacement="bottom-start"
                               />
-                              <FaMinus className="text-xs text-gray-600" />
+                              <Minus className="text-xs text-gray-600" />
                               <DatePicker
                                 selected={timeSlot.endTime}
                                 // selected={timeSlot.endTime instanceof Date && !isNaN(timeSlot.endTime.getTime()) ? timeSlot.endTime : null}
@@ -397,7 +394,7 @@ const EditAvailabilityDetails = () => {
                                 popperPlacement="bottom-start"
                               />
                               {/* {formData.times[day].length > 1 || (timeSlot.startTime || timeSlot.endTime) ? ( */}
-                              <GiCancel
+                              <X
                                 // className={`text-xl cursor-pointer text-red-500 `}
                                 className={`text-4xl cursor-pointer text-red-500 ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}`}
                                 // ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}
@@ -409,12 +406,12 @@ const EditAvailabilityDetails = () => {
                           </div>
                         ))}
                       </div>
-                      <FaPlus
+                      <Plus
                         className="text-xl cursor-pointer mt-2"
                         onClick={() => handleAddTimeSlot(day)}
                       />
                       <div className="relative">
-                        <IoIosCopy
+                        <Copy
                           className="text-xl cursor-pointer mt-2"
                           onClick={() => {
                             if (showPopup && selectedDay === day) {

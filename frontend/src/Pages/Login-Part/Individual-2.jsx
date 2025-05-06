@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { IoIosPersonAdd } from "react-icons/io";
-import { GoOrganization } from "react-icons/go";
+import { Plus, Building } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Slideshow from './Slideshow';
 import { config } from '../../config.js';
@@ -57,7 +56,7 @@ const Profile1 = () => {
               }`}
             onClick={handleIndividualClick}
           >
-            <IoIosPersonAdd className="text-2xl mr-4" />
+            <Plus className="text-2xl mr-4" />
             <p>Individual</p>
           </button>
           <p className="text-gray-500 text-center text-sm px-4">
@@ -71,7 +70,7 @@ const Profile1 = () => {
             className={`flex items-center justify-center border rounded-2xl py-2 w-full font-medium transition-colors duration-300 ${selectedOption === "organization" ? 'bg-custom-blue text-white border-custom-blue' : 'bg-white text-custom-blue border-custom-blue'
               }`}
           >
-            <GoOrganization className="text-2xl mr-4" />
+            <Building className="text-2xl mr-4" />
             <p>Organization</p>
           </button>
           <p className="text-gray-500 text-center text-sm px-4">

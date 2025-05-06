@@ -12,7 +12,6 @@ import axios from "axios";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
 import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
-// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';

@@ -2,40 +2,14 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import Modal from 'react-modal';
 
-// import {
-//   FaTimes,
-//   FaStar,
-//   FaUser,
-//   FaCalendarAlt,
-//   FaClock,
-//   FaCheckCircle,
-//   FaBuilding,
-//   FaCode,
-//   FaLaptopCode,
-//   FaComments,
-//   FaDownload,
-//   FaEnvelope,
-//   FaEdit,
-//   FaSave,
-//   FaTrash,
-//   FaPlus
-// } from 'react-icons/fa';
-
-
 import {
   X,
-  Star,
-  User,
   Calendar,
   Clock,
   CheckCircle2,
   Building,
-  Code,
-  Laptop2,
-  MessageCircle,
   Download,
   Mail,
-  Edit,
   Save,
   Plus
 } from 'lucide-react';

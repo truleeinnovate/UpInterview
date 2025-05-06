@@ -7,7 +7,7 @@ import EmailTemplateViewPage from "./EmailTemplateViewPage";
 import EmailTemplateDetails from "./EmailTemplateDetails";
 import { SettingsIcon, ToggleLeft, ToggleRight, X } from "lucide-react";
 import Settings from "./Settings";
-import { IoIosArrowBack, IoIosArrowForward, IoMdSearch } from "react-icons/io";
+import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
 
 const EmailTemplate = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,7 +150,7 @@ const EmailTemplate = () => {
                     <div className="searchintabs relative w-96">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-2">
                      <button type="submit" className="p-1">
-                      <IoMdSearch className="text-custom-blue text-lg" />
+                      <Search className="text-custom-blue text-lg" />
                      </button>
                     </div>
                     <input
@@ -171,14 +171,14 @@ const EmailTemplate = () => {
                          onClick={prevPage}
                          disabled={currentPage === 1}
                          >
-                           <IoIosArrowBack className="text-custom-blue text-xl" />
+                           <ArrowLeft className="text-custom-blue text-xl" />
                          </button>
                          <button 
                           className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''} `}
                           onClick={nextPage}
                           disabled={currentPage === totalPages}
                           >
-                          <IoIosArrowForward className="text-custom-blue text-xl" />
+                          <ArrowRight className="text-custom-blue text-xl" />
                          </button>
                          <div className="flex items-center pl-1 h-7">
                       <button

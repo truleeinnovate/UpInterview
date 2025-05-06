@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-// import { FaCheckCircle, FaCircle } from "react-icons/fa";
 
 function InterviewStatusIndicator({ currentStatus }) {
   // Define base status steps

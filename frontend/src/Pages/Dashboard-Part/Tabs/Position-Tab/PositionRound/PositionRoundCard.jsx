@@ -14,7 +14,6 @@ import {
   User,
   ExternalLink
 } from 'lucide-react';
-// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 

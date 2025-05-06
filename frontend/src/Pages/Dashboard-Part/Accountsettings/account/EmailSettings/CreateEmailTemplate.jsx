@@ -1,10 +1,9 @@
 /* eslint-disable react/prop-types */
 import axios from 'axios';
 import { useState } from 'react'
-import { IoMdArrowDropdown } from 'react-icons/io';
-import { IoArrowBack, IoCloseCircleOutline } from "react-icons/io5";
+import { ChevronDown, ArrowLeft, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { ReactComponent as IoArrowBack } from '../../../../../icons/IoArrowBack.svg';
+// import { ReactComponent as ArrowLeft } from '../../../../../icons/ArrowLeft.svg';
 // import { ReactComponent as MdArrowDropDown } from '../../../../../icons/MdArrowDropDown.svg';
 
 const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
@@ -104,7 +103,7 @@ const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
         <div className="fixed top-0 w-full bg-custom-blue text-white border-b">
           <div className="flex justify-between sm:justify-start items-center p-4">
             <button onClick={() => onClose(false)} className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8">
-              <IoArrowBack className="text-2xl" />
+              <ArrowLeft className="text-2xl" />
             </button>
             <h2 className="text-lg font-bold">Add Templates</h2>
             <button onClick={() => onClose(false)} className="focus:outline-none sm:hidden">
@@ -177,7 +176,7 @@ const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
                           className="absolute right-0 top-0"
                           onClick={toggleDropdowngender}
                         >
-                          <IoMdArrowDropdown className="text-lg text-gray-500 mt-1 cursor-pointer" />
+                          <ChevronDown className="text-lg text-gray-500 mt-1 cursor-pointer" />
                         </div>
                       </div>
                       {showDropdowngender && (

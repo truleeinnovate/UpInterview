@@ -6,7 +6,7 @@ import Cookies from 'js-cookie'
 import { SidePopup } from './SidePopup'
 import classNames from 'classnames';
 import Modal from 'react-modal';
-import { FaExpand, FaCompress, } from 'react-icons/fa';
+import { Maximize, Minimize } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
@@ -303,9 +303,9 @@ console.log("tenantId in roleformpopup", tenantId);
                               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             {isFullScreen ? (
-                              <FaCompress className="w-5 h-5 text-gray-500" />
+                              <Minimize className="w-5 h-5 text-gray-500" />
                             ) : (
-                              <FaExpand className="w-5 h-5 text-gray-500" />
+                              <Maximize className="w-5 h-5 text-gray-500" />
                             )}
                           </button>
                           <button

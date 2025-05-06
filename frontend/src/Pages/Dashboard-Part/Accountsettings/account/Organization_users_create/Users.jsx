@@ -1,16 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect, useCallback } from "react";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { FiFilter } from "react-icons/fi";
+import { ChevronLeft, ChevronRight, Filter, Grid, ChevronUp, ChevronDown, X, Search, List } from 'lucide-react';
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
-import { TbLayoutGridRemove } from "react-icons/tb";
-import { MdKeyboardArrowUp } from "react-icons/md";
-import { MdKeyboardArrowDown } from "react-icons/md";
 //import Cookies from "js-cookie";
-import { LuFilterX } from "react-icons/lu";
 import { fetchMasterData } from '../../../../../utils/fetchMasterData.js';
-import { FaSearch, FaList } from "react-icons/fa";
 import TableView from "./TableView.jsx";
 import KanbanView from "./KanbanView.jsx";
 import UserProfileDetails from "./UserProfileDetails";
@@ -153,9 +147,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
             >
               {isStatusDropdownOpen ? (
-                <MdKeyboardArrowUp />
+                <ChevronUp />
               ) : (
-                <MdKeyboardArrowDown />
+                <ChevronDown />
               )}
             </div>
           </div>
@@ -192,9 +186,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
             >
               {isTechDropdownOpen ? (
-                <MdKeyboardArrowUp />
+                <ChevronUp />
               ) : (
-                <MdKeyboardArrowDown />
+                <ChevronDown />
               )}
             </div>
           </div>
@@ -572,7 +566,7 @@ console.log("tenantId in users", tenantId);
             <div className="flex items-center sm:hidden md:hidden">
               <Tooltip title="table" enterDelay={300} leaveDelay={100} arrow>
                 <span onClick={handleListViewClick}>
-                  <FaList
+                  <List
                     className={`text-xl cursor-pointer mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
                       }`}
                   />
@@ -580,7 +574,7 @@ console.log("tenantId in users", tenantId);
               </Tooltip>
               <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
                 <span onClick={handleKanbanViewClick}>
-                  <TbLayoutGridRemove
+                  <Grid
                     className={`text-xl cursor-pointer ${viewMode === "kanban" ? "text-custom-blue" : ""
                       }`}
                   />
@@ -590,7 +584,7 @@ console.log("tenantId in users", tenantId);
             </div>
             <div className="flex items-center">
               <div className="relative flex-1 w-[300px] sm:w-full flex-grow">
-                <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                 <input
                   type="text"
                   placeholder="Search by Firstname, Email, Phone."
@@ -611,7 +605,7 @@ console.log("tenantId in users", tenantId);
                     className={`border p-2 mr-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : "cursor-pointer"}`}
                     onClick={prevPage}
                   >
-                    <IoIosArrowBack className="text-custom-blue" />
+                    <ChevronLeft className="text-custom-blue" />
                   </span>
                 </Tooltip>
 
@@ -620,7 +614,7 @@ console.log("tenantId in users", tenantId);
                     className={`border p-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : "cursor-pointer"}`}
                     onClick={nextPage}
                   >
-                    <IoIosArrowForward className="text-custom-blue" />
+                    <ChevronRight className="text-custom-blue" />
                   </span>
                 </Tooltip>
               </div>
@@ -634,9 +628,9 @@ console.log("tenantId in users", tenantId);
                     }}
                   >
                     {isFilterActive ? (
-                      <LuFilterX className="text-custom-blue cursor-pointer" />
+                      <X className="text-custom-blue cursor-pointer" />
                     ) : (
-                      <FiFilter className="text-custom-blue cursor-pointer" />
+                      <Filter className="text-custom-blue cursor-pointer" />
                     )}
                   </span>
                 </Tooltip>

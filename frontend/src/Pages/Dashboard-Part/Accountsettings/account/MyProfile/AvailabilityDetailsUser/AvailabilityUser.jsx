@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { FaMinus, } from 'react-icons/fa';
+import { Minus } from 'lucide-react';
 import Cookies from "js-cookie";
 import "react-datepicker/dist/react-datepicker.css";
 import EditAvailabilityDetails from './EditAvailabilityDetails';
@@ -159,7 +159,7 @@ const AvailabilityUser = (
                           xl:w-2/3
                           2xl:w-32">
                               {slot.startTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            <FaMinus className="text-gray-600 
+                            <Minus className="text-gray-600 
                           sm:text-xs md:text-sm lg:text-sm" />
                             <span className="border border-gray-400 rounded text-center py-2 px-3 
                           w-24 text-sm

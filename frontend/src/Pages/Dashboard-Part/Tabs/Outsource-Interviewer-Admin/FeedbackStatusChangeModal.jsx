@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-// import { IoClose } from "react-icons/io5";
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { config } from '../../../../config.js';

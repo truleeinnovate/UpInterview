@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { MdArrowDropDown } from 'react-icons/md';
-import { ImCancelCircle } from 'react-icons/im';
+import { ChevronDown, XCircle } from 'lucide-react';
 import noImage from '../../Dashboard-Part/Images/no-photo.png';
 import InfoBox from './InfoBox.jsx';
 import { format } from 'date-fns';
 import { validateEmail, validateProfileId } from '../../../utils/IndividualValidation.js';
+import { ArrowDropDown } from 'lucide-react';
 
 const BasicDetails = ({
   basicDetailsData,
@@ -323,7 +323,7 @@ const BasicDetails = ({
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-700">{file ? file.name : 'LinkedIn Profile Photo'}</span>
                       <button onClick={handleDeleteImage} type="button" className="text-red-500">
-                        <ImCancelCircle className="text-lg" />
+                        <XCircle className="text-lg" />
                       </button>
                     </div>
                   )}
@@ -489,7 +489,6 @@ const BasicDetails = ({
         )}
       </div>
 
-
       {/* Gender */}
       <div className="sm:col-span-3 relative" ref={genderDropdownRef}>
         <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
@@ -510,7 +509,7 @@ const BasicDetails = ({
             className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
             onClick={toggleDropdowngender}
           >
-            <MdArrowDropDown className="text-lg" />
+            <ArrowDropDown className="text-lg" />
           </div>
         </div>
         {showDropdowngender && (

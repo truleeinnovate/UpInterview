@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { FaTimes } from 'react-icons/fa';
+import { X } from 'lucide-react';
 
 const InterviewerSelectionModal = ({ 
   isOpen, 
@@ -19,7 +19,7 @@ const InterviewerSelectionModal = ({
             Select {type === 'Individual' ? 'Interviewer' : 'Group'}
           </h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <FaTimes className="h-5 w-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 

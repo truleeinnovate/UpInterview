@@ -5,8 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 import Cookies from "js-cookie";
-import { FaExpand, FaCompress, } from 'react-icons/fa';
-import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
+import { Maximize, Minimize, X } from 'lucide-react';
 import axios from 'axios';
 import { validateGroupForm } from '../../../../../utils/InterviewGroupValidations';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -217,9 +216,9 @@ export function InterviewerGroupFormPopup() {
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             {isFullScreen ? (
-                              <FaCompress className="w-5 h-5 text-gray-500" />
+                              <Minimize className="w-5 h-5 text-gray-500" />
                             ) : (
-                              <FaExpand className="w-5 h-5 text-gray-500" />
+                              <Maximize className="w-5 h-5 text-gray-500" />
                             )}
                           </button>
                           <button
@@ -230,7 +229,7 @@ export function InterviewerGroupFormPopup() {
                             }}
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
-                            <FaTimes className="w-5 h-5 text-gray-500" />
+                            <X className="w-5 h-5 text-gray-500" />
                           </button>
                         </div>
                       </div>

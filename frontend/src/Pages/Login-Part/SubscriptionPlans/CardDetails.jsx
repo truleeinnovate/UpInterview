@@ -1,4 +1,4 @@
-import { RiCloseCircleLine } from "react-icons/ri";
+import { XCircle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
 import { config } from '../../../config.js'
@@ -219,7 +219,7 @@ const CardDetails = () => {
                     <h2 className="text-xl font-semibold mb-2">
                         Upgrade to a Basic Membership
                     </h2>
-                    <RiCloseCircleLine
+                    <XCircle
                         onClick={() => navigate("/subscription-plans")}
                         className="h-7 w-7" />
                 </div>

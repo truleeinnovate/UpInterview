@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
@@ -160,7 +160,7 @@ const Admin = () => {
                     onClick={togglePasswordVisibility}
                     className="absolute right-3 top-3 text-gray-500"
                   >
-                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                   {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>

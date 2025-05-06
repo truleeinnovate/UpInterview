@@ -1218,7 +1218,6 @@ export default Interviewcq;
 // import { validateQuestionBankData } from "../../../../utils/questionBankValidation.js";
 // import Cookies from "js-cookie";
 // import MyQuestionList from "./MyQuestionsListPopup.jsx";
-// import { FaSearch } from 'react-icons/fa';
 
 
 

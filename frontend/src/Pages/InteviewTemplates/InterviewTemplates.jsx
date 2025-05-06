@@ -1,10 +1,9 @@
-import { FiFilter } from "react-icons/fi";
-import { IoIosArrowBack, IoIosArrowForward, IoMdSearch } from 'react-icons/io';
+import { ArrowLeft, ArrowRight, Search, Filter } from 'lucide-react';
 import { Plus, Layout, KanbanSquare, Table2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import KanbanView from "./KanbanView";
-import { FaTimes } from "react-icons/fa";
+import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../../Components/Loading';
 import Cookies from "js-cookie";
@@ -258,7 +257,7 @@ const InterviewTemplates = () => {
                 <div className="searchintabs relative w-96">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-2">
                     <button type="submit" className="p-1">
-                      <IoMdSearch className="text-custom-blue text-lg" />
+                      <Search className="text-custom-blue text-lg" />
                     </button>
                   </div>
                   <input
@@ -281,17 +280,17 @@ const InterviewTemplates = () => {
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
-                    <IoIosArrowBack className="text-custom-blue text-xl" />
+                    <ArrowLeft className="text-custom-blue text-xl" />
                   </button>
                   <button
                     className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
-                    <IoIosArrowForward className="text-custom-blue text-xl" />
+                    <ArrowRight className="text-custom-blue text-xl" />
                   </button>
                   <button className="p-2 border border-gray-300 rounded relative">
-                    <FiFilter className="text-custom-blue text-xl" />
+                    <Filter className="text-custom-blue text-xl" />
                   </button>
                 </div>
               </div>
@@ -382,7 +381,7 @@ const InterviewTemplates = () => {
             <div className="sticky rounded-tl-xl top-0 z-10 w-full flex justify-between items-center px-5 py-6 border-b-2 bg-gradient-to-r from-custom-blue to-custom-blue/80">
               <h2 className="text-2xl text-teal-50 font-semibold">New Template</h2>
               <button onClick={() => setIsSlideoverOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <FaTimes className='text-teal-50' />
+                <X className='text-teal-50' />
               </button>
             </div>
             <form id="new-template-form" onSubmit={handleSave} className="flex-1 flex flex-col overflow-y-auto">

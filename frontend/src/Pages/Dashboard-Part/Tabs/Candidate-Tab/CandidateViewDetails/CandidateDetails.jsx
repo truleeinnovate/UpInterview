@@ -1,7 +1,5 @@
 
-// import { FaTimes, FaExternalLinkAlt,  FaEnvelope, FaPhone, FaUniversity } from 'react-icons/fa';
 import Modal from 'react-modal';
-// import { RiGraduationCapFill } from "react-icons/ri";
 import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';

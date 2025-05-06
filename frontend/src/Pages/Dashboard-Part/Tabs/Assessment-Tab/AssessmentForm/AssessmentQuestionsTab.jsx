@@ -1,17 +1,13 @@
 import React from "react";
 import Popup from "reactjs-popup";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
-import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
-import {
-  MdOutlineKeyboardArrowDown,
-  MdOutlineKeyboardArrowUp,
-} from "react-icons/md";
 import {
   PlusIcon,
   CheckCircleIcon,
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { MoreVertical, ChevronDown, ChevronUp } from 'lucide-react';
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -268,7 +264,7 @@ const AssessmentQuestionsTab = ({
                         onClick={() => toggleActionMenu("section", sectionIndex)}
                         className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
                       >
-                        <MdMoreVert className="text-xl" />
+                        <MoreVertical className="text-xl" />
                       </button>
 
                       {actionViewMore?.type === "section" && actionViewMore.index === sectionIndex && (
@@ -302,9 +298,9 @@ const AssessmentQuestionsTab = ({
                       onClick={() => toggleArrow1(sectionIndex)}
                     >
                       {toggleStates[sectionIndex] ? (
-                        <MdOutlineKeyboardArrowUp className="text-xl" />
+                        <ChevronUp className="text-xl" />
                       ) : (
-                        <MdOutlineKeyboardArrowDown className="text-xl" />
+                        <ChevronDown className="text-xl" />
                       )}
                     </button>
                   </div>
@@ -375,7 +371,7 @@ const AssessmentQuestionsTab = ({
                                 onClick={() => toggleActionMenu("question", sectionIndex, questionIndex)}
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
-                                <MdMoreVert className="text-xl" />
+                                <MoreVertical className="text-xl" />
                               </button>
                               {actionViewMore?.type === "question" &&
                                 actionViewMore.index === sectionIndex &&
