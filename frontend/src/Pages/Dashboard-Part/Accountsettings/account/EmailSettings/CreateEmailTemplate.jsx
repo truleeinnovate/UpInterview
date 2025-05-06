@@ -1,10 +1,8 @@
 /* eslint-disable react/prop-types */
 import axios from 'axios';
 import { useState } from 'react'
-import { ChevronDown, ArrowLeft, X } from 'lucide-react';
+import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { ReactComponent as ArrowLeft } from '../../../../../icons/ArrowLeft.svg';
-// import { ReactComponent as MdArrowDropDown } from '../../../../../icons/MdArrowDropDown.svg';
 
 const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
 

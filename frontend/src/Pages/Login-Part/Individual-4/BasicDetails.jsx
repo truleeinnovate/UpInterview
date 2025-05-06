@@ -6,7 +6,8 @@ import noImage from '../../Dashboard-Part/Images/no-photo.png';
 import InfoBox from './InfoBox.jsx';
 import { format } from 'date-fns';
 import { validateEmail, validateProfileId } from '../../../utils/IndividualValidation.js';
-import { ArrowDropDown } from 'lucide-react';
+// import { ArrowDropDown } from 'lucide-react';
+import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 
 const BasicDetails = ({
   basicDetailsData,
@@ -509,7 +510,7 @@ const BasicDetails = ({
             className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
             onClick={toggleDropdowngender}
           >
-            <ArrowDropDown className="text-lg" />
+            <MdArrowDropDown className="text-lg" />
           </div>
         </div>
         {showDropdowngender && (
