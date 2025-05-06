@@ -7,6 +7,10 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
+// Add subdomain redirect middleware
+const subdomainRedirect = require('./middleware/subdomainRedirect');
+app.use(subdomainRedirect);
+
 const port = process.env.PORT;
 const mongoUri = process.env.MONGODB_URI;
 
