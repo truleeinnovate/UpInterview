@@ -46,7 +46,7 @@ const SidebarProfile = ({isSidebarOpen,toggleSidebar, handleTabChange, activeTab
                         //   // setActiveTab(item.id)
                         //   setIsSidebarOpen(false)
                         // }}
-                        className={`w-56 flex items-center px-6 py-3 text-xs font-medium ${
+                        className={`w-64 flex items-center px-6 py-3 text-xs font-medium ${
                           activeTab === item.id
                             ? 'bg-blue-50 text-custom-blue border-r-4 border-custom-blue'
                             : 'text-gray-600 hover:bg-gray-50'

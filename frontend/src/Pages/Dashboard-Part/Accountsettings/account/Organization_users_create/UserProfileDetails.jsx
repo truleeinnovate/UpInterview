@@ -1,21 +1,15 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  X,
-  ArrowLeft,
-  Mail,
-  Phone,
-  ExternalLink,
-  User,
-  UserCheck,
-  Pencil,
-} from 'lucide-react';
-
+import { MdOutlineCancel } from "react-icons/md";
+import { IoArrowBack } from "react-icons/io5";
+import { FaEnvelope, FaPhone, FaExternalLinkAlt, FaLinkedin, FaUserAlt, FaIdCard, FaVenusMars, FaLanguage, FaClock, FaUserTie, FaEdit } from "react-icons/fa";
 import UserForm from './UserForm';
 import maleImage from '../../../Images/man.png';
 import femaleImage from '../../../Images/woman.png';
 import genderlessImage from '../../../Images/transgender.png';
+
+import { FaExpand, FaCompress, } from 'react-icons/fa';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 
@@ -62,7 +56,7 @@ const UserProfileDetails = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <ArrowLeft className="text-2xl" />
+              <IoArrowBack className="text-2xl" />
             </button>
             <h2 className="text-xl font-medium text-white">User Profile</h2>
           </div>
@@ -72,21 +66,21 @@ const UserProfileDetails = () => {
             className="p-2 text-white hover:bg-white hover:text-custom-blue rounded-full transition-colors"
             title="Edit"
             >
-            <Pencil className="w-5 h-5" />
+            <FaEdit className="w-5 h-5" />
             </button>
             <button
               onClick={toggleFullScreen}
               className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2 transition-colors"
               title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
             >
-              <ExternalLink className="w-5 h-5" />
+              <FaExternalLinkAlt className="w-5 h-5" />
             </button>
             {!isFullScreen && (
               <button 
                 onClick={() => navigate(-1)}
                 className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2"
               >
-                <X className="text-2xl" />
+                <MdOutlineCancel className="text-2xl" />
               </button>
             )}
           </div>
@@ -114,7 +108,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
+                <FaUserAlt className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">First Name</p>
@@ -123,7 +117,7 @@ const UserProfileDetails = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
+                <FaUserAlt className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Last Name</p>
@@ -138,7 +132,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <Mail className="w-5 h-5 text-gray-500" />
+                <FaEnvelope className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email Address</p>
@@ -147,7 +141,7 @@ const UserProfileDetails = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <Phone className="w-5 h-5 text-gray-500" />
+                <FaPhone className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Phone Number</p>
@@ -162,7 +156,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <UserCheck className="w-5 h-5 text-gray-500" />
+                <FaUserTie className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Role</p>
@@ -210,7 +204,7 @@ const UserProfileDetails = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
             {/* <button className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <ArrowLeft className="text-2xl" />
+              <IoArrowBack className="text-2xl" />
             </button> */}
             <h2 className="text-2xl font-bold text-custom-blue">User Profile</h2>
           </div>
@@ -225,21 +219,21 @@ const UserProfileDetails = () => {
             className="p-2  hover:bg-white hover:text-custom-blue rounded-full transition-colors"
             title="Edit"
             >
-            <Pencil className="w-5 h-5 text-gray-500" />
+            <FaEdit className="w-5 h-5 text-gray-500" />
             </button>
             <button
               onClick={toggleFullScreen}
               className=" hover:bg-white hover:text-custom-blue rounded-full p-2 transition-colors"
               title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
             >
-              <ExternalLink className="w-5 h-5 text-gray-500" />
+              <FaExternalLinkAlt className="w-5 h-5 text-gray-500" />
             </button>
             {!isFullScreen && (
               <button 
                 onClick={() => navigate(-1)}
                 className="text-gray-500  hover:text-custom-blue rounded-full p-2"
               >
-                <X className="text-2xl" />
+                <MdOutlineCancel className="text-2xl" />
               </button>
             )}
           </div>
@@ -268,7 +262,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
+                <FaUserAlt className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">First Name</p>
@@ -277,7 +271,7 @@ const UserProfileDetails = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
+                <FaUserAlt className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Last Name</p>
@@ -292,7 +286,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <Mail className="w-5 h-5 text-gray-500" />
+                <FaEnvelope className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email Address</p>
@@ -301,7 +295,7 @@ const UserProfileDetails = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <Phone className="w-5 h-5 text-gray-500" />
+                <FaPhone className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Phone Number</p>
@@ -316,7 +310,7 @@ const UserProfileDetails = () => {
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
-                <UserCheck className="w-5 h-5 text-gray-500" />
+                <FaUserTie className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Role</p>

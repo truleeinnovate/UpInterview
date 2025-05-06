@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 // import { useCustomContext } from "../../../Context/Contextfetch";
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function Subscription() {
   // const currentPlan = subscriptionPlans.find(plan => plan.id === currentSubscription.planId);
@@ -14,9 +15,11 @@ export function Subscription() {
     const location = useLocation();
     const isUpgrading = location.state?.isUpgrading || false;
   
-    const userId = Cookies.get("userId");
-    const orgId = Cookies.get("organizationId");
-    const organization = Cookies.get("organization");
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const userId = tokenPayload.userId;
+    const orgId = tokenPayload.tenantId;
+    const organization = tokenPayload.organization;
   
   
     const [isAnnual, setIsAnnual] = useState(false);
@@ -177,9 +180,9 @@ export function Subscription() {
         );
         console.log(organization, plan.name, "organization");
         if ((organization === "false" || !organization) && plan.name === "Base") {
-          await axios.post(`${process.env.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`, {
-            ownerId: Cookies.get("userId"),
-            tenantId: Cookies.get("organizationId"),
+          await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/free`, {
+            ownerId: user.ownerId,
+            tenantId: user.tenantId,
           });
   
           // If upgrading, navigate to a specific page; otherwise, go to home

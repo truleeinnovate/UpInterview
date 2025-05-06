@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { SidePopup } from './SidePopup'
 import classNames from 'classnames';
 import Modal from 'react-modal';
-import { Maximize, Minimize } from 'lucide-react';
+import { FaExpand, FaCompress, } from 'react-icons/fa';
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function RoleFormPopup({ onSave, onClose }) {
   const navigate = useNavigate();
@@ -27,7 +29,11 @@ export function RoleFormPopup({ onSave, onClose }) {
   })
   const [permissionCategories, setPermissionCategories] = useState([])
   const [roles, setRoles] = useState([])
-  const tenantId = Cookies.get("organizationId");//import.meta.env.VITE_API_URL
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const tenantId = tokenPayload.tenantId;
+console.log("tenantId in roleformpopup", tenantId);
  const [isFullScreen, setIsFullScreen] = useState(false);
     
     // useEffect(() => {
@@ -297,9 +303,9 @@ export function RoleFormPopup({ onSave, onClose }) {
                               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             {isFullScreen ? (
-                              <Minimize className="w-5 h-5 text-gray-500" />
+                              <FaCompress className="w-5 h-5 text-gray-500" />
                             ) : (
-                              <Maximize className="w-5 h-5 text-gray-500" />
+                              <FaExpand className="w-5 h-5 text-gray-500" />
                             )}
                           </button>
                           <button

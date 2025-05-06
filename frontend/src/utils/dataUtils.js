@@ -76,7 +76,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     const tokenPayload = decodeJwt(authToken);
 
     const userId = tokenPayload?.userId;
-    const organizationId = tokenPayload?.organizationId;
+    const organizationId = tokenPayload?.tenantId;
     const organization = tokenPayload?.organization;
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");

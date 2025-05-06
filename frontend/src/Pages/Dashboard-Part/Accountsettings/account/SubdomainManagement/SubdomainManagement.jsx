@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CheckCircleIcon, XCircleIcon, PencilIcon } from '@heroicons/react/24/outline'
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function DomainManagement() {
   const [subdomain, setSubdomain] = useState('')
@@ -17,8 +18,12 @@ export function DomainManagement() {
   
   // Organization ID from state
   //const organizationId = '66fbb040eebb7de70b317ca1'
-  const organizationId = Cookies.get("organizationId");
 
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const organizationId = tokenPayload.tenantId;
+console.log("organizationId in subdomainmanagement", organizationId);
   const validateSubdomain = (subdomain) => {
     const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/
     return subdomainRegex.test(subdomain)

@@ -9,6 +9,7 @@ import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser'
 import SidebarProfile from '../Sidebar';
 import { navigation } from '../../mockData/navigationData';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function MyProfile() {
   const location = useLocation();
@@ -16,7 +17,11 @@ export function MyProfile() {
   
   const {contacts} = useCustomContext();
   // const subtab = location.pathname.split('/').pop();
-  const userId = Cookies.get("userId");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const userId = tokenPayload.userId;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isEditMode = location.pathname.includes('-edit');

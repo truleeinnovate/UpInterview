@@ -544,7 +544,7 @@ const PositionForm = () => {
     const userId = tokenPayload?.userId;
 
     const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.organizationId;
+    const orgId = tokenPayload?.tenantId;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {

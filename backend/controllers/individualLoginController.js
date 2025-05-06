@@ -63,17 +63,6 @@ exports.individualLogin = async (req, res) => {
     // <-----------------------OutsourceInterviewer------------------------------->
 
 
-    // Step 4: Send Email
-    console.log("Sending email to user...");
-    await loginSendEmail({
-      body: {
-        email: savedContact.email,
-        ownerId: savedUser._id,
-        name: savedContact.name,
-      },
-    }, { json: () => { } });
-    console.log("Email successfully sent.");
-
     // Generate JWT
     const payload = {
       userId: savedUser._id.toString(),
@@ -82,21 +71,20 @@ exports.individualLogin = async (req, res) => {
     };
     const token = generateToken(payload);
 
-    // Step 5: Send Response
     res.status(200).json({
       success: true,
-      message: "User, Contact, Availability, and Email processed successfully",
-      userId: savedUser._id,
+      message: "Profile created successfully",
+      ownerId: savedUser._id,
       contactId: savedContact._id,
-      token
+      tenantId: savedContact.tenantId,
     });
 
   } catch (error) {
     console.error("Error in individual login:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error in individual login",
-      error: error.message,
+    res.status(500).json({ 
+      success: false, 
+      message: "Error processing your request", 
+      error: error.message 
     });
   }
 };

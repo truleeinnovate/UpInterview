@@ -245,6 +245,17 @@ export const Organization = () => {
 
       // Store JWT in cookies
       setAuthCookies(token);
+      
+      // Show toast with message from backend
+      toast.success(response.data.message || 'Organization created successfully');
+      
+      // Send email silently
+      axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+        email: organizationData.email,
+        tenantId: response.data.tenantId,
+        ownerId: response.data.ownerId,
+        lastName: organizationData.lastName,
+      }).catch((err) => console.error('Email error:', err));
 
       toast.success('Organization created successfully!');
       navigate('/subscription-plans');
@@ -596,7 +607,7 @@ export const Organization = () => {
                   htmlFor="profileId"
                   className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                 >
-                 Profile ID / UserName
+                  Profile ID / UserName
                 </label>
                 {isCheckingProfileId && (
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -702,11 +713,11 @@ export const Organization = () => {
                   Save
                 </button> */}
                 <button
-                    type="submit"
-                    className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300"
-                  >
-                    Save
-                  </button>
+                  type="submit"
+                  className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300"
+                >
+                  Save
+                </button>
               </div>
             </form>
           </div>

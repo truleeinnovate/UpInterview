@@ -20,7 +20,7 @@ const SubscriptionPlan = () => {
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
   const organization = tokenPayload?.organization?.toString();
-  const orgId = tokenPayload?.organizationId;
+  const orgId = tokenPayload?.tenantId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
@@ -141,7 +141,81 @@ const SubscriptionPlan = () => {
   }, [user.userType, location.pathname, authToken]);
 
   // Submit selected plan
+  // const submitPlans = async (plan) => {
+  //   if (!plan) {
+  //     toast.success("No plan is selected");
+  //     return;
+  //   }
+  //   const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+
+  //   const payload = {
+  //     planDetails: {
+  //       subscriptionPlanId: plan.planId,
+  //       monthlyPrice: plan.monthlyPrice,
+  //       annualPrice: plan.annualPrice,
+  //       monthDiscount: plan.monthlyDiscount,
+  //       annualDiscount: plan.annualDiscount,
+  //     },
+  //     userDetails: {
+  //       tenantId: user.tenantId,
+  //       ownerId: user.ownerId,
+  //       userType: user.userType,
+  //       membershipType: isAnnual ? "annual" : "monthly",
+  //     },
+  //     totalAmount,
+  //     status: "pending",
+  //   };
+
+  //   try {
+  //     const subscriptionResponse = await axios.post(
+  //       `${config.REACT_APP_API_URL}/create-customer-subscription`,
+  //       payload,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${authToken}`, // Include token in request headers
+  //         },
+  //       }
+  //     );
+
+  //     console.log(
+  //       "Payment and Subscription submitted successfully",
+  //       subscriptionResponse.data
+  //     );
+  //     if (organization === "false" && plan.name === "Base") {
+  //       await axios.post(
+  //         `${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`,
+  //         {
+  //           ownerId: userId,
+  //           tenantId: orgId,
+  //         },
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${authToken}`, // Include token in request headers
+  //           },
+  //         }
+  //       );
+
+  //       navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
+  //     } else {
+  //       navigate("/payment-details", {
+  //         state: {
+  //           plan: {
+  //             ...plan,
+  //             billingCycle: isAnnual ? "annual" : "monthly",
+  //             user,
+  //             invoiceId: subscriptionResponse?.data?.invoiceId,
+  //           },
+  //           isUpgrading,
+  //         },
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error submitting subscription:", error);
+  //   }
+  // };
+
   const submitPlans = async (plan) => {
+
     if (!plan) {
       toast.success("No plan is selected");
       return;
@@ -169,32 +243,21 @@ const SubscriptionPlan = () => {
     try {
       const subscriptionResponse = await axios.post(
         `${config.REACT_APP_API_URL}/create-customer-subscription`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`, // Include token in request headers
-          },
-        }
+        payload
       );
 
       console.log(
         "Payment and Subscription submitted successfully",
         subscriptionResponse.data
       );
-      if (organization === "false" && plan.name === "Base") {
-        await axios.post(
-          `${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`,
-          {
-            ownerId: userId,
-            tenantId: orgId,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include token in request headers
-            },
-          }
-        );
+      console.log(organization, plan.name, "organization");
+      if ((organization === "false" || !organization) && plan.name === "Base") {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/subscriptions/free`, {
+          ownerId: Cookies.get("userId"),
+          tenantId: Cookies.get("organizationId"),
+        });
 
+        // If upgrading, navigate to a specific page; otherwise, go to home
         navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
       } else {
         navigate("/payment-details", {
@@ -205,13 +268,16 @@ const SubscriptionPlan = () => {
               user,
               invoiceId: subscriptionResponse?.data?.invoiceId,
             },
-            isUpgrading,
+            isUpgrading, // Pass the upgrading flag to next page if needed
           },
         });
       }
+
+
     } catch (error) {
       console.error("Error submitting subscription:", error);
     }
+
   };
 
   const isHighlighted = (plan) =>

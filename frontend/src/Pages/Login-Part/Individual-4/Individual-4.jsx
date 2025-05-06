@@ -11,6 +11,7 @@ import BasicDetails from './BasicDetails.jsx'
 import AdditionalDetails from './AdditionalDetails.jsx';
 import InterviewDetails from './InterviewDetails.jsx'
 import AvailabilityDetails from './AvailabilityDetails.jsx'
+import toast from "react-hot-toast";
 import { config } from '../../../config.js';
 import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
@@ -303,6 +304,14 @@ const MultiStepForm = () => {
         isProfileCompleteData,
       });
 
+      // Show success toast based on create/update
+      toast.success(
+        response.data.isUpdate 
+          ? "Profile updated successfully!" 
+          : "Profile created successfully!",
+        { autoClose: 5000 }
+      );
+
       const { contactId, token } = response.data;
 
       // Handle image upload
@@ -330,11 +339,28 @@ const MultiStepForm = () => {
       // Store JWT in cookies
       setAuthCookies(token);
 
+      // Send welcome email
+      try {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+          email: userData.email,
+          tenantId: response.data.tenantId,
+          ownerId: response.data.ownerId,
+          lastName: userData.lastName,
+        });
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+        // Don't show error toast for email failure
+      }
+
       setLoading(false);
       navigate('/subscription-plans');
     } catch (error) {
       console.error('Submission failed:', error);
       setLoading(false);
+      toast.error(
+        error.response?.data?.message || "Failed to submit form. Please try again.",
+        { autoClose: 5000 }
+      );
     }
   };
 

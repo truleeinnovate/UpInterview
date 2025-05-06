@@ -476,6 +476,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     fetchGroupsData();
   }, [fetchGroupsData]);
+  
 
   return (
     <CustomContext.Provider

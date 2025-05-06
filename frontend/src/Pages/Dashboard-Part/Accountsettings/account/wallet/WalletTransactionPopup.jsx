@@ -1,4 +1,6 @@
-import { Maximize, Minimize } from 'lucide-react';
+import { SidePopup } from '../../common/SidePopup'
+
+import { FaExpand, FaCompress, } from 'react-icons/fa';
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
 import classNames from 'classnames';
 import Modal from 'react-modal';
@@ -62,9 +64,9 @@ export function WalletTransactionPopup({  onClose }) {
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
+                  <FaCompress className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <FaExpand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button

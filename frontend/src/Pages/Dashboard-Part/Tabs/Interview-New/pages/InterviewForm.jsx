@@ -40,7 +40,7 @@ const InterviewForm = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const orgId = tokenPayload?.organizationId;
+  const orgId = tokenPayload?.tenantId;
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();

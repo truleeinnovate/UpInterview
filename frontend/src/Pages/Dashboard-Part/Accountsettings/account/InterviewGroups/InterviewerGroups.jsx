@@ -7,7 +7,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch'
 import axios from 'axios'
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from 'react-router-dom'
-
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function InterviewerGroups() {
   const { groups } = useCustomContext();
@@ -40,7 +40,11 @@ export function InterviewerGroups() {
   // ])
   const [groupsData, setGroupsData] = useState([])
 
-  const tenantId = Cookies.get("organizationId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload.tenantId;
+
+  console.log("tenantId InterviewerGroups", tenantId);
 
   console.log("organizationId", tenantId, groups);
 
@@ -118,11 +122,10 @@ export function InterviewerGroups() {
                   <h3 className="text-lg font-medium">{group.name}</h3>
                   {/* <p className="text-gray-500 mt-1 text-sm">{group.description}</p> */}
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-              }`}>
-                {group.status}
-              </span>
+                <span className={`px-2 py-1 text-xs rounded-full ${group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
+                  {group.status}
+                </span>
               </div>
 
               <div className="mt-4">

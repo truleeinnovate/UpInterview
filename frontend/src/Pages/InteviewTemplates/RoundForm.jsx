@@ -73,7 +73,7 @@ function RoundForm() {
       const authToken = Cookies.get("authToken");
       const tokenPayload = decodeJwt(authToken);
 
-      const tenantId = tokenPayload?.organizationId;
+      const tenantId = tokenPayload?.tenantId;
       const ownerId = tokenPayload?.userId;
 
 

@@ -38,7 +38,8 @@ const mainNavigation = [
   { name: 'Interviewer Groups', icon: UserGroupIcon, id: 'interviewer-groups' },
   { name: 'Roles', icon: UserIcon, id: 'roles' },
   { name: 'Sharing Settings', icon: ShareIcon, id: 'sharing' },
-  { name: 'Subdomain Management', icon: GlobeAltIcon, id: 'sub-domain' }
+  { name: 'Subdomain Management', icon: GlobeAltIcon, id: 'sub-domain' },
+  { name: 'Notification Management',  icon: BellIcon, id: 'email-settings' }
 ]
 
 const interviewNavigation = [

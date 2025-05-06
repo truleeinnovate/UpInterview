@@ -16,7 +16,7 @@ const CardDetails = () => {
     const tokenPayload = decodeJwt(authToken);
 
 
-    const tenantId = tokenPayload?.organizationId;
+    const tenantId = tokenPayload?.tenantId;
     const ownerId = tokenPayload?.userId;
 
     const location = useLocation();
@@ -83,58 +83,120 @@ const CardDetails = () => {
     }, [planDetails]);
 
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+
+    //     // Validate card fields
+    //     if (!validateCardFields(setErrors, cardDetails)) {
+    //         return;
+    //     }
+    //     try {
+    //         const updatedCardDetails = {
+    //             ...cardDetails,
+    //             cardNumber: cardDetails.cardNumber.replace(/-/g, "")
+    //         };
+    //         // Send the token to your backend to complete the payment
+    //         const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
+    //             cardDetails: updatedCardDetails//card creation
+    //         });
+    //         const { message, transactionId, status } = paymentResponse.data;
+
+    //         if (status === "paid") {
+    //             toast.success("Payment successfully compeleted!");
+
+    //             console.log("caedssssssssss", {
+    //                 planDetails,
+    //                 cardDetails,
+    //                 status,
+    //                 totalPaid,
+    //                 InvoiceId: planDetails.invoiceId,
+    //                 transactionId
+    //             });
+
+    //             const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
+    //                 planDetails,
+    //                 cardDetails,
+    //                 status,
+    //                 totalPaid,
+    //                 InvoiceId: planDetails.invoiceId,
+    //                 transactionId
+
+    //             });
+    //             const response = await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
+    //                 ownerId,
+    //                 tenantId,
+    //                 // ccEmail: "shaikmansoor1200@gmail.com",
+    //             });
+    //             if (isUpgrading) {
+    //                 navigate("/SubscriptionDetails"); // Redirect to upgraded dashboard
+    //             } else {
+    //                 navigate("/home"); // Default navigation
+    //             }
+
+    //             console.log("Payment and Subscription submitted successfully", subscriptionResponse.data);
+    //         } else if (paymentResponse.data.status === "failed") {
+    //             toast.error("Payment Failed!");
+    //         }
+    //         else {
+    //             console.log("Error submitting payment", message);
+    //         }
+
+    //     } catch (error) {
+    //         console.error("Error processing payment:", error);
+    //     }
+    // };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate card fields
-        if (!validateCardFields(setErrors, cardDetails)) {
-            return;
-        }
+         // Validate card fields
+            if (!validateCardFields(setErrors, cardDetails)) {
+                return;
+            }
         try {
             const updatedCardDetails = {
                 ...cardDetails,
                 cardNumber: cardDetails.cardNumber.replace(/-/g, "")
             };
-            // Send the token to your backend to complete the payment
-            const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
-                cardDetails: updatedCardDetails//card creation
-            });
-            const { message, transactionId, status } = paymentResponse.data;
-
+              // Send the token to your backend to complete the payment
+              const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
+                cardDetails:updatedCardDetails//card creation
+        });
+            const { message,transactionId, status } = paymentResponse.data;
+           
             if (status === "paid") {
                 toast.success("Payment successfully compeleted!");
 
-                console.log("caedssssssssss", {
+                console.log( "caedssssssssss",{
                     planDetails,
                     cardDetails,
                     status,
                     totalPaid,
-                    InvoiceId: planDetails.invoiceId,
+                    InvoiceId:planDetails.invoiceId,
                     transactionId
                 });
-
+                
                 const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
                     planDetails,
                     cardDetails,
                     status,
                     totalPaid,
-                    InvoiceId: planDetails.invoiceId,
+                    InvoiceId:planDetails.invoiceId,
                     transactionId
-
                 });
-                const response = await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
+                const response = await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/paid`, {
                     ownerId,
                     tenantId,
                     // ccEmail: "shaikmansoor1200@gmail.com",
-                });
-                if (isUpgrading) {
+                  });  
+                  if (isUpgrading) {
                     navigate("/SubscriptionDetails"); // Redirect to upgraded dashboard
                 } else {
                     navigate("/home"); // Default navigation
                 }
 
                 console.log("Payment and Subscription submitted successfully", subscriptionResponse.data);
-            } else if (paymentResponse.data.status === "failed") {
+            } else if(paymentResponse.data.status === "failed"){
                 toast.error("Payment Failed!");
             }
             else {
@@ -145,7 +207,6 @@ const CardDetails = () => {
             console.error("Error processing payment:", error);
         }
     };
-
 
     return (
         <div className="flex  mt-2 flex-col h-full w-full items-center  bg-white">

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
-import { Minus } from 'lucide-react';
+import { FaMinus, } from 'react-icons/fa';
 import Cookies from "js-cookie";
 import "react-datepicker/dist/react-datepicker.css";
+import EditAvailabilityDetails from './EditAvailabilityDetails';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
+import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
 const AvailabilityUser = (
   // {
@@ -29,7 +32,12 @@ const AvailabilityUser = (
     Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
   });
 
-  const userId = Cookies.get("userId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const userId = tokenPayload.userId;
+
+  console.log("userId AvailabilityUser", userId);
 
   useEffect(() => {
     const fetchData =  () => {
@@ -151,7 +159,7 @@ const AvailabilityUser = (
                           xl:w-2/3
                           2xl:w-32">
                               {slot.startTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            <Minus className="text-gray-600 
+                            <FaMinus className="text-gray-600 
                           sm:text-xs md:text-sm lg:text-sm" />
                             <span className="border border-gray-400 rounded text-center py-2 px-3 
                           w-24 text-sm

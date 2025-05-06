@@ -10,22 +10,23 @@ const validatePhoneNumber = (phone) => {
     return re.test(String(phone));
 };
 
-const getErrorMessage = (field, value) => {
+
+const getErrorMessage = (field, value, formData) => {  // Modified to accept formData parameter
     const messages = {
         LastName: "Last Name is required",
         Email: "Email is required",
         Phone: "Phone Number is required",
         Gender: "Gender is required",
         HigherQualification: "Higher Qualification is required",
-        CurrentRole: "Current Role is required",
         UniversityCollege: "University/College is required",
         CurrentExperience: "Current Experience is required",
         RelevantExperience: "Relevant Experience is required",
+        RelevantExperienceGreater: "Relevant Experience cannot be greater than Current Experience",
         Position: "Position is required",
         skills: "At least one skill is required",
-        Date_Of_Birth: "Date of Birth is required",
         invalidEmail: "Invalid email address",
         invalidPhone: "Invalid phone number",
+        // CurrentRole: "Current Role is required",
     };
 
     if (!value) {
@@ -40,16 +41,26 @@ const getErrorMessage = (field, value) => {
         return messages.invalidPhone;
     }
 
+    // Add validation for Relevant Experience
+    if (field === "RelevantExperience" && formData && formData.CurrentExperience) {
+        const currentExp = parseInt(formData.CurrentExperience);
+        const relevantExp = parseInt(value);
+        if (relevantExp > currentExp) {
+            return messages.RelevantExperienceGreater;
+        }
+    }
+
     return "";
 };
 
+// Update the validateCandidateForm function to pass formData to getErrorMessage:
 const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
-    console.log("formData", formData);
+    // console.log("formData", formData);
     let formIsValid = true;
     const newErrors = { ...errors };
 
     Object.keys(formData).forEach((field) => {
-        const errorMessage = getErrorMessage(field, formData[field]);
+        const errorMessage = getErrorMessage(field, formData[field], formData);  // Pass formData here
         if (errorMessage) {
             newErrors[field] = errorMessage;
             formIsValid = false;
@@ -57,19 +68,17 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     });
 
     if (!selectedPosition || selectedPosition.length === 0) {
-        newErrors.Position = getErrorMessage("Position", null);
+        newErrors.Position = getErrorMessage("Position", null, formData);
         formIsValid = false;
     }
     
-
     if (entries.length === 0) {
-        newErrors.skills = getErrorMessage("skills", entries.length);
+        newErrors.skills = getErrorMessage("skills", entries.length, formData);
         formIsValid = false;
     }
 
     return { formIsValid, newErrors };
 };
-
  const countryCodes = [
     { value: '+1', label: '🇺🇸 +1 (USA)' },
     { value: '+44', label: '🇬🇧 +44 (UK)' },

@@ -1,5 +1,7 @@
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
-import { MoreHorizontal } from 'lucide-react';
+import { MdMoreHoriz } from "react-icons/md";
+import { CgInfo } from "react-icons/cg";
 import maleImage from "../../../Images/man.png";
 import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
@@ -82,7 +84,7 @@ const TableView = ({ currentFilteredRows, toggleAction, actionViewMore, handleUs
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                         <div className="relative">
                           <button onClick={() => toggleAction(users._id)}>
-                            <MoreHorizontal className="text-3xl" />
+                            <MdMoreHoriz className="text-3xl" />
                           </button>
                           {actionViewMore === users._id && (
                             <div className="absolute z-10 w-36 rounded-md shadow-lg bg-white ring-1 p-4 ring-black ring-opacity-5 right-2">

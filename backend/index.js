@@ -66,17 +66,16 @@ const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
 const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
 const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-const emailCommonRouter = require('./routes/emailCommonRoutes.js');
 const Cardrouter = require("./routes/Carddetailsroutes.js");
-
+const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js')
 // Register all routes
 app.use('/linkedin', linkedinAuthRoutes);
 app.use("/Individual", individualLoginRoutes);
 app.use('/',SubscriptionRouter);
 app.use('/',CustomerSubscriptionRouter)
 app.use('/Organization', organizationRoutes);
-app.use('/emailCommon',emailCommonRouter)
 app.use('/',Cardrouter)
+app.use('/emails', EmailRouter)
 
 // Master Data Endpoints
 app.get('/skills', async (req, res) => {
@@ -459,23 +458,7 @@ app.get('/getUsersByRoleId', async (req, res) => {
   }
 });
 
-app.post('/rolesdata', async (req, res) => {
-  const { roleName, reportsToRoleId, description, organizationId } = req.body;
 
-  const newRole = new Role({
-    roleName,
-    reportsToRoleId,
-    description,
-    organizationId,
-  });
-
-  try {
-    const savedRole = await newRole.save();
-    res.status(201).json(savedRole);
-  } catch (error) {
-    res.status(500).json({ message: 'Error saving role', error: error.message });
-  }
-});
 // this is realted to data utils i think
 app.get('/rolesdata/:id', async (req, res) => {
   const { id } = req.params;
@@ -489,23 +472,25 @@ app.get('/rolesdata/:id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching role', error: error.message });
   }
 });
+
+
 //this is related to roles main page get
-app.get('/rolesdata', async (req, res) => {
-  const { organizationId } = req.query; // Use query parameters
-  console.log("333333333");
-  try {
-    const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
-    if (!roles || roles.length === 0) {
-      return res.status(404).json({ message: 'No roles found for this organization' });
-    }
-    res.status(200).json(roles);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching roles', error: error.message });
-  }
-});
+// app.get('/rolesdata', async (req, res) => {
+//   const { organizationId } = req.query; // Use query parameters
+//   console.log("333333333");
+//   try { 
+//     const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
+//     if (!roles || roles.length === 0) {
+//       return res.status(404).json({ message: 'No roles found for this organization' });
+//     }
+//     res.status(200).json(roles);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching roles', error: error.message });
+//   }
+// });
 
 app.get('/api/rolesdata/:organizationId', async (req, res) => {
-
+console.log('triggered');
   const { organizationId } = req.params;
   try {
     const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
@@ -616,6 +601,33 @@ app.use('/', mockInterviewRoutes);
 
 const groupsRoutes = require('./routes/interviewerGroupRoutes');
 app.use('/groups', groupsRoutes);
+
+app.get('/org-users', async (req, res) => {
+  try {
+    const tenantId = req.query.tenantId;
+
+    if (!tenantId) {
+      return res.status(400).json({ message: 'tenantId is required' });
+    }
+
+    const users = await Users.find({ tenantId });
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+});
+
+// Email TemplateRouter
+const EmailTemplateRouter = require("./routes/EmailTemplateRoutes.js");
+app.use('/emailTemplate', EmailTemplateRouter);
+
+const rolesRoutes = require('./routes/rolesRoutes');
+const rolesPermissionRoutes = require('./routes/rolesPermissionRoutes');
+
+app.use('/permissions', rolesPermissionRoutes);
+app.use('/',  rolesRoutes);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {

@@ -4,7 +4,6 @@ import Cookies from "js-cookie";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
 const InterviewUserDetails = (
   // {userData, setUserData }
@@ -13,10 +12,7 @@ const InterviewUserDetails = (
   const navigate = useNavigate();
   const [userData, setUserData] = useState({})
 
-   const authToken = Cookies.get("authToken");
-   const tokenPayload = decodeJwt(authToken);
- 
-   const userId = tokenPayload?.userId;
+  const userId = Cookies.get("userId");
 
   useEffect(() => {
     const fetchData = async () => {

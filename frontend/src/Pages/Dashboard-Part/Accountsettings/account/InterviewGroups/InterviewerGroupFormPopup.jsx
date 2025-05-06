@@ -5,12 +5,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 import Cookies from "js-cookie";
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { FaExpand, FaCompress, } from 'react-icons/fa';
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
 import axios from 'axios';
 import { validateGroupForm } from '../../../../../utils/InterviewGroupValidations';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
-
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 Modal.setAppElement('#root');
 export function InterviewerGroupFormPopup() {
   const {id} = useParams();
@@ -25,13 +25,16 @@ export function InterviewerGroupFormPopup() {
   console.log("InterviewerGroupFormPopup id", id);
   
    const [users, setUsers] = useState([]);
-   const [formErrors, setFormErrors] = useState({}); 
+   const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const organizationId = Cookies.get("organizationId");
-          
-    // console.log("organizationDetails", organizationId);
 
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const tenantId = tokenPayload.tenantId;
+
+    console.log("tenantId InterviewerGroupFormPopup", tenantId);
+          
     useEffect(() => {
       const fetchData = () => {
         try {
@@ -70,10 +73,14 @@ export function InterviewerGroupFormPopup() {
     useEffect(() => {
         const fetchUsers = async () => {
           try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/org-users`, {
-              tenantId:organizationId
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/org-users`, 
+              {
+                params: {
+                  tenantId: tenantId
+                }
+              }
 
-            })
+            )
             // console.log('Fetched users:', response.data);
             setUsers(response.data);
           } catch (error) {
@@ -81,7 +88,7 @@ export function InterviewerGroupFormPopup() {
           }
         }
         fetchUsers()
-      }, [organizationId])
+      }, [tenantId])
 
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -102,7 +109,7 @@ export function InterviewerGroupFormPopup() {
               description: formData.description,
               status: formData.status,
               users: formData.members,
-              tenantId: organizationId
+              tenantId: tenantId
             });
           } else {
             // Create new group
@@ -111,7 +118,7 @@ export function InterviewerGroupFormPopup() {
               description: formData.description,
               status: formData.status,
               users: formData.members,
-              tenantId: organizationId
+              tenantId: tenantId
             });
           }
           
@@ -210,9 +217,9 @@ export function InterviewerGroupFormPopup() {
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             {isFullScreen ? (
-                              <Minimize2 className="w-5 h-5 text-gray-500" />
+                              <FaCompress className="w-5 h-5 text-gray-500" />
                             ) : (
-                              <Maximize2 className="w-5 h-5 text-gray-500" />
+                              <FaExpand className="w-5 h-5 text-gray-500" />
                             )}
                           </button>
                           <button

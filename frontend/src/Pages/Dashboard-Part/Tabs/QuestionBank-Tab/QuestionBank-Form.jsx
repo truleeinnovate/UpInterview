@@ -106,7 +106,7 @@ const Interviewcq = ({
       const tokenPayload = decodeJwt(authToken);
 
   const userId = tokenPayload?.userId;
-  const orgId = tokenPayload?.organizationId;
+  const orgId = tokenPayload?.tenantId;
 
   const handleListSelection = (candidateId) => {
     setSelectedListId(candidateId);

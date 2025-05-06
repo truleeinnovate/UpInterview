@@ -106,7 +106,7 @@ const MockSchedulelater = () => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
 
-  const organizationId = tokenPayload?.organizationId;
+  const organizationId = tokenPayload?.tenantId;
   const Navigate = useNavigate();
 
   const [showDropdownRole, setShowDropdownRole] = useState(false);

@@ -5,14 +5,19 @@ import Cookies from 'js-cookie'
 import { EditButton } from './Buttons'
 import { RoleFormPopup } from './RoleFormPopup';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 export function Role() {
   const [editingRole, setEditingRole] = useState(null)
   const [isCreating, setIsCreating] = useState(false)
   const [roles, setRoles] = useState([])
    const navigate = useNavigate();
-  const tenantId = Cookies.get("organizationId");//67f8af5e82a3a5a4c3866105 import.meta.env.VITE_API_URL
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
 
+  const tenantId = tokenPayload.tenantId;
+  console.log("tokenPayload in role", tokenPayload);
+console.log("tenantId in role", tenantId);
   useEffect(() => {
     const fetchRoles = async () => {
       try {

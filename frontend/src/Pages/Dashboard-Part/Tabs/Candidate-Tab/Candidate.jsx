@@ -5,9 +5,9 @@ import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
 import CandidateKanban from './CandidateKanban';
 import Tooltip from "@mui/material/Tooltip";
-// import AddCandidateForm from './AddCandidateForm';
-// import CandidateDetails from './CandidateDetails';
-
+import AddCandidateForm from './AddCandidateForm';
+import CandidateDetails from './CandidateViewDetails/CandidateDetails';
+import { useMediaQuery } from 'react-responsive';
 // import FaList from '../../icons/FaList.svg?react';
 // import TbLayoutGridRemove from '../../icons/TbLayoutGridRemove.svg?react';
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
@@ -264,24 +264,18 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
       </div>
     </div>
   );
-}; 
+};
 
-const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {//this props we will use in assessment form
-  const {
-    candidateData,
-    loading,
-    // fetchCandidates
-  } = useCustomContext();
-  // console.log("candidateData ", candidateData)
+
+
+function Candidate({ candidates, onResendLink, isAssessmentView }) {
+  const { candidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  // State for sorting configuration and filters
-  // const [candidateData,setCandidatesData] = useState([]);
-  // const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -290,17 +284,30 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
     tech: [],
     experience: { min: '', max: '' },
   });
-  const navigate = useNavigate();
-  const handleFilterChange = useCallback((filters) => {
-    setSelectedFilters(filters);
-  }, []);
+    const navigate = useNavigate();
 
+  // Determine which data to use based on isAssessmentView
+  const dataToUse = isAssessmentView ? candidates : candidateData;
+
+  // Automatically switch to Kanban view for tablet view (768px to 1024px)
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+
+  useEffect(() => {
+    if (isTablet) {
+      setView('kanban');
+    } else {
+      setView('table');
+    }
+  }, [isTablet]);
+
+  const handleFilterChange = (filters) => {
+    setSelectedFilters(filters);
+  };
 
   const handleEdit = (candidate) => {
     setSelectedCandidate(candidate);
     setEditModeOn(true);
     setShowAddForm(true);
-    // console.log('Edit candidate:', candidate);
   };
 
   const handleView = (candidate) => {
@@ -308,46 +315,46 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
     setSelectCandidateView(true);
   };
 
-  // console.log("candidateData table ", candidateData);
-
-
-
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
 
-
+  const handleFilterIconClick = () => {
+    if (dataToUse.length !== 0) {
+      setIsFilterActive((prev) => !prev);
+      toggleMenu();
+    }
+  };
 
   const FilteredData = () => {
-    if (!Array.isArray(candidateData)) return [];
-    return candidateData.filter((user) => {
+    if (!Array.isArray(dataToUse)) return [];
+    return dataToUse.filter((user) => {
       const fieldsToSearch = [
         user.LastName,
         user.Email,
         user.Phone,
-      ].filter(field => field !== null && field !== undefined);
+      ].filter((field) => field !== null && field !== undefined);
 
-      const matchesStatus = selectedFilters.status.length === 0 || selectedFilters.status.includes(user.HigherQualification);
-      const matchesTech = selectedFilters.tech.length === 0 || user.skills?.some(skill => selectedFilters.tech.includes(skill.skill));
+      const matchesStatus =
+        selectedFilters.status.length === 0 ||
+        selectedFilters.status.includes(user.HigherQualification);
+      const matchesTech =
+        selectedFilters.tech.length === 0 ||
+        user.skills?.some((skill) => selectedFilters.tech.includes(skill.skill));
       const matchesExperience =
-        (!selectedFilters.experience.min || user.CurrentExperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max || user.CurrentExperience <= selectedFilters.experience.max);
+        (!selectedFilters.experience.min ||
+          user.CurrentExperience >= selectedFilters.experience.min) &&
+        (!selectedFilters.experience.max ||
+          user.CurrentExperience <= selectedFilters.experience.max);
 
-      const matchesSearchQuery = fieldsToSearch.some(
-        (field) =>
-          field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       return matchesSearchQuery && matchesStatus && matchesTech && matchesExperience;
     });
   };
 
-  const handleFilterIconClick = () => {
-    if (candidateData.length !== 0) {
-      setIsFilterActive((prev) => !prev);
-      toggleMenu();
-    }
-  };
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
   const nextPage = () => {
@@ -365,79 +372,33 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
-
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // const handleAddCandidate = (newCandidate) => {
-  //   setCandidatesData(prev => [...prev, newCandidate]);
-  // };
-
-
-  // Handle column sorting
-  // const handleSort = (key) => {
-  //   let direction = 'asc';
-  //   if (sortConfig.key === key && sortConfig.direction === 'asc') {
-  //     direction = 'desc';
-  //   }
-  //   setSortConfig({ key, direction });
-  // };
-
-  // Apply filters to candidates list
-  // const filteredCandidates = candidates.filter(candidate => {
-  //   if (filters.Status !== 'all' && candidate.Status !== filters.Status) return false;
-  //   // if (filters.department !== 'all' && candidate.department !== filters.department) return false;
-  //   return true;
-  // });
-
-  // Sort filtered candidates based on current sort configuration
-  // const sortedCandidates = [...candidateData].sort((a, b) => {
-  //   if (!sortConfig.key) return 0;
-
-  //   if (a[sortConfig.key] < b[sortConfig.key]) {
-  //     return sortConfig.direction === 'asc' ? -1 : 1;
-  //   }
-  //   if (a[sortConfig.key] > b[sortConfig.key]) {
-  //     return sortConfig.direction === 'asc' ? 1 : -1;
-  //   }
-  //   return 0;
-  // });
-
-  if (loading) {
-    return <p className='h-full w-full flex justify-center items-center'>loading....</p>
+  if (loading && !isAssessmentView) {
+    return (
+      <p className="h-full w-full flex justify-center items-center">loading....</p>
+    );
   }
 
   return (
-    <>
-    <main className="bg-background">
-      <main className={isAssessmentContext ? '' : 'max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8'}>
-
-        <div className="mb-3">
-          <div className="flex sm:flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row  justify-between items-start sm:items-center gap-2 mb-3">
-            {!isAssessmentContext && (
-              <h1 className="text-2xl font-bold text-custom-blue">
-                Candidates
-              </h1>
-            )}
-            {!isAssessmentContext && (
+    <main className="h-full -mt-2 w-full bg-white">
+      <main className={isAssessmentView ? "p-2" : "w-full px-9 py-2 sm:mt-20 md:mt-24  sm:px-2 lg:px-8 xl:px-8 2xl:px-8"} >
+        {!isAssessmentView && (
+          <div className="mb-3">
+            <div className="flex sm:flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+              <h1 className="text-2xl font-bold text-custom-blue">Candidates</h1>
               <button
-                onClick={() =>
-                  navigate('new')
-                  // setShowAddForm(true)
-                }
+                onClick={() => navigate('new')}
                 className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Candidate
               </button>
-            )}
-          </div>
+            </div>
 
-          <div className="flex md:flex-row xl:w-row lg:w-row 2xl:w-row sm:flex-row items-stretch sm:items-center gap-2 justify-between">
-            {isAssessmentContext ? (
-              <p className='font-semibold text-lg float-start'>Candidates</p>
-            ) : (
+            <div className="flex md:flex-row sm:flex-row items-stretch sm:items-center gap-2 justify-between">
               <div className="flex items-center gap-1 order-1 sm:order-1">
                 <button
                   onClick={() => setView('table')}
@@ -446,7 +407,7 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                     : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                 >
-                  <FaList className='w-7 h-7' />
+                  <FaList className="w-7 h-7" />
                 </button>
                 <button
                   onClick={() => setView('kanban')}
@@ -455,91 +416,91 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                     : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                 >
-                  <TbLayoutGridRemove className='w-5 h-5' />
+                  <TbLayoutGridRemove className="w-5 h-5" />
                 </button>
               </div>
-            )}
 
-            <div className="flex order-2 sm:order-2  items-center ">
+              <div className="flex order-2 sm:order-2 items-center">
+                <div className="relative flex-1">
+                  <IoMdSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search candidates..."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="w-[100%] pl-8 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
+                  />
+                </div>
 
-              {/* // flex-1 order-1 sm:order-2 */}
-              <div className="relative flex-1 ">
-                <IoMdSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search candidates..."
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  className="w-[100%] pl-8 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
-                />
-              </div>
-
-
-              <div className="flex items-center ml-2 space-x-1">
-                <span>{currentPage + 1} / {totalPages}</span>
-                <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""}`}
-                    onClick={prevPage}
-                  >
-                    <IoIosArrowBack className="text-custom-blue" />
+                <div className="flex items-center ml-2 space-x-1">
+                  <span>
+                    {currentPage + 1} / {totalPages}
                   </span>
-                </Tooltip>
+                  <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? ' cursor-not-allowed' : ''
+                        }`}
+                      onClick={prevPage}
+                    >
+                      <IoIosArrowBack className="text-custom-blue" />
+                    </span>
+                  </Tooltip>
 
-                <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length ? " cursor-not-allowed" : ""}`}
-                    onClick={nextPage}
-                  >
-                    <IoIosArrowForward className="text-custom-blue" />
-                  </span>
-                </Tooltip>
+                  <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length
+                        ? ' cursor-not-allowed'
+                        : ''
+                        }`}
+                      onClick={nextPage}
+                    >
+                      <IoIosArrowForward className="text-custom-blue" />
+                    </span>
+                  </Tooltip>
+                </div>
+                <div className="relative ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
+                  <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      onClick={handleFilterIconClick}
+                      style={{
+                        opacity: dataToUse.length === 0 ? 0.2 : 1,
+                        pointerEvents: dataToUse.length === 0 ? 'none' : 'auto',
+                      }}
+                    >
+                      {isFilterActive ? (
+                        <LuFilterX className="text-custom-blue" />
+                      ) : (
+                        <LuFilter className="text-custom-blue" />
+                      )}
+                    </span>
+                  </Tooltip>
+                </div>
               </div>
-              <div className="relative ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    onClick={handleFilterIconClick}
-                    style={{
-                      opacity: candidateData.length === 0 ? 0.2 : 1,
-                      pointerEvents: candidateData.length === 0 ? "none" : "auto",
-                    }}
-                  >
-                    {isFilterActive ? (
-                      <LuFilterX className="text-custom-blue" />
-                    ) : (
-                      <LuFilter className="text-custom-blue" />
-                    )}
-                  </span>
-                </Tooltip>
-
-              </div>
-
             </div>
-
-
           </div>
-        </div>
+        )}
 
-        <div className="bg-white rounded-xl  border border-gray-100">
-
-          {view === 'table' ?
-            <div className="flex relative w-full overflow-hidden">
-              <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                }`} >
+        <div className="bg-white rounded-xl border border-gray-100">
+          {view === 'table' ? (
+            <div className="flex  w-full mb-2">
+              <div
+                className={`transition-all duration-300 ${isMenuOpen
+                  ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                  : 'w-full'
+                  }`}
+              >
                 <CandidateTable
                   candidates={currentFilteredRows}
                   onView={handleView}
                   onEdit={handleEdit}
-                  isAssessmentContext={isAssessmentContext}
-                  onSelectCandidates={onSelectCandidates}
-                // isMenuOpen={isMenuOpen}
-                // closeOffcanvas={handleFilterIconClick}
-                // onFilterChange={handleFilterChange}
+                  onResendLink={onResendLink}
+                  isAssessmentView={isAssessmentView}
+                  isMenuOpen={isMenuOpen}
                 />
               </div>
 
-              {isMenuOpen && (
-                <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+              {!isAssessmentView && isMenuOpen && (
+                <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
                   <OffcanvasMenu
                     isOpen={isMenuOpen}
                     closeOffcanvas={handleFilterIconClick}
@@ -548,19 +509,24 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                 </div>
               )}
             </div>
-
-            :
+          ) : (
             <div className="flex relative w-full overflow-hidden">
-              <div className={` transition-all duration-300 ${isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                }`} >
+              <div
+                className={`transition-all duration-300 ${isMenuOpen
+                  ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                  : 'w-full'
+                  }`}
+              >
                 <CandidateKanban
                   candidates={currentFilteredRows}
                   onView={handleView}
                   onEdit={handleEdit}
+                  onResendLink={onResendLink}
+                  isAssessmentView={isAssessmentView}
                 />
               </div>
-              {isMenuOpen && (
-                <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+              {!isAssessmentView && isMenuOpen && (
+                <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
                   <OffcanvasMenu
                     isOpen={isMenuOpen}
                     closeOffcanvas={handleFilterIconClick}
@@ -569,40 +535,36 @@ const CandidateTab = ({ isAssessmentContext = false, onSelectCandidates }) => {/
                 </div>
               )}
             </div>
-          }
+          )}
         </div>
       </main>
 
-      {/* {selectCandidateView === true && (
-        <CandidateDetails
-          candidate={selectedCandidate}
-          onClose={() => setSelectCandidateView(null)}
-        />
-      )} */}
+      {
+        selectCandidateView && (
+          <CandidateDetails
+            candidate={selectedCandidate}
+            onClose={() => setSelectCandidateView(false)}
+          />
+        )
+      }
 
-
-      {/* {showAddForm && <AddCandidateForm
-        isOpen={showAddForm}
-        onClose={() => {
-          setShowAddForm(false);
-          setSelectedCandidate(null);
-          setEditModeOn(false);
-          // fetchCandidates();
-        }}
-
-        selectedCandidate={selectedCandidate}
-        isEdit={editModeOn}
-
-      // onSave={handleAddCandidate}
-      />} */}
-
-     
-<Outlet />
-    </main>
-    
-    </>
+      {
+        !isAssessmentView && showAddForm && (
+          <AddCandidateForm
+            isOpen={showAddForm}
+            onClose={() => {
+              setShowAddForm(false);
+              setSelectedCandidate(null);
+              setEditModeOn(false);
+            }}
+            selectedCandidate={selectedCandidate}
+            isEdit={editModeOn}
+          />
+        )
+      }
+      <Outlet />
+    </main >
   );
-};
+}
 
-export default CandidateTab;
-
+export default Candidate;

@@ -33,7 +33,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
     const tokenPayload = decodeJwt(authToken);
 
     const userId = tokenPayload?.userId;
-    const orgId = tokenPayload?.organizationId;
+    const orgId = tokenPayload?.tenantId;
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingSectionId, setEditingSectionId] = useState(null);

@@ -35,7 +35,7 @@ function RoundFormPosition() {
   const tokenPayload = decodeJwt(authToken);
 
   const userId = tokenPayload?.userId;
-  const tenantId = tokenPayload?.organizationId;
+  const tenantId = tokenPayload?.tenantId;
 
   // const orgId = Cookies.get("organizationId");
 

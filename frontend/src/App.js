@@ -77,6 +77,7 @@ import { RoleFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/Ro
 import SettingsPage from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
 import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx';
 import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
+import EmailTemplate from './Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate.jsx';
 //-----------------------------------account settings
 
 import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplates.jsx';
@@ -94,7 +95,9 @@ const App = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload?.organization === "true";
+  const organization = tokenPayload?.organization;
+
+  console.log('authToken', authToken, 'tokenPayload', tokenPayload, 'organization', organization)
 
   return (
     <React.Fragment>
@@ -245,6 +248,9 @@ const App = () => {
               </Route>
             }
 
+            {/* Email templates  */}
+            <Route path="email-settings" element={<EmailTemplate />} />
+
 
 
             {/* other tabs */}
@@ -256,16 +262,15 @@ const App = () => {
             <Route path="usage" element={<Usage />} />
 
 
-
-
             {/* Org-Only Tabs */}
             {
               organization &&
 
-              <>              <Route path="roles" element={<Role />} >
-                <Route index element={null} />
-                <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-              </Route>
+              <>
+                <Route path="roles" element={<Role />} >
+                  <Route index element={null} />
+                  <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                </Route>
 
                 <Route path="sharing" element={<Sharing />} />
                 <Route path="sub-domain" element={<DomainManagement />} />

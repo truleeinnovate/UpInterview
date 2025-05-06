@@ -15,8 +15,11 @@ import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Minimize, Expand } from 'lucide-react';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import { 
+  Minimize , 
+  Expand  
+} from 'lucide-react';
+
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -134,6 +137,8 @@ const AddCandidateForm = ({ mode }) => {
     candidateData,
   } = useCustomContext();
 
+  
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -195,10 +200,7 @@ const AddCandidateForm = ({ mode }) => {
     CurrentRole: '',
   });
   const [errors, setErrors] = useState({});
-
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  const userId = Cookies.get("userId");
 
   useEffect(() => {
 
@@ -206,15 +208,12 @@ const AddCandidateForm = ({ mode }) => {
 
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
-      const phone = selectedCandidate.Phone || '';
-      const countryCode = phone.startsWith('+') ? phone.split(' ')[0] : '';
-      const phoneNumber = phone.startsWith('+') ? phone.split(' ')[1] : phone;
-
+    
       setFormData({
         FirstName: selectedCandidate.FirstName || '',
         LastName: selectedCandidate.LastName || '',
         Email: selectedCandidate.Email || '',
-        Phone: phoneNumber || '',
+        Phone: selectedCandidate.Phone || '',
         Date_Of_Birth: dob ? format(dob, 'MMMM dd, yyyy') : '',
         Gender: selectedCandidate.Gender || '',
         HigherQualification: selectedCandidate.HigherQualification || '',
@@ -225,7 +224,7 @@ const AddCandidateForm = ({ mode }) => {
         ImageData: selectedCandidate.imageUrl || null,
         resume: selectedCandidate.resume || null,
         CurrentRole: selectedCandidate.CurrentRole || '',
-        CountryCode: countryCode || '',
+        CountryCode: selectedCandidate.CountryCode || '',
       });
 
       if (selectedCandidate.resume?.filename) {
@@ -238,6 +237,8 @@ const AddCandidateForm = ({ mode }) => {
       }
 
       setEntries(selectedCandidate.skills || []);
+      // Initialize allSelectedSkills with the skills from the candidate being edited
+      setAllSelectedSkills(selectedCandidate.skills?.map(skill => skill.skill) || []);
     }
   }, [id, candidateData]);
 
@@ -248,8 +249,9 @@ const AddCandidateForm = ({ mode }) => {
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, CurrentRole: role }));
     setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole(''); // Clear the search term
-  };
+    setSearchTermCurrentRole(''); // Clear the search term
+  };
+
 
   const filteredCurrentRoles = currentRole?.filter(role =>
     role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
@@ -290,10 +292,17 @@ const AddCandidateForm = ({ mode }) => {
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
+    setSelectedSkill("");
   };
+
+
+  const filteredSkills = skills.filter(skill =>
+    skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddEntry = () => {
     if (editingIndex !== null) {
+      const oldSkill = entries[editingIndex].skill;
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
@@ -305,7 +314,15 @@ const AddCandidateForm = ({ mode }) => {
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
-      setAllSelectedSkills([selectedSkill]);
+      setAllSelectedSkills(prev => {
+        const newSkills = prev.filter(skill => skill !== oldSkill);
+        newSkills.push(selectedSkill);
+        return newSkills;
+      });
+
+      setEditingIndex(null);
+
+      // setAllSelectedSkills([selectedSkill]);
       setFormData((prevFormData) => ({
         ...prevFormData,
         skills: updatedEntries,
@@ -338,7 +355,8 @@ const AddCandidateForm = ({ mode }) => {
 
   const handleEdit = (index) => {
     const entry = entries[index];
-    setSelectedSkill(entry.skill);
+    // setSelectedSkill(entry.skill);
+    setSelectedSkill(entry.skill || ""); 
     setSelectedExp(entry.experience);
     setSelectedLevel(entry.expertise);
     setEditingIndex(index);
@@ -356,7 +374,10 @@ const AddCandidateForm = ({ mode }) => {
   const isNextEnabled = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
-        return selectedSkill !== "";
+        const currentSkill = entries[editingIndex]?.skill;
+        return selectedSkill !== "" && 
+               (selectedSkill === currentSkill || 
+                !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -421,7 +442,7 @@ const AddCandidateForm = ({ mode }) => {
   };
 
   const handleClose = () => {
-    // resetFormData();
+    resetFormData();
     // onClose();
     // navigate('/candidate');
 
@@ -453,16 +474,16 @@ const AddCandidateForm = ({ mode }) => {
       setErrors(newErrors);
       return;
     }
-    console.log('erros: ', errors);
 
-    const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
+    // const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
       Email: formData.Email,
-      Phone: fullPhoneNumber,
+      Phone: formData.Phone,
+      CountryCode:formData.CountryCode,
       CurrentExperience: formData.CurrentExperience,
       RelevantExperience: formData.RelevantExperience,
       HigherQualification: formData.HigherQualification,
@@ -524,14 +545,14 @@ const AddCandidateForm = ({ mode }) => {
       return;
     }
 
-    const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
       Email: formData.Email,
-      Phone: fullPhoneNumber,
+      Phone: formData.Phone,
+      CountryCode: formData.CountryCode,
       CurrentExperience: formData.CurrentExperience,
       RelevantExperience: formData.RelevantExperience,
       HigherQualification: formData.HigherQualification,
@@ -613,6 +634,7 @@ const AddCandidateForm = ({ mode }) => {
       RelevantExperience: '',
       skills: [],
       CurrentRole: '',
+      CountryCode:''
     });
 
     setErrors({});
@@ -624,6 +646,7 @@ const AddCandidateForm = ({ mode }) => {
     setCurrentStep(0);
     removeImage();
     removeResume();
+    setAllSelectedSkills([])
   };
 
   const modalClass = classNames(
@@ -648,7 +671,8 @@ const AddCandidateForm = ({ mode }) => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
-                Add New Candidate
+              {id ? "Update Candidate" :"Add New Candidate" }
+                
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -664,7 +688,9 @@ const AddCandidateForm = ({ mode }) => {
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                > <X className="w-4 h-4" />
+                >
+                  {/* <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" /> */}
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -784,7 +810,7 @@ const AddCandidateForm = ({ mode }) => {
                     name="FirstName"
                     value={formData.FirstName}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
+                    className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 "
                     placeholder="Enter First Name"
                   />
                 </div>
@@ -797,7 +823,7 @@ const AddCandidateForm = ({ mode }) => {
                     name="LastName"
                     value={formData.LastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent sm:text-sm ${errors.LastName && 'border-red-500'}`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.LastName && 'border-red-500'}`}
                     placeholder="Enter Last Name"
                   />
                   {errors.LastName && <p className="text-red-500 text-xs pt-1">{errors.LastName}</p>}
@@ -811,7 +837,7 @@ const AddCandidateForm = ({ mode }) => {
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent sm:text-sm ${errors.Email && 'border-red-500'}`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Email && 'border-red-500'}`}
                     placeholder="Enter email address"
                   />
                   {errors.Email && <p className="text-red-500 text-xs pt-1">{errors.Email}</p>}
@@ -850,7 +876,7 @@ const AddCandidateForm = ({ mode }) => {
                           }
                         }}
                         maxLength={10}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent sm:text-sm ${errors.Phone && 'border-red-500'}`}
+                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Phone && 'border-red-500'}`}
                         placeholder="Enter Phone number"
                       />
 
@@ -865,6 +891,7 @@ const AddCandidateForm = ({ mode }) => {
                   <CustomDatePicker
                     selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
                     onChange={handleDateChange}
+                    placeholder="Select date of birth" 
                   />
                 </div>
 
@@ -881,7 +908,8 @@ const AddCandidateForm = ({ mode }) => {
 
                 <div ref={currentRoleDropdownRef}>
                   <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Role <span className="text-red-500">*</span>
+                    Current Role 
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -892,7 +920,7 @@ const AddCandidateForm = ({ mode }) => {
                       onClick={toggleCurrentRole}
                       placeholder="Select Current Role"
                       autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -967,7 +995,7 @@ const AddCandidateForm = ({ mode }) => {
                     max="15"
                     value={formData.CurrentExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Enter current experience"
                   />
                   {errors.CurrentExperience && <p className="text-red-500 text-xs pt-1">{errors.CurrentExperience}</p>}
@@ -985,10 +1013,10 @@ const AddCandidateForm = ({ mode }) => {
                     max="15"
                     value={formData.RelevantExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Enter relevant experience"
                   />
-                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
+                {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
                 </div>
               </div>
 
@@ -1002,7 +1030,14 @@ const AddCandidateForm = ({ mode }) => {
 
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => { setIsModalOpen(true)
+                      if (editingIndex === null) {
+                        setSelectedSkill(""); // Reset selection when adding new skill
+                        setSelectedExp("");
+                        setSelectedLevel("");
+                      }
+
+                    }}
                     className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded"
                   >
                     <FaPlus className="mr-1 w-5 h-5" /> Add Skills
@@ -1014,10 +1049,12 @@ const AddCandidateForm = ({ mode }) => {
                 <div>
                   <div className="space-y-2 mb-4 mt-5">
                     {entries.map((entry, index) => (
-                      <div key={index} className="flex flex-wrap justify-between -mx-2 border p-3 rounded-lg items-center bg-blue-100">
-                        <div className="px-2">{entry.skill}</div>
-                        <div className="px-2">{entry.experience}</div>
-                        <div className="px-2">{entry.expertise}</div>
+                      <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
+                          <div className="flex justify-between border bg-white rounded w-full mr-3">
+                        <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
+                        <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
+                        <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
+                        </div>
                         <div className="flex space-x-2">
                           <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
                             <FaEdit />
@@ -1031,10 +1068,10 @@ const AddCandidateForm = ({ mode }) => {
                   </div>
 
                   {deleteIndex !== null && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
+                    <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-end items-center right-0 pr-44 z-50">
                       <div className="bg-white p-5 rounded shadow-lg">
                         <p>Are you sure you want to delete this Skill?</p>
-                        <div className="flex justify-end space-x-2 mt-4">
+                        <div className="flex justify-center space-x-2 mt-4">
                           <button
                             onClick={confirmDelete}
                             className="bg-red-500 text-white px-4 py-2 rounded"
@@ -1066,7 +1103,7 @@ const AddCandidateForm = ({ mode }) => {
                   onClick={handleSubmit}
                   className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
                 >
-                  save
+                  {id ? "Update" :"Save" }
                 </button>
 
                 {!id && (
@@ -1105,8 +1142,8 @@ const AddCandidateForm = ({ mode }) => {
                             className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
                           />
                           <div className="min-h-56">
-                            {skills.length > 0 ? (
-                              skills.map(skill => (
+                            {filteredSkills.length > 0 ? (
+                              filteredSkills.map(skill => (
                                 <label key={skill._id} className="block mb-1">
                                   <input
                                     type="radio"

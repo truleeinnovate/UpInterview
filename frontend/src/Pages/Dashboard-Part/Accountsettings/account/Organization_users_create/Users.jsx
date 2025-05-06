@@ -1,25 +1,25 @@
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect, useCallback } from "react";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { FiFilter } from "react-icons/fi";
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Filter,
-  LayoutGrid,
-  ChevronUp,
-  ChevronDown,
-  FilterX,
-  Search,
-  List,
-} from 'lucide-react';
+import { TbLayoutGridRemove } from "react-icons/tb";
+import { MdKeyboardArrowUp } from "react-icons/md";
+import { MdKeyboardArrowDown } from "react-icons/md";
+//import Cookies from "js-cookie";
+import { LuFilterX } from "react-icons/lu";
 import { fetchMasterData } from '../../../../../utils/fetchMasterData.js';
+import { FaSearch, FaList } from "react-icons/fa";
 import TableView from "./TableView.jsx";
 import KanbanView from "./KanbanView.jsx";
+import UserProfileDetails from "./UserProfileDetails";
+import Sidebar from "./UserForm";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import Loading from '../../../../../Components/Loading.js';
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -153,9 +153,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
             >
               {isStatusDropdownOpen ? (
-                <ChevronUp />
+                <MdKeyboardArrowUp />
               ) : (
-                <ChevronDown />
+                <MdKeyboardArrowDown />
               )}
             </div>
           </div>
@@ -192,9 +192,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
             >
               {isTechDropdownOpen ? (
-                <ChevronUp />
+                <MdKeyboardArrowUp />
               ) : (
-                <ChevronDown />
+                <MdKeyboardArrowDown />
               )}
             </div>
           </div>
@@ -267,13 +267,16 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 };
 
 const Users = () => {
-  //const organizationId = Cookies.get("organizationId");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState([]);
   console.log("userData:", userData);
   
-  const tenantId = Cookies.get("organizationId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const tenantId = tokenPayload.tenantId;
+console.log("tenantId in users", tenantId);
   const fetchUserData = useCallback(async () => {
     setLoading(true);
     try {
@@ -569,7 +572,7 @@ const Users = () => {
             <div className="flex items-center sm:hidden md:hidden">
               <Tooltip title="table" enterDelay={300} leaveDelay={100} arrow>
                 <span onClick={handleListViewClick}>
-                  <List
+                  <FaList
                     className={`text-xl cursor-pointer mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
                       }`}
                   />
@@ -577,7 +580,7 @@ const Users = () => {
               </Tooltip>
               <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
                 <span onClick={handleKanbanViewClick}>
-                  <LayoutGrid
+                  <TbLayoutGridRemove
                     className={`text-xl cursor-pointer ${viewMode === "kanban" ? "text-custom-blue" : ""
                       }`}
                   />
@@ -587,7 +590,7 @@ const Users = () => {
             </div>
             <div className="flex items-center">
               <div className="relative flex-1 w-[300px] sm:w-full flex-grow">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                 <input
                   type="text"
                   placeholder="Search by Firstname, Email, Phone."
@@ -608,7 +611,7 @@ const Users = () => {
                     className={`border p-2 mr-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : "cursor-pointer"}`}
                     onClick={prevPage}
                   >
-                    <ArrowLeft className="text-custom-blue" />
+                    <IoIosArrowBack className="text-custom-blue" />
                   </span>
                 </Tooltip>
 
@@ -617,7 +620,7 @@ const Users = () => {
                     className={`border p-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : "cursor-pointer"}`}
                     onClick={nextPage}
                   >
-                    <ArrowRight className="text-custom-blue" />
+                    <IoIosArrowForward className="text-custom-blue" />
                   </span>
                 </Tooltip>
               </div>
@@ -631,9 +634,9 @@ const Users = () => {
                     }}
                   >
                     {isFilterActive ? (
-                      <FilterX className="text-custom-blue cursor-pointer" />
+                      <LuFilterX className="text-custom-blue cursor-pointer" />
                     ) : (
-                      <Filter className="text-custom-blue cursor-pointer" />
+                      <FiFilter className="text-custom-blue cursor-pointer" />
                     )}
                   </span>
                 </Tooltip>
