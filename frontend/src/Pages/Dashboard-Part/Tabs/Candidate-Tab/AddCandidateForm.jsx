@@ -246,8 +246,9 @@ const AddCandidateForm = ({ mode }) => {
   };
 
   const handleRoleSelect = (role) => {
-    handleChange({ target: { name: 'CurrentRole', value: role } });
+    setFormData((prev) => ({ ...prev, CurrentRole: role }));
     setShowDropdownCurrentRole(false);
+    setSearchTermCurrentRole(''); // Clear the search term
   };
 
   const filteredCurrentRoles = currentRole?.filter(role =>
