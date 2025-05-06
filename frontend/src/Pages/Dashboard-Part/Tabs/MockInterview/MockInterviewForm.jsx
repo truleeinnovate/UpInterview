@@ -104,9 +104,9 @@ const MockSchedulelater = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
-  const organizationId = tokenPayload.organizationId;
+  const organizationId = tokenPayload?.organizationId;
   const Navigate = useNavigate();
 
   const [showDropdownRole, setShowDropdownRole] = useState(false);

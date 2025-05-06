@@ -32,8 +32,8 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
 
-    const userId = tokenPayload.userId;
-    const orgId = tokenPayload.organizationId;
+    const userId = tokenPayload?.userId;
+    const orgId = tokenPayload?.organizationId;
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingSectionId, setEditingSectionId] = useState(null);

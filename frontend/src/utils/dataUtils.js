@@ -75,9 +75,9 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
 
-    const userId = tokenPayload.userId;
-    const organizationId = tokenPayload.organizationId;
-    const organization = tokenPayload.organization;
+    const userId = tokenPayload?.userId;
+    const organizationId = tokenPayload?.organizationId;
+    const organization = tokenPayload?.organization;
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");
         return [];

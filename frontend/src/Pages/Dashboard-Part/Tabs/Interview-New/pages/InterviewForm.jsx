@@ -40,8 +40,8 @@ const InterviewForm = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const orgId = tokenPayload.organizationId;
-  const userId = tokenPayload.userId;
+  const orgId = tokenPayload?.organizationId;
+  const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
   const { interviewData, candidateData, positions, templates } = useCustomContext();

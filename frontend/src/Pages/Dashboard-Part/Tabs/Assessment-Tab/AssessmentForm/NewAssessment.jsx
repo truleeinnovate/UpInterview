@@ -38,14 +38,14 @@ const NewAssessment = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
   const { id } = useParams();
 
   const isEditing = !!id;
   const assessment = isEditing ? assessmentData.find(assessment => assessment._id === id) : null;
 
-  const organizationId = tokenPayload.organizationId;
+  const organizationId = tokenPayload?.organizationId;
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [activeTab, setActiveTab] = useState("Details");
   // const [activeTab, setActiveTab] = useState("Questions");
@@ -309,7 +309,7 @@ useEffect(() => {
     }
   };
 
-  const userName = tokenPayload.userName;
+  const userName = tokenPayload?.userName;
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
 

@@ -16,8 +16,8 @@ const CardDetails = () => {
     const tokenPayload = decodeJwt(authToken);
 
 
-    const tenantId = tokenPayload.organizationId;
-    const ownerId = tokenPayload.userId;
+    const tenantId = tokenPayload?.organizationId;
+    const ownerId = tokenPayload?.userId;
 
     const location = useLocation();
     const isUpgrading = location.state?.isUpgrading || false;

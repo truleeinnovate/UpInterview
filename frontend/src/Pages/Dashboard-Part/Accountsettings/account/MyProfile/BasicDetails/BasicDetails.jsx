@@ -22,7 +22,7 @@ const BasicDetails = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
   // const organization = Cookies.get("organization") === "true"; 
   // const activeTab =  'my-profile'

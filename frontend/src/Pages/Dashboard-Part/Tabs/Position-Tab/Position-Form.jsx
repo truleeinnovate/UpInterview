@@ -541,10 +541,10 @@ const PositionForm = () => {
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
-    const userId = tokenPayload.userId;
+    const userId = tokenPayload?.userId;
 
-    const userName = tokenPayload.userName;
-    const orgId = tokenPayload.organizationId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.organizationId;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {

@@ -17,8 +17,8 @@ export const PermissionsProvider = ({ children }) => {
       const authToken = Cookies.get("authToken");
       const tokenPayload = decodeJwt(authToken);
 
-      const ownerId = tokenPayload.userId;
-      const tenantId = tokenPayload.tenantId;
+      const ownerId = tokenPayload?.userId;
+      const tenantId = tokenPayload?.tenantId;
 
       let profileResponse, sharesetting;
       try {

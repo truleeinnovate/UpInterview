@@ -40,7 +40,7 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
   try {
     const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);

@@ -25,7 +25,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const tenantId = tokenPayload.tenantId;
+  const tenantId = tokenPayload?.tenantId;
   const fileInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);

@@ -26,7 +26,7 @@ function RoundForm() {
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
   const [errors, setErrors] = useState({});
   console.log("errors", errors);
 

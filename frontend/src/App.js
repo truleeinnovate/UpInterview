@@ -94,7 +94,7 @@ const App = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload.organization === "true";
+  const organization = tokenPayload?.organization === "true";
 
   return (
     <React.Fragment>

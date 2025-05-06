@@ -103,7 +103,7 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
 
-    const organizationId = tokenPayload.organizationId;
+    const organizationId = tokenPayload?.organizationId;
 
     useEffect(() => {
         const fetchUserData = async () => {

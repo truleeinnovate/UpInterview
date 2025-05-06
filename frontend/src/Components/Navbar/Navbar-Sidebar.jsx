@@ -27,8 +27,8 @@ const Navbar = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId =  tokenPayload.userId;
-  const userName = tokenPayload.userName;
+  const userId =  tokenPayload?.userId;
+  const userName = tokenPayload?.userName;
   const { logout } = useAuth0();
   const [assessmentDropdown, setAssessmentDropdown] = useState(false);
   const [interviewDropdown, setInterviewDropdown] = useState(false);

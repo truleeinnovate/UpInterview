@@ -434,7 +434,8 @@ const CustomProvider = ({ children }) => {
 
   // ranjith  //
 
-  const tenantId = tokenPayload.tenantId;
+  const tenantId = tokenPayload?.tenantId;
+  console.log('tenantId fron context:-', tenantId);
 
   // Fetch groups
   const [groups, setGroups] = useState([]);

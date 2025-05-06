@@ -133,8 +133,8 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
-    const ownerId = tokenPayload.userId;
-    const organizationId = tokenPayload.organizationId;
+    const ownerId = tokenPayload?.userId;
+    const organizationId = tokenPayload?.organizationId;
 
     const handleSubmit = async (e) => {
         e.preventDefault();

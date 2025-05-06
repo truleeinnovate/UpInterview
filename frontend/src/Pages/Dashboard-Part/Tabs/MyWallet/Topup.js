@@ -10,8 +10,8 @@ import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 const Topup = () => {
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
-    const ownerId = tokenPayload.userId;
-    const tenantId = tokenPayload.tenantId;
+    const ownerId = tokenPayload?.userId;
+    const tenantId = tokenPayload?.tenantId;
 
     const [paymentData, setPaymentData] = useState({
         balance: '',

@@ -198,7 +198,7 @@ const AddCandidateForm = ({ mode }) => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
   useEffect(() => {
 

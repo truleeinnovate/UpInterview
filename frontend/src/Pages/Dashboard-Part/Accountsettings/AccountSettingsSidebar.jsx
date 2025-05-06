@@ -39,7 +39,7 @@ function SettingsPage() {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const organization = tokenPayload.tenantId === "true";
+  const organization = tokenPayload?.tenantId === "true";
 
   // const isInMyProfile = location.pathname.includes('/my-profile');
 
