@@ -22,7 +22,13 @@ const CustomProvider = ({ children }) => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId =  tokenPayload.userId;
+
+  useEffect(() => {
+    console.log('tokenPayload fron context:-', tokenPayload);
+  }, [tokenPayload]);
+
+  const userId =  tokenPayload?.userId;
+  console.log('userId fron context:-', userId);
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
