@@ -19,6 +19,7 @@ import {
   Minimize , 
   Expand  
 } from 'lucide-react';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 
 // Reusable CustomDropdown Component
@@ -200,7 +201,10 @@ const AddCandidateForm = ({ mode }) => {
     CurrentRole: '',
   });
   const [errors, setErrors] = useState({});
-  const userId = Cookies.get("userId");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
 
   useEffect(() => {
 
