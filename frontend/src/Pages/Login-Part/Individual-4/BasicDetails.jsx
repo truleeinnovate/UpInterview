@@ -7,7 +7,7 @@ import InfoBox from './InfoBox.jsx';
 import { format } from 'date-fns';
 import { validateEmail, validateProfileId } from '../../../utils/IndividualValidation.js';
 // import { ArrowDropDown } from 'lucide-react';
-import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
+import { ReactComponent as MdArrowDropDown } from '../../../icons/MdArrowDropDown.svg';
 
 const BasicDetails = ({
   basicDetailsData,
