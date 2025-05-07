@@ -270,6 +270,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const { candidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
+  console.log('candidateData:-', candidateData);
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
