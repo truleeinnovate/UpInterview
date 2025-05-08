@@ -16,17 +16,17 @@ const BasicDetailsTab = ({
   formData,
   handleInputChange,
   toggleDropdownAssessment,
-  handleRemoveAssessmentType,
+  // handleRemoveAssessmentType,
   setFormData,
-  showDropdownAssessment,
-  assessmentTypes,
-  handleAssessmentTypeSelect,
+  // showDropdownAssessment,
+  // assessmentTypes,
+  // handleAssessmentTypeSelect,
   setShowDropdownAssessment,
   handleChange,
   handleIconClick,
   showMessage,
   selectedPosition,
-  toggleDropdownPosition,
+  // toggleDropdownPosition,
   showDropdownPosition,
   difficultyLevels,
   handleDifficultySelect,
@@ -41,23 +41,23 @@ const BasicDetailsTab = ({
   startDate,
   handleDateChange,
   CustomInput,
-  onClose,
   handleSave,
-  handleSaveAndNext,
-  setSelectedAssessmentType,
-  selectedAssessmentType,
+  // handleSaveAndNext,
+  // setSelectedAssessmentType,
+  // selectedAssessmentType,
   showDropdownDifficulty,
   setSelectedPosition,
   handlePositionSelect,
   handleAddNewPositionClick,
   selectedDifficulty,
-  toggleDropdownDifficulty,
+  // toggleDropdownDifficulty,
   setShowDropdownDifficulty,
   setShowDropdownPosition,
   setShowDropdownDuration,
   positions,
   errors,
-  isEditing
+  isEditing,
+  setActiveTab
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -579,24 +579,6 @@ const BasicDetailsTab = ({
               </div>
             </div>
             <div></div> {/* Empty div to maintain grid structure */}
-          </div>
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end pt-6">
-            <button
-              type="button"
-              onClick={(e) => handleSave(e, "Basicdetails", true)}
-              className="mr-3 inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {isEditing ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={(e) => handleSaveAndNext(e, "Basicdetails", "Details")}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {isEditing ? "Update & Next" : "Save & Next"}
-            </button>
           </div>
 
         </div>

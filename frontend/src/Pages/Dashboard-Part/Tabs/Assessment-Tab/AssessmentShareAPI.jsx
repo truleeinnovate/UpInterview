@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
 export const shareAssessmentAPI = async ({
   assessmentId,
@@ -9,9 +10,11 @@ export const shareAssessmentAPI = async ({
   onClose = () => {},
   setErrors = () => {},
   setIsLoading = () => {},
-  organizationId = Cookies.get('organizationId'),
-  userId = Cookies.get('userId'),
 }) => {
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const organizationId = tokenPayload?.tenantId
+  const userId = tokenPayload?.userId
+
   if (!assessmentId) {
     setErrors((prev) => ({ ...prev, Assessment: 'Assessment ID is required' }));
     return { success: false, error: 'Assessment ID missing' };

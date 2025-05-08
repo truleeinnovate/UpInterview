@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
 import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from 'react-icons/md';
-import axios from 'axios';
 
 function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
   const getDifficultyColorClass = (difficulty) => {

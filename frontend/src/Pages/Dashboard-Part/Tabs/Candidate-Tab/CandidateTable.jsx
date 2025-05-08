@@ -4,38 +4,38 @@ import { Eye, Mail, UserCircle, Pencil } from 'lucide-react';
 import { Menu } from '@headlessui/react';
 import { useNavigate } from 'react-router-dom';
 
-const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessmentView,isMenuOpen }) => {
+const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessmentView, isMenuOpen }) => {
   const navigate = useNavigate();
 
-    const menuRefs = useRef([]);
-    const [openMenuIndex, setOpenMenuIndex] = useState(null);
-  
-    // Close menu when clicking outside
-    useEffect(() => {
-      const handleClickOutside = (e) => {
-        if (openMenuIndex !== null &&
-          menuRefs.current[openMenuIndex] &&
-          !menuRefs.current[openMenuIndex].contains(e.target)) {
-          setOpenMenuIndex(null);
-        }
-      };
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [openMenuIndex]);
-  
-    const toggleMenu = (e, index) => {
-      e.stopPropagation();
-      setOpenMenuIndex(openMenuIndex === index ? null : index);
+  const menuRefs = useRef([]);
+  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (openMenuIndex !== null &&
+        menuRefs.current[openMenuIndex] &&
+        !menuRefs.current[openMenuIndex].contains(e.target)) {
+        setOpenMenuIndex(null);
+      }
     };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuIndex]);
+
+  const toggleMenu = (e, index) => {
+    e.stopPropagation();
+    setOpenMenuIndex(openMenuIndex === index ? null : index);
+  };
 
   return (
     <div className={`w-full ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'} flex flex-col`}>
 
-      {/* <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden"> */}
-        {/* <div className="overflow-x-auto"> */}
-          {/* <div className="inline-block min-w-full align-middle"> */}
+      <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="inline-block min-w-full align-middle">
             <div
-              className={`${isMenuOpen ?'overflow-x-auto' :""} rounded-lg ${candidates.length > 0 ? 'border border-gray-200' : ''
+              className={`${isMenuOpen ? 'overflow-x-auto' : ""} rounded-lg ${candidates.length > 0 ? 'border border-gray-200' : ''
                 }`}
             >
               <table className="min-w-full divide-y divide-gray-200">
@@ -97,7 +97,7 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                               </div>
                               <div className="ml-3">
                                 <div className="text-sm font-medium text-custom-blue"
-                                    onClick={() => navigate(`view-details/${candidate._id}`)}
+                                  onClick={() => navigate(`view-details/${candidate._id}`)}
                                 >
                                   {(candidate?.FirstName || '') +
                                     ' ' +
@@ -155,7 +155,7 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                           </td>
 
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                            <Menu as="div"className="relative inline-block " ref={el => menuRefs.current[index] = el}>
+                            <Menu as="div" className="relative inline-block " ref={el => menuRefs.current[index] = el}>
                               <Menu.Button className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none">
                                 <FiMoreHorizontal className="w-4 h-4 text-gray-600" />
                               </Menu.Button>
@@ -204,18 +204,18 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                                   </>
                                 ) : (
                                   <Menu.Item>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={() => onResendLink(candidate.id)}
-                                      className={`${active ? 'bg-gray-100' : ''} flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${candidate.status === 'completed' ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
-                                      disabled={candidate.status === 'completed'}
-                                    >
-                                      <Mail className="w-4 h-4 text-blue-600" />
-                                      Resend Link
-                                    </button>
-                                  )}
-                                </Menu.Item>
+                                    {({ active }) => (
+                                      <button
+                                        onClick={() => onResendLink(candidate.id)}
+                                        className={`${active ? 'bg-gray-100' : ''} flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${candidate.status === 'completed' ? 'opacity-50 cursor-not-allowed' : ''
+                                          }`}
+                                        disabled={candidate.status === 'completed'}
+                                      >
+                                        <Mail className="w-4 h-4 text-blue-600" />
+                                        Resend Link
+                                      </button>
+                                    )}
+                                  </Menu.Item>
                                 )}
                               </Menu.Items>
                             </Menu>
@@ -228,9 +228,9 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
               </table>
             </div>
           </div>
-        // </div>
-      // </div>
-    // </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

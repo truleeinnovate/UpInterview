@@ -127,7 +127,7 @@ const AssessmentTestDetailsTab = ({
       </div>
 
       {/* Footer Buttons */}
-      <div className="flex justify-between pt-6">
+      {/* <div className="flex justify-between pt-6">
         <button
           onClick={handleBackToBasicDetails}
           className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -150,7 +150,7 @@ const AssessmentTestDetailsTab = ({
             {isEditing ? "Update & Next" : "Save & Next"}
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

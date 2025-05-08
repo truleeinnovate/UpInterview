@@ -513,12 +513,6 @@ app.use('/position', positionRoutes);
 const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
 app.use('/', pushNotificationRoutes);
 
-const AssessmentRouter = require('./routes/assessmentRoute.js');
-app.use('/assessments', AssessmentRouter);
-
-const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoutes.js");
-app.use('/schedule-assessment', scheduledAssessmentRouter);
-
 const suggestedQuestionRouter = require('./routes/suggestedQuestionRoute.js')
 const interviewQuestions = require('./models/interviewQuestions.js');
 app.use('/suggested-questions', suggestedQuestionRouter)
@@ -629,8 +623,21 @@ const rolesPermissionRoutes = require('./routes/rolesPermissionRoutes');
 app.use('/permissions', rolesPermissionRoutes);
 app.use('/',  rolesRoutes);
 
+
+// <------------------------Assessment Templates
 const candidateAssessmentRouter = require('./routes/candidateAssessmentRoutes.js');
 app.use('/candidate-assessment', candidateAssessmentRouter);
+
+const AssessmentRouter = require('./routes/assessmentRoute.js');
+app.use('/assessments', AssessmentRouter);
+
+const assessmentQuestionsRoutes = require('./routes/assessmentQuestionsRoutes.js');
+app.use('/assessment-questions', assessmentQuestionsRoutes);
+
+const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoutes.js");
+app.use('/schedule-assessment', scheduledAssessmentRouter);
+
+// ----------------------------------------------------->
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {

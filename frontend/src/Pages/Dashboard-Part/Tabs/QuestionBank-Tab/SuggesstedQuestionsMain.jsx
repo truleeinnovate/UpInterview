@@ -864,7 +864,7 @@ const SuggestedQuestionsComponent = ({
                               </button>
                             ) : (
                               <button
-                                className="bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                className="bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm"
                                 onClick={() => onClickAddButton(item)}
                               >
                                 Add
@@ -881,7 +881,7 @@ const SuggestedQuestionsComponent = ({
                               </span>
                             ) : (
                               <button
-                                className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md hover:bg-blue-700 transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
                                     ? 'opacity-50 cursor-not-allowed'
                                     : ''
                                   }`}
@@ -901,7 +901,7 @@ const SuggestedQuestionsComponent = ({
                           <div className="flex justify-center mx-3">
                             <button
                               type="button"
-                              className="bg-custom-blue text-sm py-1 px-3 text-white rounded-md hover:bg-blue-700 transition-colors"
+                              className="bg-custom-blue text-sm py-1 px-3 text-white rounded-md transition-colors"
                               onClick={() => onClickForSchedulelater(item, index)}
                             >
                               Add
@@ -913,7 +913,7 @@ const SuggestedQuestionsComponent = ({
                         {!section && !fromScheduleLater && (
                           <div className="w-[5%] flex justify-center relative">
                             <button
-                              className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue hover:bg-blue-50 transition-colors"
+                              className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
                               onClick={() => toggleDropdown(item._id)}
                             >
                               <Plus />

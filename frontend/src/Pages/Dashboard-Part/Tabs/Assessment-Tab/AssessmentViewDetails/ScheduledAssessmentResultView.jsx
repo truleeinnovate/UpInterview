@@ -9,7 +9,7 @@ function AssessmentResultView({
   toggleStates, 
   toggleArrow1,
   isFullscreen,
-  assessmentQuestions
+  assessmentQuestions // assessmentQuestions come from AssessmentViewDetails.jsx
 }) {
   const isEachSection = assessment.passScoreBy === 'Each Section';
   const totalAnsweredQuestions = candidate.sections.reduce((count, section) => {

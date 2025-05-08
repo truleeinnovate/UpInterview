@@ -8,14 +8,18 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
 const ShareAssessment = ({
   isOpen,
   onCloseshare,
   assessment
-  // AssessmentTitle,
-  // assessmentId,
 }) => {
+
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const organizationId = tokenPayload?.tenantId;
+  const userId = tokenPayload?.userId;
+
   const { candidateData } = useCustomContext();
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
@@ -163,8 +167,8 @@ const ShareAssessment = ({
       onClose: onCloseshare,
       setErrors,
       setIsLoading,
-      organizationId: Cookies.get('organizationId'),
-      userId: Cookies.get('userId'),
+      organizationId,
+      userId
     });
 
     if (result.success) {

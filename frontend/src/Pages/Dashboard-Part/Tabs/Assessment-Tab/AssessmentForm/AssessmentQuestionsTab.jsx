@@ -413,7 +413,7 @@ const AssessmentQuestionsTab = ({
       </div>
 
       {/* Footer Buttons */}
-      <div className="flex justify-between mt-8 px-6">
+      {/* <div className="flex justify-between mt-8 px-6">
         <button
           onClick={handleBackButtonClick}
           className="px-4 py-2 border border-custom-blue rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -466,7 +466,7 @@ const AssessmentQuestionsTab = ({
             </button>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
