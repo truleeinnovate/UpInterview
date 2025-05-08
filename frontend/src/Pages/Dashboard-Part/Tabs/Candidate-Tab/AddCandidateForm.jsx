@@ -202,9 +202,9 @@ const AddCandidateForm = ({ mode }) => {
   });
   const [errors, setErrors] = useState({});
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
+  // const userId = tokenPayload?.userId;
 
   useEffect(() => {
 
@@ -463,81 +463,15 @@ const AddCandidateForm = ({ mode }) => {
 
   };
 
-  const userName = Cookies.get("userName");
+  // const userName = tokenPayload?.userName;
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    const orgId = Cookies.get("organizationId");
-    const { formIsValid, newErrors } = validateCandidateForm(
-      formData,
-      entries || [],
-      errors || {}
-    );
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.orgId;
 
-    if (!formIsValid) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // const fullPhoneNumber = `${formData.CountryCode} ${formData.Phone}`;
-    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-
-    const data = {
-      FirstName: formData.FirstName,
-      LastName: formData.LastName,
-      Email: formData.Email,
-      Phone: formData.Phone,
-      CountryCode:formData.CountryCode,
-      CurrentExperience: formData.CurrentExperience,
-      RelevantExperience: formData.RelevantExperience,
-      HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      resume: null,
-      CurrentRole: formData.CurrentRole,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: `${userName} at ${currentDateTime}`,
-      ownerId: userId,
-    };
-
-    if (orgId) {
-      data.tenantId = orgId;
-    }
-
-    try {
-      let candidateId;
-
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
-
-      candidateId = await response.data.data._id;
-      if (file) {
-        const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "candidate");
-        imageData.append("id", candidateId);
-
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-
-      if (response.status === 200 || response.status === 201) {
-        resetFormData();
-      }
-    } catch (error) {
-      console.error("Failed to add candidate:", error);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const orgId = Cookies.get("organizationId");
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries || [],
@@ -573,11 +507,80 @@ const AddCandidateForm = ({ mode }) => {
       CreatedBy: `${userName} at ${currentDateTime}`,
       LastModifiedById: `${userName} at ${currentDateTime}`,
       ownerId: userId,
+      tenantId: orgId
     };
 
-    if (orgId) {
-      data.tenantId = orgId;
+    try {
+      let candidateId;
+
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
+
+      console.log("response.data ", response.data);
+
+      candidateId = await response.data.data._id;
+      if (file) {
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "candidate");
+        imageData.append("id", candidateId);
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      if (response.status === 200 || response.status === 201) {
+        resetFormData();
+      }
+    } catch (error) {
+      console.error("Failed to add candidate:", error);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.orgId;
+
+    const { formIsValid, newErrors } = validateCandidateForm(
+      formData,
+      entries || [],
+      errors || {}
+    );
+
+    if (!formIsValid) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+
+    const data = {
+      FirstName: formData.FirstName,
+      LastName: formData.LastName,
+      Email: formData.Email,
+      Phone: formData.Phone,
+      CountryCode: formData.CountryCode,
+      CurrentExperience: formData.CurrentExperience,
+      RelevantExperience: formData.RelevantExperience,
+      HigherQualification: formData.HigherQualification,
+      Gender: formData.Gender,
+      UniversityCollege: formData.UniversityCollege,
+      Date_Of_Birth: formData.Date_Of_Birth,
+      skills: entries.map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      })),
+      resume: null,
+      CurrentRole: formData.CurrentRole,
+      CreatedBy: `${userName} at ${currentDateTime}`,
+      LastModifiedById: `${userName} at ${currentDateTime}`,
+      ownerId: userId,
+      tenantId: orgId
+    };
 
     try {
       let candidateId;
