@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
@@ -53,11 +52,80 @@ const BasicDetailsTab = ({
   handleAddNewPositionClick,
   selectedDifficulty,
   toggleDropdownDifficulty,
+  setShowDropdownDifficulty,
+  setShowDropdownPosition,
+  setShowDropdownDuration,
   positions,
   errors,
-  setError,
   isEditing
 }) => {
+  // Refs for dropdown containers
+  const linkExpiryRef = useRef(null);
+  const assessmentTypeRef = useRef(null);
+  const positionRef = useRef(null);
+  const difficultyRef = useRef(null);
+  const durationRef = useRef(null);
+
+  // Close all dropdowns except the one specified
+  const closeAllDropdowns = (except = null) => {
+    if (except !== "linkExpiry") setShowLinkExpiryDays(false);
+    if (except !== "assessment") setShowDropdownAssessment(false);
+    if (except !== "position") setShowDropdownPosition(false);
+    if (except !== "difficulty") setShowDropdownDifficulty(false);
+    if (except !== "duration") setShowDropdownDuration(false);
+  };
+
+  // Handle click outside dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        (linkExpiryRef.current && !linkExpiryRef.current.contains(event.target)) &&
+        (assessmentTypeRef.current && !assessmentTypeRef.current.contains(event.target)) &&
+        (positionRef.current && !positionRef.current.contains(event.target)) &&
+        (difficultyRef.current && !difficultyRef.current.contains(event.target)) &&
+        (durationRef.current && !durationRef.current.contains(event.target))
+      ) {
+        closeAllDropdowns();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Modified toggle functions to close other dropdowns
+  const modifiedToggleLinkExpiry = (e) => {
+    if (e) e.stopPropagation();
+    closeAllDropdowns("linkExpiry");
+    toggleLinkExpiryDropdown();
+  };
+
+  const modifiedToggleAssessment = (e) => {
+    if (e) e.stopPropagation();
+    closeAllDropdowns("assessment");
+    toggleDropdownAssessment();
+  };
+
+  const modifiedTogglePosition = (e) => {
+    if (e) e.stopPropagation();
+    closeAllDropdowns("position");
+    setShowDropdownPosition(!showDropdownPosition);
+  };
+
+  const modifiedToggleDifficulty = (e) => {
+    if (e) e.stopPropagation();
+    closeAllDropdowns("difficulty");
+    setShowDropdownDifficulty(!showDropdownDifficulty);
+  };
+
+  const modifiedToggleDuration = (e) => {
+    if (e) e.stopPropagation();
+    closeAllDropdowns("duration");
+    toggleDropdownDuration();
+  };
+
   return (
     <div>
       <form>
@@ -117,11 +185,14 @@ const BasicDetailsTab = ({
                   onChange={handleChange}
                   id="NumberOfQuestions"
                   min="1"
-                  max="50"
+                  max="100"
+                  step="1"
                   autoComplete="off"
                   className={`block w-full border ${errors.NumberOfQuestions ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
                 />
+
                 {errors.NumberOfQuestions && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.NumberOfQuestions}
@@ -131,7 +202,7 @@ const BasicDetailsTab = ({
             </div>
 
             {/* Assessment Type */}
-            {/* <div>
+            {/* <div ref={assessmentTypeRef}>
         <label
           htmlFor="AssessmentType"
           className="block text-sm font-medium text-gray-700"
@@ -142,7 +213,7 @@ const BasicDetailsTab = ({
           <div
             className={`flex items-center justify-between border ${errors.AssessmentType ? 'border-red-500' : 'border-gray-300'
               } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-            onClick={toggleDropdownAssessment}
+            onClick={modifiedToggleAssessment}
           >
             <div className="flex flex-wrap gap-1">
               {Array.isArray(selectedAssessmentType) &&
@@ -252,7 +323,7 @@ const BasicDetailsTab = ({
           {/* Position and Difficulty Level */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             {/* Position */}
-            <div className="mb-4">
+            <div className="mb-4" ref={positionRef}>
               <div className="flex items-center">
                 <label
                   htmlFor="position"
@@ -280,7 +351,7 @@ const BasicDetailsTab = ({
                   className={`relative w-full cursor-default rounded-md border ${errors.Position ? 'border-red-500' : 'border-gray-300'
                     } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${errors.Position ? 'focus:ring-red-500' : 'focus:ring-blue-500'
                     } sm:text-sm min-h-[42px] flex items-center`}
-                  onClick={toggleDropdownPosition}
+                  onClick={modifiedTogglePosition}
                   aria-haspopup="listbox"
                   aria-expanded={showDropdownPosition}
                 >
@@ -322,7 +393,11 @@ const BasicDetailsTab = ({
                         <li
                           key={position._id}
                           className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
-                          onClick={() => handlePositionSelect(position)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePositionSelect(position);
+                            setShowDropdownPosition(false);
+                          }}
                         >
                           <div className="flex items-center">
                             <span className="ml-3 block truncate">{position.title}</span>
@@ -333,7 +408,11 @@ const BasicDetailsTab = ({
                     <div className="border-t border-gray-200 px-4 py-2">
                       <button
                         type="button"
-                        onClick={handleAddNewPositionClick}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddNewPositionClick();
+                          setShowDropdownPosition(false);
+                        }}
                         className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none"
                       >
                         <IoIosAddCircle className="mr-1.5 h-5 w-5" />
@@ -342,12 +421,11 @@ const BasicDetailsTab = ({
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
 
             {/* Difficulty Level */}
-            <div>
+            <div ref={difficultyRef}>
               <label
                 htmlFor="difficulty"
                 className="block text-sm font-medium text-gray-700"
@@ -358,7 +436,7 @@ const BasicDetailsTab = ({
                 <div
                   className={`flex items-center border ${errors.DifficultyLevel ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  onClick={toggleDropdownDifficulty}
+                  onClick={modifiedToggleDifficulty}
                 >
                   {selectedDifficulty || (
                     <span className="text-gray-400">Select difficulty level</span>
@@ -390,7 +468,7 @@ const BasicDetailsTab = ({
           {/* Duration and Expiry Date */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             {/* Duration */}
-            <div>
+            <div ref={durationRef}>
               <label
                 htmlFor="duration"
                 className="block text-sm font-medium text-gray-700"
@@ -401,7 +479,7 @@ const BasicDetailsTab = ({
                 <div
                   className={`flex items-center border ${errors.Duration ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  onClick={toggleDropdownDuration}
+                  onClick={modifiedToggleDuration}
                 >
                   {selectedDuration || (
                     <span className="text-gray-400">Select duration</span>
@@ -457,7 +535,7 @@ const BasicDetailsTab = ({
 
           {/* Link Expiry Days */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
-            <div>
+            <div ref={linkExpiryRef}>
               <label
                 htmlFor="linkExpiry"
                 className="block text-sm font-medium text-gray-700"
@@ -468,7 +546,7 @@ const BasicDetailsTab = ({
                 <div
                   className={`flex items-center border ${errors.LinkExpiryDays ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  onClick={toggleLinkExpiryDropdown}
+                  onClick={modifiedToggleLinkExpiry}
                 >
                   {linkExpiryDays || (
                     <span className="text-gray-400">Select days</span>
@@ -476,7 +554,7 @@ const BasicDetailsTab = ({
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>
                 {showLinkExpiryDay && (
-                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-36 overflow-y-auto">
+                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-24 overflow-y-auto">
                     {Array.from({ length: 15 }, (_, index) => index + 1).map(
                       (days) => (
                         <div

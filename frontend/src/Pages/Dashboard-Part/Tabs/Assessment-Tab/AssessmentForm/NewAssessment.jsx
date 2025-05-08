@@ -1,6 +1,4 @@
 
-
-
 import React, {
   useState,
   useRef,
@@ -9,11 +7,9 @@ import React, {
   useCallback,
 } from "react";
 import axios from "axios";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-input-2/lib/style.css";
 // import AddPositionForm from "../Position-Tab/Position-Form.jsx";
-import { fetchFilterData } from "../../../../../utils/dataUtils.js";
 import { validateAssessmentData } from "../../../../../utils/assessmentValidation.js";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
@@ -21,31 +17,31 @@ import ConfirmationPopup from "../ConfirmationPopup.jsx";
 // import { handleShareClick as shareAssessment } from '../../../../utils/EmailShare';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+
 
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
 import Candidate from '../../Candidate-Tab/Candidate.jsx'
+import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentTab.jsx';
+
 import toast from "react-hot-toast";
 
 import PassScore from "./PassScore.jsx";
+import { shareAssessmentAPI } from '../AssessmentShareAPI.jsx';
 
 const NewAssessment = () => {
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false)
   const [linkExpiryDays, setLinkExpiryDays] = useState(3)
   const { positions, assessmentData } = useCustomContext();
-
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  const userId = Cookies.get("userId");
 
   const { id } = useParams();
 
   const isEditing = !!id;
   const assessment = isEditing ? assessmentData.find(assessment => assessment._id === id) : null;
 
-  const organizationId = tokenPayload?.tenantId;
+  const organizationId = Cookies.get("organizationId");
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [activeTab, setActiveTab] = useState("Details");
   // const [activeTab, setActiveTab] = useState("Questions");
@@ -115,7 +111,7 @@ const NewAssessment = () => {
   const [totalScore, setTotalScore] = useState("");
   const [overallPassScore, setOverallPassScore] = useState(0);
   const [isPassScoreSubmitted, setIsPassScoreSubmitted] = useState(false);
-
+  const [preSelectedCandidates, setPreSelectedCandidates] = useState([]);
   const [formData, setFormData] = useState({
     AssessmentTitle: "",
     // AssessmentType: "",
@@ -129,125 +125,113 @@ const NewAssessment = () => {
     passScoreBy: "",
     passScore: ''
   });
-    // const [passScores, setPassScores] = useState(
-    //   addedSections.reduce((acc, section) => ({
-    //     ...acc,
-    //     [section.SectionName]: section.passScore || ""
-    //   }), {})
-    // );
 
-    //   const [totalScores, setTotalScores] = useState(
-    //     addedSections.reduce((acc, section) => ({
-    //       ...acc,
-    //       [section.SectionName]: section.totalScore || ""
-    //     }), {})
-    //   );
 
-    //     const [passScore, setPassScore] = useState(formData.passScore || "");
-    //     const [totalScore, setTotalScore] = useState(formData.totalScore || "");
 
- // Load basic assessment data
- useEffect(() => {
-  if (isEditing && assessment) {
-    const matchedPosition = positions.find((pos) => pos._id === assessment.Position);
-    console.log("matchedPosition", matchedPosition);
-    setFormData({
-      AssessmentTitle: assessment.AssessmentTitle || "",
-      Position: assessment.Position || "",
-      DifficultyLevel: assessment.DifficultyLevel || "",
-      Duration: assessment.Duration || "60 minutes",
-      NumberOfQuestions: assessment.NumberOfQuestions || "",
-      ExpiryDate: assessment.ExpiryDate ? new Date(assessment.ExpiryDate) : new Date(),
-      status: assessment.status || "Active",
-      passScoreType: assessment.passScoreType || "Number",
-      passScoreBy: assessment.passScoreBy || "Overall",
-      passScore: assessment.passScore || "",
-    });
-    setQuestionsLimit(assessment.NumberOfQuestions || "");
-    setSelectedDifficulty(assessment.DifficultyLevel);
-    setInstructions(assessment.Instructions || "");
-    setAdditionalNotes(assessment.AdditionalNotes || "");
-    setSelectedPosition(matchedPosition || null);
 
-    // Set CandidateDetails fields if they exist
-    if (assessment.CandidateDetails) {
-      setIncludePhone(assessment.CandidateDetails.includePhone || false);
-      setIncludePosition(assessment.CandidateDetails.includePosition || false);
-    } else {
-      setIncludePhone(false);
-      setIncludePosition(false);
-    }
-
-    // Set scores based on passScoreBy
-    if (assessment.passScoreBy === "Overall") {
-      setTotalScore(assessment.totalScore || "");
-      setPassScore(assessment.passScore || "");
-      setOverallPassScore(assessment.passScore || 0);
-      setPassScores({}); // Reset section-specific scores
-      setTotalScores({});
-    }
-
-    setIsPassScoreSubmitted(true); // Enable "Edit Pass Score" button when editing
-  }
-}, [isEditing, assessment, positions]);
-
-// Load assessment questions and section-specific scores
-useEffect(() => {
-  if (isEditing && assessment && id) {
-    console.log("Fetching assessment questions for ID:", id);
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${id}`)
-      .then((response) => {
-        console.log("API Response:", response.data);
-        if (response.data.success) {
-          const data = response.data.data;
-          console.log("Received assessment questions data:", data);
-
-          // Transform the API data to match the addedSections structure
-          const formattedSections = data.sections.map((section) => ({
-            SectionName: section.sectionName,
-            passScore: section.passScore || 0, // Ensure passScore is set
-            totalScore: section.totalScore || 0, // Ensure totalScore is set
-            Questions: section.questions.map((question) => ({
-              id: question.questionId,
-              source: question.source,
-              snapshot: question.snapshot,
-              order: question.order,
-              customizations: question.customizations,
-            })),
-          }));
-
-          setAddedSections(formattedSections);
-
-          // If passScoreBy is "Each Section", populate totalScores and passScores
-          if (assessment.passScoreBy === "Each Section") {
-            const sectionTotalScores = formattedSections.reduce((acc, section) => ({
-              ...acc,
-              [section.SectionName]: section.totalScore || "",
-            }), {});
-            const sectionPassScores = formattedSections.reduce((acc, section) => ({
-              ...acc,
-              [section.SectionName]: section.passScore || "",
-            }), {});
-
-            setTotalScores(sectionTotalScores);
-            setPassScores(sectionPassScores);
-            setTotalScore(""); // Reset overall totalScore
-            setPassScore(""); // Reset overall passScore
-            setOverallPassScore(0);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching assessment questions:", error);
-        console.error("Error details:", error.response?.data || error.message);
+  // Load basic assessment data
+  useEffect(() => {
+    if (isEditing && assessment) {
+      const matchedPosition = positions.find((pos) => pos._id === assessment.Position);
+      console.log("matchedPosition", matchedPosition);
+      setFormData({
+        AssessmentTitle: assessment.AssessmentTitle || "",
+        Position: assessment.Position || "",
+        DifficultyLevel: assessment.DifficultyLevel || "",
+        Duration: assessment.Duration || "60 minutes",
+        NumberOfQuestions: assessment.NumberOfQuestions || "",
+        ExpiryDate: assessment.ExpiryDate ? new Date(assessment.ExpiryDate) : new Date(),
+        status: assessment.status || "Active",
+        passScoreType: assessment.passScoreType || "Number",
+        passScoreBy: assessment.passScoreBy || "Overall",
+        passScore: assessment.passScore || "",
       });
-  }
-}, [id, isEditing, assessment]);
+      setQuestionsLimit(assessment.NumberOfQuestions || "");
+      setSelectedDifficulty(assessment.DifficultyLevel);
+      setInstructions(assessment.Instructions || "");
+      setAdditionalNotes(assessment.AdditionalNotes || "");
+      setSelectedPosition(matchedPosition || null);
+
+      // Set CandidateDetails fields if they exist
+      if (assessment.CandidateDetails) {
+        setIncludePhone(assessment.CandidateDetails.includePhone || false);
+        setIncludePosition(assessment.CandidateDetails.includePosition || false);
+      } else {
+        setIncludePhone(false);
+        setIncludePosition(false);
+      }
+
+      // Set scores based on passScoreBy
+      if (assessment.passScoreBy === "Overall") {
+        setTotalScore(assessment.totalScore || "");
+        setPassScore(assessment.passScore || "");
+        setOverallPassScore(assessment.passScore || 0);
+        setPassScores({}); // Reset section-specific scores
+        setTotalScores({});
+      }
+
+      setIsPassScoreSubmitted(true); // Enable "Edit Pass Score" button when editing
+    }
+  }, [isEditing, assessment, positions]);
+
+  // Load assessment questions and section-specific scores
+  useEffect(() => {
+    if (isEditing && assessment && id) {
+      console.log("Fetching assessment questions for ID:", id);
+      axios
+        .get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${id}`)
+        .then((response) => {
+          console.log("API Response:", response.data);
+          if (response.data.success) {
+            const data = response.data.data;
+            console.log("Received assessment questions data:", data);
+
+            // Transform the API data to match the addedSections structure
+            const formattedSections = data.sections.map((section) => ({
+              SectionName: section.sectionName,
+              passScore: section.passScore || 0, // Ensure passScore is set
+              totalScore: section.totalScore || 0, // Ensure totalScore is set
+              Questions: section.questions.map((question) => ({
+                id: question.questionId,
+                source: question.source,
+                snapshot: question.snapshot,
+                order: question.order,
+                customizations: question.customizations,
+              })),
+            }));
+
+            setAddedSections(formattedSections);
+
+            // If passScoreBy is "Each Section", populate totalScores and passScores
+            if (assessment.passScoreBy === "Each Section") {
+              const sectionTotalScores = formattedSections.reduce((acc, section) => ({
+                ...acc,
+                [section.SectionName]: section.totalScore || "",
+              }), {});
+              const sectionPassScores = formattedSections.reduce((acc, section) => ({
+                ...acc,
+                [section.SectionName]: section.passScore || "",
+              }), {});
+
+              setTotalScores(sectionTotalScores);
+              setPassScores(sectionPassScores);
+              setTotalScore(""); // Reset overall totalScore
+              setPassScore(""); // Reset overall passScore
+              setOverallPassScore(0);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching assessment questions:", error);
+          console.error("Error details:", error.response?.data || error.message);
+        });
+    }
+  }, [id, isEditing, assessment]);
 
   //shashank - [10/01/2025]
   const [tabsSubmitStatus, setTabsSubmitStatus] = useState({
     responseId: "",
+    responseData:"",
     Basicdetails: false,
     Details: false,
     Questions: false,
@@ -267,181 +251,223 @@ useEffect(() => {
 
 
 
-  const resetActiveTab = () => {
-    setActiveTab("Basicdetails");
-  };
 
-  const resetFormData = () => {
-    setFormData({
-      AssessmentTitle: "",
-      AssessmentType: "",
-      Skill_Technology: "",
-      Position: "",
-      Duration: "",
-      DifficultyLevel: "",
-      NumberOfQuestions: "",
-      ExpiryDate: null,
-    });
-    setQuestionsBySection({});
-    setSelectedAssessmentType("");
-    setSelectedDuration("");
-    setSelectedDifficulty("");
-    setStartDate(null);
-    setSelectedPosition("");
-  };
-
-  const handleClose = () => {
-    resetActiveTab();
-    resetFormData();
-  };
 
   const [showDropdownPosition, setShowDropdownPosition] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let errorMessage = "";
-
-    setFormData({ ...formData, [name]: value });
-    setErrors({ ...errors, [name]: errorMessage });
 
     if (name === "NumberOfQuestions") {
-      setQuestionsLimit(Number(value));
+      const number = Number(value);
+
+      if (number >= 1 && number <= 100) {
+        setFormData({ ...formData, [name]: number });
+        setErrors({ ...errors, [name]: "" });
+        setQuestionsLimit(number);
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+      setErrors({ ...errors, [name]: "" });
     }
   };
 
-  const userName = tokenPayload?.userName;
+
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
 
-  const handleSaveAndNext = async (event, currentTab, nextTab) => {
-    event.preventDefault();
-
-    // Initialize an object to hold any validation errors
+  const validateAndPrepareData = (currentTab) => {
     let newErrors = {};
 
-    // Perform validation based on the current tab
+    // Validate data based on the current tab
     switch (currentTab) {
       case "Basicdetails":
-        newErrors = validateAssessmentData(formData);
+        newErrors = validateAssessmentData(formData, "Basicdetails");
         break;
       case "Details":
-        if (instructionError) {
-          newErrors.instructions = instructionError;
-        }
+        newErrors = validateAssessmentData({ instructions: instructions });
         break;
       case "Questions":
-        const totalQuestions = addedSections.reduce((acc, eachSection) => acc + eachSection.Questions.length, 0)
+        const totalQuestions = addedSections.reduce(
+          (acc, eachSection) => acc + eachSection.Questions.length,
+          0
+        );
         if (totalQuestions !== questionsLimit) {
           newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
-          setIsQuestionLimitErrorPopupOpen(true); // Show popup
+          setIsQuestionLimitErrorPopupOpen(true);
         } else {
           const isAnySectionPassScoreSet = Object.values(passScores).some(
             (score) => score > 0
           );
           if (!(overallPassScore > 0 || isAnySectionPassScoreSet)) {
             setSidebarOpen(true);
-            return;
+            return { errors: { passScore: "Pass score is required" } };
           }
         }
-        break;
-      case "Candidates":
-        // Add validation logic for Candidates tab
         break;
       default:
         break;
     }
-    // If there are any errors, set them and prevent tab switching
+
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      return { errors: newErrors };
+    }
+
+    // Gather data up to the current tab
+    const assessmentData = gatherDataUpToCurrentTab(currentTab);
+
+    // Add common fields
+    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+    assessmentData.CreatedBy = `${userId} at ${currentDateTime}`;
+    assessmentData.LastModifiedById = userId;
+    assessmentData.ownerId = userId;
+    assessmentData.CreatedDate = new Date();
+
+    if (organizationId) {
+      assessmentData.tenantId = organizationId;
+    }
+
+    return { assessmentData };
+  };
+
+  const handleSave = async (event, currentTab) => {
+    event.preventDefault();
+
+    const { errors, assessmentData } = validateAndPrepareData(currentTab);
+
+    if (errors) {
+      setErrors(errors);
       return;
     }
-    handleSave(event, currentTab)
 
+    try {
+      let response;
+      if (isEditing) {
+        response = await axios.patch(
+          `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
+          assessmentData
+        );
+        setTabsSubmitStatus((prev) => ({
+          ...prev,
+          [currentTab]: true,
+        }));
+      } else {
+        if (!tabsSubmitStatus["Basicdetails"]) {
+          response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
+            assessmentData
+          );
+          setTabsSubmitStatus((prev) => ({
+            ...prev,
+            [currentTab]: true,
+            responseId: response.data._id,
+            responseData:response.data
+          }));
+        } else {
+          response = await axios.patch(
+            `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+            assessmentData
+          );
+          setTabsSubmitStatus((prev) => ({
+            ...prev,
+            [currentTab]: true,
+          }));
+        }
+      }
+
+      if (currentTab === "Questions") {
+        const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
+        const assessmentQuestionsData = prepareAssessmentQuestionsData(
+          addedSections,
+          assessmentId
+        );
+        response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
+          assessmentQuestionsData
+        );
+        console.log(response.data.message);
+      }
+
+      // if (currentTab === "Candidates") {
+      //   setIsLoading(true);
+      //   await handleShareClick(isEditing ? id : tabsSubmitStatus.responseId, isEditing);
+      //   setIsLoading(false);
+      //   NavigateToAssessmentList();
+      // }
+    } catch (error) {
+      console.error("Error saving data:", {
+        message: error.message,
+        response: error.response?.data,
+        stack: error.stack,
+      });
+    }
+  };
+
+  const handleSaveAndNext = async (event, currentTab, nextTab) => {
+    event.preventDefault();
+
+    const { errors } = validateAndPrepareData(currentTab);
+
+    if (errors) {
+      setErrors(errors);
+      return;
+    }
+
+    await handleSave(event, currentTab);
     setActiveTab(nextTab);
   };
 
+  // const handleSaveAndNext = async (event, currentTab, nextTab) => {
+  //   event.preventDefault();
 
+  //   // Initialize an object to hold any validation errors
+  //   let newErrors = {};
 
-  // const gatherDataUpToCurrentTab = (currentTab) => {
-  //   let assessmentData = {};
-
-  //   if (
-  //     currentTab === "Basicdetails" ||
-  //     currentTab === "Details" ||
-  //     currentTab === "Questions" ||
-  //     currentTab === "Candidates"
-  //   ) {
-  //     assessmentData = {
-  //       ...assessmentData,
-  //       ...(formData.AssessmentTitle && {
-  //         AssessmentTitle: formData.AssessmentTitle,
-  //       }),
-  //       // ...(formData.AssessmentType.length > 0 && {
-  //       //   AssessmentType: formData.AssessmentType,
-  //       // }),
-  //       ...(formData.Position && { Position: formData.Position }),
-  //       ...(formData.Duration && { Duration: formData.Duration }),
-  //       ...(formData.DifficultyLevel && {
-  //         DifficultyLevel: formData.DifficultyLevel,
-  //       }),
-  //       ...(formData.NumberOfQuestions && {
-  //         NumberOfQuestions: formData.NumberOfQuestions,
-  //       }),
-  //       ...(formData.ExpiryDate && { ExpiryDate: formData.ExpiryDate }),
-  //       ...({ status: formData.status }),
-  //       ...(formData.passScoreType && { passScoreType: formData.passScoreType }),
-  //       ...(formData.passScoreBy && { passScoreBy: formData.passScoreBy }),
-  //       ...(formData.passScoreBy === "overall" && { passScore: formData.passScore })
-  //     };
-  //   }
-
-  //   if (
-  //     currentTab === "Details" ||
-  //     currentTab === "Questions" ||
-  //     currentTab === "Candidates"
-  //   ) {
-  //     assessmentData = {
-  //       ...assessmentData,
-  //       ...(includePosition || includePhone
-  //         ? {
-  //           CandidateDetails: {
-  //             ...(includePosition ? { includePosition } : {}),
-  //             ...(includePhone ? { includePhone } : {}),
-  //             // ...(includeSkills ? { includeSkills } : {}),
-  //           },
+  //   // Perform validation based on the current tab
+  //   switch (currentTab) {
+  //     case "Basicdetails":
+  //       newErrors = validateAssessmentData(formData, "Basicdetails");
+  //       break;
+  //     case "Details":
+  //       newErrors = validateAssessmentData({ instructions: instructions });
+  //       break;
+  //     case "Questions":
+  //       const totalQuestions = addedSections.reduce((acc, eachSection) => acc + eachSection.Questions.length, 0)
+  //       if (totalQuestions !== questionsLimit) {
+  //         newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
+  //         setIsQuestionLimitErrorPopupOpen(true); // Show popup
+  //       } else {
+  //         const isAnySectionPassScoreSet = Object.values(passScores).some(
+  //           (score) => score > 0
+  //         );
+  //         if (!(overallPassScore > 0 || isAnySectionPassScoreSet)) {
+  //           setSidebarOpen(true);
+  //           return;
   //         }
-  //         : {}),
-  //       ...(instructions ? { Instructions: instructions } : {}),
-  //       ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
-  //     };
+  //       }
+  //       break;
+  //     default:
+  //       break;
   //   }
-
-  //   if (currentTab === "Questions" || currentTab === "Candidates") {
-
-  //     assessmentData = {
-  //       ...assessmentData,
-  //       totalScore: totalScore,
-  //       // passScore: eachSection.passScore,
-  //       ...(formData.passScore && { passScore: formData.passScore })
-  //     };
+  //   // If there are any errors, set them and prevent tab switching
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
   //   }
-  //   if (currentTab === "Candidates") {
-  //     assessmentData = {
-  //       ...assessmentData,
-  //       ...(selectedCandidates.length > 0 && {
-  //         candidateIds: selectedCandidates,
-  //       }),
-  //     };
-  //   }
+  //   handleSave(event, currentTab)
 
-  //   return assessmentData;
+  //   setActiveTab(nextTab);
   // };
+
+
+
+
   const gatherDataUpToCurrentTab = (currentTab) => {
     let assessmentData = {};
-  
+
     // Basic details
-    if (currentTab === "Basicdetails" || currentTab === "Details" || 
-        currentTab === "Questions" || currentTab === "Candidates") {
+    if (currentTab === "Basicdetails" || currentTab === "Details" ||
+      currentTab === "Questions" || currentTab === "Candidates") {
       assessmentData = {
         ...assessmentData,
         ...(formData.AssessmentTitle && { AssessmentTitle: formData.AssessmentTitle }),
@@ -456,13 +482,13 @@ useEffect(() => {
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" && formData.passScore && { passScore: formData.passScore })
       };
-  
+
       // Include pass score only if it's overall
       if (formData.passScoreBy === "Overall" && formData.passScore) {
         assessmentData.passScore = formData.passScore;
       }
     }
-  
+
     // Other details (Instructions, CandidateDetails, etc.)
     if (currentTab === "Details" || currentTab === "Questions" || currentTab === "Candidates") {
       assessmentData = {
@@ -477,7 +503,7 @@ useEffect(() => {
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
       };
     }
-  
+
     // Questions and Candidates data remains the same
     if (currentTab === "Candidates") {
       assessmentData = {
@@ -485,7 +511,7 @@ useEffect(() => {
         ...(selectedCandidates.length > 0 && { candidateIds: selectedCandidates }),
       };
     }
-  
+
     return assessmentData;
   };
 
@@ -513,161 +539,128 @@ useEffect(() => {
 
 
 
-  const handleSave = async (event, currentTab, redirect = false) => {
-    event.preventDefault();
-    let newErrors = {};
+  // const handleSave = async (event, currentTab) => {
+  //   event.preventDefault();
+  //   let newErrors = {};
 
-    // Validate data based on the current tab
-    switch (currentTab) {
-      case "Basicdetails":
-        newErrors = validateAssessmentData(formData);
-        break;
-      case "Details":
-        if (instructionError) {
-          newErrors.instructions = instructionError;
-        }
-        break;
-      case "Questions":
-        const totalQuestions = addedSections.reduce((acc, eachsection) => acc + eachsection.Questions.length, 0);
-        if (totalQuestions !== questionsLimit) {
-          newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
-          setIsQuestionLimitErrorPopupOpen(true);
-        } else {
-          const isAnySectionPassScoreSet = Object.values(passScores).some(
-            (score) => score > 0
-          );
-          if (!(overallPassScore > 0 || isAnySectionPassScoreSet)) {
-            setSidebarOpen(true);
-            return;
-          }
-        }
-        break;
-      case "Candidates":
-        // Add validation logic for Candidates tab
-        break;
-      default:
-        break;
-    }
+  //   // Validate data based on the current tab
+  //   switch (currentTab) {
+  //     case "Basicdetails":
+  //       newErrors = validateAssessmentData(formData, "Basicdetails");
+  //       break;
+  //     case "Details":
+  //       newErrors = validateAssessmentData({ instructions: instructions });
+  //       break;
+  //     case "Questions":
+  //       const totalQuestions = addedSections.reduce((acc, eachsection) => acc + eachsection.Questions.length, 0);
+  //       if (totalQuestions !== questionsLimit) {
+  //         newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
+  //         setIsQuestionLimitErrorPopupOpen(true);
+  //       } else {
+  //         const isAnySectionPassScoreSet = Object.values(passScores).some(
+  //           (score) => score > 0
+  //         );
+  //         if (!(overallPassScore > 0 || isAnySectionPassScoreSet)) {
+  //           setSidebarOpen(true);
+  //           return;
+  //         }
+  //       }
+  //       break;
+  //     default:
+  //       break;
+  //   }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
 
-    try {
-      // Gather data up to the current tab
-      const assessmentData = gatherDataUpToCurrentTab(currentTab);
+  //   try {
+  //     // Gather data up to the current tab
+  //     const assessmentData = gatherDataUpToCurrentTab(currentTab);
 
-      // Add common fields
-      const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-      assessmentData.CreatedBy = `${userName} at ${currentDateTime}`;
-      assessmentData.LastModifiedById = userId;
-      assessmentData.ownerId = userId;
-      assessmentData.CreatedDate = new Date();
+  //     // Add common fields
+  //     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+  //     assessmentData.CreatedBy = `${userName} at ${currentDateTime}`;
+  //     assessmentData.LastModifiedById = userId;
+  //     assessmentData.ownerId = userId;
+  //     assessmentData.CreatedDate = new Date();
 
-      if (organizationId) {
-        assessmentData.tenantId = organizationId;
-      }
+  //     if (organizationId) {
+  //       assessmentData.tenantId = organizationId;
+  //     }
 
-      console.log("Assessment Data to be sent:", assessmentData);
+  //     console.log("Assessment Data to be sent:", assessmentData);
 
-      // First handle assessment creation/update
-      let response;
-      if (isEditing) {
-        // Always use PATCH when editing
-        response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
-          assessmentData
-        );
-        setTabsSubmitStatus(prev => ({
-          ...prev,
-          [currentTab]: true
-        }));
-      } else {
-        // Original logic for new assessment creation
-        if (!tabsSubmitStatus["Basicdetails"]) {
-          response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
-            assessmentData
-          );
-          // Update responseId in state after successful creation
-          setTabsSubmitStatus(prev => ({
-            ...prev,
-            [currentTab]: true,
-            responseId: response.data._id
-          }));
-        } else {
-          response = await axios.patch(
-            `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
-            assessmentData
-          );
-          setTabsSubmitStatus(prev => ({
-            ...prev,
-            [currentTab]: true
-          }));
-        }
-      }
+  //     // First handle assessment creation/update
+  //     let response;
+  //     if (isEditing) {
+  //       // Always use PATCH when editing
+  //       response = await axios.patch(
+  //         `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
+  //         assessmentData
+  //       );
+  //       setTabsSubmitStatus(prev => ({
+  //         ...prev,
+  //         [currentTab]: true
+  //       }));
+  //     } else {
+  //       // Original logic for new assessment creation
+  //       if (!tabsSubmitStatus["Basicdetails"]) {
+  //         response = await axios.post(
+  //           `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
+  //           assessmentData
+  //         );
+  //         // Update responseId in state after successful creation
+  //         setTabsSubmitStatus(prev => ({
+  //           ...prev,
+  //           [currentTab]: true,
+  //           responseId: response.data._id
+  //         }));
+  //       } else {
+  //         response = await axios.patch(
+  //           `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+  //           assessmentData
+  //         );
+  //         setTabsSubmitStatus(prev => ({
+  //           ...prev,
+  //           [currentTab]: true
+  //         }));
+  //       }
+  //     }
 
-      // Then handle questions if current tab is Questions
-      // if (currentTab === "Questions") {
-      //   console.log("Preparing questions data...");
+  //     // for questions for both create and update
+  //     if (currentTab === "Questions") {
+  //       const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
+  //       const assessmentQuestionsData = prepareAssessmentQuestionsData(addedSections, assessmentId);
 
-      //   // Use the responseId from either:
-      //   // 1. The just-created assessment (response.data._id)
-      //   // 2. The existing tabsSubmitStatus.responseId
-      //   const assessmentId = response?.data?._id || tabsSubmitStatus.responseId;
+  //       // Single API call for both create/update
+  //       response = await axios.post(
+  //         `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
+  //         assessmentQuestionsData
+  //       );
+  //       console.log(response.data.message); // "Assessment questions processed successfully"
+  //     }
 
-      //   if (!assessmentId) {
-      //     throw new Error("No assessment ID available for questions");
-      //   }
+  //     if (currentTab === 'Candidates') {
+  //       setIsLoading(true);
+  //       await handleShareClick(isEditing ? id : tabsSubmitStatus.responseId, isEditing);
+  //       setIsLoading(false);
+  //       NavigateToAssessmentList();
+  //     }
 
-      //   const assessmentQuestionsData = prepareAssessmentQuestionsData(
-      //     addedSections,
-      //     assessmentId
-      //   );
 
-      //   console.log("Questions data:", assessmentQuestionsData);
 
-      //   response = await axios.post(
-      //     `${process.env.REACT_APP_API_URL}/assessment-questions/add`,
-      //     assessmentQuestionsData
-      //   );
-      //   console.log("Questions saved:", response.data);
-      // }
 
-      if (currentTab === "Questions") {
-        const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
-        const assessmentQuestionsData = prepareAssessmentQuestionsData(addedSections, assessmentId);
-
-        // Single API call for both create/update
-        response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
-          assessmentQuestionsData
-        );
-        console.log(response.data.message); // "Assessment questions processed successfully"
-      }
-
-      if (currentTab === "Candidates") {
-        setIsLoading(true);
-        await handleShareClick(tabsSubmitStatus.responseId);
-        setIsLoading(false);
-      }
-
-      if (redirect) {
-        // Navigate to assessments list page
-        // Replace with your actual navigation method (React Router, etc.)
-        navigate('/assessments'); // or your assessments list route
-      }
-
-    } catch (error) {
-      console.error("Error saving data:", {
-        message: error.message,
-        response: error.response?.data,
-        stack: error.stack
-      });
-      // Consider adding user feedback here (e.g., toast notification)
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error saving data:", {
+  //       message: error.message,
+  //       response: error.response?.data,
+  //       stack: error.stack
+  //     });
+  //     // Consider adding user feedback here (e.g., toast notification)
+  //   }
+  // };
 
   const [deleteConfirmation, setDeleteConfirmation] = useState({
     isOpen: false,
@@ -778,78 +771,34 @@ useEffect(() => {
     }
   };
 
-  const handleShareClick = async (assessmentId) => {
-
-    try {
-      setIsLoading(true)
-      if (!assessmentId) {
-        console.error("Failed to save assessment or retrieve assessmentId", assessmentId);
-        return;
-      }
-      if (selectedCandidates.length === 0) {
-        setErrors({
-          ...errors,
-          Candidate: "Please select at least one candidate.",
-        });
-        return;
-      }
-      const reqBody = {
-        assessmentId,
-        organizationId,
-        expiryAt: new Date(new Date().setDate(new Date().getDate() + linkExpiryDays)),
-        status: "scheduled",
-        proctoringEnabled: true,
-        createdBy: userId,
-      }
-      const scheduleAssessmentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/schedule-assessment/schedule`, reqBody)
-      if (scheduleAssessmentResponse.data.success) {
-
-        const CandidateAssessmentsList = selectedCandidates.map(candidateId => ({
-          scheduledAssessmentId: scheduleAssessmentResponse.data.assessment._id,
-          candidateId,
-          status: "pending",
-          expiryAt: new Date(new Date().setDate(new Date().getDate() + linkExpiryDays)),
-          isActive: true,
-          assessmentLink: ""
-          // assessmentLink:"http://truleeinnovative.com/asssessment/eedgewwf22342343"
-
-        }))
-        console.log("candidate assessment list", CandidateAssessmentsList)
-        const CandidateAssessmentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/candidate-assessment/create`, CandidateAssessmentsList)
-        if (CandidateAssessmentResponse.data.success) {
-          const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate-assessment/send-assessment-link`,
-            { scheduledAssessmentId: scheduleAssessmentResponse.data.assessment._id, candidateEmails: candidateEmails })
-          toast.success(`${response.data.message}`)
-
-        }
-        setIsLoading(false)
-        setSelectedCandidates([])
-        // fetchAssessmentData()
-        // onClose()
-
-      }
-
-      toast.success(`Assessment Scheduled`)
-
-
-    } catch (error) {
-
-    }
-  }
-
-  // const assessmentTypes = [
-  //   "MCQ",
-  //   "Programming Questions",
-  //   "Short Text(Single line)",
-  //   "Long Text(Paragraph)",
-  //   "Number",
-  //   "Boolean",
-  //   "Mixed"
-  // ];
 
   const toggleDropdownAssessment = () => {
     setShowDropdownAssessment(!showDropdownAssessment);
   };
+
+  // const handleShareClick = async (assessmentId, isEditing) => {
+  //   try {
+  //     const result = await shareAssessmentAPI({
+  //       assessmentId,
+  //       selectedCandidates,
+  //       linkExpiryDays: 3,
+  //       onClose: () => console.log('Modal closed'),
+  //       setErrors,
+  //       setIsLoading,
+  //       organizationId,
+  //       userId,
+  //       isEditing,
+  //       existingCandidateIds: preSelectedCandidates.map((c) => c._id.toString()),
+  //     });
+
+  //     if (result.success) {
+  //       toast.success(result.message || 'Assessment shared successfully');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error sharing assessment:', error);
+  //     toast.error('Failed to share assessment');
+  //   }
+  // };
 
   const handleAssessmentTypeSelect = (type) => {
     setSelectedAssessmentType((prevSelected) => {
@@ -1126,10 +1075,10 @@ useEffect(() => {
 
   const handleSectionAdded = (data) => {
     const { SectionName, Questions } = data;
-  
+
     if (SectionName) {
       setMatchingSection(prevSections => [...new Set([...prevSections, SectionName])]);
-      
+
       setAddedSections(prevSections => {
         const newSections = [...prevSections, {
           ...data,
@@ -1137,12 +1086,12 @@ useEffect(() => {
         }];
         return newSections;
       });
-  
+
       setQuestionsBySection(prevQuestions => ({
         ...prevQuestions,
         [SectionName]: Questions || []
       }));
-  
+
       // Initialize pass score for this section if using section-wise pass scores
       if (formData.passScoreBy === "Each Section") {
         setPassScores(prev => ({
@@ -1260,35 +1209,36 @@ useEffect(() => {
   // const [isPassScoreSubmitted, setIsPassScoreSubmitted] = useState(false);
 
   const handlePassScoreSave = (scores) => {
-    // Ensure passScoreType and passScoreBy are always updated
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       passScoreType: scores.passScoreType,
       passScoreBy: scores.passScoreBy,
-      ...(scores.passScoreBy === "Overall" && {
-        passScore: scores.overallPassScore,
-        totalScore: scores.overallTotalScore
-      })
+      passScore: scores.overallPassScore,
+      totalScore: scores.overallTotalScore,
     }));
   
     if (scores.passScoreBy === "Overall") {
       setOverallPassScore(scores.overallPassScore);
       setTotalScore(scores.overallTotalScore);
+      setPassScores({});
+      setTotalScores({});
     } else {
       setPassScores(scores.sectionPassScores);
-      setTotalScore(0); // Reset overall totalScore for "Each Section"
-      setOverallPassScore(0); // Reset overallPassScore for "Each Section"
-      setAddedSections(prevSections =>
-        prevSections.map(section => ({
+      setTotalScores(scores.sectionTotalScores);
+      setTotalScore("");
+      setOverallPassScore("");
+      setAddedSections((prevSections) =>
+        prevSections.map((section) => ({
           ...section,
           passScore: scores.sectionPassScores[section.SectionName] || 0,
-          totalScore: scores.sectionTotalScores[section.SectionName] || 0
+          totalScore: scores.sectionTotalScores[section.SectionName] || 0,
         }))
       );
     }
     setIsPassScoreSubmitted(true);
   };
   const [selectedCandidates, setSelectedCandidates] = useState([]);
+
   const [candidateEmails, setCandidateEmails] = useState([])
 
   const [isLoading, setIsLoading] = useState(false);
@@ -1345,22 +1295,13 @@ useEffect(() => {
   const [instructionError, setInstructionError] = useState("");
 
   const handleInstructionsChange = (e) => {
-
     const value = e.target.value;
-
     setInstructions(value);
 
-    if (value === defaultInstructions) {
-      setInstructionError("");
-    } else if (value.length < 500) {
-      setInstructionError("Instructions must be at least 500 characters.");
-    } else if (value.length > 2000) {
-      setInstructionError("Instructions cannot exceed 2000 characters.");
-    } else {
-      setInstructionError("");
-    }
+    // Validate instructions for UI feedback
+    const errors = validateAssessmentData({ instructions: value });
+    setInstructionError(errors.instructions || "");
   };
-
   const handleBackToBasicDetails = () => {
     setActiveTab("Basicdetails");
   };
@@ -1536,7 +1477,6 @@ useEffect(() => {
     });
   };
 
-  console.log('added sections', addedSections)
 
 
 
@@ -1561,12 +1501,12 @@ useEffect(() => {
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-12 py-4 sm:px-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {isEditing ? 'Edit Assessment' : 'Add New Assessment'}
+                  {isEditing ? 'Edit Assessment Template' : 'Add New Assessment Template'}
                 </h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
                   {isEditing
-                    ? 'Update the Assessment below'
-                    : 'Fill in the details to add a new assessment'}
+                    ? 'Update the Assessment Template details'
+                    : 'Fill in the details to add a new assessment template'}
                 </p>
               </div>
 
@@ -1636,6 +1576,9 @@ useEffect(() => {
                           selectedDifficulty={selectedDifficulty}
                           toggleDropdownDifficulty={toggleDropdownDifficulty}
                           showDropdownDifficulty={showDropdownDifficulty}
+                          setShowDropdownPosition={setShowDropdownPosition}
+                          setShowDropdownDifficulty={setShowDropdownDifficulty}
+                          setShowDropdownDuration={setShowDropdownDuration}
                           errors={errors}
                           setErrors={setErrors}
                           isEditing={isEditing}
@@ -1671,64 +1614,63 @@ useEffect(() => {
                     {activeTab === "Questions" && (
                       <>
                         <AssessmentQuestionsTab
-                      assessmentId={tabsSubmitStatus.responseId}
-                      isAlreadyExistingSection={isAlreadyExistingSection}
-                      setIsAlreadyExistingSection={setIsAlreadyExistingSection}
-                      actionViewMore={actionViewMore}
-                      setActionViewMore={setActionViewMore}
-                      toggleAction={toggleAction}
-                      passScores={passScores}
-                      totalScores={totalScores} // Pass totalScores
-                      passScoreType={formData.passScoreBy} // Pass passScoreType
-                      toggleActionSection={toggleActionSection}
-                      actionViewMoreSection={actionViewMoreSection}
-                      toggleArrow1={toggleArrow1}
-                      checkedCount={checkedCount}
-                      questionsLimit={questionsLimit}
-                      totalScore={totalScore}
-                      overallPassScore={overallPassScore}
-                      sectionName={sectionName}
-                      setSectionName={setSectionName}
-                      questionsBySection={questionsBySection}
-                      addedSections={addedSections}
-                      isAddQuestionModalOpen={isAddQuestionModalOpen}
-                      setIsAddQuestionModalOpen={setIsAddQuestionModalOpen}
-                      currentSectionName={currentSectionName}
-                      selectedAssessmentType={selectedAssessmentType}
-                      checkedState={checkedState}
-                      toggleStates={toggleStates}
-                      toggleSidebarForSection={toggleSidebarForSection}
-                      handleAddSection={handleAddSection}
-                      handleEditSection={handleEditSection}
-                      handleDeleteClick={handleDeleteClick}
-                      handleQuestionSelection={handleQuestionSelection}
-                      handleBackButtonClick={handleBackButtonClick}
-                      handleSave={handleSave}
-                      handleSaveAndNext={handleSaveAndNext}
-                      handleBulkDeleteClick={handleBulkDeleteClick}
-                      updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
-                      getDifficultyColorClass={getDifficultyColorClass}
-                      getSelectedQuestionsCount={getSelectedQuestionsCount}
-                      matchingSection={matchingSection}
-                      openDeleteConfirmation={openDeleteConfirmation}
-                      openEditSection={openEditSection}
-                      isEditing={isEditing}
-                      setSidebarOpen={setSidebarOpen}
-                      isPassScoreSubmitted={isPassScoreSubmitted}
-                    />
+                          assessmentId={tabsSubmitStatus.responseId}
+                          isAlreadyExistingSection={isAlreadyExistingSection}
+                          setIsAlreadyExistingSection={setIsAlreadyExistingSection}
+                          actionViewMore={actionViewMore}
+                          setActionViewMore={setActionViewMore}
+                          toggleAction={toggleAction}
+                          passScores={passScores}
+                          totalScores={totalScores} // Pass totalScores
+                          passScoreType={formData.passScoreBy} // Pass passScoreType
+                          toggleActionSection={toggleActionSection}
+                          actionViewMoreSection={actionViewMoreSection}
+                          toggleArrow1={toggleArrow1}
+                          checkedCount={checkedCount}
+                          questionsLimit={questionsLimit}
+                          totalScore={totalScore}
+                          overallPassScore={overallPassScore}
+                          sectionName={sectionName}
+                          setSectionName={setSectionName}
+                          questionsBySection={questionsBySection}
+                          addedSections={addedSections}
+                          isAddQuestionModalOpen={isAddQuestionModalOpen}
+                          setIsAddQuestionModalOpen={setIsAddQuestionModalOpen}
+                          currentSectionName={currentSectionName}
+                          selectedAssessmentType={selectedAssessmentType}
+                          checkedState={checkedState}
+                          toggleStates={toggleStates}
+                          toggleSidebarForSection={toggleSidebarForSection}
+                          handleAddSection={handleAddSection}
+                          handleEditSection={handleEditSection}
+                          handleDeleteClick={handleDeleteClick}
+                          handleQuestionSelection={handleQuestionSelection}
+                          handleBackButtonClick={handleBackButtonClick}
+                          handleSave={handleSave}
+                          handleSaveAndNext={handleSaveAndNext}
+                          handleBulkDeleteClick={handleBulkDeleteClick}
+                          updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                          getDifficultyColorClass={getDifficultyColorClass}
+                          getSelectedQuestionsCount={getSelectedQuestionsCount}
+                          matchingSection={matchingSection}
+                          openDeleteConfirmation={openDeleteConfirmation}
+                          openEditSection={openEditSection}
+                          isEditing={isEditing}
+                          setSidebarOpen={setSidebarOpen}
+                          isPassScoreSubmitted={isPassScoreSubmitted}
+                          setIsQuestionLimitErrorPopupOpen={setIsQuestionLimitErrorPopupOpen}
+                        />
                       </>
                     )}
 
                     {activeTab === "Candidates" && (
                       <>
-                        <Candidate isAssessmentContext={true} onSelectCandidates={handleSelectCandidates}
-                          isEditing={isEditing}
-
-                        />
-                        <div className="flex justify-between pt-6">
+                       <div className="px-6">
+                        <AssessmentsTab assessment={isEditing ? assessment : tabsSubmitStatus.responseData} />
+                        
+                        {/* <div className="flex justify-between pt-6">
                           <button
                             onClick={handleBackButtonClickCandidate}
-
                             className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             Back
@@ -1748,7 +1690,6 @@ useEffect(() => {
                                 if (selectedCandidates.length === 0) {
                                   setIsSelectCandidatePopupOpen(true);
                                 } else {
-
                                   handleSave(e, "Candidates");
                                 }
                               }}
@@ -1757,46 +1698,31 @@ useEffect(() => {
                               Share
                             </button>
                           </div>
+                        </div> */}
+                         <div className="flex justify-between pt-6">
+                          <button
+                            onClick={handleBackButtonClickCandidate}
+                            className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            Back
+                          </button>
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={NavigateToAssessmentList}
+                              className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Close
+                            </button>
+                          </div>
                         </div>
+
+                        </div>
+
                       </>
                     )}
                   </div>
                 </div>
-
-                {/* {isDeleteConfirmationOpen && (
-                  <ConfirmationPopup
-                    isOpen={isDeleteConfirmationOpen}
-                    title={`Are you sure you want to delete this ${deleteType}?`}
-                    onConfirm={confirmDelete}
-                    onCancel={cancelDelete}
-                  />
-                )}
-                {isBulkDeleteConfirmationOpen && (
-                  <ConfirmationPopup
-                    isOpen={isBulkDeleteConfirmationOpen}
-                    title="Are you sure you want to delete the selected questions?"
-                    onConfirm={confirmBulkDeleteQuestions}
-                    onCancel={() => setIsBulkDeleteConfirmationOpen(false)}
-                  />
-                )}
-
-                {isEditSectionModalOpen && (
-                  <ConfirmationPopup
-                    isOpen={isEditSectionModalOpen}
-                    title="Edit Section Name"
-                    message={
-                      <input
-                        type="text"
-                        value={editedSectionName}
-                        onChange={(e) => setEditedSectionName(e.target.value)}
-                        className="border p-2 rounded w-full"
-                      />
-                    }
-                    onConfirm={handleSaveSectionName}
-                    onCancel={() => setIsEditSectionModalOpen(false)}
-                  />
-                )} */}
-
 
 
                 {/* Confirmation Popups */}

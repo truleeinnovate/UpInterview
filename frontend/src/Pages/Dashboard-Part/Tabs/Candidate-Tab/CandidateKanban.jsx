@@ -43,7 +43,7 @@ const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentV
                 </div>
                 <div className="ml-3">
                   <h4 className="text-sm font-medium text-custom-blue"
-                      onClick={() => navigate(`view-details/${candidate._id}`)}
+                    onClick={() => navigate(`view-details/${candidate._id}`)}
                   >
                     {candidate?.FirstName || ''}{' '}
                     {candidate?.LastName || ''}
@@ -82,6 +82,7 @@ const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentV
                 ) : (
                   <button
                     onClick={() => onResendLink(candidate.id)}
+                    disabled={candidate.status === 'completed'}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="Resend Link"
                   >

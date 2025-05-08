@@ -204,17 +204,18 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                                   </>
                                 ) : (
                                   <Menu.Item>
-                                    {({ active }) => (
-                                      <button
-                                        onClick={() => onResendLink(candidate.id)}
-                                        className={`${active ? 'bg-gray-100' : ''
-                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100`}
-                                      >
-                                        <Mail className="w-4 h-4 text-blue-600" />
-                                        Resend Link
-                                      </button>
-                                    )}
-                                  </Menu.Item>
+                                  {({ active }) => (
+                                    <button
+                                      onClick={() => onResendLink(candidate.id)}
+                                      className={`${active ? 'bg-gray-100' : ''} flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${candidate.status === 'completed' ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                      disabled={candidate.status === 'completed'}
+                                    >
+                                      <Mail className="w-4 h-4 text-blue-600" />
+                                      Resend Link
+                                    </button>
+                                  )}
+                                </Menu.Item>
                                 )}
                               </Menu.Items>
                             </Menu>

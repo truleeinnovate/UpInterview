@@ -513,7 +513,7 @@ app.use('/position', positionRoutes);
 const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
 app.use('/', pushNotificationRoutes);
 
-const AssessmentRouter = require('./routes/assessmentRoutes.js');
+const AssessmentRouter = require('./routes/assessmentRoute.js');
 app.use('/assessments', AssessmentRouter);
 
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoutes.js");
@@ -628,6 +628,9 @@ const rolesPermissionRoutes = require('./routes/rolesPermissionRoutes');
 
 app.use('/permissions', rolesPermissionRoutes);
 app.use('/',  rolesRoutes);
+
+const candidateAssessmentRouter = require('./routes/candidateAssessmentRoutes.js');
+app.use('/candidate-assessment', candidateAssessmentRouter);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {

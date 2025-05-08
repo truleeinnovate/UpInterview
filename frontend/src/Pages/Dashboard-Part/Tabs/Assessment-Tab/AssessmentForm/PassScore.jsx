@@ -1,76 +1,85 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { validatePassScoreData } from "../../../../../utils/passScoreValidation";
 
-const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onClose, onSave,totalScore,totalScores,passScores,passScore,setPassScores,setTotalScores,setTotalScore,setPassScore }) => {
+const PassScore = ({
+  setAddedSections,
+  addedSections,
+  setFormData,
+  formData,
+  onClose,
+  onSave,
+  totalScore: initialTotalScore,
+  totalScores: initialTotalScores,
+  passScores: initialPassScores,
+  passScore: initialPassScore,
+  setPassScores,
+  setTotalScores,
+  setTotalScore,
+  setPassScore,
+}) => {
   const [selectedScore, setSelectedScore] = useState(formData.passScoreType || "Number");
   const [selectedPassScoreBy, setSelectedPassScoreBy] = useState(formData.passScoreBy || "Overall");
+  const [localTotalScore, setLocalTotalScore] = useState(initialTotalScore || "");
+  const [localPassScore, setLocalPassScore] = useState(initialPassScore || "");
+  const [localTotalScores, setLocalTotalScores] = useState(initialTotalScores || {});
+  const [localPassScores, setLocalPassScores] = useState(initialPassScores || {});
   const [showDropdownScore, setShowDropdownScore] = useState(false);
   const [showDropdownPassScoreBy, setShowDropdownPassScoreBy] = useState(false);
-
-
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const scoreInputRef = useRef(null);
+  const passScoreByInputRef = useRef(null);
 
   const score = ["Percentage", "Number"];
   const passScoreBy = ["Overall", "Each Section"];
 
   const memoizedAddedSections = useMemo(() => addedSections, [addedSections]);
 
+  // Initialize localTotalScores and localPassScores for "Each Section" mode
   useEffect(() => {
-    calculateScores();
-  }, [selectedScore, selectedPassScoreBy, passScore, totalScore, passScores, totalScores,setTotalScores,]);
-
-  const calculateScores = () => {
-    if (selectedPassScoreBy === "Overall" && totalScore) {
-      const totalQuestions = memoizedAddedSections.reduce((acc, section) => acc + section.Questions.length, 0);
-      const questionScore = Number(totalScore) / totalQuestions;
-
-      if (questionScore < 1) {
-        setErrors({ totalScore: "Total Score must be high enough to assign at least 1 point per question." });
-        return;
-      }
-
-      setAddedSections(prev => {
-        const newSections = prev.map(section => ({
-          ...section,
-          Questions: section.Questions.map(q => ({ ...q, Score: questionScore }))
-        }));
-        if (JSON.stringify(newSections) !== JSON.stringify(prev)) {
-          return newSections;
-        }
-        return prev;
-      });
-      setFormData(prev => ({ ...prev, totalScore }));
-    } else if (selectedPassScoreBy === "Each Section") {
-      setAddedSections(prev => {
-        const newSections = prev.map(section => {
-          const sectionQuestions = section.Questions.length;
-          const sectionPassScore = Number(passScores[section.SectionName]) || 0;
-          const sectionTotalScore = Number(totalScores[section.SectionName]) || 0;
-          const questionScore = sectionTotalScore ? sectionTotalScore / sectionQuestions : 0;
-
-          if (sectionTotalScore && questionScore < 1) {
-            setErrors({ [section.SectionName]: "Total Score must be high enough to assign at least 1 point per question." });
-            return section;
-          }
-
-          return {
-            ...section,
-            totalScore: sectionTotalScore,
-            passScore: sectionPassScore,
-            Questions: section.Questions.map(q => ({
-              ...q,
-              Score: sectionTotalScore ? questionScore : q.Score || 1
-            }))
-          };
-        });
-        if (JSON.stringify(newSections) !== JSON.stringify(prev)) {
-          return newSections;
-        }
-        return prev;
-      });
+    if (selectedPassScoreBy === "Each Section") {
+      const initialTotalScores = memoizedAddedSections.reduce(
+        (acc, section) => ({
+          ...acc,
+          [section.SectionName]: section.totalScore || "",
+        }),
+        {}
+      );
+      const initialPassScores = memoizedAddedSections.reduce(
+        (acc, section) => ({
+          ...acc,
+          [section.SectionName]: section.passScore || "",
+        }),
+        {}
+      );
+      setLocalTotalScores(initialTotalScores);
+      setLocalPassScores(initialPassScores);
+    } else {
+      setLocalTotalScores({});
+      setLocalPassScores({});
+      setLocalTotalScore(initialTotalScore || "");
+      setLocalPassScore(initialPassScore || "");
     }
-  };
+  }, [selectedPassScoreBy, memoizedAddedSections, initialTotalScore, initialPassScore]);
+
+  // Validate only when fields are touched
+  useEffect(() => {
+    if (Object.keys(touched).length > 0) {
+      const newErrors = validatePassScoreData(
+        selectedScore,
+        selectedPassScoreBy,
+        localPassScore,
+        localPassScores,
+        memoizedAddedSections.map((s) => s.SectionName),
+        localTotalScore,
+        localTotalScores,
+        memoizedAddedSections
+      );
+      setErrors(newErrors);
+    }
+  }, [selectedScore, selectedPassScoreBy, localPassScore, localTotalScore, localPassScores, localTotalScores, memoizedAddedSections, touched]);
 
   const handleClose = () => {
     onClose();
@@ -78,64 +87,108 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
 
   const toggleDropdownScore = () => {
     setShowDropdownScore(!showDropdownScore);
+    setTouched((prev) => ({ ...prev, selectedScore: true }));
   };
 
   const toggleDropdownPassScoreBy = () => {
     setShowDropdownPassScoreBy(!showDropdownPassScoreBy);
+    setTouched((prev) => ({ ...prev, selectedPassScoreBy: true }));
   };
 
   const handleScoreSelect = (score) => {
     setSelectedScore(score);
-    setFormData(prev => ({ ...prev, passScoreType: score }));
     setShowDropdownScore(false);
-    setErrors(prev => { const { selectedScore, ...rest } = prev; return rest; });
+    setTouched((prev) => ({ ...prev, selectedScore: true }));
+    setErrors((prev) => {
+      const { selectedScore, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handlePassScoreBySelect = (score) => {
     setSelectedPassScoreBy(score);
     setShowDropdownPassScoreBy(false);
-    setFormData(prev => ({
-      ...prev,
-      passScoreBy: score,
-      ...(score === "Each Section" && { passScore: "", totalScore: "" })
-    }));
-    setErrors(prev => { const { selectedPassScoreBy, ...rest } = prev; return rest; });
-    if (score === "Each Section") {
-      setTotalScores(
-        memoizedAddedSections.reduce((acc, section) => ({
-          ...acc,
-          [section.SectionName]: section.totalScore || ""
-        }), {})
-      );
-      setPassScores(
-        memoizedAddedSections.reduce((acc, section) => ({
-          ...acc,
-          [section.SectionName]: section.passScore || ""
-        }), {})
-      );
-    }
+    setTouched((prev) => ({ ...prev, selectedPassScoreBy: true }));
+    setErrors((prev) => {
+      const { selectedPassScoreBy, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handlePassScoreChange = (sectionName, value) => {
-    setPassScores(prev => ({ ...prev, [sectionName]: value }));
-    setErrors(prev => { const { [sectionName]: _, ...rest } = prev; return rest; });
+    const maxPassScore = selectedScore === "Percentage" ? 100 : Number(localTotalScores[sectionName]) || Infinity;
+    if (value === "" || (Number(value) >= 1 && Number(value) <= maxPassScore)) {
+      setLocalPassScores((prev) => ({ ...prev, [sectionName]: value }));
+      setTouched((prev) => ({ ...prev, [`passScore_${sectionName}`]: true }));
+      setErrors((prev) => {
+        const { [sectionName]: _, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
   const handleTotalScoreChange = (sectionName, value) => {
-    setTotalScores(prev => ({ ...prev, [sectionName]: value }));
-    setErrors(prev => { const { [sectionName]: _, ...rest } = prev; return rest; });
+    if (value === "" || Number(value) >= 1) {
+      setLocalTotalScores((prev) => ({ ...prev, [sectionName]: value }));
+      setTouched((prev) => ({ ...prev, [`totalScore_${sectionName}`]: true }));
+      setErrors((prev) => {
+        const { [sectionName]: _, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const handleOverallTotalScoreChange = (value) => {
+    if (value === "" || Number(value) >= 1) {
+      setLocalTotalScore(value);
+      setTouched((prev) => ({ ...prev, totalScore: true }));
+      setErrors((prev) => {
+        const { totalScore, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const handleOverallPassScoreChange = (value) => {
+    if (
+      value === "" ||
+      (Number(value) >= 1 &&
+        (selectedScore === "Percentage" ? Number(value) <= 100 : Number(value) <= (Number(localTotalScore) || Infinity)))
+    ) {
+      setLocalPassScore(value);
+      setTouched((prev) => ({ ...prev, passScore: true }));
+      setErrors((prev) => {
+        const { passScore, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
   const handleSave = (e) => {
     e.preventDefault();
+    setTouched({
+      selectedScore: true,
+      selectedPassScoreBy: true,
+      totalScore: selectedPassScoreBy === "Overall",
+      passScore: selectedPassScoreBy === "Overall",
+      ...memoizedAddedSections.reduce(
+        (acc, section) => ({
+          ...acc,
+          [`totalScore_${section.SectionName}`]: selectedPassScoreBy === "Each Section",
+          [`passScore_${section.SectionName}`]: selectedPassScoreBy === "Each Section",
+        }),
+        {}
+      ),
+    });
+
     const newErrors = validatePassScoreData(
       selectedScore,
       selectedPassScoreBy,
-      passScore,
-      passScores,
-      memoizedAddedSections.map(s => s.SectionName),
-      totalScore,
-      totalScores,
+      localPassScore,
+      localPassScores,
+      memoizedAddedSections.map((s) => s.SectionName),
+      localTotalScore,
+      localTotalScores,
       memoizedAddedSections
     );
 
@@ -144,58 +197,121 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
       return;
     }
 
+    // Update parent state
+    setFormData((prev) => ({
+      ...prev,
+      passScoreType: selectedScore,
+      passScoreBy: selectedPassScoreBy,
+      passScore: selectedPassScoreBy === "Overall" ? localPassScore : "",
+      totalScore: selectedPassScoreBy === "Overall" ? localTotalScore : "",
+    }));
+    if (selectedPassScoreBy === "Overall") {
+      setTotalScore(localTotalScore);
+      setPassScore(localPassScore);
+      setTotalScores({});
+      setPassScores({});
+    } else {
+      setTotalScores(localTotalScores);
+      setPassScores(localPassScores);
+      setTotalScore("");
+      setPassScore("");
+    }
+
+    // Update question scores in addedSections
+    let updatedSections = [...memoizedAddedSections];
+    if (selectedPassScoreBy === "Overall") {
+      const totalQuestions = memoizedAddedSections.reduce(
+        (acc, section) => acc + section.Questions.length,
+        0
+      );
+      const questionScore = localTotalScore ? Number(localTotalScore) / totalQuestions : 0;
+
+      updatedSections = memoizedAddedSections.map((section) => ({
+        ...section,
+        Questions: section.Questions.map((q) => ({ ...q, Score: questionScore })),
+        totalScore: localTotalScore,
+        passScore: localPassScore,
+      }));
+    } else {
+      updatedSections = memoizedAddedSections.map((section) => {
+        const sectionQuestions = section.Questions.length;
+        const sectionTotalScore = Number(localTotalScores[section.SectionName]) || 0;
+        const sectionPassScore = Number(localPassScores[section.SectionName]) || 0;
+        const questionScore = sectionTotalScore ? sectionTotalScore / sectionQuestions : 0;
+
+        return {
+          ...section,
+          totalScore: sectionTotalScore,
+          passScore: sectionPassScore,
+          Questions: section.Questions.map((q) => ({
+            ...q,
+            Score: sectionTotalScore ? questionScore : q.Score || 1,
+          })),
+        };
+      });
+    }
+
+    setAddedSections(updatedSections);
+
+    // Pass data to parent
     if (selectedPassScoreBy === "Overall") {
       onSave({
-        overallPassScore: passScore,
-        overallTotalScore: totalScore,
+        overallPassScore: localPassScore,
+        overallTotalScore: localTotalScore,
         passScoreType: selectedScore,
-        passScoreBy: selectedPassScoreBy
+        passScoreBy: selectedPassScoreBy,
+        sectionPassScores: {},
+        sectionTotalScores: {},
       });
     } else {
       onSave({
-        sectionPassScores: passScores,
-        sectionTotalScores: totalScores,
+        sectionPassScores: localPassScores,
+        sectionTotalScores: localTotalScores,
         passScoreType: selectedScore,
-        passScoreBy: selectedPassScoreBy
+        passScoreBy: selectedPassScoreBy,
+        overallPassScore: "",
+        overallTotalScore: "",
       });
     }
+
     handleClose();
   };
 
   return (
-    <>
-      <div className="fixed top-0 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between items-center p-4 bg-custom-blue text-white">
-          <h2 className="text-lg font-semibold">Pass Score</h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="p-1 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-white flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-gray-200 shadow-sm">
+        <h2 className="text-lg font-semibold">Pass Score</h2>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="p-1 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
-      <div className="fixed top-16 bottom-16 overflow-auto p-6 w-full">
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-6">
         <div className="max-w-3xl mx-auto">
           <form onSubmit={handleSave} className="space-y-6">
             {/* Pass Score Type */}
-            <div className="flex items-center gap-6">
-              <label htmlFor="Passscore" className="w-40 text-sm font-medium text-gray-700">
+            <div className="flex items-start gap-6">
+              <label htmlFor="Passscore" className="w-40 text-sm font-medium text-gray-700 pt-2">
                 Pass Score Type<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="relative flex-1">
+              <div className="flex-1">
                 <div className="relative">
                   <input
                     type="text"
-                    id="duration"
+                    id="Passscore"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                     value={selectedScore}
                     onClick={toggleDropdownScore}
                     readOnly
+                    ref={scoreInputRef}
                   />
                   <MdArrowDropDown
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer h-5 w-5"
@@ -203,7 +319,10 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                   />
                 </div>
                 {showDropdownScore && (
-                  <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
+                  <div
+                    className="absolute z-10 mt-1 rounded-md bg-white shadow-lg border border-gray-200"
+                    style={{ width: scoreInputRef.current?.offsetWidth }}
+                  >
                     {score.map((score) => (
                       <div
                         key={score}
@@ -215,27 +334,28 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                     ))}
                   </div>
                 )}
-                {errors.selectedScore && (
+                {touched.selectedScore && errors.selectedScore && (
                   <p className="mt-1 text-sm text-red-600">{errors.selectedScore}</p>
                 )}
               </div>
             </div>
 
             {/* Pass Score By */}
-            <div className="flex items-center gap-6">
-              <label htmlFor="Passscore by" className="w-40 text-sm font-medium text-gray-700">
+            <div className="flex items-start gap-6">
+              <label htmlFor="Passscoreby" className="w-40 text-sm font-medium text-gray-700 pt-2">
                 Pass Score By<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="relative flex-1">
+              <div className="flex-1">
                 <div className="relative">
                   <input
-                    name="passscore by"
+                    name="passscoreby"
                     type="text"
-                    id="passscore by"
+                    id="Passscoreby"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                     value={selectedPassScoreBy}
                     onClick={toggleDropdownPassScoreBy}
                     readOnly
+                    ref={passScoreByInputRef}
                   />
                   <MdArrowDropDown
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer h-5 w-5"
@@ -243,7 +363,10 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                   />
                 </div>
                 {showDropdownPassScoreBy && (
-                  <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
+                  <div
+                    className="absolute z-10 mt-1 rounded-md bg-white shadow-lg border border-gray-200"
+                    style={{ width: passScoreByInputRef.current?.offsetWidth }}
+                  >
                     {passScoreBy.map((passScoreBy) => (
                       <div
                         key={passScoreBy}
@@ -255,7 +378,7 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                     ))}
                   </div>
                 )}
-                {errors.selectedPassScoreBy && (
+                {touched.selectedPassScoreBy && errors.selectedPassScoreBy && (
                   <p className="mt-1 text-sm text-red-600">{errors.selectedPassScoreBy}</p>
                 )}
               </div>
@@ -264,116 +387,51 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
             {/* Overall Pass Score and Total Score */}
             {selectedPassScoreBy === "Overall" && (
               <>
-                <div className="flex items-center gap-6">
-                  <label htmlFor="totalScore" className="w-40 text-sm font-medium text-gray-700">
+                <div className="flex items-start gap-6">
+                  <label htmlFor="totalScore" className="w-40 text-sm font-medium text-gray-700 pt-2">
                     Total Score <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <div className="relative flex-1">
+                  <div className="flex-1">
                     <div className="relative flex items-center">
                       <input
                         type="number"
                         id="totalScore"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none no-spinner" // Added no-spinner class
-                        value={totalScore}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value >= 1) {
-                            setTotalScore(value);
-                            setFormData((prev) => ({ ...prev, totalScore: value }));
-                          }
-                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        value={localTotalScore}
+                        onChange={(e) => handleOverallTotalScoreChange(e.target.value)}
                         required
-                        style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
+                        min="1"
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-10 text-gray-500">%</span>
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
-                      <div className="absolute right-2 flex flex-col space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => setTotalScore((prev) => (Number(prev) || 0) + 1)}
-                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setTotalScore((prev) =>
-                              Math.max(
-                                memoizedAddedSections.reduce((acc, s) => acc + s.Questions.length, 0),
-                                (Number(prev) || 0) - 1
-                              )
-                            )
-                          }
-                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
                     </div>
-                    {errors.totalScore && (
+                    {touched.totalScore && errors.totalScore && (
                       <p className="mt-1 text-sm text-red-600">{errors.totalScore}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <label htmlFor="passScore" className="w-40 text-sm font-medium text-gray-700">
+                <div className="flex items-start gap-6">
+                  <label htmlFor="passScore" className="w-40 text-sm font-medium text-gray-700 pt-2">
                     Pass Score <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <div className="relative flex-1">
+                  <div className="flex-1">
                     <div className="relative flex items-center">
                       <input
                         type="number"
                         id="passScore"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none no-spinner" // Added no-spinner class
-                        value={passScore}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (
-                            value >= 1 &&
-                            (selectedScore === "Percentage" ? value <= 100 : value <= (totalScore || Infinity))
-                          ) {
-                            setPassScore(value);
-                            setFormData((prev) => ({ ...prev, passScore: value }));
-                          }
-                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        value={localPassScore}
+                        onChange={(e) => handleOverallPassScoreChange(e.target.value)}
                         required
-                        style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
+                        min="1"
+                        max={selectedScore === "Percentage" ? "100" : localTotalScore || undefined}
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-10 text-gray-500">%</span>
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
-                      <div className="absolute right-2 flex flex-col space-y-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setPassScore((prev) =>
-                              Math.min(selectedScore === "Percentage" ? 100 : totalScore, (Number(prev) || 0) + 1)
-                            )
-                          }
-                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPassScore((prev) => Math.max(1, (Number(prev) || 0) - 1))}
-                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
                     </div>
-                    {errors.passScore && (
+                    {touched.passScore && errors.passScore && (
                       <p className="mt-1 text-sm text-red-600">{errors.passScore}</p>
                     )}
                   </div>
@@ -400,55 +458,44 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                         <tr key={index}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{sectionName}</td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{questions.length}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <input
-                                type="number"
-                                value={totalScores[sectionName] || ""}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "" || (Number(value) >= 1)) { // Allow empty input for flexibility
-                                    handleTotalScoreChange(sectionName, value);
-                                    setAddedSections(prev =>
-                                      prev.map((each) => 
-                                        each.SectionName === sectionName ? { ...each, totalScore: value === "" ? 0 : +value } : each
-                                      )
-                                    );
-                                  }
-                                }}
-                                className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                              />
-                              {selectedScore === "Percentage" && (
-                                <span className="ml-2 text-gray-500 text-sm">%</span>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <div className="flex flex-col">
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  value={localTotalScores[sectionName] || ""}
+                                  onChange={(e) => handleTotalScoreChange(sectionName, e.target.value)}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  min="1"
+                                />
+                                {selectedScore === "Percentage" && (
+                                  <span className="ml-2 text-gray-500 text-sm">%</span>
+                                )}
+                              </div>
+                              {touched[`totalScore_${sectionName}`] && errors[sectionName] && (
+                                <p className="mt-1 text-xs text-red-600 max-w-[120px]">{errors[sectionName]}</p>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <input
-                                type="number"
-                                value={passScores[sectionName] || ""}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  const maxPassScore = selectedScore === "Percentage" ? 100 : Number(totalScores[sectionName]) || Infinity;
-                                  if (value === "" || (Number(value) >= 1 && Number(value) <= maxPassScore)) {
-                                    handlePassScoreChange(sectionName, value);
-                                    setAddedSections(prev =>
-                                      prev.map((each) => 
-                                        each.SectionName === sectionName ? { ...each, passScore: value === "" ? 0 : +value } : each
-                                      )
-                                    );
-                                  }
-                                }}
-                                className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                              />
-                              {selectedScore === "Percentage" && (
-                                <span className="ml-2 text-gray-500 text-sm">%</span>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <div className="flex flex-col">
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  value={localPassScores[sectionName] || ""}
+                                  onChange={(e) => handlePassScoreChange(sectionName, e.target.value)}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  min="1"
+                                  max={selectedScore === "Percentage" ? "100" : localTotalScores[sectionName] || undefined}
+                                />
+                                {selectedScore === "Percentage" && (
+                                  <span className="ml-2 text-gray-500 text-sm">%</span>
+                                )}
+                              </div>
+                              {touched[`passScore_${sectionName}`] && errors[sectionName] && (
+                                <p className="mt-1 text-xs text-red-600 max-w-[120px]">{errors[sectionName]}</p>
                               )}
                             </div>
-                            {errors[sectionName] && (
-                              <p className="mt-1 text-xs text-red-600">{errors[sectionName]}</p>
-                            )}
                           </td>
                         </tr>
                       );
@@ -457,21 +504,23 @@ const PassScore = ({ setAddedSections, addedSections, setFormData, formData, onC
                 </table>
               </div>
             )}
-
-            {/* Footer Buttons */}
-            <div className="fixed pt-6 bottom-2 right-3">
-              <button
-                type="button"
-                onClick={handleSave}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                Save
-              </button>
-            </div>
           </form>
         </div>
       </div>
-    </>
+
+      {/* Footer Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-sm">
+        <div className="max-w-3xl mx-auto flex justify-end">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

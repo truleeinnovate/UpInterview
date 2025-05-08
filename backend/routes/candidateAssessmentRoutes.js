@@ -1,37 +1,32 @@
 
 const express = require('express')
 
-const { createCandidateAssessment, getCandidateAssessmentBasedOnScheduledAssessmentId, updateCandidateAssessment, getCandidateAssessmentBasedOnId, updateAnswersToDb, autoSaveAnswers, verifyOtp, resendOtp } = require('../controllers/candidateAssessment')
-// const { customControllerToSendEmail } = require('../controllers/assessmentEmailCommonController')
+const { getCandidateAssessmentBasedOnId, verifyOtp, sendOtp,submitCandidateAssessment} = require('../controllers/candidateAssessmentController')
 
 const router = express.Router()
 
-router.post('/create',createCandidateAssessment)
-
-//getting candidate assessment based on scheduled assessment id
-router.get('/scheduled-assessment/:id',getCandidateAssessmentBasedOnScheduledAssessmentId)
-
-
 //update candidate assessment 
-router.patch('/update/:id',updateCandidateAssessment)
+//we are using in assessmet test
+// router.patch('/update/:id',updateCandidateAssessment)
 
 //get candidate assessment based on _id ,purpose: to get candidate id and assessment id out of it.
-router.get('/details/:id',getCandidateAssessmentBasedOnId)
+// we are using this assessment test
 
 //save the answers
-router.patch('/:candidateAssessmentId/sections/:sectionIndex/questions/:questionId',updateAnswersToDb)
+//we are using in assessment test
+// router.patch('/:candidateAssessmentId/sections/:sectionIndex/questions/:questionId',updateAnswersToDb)
+//we are using this in asessment test
+// router.patch('/:candidateAssessmentId/save-progress',autoSaveAnswers)
+//we are using in assessment test
 
-router.patch('/:candidateAssessmentId/save-progress',autoSaveAnswers)
 
+
+
+
+router.get('/details/:id',getCandidateAssessmentBasedOnId)
 router.post('/verify-otp',verifyOtp)
-
-router.post('/resend-otp',resendOtp)
-
-// router.post('/candidate-link/:scheduledAssessmentId/:candidateId',sendLinkToCandidate)
-
-// router.post('/send-assessment-link',sendAssessmentLink)
-// router.post('/emailCommon/assessmentSendEmail',customControllerToSendEmail)
-
+router.post('/send-otp/:scheduledAssessmentId/:candidateId',sendOtp);
+router.post('/submit', submitCandidateAssessment);
 
 
 module.exports = router

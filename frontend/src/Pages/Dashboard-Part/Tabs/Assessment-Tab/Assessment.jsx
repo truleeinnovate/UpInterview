@@ -14,13 +14,9 @@ import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBa
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
-import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
-import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
-import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 
@@ -448,7 +444,7 @@ const Assessment = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <h1 className="text-2xl font-semibold text-custom-blue">My Assessments</h1>
+            <h1 className="text-2xl font-semibold text-custom-blue">Assessment Templates</h1>
 
             <Link to="/assessment/new">
               <Button variant="default" size="sm" className="bg-custom-blue hover:bg-custom-blue/90 text-white">
@@ -598,47 +594,13 @@ const Assessment = () => {
           )}
         </div>
       </main>
-      {/* 
-      {selectedAssessment && (
-        <EditAssessment
-          onClose={handleCloseEdit}
-          candidate1={selectedAssessment}
-        />
-      )} */}
-
-      {/* {showAssessmentDetails && (
-        <AssessmentProfileDetails
-          // assessmentId={}
-          // fetchAssessmentData={fetchAssessmentData}
-          // isOpen={isMenuOpen}
-          // onOutsideClick={handleOutsideClick}
-          // linkExpiryDays={linkExpiryDays}
-          assessment={showAssessmentDetails}
-          onCloseprofile={handleCloseProfile}
-        />
-      )} */}
-
-      {/* {sidebarOpen && (
-        <>
-          <Sidebar
-            fetchAssessmentData={fetchAssessmentData}
-            showLinkExpiryDay={showLinkExpiryDay}
-            setShowLinkExpiryDays={setShowLinkExpiryDays}
-            linkExpiryDays={linkExpiryDays}
-            setLinkExpiryDays={setLinkExpiryDays}
-            onClose={closeSidebar}
-            onOutsideClick={handleOutsideClick}
-            onDataAdded={handleDataAdded}
-          />
-        </>
-      )} */}
 
       {isShareOpen && (
         <ShareAssessment
           linkExpiryDays={linkExpiryDays}
           isOpen={isShareOpen}
           onCloseshare={handleCloseShare}
-          assessmentId={isShareOpen._id}
+          assessment={isShareOpen}
         />
       )}
     </div>

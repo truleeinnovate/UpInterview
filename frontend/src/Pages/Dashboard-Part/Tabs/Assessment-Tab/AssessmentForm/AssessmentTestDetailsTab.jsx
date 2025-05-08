@@ -103,7 +103,7 @@ const AssessmentTestDetailsTab = ({
             <div className="absolute bottom-1 right-1 text-right text-sm">
               {instructions.length}/2000
             </div>
-            {isEditing && instructionError && (
+            {instructionError && (
               <p className="text-red-500 text-sm">{instructionError}</p>
             )}
           </div>

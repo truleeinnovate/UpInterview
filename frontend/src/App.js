@@ -42,7 +42,7 @@ import QuestionBank from './Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionB
 
 import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx";
 import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
-import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails.jsx";
+import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails.jsx";
 
 //-----------------------------------account settings
 import UsersLayout from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx';

@@ -1,41 +1,5 @@
-// const questionSchema = new mongoose.Schema({
-//     Question: String,
-//     QuestionType: String,
-//     DifficultyLevel: String,
-//     Score: Number,
-//     Options: [String],
-//     Answer: String,
-//     ProgrammingDetails: [{
-//         language: String,
-//         code: String,
-//         testCases: [{
-//             name: String,
-//             input: String,
-//             output: String,
-//             marks: Number
-//         }]
-//     }],
-//     Hint: String,
-//     AutoAssessment: {
-//         enabled: Boolean,
-//         matching: {
-//             type: String,
-//             enum: ['Exact', 'Contains'],
-//             default: 'Exact'
-//         }
-//     },
-//     CharLimits: { 
-//         min: Number,
-//         max: Number
-//     },
-// });
-const mongoose = require('mongoose');
-// const sectionSchema = new mongoose.Schema({
-//     SectionName: String,
-//     Questions:[{type:mongoose.Schema.Types.ObjectId,ref:"assessmentQuestions"}],
-//     passScore:Number
 
-// });
+const mongoose = require('mongoose');
 
 const assessmentSchema = new mongoose.Schema({
     AssessmentTitle: String,
@@ -48,7 +12,7 @@ const assessmentSchema = new mongoose.Schema({
     // Sections: [
     //     sectionSchema
     // ],
-    CandidateDetails: {
+    CandidateDetails: { 
         includePosition: { type: Boolean, default: false },
         includePhone: { type: Boolean, default: false },
     },

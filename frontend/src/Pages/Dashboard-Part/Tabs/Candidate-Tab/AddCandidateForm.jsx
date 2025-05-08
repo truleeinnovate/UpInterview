@@ -467,11 +467,17 @@ const AddCandidateForm = ({ mode }) => {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
+    console.log('Starting add candidate process...');
+
+    // Get user token information
     const tokenPayload = decodeJwt(Cookies.get('authToken'));
     const userId = tokenPayload?.userId;
     const userName = tokenPayload?.userName;
     const orgId = tokenPayload?.orgId;
 
+    console.log('User info:', { userId, userName, orgId });
+
+    // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries || [],
@@ -479,11 +485,14 @@ const AddCandidateForm = ({ mode }) => {
     );
 
     if (!formIsValid) {
+      console.log('Form validation failed:', newErrors);
       setErrors(newErrors);
       return;
     }
 
+    // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+    console.log('Current date and time:', currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -510,15 +519,19 @@ const AddCandidateForm = ({ mode }) => {
       tenantId: orgId
     };
 
+    console.log('Submitting candidate data:', data);
+
     try {
-      let candidateId;
-
+      // Create candidate
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
+      console.log('Candidate creation response:', response.data);
 
-      console.log("response.data ", response.data);
+      const candidateId = response.data.data._id;
+      console.log('New candidate created with ID:', candidateId);
 
-      candidateId = await response.data.data._id;
+      // Upload image if available
       if (file) {
+        console.log('Uploading candidate image...');
         const imageData = new FormData();
         imageData.append("image", file);
         imageData.append("type", "candidate");
@@ -527,23 +540,37 @@ const AddCandidateForm = ({ mode }) => {
         await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        console.log('Image upload completed successfully');
       }
 
-      if (response.status === 200 || response.status === 201) {
-        resetFormData();
-      }
+      // Reset form and close
+      resetFormData();
+      console.log('Form reset completed');
+
+      // Navigate to candidate list
+      navigate('/candidate');
+      console.log('Navigation to candidate list completed');
     } catch (error) {
-      console.error("Failed to add candidate:", error);
+      console.error('Failed to add candidate:', error);
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Starting submit process...');
+
+    // Get user token information
     const tokenPayload = decodeJwt(Cookies.get('authToken'));
     const userId = tokenPayload?.userId;
     const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.orgId;
+    const orgId = tokenPayload?.tenantId;
 
+    console.log('User info:', { userId, userName, orgId });
+
+    // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries || [],
@@ -551,11 +578,14 @@ const AddCandidateForm = ({ mode }) => {
     );
 
     if (!formIsValid) {
+      console.log('Form validation failed:', newErrors);
       setErrors(newErrors);
       return;
     }
 
+    // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+    console.log('Current date and time:', currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -568,48 +598,57 @@ const AddCandidateForm = ({ mode }) => {
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      resume: null,
-      CurrentRole: formData.CurrentRole,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: `${userName} at ${currentDateTime}`,
-      ownerId: userId,
-      tenantId: orgId
-    };
+        Date_Of_Birth: formData.Date_Of_Birth,
+        skills: entries.map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
+        resume: null,
+        CurrentRole: formData.CurrentRole,
+        CreatedBy: `${userName} at ${currentDateTime}`,
+        LastModifiedById: `${userName} at ${currentDateTime}`,
+        ownerId: userId,
+        tenantId: orgId
+      };
 
-    try {
-      let candidateId;
-      let response;
+      console.log('Submitting candidate data:', data);
 
-      if (id) {
-        response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/candidate/${id}`,
-          data
-        );
-      } else {
-        response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
-      }
+      try {
+        let candidateId;
+        let response;
 
-      candidateId = await response.data.data._id;
-      if (file) {
-        const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "candidate");
-        imageData.append("id", candidateId);
+        if (id) {
+          // Update existing candidate
+          console.log('Updating existing candidate with ID:', id);
+          response = await axios.patch(
+            `${process.env.REACT_APP_API_URL}/candidate/${id}`,
+            data
+          );
+        } else {
+          // Create new candidate
+          console.log('Creating new candidate...');
+          response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
+        }
 
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else if (!isImageUploaded && !filePreview && id) {
-        await axios.delete(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}/image`);
-      }
+        console.log('API response:', response.data);
+        candidateId = response.data.data._id;
 
-      if (response.status === 200 || response.status === 201) {
+        // Upload image if available
+        if (file) {
+          console.log('Uploading candidate image...');
+          const imageData = new FormData();
+          imageData.append("image", file);
+          imageData.append("type", "candidate");
+          imageData.append("id", candidateId);
+
+          await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          console.log('Image upload completed successfully');
+        }
+
+        // Handle navigation based on mode
         switch (mode) {
           case 'Edit':
             navigate(`/candidate`);
@@ -620,12 +659,12 @@ const AddCandidateForm = ({ mode }) => {
           default: // Create mode
             navigate('/candidate');
         }
+
         resetFormData();
+      } catch (error) {
+        console.error("Error adding candidate:", error);
       }
-    } catch (error) {
-      console.error("Error adding candidate:", error);
-    }
-  };
+    };
 
   const resetFormData = () => {
     setFormData({

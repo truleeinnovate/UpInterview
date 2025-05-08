@@ -1,5 +1,5 @@
 import React from 'react';
-import { Share2, Eye, Pencil } from 'lucide-react';
+import { FaEye, FaPencilAlt, FaShareAlt } from 'react-icons/fa';
 
 const AssessmentList = ({ assessments, onView, onEdit, onShare }) => (
     <div className="w-full bg-gray-50 rounded-xl p-6">
@@ -30,21 +30,21 @@ const AssessmentList = ({ assessments, onView, onEdit, onShare }) => (
                                 className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors" 
                                 title="Share"
                             >
-                                <Share2 className="w-4 h-4" />
+                                <FaShareAlt className="w-4 h-4" />
                             </button>
                             <button 
                                 onClick={() => onView(assessment)} 
                                 className="text-green-500 hover:bg-green-50 p-2 rounded-lg transition-colors" 
                                 title="View"
                             >
-                                <Eye className="w-4 h-4" />
+                                <FaEye className="w-4 h-4" />
                             </button>
                             <button 
                                 onClick={() => onEdit(assessment)} 
                                 className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg transition-colors" 
                                 title="Edit"
                             >
-                                <Pencil className="w-4 h-4" />
+                                <FaPencilAlt className="w-4 h-4" />
                             </button>
                         </div>
                     </div>

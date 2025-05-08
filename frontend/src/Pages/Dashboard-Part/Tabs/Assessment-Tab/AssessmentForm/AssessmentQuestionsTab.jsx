@@ -1,13 +1,17 @@
 import React from "react";
 import Popup from "reactjs-popup";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
+import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
+import {
+  MdOutlineKeyboardArrowDown,
+  MdOutlineKeyboardArrowUp,
+} from "react-icons/md";
 import {
   PlusIcon,
   CheckCircleIcon,
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { MoreVertical, ChevronDown, ChevronUp } from 'lucide-react';
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -32,8 +36,8 @@ const AssessmentQuestionsTab = ({
   getDifficultyColorClass,
   getSelectedQuestionsCount,
   passScores,
-  totalScores, // Added prop
-  passScoreType, // Added prop (from formData.passScoreBy)
+  totalScores,
+  passScoreType,
   toggleArrow1,
   isAlreadyExistingSection,
   setIsAlreadyExistingSection,
@@ -44,6 +48,7 @@ const AssessmentQuestionsTab = ({
   isEditing,
   setSidebarOpen,
   isPassScoreSubmitted,
+  setIsQuestionLimitErrorPopupOpen
 }) => {
   // Toggle action menu for sections and questions
   const toggleActionMenu = (type, sectionIndex, questionIndex = null) => {
@@ -137,6 +142,7 @@ const AssessmentQuestionsTab = ({
                           setSectionName(e.target.value);
                           setIsAlreadyExistingSection("");
                         }}
+                        autoComplete="off"
                       />
                       {isAlreadyExistingSection && (
                         <p className="text-red-500 text-xs mt-1">{isAlreadyExistingSection}</p>
@@ -264,7 +270,7 @@ const AssessmentQuestionsTab = ({
                         onClick={() => toggleActionMenu("section", sectionIndex)}
                         className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
                       >
-                        <MoreVertical className="text-xl" />
+                        <MdMoreVert className="text-xl" />
                       </button>
 
                       {actionViewMore?.type === "section" && actionViewMore.index === sectionIndex && (
@@ -298,9 +304,9 @@ const AssessmentQuestionsTab = ({
                       onClick={() => toggleArrow1(sectionIndex)}
                     >
                       {toggleStates[sectionIndex] ? (
-                        <ChevronUp className="text-xl" />
+                        <MdOutlineKeyboardArrowUp className="text-xl" />
                       ) : (
-                        <ChevronDown className="text-xl" />
+                        <MdOutlineKeyboardArrowDown className="text-xl" />
                       )}
                     </button>
                   </div>
@@ -371,7 +377,7 @@ const AssessmentQuestionsTab = ({
                                 onClick={() => toggleActionMenu("question", sectionIndex, questionIndex)}
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
-                                <MoreVertical className="text-xl" />
+                                <MdMoreVert className="text-xl" />
                               </button>
                               {actionViewMore?.type === "question" &&
                                 actionViewMore.index === sectionIndex &&
@@ -423,20 +429,42 @@ const AssessmentQuestionsTab = ({
               Delete Selected
             </button>
           )}
-          <button
-            type="button"
-            onClick={(e) => handleSave(e, "Questions", true)}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-          >
-            {isEditing ? "Update" : "Save"}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSaveAndNext(e, "Questions", "Candidates")}
-            className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
-          >
-            {isEditing ? "Update & Next" : "Save & Next"}
-          </button>
+          {isPassScoreSubmitted ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => handleSave(e, "Questions")}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              >
+                {isEditing ? "Update" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSaveAndNext(e, "Questions", "Candidates")}
+                className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+              >
+                {isEditing ? "Update & Next" : "Save & Create Assessment"}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                const totalQuestions = addedSections.reduce(
+                  (acc, eachSection) => acc + eachSection.Questions.length,
+                  0
+                );
+                if (totalQuestions !== questionsLimit) {
+                  setIsQuestionLimitErrorPopupOpen(true);
+                  return;
+                }
+                setSidebarOpen(true);
+              }}
+              className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+            >
+              Add Score
+            </button>
+          )}
         </div>
       </div>
     </div>
