@@ -77,6 +77,7 @@ exports.individualLogin = async (req, res) => {
       ownerId: savedUser._id,
       contactId: savedContact._id,
       tenantId: savedContact.tenantId,
+      token: token
     });
 
   } catch (error) {

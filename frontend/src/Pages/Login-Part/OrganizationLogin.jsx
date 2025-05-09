@@ -93,18 +93,18 @@ const Admin = () => {
   return (
     <>
       <div>
-        <div className="grid grid-cols-2 sm:grid-cols-1">
+        <div className="grid grid-cols-2 sm:grid-cols-1 items-center">
           {/* Left Column - Slideshow */}
           <div>
             <Slideshow />
           </div>
           {/* Right Column - Login Form */}
           <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
-            <div className="mb-8 mt-5 flex justify-center">
+            {/* <div className="mb-8 flex justify-center">
               <button className="border border-gray-400 font-medium rounded-md px-10 py-2">
                 User
               </button>
-            </div>
+            </div> */}
             <div>
               <p className="text-2xl font-semibold mb-7 text-center">Welcome Back</p>
               <form onSubmit={handleLogin}>

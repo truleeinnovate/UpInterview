@@ -81,7 +81,7 @@ const Profile1 = () => {
           {selectedOption === "individual" && (
             <button
               onClick={handleLinkedInLogin}
-              className="bg-sky-400 text-white py-2 rounded-full hover:bg-sky-500 transition w-full"
+              className="bg-custom-blue text-white py-2 rounded-full hover:bg-custom-blue/80 transition w-full"
             >
               Sign Up with LinkedIn
             </button>

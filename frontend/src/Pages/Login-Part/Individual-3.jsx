@@ -52,7 +52,7 @@ const Profile3 = () => {
                     <Slideshow />
                 </div>
 
-                <div className='flex text-sm flex-col items-center justify-center mt-24 sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]'>
+                <div className='flex text-sm flex-col justify-center sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]'>
                     {/* Let us Know your profession? */}
                     <div className='border border-custom-blue rounded-md shadow-md w-full p-4'>
                         <p className='text-md font-normal mb-5'>Let us know your profession?</p>

@@ -50,16 +50,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Master Data Routes
-const { Skills } = require('./models/MasterSchemas/skills.js');
-const { LocationMaster } = require('./models/MasterSchemas/LocationMaster.js');
-const { Industry } = require('./models/MasterSchemas/industries.js');
-const { RoleMaster } = require('./models/MasterSchemas/RoleMaster.js');
-const { TechnologyMaster } = require('./models/MasterSchemas/TechnologyMaster.js');
-const { HigherQualification } = require('./models/higherqualification.js');
-const { University_CollegeName } = require('./models/college.js')
-const { Company } = require('./models/company.js');
- 
+
 // API Routes
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
@@ -77,6 +68,15 @@ app.use('/Organization', organizationRoutes);
 app.use('/',Cardrouter)
 app.use('/emails', EmailRouter)
 
+// Master Data Routes
+const { Skills } = require('./models/MasterSchemas/skills.js');
+const { LocationMaster } = require('./models/MasterSchemas/LocationMaster.js');
+const { Industry } = require('./models/MasterSchemas/industries.js');
+const { RoleMaster } = require('./models/MasterSchemas/RoleMaster.js');
+const { TechnologyMaster } = require('./models/MasterSchemas/TechnologyMaster.js');
+const { HigherQualification } = require('./models/higherqualification.js');
+const { University_CollegeName } = require('./models/college.js')
+const { Company } = require('./models/company.js');
 // Master Data Endpoints
 app.get('/skills', async (req, res) => {
   try {
@@ -109,17 +109,6 @@ app.get('/roles', async (req, res) => {
   try {
     const roles = await RoleMaster.find({}, 'RoleName');
     res.json(roles);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// POST endpoint to insert roles
-app.post('/roles', async (req, res) => {
-  try {
-    const roles = req.body; // Expecting an array of role objects
-    const insertedRoles = await RoleMaster.insertMany(roles, { ordered: false });
-    res.status(201).json({ message: 'Roles inserted successfully', data: insertedRoles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -472,7 +461,6 @@ app.get('/rolesdata/:id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching role', error: error.message });
   }
 });
-
 
 //this is related to roles main page get
 // app.get('/rolesdata', async (req, res) => {

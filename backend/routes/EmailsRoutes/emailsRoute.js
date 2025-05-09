@@ -6,7 +6,7 @@ const { sendSignUpEmail,forgotPasswordSendEmail} = require('../../controllers/Em
 const router = express.Router()
 
 router.post('/subscription/paid',afterSubscribePlan)
-router.post('/subscription/free',afterSubscribeFreePlan)
+router.post('/subscriptions/free',afterSubscribeFreePlan)
 
 
 router.post('/send-signup-email', sendSignUpEmail);

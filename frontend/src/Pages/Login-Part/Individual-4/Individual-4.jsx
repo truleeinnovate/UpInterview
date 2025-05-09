@@ -339,6 +339,13 @@ const MultiStepForm = () => {
         });
       }
   
+      if (!token) {
+        console.error("No token received from server");
+        toast.error("Failed to authenticate. Please try again.", { autoClose: 5000 });
+        setLoading(false);
+        return;
+      }
+      
       // Store JWT in cookies
       setAuthCookies(token);
   
