@@ -623,7 +623,6 @@ const rolesPermissionRoutes = require('./routes/rolesPermissionRoutes');
 app.use('/permissions', rolesPermissionRoutes);
 app.use('/',  rolesRoutes);
 
-
 // <------------------------Assessment Templates
 const candidateAssessmentRouter = require('./routes/candidateAssessmentRoutes.js');
 app.use('/candidate-assessment', candidateAssessmentRouter);

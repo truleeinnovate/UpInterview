@@ -254,7 +254,7 @@ const MultiStepForm = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
-
+  
     const userData = {
       firstName: basicDetailsData.firstName,
       lastName: basicDetailsData.lastName,
@@ -263,14 +263,17 @@ const MultiStepForm = () => {
       email: basicDetailsData.email,
       isProfileCompleted: true,
     };
-
+  
     const contactData = {
       ...basicDetailsData,
       ...additionalDetailsData,
       ...(isInternalInterviewer || Freelancer ? interviewDetailsData : {}),
       LetUsKnowYourProfession: profession,
+      // Add preferredDuration and timeZone to contactData
+      preferredDuration: availabilityDetailsData.preferredDuration,
+      timeZone: availabilityDetailsData.timeZone,
     };
-
+  
     const availabilityData = (isInternalInterviewer || Freelancer)
       ? Object.keys(availabilityDetailsData.availability || times)
           .map((day) => ({
@@ -284,7 +287,7 @@ const MultiStepForm = () => {
           }))
           .filter((dayData) => dayData.timeSlots.length > 0)
       : [];
-
+  
     let isProfileCompleteData = {};
     if (isProfileComplete) {
       isProfileCompleteData = {
@@ -294,7 +297,7 @@ const MultiStepForm = () => {
         isInternalInterviewer,
       };
     }
-
+  
     try {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
         userData,
@@ -303,7 +306,7 @@ const MultiStepForm = () => {
         Freelancer,
         isProfileCompleteData,
       });
-
+  
       // Show success toast based on create/update
       toast.success(
         response.data.isUpdate 
@@ -311,9 +314,9 @@ const MultiStepForm = () => {
           : "Profile created successfully!",
         { autoClose: 5000 }
       );
-
+  
       const { contactId, token } = response.data;
-
+  
       // Handle image upload
       if (file) {
         const imageData = new FormData();
@@ -335,10 +338,10 @@ const MultiStepForm = () => {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
-
+  
       // Store JWT in cookies
       setAuthCookies(token);
-
+  
       // Send welcome email
       try {
         await axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
@@ -351,7 +354,7 @@ const MultiStepForm = () => {
         console.error('Email error:', emailError);
         // Don't show error toast for email failure
       }
-
+  
       setLoading(false);
       navigate('/subscription-plans');
     } catch (error) {
