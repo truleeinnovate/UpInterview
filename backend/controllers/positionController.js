@@ -111,25 +111,27 @@ const updatePosition = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
-    // Fetch current position details
-    const currentPosition = await Position.findById(positionId).lean();
+    console.log('Starting position update process');
+    console.log('Request parameters:', { positionId });
+    console.log('Request body:', req.body);
+    console.log('Update fields:', updateFields);
+
+    // Fetch current position details (keep as Mongoose document)
+    const currentPosition = await Position.findById(positionId);
 
     if (!currentPosition) {
+      console.log('Position not found');
       return res.status(404).json({ message: "Position not found" });
     }
-    // console.log("updateFields data", updateFields );
 
+    console.log('Building position data with updates');
     const positionData = {
       title: updateFields.title || currentPosition.title,
       companyname: updateFields.companyName || currentPosition.companyname,
       jobDescription: updateFields.jobDescription || currentPosition.jobDescription,
       minexperience: updateFields.experienceMin || currentPosition.minexperience,
       maxexperience: updateFields.experienceMax || currentPosition.maxexperience,
-
-      // selectedTemplete: updateFields.template?.templateName || currentPosition?.templateName,
       selectedTemplete: updateFields.template?.templateName ?? currentPosition.selectedTemplete,
-
-
       skills: updateFields.skills || currentPosition.skills,
       additionalNotes: updateFields.additionalNotes || currentPosition.additionalNotes,
       CreatedBy: ownerId || currentPosition.CreatedBy,
@@ -147,29 +149,15 @@ const updatePosition = async (req, res) => {
         duration: round.duration || "",
         instructions: round.instructions || ""
       })) ?? currentPosition.rounds
-      // rounds: (updateFields.template?.rounds?.length > 0 ? 
-      //   updateFields.template?.rounds?.map(round => ({
-      //   roundName: round.roundName || "",
-      //   interviewMode: round.interviewMode || "",
-      //   interviewType: round.interviewType || "",
-      //   duration: round.duration || "",
-      //   instructions: round.instructions || ""
-      // })) : currentPosition.rounds)
     };
+    console.log('Position data with updates:', positionData);
 
     // Compare current values with updateFields to identify changes
+    console.log('Comparing current values with updates');
     const changes = Object.entries(positionData)
       .filter(([key, newValue]) => {
         const oldValue = currentPosition[key];
-
-
-        // console.log(`key: ${key}, oldValue: ${oldValue}, newValue: ${newValue}`);
-
-
-        // console.log("Old Value:", oldValue);
-        // console.log("New Value:", newValue);
-
-
+        console.log(`Comparing field: ${key}`, { oldValue, newValue });
 
         // Handle arrays (e.g., `skills`) by comparing stringified versions
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
@@ -177,21 +165,25 @@ const updatePosition = async (req, res) => {
             array.map(({ _id, ...rest }) => rest)
               .sort((a, b) => (a.skill || "").localeCompare(b.skill || ""));
 
-          return JSON.stringify(normalizeArray(oldValue)) !== JSON.stringify(normalizeArray(newValue));
+          const areDifferent = JSON.stringify(normalizeArray(oldValue)) !== JSON.stringify(normalizeArray(newValue));
+          console.log(`Array field ${key} changed:`, areDifferent);
+          return areDifferent;
         }
 
-        return oldValue !== newValue;
+        const hasChanged = oldValue !== newValue;
+        console.log(`Field ${key} changed:`, hasChanged);
+        return hasChanged;
       })
       .map(([key, newValue]) => ({
         fieldName: key,
         oldValue: currentPosition[key],
         newValue,
       }));
-
-    // console.log("Changes detected:", changes);    
+    console.log('Changes detected:', changes);
 
     // If no changes detected, return early
     if (changes.length === 0) {
+      console.log('No changes detected, returning');
       return res.status(200).json({
         status: 'no_changes',
         message: 'No changes detected, position details remain the same',
@@ -199,23 +191,20 @@ const updatePosition = async (req, res) => {
     }
 
     // Update the position
-    // const updatedPosition = await Position.findByIdAndUpdate(
-    //   positionId,
-    //   { $set: positionData },
-    //   { new: true }
-    // );
-
-    // Apply updates
+    console.log('Applying updates to position');
     Object.assign(currentPosition, positionData);
 
     // Save to trigger middleware and timestamps
     const updatedPosition = await currentPosition.save();
+    console.log('Position saved successfully:', updatedPosition);
 
     if (!updatedPosition) {
+      console.log('Failed to update position');
       return res.status(404).json({ message: "Position not found." });
     }
 
     // Generate feed
+    console.log('Generating feed data');
     res.locals.feedData = {
       tenantId,
       feedType: 'update',
@@ -234,8 +223,10 @@ const updatePosition = async (req, res) => {
       })),
       history: changes,
     };
+    console.log('Feed data generated:', res.locals.feedData);
 
     // Generate logs
+    console.log('Generating log data');
     res.locals.logData = {
       tenantId,
       ownerId,
@@ -245,14 +236,23 @@ const updatePosition = async (req, res) => {
       message: 'Position updated successfully',
       responseBody: updatedPosition,
     };
+    console.log('Log data generated:', res.locals.logData);
 
     // Send response
+    console.log('Sending successful response');
     res.status(201).json({
       status: 'success',
       message: 'Position updated successfully',
       data: updatedPosition,
     });
   } catch (error) {
+    console.error('Error updating position:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      requestBody: req.body
+    });
+
     // Handle errors
     res.locals.logData = {
       tenantId,
@@ -261,6 +261,7 @@ const updatePosition = async (req, res) => {
       requestBody: req.body,
       message: error.message,
       status: 'error',
+      responseError: error.message // Store just the error message as string
     };
 
     res.status(500).json({
@@ -457,6 +458,7 @@ const saveInterviewRoundPosition = async (req, res) => {
 };
 
 const getPositionById = async (req, res) => {
+
   const { id } = req.params; // Position ID from URL params
   const { tenantId } = req.query; // Tenant ID from query string
 
@@ -475,6 +477,8 @@ const getPositionById = async (req, res) => {
       tenantId: tenantId, // Filter by tenant
     }).lean(); // Convert to plain JS object for performance
 
+    
+    
     if (!position) {
       return res.status(404).json({
         success: false,
@@ -484,12 +488,15 @@ const getPositionById = async (req, res) => {
 
     // Success response
     res.status(200).json(
-
       position
     );
 
   } catch (error) {
     console.error("Error fetching position:", error);
+    console.error('Error details:', {
+      error: error.message,
+      stack: error.stack
+    });
     res.status(500).json({
       success: false,
       error: "Server Error"

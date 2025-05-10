@@ -507,7 +507,7 @@ const PositionTab = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl  border border-gray-100 ">
+        <div className="bg-white rounded-xl border">
 
           {view === 'table' ?
             <div className="flex  w-full mb-2">

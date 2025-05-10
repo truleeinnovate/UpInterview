@@ -21,7 +21,7 @@ import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
 import axios from 'axios';
 import Cookies from "js-cookie";
-
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 Modal.setAppElement('#root');
 
 const PositionSlideDetails = () => {
@@ -43,8 +43,9 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const organizationId = Cookies.get("organizationId");
-
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const organizationId = tokenPayload.tenantId;
 
   // useEffect(() => {
   //   const foundPosition = positions.find(pos => pos._id === id)
@@ -73,8 +74,8 @@ const PositionSlideDetails = () => {
         );
 
         const foundPosition = response.data
-        // console.log("foundPosition", foundPosition);
-        // console.log("foundPosition. rounds", foundPosition.rounds);
+        console.log("foundPosition", foundPosition);
+        console.log("foundPosition. rounds", foundPosition.rounds);
         
         if (foundPosition) {
           setPosition(foundPosition || []);

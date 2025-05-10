@@ -38,11 +38,9 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
 
   return (
     <div className={`w-full ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'} flex flex-col`}>
-
       <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
         <div className="inline-block min-w-full align-middle">
-          <div
-            className={`${isMenuOpen ? 'overflow-x-auto' : ""} rounded-xl`} >
+          <div className={`${isMenuOpen ? 'overflow-x-auto' : ""} rounded-xl`} >
             <table className="min-w-full">
               <thead className="border-b">
                 <tr className="py-2">

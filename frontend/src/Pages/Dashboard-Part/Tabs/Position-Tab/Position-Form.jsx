@@ -251,16 +251,25 @@ const PositionForm = () => {
 
   // position details states
   const {
-    companies,
+    companies, 
     locations,
     templates,
     skills,
     positions
   } = useCustomContext();
 
+  // Add detailed template logging
+  useEffect(() => {
+    console.log('Template data update detected');
+    console.log('Raw templates:', templates);
+    if (templates) {
+      console.log('Templates count:', templates.length);
+      console.log('First template:', templates[0]);
+    } else {
+      console.log('Templates is null/undefined');
+    }
+  }, [templates]);
 
-  console.log("templates", templates);
-  
   useEffect(() => {
     console.log('companies:', companies);
     console.log('locations:', locations);
@@ -1546,6 +1555,7 @@ const PositionForm = () => {
                         value={formData.template?.templateName || ""}
                         options={templates}
                         onChange={(e) => {
+                          console.log('Template selected:', e.target.value);
                           setFormData({ ...formData, template: e.target.value });
                         }}
                         disabledError={false}
