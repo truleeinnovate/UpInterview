@@ -84,7 +84,7 @@ const PositionTable = ({ positions,isMenuOpen }) => {
                   <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div 
-                       onClick={() =>  navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }})}
+                       onClick={() =>  navigate(`/positions/view-details/${position._id}`, { state: { from: location.pathname }})}
                       className="flex items-center gap-1 text-sm font-medium text-custom-blue">
                         <span>{position?.title || 'N/A'}</span>
                       </div>
@@ -159,7 +159,7 @@ const PositionTable = ({ positions,isMenuOpen }) => {
                             {/* {({ active }) => ( */}
                             <button
                               // /position/view-details/:id
-                              onClick={() => navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } })}
+                              onClick={() => navigate(`/positions/view-details/${position._id}`, { state: { from: location.pathname } })}
                                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                             >
                               <Eye className="w-4 h-4 text-blue-600" />
@@ -168,7 +168,7 @@ const PositionTable = ({ positions,isMenuOpen }) => {
                             {/* // )} */}
 
                             <button
-                              onClick={() => navigate(`/position/edit-position/${position._id}`)}
+                              onClick={() => navigate(`/positions/edit-position/${position._id}`)}
                                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                             >
                               <Pencil className="w-4 h-4 text-green-600" />

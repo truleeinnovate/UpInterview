@@ -4,7 +4,7 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 
 
 // patch call 
-const  updateCandidatePatchCall = async (req, res) => {
+const updateCandidatePatchCall = async (req, res) => {
   console.log('getting 4')
 
   res.locals.loggedByController = true;
@@ -156,6 +156,7 @@ const addCandidatePostCall = async (req, res) => {
       LastName,
       Email,
       Phone,
+      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
@@ -179,6 +180,7 @@ const addCandidatePostCall = async (req, res) => {
       LastName,
       Email,
       Phone,
+      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
@@ -193,6 +195,8 @@ const addCandidatePostCall = async (req, res) => {
       CreatedBy,
       CreatedDate: new Date(),
     });
+
+    console.log("New candidate created:", newCandidate);
 
     await newCandidate.save();
 

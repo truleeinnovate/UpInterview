@@ -345,7 +345,7 @@ const MultiStepForm = () => {
         setLoading(false);
         return;
       }
-      
+
       // Store JWT in cookies
       setAuthCookies(token);
   
@@ -376,7 +376,7 @@ const MultiStepForm = () => {
 
   const handlePrevStep = () => {
     if (currentStep === 0) {
-      navigate('/profile3');
+      navigate('/select-profession');
     } else {
       setCurrentStep((prevStep) => {
         const previousStep = prevStep - 1;

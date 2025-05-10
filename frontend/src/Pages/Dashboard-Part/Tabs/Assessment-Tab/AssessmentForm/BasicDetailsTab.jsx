@@ -41,23 +41,16 @@ const BasicDetailsTab = ({
   startDate,
   handleDateChange,
   CustomInput,
-  handleSave,
-  // handleSaveAndNext,
-  // setSelectedAssessmentType,
-  // selectedAssessmentType,
   showDropdownDifficulty,
   setSelectedPosition,
   handlePositionSelect,
   handleAddNewPositionClick,
   selectedDifficulty,
-  // toggleDropdownDifficulty,
   setShowDropdownDifficulty,
   setShowDropdownPosition,
   setShowDropdownDuration,
   positions,
   errors,
-  isEditing,
-  setActiveTab
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -100,12 +93,6 @@ const BasicDetailsTab = ({
     if (e) e.stopPropagation();
     closeAllDropdowns("linkExpiry");
     toggleLinkExpiryDropdown();
-  };
-
-  const modifiedToggleAssessment = (e) => {
-    if (e) e.stopPropagation();
-    closeAllDropdowns("assessment");
-    toggleDropdownAssessment();
   };
 
   const modifiedTogglePosition = (e) => {
@@ -561,8 +548,12 @@ const BasicDetailsTab = ({
                           key={days}
                           className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
                           onClick={() => {
-                            setLinkExpiryDays(days);
-                            toggleLinkExpiryDropdown();
+                            setLinkExpiryDays(days); // Update linkExpiryDays prop
+                            setFormData((prev) => ({
+                              ...prev,
+                              linkExpiryDays: days, // Update formData.linkExpiryDays
+                            }));
+                            toggleLinkExpiryDropdown(); // Close dropdown
                           }}
                         >
                           {days}

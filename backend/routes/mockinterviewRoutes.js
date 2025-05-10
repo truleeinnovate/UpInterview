@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const mockInterviewController = require('../controllers/mockInterviewController');
-const loggingService = require('../middlewares/loggingService');
+const loggingService = require('../middleware/loggingService');
 
 // POST: Create mock interview
 router.post('/mockinterview',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, mockInterviewController.createMockInterview);

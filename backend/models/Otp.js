@@ -1,11 +1,20 @@
 const mongoose = require('mongoose');
 
 const otpSchema = new mongoose.Schema({
-scheduledAssessmentId:{type:mongoose.Schema.Types.ObjectId,required:true,ref:"ScheduledAssessment"},
+  scheduledAssessmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'ScheduledAssessment',
+  },
   candidateId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'Candidate',
+  },
+  candidateAssessmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'CandidateAssessment',
   },
   otp: {
     type: String,

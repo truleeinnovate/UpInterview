@@ -566,7 +566,7 @@ function RoundFormPosition() {
       // console.log("response", response.data);
 
       if (response.status === 201 || response.status === 200) {
-        navigate(`/position/view-details/${positionId}`)
+        navigate(`/positions/view-details/${positionId}`)
       }
 
 
@@ -630,8 +630,8 @@ function RoundFormPosition() {
   // Create breadcrumb items with status
   const breadcrumbItems = isPositionContext
     && [
-      { label: 'Positions', path: '/position' },
-      { label: position?.title || 'Position', path: `/position/view-details/${contextId}` },
+      { label: 'Positions', path: '/positions' },
+      { label: position?.title || 'Position', path: `/positions/view-details/${contextId}` },
       // { label: isEditing ? `Edit ${roundEditData?.roundTitle || 'Round'}` : 'Add New Round', path: '' }
     ]
 
@@ -1398,7 +1398,7 @@ function RoundFormPosition() {
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() => navigate(`/position/view-details/${contextId}`)}
+                      onClick={() => navigate(`/positions/view-details/${contextId}`)}
                       className="mr-3 inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 "
                     >
                       Cancel

@@ -411,62 +411,6 @@ const AssessmentQuestionsTab = ({
           })}
         </div>
       </div>
-
-      {/* Footer Buttons */}
-      {/* <div className="flex justify-between mt-8 px-6">
-        <button
-          onClick={handleBackButtonClick}
-          className="px-4 py-2 border border-custom-blue rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-        >
-          Back
-        </button>
-        <div className="flex gap-3">
-          {getSelectedQuestionsCount() > 0 && (
-            <button
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-              onClick={() => openDeleteConfirmation("bulk", null, Object.keys(checkedState)[0])}
-            >
-              Delete Selected
-            </button>
-          )}
-          {isPassScoreSubmitted ? (
-            <>
-              <button
-                type="button"
-                onClick={(e) => handleSave(e, "Questions")}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-              >
-                {isEditing ? "Update" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => handleSaveAndNext(e, "Questions", "Candidates")}
-                className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
-              >
-                {isEditing ? "Update & Next" : "Save & Create Assessment"}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                const totalQuestions = addedSections.reduce(
-                  (acc, eachSection) => acc + eachSection.Questions.length,
-                  0
-                );
-                if (totalQuestions !== questionsLimit) {
-                  setIsQuestionLimitErrorPopupOpen(true);
-                  return;
-                }
-                setSidebarOpen(true);
-              }}
-              className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
-            >
-              Add Score
-            </button>
-          )}
-        </div>
-      </div> */}
     </div>
   );
 };

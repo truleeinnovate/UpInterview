@@ -29,7 +29,7 @@ export const shareAssessmentAPI = async ({
 
   try {
     const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/assessments/share`,
+      `${process.env.REACT_APP_API_URL}/emails/share`,
       {
         assessmentId,
         selectedCandidates,

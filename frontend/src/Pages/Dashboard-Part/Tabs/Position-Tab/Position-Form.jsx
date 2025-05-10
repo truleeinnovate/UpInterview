@@ -507,6 +507,7 @@ const PositionForm = () => {
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
       e.preventDefault();
+      console.log("Form submission prevented.");
     }
 
     // Function to check if two objects are equal
@@ -530,30 +531,33 @@ const PositionForm = () => {
     console.log("Data to Submit:", dataToSubmit);
 
     if (!skipValidation) {
+      console.log("Validating form...");
       const { formIsValid, newErrors } = validateForm(dataToSubmit, entries, dataToSubmit.rounds);
+      console.log("Form Validation Result:", formIsValid, newErrors);
       if (!formIsValid) {
         setErrors(newErrors);
+        console.log("Validation failed, errors set.");
         return;
       }
     }
 
     setErrors({});
+    console.log("Form validation passed.");
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
     const userId = tokenPayload?.userId;
-
     const userName = tokenPayload?.userName;
     const orgId = tokenPayload?.tenantId;
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+
+    console.log("User Info:", { userId, userName, orgId, currentDateTime });
 
     let basicdetails = {
       ...dataToSubmit,
       companyname: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && { minexperience: parseInt(dataToSubmit.minexperience) }),
-  ...(dataToSubmit.maxexperience && { maxexperience: parseInt(dataToSubmit.maxexperience) }),
-      // minexperience: dataToSubmit.minexperience || "",
-      // maxexperience: dataToSubmit.maxexperience || "",
+      ...(dataToSubmit.maxexperience && { maxexperience: parseInt(dataToSubmit.maxexperience) }),
       ownerId: userId,
       tenantId: orgId,
       CreatedBy: `${userName} at ${currentDateTime}`,
@@ -565,60 +569,66 @@ const PositionForm = () => {
       })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
-      // rounds: dataToSubmit.rounds || [],
     };
 
-    // console.log('basicdetails:', basicdetails);
+    console.log("Payload to submit:", basicdetails);
 
     try {
       let response;
       if (isEdit && positionId) {
-        console.log("templates", formData.template);
         console.log("Updating existing position with ID:", positionId);
         response = await axios.patch(
           `${process.env.REACT_APP_API_URL}/position/${positionId}`,
           basicdetails
         );
-        // console.log("Updated response:", response.data);
-
+        console.log("Updated response:", response.data);
       } else {
         console.log("Creating new position...");
         response = await axios.post(
           `${process.env.REACT_APP_API_URL}/position`,
           basicdetails
         );
-        // console.log("New position response:", response.data.data);
         setPositionId(response.data.data._id);
+        console.log("New position created, response:", response.data);
       }
 
       if (response.status === 201 || response.status === 200) {
-        // Handle navigation
+        console.log("Request successful, status:", response.status);
+
         if (actionType === "BasicDetailsSave") {
-          // onClose();
-          const previousPage = location.state?.from || "/position";
+          const previousPage = location.state?.from || "/positions";
+          console.log("Navigating to previous page:", previousPage);
           navigate(previousPage);
-          // navigate('/position')
         }
+
         if (actionType === "BasicDetailsSave&AddRounds") {
+          console.log("Opening round modal.");
           setIsRoundModalOpen(true);
         }
+
         if (actionType === "BasicDetailsSave&Next") {
+          console.log("Navigating to next page.");
           handleNextNavigation();
         }
+
         if (actionType === "RoundDetailsSave") {
-          // onClose();
+          console.log("Saving round details...");
         }
+
         if (actionType === "RoundDetailsSave&AddRound") {
+          console.log("Opening round modal again.");
           setIsRoundModalOpen(true);
         }
+
         if (actionType === "RoundDetailsSave&Next") {
+          console.log("Navigating to next round.");
           handleNextNavigation();
         }
       }
     } catch (error) {
       console.error("Error saving position:", error);
     }
-  };
+};
 
   const [isRoundModalOpen, setIsRoundModalOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState(-1);
@@ -627,15 +637,7 @@ const PositionForm = () => {
   const [rounds, setRounds] = useState([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(-1);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, roundIndex: -1 });
-  const [hoveredRound, setHoveredRound] = useState(-1);
   const [hasRounds, setHasRounds] = useState(false);
-
-  // if (!isOpen) return null;
-  const maxRounds = 5;
-  const handleSave = (e) => {
-    e.preventDefault();
-    // onSubmit();
-  };
 
   const handleRoundNext = (interviewType, roundData) => {
     setHasRounds(true);
@@ -665,14 +667,14 @@ const PositionForm = () => {
     setInsertIndex(-1);
   };
 
-  const handleAddRoundAtIndex = (index) => {
-    setInsertIndex(index);
-    setIsRoundModalOpen(true);
-  };
+  // const handleAddRoundAtIndex = (index) => {
+  //   setInsertIndex(index);
+  //   setIsRoundModalOpen(true);
+  // };
 
-  const handleRoundDelete = (index) => {
-    setDeleteConfirmation({ isOpen: true, roundIndex: index });
-  };
+  // const handleRoundDelete = (index) => {
+  //   setDeleteConfirmation({ isOpen: true, roundIndex: index });
+  // };
 
   // const confirmDelete = () => {
   //   if (deleteIndex !== null) {
@@ -802,8 +804,8 @@ const PositionForm = () => {
   const renderStageIndicator = () => {
 
     // Update flag when moving to rounds
-    const isBasicStage = currentStage === 'basic';
-    const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
+    // const isBasicStage = currentStage === 'basic';
+    // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
 
     return (
       <div className="flex items-center justify-center mb-4 mt-1 w-full overflow-x-auto py-2">
@@ -1604,7 +1606,7 @@ const PositionForm = () => {
               <div className="flex justify-end mt-4 space-x-3 mb-5">
                 <button className="px-3 py-1 border-custom-blue rounded border"
                   onClick={() => {
-                    const previousPage = location.state?.from || "/position";
+                    const previousPage = location.state?.from || "/positions";
                     navigate(previousPage);
                   }}
                 >

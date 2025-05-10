@@ -5,10 +5,13 @@ const candidateSchema = new mongoose.Schema({
     LastName: String,
     Email: String,
     Phone: String,
+    CountryCode: String,
     Date_Of_Birth: Date,
     Gender: String,
     HigherQualification: String,
     UniversityCollege: String,
+    CurrentRole: String,
+    RelevantExperience: Number,
     CurrentExperience: Number,
     // PositionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Position' },
     // PositionId: [{ 

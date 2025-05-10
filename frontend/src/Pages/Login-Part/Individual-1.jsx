@@ -5,7 +5,7 @@ const Login_1 = () => {
 	const navigate = useNavigate()
 
 	const Login = () => {
-		navigate("/profile1", { state: { from: "login" } });
+		navigate("/select-user-type", { state: { from: "login" } });
 	};
 	
 	return (

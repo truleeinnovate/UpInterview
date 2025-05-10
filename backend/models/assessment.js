@@ -9,9 +9,7 @@ const assessmentSchema = new mongoose.Schema({
     DifficultyLevel: String,
     NumberOfQuestions: Number,
     ExpiryDate: Date,
-    // Sections: [
-    //     sectionSchema
-    // ],
+    linkExpiryDays: Number,
     CandidateDetails: { 
         includePosition: { type: Boolean, default: false },
         includePhone: { type: Boolean, default: false },
@@ -20,11 +18,9 @@ const assessmentSchema = new mongoose.Schema({
     AdditionalNotes: String,
     totalScore: { 
         type: Number, 
-        // required: function() { return this.passScoreBy === "Overall"; } // Required only for Overall
     },
     passScore: { 
         type: Number, 
-        // required: function() { return this.passScoreBy === "Overall"; } // Required only for Overall
     },
     passScoreType: { 
         type: String, 

@@ -3,7 +3,7 @@ const { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidate
 const router = express.Router();
 
 // const candidateController = require('../controllers/candidateController');
-const loggingService = require('../middlewares/loggingService');
+const loggingService = require('../middleware/loggingService.js');
 
 
 router.post('/',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, addCandidatePostCall);

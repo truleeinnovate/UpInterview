@@ -7,7 +7,7 @@ const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const emailTemplateModel = require("../models/EmailTemplatemodel");
 const sendEmail = require('../utils/sendEmail');
-const notificationMiddleware = require("../middlewares/notificationMiddleware");
+const notificationMiddleware = require("../middleware/notificationMiddleware");
 // exports.assessmentSendEmail = async (req, res) => {
 //   const { category } = req.body;
 

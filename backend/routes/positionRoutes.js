@@ -6,7 +6,7 @@ const {
   getPositionById,
   // updateRounds
 } = require('../controllers/positionController.js');
-const loggingService = require('../middlewares/loggingService');
+const loggingService = require('../middleware/loggingService.js');
 
 const router = express.Router();
 

@@ -52,7 +52,7 @@ const CandidateDetails = () => {
               onClick={() => 
                 {
                   // sessionStorage.setItem('candidateData', JSON.stringify(candidate));
-                window.open(`/candidate/full-screen/${candidate._id}`, '_blank',);
+                window.open(`/candidates/full-screen/${candidate._id}`, '_blank',);
                 
                 }
                 }
@@ -65,7 +65,7 @@ const CandidateDetails = () => {
 
 
           <button
-            onClick={() => navigate('/candidate')}
+            onClick={() => navigate('/candidates')}
             className=" hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />

@@ -46,7 +46,7 @@ const MainContent = () => {
   const fetchCandidate = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${id}`);
-      console.log("response.data ", response.data);
+      console.log("response.data......... ", response.data);
 
       const { appliedPositions, ...candidateData } = response.data;
       setCandidate(candidateData);

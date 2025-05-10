@@ -5,12 +5,12 @@ import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
 import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx';
 import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
-import Login1 from './Pages/Login-Part/Individual-1.jsx';
-import Login2 from './Pages/Login-Part/Individual-2.jsx';
-import Login3 from './Pages/Login-Part/Individual-3.jsx';
-import Login4 from './Pages/Login-Part/Individual-4/Individual-4.jsx';
+import LandingPage from './Pages/Login-Part/Individual-1.jsx';
+import UserTypeSelection from './Pages/Login-Part/Individual-2.jsx';
+import SelectProfession from './Pages/Login-Part/Individual-3.jsx';
+import ProfileWizard from './Pages/Login-Part/Individual-4/Individual-4.jsx';
 import Logo from './Pages/Login-Part/Logo.jsx';
-import { Organization } from './Pages/Login-Part/OrganizationSignUp.jsx';
+import OrganizationSignUp from './Pages/Login-Part/OrganizationSignUp.jsx';
 import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 import LinkedInCallback from './Components/LinkedInCallback.jsx';
@@ -88,10 +88,10 @@ import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
 const App = () => {
   const location = useLocation();
-  const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin','/organizationSignUp', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login','/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
-  const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
+  const shouldRenderLogo = ['/organization-signup', '/organization-login', '/select-user-type', '/select-profession', '/complete-profile', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -107,45 +107,45 @@ const App = () => {
       {shouldRenderLogo && <Logo />}
       <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
         <Routes>
-          <Route path="/" element={<Login1 />} />
-          <Route path="/profile1" element={<Login2 />} />
-          <Route path="/profile3" element={<Login3 />} />
-          <Route path="/profile4" element={<Login4 />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/select-user-type" element={<UserTypeSelection />} />
+          <Route path="/select-profession" element={<SelectProfession />} />
+          <Route path="/complete-profile" element={<ProfileWizard />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/organizationSignUp" element={<Organization />} />
-          <Route path="/organizationLogin" element={<OrganizationLogin />} />
+          <Route path="/organization-signup" element={<OrganizationSignUp />} />
+          <Route path="/organization-login" element={<OrganizationLogin />} />
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
           {/* tabs */}
 
-          <Route path="/candidate" element={<CandidateTab />} >
+          <Route path="/candidates" element={<CandidateTab />} >
             <Route index element={null} />
             <Route path="new" element={<AddCandidateForm mode="Create" />} />
             <Route path="view-details/:id" element={<CandidateDetails />} />
             <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
           </Route >
 
-          <Route path="/candidate/:id" element={<CandidateTabDetails />} >
+          <Route path="/candidates/:id" element={<CandidateTabDetails />} >
             <Route index element={null} />
             <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
           </Route>
 
-          <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
+          <Route path="/candidates/full-screen/:id" element={<CandidateFullscreen />} />
 
           {/* // position UI  */}
 
-          <Route path="/position" element={<Position />} />
-          <Route path="/position/new-position" element={<PositionForm />} />
-          <Route path="/position/edit-position/:id" element={<PositionForm />} />
+          <Route path="/positions" element={<Position />} />
+          <Route path="/positions/new-position" element={<PositionForm />} />
+          <Route path="/positions/edit-position/:id" element={<PositionForm />} />
 
-          <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
+          <Route path="/positions/view-details/:id" element={<PositionSlideDetails />} />
 
-          <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+          <Route path="/positions/view-details/:id/rounds/new" element={<RoundFormPosition />} />
 
-          <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+          <Route path="/positions/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
 
           <Route path="/mockinterview" element={<MockInterview />} />
           <Route path="/mockinterview-create" element={<MockSchedulelater />} />
@@ -320,7 +320,7 @@ export default App;
 // const Login1 = lazy(() => import('./Pages/Login-Part/Individual-1.jsx'));
 // const Login2 = lazy(() => import('./Pages/Login-Part/Individual-2.jsx'));
 // const Login3 = lazy(() => import('./Pages/Login-Part/Individual-3.jsx'));
-// const Login4 = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4.jsx'));
+// const ProfileWizard = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4.jsx'));
 // const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx'));
 // const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home.jsx'));
 // const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp.jsx'));
@@ -340,13 +340,13 @@ export default App;
 //   const location = useLocation();
 
 //   // <-----------this pages will not get the context and permissions contexts
-//   const publicRoutes = ['/', '/profile1', '/profile3', '/callback', '/organizationSignUp', '/organizationLogin', '/subscription-plans', '/payment-details', '/home'];
+//   const publicRoutes = ['/', '/select-user-type', '/select-profession', '/callback', '/organizationSignUp', '/organization-login', '/subscription-plans', '/payment-details', '/home'];
 //   // --------------------------->
 
 //   const isPublic = publicRoutes.includes(location.pathname);
 
 //   // <-----------this pages will not get the navbar
-//   const shouldRenderNavbar = !['/', '/profile1', '/price', '/profile2', '/profile3', '/profile4', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organizationLogin', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+//   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/profile2', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
 //   // --------------------------->
 
 //   // <-----------this pages will get the sidebar
@@ -358,7 +358,7 @@ export default App;
 //   // --------------------------->
 
 //   // <-----------this pages will get the logo
-//   const shouldRenderLogo = ['/organizationSignUp', '/organizationLogin', '/profile1', '/profile3', '/profile4', '/subscription-plans', '/payment-details'].includes(location.pathname);
+//   const shouldRenderLogo = ['/organization-signup', '/organization-login', '/select-user-type', '/select-profession', '/complete-profile', '/subscription-plans', '/payment-details'].includes(location.pathname);
 //   // --------------------------->
 
 //   return (
@@ -371,11 +371,11 @@ export default App;
 //         {isPublic ? (
 //           <Routes>
 //             <Route path="/" element={<Login1 />} />
-//             <Route path="/profile1" element={<Login2 />} />
+//             <Route path="/select-user-type" element={<Login2 />} />
 //             <Route path="/callback" element={<LinkedInCallback />} />
-//             <Route path="/profile3" element={<Login3 />} />
-//             <Route path="/organizationSignUp" element={<OrganizationSignUp />} />
-//             <Route path="/organizationLogin" element={<OrganizationLogin />} />
+//             <Route path="/select-profession" element={<Login3 />} />
+//             <Route path="/organization-signup" element={<OrganizationSignUp />} />
+//             <Route path="/organization-login" element={<OrganizationLogin />} />
 //             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
 //             <Route path="/payment-details" element={<CardDetails />} />
 //             <Route path="/home" element={<Home />} />
@@ -384,7 +384,7 @@ export default App;
 //           <PermissionsProvider>
 //             <CustomProvider>
 //               <Routes>
-//                 <Route path="/profile4" element={<Login4 />} />
+//                 <Route path="/complete-profile" element={<ProfileWizard />} />
 //                 <Route path="/candidates" element={<CandidateTab />} />
 //                 <Route path="/candidates/:id" element={<CandidateTabDetails />} />
 //               </Routes>

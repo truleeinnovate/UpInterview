@@ -269,8 +269,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResendLink, isAssessmentView - this things come from Assessment-view-AssessmentTab.jsx
-  const { candidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
-  console.log('candidateData:-', candidateData);
+  const { candidateData, fetchCandidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -285,7 +284,11 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
     tech: [],
     experience: { min: '', max: '' },
   });
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchCandidateData();
+  }, [fetchCandidateData])
 
   // Determine which data to use based on isAssessmentView
   const dataToUse = isAssessmentView ? candidates : candidateData;
@@ -481,7 +484,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-gray-100">
+        <div className="bg-white rounded-xl border">
           {view === 'table' ? (
             <div className="flex  w-full mb-2">
               <div

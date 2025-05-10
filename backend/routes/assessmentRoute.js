@@ -14,12 +14,7 @@ router.patch('/update/:id', updateAssessment)
 // from here this is new code created by ashraf
 router.get('/:assessmentId/results', getAssessmentResults);
 
-// checking candidates if already assigned for assessment or not
-//uses in shareAssessment
-// router.get('/assigned/:assessmentId', getAssignedCandidates);
 
 
-router.post('/share', shareAssessment);
-router.post('/resend-link', resendAssessmentLink);
 
 module.exports = router

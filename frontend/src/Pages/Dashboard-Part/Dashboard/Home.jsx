@@ -76,13 +76,13 @@ const Home = () => {
       description: "Explore questions easily with our Question Bank app.",
     },
     {
-      to: "/candidate",
+      to: "/candidates",
       icon: <IoIosPerson className="text-4xl" />,
       title: "Candidates",
       description: "Manage candidates easily with our Candidates app.",
     },
     {
-      to: "/position",
+      to: "/positions",
       icon: <GoOrganization className="text-4xl" />,
       title: "Positions",
       description: "Organize positions efficiently with the Position app.",

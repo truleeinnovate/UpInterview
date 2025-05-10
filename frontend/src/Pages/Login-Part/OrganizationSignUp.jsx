@@ -702,7 +702,7 @@ export const Organization = () => {
               </div>
               <div className="flex justify-center">
                 <div className="text-sm mb-4">
-                  If already registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organizationLogin')}>Login</span>
+                  If already registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-login')}>Login</span>
                 </div>
               </div>
               <div className="flex justify-center mb-5">

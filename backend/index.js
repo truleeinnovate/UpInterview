@@ -621,7 +621,7 @@ app.use('/assessments', AssessmentRouter);
 const assessmentQuestionsRoutes = require('./routes/assessmentQuestionsRoutes.js');
 app.use('/assessment-questions', assessmentQuestionsRoutes);
 
-const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoutes.js");
+const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use('/schedule-assessment', scheduledAssessmentRouter);
 
 // ----------------------------------------------------->

@@ -15,14 +15,13 @@ import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  Minimize , 
-  Expand  
+import {
+  Minimize,
+  Expand
 } from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 
-// Reusable CustomDropdown Component
 const CustomDropdown = ({
   label,
   name,
@@ -31,10 +30,11 @@ const CustomDropdown = ({
   onChange,
   error,
   placeholder,
-  optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
-  optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
+  optionKey,
+  optionValue,
   disableSearch = false,
   hideLabel = false,
+  disableTruncation = false,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +85,17 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'
+            } ${disableTruncation ? '' : 'pr-10 truncate'}`}
+          style={
+            disableTruncation
+              ? {}
+              : {
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+              }
+          }
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -136,9 +146,10 @@ const AddCandidateForm = ({ mode }) => {
     qualification,
     currentRole,
     candidateData,
+    fetchCandidateData
   } = useCustomContext();
 
-  
+
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -200,6 +211,7 @@ const AddCandidateForm = ({ mode }) => {
     resume: null,
     CurrentRole: '',
   });
+  console.log(formData);
   const [errors, setErrors] = useState({});
 
   // const authToken = Cookies.get("authToken");
@@ -212,7 +224,7 @@ const AddCandidateForm = ({ mode }) => {
 
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
-    
+
       setFormData({
         FirstName: selectedCandidate.FirstName || '',
         LastName: selectedCandidate.LastName || '',
@@ -246,20 +258,20 @@ const AddCandidateForm = ({ mode }) => {
     }
   }, [id, candidateData]);
 
-  const toggleCurrentRole = () => {
-    setShowDropdownCurrentRole(!showDropdownCurrentRole);
-  };
+  // const toggleCurrentRole = () => {
+  //   setShowDropdownCurrentRole(!showDropdownCurrentRole);
+  // };
 
-  const handleRoleSelect = (role) => {
-    setFormData((prev) => ({ ...prev, CurrentRole: role }));
-    setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole(''); // Clear the search term
-  };
+  // const handleRoleSelect = (role) => {
+  //   setFormData((prev) => ({ ...prev, CurrentRole: role }));
+  //   setShowDropdownCurrentRole(false);
+  //   setSearchTermCurrentRole('');
+  //  }; 
 
 
-  const filteredCurrentRoles = currentRole?.filter(role =>
-    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  );
+  // const filteredCurrentRoles = currentRole?.filter(role =>
+  //   role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
+  // );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -360,7 +372,7 @@ const AddCandidateForm = ({ mode }) => {
   const handleEdit = (index) => {
     const entry = entries[index];
     // setSelectedSkill(entry.skill);
-    setSelectedSkill(entry.skill || ""); 
+    setSelectedSkill(entry.skill || "");
     setSelectedExp(entry.experience);
     setSelectedLevel(entry.expertise);
     setEditingIndex(index);
@@ -379,9 +391,9 @@ const AddCandidateForm = ({ mode }) => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" && 
-               (selectedSkill === currentSkill || 
-                !allSelectedSkills.includes(selectedSkill));
+        return selectedSkill !== "" &&
+          (selectedSkill === currentSkill ||
+            !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -452,13 +464,13 @@ const AddCandidateForm = ({ mode }) => {
 
     switch (mode) {
       case 'Edit':
-        navigate(`/candidate`);
+        navigate(`/candidates`);
         break;
       case 'Candidate Edit':
-        navigate(`/candidate/${id}`);
+        navigate(`/candidates/${id}`);
         break;
       default: // Create mode
-        navigate('/candidate');
+        navigate('/candidates');
     }
 
   };
@@ -543,12 +555,10 @@ const AddCandidateForm = ({ mode }) => {
         console.log('Image upload completed successfully');
       }
 
+      await fetchCandidateData();
       // Reset form and close
       resetFormData();
       console.log('Form reset completed');
-
-      // Navigate to candidate list
-      navigate('/candidate');
       console.log('Navigation to candidate list completed');
     } catch (error) {
       console.error('Failed to add candidate:', error);
@@ -598,73 +608,75 @@ const AddCandidateForm = ({ mode }) => {
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
-        Date_Of_Birth: formData.Date_Of_Birth,
-        skills: entries.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        resume: null,
-        CurrentRole: formData.CurrentRole,
-        CreatedBy: `${userName} at ${currentDateTime}`,
-        LastModifiedById: `${userName} at ${currentDateTime}`,
-        ownerId: userId,
-        tenantId: orgId
-      };
-
-      console.log('Submitting candidate data:', data);
-
-      try {
-        let candidateId;
-        let response;
-
-        if (id) {
-          // Update existing candidate
-          console.log('Updating existing candidate with ID:', id);
-          response = await axios.patch(
-            `${process.env.REACT_APP_API_URL}/candidate/${id}`,
-            data
-          );
-        } else {
-          // Create new candidate
-          console.log('Creating new candidate...');
-          response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
-        }
-
-        console.log('API response:', response.data);
-        candidateId = response.data.data._id;
-
-        // Upload image if available
-        if (file) {
-          console.log('Uploading candidate image...');
-          const imageData = new FormData();
-          imageData.append("image", file);
-          imageData.append("type", "candidate");
-          imageData.append("id", candidateId);
-
-          await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          console.log('Image upload completed successfully');
-        }
-
-        // Handle navigation based on mode
-        switch (mode) {
-          case 'Edit':
-            navigate(`/candidate`);
-            break;
-          case 'Candidate Edit':
-            navigate(`/candidate/${id || candidateId}`);
-            break;
-          default: // Create mode
-            navigate('/candidate');
-        }
-
-        resetFormData();
-      } catch (error) {
-        console.error("Error adding candidate:", error);
-      }
+      Date_Of_Birth: formData.Date_Of_Birth,
+      skills: entries.map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      })),
+      resume: null,
+      CurrentRole: formData.CurrentRole,
+      CreatedBy: `${userName} at ${currentDateTime}`,
+      LastModifiedById: `${userName} at ${currentDateTime}`,
+      ownerId: userId,
+      tenantId: orgId
     };
+
+    console.log('Submitting candidate data:', data);
+
+    try {
+      let candidateId;
+      let response;
+
+      if (id) {
+        // Update existing candidate
+        console.log('Updating existing candidate with ID:', id);
+        response = await axios.patch(
+          `${process.env.REACT_APP_API_URL}/candidate/${id}`,
+          data
+        );
+      } else {
+        // Create new candidate
+        console.log('Creating new candidate...');
+        response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
+      }
+
+      console.log('API response:', response.data);
+      candidateId = response.data.data._id;
+
+      // Upload image if available
+      if (file) {
+        console.log('Uploading candidate image...');
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "candidate");
+        imageData.append("id", candidateId);
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        console.log('Image upload completed successfully');
+      }
+
+      await fetchCandidateData();
+
+      // Handle navigation based on mode
+      switch (mode) {
+        case 'Edit':
+          navigate(`/candidates`);
+          break;
+        case 'Candidate Edit':
+          navigate(`/candidates/${id || candidateId}`);
+          break;
+        default: // Create mode
+          navigate('/candidates');
+      }
+
+      resetFormData();
+    } catch (error) {
+      console.error("Error adding candidate:", error);
+    }
+  };
 
   const resetFormData = () => {
     setFormData({
@@ -680,7 +692,7 @@ const AddCandidateForm = ({ mode }) => {
       RelevantExperience: '',
       skills: [],
       CurrentRole: '',
-      CountryCode:''
+      CountryCode: ''
     });
 
     setErrors({});
@@ -717,8 +729,8 @@ const AddCandidateForm = ({ mode }) => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
-              {id ? "Update Candidate" :"Add New Candidate" }
-                
+                {id ? "Update Candidate" : "Add New Candidate"}
+
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -908,6 +920,7 @@ const AddCandidateForm = ({ mode }) => {
                         optionValue="value"
                         selectedValue={+91}
                         disableSearch={true}
+                        disableTruncation={true}
                       />
                     </div>
                     <div className="flex-1">
@@ -937,7 +950,7 @@ const AddCandidateForm = ({ mode }) => {
                   <CustomDatePicker
                     selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
                     onChange={handleDateChange}
-                    placeholder="Select date of birth" 
+                    placeholder="Select date of birth"
                   />
                 </div>
 
@@ -952,58 +965,18 @@ const AddCandidateForm = ({ mode }) => {
                   disableSearch={true}
                 />
 
-                <div ref={currentRoleDropdownRef}>
-                  <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Role 
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      name="CurrentRole"
-                      type="text"
-                      id="CurrentRole"
-                      value={formData.CurrentRole}
-                      onClick={toggleCurrentRole}
-                      placeholder="Select Current Role"
-                      autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
-                      readOnly
-                    />
-                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown className="text-lg w-5 h-5" onClick={toggleCurrentRole} />
-                    </div>
-                    {showDropdownCurrentRole && (
-                      <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                        <div className="border-b">
-                          <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                            <input
-                              type="text"
-                              placeholder="Search Current Role"
-                              value={searchTermCurrentRole}
-                              onChange={(e) => setSearchTermCurrentRole(e.target.value)}
-                              className="pl-8 focus:border-black focus:outline-none w-full"
-                            />
-                          </div>
-                        </div>
-                        {filteredCurrentRoles?.length > 0 ? (
-                          filteredCurrentRoles.map((role) => (
-                            <div
-                              key={role._id}
-                              onClick={() => handleRoleSelect(role.RoleName)}
-                              className="cursor-pointer hover:bg-gray-200 p-2"
-                            >
-                              {role.RoleName}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-2 text-gray-500">No roles found</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {errors.CurrentRole && <p className="text-red-500 text-xs pt-1">{errors.CurrentRole}</p>}
-                </div>
+                {/* Current Role Dropdown */}
+                <CustomDropdown
+                  label="Current Role"
+                  name="CurrentRole"
+                  value={formData.CurrentRole}
+                  options={currentRole}
+                  onChange={handleChange}
+                  error={errors.CurrentRole}
+                  placeholder="Select Current Role"
+                  optionKey="RoleName"
+                  optionValue="RoleName"
+                />
 
                 <CustomDropdown
                   label="Higher Qualification"
@@ -1062,7 +1035,7 @@ const AddCandidateForm = ({ mode }) => {
                     className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Enter relevant experience"
                   />
-                {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
+                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
                 </div>
               </div>
 
@@ -1076,7 +1049,8 @@ const AddCandidateForm = ({ mode }) => {
 
                   <button
                     type="button"
-                    onClick={() => { setIsModalOpen(true)
+                    onClick={() => {
+                      setIsModalOpen(true)
                       if (editingIndex === null) {
                         setSelectedSkill(""); // Reset selection when adding new skill
                         setSelectedExp("");
@@ -1096,10 +1070,10 @@ const AddCandidateForm = ({ mode }) => {
                   <div className="space-y-2 mb-4 mt-5">
                     {entries.map((entry, index) => (
                       <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
-                          <div className="flex justify-between border bg-white rounded w-full mr-3">
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
+                        <div className="flex justify-between border bg-white rounded w-full mr-3">
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
                         </div>
                         <div className="flex space-x-2">
                           <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
@@ -1149,7 +1123,7 @@ const AddCandidateForm = ({ mode }) => {
                   onClick={handleSubmit}
                   className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
                 >
-                  {id ? "Update" :"Save" }
+                  {id ? "Update" : "Save"}
                 </button>
 
                 {!id && (

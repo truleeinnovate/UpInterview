@@ -6,7 +6,7 @@ import SubmitConfirmation from './AssessmentExamComponents/AssessmentExamSubmitC
 import CompletionScreen from './AssessmentExamComponents/AssessmentExamCompletionScreen.jsx';
 import QuestionNavigation from './AssessmentExamComponents/AssessmentExamQuestionNavigation.jsx';
 
-function AssessmentTest({ assessment, candidate, questions, duration }) {
+function AssessmentTest({ assessment, candidate, questions, duration,candidateAssessmentId }) {
     const [currentSection, setCurrentSection] = useState(0);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -50,83 +50,84 @@ function AssessmentTest({ assessment, candidate, questions, duration }) {
         setShowConfirmSubmit(true);
     };
 
-    const handleConfirmSubmit = async () => {
-        try {
-            const candidateAssessmentData = {
-                scheduledAssessmentId: assessment._id,
-                candidateId: candidate._id,
-                status: 'completed',
-                sections: questions.sections.map(section => ({
-                    SectionName: section.sectionName || 'Unnamed Section',
-                    Answers: section.questions.map(question => {
-                        console.log("Question ID:", question._id);
-                        console.log("Question:", question);
-                        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-                        const selectedAnswer = answers[question._id];
-                        const isCorrect = correctAnswer === selectedAnswer;
-                        const score = isCorrect ? question.score ?? 0 : 0;
-                        console.log("Correct Answer:", correctAnswer);
-                        console.log("Selected Answer:", selectedAnswer);
-                        console.log("Score:", score);
-                        return {
-                            questionId: question._id,
-                            answer: selectedAnswer,
-                            isCorrect: isCorrect,
-                            score: score,
-                            isAnswerLater: skippedQuestions.includes(question._id),
-                            submittedAt: new Date()
-                        }
-                    }),
-                    totalScore: section.questions.reduce((total, question) => {
-                        const answer = answers[question._id];
-                        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-                        return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
-                    }, 0),
-                    passScore: section.passScore ?? 0,
-                    sectionResult: section.questions.reduce((total, question) => {
-                        const answer = answers[question._id];
-                        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-                        return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
-                    }, 0) >= (section.passScore ?? 0) ? 'pass' : 'fail'
-                })),
-                totalScore: questions.sections.reduce((total, section) => {
-                    return total + section.questions.reduce((sectionTotal, question) => {
-                        const answer = answers[question._id];
-                        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-                        return sectionTotal + (answer === correctAnswer ? (question.score ?? 0) : 0);
-                    }, 0);
+ const handleConfirmSubmit = async () => {
+    try {
+        const candidateAssessmentData = {
+            candidateAssessmentId: candidateAssessmentId, // Add candidateAssessmentId here
+            scheduledAssessmentId: assessment._id,
+            candidateId: candidate._id,
+            status: 'completed',
+            sections: questions.sections.map(section => ({
+                SectionName: section.sectionName || 'Unnamed Section',
+                Answers: section.questions.map(question => {
+                    console.log("Question ID:", question._id);
+                    console.log("Question:", question);
+                    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+                    const selectedAnswer = answers[question._id];
+                    const isCorrect = correctAnswer === selectedAnswer;
+                    const score = isCorrect ? question.score ?? 0 : 0;
+                    console.log("Correct Answer:", correctAnswer);
+                    console.log("Selected Answer:", selectedAnswer);
+                    console.log("Score:", score);
+                    return {
+                        questionId: question._id,
+                        answer: selectedAnswer,
+                        isCorrect: isCorrect,
+                        score: score,
+                        isAnswerLater: skippedQuestions.includes(question._id),
+                        submittedAt: new Date()
+                    }
+                }),
+                totalScore: section.questions.reduce((total, question) => {
+                    const answer = answers[question._id];
+                    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+                    return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
                 }, 0),
-                overallResult: questions.sections.every(section => {
-                    const sectionScore = section.questions.reduce((total, question) => {
-                        const answer = answers[question._id];
-                        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-                        return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
-                    }, 0);
-                    return sectionScore >= (section.passScore ?? 0);
-                }) ? 'pass' : 'fail',
-                submittedAt: new Date()
-            };
-            console.log("candidateAssessmentData", candidateAssessmentData)
+                passScore: section.passScore ?? 0,
+                sectionResult: section.questions.reduce((total, question) => {
+                    const answer = answers[question._id];
+                    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+                    return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
+                }, 0) >= (section.passScore ?? 0) ? 'pass' : 'fail'
+            })),
+            totalScore: questions.sections.reduce((total, section) => {
+                return total + section.questions.reduce((sectionTotal, question) => {
+                    const answer = answers[question._id];
+                    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+                    return sectionTotal + (answer === correctAnswer ? (question.score ?? 0) : 0);
+                }, 0);
+            }, 0),
+            overallResult: questions.sections.every(section => {
+                const sectionScore = section.questions.reduce((total, question) => {
+                    const answer = answers[question._id];
+                    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+                    return total + (answer === correctAnswer ? (question.score ?? 0) : 0);
+                }, 0);
+                return sectionScore >= (section.passScore ?? 0);
+            }) ? 'pass' : 'fail',
+            submittedAt: new Date()
+        };
+        console.log("candidateAssessmentData", candidateAssessmentData);
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/candidate-assessment/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(candidateAssessmentData)
-            });
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/candidate-assessment/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(candidateAssessmentData)
+        });
 
-            const responseData = await response.json();
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to submit assessment');
-            }
-
-            setIsSubmitted(true);
-            setShowConfirmSubmit(false);
-        } catch (error) {
-            console.error('Error submitting assessment:', error.message);
+        const responseData = await response.json();
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to submit assessment');
         }
-    };
+
+        setIsSubmitted(true);
+        setShowConfirmSubmit(false);
+    } catch (error) {
+        console.error('Error submitting assessment:', error.message);
+    }
+};
 
     const handleStartReview = () => {
         setIsReviewing(true);

@@ -44,14 +44,14 @@ const LinkedInCallback = () => {
           } else if (isProfileCompleted === true) {
             navigate('/home');
           } else if (isProfileCompleted === false && roleName) {
-            navigate('/profile4', {
+            navigate('/complete-profile', {
               state: { isProfileComplete: true, roleName },
             });
           } else {
             navigate('/home');
           }
         } else {
-          navigate('/profile3', {
+          navigate('/select-profession', {
             state: {
               linkedInData: {
                 firstName: userInfo.firstName,

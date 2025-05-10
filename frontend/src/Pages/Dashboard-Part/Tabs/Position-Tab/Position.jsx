@@ -21,7 +21,6 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
     qualification,
-
   } = useCustomContext();
   // const [skills, setSkills] = useState([]);
   // const [qualification, setQualification] = useState([])
@@ -309,18 +308,9 @@ const PositionTab = () => {
     experience: { min: '', max: '' },
   });
 
-
-
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
   }, []);
-
-
-  // const handleEdit = (position) => {
-  //   setSelectedPosition(position);
-  //   setEditModeOn(true);
-  //   setShowAddForm(true);
-  // };
 
   const handleView = (position) => {
     setSelectedPosition(position);
@@ -328,10 +318,8 @@ const PositionTab = () => {
   };
 
   useEffect(() => {
-    fetchPositionsData()
+    fetchPositionsData();
   }, [fetchPositionsData])
-
-
 
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
@@ -429,7 +417,7 @@ const PositionTab = () => {
               Positions
             </h1>
             <button
-              onClick={() => navigate('/position/new-position')}
+              onClick={() => navigate('/positions/new-position')}
               className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
             >
               <Plus className="h-4 w-4 mr-2" />

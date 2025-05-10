@@ -1,5 +1,5 @@
 const sendEmail = require("../../utils/sendEmail");
-const notificationMiddleware = require("../../middlewares/notificationMiddleware");
+const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
 const jwt = require("jsonwebtoken");
 exports.sendSignUpEmail = async (req, res) => {

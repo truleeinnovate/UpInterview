@@ -73,7 +73,7 @@ const Admin = () => {
         } else if (isProfileCompleted === true) {
           navigate('/home');
         } else if (isProfileCompleted === false && roleName) {
-          navigate('/profile4', {
+          navigate('/complete-profile', {
             state: { isProfileComplete: true, roleName, contactDataFromOrg },
           });
         } else {
@@ -211,7 +211,7 @@ const Admin = () => {
                 {/* Signup Link */}
                 <div className="flex justify-center mt-4">
                   <p className="text-sm mb-4">
-                    If not registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organizationSignUp')}>Sign Up</span>
+                    If not registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-signup')}>Sign Up</span>
                   </p>
                 </div>
               </form>

@@ -1,6 +1,6 @@
 
 const sendEmail = require("../../utils/sendEmail");
-const notificationMiddleware = require("../../middlewares/notificationMiddleware");
+const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
 
 // this controller use for sending mails in signup or reset password

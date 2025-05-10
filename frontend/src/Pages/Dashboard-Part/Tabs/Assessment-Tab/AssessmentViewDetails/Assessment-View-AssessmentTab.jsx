@@ -59,7 +59,7 @@ function AssessmentsTab({ assessment }) {
       }
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/assessments/resend-link`,
+        `${process.env.REACT_APP_API_URL}/emails/resend-link`,
         {
           candidateAssessmentId,
           userId,

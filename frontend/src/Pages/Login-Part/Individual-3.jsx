@@ -36,7 +36,7 @@ const Profile3 = () => {
           profession: professionName, 
           linkedInData: location.state?.linkedInData 
         });
-        navigate('/profile4', { 
+        navigate('/complete-profile', { 
           state: { 
             Freelancer, 
             profession: professionName,

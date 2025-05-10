@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Building } from 'lucide-react';
+import { UserPlus, Building } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Slideshow from './Slideshow';
 import { config } from '../../config.js';
@@ -18,9 +18,9 @@ const Profile1 = () => {
     setSelectedOption("organization");
 
     if (state?.from === "signup") {
-      navigate('/organizationSignUp');
+      navigate('/organization-signup');
     } else if (state?.from === "login") {
-      navigate('/organizationLogin');
+      navigate('/organization-login');
     }
   };
 
@@ -56,7 +56,7 @@ const Profile1 = () => {
               }`}
             onClick={handleIndividualClick}
           >
-            <Plus className="text-2xl mr-4" />
+            <UserPlus className="text-2xl mr-4" />
             <p>Individual</p>
           </button>
           <p className="text-gray-500 text-center text-sm px-4">

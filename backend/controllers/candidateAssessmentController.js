@@ -1,7 +1,7 @@
 const { CandidateAssessment } = require("../models/candidateAssessment");
 const { generateOTP } = require('../utils/generateOtp')
 const Otp = require("../models/Otp");
-
+const mongoose = require('mongoose');
 // exports.updateCandidateAssessment = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -182,139 +182,60 @@ exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
   }
 }
 
-exports.verifyOtp =  async (req, res) => {
-  const { candidateId, scheduledAssessmentId, otp } = req.body;
-  console.log("req body", req.body);
-  // Check for missing fields
-  if (!candidateId || !scheduledAssessmentId || !otp) {
+exports.verifyOtp = async (req, res) => {
+  const { candidateAssessmentId, otp } = req.body;
+
+  if (!candidateAssessmentId || !otp) {
     return res.status(400).json({
       isValid: false,
-      message: "Missing required fields.",
+      message: 'Missing required fields.',
     });
   }
 
   try {
-    // Check if OTP exists in the database
-    const storedOtp = await Otp.findOne({ candidateId, scheduledAssessmentId });
-    console.log("stored otp", storedOtp);
+    const storedOtp = await Otp.findOne({ candidateAssessmentId });
     if (!storedOtp) {
       return res.status(404).json({
         isValid: false,
-        message: "OTP not found. Please request a new one.",
+        message: 'Invalid OTP. Please request a new one.',
       });
     }
 
-    // Check if OTP has expired
     if (new Date() > storedOtp.expiresAt) {
-      await Otp.findByIdAndDelete(storedOtp._id)
+      await Otp.findByIdAndDelete(storedOtp._id);
       return res.status(410).json({
         isValid: false,
-        message: "OTP has expired. Please request a new one.",
+        message: 'OTP has expired. Please request a new one.',
       });
     }
 
-    // Validate OTP
-    const isValid = String(storedOtp.otp) === String(otp); // Ensure type safety
-
+    const isValid = String(storedOtp.otp) === String(otp);
     if (isValid) {
-      // Delete OTP after successful validation
       await Otp.findByIdAndDelete(storedOtp._id);
-
       return res.status(200).json({
         isValid: true,
-        message: "OTP is valid.",
+        message: 'OTP is valid.',
       });
     } else {
       return res.status(400).json({
         isValid: false,
-        message: "Invalid OTP.",
+        message: 'Invalid OTP.',
       });
     }
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-
+    console.error('Error verifying OTP:', error);
     return res.status(500).json({
       isValid: false,
-      message: "Internal server error. Please try again.",
+      message: 'Internal server error. Please try again.',
     });
   }
-}
-exports.sendOtp = async (req, res) => {
-  try {
-    const { scheduledAssessmentId, candidateId } = req.params;
-    const scheduledAssessment = await CandidateAssessment.findOne({ scheduledAssessmentId, candidateId })
-      .populate("candidateId", "Email");
-    console.log("scheduled assessment", scheduledAssessment)
-    if (!scheduledAssessment) {
-      return res.status(400).send({ message: "Assessment not found" });
-    }
+};
 
-    const { assessmentLink } = scheduledAssessment;
-  
-    const otp = generateOTP(candidateId);
-    const expiresAt = new Date(Date.now() + 90 * 1000);
-
-    const existingOtpDoc = await Otp.findOne({ scheduledAssessmentId, candidateId });
-
-    if (existingOtpDoc) {
-      existingOtpDoc.otp = otp;
-      existingOtpDoc.expiresAt = expiresAt;
-      await existingOtpDoc.save();
-    } else {
-      await Otp.create({
-        scheduledAssessmentId,
-        candidateId,
-        otp,
-        expiresAt,
-      });
-    }
-    console.log("OTP generated:", otp);
-    
-
-    // const candidateEmail = scheduledAssessment.candidateId?.Email;
-    // if (!candidateEmail) {
-    //   return res.status(400).send({ message: "Candidate email not found" });
-    // }
-
-    // const mailOptions = {
-    //   from: "ashrafshaik250@gmail.com",
-    //   to: candidateEmail,
-    //   subject: "Assessment Invitation",
-    //   text: `Your OTP is ${otp}, valid for 90 seconds.`,
-    // };
-
-    // console.log("Sending email with options:", mailOptions);
-
-    // try {
-    //   await transporter.sendMail(mailOptions);
-    //   console.log("Email sent successfully to:", candidateEmail);
-    // } catch (emailError) {
-    //   console.error("Error sending email to:", candidateEmail, emailError);
-    //   return res.status(500).send({
-    //     message: "Failed to send email",
-    //     success: false,
-    //     error: emailError.message,
-    //   });
-    // }
-
-    return res.status(200).send({
-      message: "Email sent successfully",
-      success: true,
-    });
-
-  } catch (error) {
-    console.error("Internal Server Error:", error);
-    return res.status(500).send({
-      message: "Internal server error",
-      success: false,
-      error: error.message,
-    });
-  }
-}
 exports.submitCandidateAssessment = async (req, res) => {
   console.log('Started backend process');
   try {
     const {
+      candidateAssessmentId, // Add candidateAssessmentId
       scheduledAssessmentId,
       candidateId,
       status,
@@ -324,6 +245,7 @@ exports.submitCandidateAssessment = async (req, res) => {
     } = req.body;
 
     console.log('Received request body:', {
+      candidateAssessmentId,
       scheduledAssessmentId,
       candidateId,
       status,
@@ -334,15 +256,13 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     // Validate required fields (allow 0 for totalScore)
     if (
-      scheduledAssessmentId === undefined || scheduledAssessmentId === null ||
-      candidateId === undefined || candidateId === null ||
+      candidateAssessmentId === undefined || candidateAssessmentId === null ||
       sections === undefined || sections === null ||
       totalScore === undefined || totalScore === null ||
       submittedAt === undefined || submittedAt === null
     ) {
       console.log('Missing fields:', {
-        scheduledAssessmentId: scheduledAssessmentId !== undefined && scheduledAssessmentId !== null,
-        candidateId: candidateId !== undefined && candidateId !== null,
+        candidateAssessmentId: candidateAssessmentId !== undefined && candidateAssessmentId !== null,
         sections: sections !== undefined && sections !== null,
         totalScore: totalScore !== undefined && totalScore !== null,
         submittedAt: submittedAt !== undefined && submittedAt !== null,
@@ -355,14 +275,13 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     console.log('Validation passed, searching for candidate assessment...');
 
-    // Find the existing candidate assessment
-    let candidateAssessment = await CandidateAssessment.findOne({
-      scheduledAssessmentId,
-      candidateId,
-    });
+    // Find the existing candidate assessment by candidateAssessmentId
+
+let candidateAssessment = await CandidateAssessment.findById(new mongoose.Types.ObjectId(candidateAssessmentId));
+
 
     if (!candidateAssessment) {
-      console.log('No candidate assessment found for:', { scheduledAssessmentId, candidateId });
+      console.log('No candidate assessment found for:', { candidateAssessmentId });
       return res.status(404).json({
         success: false,
         message: "Candidate assessment not found",
@@ -383,19 +302,25 @@ exports.submitCandidateAssessment = async (req, res) => {
     let hasFailedSection = false;
 
     // Check each section's result
-    sections.forEach(section => {
-      const sectionScore = section.Answers.reduce((total, answer) => {
-        const question = section.questions.find(q => q._id.toString() === answer.questionId.toString());
-        if (!question) return total;
+ sections.forEach(section => {
+  if (!Array.isArray(section.questions)) {
+    console.warn('Missing or invalid questions array in section:', section);
+    hasFailedSection = true;
+    return; // Skip to the next section
+  }
 
-        const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-        return total + (answer.answer === correctAnswer ? (question.score ?? 0) : 0);
-      }, 0);
+  const sectionScore = section.Answers.reduce((total, answer) => {
+    const question = section.questions.find(q => q._id.toString() === answer.questionId.toString());
+    if (!question) return total;
 
-      if (sectionScore < (section.passScore ?? 0)) {
-        hasFailedSection = true;
-      }
-    });
+    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+    return total + (answer.answer === correctAnswer ? (question.score ?? 0) : 0);
+  }, 0);
+
+  if (sectionScore < (section.passScore ?? 0)) {
+    hasFailedSection = true;
+  }
+});
 
     // If any section failed, overall result is fail
     if (hasFailedSection) {

@@ -435,12 +435,12 @@ const Navbar = () => {
 
             <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
-                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidate">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidates">
                   Candidates
                 </NavLink>
               </p>
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
-                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/position">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/positions">
                   Positions
                 </NavLink>
               </p>
@@ -562,7 +562,7 @@ const Navbar = () => {
             <p className="text-base font-medium p-4">
               <NavLink
                 activeClassName="bg-gray-200 text-custom-blue"
-                to="/position"
+                to="/positions"
                 onClick={toggleSidebar}
               >
                 Positions

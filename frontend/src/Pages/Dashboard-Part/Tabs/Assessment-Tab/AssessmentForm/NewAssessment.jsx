@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useRef,
@@ -14,11 +13,8 @@ import { validateAssessmentData } from "../../../../../utils/assessmentValidatio
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import ConfirmationPopup from "../ConfirmationPopup.jsx";
-// import { handleShareClick as shareAssessment } from '../../../../utils/EmailShare';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
-
-
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
@@ -31,10 +27,9 @@ const NewAssessment = () => {
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
-  const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false)
-  const [linkExpiryDays, setLinkExpiryDays] = useState(3)
-  const { positions, assessmentData, assessmentTypes } = useCustomContext();
-
+  const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
+  const [linkExpiryDays, setLinkExpiryDays] = useState(3);
+  const { positions, assessmentData } = useCustomContext();
 
   const { id } = useParams();
 
@@ -42,31 +37,19 @@ const NewAssessment = () => {
   const assessment = isEditing ? assessmentData.find(assessment => assessment._id === id) : null;
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
-
   const [startDate, setStartDate] = useState(new Date());
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
-  const [selectedAssessmentType, setSelectedAssessmentType] = useState([]);
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState("60 minutes");
   const [showDropdownDuration, setShowDropdownDuration] = useState(false);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [showDropdownDifficulty, setShowDropdownDifficulty] = useState(false);
-  // //shashank-[16/01/2025]
-  // const [showLinkExpiryDay,setShowLinkExpiryDays]=useState(false)//we need to check why we are using this
-  // const [linkExpiryDays,setLinkExpiryDays]=useState(3)
-  // //
   const [sidebarOpenForSection, setSidebarOpenForSection] = useState(false);
   const [sidebarOpenAddQuestion, setSidebarOpenAddQuestion] = useState(false);
   const sidebarRefAddQuestion = useRef(null);
-  const [selectedIcons, setSelectedIcons] = useState([]);
-  const [selectedIcons2, setSelectedIcons2] = useState([]);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isPopupOpen2, setIsPopupOpen2] = useState(false);
-  // const [currentSectionName, setCurrentSectionName] = useState(null);
   const [toggleStates, setToggleStates] = useState([]);
-  // const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState("");
 
   const [value, setValue] = useState("");
@@ -82,21 +65,11 @@ const NewAssessment = () => {
   • Make sure to read each question carefully before answering.
   • You can review your answers before submitting.
   • Ensure you are in a quiet environment to avoid distractions.`;
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editedSectionName, setEditedSectionName] = useState("");
-  const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
   const [checkedState, setCheckedState] = useState({});
   const [checkedCount, setCheckedCount] = useState(0);
   const [questionsBySection, setQuestionsBySection] = useState({});
   const [instructions, setInstructions] = useState(defaultInstructions);
-
-  const [questionToDelete, setQuestionToDelete] = useState(null);
-  const [sectionToDeleteFrom, setSectionToDeleteFrom] = useState(null);
-  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
-    useState(false);
-  const [isBulkDelete, setIsBulkDelete] = useState(false);
   const sidebarRefForSection = useRef(null);
-  const popupRef = useRef(null);
   const [isAlreadyExistingSection, setIsAlreadyExistingSection] = useState("");
   const [includePhone, setIncludePhone] = useState(false);
   const [includePosition, setIncludePosition] = useState(false);
@@ -109,10 +82,8 @@ const NewAssessment = () => {
   const [totalScore, setTotalScore] = useState("");
   const [overallPassScore, setOverallPassScore] = useState(0);
   const [isPassScoreSubmitted, setIsPassScoreSubmitted] = useState(false);
-  const [preSelectedCandidates, setPreSelectedCandidates] = useState([]);
   const [formData, setFormData] = useState({
     AssessmentTitle: "",
-    // AssessmentType: "",
     Position: "",
     Duration: "60 minutes",
     DifficultyLevel: "",
@@ -121,11 +92,21 @@ const NewAssessment = () => {
     status: "Active",
     passScoreType: "",
     passScoreBy: "",
-    passScore: ''
+    passScore: '',
+    linkExpiryDays: "",
   });
 
-
-
+  // Initialize checkedState based on addedSections
+  useEffect(() => {
+    const initialCheckedState = addedSections.reduce((acc, section) => {
+      acc[section.SectionName] = section.Questions.reduce((qAcc, _, index) => {
+        qAcc[index] = false;
+        return qAcc;
+      }, {});
+      return acc;
+    }, {});
+    setCheckedState(initialCheckedState);
+  }, [addedSections]);
 
   // Load basic assessment data
   useEffect(() => {
@@ -143,12 +124,14 @@ const NewAssessment = () => {
         passScoreType: assessment.passScoreType || "Number",
         passScoreBy: assessment.passScoreBy || "Overall",
         passScore: assessment.passScore || "",
+        linkExpiryDays: assessment.linkExpiryDays || "",
       });
       setQuestionsLimit(assessment.NumberOfQuestions || "");
       setSelectedDifficulty(assessment.DifficultyLevel);
       setInstructions(assessment.Instructions || "");
       setAdditionalNotes(assessment.AdditionalNotes || "");
       setSelectedPosition(matchedPosition || null);
+      setLinkExpiryDays(assessment.linkExpiryDays);
 
       // Set CandidateDetails fields if they exist
       if (assessment.CandidateDetails) {
@@ -226,7 +209,7 @@ const NewAssessment = () => {
     }
   }, [id, isEditing, assessment]);
 
-  //shashank - [10/01/2025]
+  // shashank - [10/01/2025]
   const [tabsSubmitStatus, setTabsSubmitStatus] = useState({
     responseId: "",
     responseData: "",
@@ -234,7 +217,7 @@ const NewAssessment = () => {
     Details: false,
     Questions: false,
     Candidates: false
-  })
+  });
 
   const handleIconClick = (e) => {
     if (e) {
@@ -243,14 +226,7 @@ const NewAssessment = () => {
     setShowMessage(!showMessage);
   };
 
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isAddQuestionModalOpen, setIsAddQuestionModalOpen] = useState(false);
-  const [currentSectionName, setCurrentSectionName] = useState("");
-
-
-
-
-
   const [showDropdownPosition, setShowDropdownPosition] = useState(false);
 
   const handleChange = (e) => {
@@ -269,7 +245,6 @@ const NewAssessment = () => {
       setErrors({ ...errors, [name]: "" });
     }
   };
-
 
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
@@ -429,16 +404,6 @@ const NewAssessment = () => {
     }
   };
 
-  // const handleSaveAndNext = async (event, currentTab, nextTab) => {
-
-  // const { errors } = validateAndPrepareData(currentTab);
-
-  // if (errors) {
-  //   setErrors(errors);
-  //   return;
-  // }
-  // };
-
   const gatherDataUpToCurrentTab = (currentTab) => {
     let assessmentData = {};
 
@@ -453,6 +418,7 @@ const NewAssessment = () => {
         ...(formData.DifficultyLevel && { DifficultyLevel: formData.DifficultyLevel }),
         ...(formData.NumberOfQuestions && { NumberOfQuestions: formData.NumberOfQuestions }),
         ...(formData.ExpiryDate && { ExpiryDate: formData.ExpiryDate }),
+        ...(formData.linkExpiryDays && { linkExpiryDays: formData.linkExpiryDays }),
         ...({ status: formData.status }),
         passScoreType: formData.passScoreType, // Always include
         passScoreBy: formData.passScoreBy, // Always include
@@ -480,15 +446,6 @@ const NewAssessment = () => {
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
       };
     }
-
-    // Questions and Candidates data remains the same
-    if (currentTab === "Candidates") {
-      assessmentData = {
-        ...assessmentData,
-        ...(selectedCandidates.length > 0 && { candidateIds: selectedCandidates }),
-      };
-    }
-
     return assessmentData;
   };
 
@@ -531,8 +488,8 @@ const NewAssessment = () => {
     setCheckedState(prev => ({
       ...prev,
       [sectionName]: {
-        ...prev[sectionName],
-        [questionIndex]: !prev[sectionName]?.[questionIndex]
+        ...(prev[sectionName] || {}),
+        [questionIndex]: !(prev[sectionName]?.[questionIndex] || false)
       }
     }));
   };
@@ -561,8 +518,7 @@ const NewAssessment = () => {
     if (type === 'section') {
       // Delete entire section
       setAddedSections(prev => prev.filter((_, index) => index !== data));
-    }
-    else if (type === 'question') {
+    } else if (type === 'question') {
       // Delete single question
       setAddedSections(prev => prev.map(section => {
         if (section.SectionName === sectionName) {
@@ -573,8 +529,7 @@ const NewAssessment = () => {
         }
         return section;
       }));
-    }
-    else if (type === 'bulk') {
+    } else if (type === 'bulk') {
       // Bulk delete selected questions
       setAddedSections(prev => prev.map(section => {
         if (checkedState[section.SectionName]) {
@@ -587,11 +542,7 @@ const NewAssessment = () => {
         }
         return section;
       }));
-      // Reset checked state
-      setCheckedState(prev => ({
-        ...prev,
-        [sectionName]: {}
-      }));
+      setCheckedState({}); // Reset checked state
     }
 
     setDeleteConfirmation({ isOpen: false, type: null, data: null, sectionName: null });
@@ -622,68 +573,9 @@ const NewAssessment = () => {
     }
   };
 
-
   const toggleDropdownAssessment = () => {
     setShowDropdownAssessment(!showDropdownAssessment);
   };
-
-  // const handleShareClick = async (assessmentId, isEditing) => {
-  //   try {
-  //     const result = await shareAssessmentAPI({
-  //       assessmentId,
-  //       selectedCandidates,
-  //       linkExpiryDays: 3,
-  //       onClose: () => console.log('Modal closed'),
-  //       setErrors,
-  //       setIsLoading,
-  //       organizationId,
-  //       userId,
-  //       isEditing,
-  //       existingCandidateIds: preSelectedCandidates.map((c) => c._id.toString()),
-  //     });
-
-  //     if (result.success) {
-  //       toast.success(result.message || 'Assessment shared successfully');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error sharing assessment:', error);
-  //     toast.error('Failed to share assessment');
-  //   }
-  // };
-
-  const handleAssessmentTypeSelect = (type) => {
-    setSelectedAssessmentType((prevSelected) => {
-      if (prevSelected.includes(type)) {
-        setShowDropdownAssessment(false);
-        return prevSelected;
-      } else {
-        return [...prevSelected, type];
-      }
-    });
-
-    setFormData((prevData) => ({
-      ...prevData,
-      AssessmentType: selectedAssessmentType.includes(type)
-        ? selectedAssessmentType.filter((item) => item !== type)
-        : [...selectedAssessmentType, type],
-    }));
-
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      AssessmentType: "",
-    }));
-  };
-
-  // const handleRemoveAssessmentType = (type) => {
-  //   setSelectedAssessmentType((prevSelected) => {
-  //     const updatedSelected = prevSelected.filter((item) => item !== type);
-  //     setFormData((prevData) => ({
-  //       ...prevData,
-  //       AssessmentType: updatedSelected,
-  //     }));
-  //     return updatedSelected;
-  //   });
-  // };
 
   const durations = ["30 minutes", "45 minutes", "60 minutes", "90 minutes"];
 
@@ -692,8 +584,8 @@ const NewAssessment = () => {
   };
 
   const toggleLinkExpiryDropdown = () => {
-    setShowLinkExpiryDays(!showLinkExpiryDay)
-  }
+    setShowLinkExpiryDays(!showLinkExpiryDay);
+  };
 
   const handleDurationSelect = (duration) => {
     if (duration === "60 minutes" || duration === "90 minutes") {
@@ -712,10 +604,6 @@ const NewAssessment = () => {
       }));
     }
   };
-
-  const handleLinkExpiryChange = (date) => {
-    setLinkExpiryDays(date)
-  }
 
   const handleDateChange = (date) => {
     setStartDate(date);
@@ -738,9 +626,6 @@ const NewAssessment = () => {
   };
 
   const difficultyLevels = ["Easy", "Medium", "Hard"];
-  const toggleDropdownDifficulty = () => {
-    setShowDropdownDifficulty(!showDropdownDifficulty);
-  };
   const handleDifficultySelect = (level) => {
     setSelectedDifficulty(level);
     setShowDropdownDifficulty(false);
@@ -814,29 +699,6 @@ const NewAssessment = () => {
     };
   }, [sidebarOpenAddQuestion, handleOutsideClickAddQuestion]);
 
-  // useEffect(() => {
-  //   const fetchSectionData = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${process.env.REACT_APP_API_URL}/sections`
-  //       );
-  //       setSelectedIcons(response.data);
-  //       const IconData = response.data.filter(
-  //         (data) => data.Position === position
-  //       );
-  //       setSelectedIcons2(IconData);
-  //     } catch (error) {
-  //       console.error("Error fetching Sectionsdata:", error);
-  //     }
-  //   };
-  //   fetchSectionData();
-  // }, [position]);
-
-
-
-
-
-
   const toggleArrow1 = (index) => {
     setToggleStates((prevState) => {
       const newState = [...prevState];
@@ -858,12 +720,6 @@ const NewAssessment = () => {
     }
   };
 
-
-  const toggleDropdownPosition = (e) => {
-    e.stopPropagation();
-    setShowDropdownPosition(!showDropdownPosition);
-  };
-
   const handlePositionSelect = (position) => {
     if (!position?._id) {
       console.error("Invalid position selected");
@@ -878,9 +734,6 @@ const NewAssessment = () => {
   };
 
   const handleAddNewPositionClick = () => {
-    // setShowMainContent(false);
-    // setShowNewPositionContent(true);
-
     if (value.trim() !== "") {
       const newPosition = { _id: positions.length + 1, title: value };
       // setPositions([newPosition, ...positions]);
@@ -888,41 +741,6 @@ const NewAssessment = () => {
       setValue("");
     }
   };
-
-
-  // const [selectedSkills, setSelectedSkills] = useState([]);
-
-
-
-
-
-
-
-  // const handleSectionAdded = (data) => {
-  //   const { SectionName, Questions } = data;
-
-  //   // Check if SectionName is not empty before adding
-  //   if (SectionName) {
-  //     setMatchingSection((prevSections) => {
-  //       const uniqueSections = [...new Set([...prevSections, SectionName])];
-  //       return uniqueSections;
-  //     });
-
-  //     // Add the section name to the addedSections state
-  //     // setAddedSections((prevSections) => [...prevSections, SectionName]);
-  //     setAddedSections((prevSections) => [...prevSections, data]);
-  //     console.log("added sections", addedSections);
-
-  //     // Initialize questions for the new section
-  //     setQuestionsBySection((prevQuestions) => {
-  //       const updatedQuestions = { ...prevQuestions };
-  //       if (!updatedQuestions[SectionName]) {
-  //         updatedQuestions[SectionName] = Questions || [];
-  //       }
-  //       return updatedQuestions;
-  //     });
-  //   }
-  // };
 
   const handleSectionAdded = (data) => {
     const { SectionName, Questions } = data;
@@ -952,63 +770,14 @@ const NewAssessment = () => {
       }
     }
   };
+
   const handleBackButtonClick = () => {
     setActiveTab("Details");
   };
 
-  const handleBackButtonClickCandidate = () => {
-    setActiveTab("Questions");
-  };
-
   const handleEditSection = (index, currentSectionName) => {
-    setEditingIndex(index);
-    setEditedSectionName(currentSectionName);
-    setIsEditSectionModalOpen(true);
     setActionViewMoreSection(null);
   };
-
-  // const handleSaveSectionName = () => {
-  //   if (editingIndex !== null && editedSectionName.trim() !== "") {
-  //     const updatedSectionName = editedSectionName.trim();
-  //     // alert(editedSectionName)
-  //     setQuestionsBySection((prevQuestions) => {
-  //       const updatedQuestions = { ...prevQuestions };
-  //       if (updatedQuestions[matchingSection[editingIndex]]) {
-  //         updatedQuestions[updatedSectionName] =
-  //           updatedQuestions[matchingSection[editingIndex]];
-  //         delete updatedQuestions[matchingSection[editingIndex]];
-  //       }
-  //       return updatedQuestions;
-  //     });
-
-  //     setMatchingSection((prevSections) => {
-  //       const updatedSections = [...prevSections];
-  //       updatedSections[editingIndex] = updatedSectionName;
-  //       return updatedSections;
-  //     });
-
-  //     setAddedSections((prev) =>
-  //       prev.map((section, index) =>
-  //         index === editingIndex
-  //           ? { ...section, SectionName: updatedSectionName }
-  //           : section
-  //       )
-  //     );
-
-  //     setIsEditSectionModalOpen(false);
-  //     setEditingIndex(null);
-  //   }
-  // };
-
-
-
-
-
-  const [isDeleteSectionConfirmationOpen, setIsDeleteSectionConfirmationOpen] =
-    useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState(null);
-  const [sectionIndexToDelete, setSectionIndexToDelete] = useState(null);
-
 
   const CustomInput = forwardRef(({ value, onClick }, ref) => (
     <input
@@ -1022,9 +791,7 @@ const NewAssessment = () => {
     />
   ));
 
-
   // mansoor
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
 
@@ -1037,27 +804,6 @@ const NewAssessment = () => {
       closeSidebar();
     }
   }, []);
-
-
-  // Function to calculate total score
-  // const calculateTotalScore = () => {
-  //   let score = 0;
-  //   addedSections.forEach(section => {
-  //     section.Questions.forEach(question => {
-  //       score += Number(question.score) || 0;
-  //     });
-  //   });
-  //   setTotalScore(score);
-  //   return score;
-  // };
-  // Effect to recalculate total score whenever questions change
-  // useEffect(() => {
-  //   calculateTotalScore();
-  // }, [addedSections]);
-  // const [totalScore, setTotalScore] = useState(0);
-  // const [passScores, setPassScores] = useState({});
-  // const [overallPassScore, setOverallPassScore] = useState(0);
-  // const [isPassScoreSubmitted, setIsPassScoreSubmitted] = useState(false);
 
   const handlePassScoreSave = (scores) => {
     setFormData((prev) => ({
@@ -1088,40 +834,24 @@ const NewAssessment = () => {
     }
     setIsPassScoreSubmitted(true);
   };
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
-
-  const [candidateEmails, setCandidateEmails] = useState([])
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSelectCandidates = (candidates, emails) => {
-    setSelectedCandidates(candidates);
-    setCandidateEmails(emails)
-  };
 
   // ashraf
-
   const calculateCheckedCount = () => {
-
     const count = addedSections.reduce((acc, section) => {
-      return acc + section.Questions.length
-    }, 0)
-
-    return count
+      return acc + section.Questions.length;
+    }, 0);
+    return count;
   };
 
   useEffect(() => {
     setCheckedCount(calculateCheckedCount());
-    // }, [questionsBySection]);
   }, [addedSections]);
 
   const [isLimitReachedPopupOpen, setIsLimitReachedPopupOpen] = useState(false);
 
-
   const closeLimitReachedPopup = () => {
     setIsLimitReachedPopupOpen(false);
   };
-
 
   const [isSelectCandidatePopupOpen, setIsSelectCandidatePopupOpen] = useState(false);
 
@@ -1140,9 +870,6 @@ const NewAssessment = () => {
     }
   };
 
-
-
-
   const [instructionError, setInstructionError] = useState("");
 
   const handleInstructionsChange = (e) => {
@@ -1153,80 +880,22 @@ const NewAssessment = () => {
     const errors = validateAssessmentData({ instructions: value });
     setInstructionError(errors.instructions || "");
   };
+
   const handleBackToBasicDetails = () => {
     setActiveTab("Basicdetails");
   };
 
-  const handleExceedLimit = () => {
-    setIsLimitReachedPopupOpen(true);
-  };
 
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState("");
 
   // Function to handle delete button click
-  //shashank-[11/01/2025]
-  // const handleDeleteClick = (type, item) => {
+  // shashank-[11/01/2025]
   const handleDeleteClick = (type, item, secName) => {
-    console.log("item to delete", { ...item, secName })
     setDeleteType(type);
     setItemToDelete({ ...item, SectionName: secName });
-    setIsDeleteConfirmationOpen(true);
     setActionViewMore(null);
     setActionViewMoreSection(null);
-  };
-
-
-
-  function deleteQuestion(sectionIndex, questionIndex) {
-    setAddedSections((prevSections) => {
-      const updatedSections = [...prevSections];
-
-      // Remove the question from the target section
-      updatedSections[sectionIndex].Questions.splice(questionIndex, 1);
-
-      // Synchronize order across all sections
-      return synchronizeOrder(updatedSections);
-    });
-  }
-
-
-  const handleDeleteQuestion = (sectionName, questionIndex) => {
-    setQuestionsBySection((prevQuestions) => {
-      const updatedQuestions = { ...prevQuestions };
-      if (Array.isArray(updatedQuestions[sectionName])) {
-        updatedQuestions[sectionName] = updatedQuestions[sectionName].filter(
-          (_, index) => index !== questionIndex
-        );
-      }
-      return updatedQuestions;
-    });
-  };
-
-  const [isBulkDeleteConfirmationOpen, setIsBulkDeleteConfirmationOpen] =
-    useState(false);
-
-  const handleBulkDeleteClick = () => {
-    setIsBulkDeleteConfirmationOpen(true);
-  };
-
-  const confirmBulkDeleteQuestions = () => {
-    setQuestionsBySection((prevState) => {
-      const newQuestionsBySection = { ...prevState };
-
-      Object.keys(checkedState).forEach((sectionName) => {
-        newQuestionsBySection[sectionName] = newQuestionsBySection[
-          sectionName
-        ].filter(
-          (_, questionIndex) => !checkedState[sectionName][questionIndex]
-        );
-      });
-
-      return newQuestionsBySection;
-    });
-
-    setCheckedState({});
-    setIsBulkDeleteConfirmationOpen(false);
   };
 
   const [actionViewMore, setActionViewMore] = useState({});
@@ -1262,19 +931,17 @@ const NewAssessment = () => {
     }));
   };
 
-  //changes made by shashank on [08/01/2025] addedSections onSectionAdded
+  // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
   const handleAddSection = (closeAddSectionPopup) => {
     const validateErrors = {};
     if (!sectionName.trim()) {
       validateErrors.sectionName = "";
-
       setIsAlreadyExistingSection("section name is required*");
       return;
     }
     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
-
       return;
     }
 
@@ -1285,32 +952,6 @@ const NewAssessment = () => {
     setSectionName("");
     closeAddSectionPopup();
   };
-
-
-
-  function synchronizeOrder(addedSections) {
-    let currentOrder = 1; // Start the order from 1
-    return addedSections.map((section) => {
-      section.Questions = section.Questions.map((question) => ({
-        ...question,
-        order: currentOrder++, // Assign and increment the order
-      }));
-      return section;
-    });
-  }
-
-
-  function addQuestion(sectionIndex, newQuestion) {
-    setAddedSections((prevSections) => {
-      const updatedSections = [...prevSections];
-
-      // Add the new question to the target section
-      updatedSections[sectionIndex].Questions.push(newQuestion);
-
-      // Synchronize order across all sections
-      return synchronizeOrder(updatedSections);
-    });
-  }
 
   const updateQuestionsInAddedSectionFromQuestionBank = (sectionName, question) => {
     console.log("Updating questions in section:", sectionName);
@@ -1328,52 +969,61 @@ const NewAssessment = () => {
     });
   };
 
-
-
-
-
   const navigate = useNavigate();
 
   const NavigateToAssessmentList = () => {
     navigate('/assessments');
   };
 
-  const TabFooter = ({ currentTab }) => {
-    const handleBack = () => {
-      if (currentTab === "Details") setActiveTab("Basicdetails");
-      else if (currentTab === "Questions") setActiveTab("Details");
-      else if (currentTab === "Candidates") setActiveTab("Questions");
-    };
+ const TabFooter = ({ currentTab }) => {
+  const handleBack = () => {
+    if (currentTab === "Details") setActiveTab("Basicdetails");
+    else if (currentTab === "Questions") setActiveTab("Details");
+    else if (currentTab === "Candidates") setActiveTab("Questions");
+  };
 
-    const getNextTab = () => {
-      if (currentTab === "Basicdetails") return "Details";
-      if (currentTab === "Details") return "Questions";
-      if (currentTab === "Questions") return "Candidates";
-      return null;
-    };
+  const getNextTab = () => {
+    if (currentTab === "Basicdetails") return "Details";
+    if (currentTab === "Details") return "Questions";
+    if (currentTab === "Questions") return "Candidates";
+    return null;
+  };
 
-    return (
-      <div className="flex justify-between px-6 pt-6">
-        {currentTab !== "Basicdetails" && (
+  const selectedCount = getSelectedQuestionsCount();
+
+  return (
+    <div className="flex justify-between px-6 pt-6">
+      {currentTab !== "Basicdetails" && (
+        <button
+          onClick={handleBack}
+          className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Back
+        </button>
+      )}
+
+      <div className="flex gap-3">
+        {currentTab === "Candidates" ? (
           <button
-            onClick={handleBack}
+            type="button"
+            onClick={NavigateToAssessmentList}
             className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
-            Back
+            Close
           </button>
-        )}
+        ) : currentTab === "Questions" ? (
+          <>
+            {/* Always show Delete Selected if questions are selected */}
+            {selectedCount > 0 && (
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                onClick={() => openDeleteConfirmation("bulk", null, null)}
+              >
+                Delete Selected ({selectedCount})
+              </button>
+            )}
 
-        <div className="flex gap-3">
-          {currentTab === "Candidates" ? (
-            <button
-              type="button"
-              onClick={NavigateToAssessmentList}
-              className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Close
-            </button>
-          ) : currentTab === "Questions" ? (
-            isPassScoreSubmitted ? (
+            {isPassScoreSubmitted ? (
               <>
                 <button
                   type="button"
@@ -1408,47 +1058,39 @@ const NewAssessment = () => {
               >
                 Add Score
               </button>
-            )
-          ) : (
-            <>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={(e) => handleSave(e, currentTab, "close")}
+              className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              {isEditing ? "Update" : "Save"}
+            </button>
+
+            {getNextTab() && (
               <button
                 type="button"
-                onClick={(e) => handleSave(e, currentTab, "close")}
-                className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                onClick={(e) => handleSave(e, currentTab, "next")}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
               >
-                {isEditing ? "Update" : "Save"}
+                {isEditing ? "Update & Next" : "Save & Next"}
               </button>
-
-              {getNextTab() && (
-                <button
-                  type="button"
-                  onClick={(e) => handleSave(e, currentTab, "next")}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
-                >
-                  {isEditing ? "Update & Next" : "Save & Next"}
-                </button>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
-    );
-  };
-
-
+    </div>
+  );
+};
 
   return (
     <>
       <div className="min-h-screen bg-gray-50">
         <main className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
-            {/* <Breadcrumb items={[
-            { label: 'Interviews', path: '/interviewList' },
-            ...(isEditing && interview
-              ? [{ label: candidateData?.LastName || 'Interview', path: `/interviews/${id}`, status: interview.status },
-              { label: 'Edit Interview', path: '' }]
-              : [{ label: 'New Interview', path: '' }])
-          ]} /> */}
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-12 py-4 sm:px-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -1460,14 +1102,6 @@ const NewAssessment = () => {
                     : 'Fill in the details to add a new assessment template'}
                 </p>
               </div>
-
-              {isLoading && (
-                // <div className="fixed inset-0 bg-gray-700 bg-opacity-70 flex items-center justify-center z-50">
-                //   <div className="text-white text-2xl font-bold">Loading...</div>
-                // </div>
-                // <Loader />
-                <></>
-              )}
 
               {/* Content */}
               <div>
@@ -1486,17 +1120,12 @@ const NewAssessment = () => {
                           formData={formData}
                           handleInputChange={handleInputChange}
                           toggleDropdownAssessment={toggleDropdownAssessment}
-                          // handleRemoveAssessmentType={handleRemoveAssessmentType}
                           setFormData={setFormData}
-                          // showDropdownAssessment={showDropdownAssessment}
-                          // assessmentTypes={assessmentTypes}
-                          // handleAssessmentTypeSelect={handleAssessmentTypeSelect}
                           setShowDropdownAssessment={setShowDropdownAssessment}
                           handleChange={handleChange}
                           handleIconClick={handleIconClick}
                           showMessage={showMessage}
                           selectedPosition={selectedPosition}
-                          // toggleDropdownPosition={toggleDropdownPosition}
                           showDropdownPosition={showDropdownPosition}
                           difficultyLevels={difficultyLevels}
                           handleDifficultySelect={handleDifficultySelect}
@@ -1512,15 +1141,11 @@ const NewAssessment = () => {
                           handleDateChange={handleDateChange}
                           CustomInput={CustomInput}
                           handleSave={handleSave}
-                          // handleSaveAndNext={handleSaveAndNext}
-                          // setSelectedAssessmentType={setSelectedAssessmentType}
-                          // selectedAssessmentType={selectedAssessmentType}
                           showDropdownDifficulty={showDropdownDifficulty}
                           setSelectedPosition={setSelectedPosition}
                           handlePositionSelect={handlePositionSelect}
                           handleAddNewPositionClick={handleAddNewPositionClick}
                           selectedDifficulty={selectedDifficulty}
-                          // toggleDropdownDifficulty={toggleDropdownDifficulty}
                           setShowDropdownDifficulty={setShowDropdownDifficulty}
                           setShowDropdownPosition={setShowDropdownPosition}
                           setShowDropdownDuration={setShowDropdownDuration}
@@ -1569,8 +1194,8 @@ const NewAssessment = () => {
                           setActionViewMore={setActionViewMore}
                           toggleAction={toggleAction}
                           passScores={passScores}
-                          totalScores={totalScores} // Pass totalScores
-                          passScoreType={formData.passScoreBy} // Pass passScoreType
+                          totalScores={totalScores}
+                          passScoreType={formData.passScoreBy}
                           toggleActionSection={toggleActionSection}
                           actionViewMoreSection={actionViewMoreSection}
                           toggleArrow1={toggleArrow1}
@@ -1584,8 +1209,6 @@ const NewAssessment = () => {
                           addedSections={addedSections}
                           isAddQuestionModalOpen={isAddQuestionModalOpen}
                           setIsAddQuestionModalOpen={setIsAddQuestionModalOpen}
-                          currentSectionName={currentSectionName}
-                          selectedAssessmentType={selectedAssessmentType}
                           checkedState={checkedState}
                           toggleStates={toggleStates}
                           toggleSidebarForSection={toggleSidebarForSection}
@@ -1595,7 +1218,6 @@ const NewAssessment = () => {
                           handleQuestionSelection={handleQuestionSelection}
                           handleBackButtonClick={handleBackButtonClick}
                           handleSave={handleSave}
-                          handleBulkDeleteClick={handleBulkDeleteClick}
                           updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
                           getDifficultyColorClass={getDifficultyColorClass}
                           getSelectedQuestionsCount={getSelectedQuestionsCount}
@@ -1615,30 +1237,12 @@ const NewAssessment = () => {
                       <>
                         <div className="px-6">
                           <AssessmentsTab assessment={isEditing ? assessment : tabsSubmitStatus.responseData} />
-                          {/* <div className="flex justify-between pt-6">
-                            <button
-                              onClick={handleBackButtonClickCandidate}
-                              className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Back
-                            </button>
-                            <div className="flex gap-3">
-                              <button
-                                type="button"
-                                onClick={NavigateToAssessmentList}
-                                className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              >
-                                Close
-                              </button>
-                            </div>
-                          </div> */}
                           <TabFooter currentTab="Candidates" />
                         </div>
                       </>
                     )}
                   </div>
                 </div>
-
 
                 {/* Confirmation Popups */}
                 <ConfirmationPopup
@@ -1714,7 +1318,6 @@ const NewAssessment = () => {
                         passScore={passScore}
                         setPassScores={setPassScores}
                         setPassScore={setPassScore}
-
                       />
                     </div>
                   </div>

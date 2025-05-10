@@ -10,8 +10,7 @@ const validatePhoneNumber = (phone) => {
     return re.test(String(phone));
 };
 
-
-const getErrorMessage = (field, value, formData) => {  // Modified to accept formData parameter
+const getErrorMessage = (field, value, formData) => {
     const messages = {
         LastName: "Last Name is required",
         Email: "Email is required",
@@ -26,7 +25,7 @@ const getErrorMessage = (field, value, formData) => {  // Modified to accept for
         skills: "At least one skill is required",
         invalidEmail: "Invalid email address",
         invalidPhone: "Invalid phone number",
-        // CurrentRole: "Current Role is required",
+        CurrentRole: "Current Role is required",
     };
 
     if (!value) {

@@ -38,7 +38,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() =>navigate('/candidate')}
+                onClick={() =>navigate('/candidates')}
                 className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
                 title="Back to Dashboard"
               >

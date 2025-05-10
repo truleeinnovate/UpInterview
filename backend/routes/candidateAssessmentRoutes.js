@@ -2,6 +2,7 @@
 const express = require('express')
 
 const { getCandidateAssessmentBasedOnId, verifyOtp, sendOtp,submitCandidateAssessment} = require('../controllers/candidateAssessmentController')
+// const { customControllerToSendEmail } = require('../controllers/assessmentEmailCommonController')
 
 const router = express.Router()
 
@@ -25,7 +26,6 @@ const router = express.Router()
 
 router.get('/details/:id',getCandidateAssessmentBasedOnId)
 router.post('/verify-otp',verifyOtp)
-router.post('/send-otp/:scheduledAssessmentId/:candidateId',sendOtp);
 router.post('/submit', submitCandidateAssessment);
 
 

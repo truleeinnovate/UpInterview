@@ -3,7 +3,7 @@ import { Eye, Mail, UserCircle, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentView, navigate }) => (
-  <div className={`w-full bg-gray-50 rounded-xl p-4 ${isAssessmentView ? '' : 'min-h-screen'}`}>
+  <div className={`w-full bg-gray-50 rounded-xl p-4  ${isAssessmentView ? '' : 'h-[calc(100vh-11rem)]'} flex flex-col`}>
 
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-semibold text-gray-800">All Candidates</h3>
@@ -65,7 +65,7 @@ const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentV
                 {!isAssessmentView ? (
                   <>
                     <button
-                      onClick={() => candidate?._id && navigate(`/candidate/${candidate._id}`)}
+                      onClick={() => candidate?._id && navigate(`/candidates/${candidate._id}`)}
                       className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                       title="360° View"
                     >

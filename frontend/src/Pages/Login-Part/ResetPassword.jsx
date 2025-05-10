@@ -48,7 +48,7 @@ const ResetPassword = () => {
       const data = await response.json();
       setMessage(data.message);
       if (data.success) {
-        window.location.href = "/organizationLogin";
+        window.location.href = "/organization-login";
       }
     } catch (error) {
       setMessage("An error occurred. Please try again.");

@@ -1,5 +1,5 @@
 const sendEmail = require("../utils/sendEmail.js");
-const notificationMiddleware = require("../middlewares/notificationMiddleware.js");
+const notificationMiddleware = require("../middleware/notificationMiddleware.js");
 const { Users } = require("../models/Users");
 const jwt = require("jsonwebtoken");
 
