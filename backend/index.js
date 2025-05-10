@@ -20,16 +20,27 @@ const mongoUri = process.env.MONGODB_URI;
 
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow requests from localhost for development
     if (!origin || origin === 'http://localhost:3000' || origin === 'https://www.app.upinterview.io') {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // For production, allow requests from any subdomain of upinterview.io
+      const allowedDomains = ['upinterview.io', 'app.upinterview.io'];
+      const originDomain = origin.split('//')[1].split(':')[0];
+      const isAllowedDomain = allowedDomains.some(domain => originDomain.endsWith(domain));
+      
+      if (isAllowedDomain) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
+  exposedHeaders: ['Set-Cookie'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
 
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
