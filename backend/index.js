@@ -4,7 +4,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const app = express();
+
+// Parse cookies
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 // Add subdomain redirect middleware
@@ -15,17 +19,18 @@ const port = process.env.PORT;
 const mongoUri = process.env.MONGODB_URI;
 
 const corsOptions = {
-  origin: [
-    'https://www.app.upinterview.io',
-    'https://frontend-001-c7hzake8ghdbfeeh.canadacentral-01.azurewebsites.net',
-    'http://localhost:3000',
-    'http://localhost:5000',
-  ],
+  origin: function (origin, callback) {
+    if (!origin || origin === 'http://localhost:3000' || origin === 'https://www.app.upinterview.io') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
 };
-// console.log('corsOptions:', corsOptions);
 
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully'))
