@@ -1,23 +1,5 @@
 const mongoose = require('mongoose');
 
-// const OrganizationSchema = new mongoose.Schema({
-//   firstName: { type: String },
-//   lastName: { type: String, required: true },
-//   email: { type: String, required: true },
-//   phone: { type: String },
-//   // username: { type: String, required: true },
-//   profileId: { type: String },//changed username to profileId
-//   jobTitle: { type: String, required: true },
-//   company: { type: String, required: true },
-//   employees: { type: String, required: true },
-//   country: { type: String, required: true },
-//   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-// }, { timestamps: true });
-
-
-
-
-
 // Ranjith added OrganizationSchema
 const OrganizationSchema = new mongoose.Schema({
 
@@ -72,11 +54,6 @@ const OrganizationSchema = new mongoose.Schema({
   subdomainLastVerified: { type: Date }
 
 });
-
-
-
-
-
 
 const Organization = mongoose.model('Organization', OrganizationSchema);
 

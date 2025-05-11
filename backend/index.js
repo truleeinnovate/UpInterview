@@ -1,69 +1,148 @@
-require('dotenv').config();
+// require('dotenv').config();
 
+// const express = require('express');
+// const mongoose = require('mongoose');
+// const cors = require('cors');
+// const bodyParser = require('body-parser');
+// const cookieParser = require('cookie-parser');
+// const app = express();
+
+// // Parse cookies
+// app.use(cookieParser());
+// app.use(bodyParser.json());
+
+// const port = process.env.PORT;
+// const mongoUri = process.env.MONGODB_URI;
+
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     // Allow requests from localhost for development
+//     if (!origin || origin === 'http://localhost:3000' || origin === 'https://www.app.upinterview.io') {
+//       callback(null, true);
+//     } else {
+//       // For production, allow requests from any subdomain of upinterview.io
+//       const allowedDomains = ['upinterview.io', 'app.upinterview.io'];
+//       const originDomain = origin.split('//')[1].split(':')[0];
+//       const isAllowedDomain = allowedDomains.some(domain => originDomain.endsWith(domain));
+      
+//       if (isAllowedDomain) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error('Not allowed by CORS'));
+//       }
+//     }
+//   },
+//   credentials: true,
+//   optionsSuccessStatus: 200,
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
+//   exposedHeaders: ['Set-Cookie'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+// };
+
+// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('MongoDB connected successfully'))
+//   .catch(err => console.error('MongoDB connection error:', err));
+
+// // Enhanced CORS handling - applied before routes
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+//   res.header('Access-Control-Allow-Credentials', 'true');
+  
+//   // Handle preflight OPTIONS requests
+//   if (req.method === 'OPTIONS') {
+//     return res.status(200).end();
+//   }
+  
+//   // console.log('CORS headers set for:', req.method, req.url);
+//   next();
+// });
+
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+
+
 const app = express();
+const port = process.env.PORT || 4000;
 
-// Parse cookies
-app.use(cookieParser());
-app.use(bodyParser.json());
-
-// Add subdomain redirect middleware
-const subdomainRedirect = require('./middleware/subdomainRedirect');
-app.use(subdomainRedirect);
-
-const port = process.env.PORT;
-const mongoUri = process.env.MONGODB_URI;
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true, useUnifiedTopology: true
+}).then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests from localhost for development
-    if (!origin || origin === 'http://localhost:3000' || origin === 'https://www.app.upinterview.io') {
+    if (!origin || origin === 'http://localhost:3000' || origin.endsWith('.upinterview.io')) {
       callback(null, true);
     } else {
-      // For production, allow requests from any subdomain of upinterview.io
-      const allowedDomains = ['upinterview.io', 'app.upinterview.io'];
-      const originDomain = origin.split('//')[1].split(':')[0];
-      const isAllowedDomain = allowedDomains.some(domain => originDomain.endsWith(domain));
-      
-      if (isAllowedDomain) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(new Error('❌ Not allowed by CORS'));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
-  exposedHeaders: ['Set-Cookie'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  optionsSuccessStatus: 200
 };
 
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
- 
-// Apply CORS middleware before any routes
 app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(bodyParser.json());
 
-// Enhanced CORS handling - applied before routes
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight OPTIONS requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+const authRoutes = require('./routes/authRoutes.js');
+app.use('/api/auth', authRoutes);
+
+// app.get('/api/validate-domain', (req, res) => {
+//   const token = req.cookies.token;
+//   const origin = req.headers.origin || req.headers.host;
+
+//   console.log('Received domain validation request from:', origin);
+
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const subdomain = origin.split('.')[0];
+
+//     if (subdomain === decoded.organization.subdomain) {
+//       return res.json({ isValid: true });
+//     } else {
+//       return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
+//     }
+//   } catch (err) {
+//     console.error('JWT validation failed:', err.message);
+//     return res.status(401).json({ isValid: false });
+//   }
+// });
+
+
+// backend route (e.g. validate-domain.js or inside index.js)
+app.get('/api/validate-domain', (req, res) => {
+  const token = req.cookies.token;
+  const origin = req.headers.origin || req.headers.host;
+
+  console.log('Received domain validation request from:', origin);
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded JWT:', decoded);
+
+    const subdomain = origin.split('.')[0];
+    console.log('Extracted subdomain:', subdomain);
+
+    if (subdomain === decoded.organization.subdomain) {
+      console.log('Subdomain matches. Validation successful.');
+      return res.json({ isValid: true });
+    } else {
+      console.log('Subdomain mismatch. Validation failed.');
+      return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
+    }
+  } catch (err) {
+    console.error('JWT validation failed:', err.message);
+    return res.status(401).json({ isValid: false });
   }
-  
-  // console.log('CORS headers set for:', req.method, req.url);
-  next();
 });
 
 
@@ -615,6 +694,16 @@ app.get('/org-users', async (req, res) => {
     console.error('Error fetching users:', error);
     res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
+});
+
+app.get('/users', async (req, res) => {
+    try {
+        const users = await Users.find().populate('tenantId');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
 });
 
 // Email TemplateRouter

@@ -86,9 +86,11 @@ import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
 
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
+import NotFound from './Components/NotFoundPage/NotFound.jsx';
+
 const App = () => {
   const location = useLocation();
-  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login','/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
   const shouldRenderLogo = ['/organization-signup', '/organization-login', '/select-user-type', '/select-profession', '/complete-profile', '/subscription-plans', '/payment-details'].includes(location.pathname);
@@ -96,8 +98,6 @@ const App = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
-
-  console.log('authToken', authToken, 'tokenPayload', tokenPayload, 'organization', organization)
 
   return (
     <React.Fragment>
@@ -288,6 +288,9 @@ const App = () => {
           <Route path="/interview-templates" element={<InterviewTemplates />} />
           <Route path="/interview-templates/:id" element={<TemplateDetail />} />
           <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
+
+          {/* 404 */}
+          <Route path="/404" element={<NotFound />} />
 
         </Routes>
       </div>

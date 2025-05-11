@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { useCustomContext } from '../../Context/Contextfetch.js';
 
-const Admin = () => {
+const OrganizationLogin = () => {
+  const { usersData } = useCustomContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -56,27 +58,49 @@ const Admin = () => {
 
     if (emailError || passwordError) return;
 
+
     try {
+      console.log("🔐 Attempting org login...");
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
         email: email.trim().toLowerCase(),
         password,
       });
 
+      console.log('response of the org login :-', response);
+
       if (response.data.success) {
-        const { token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
+        const { token, contactDataFromOrg } = response.data;
 
         // Store JWT in cookies
         setAuthCookies(token);
+        console.log("🍪 JWT stored in cookie");
 
-        if (typeof isProfileCompleted === 'undefined') {
-          navigate('/home');
-        } else if (isProfileCompleted === true) {
-          navigate('/home');
-        } else if (isProfileCompleted === false && roleName) {
-          navigate('/complete-profile', {
-            state: { isProfileComplete: true, roleName, contactDataFromOrg },
-          });
+        const organization = usersData.find(user => user.email === email)?.tenantId;
+        console.log('Organization data for logged-in user:', organization);
+
+        // Handle redirection based on profile completion and domain
+        if (organization?.subdomain) {
+          console.log("✅ Subdomain found:", organization.subdomain);
+
+          const sub = organization.subdomain;
+          const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
+
+          console.log("🌐 Redirecting to subdomain:", sub);
+          console.log("🔍 Contact Data:", contactData);
+
+          window.location.href = `https://${sub}.app.upinterview.io/home`;
+        } else if (organization?.fullDomain) {
+          console.log("✅ Full domain found:", organization.fullDomain);
+
+          const full = organization.fullDomain;
+          const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
+
+          console.log("🌐 Redirecting to fullDomain:", full);
+          console.log("🔍 Contact Data:", contactData);
+
+          window.location.href = `https://${full}/home`;
         } else {
+          console.warn("⚠️ No subdomain or fullDomain found in org data.");
           navigate('/home');
         }
       } else {
@@ -223,4 +247,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default OrganizationLogin;

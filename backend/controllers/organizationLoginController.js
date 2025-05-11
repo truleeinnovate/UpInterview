@@ -370,6 +370,71 @@ const loginOrganization = async (req, res) => {
   }
 };
 
+// const loginOrganization = async (req, res) => {
+//   try {
+//     let { email, password } = req.body;
+//     email = email?.trim().toLowerCase();
+//     password = password?.trim();
+
+//     if (!email || !password) {
+//       return res.status(400).json({ success: false, message: 'Email and password are required' });
+//     }
+
+//     const user = await Users.findOne({ email });
+//     if (!user) {
+//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//     }
+
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//     }
+
+//     let roleName = null;
+//     if (user?.isProfileCompleted === false && user.roleId) {
+//       const role = await Role.findById(user.roleId);
+//       roleName = role?.roleName;
+//     }
+
+//     // Fetch contactId where ownerId matches user._id
+//     const contact = await Contacts.findOne({ ownerId: user._id });
+//     const contactDataFromOrg = contact || null;
+
+//     // Fetch organization data using tenantId
+//     const organization = await Organizations.findById(user.tenantId).select('subdomain fullDomain');
+//     if (!organization) {
+//       return res.status(400).json({ success: false, message: 'Organization not found' });
+//     }
+
+//     // Generate JWT
+//     const payload = {
+//       userId: user._id.toString(),
+//       tenantId: user.tenantId,
+//       organization: true,
+//       timestamp: new Date().toISOString(),
+//     };
+//     const token = generateToken(payload);
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Login successful',
+//       ownerId: user._id,
+//       tenantId: user.tenantId,
+//       token,
+//       isProfileCompleted: user?.isProfileCompleted,
+//       roleName,
+//       contactDataFromOrg,
+//       organization: {
+//         subdomain: organization.subdomain,
+//         fullDomain: organization.fullDomain,
+//       },
+//     });
+
+//   } catch (error) {
+//     console.error('Error during login:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   }
+// };
 
 
 

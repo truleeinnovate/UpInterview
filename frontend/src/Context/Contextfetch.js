@@ -23,12 +23,7 @@ const CustomProvider = ({ children }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  useEffect(() => {
-    console.log('tokenPayload fron context:-', tokenPayload);
-  }, [tokenPayload]);
-
-  const userId =  tokenPayload?.userId;
-  console.log('userId fron context:-', userId);
+  const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
@@ -435,7 +430,6 @@ const CustomProvider = ({ children }) => {
   // ranjith  //
 
   const tenantId = tokenPayload?.tenantId;
-  console.log('tenantId fron context:-', tenantId);
 
   // Fetch groups
   const [groups, setGroups] = useState([]);
@@ -457,7 +451,6 @@ const CustomProvider = ({ children }) => {
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
-        console.log('Groups fetched:', response.data);
       } else {
         console.error('Invalid groups data format:', response.data);
         setGroups([]);
@@ -476,7 +469,23 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     fetchGroupsData();
   }, [fetchGroupsData]);
-  
+
+  // users
+  const [usersData, setUsersData] = useState([]);
+
+  // Fetch users data
+  const fetchUsersData = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
+      setUsersData(response.data);
+    } catch (error) {
+      console.error('Error fetching users data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersData();
+  }, []);
 
   return (
     <CustomContext.Provider
@@ -556,6 +565,10 @@ const CustomProvider = ({ children }) => {
         // groups
         groups,
         fetchGroupsData,
+
+        // users
+        usersData,
+        fetchUsersData
       }}
     >
       {children}
