@@ -696,15 +696,8 @@ app.get('/org-users', async (req, res) => {
   }
 });
 
-app.get('/users', async (req, res) => {
-    try {
-        const users = await Users.find().populate('tenantId');
-        res.status(200).json(users);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ error: 'Failed to fetch users' });
-    }
-});
+const usersRoutes = require('./routes/usersRoutes.js');
+app.use('/users', usersRoutes);
 
 // Email TemplateRouter
 const EmailTemplateRouter = require("./routes/EmailTemplateRoutes.js");

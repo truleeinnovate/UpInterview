@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 // import axios from "axios";
 import React from 'react';
@@ -39,12 +39,22 @@ import { ReactComponent as BsBuildingCheck } from '../../../icons/BsBuildingChec
 import { ReactComponent as MdOutlineSchedule } from '../../../icons/MdOutlineSchedule.svg';
 import { ReactComponent as FaArrowRight } from '../../../icons/FaArrowRight.svg';
 // import { usePermissions } from "../../../Context/PermissionsContext.js";
+import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Home = () => {
   useEffect(() => {
     console.log("Home");
+  }, []);
+    useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+      console.log("Setting auth cookie on new domain...");
+      setAuthCookies(token);
+    }
   }, []);
   const freelancer = Cookies.get("freelancer");
     // const { sharingPermissionscontext, objectPermissionscontext } = usePermissions();

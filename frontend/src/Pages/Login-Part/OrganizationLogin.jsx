@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
+import Cookies from 'js-cookie';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { useCustomContext } from '../../Context/Contextfetch.js';
+import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 const OrganizationLogin = () => {
   const { usersData } = useCustomContext();
@@ -49,7 +51,7 @@ const OrganizationLogin = () => {
     }
   };
 
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
 
     const emailError = validateEmail(email);
@@ -58,61 +60,39 @@ const OrganizationLogin = () => {
 
     if (emailError || passwordError) return;
 
-
     try {
-      console.log("🔐 Attempting org login...");
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
-        email: email.trim().toLowerCase(),
-        password,
-      });
+        console.log("🔐 Attempting org login...");
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
+            email: email.trim().toLowerCase(),
+            password,
+        });
 
-      console.log('response of the org login :-', response);
+        console.log('Login response data:', response.data);
 
-      if (response.data.success) {
-        const { token, contactDataFromOrg } = response.data;
+        if (response.data.success) {
+            const { token, contactDataFromOrg } = response.data;
 
-        // Store JWT in cookies
-        setAuthCookies(token);
-        console.log("🍪 JWT stored in cookie");
+            // Store JWT in cookies
+            console.log("Setting auth cookie...");
+            setAuthCookies(token);
+            console.log("Auth cookie set:", Cookies.get('authToken'));
 
-        const organization = usersData.find(user => user.email === email)?.tenantId;
-        console.log('Organization data for logged-in user:', organization);
+            const organization = usersData.find(user => user.email === email)?.tenantId;
+            console.log('Organization data for logged-in user:', organization);
 
-        // Handle redirection based on profile completion and domain
-        if (organization?.subdomain) {
-          console.log("✅ Subdomain found:", organization.subdomain);
-
-          const sub = organization.subdomain;
-          const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
-
-          console.log("🌐 Redirecting to subdomain:", sub);
-          console.log("🔍 Contact Data:", contactData);
-
-          window.location.href = `https://${sub}.app.upinterview.io/home`;
-        } else if (organization?.fullDomain) {
-          console.log("✅ Full domain found:", organization.fullDomain);
-
-          const full = organization.fullDomain;
-          const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
-
-          console.log("🌐 Redirecting to fullDomain:", full);
-          console.log("🔍 Contact Data:", contactData);
-
-          window.location.href = `https://${full}/home`;
+            // Pass token and contactDataFromOrg to handleDomainRedirection
+            handleDomainRedirection(organization, contactDataFromOrg, navigate, token);
         } else {
-          console.warn("⚠️ No subdomain or fullDomain found in org data.");
-          navigate('/home');
+            setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
         }
-      } else {
-        setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
-      }
     } catch (error) {
-      setErrors((prev) => ({
-        ...prev,
-        email: error.response?.data.message || 'Login failed. Please try again.',
-      }));
+        console.error('Login error:', error);
+        setErrors((prev) => ({
+            ...prev,
+            email: error.response?.data.message || 'Login failed. Please try again.',
+        }));
     }
-  };
+};
 
   return (
     <>
