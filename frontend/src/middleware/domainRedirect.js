@@ -1,16 +1,23 @@
-export const handleDomainRedirection = (organization, contactDataFromOrg, navigate, token) => {
-  console.log('Redirecting with:', { organization, contactDataFromOrg, token });
+import Cookies from "js-cookie";
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
-  if (organization?.subdomain) {
-    const sub = organization.subdomain;
-    const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
-    window.location.href = `https://${sub}.app.upinterview.io/home?token=${token}&contactData=${contactData}`;
-  } else if (organization?.fullDomain) {
-    const full = organization.fullDomain;
-    const contactData = encodeURIComponent(JSON.stringify(contactDataFromOrg || {}));
-    window.location.href = `https://${full}/home?token=${token}&contactData=${contactData}`;
+export const handleDomainRedirection = (organization, navigate, token, path = '') => {
+  console.log('Redirecting with:', { organization, token, path });
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  if (tokenPayload.organization === true) {
+    
+    if (organization?.subdomain) {
+      const sub = organization.subdomain;
+      window.location.href = `https://${sub}.app.upinterview.io/${path}?token=${token}`;
+    } else {
+      navigate(`/${path}`)
+    }
+
   } else {
-    console.warn("⚠️ No subdomain or fullDomain found in org data.");
-    navigate('/home');
+    console.log('org from the cookies are false')
+    navigate(`/${path}`)
   }
 };

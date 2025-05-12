@@ -1,92 +1,95 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Cookies from "js-cookie";
-import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
-import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
-import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
-import LandingPage from './Pages/Login-Part/Individual-1.jsx';
-import UserTypeSelection from './Pages/Login-Part/Individual-2.jsx';
-import SelectProfession from './Pages/Login-Part/Individual-3.jsx';
-import ProfileWizard from './Pages/Login-Part/Individual-4/Individual-4.jsx';
-import Logo from './Pages/Login-Part/Logo.jsx';
-import OrganizationSignUp from './Pages/Login-Part/OrganizationSignUp.jsx';
-import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
-import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
-import LinkedInCallback from './Components/LinkedInCallback.jsx';
-import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
-import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
-
-// tabs
-import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
-import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent.jsx';
-import AddCandidateForm from './Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm.jsx';
-import CandidateDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx';
-import CandidateFullscreen from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen.jsx';
-
-import Position from './Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx';
-import PositionForm from './Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx';
-import PositionSlideDetails from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx';
-import RoundFormPosition from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx';
-
-import MockInterview from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterview.jsx';
-import MockInterviewDetails from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx';
-import MockSchedulelater from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm.jsx';
-
-import InterviewList from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList.jsx';
-import InterviewDetail from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail.jsx';
-import InterviewForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm.jsx';
-import RoundForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm.jsx';
-
-import QuestionBank from './Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
-
-import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx";
-import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
-import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails.jsx";
-
-//-----------------------------------account settings
-import UsersLayout from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx';
-import UserForm from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm.jsx';
-import UserProfileDetails from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails.jsx';
-import BasicDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx';
-import BasicDetailsEditPage from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx';
-import EditAdvacedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx';
-import EditInterviewDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails.jsx';
-import EditAvailabilityDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails.jsx';
-import AdvancedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx';
-import AvailabilityUser from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser.jsx';
-import InterviewUserDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx';
-import { CompanyProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile.jsx';
-import { BillingDetails } from './Pages/Dashboard-Part/Accountsettings/account/billing/Billing.jsx';
-import { Subscription } from './Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription.jsx';
-import { Wallet } from './Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet.jsx';
-import { Security } from './Pages/Dashboard-Part/Accountsettings/account/Security.jsx';
-import { Usage } from './Pages/Dashboard-Part/Accountsettings/account/Usage.jsx';
-import { NotificationsDetails } from './Pages/Dashboard-Part/Accountsettings/account/Notifications.jsx';
-import { HrmsAtsApi } from './Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi.jsx';
-import { Webhooks } from './Pages/Dashboard-Part/Accountsettings/integrations/Webhooks.jsx';
-import { Sharing } from './Pages/Dashboard-Part/Accountsettings/account/Sharing.jsx';
-import { InterviewerGroups } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups.jsx';
-import { CompanyEditProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit.jsx';
-import { InterviewerGroupFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup.jsx';
-import { InterviewGroupDetails } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails.jsx';
-import { WalletTransactionPopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup.jsx';
-import { WalletBalancePopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup.jsx';
-import { Role } from './Pages/Dashboard-Part/Accountsettings/account/Roles/Role.jsx';
-import { RoleFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup.jsx';
-import SettingsPage from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
-import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx';
-import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
-import EmailTemplate from './Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate.jsx';
-//-----------------------------------account settings
-
-import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplates.jsx';
-import TemplateDetail from '../src/Pages/InteviewTemplates/TemplateDetail';
-import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
-
+import { CustomProvider } from './Context/Contextfetch.js';
+import { PermissionsProvider } from './Context/PermissionsContext.js';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
-import NotFound from './Components/NotFoundPage/NotFound.jsx';
+// Lazy-loaded components
+const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home.jsx'));
+const Navbar = lazy(() => import('./Components/Navbar/Navbar-Sidebar.jsx'));
+const Settingssidebar = lazy(() => import('./Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx'));
+const AppSettings = lazy(() => import('./Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx'));
+const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1.jsx'));
+const UserTypeSelection = lazy(() => import('./Pages/Login-Part/Individual-2.jsx'));
+const SelectProfession = lazy(() => import('./Pages/Login-Part/Individual-3.jsx'));
+const ProfileWizard = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4.jsx'));
+const Logo = lazy(() => import('./Pages/Login-Part/Logo.jsx'));
+const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp.jsx'));
+const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogin.jsx'));
+const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx'));
+const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback.jsx'));
+const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx'));
+const OutsourceInterviewerAdmin = lazy(() => import('./Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx'));
+
+// Tabs
+const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx'));
+const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent.jsx'));
+const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm.jsx'));
+const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx'));
+const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen.jsx'));
+
+const Position = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx'));
+const PositionForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx'));
+const PositionSlideDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx'));
+const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx'));
+
+const MockInterview = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview.jsx'));
+const MockInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx'));
+const MockSchedulelater = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm.jsx'));
+
+const InterviewList = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList.jsx'));
+const InterviewDetail = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail.jsx'));
+const InterviewForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm.jsx'));
+const RoundForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm.jsx'));
+
+const QuestionBank = lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx'));
+
+const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx'));
+const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx'));
+const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails.jsx'));
+
+// Account settings
+const UsersLayout = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx'));
+const UserForm = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm.jsx'));
+const UserProfileDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails.jsx'));
+const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
+const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));
+const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx'));
+const EditInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails.jsx'));
+const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails.jsx'));
+const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx'));
+const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser.jsx'));
+const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx'));
+const CompanyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile.jsx'));
+const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing.jsx'));
+const Subscription = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription.jsx'));
+const Wallet = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet.jsx'));
+const Security = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Security.jsx'));
+const Usage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Usage.jsx'));
+const NotificationsDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Notifications.jsx'));
+const HrmsAtsApi = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi.jsx'));
+const Webhooks = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks.jsx'));
+const Sharing = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Sharing.jsx'));
+const InterviewerGroups = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups.jsx'));
+const CompanyEditProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit.jsx'));
+const InterviewerGroupFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup.jsx'));
+const InterviewGroupDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails.jsx'));
+const WalletTransactionPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup.jsx'));
+const WalletBalancePopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup.jsx'));
+const Role = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/Role.jsx'));
+const RoleFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup.jsx'));
+const SettingsPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
+const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
+const Domain_management = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx'));
+const EmailTemplate = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate.jsx'));
+
+// Interview Templates
+const InterviewTemplates = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplates.jsx'));
+const TemplateDetail = lazy(() => import('../src/Pages/InteviewTemplates/TemplateDetail'));
+const RoundFormTemplate = lazy(() => import('../src/Pages/InteviewTemplates/RoundForm'));
+
+const NotFound = lazy(() => import('./Components/NotFoundPage/NotFound.jsx'));
 
 const App = () => {
   const location = useLocation();
@@ -95,205 +98,176 @@ const App = () => {
   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
   const shouldRenderLogo = ['/organization-signup', '/organization-login', '/select-user-type', '/select-profession', '/complete-profile', '/subscription-plans', '/payment-details'].includes(location.pathname);
 
+  const publicRoutes = ['/', '/select-user-type', '/select-profession', '/callback', '/organization-signup', '/organization-login', '/subscription-plans', '/payment-details', '/home'];
+  const isPublic = publicRoutes.includes(location.pathname);
+
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
 
   return (
     <React.Fragment>
-      {shouldRenderNavbar && <Navbar />}
-      {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
-      {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
-      {shouldRenderLogo && <Logo />}
-      <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/select-user-type" element={<UserTypeSelection />} />
-          <Route path="/select-profession" element={<SelectProfession />} />
-          <Route path="/complete-profile" element={<ProfileWizard />} />
-          <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/organization-signup" element={<OrganizationSignUp />} />
-          <Route path="/organization-login" element={<OrganizationLogin />} />
-          <Route path="/callback" element={<LinkedInCallback />} />
-          <Route path="/payment-details" element={<CardDetails />} />
-          <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
+      <Suspense fallback={<div>Loading...</div>}>
+        {shouldRenderNavbar && <Navbar />}
+        {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
+        {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
+        {shouldRenderLogo && <Logo />}
+        <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
+          {isPublic ? (
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/select-user-type" element={<UserTypeSelection />} />
+              <Route path="/select-profession" element={<SelectProfession />} />
+              <Route path="/complete-profile" element={<ProfileWizard />} />
+              <Route path="/subscription-plans" element={<SubscriptionPlan />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/organization-signup" element={<OrganizationSignUp />} />
+              <Route path="/organization-login" element={<OrganizationLogin />} />
+              <Route path="/callback" element={<LinkedInCallback />} />
+              <Route path="/payment-details" element={<CardDetails />} />
+            </Routes>
+          ) : (
+            <PermissionsProvider>
+              <CustomProvider>
+                <Routes>
+                  <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
-          {/* tabs */}
+                  {/* tabs */}
+                  <Route path="/candidates" element={<CandidateTab />} >
+                    <Route index element={null} />
+                    <Route path="new" element={<AddCandidateForm mode="Create" />} />
+                    <Route path="view-details/:id" element={<CandidateDetails />} />
+                    <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
+                  </Route >
+                  <Route path="/candidates/:id" element={<CandidateTabDetails />} >
+                    <Route index element={null} />
+                    <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
+                  </Route>
+                  <Route path="/candidates/full-screen/:id" element={<CandidateFullscreen />} />
 
-          <Route path="/candidates" element={<CandidateTab />} >
-            <Route index element={null} />
-            <Route path="new" element={<AddCandidateForm mode="Create" />} />
-            <Route path="view-details/:id" element={<CandidateDetails />} />
-            <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
-          </Route >
+                  {/* position UI */}
+                  <Route path="/positions" element={<Position />} />
+                  <Route path="/positions/new-position" element={<PositionForm />} />
+                  <Route path="/positions/edit-position/:id" element={<PositionForm />} />
+                  <Route path="/positions/view-details/:id" element={<PositionSlideDetails />} />
+                  <Route path="/positions/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+                  <Route path="/positions/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
 
-          <Route path="/candidates/:id" element={<CandidateTabDetails />} >
-            <Route index element={null} />
-            <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
-          </Route>
+                  <Route path="/mockinterview" element={<MockInterview />} />
+                  <Route path="/mockinterview-create" element={<MockSchedulelater />} />
+                  <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
+                  <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
 
-          <Route path="/candidates/full-screen/:id" element={<CandidateFullscreen />} />
+                  <Route path="/interviewList" element={<InterviewList />} />
+                  <Route path="/interviews/new" element={<InterviewForm />} />
+                  <Route path="/interviews/:id" element={<InterviewDetail />} />
+                  <Route path="/interviews/:id/edit" element={<InterviewForm />} />
+                  <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
 
-          {/* // position UI  */}
+                  <Route path="/questionBank" element={<QuestionBank />} />
 
-          <Route path="/positions" element={<Position />} />
-          <Route path="/positions/new-position" element={<PositionForm />} />
-          <Route path="/positions/edit-position/:id" element={<PositionForm />} />
+                  {/* assessment */}
+                  <Route path="/assessments" element={<Assessment />} />
+                  <Route path="/assessment/new" element={<AssessmentForm />} />
+                  <Route path="/assessment-details" element={<AssessmentDetails />} />
+                  <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
+                  <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
 
-          <Route path="/positions/view-details/:id" element={<PositionSlideDetails />} />
+                  {/* account settings */}
+                  <Route path="/account-settings" element={<SettingsPage />}>
+                    <Route index element={
+                      organization ?
+                        <>
+                          <Navigate to="profile" replace />
+                          <Navigate to="my-profile/basic" replace />
+                        </>
+                        :
+                        <Navigate to="my-profile/basic" replace />
+                    } />
 
-          <Route path="/positions/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+                    {/* Company Profile (Org Only) */}
+                    {organization && (
+                      <Route path="profile" element={<CompanyProfile />} >
+                        <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
+                      </Route>
+                    )}
 
-          <Route path="/positions/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+                    {/* My Profile & Sub-tabs */}
+                    <Route path="my-profile" element={<MyProfile />}>
+                      <Route index element={<Navigate to="basic" replace />} />
+                      <Route path="basic" element={<BasicDetails />} />
+                      <Route path="advanced" element={<AdvancedDetails />} />
+                      <Route path="interview" element={<InterviewUserDetails />} />
+                      <Route path="availability" element={<AvailabilityUser />} />
+                      <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
+                      <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
+                      <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
+                      <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+                    </Route>
 
-          <Route path="/mockinterview" element={<MockInterview />} />
-          <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-          <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-          <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+                    {/* Wallet Section */}
+                    <Route path="wallet" element={<Wallet />} >
+                      <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
+                      <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+                    </Route>
 
-          <Route path="/interviewList" element={<InterviewList />} />
-          <Route path="/interviews/new" element={<InterviewForm />} />
-          <Route path="/interviews/:id" element={<InterviewDetail />} />
-          <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-          <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
+                    {/* Interviewer Groups (Org Only) */}
+                    {organization && (
+                      <Route path="interviewer-groups" element={<InterviewerGroups />} >
+                        <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
+                        <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
+                        <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
+                      </Route>
+                    )}
 
-          <Route path="/questionBank" element={<QuestionBank />} />
+                    {/* Users Section (Org Only) */}
+                    {organization && (
+                      <Route path="users" element={<UsersLayout />}>
+                        <Route index element={null} />
+                        <Route path="new" element={<UserForm mode="create" />} />
+                        <Route path="edit/:id" element={<UserForm mode="edit" />} />
+                        <Route path="details/:id" element={<UserProfileDetails />} />
+                      </Route>
+                    )}
 
-          {/* assessment */}
-          <Route path="/assessments" element={<Assessment />} />
-          <Route path="/assessment/new" element={<AssessmentForm />} />
-          <Route path="/assessment-details" element={<AssessmentDetails />} />
-          <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
-          <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
+                    {/* Email templates */}
+                    <Route path="email-settings" element={<EmailTemplate />} />
 
-          {/* ---------------------------account settings------------------- */}
+                    {/* other tabs */}
+                    <Route path="billing" element={<BillingDetails />} />
+                    <Route path="subscription" element={<Subscription />} />
+                    <Route path="security" element={<Security />} />
+                    <Route path="notifications" element={<NotificationsDetails />} />
+                    <Route path="usage" element={<Usage />} />
 
-          <Route path="/account-settings" element={<SettingsPage />}>
+                    {/* Org-Only Tabs */}
+                    {organization && (
+                      <>
+                        <Route path="roles" element={<Role />} >
+                          <Route index element={null} />
+                          <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                        </Route>
+                        <Route path="sharing" element={<Sharing />} />
+                        <Route path="sub-domain" element={<Domain_management />} />
+                        <Route path="webhooks" element={<Webhooks />} />
+                        <Route path="hrms-ats" element={<HrmsAtsApi />} />
+                      </>
+                    )}
+                  </Route>
 
-            {/* <Route index element={<Navigate to="profile" replace />} /> */}
+                  {/* Interview Templates */}
+                  <Route path="/interview-templates" element={<InterviewTemplates />} />
+                  <Route path="/interview-templates/:id" element={<TemplateDetail />} />
+                  <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
 
-            {/* Default route based on organization status */}
-
-            <Route index element={
-              organization ?
-                <>
-                  <Navigate to="profile" replace />
-                  <Navigate to="my-profile/basic" replace />
-                </>
-                :
-                <Navigate to="my-profile/basic" replace />
-            } />
-
-            {/* Company Profile (Org Only) */}
-
-            {
-              organization &&
-
-              <Route path="profile" element={<CompanyProfile />} >
-
-                <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
-              </Route>
-            }
-
-            {/* My Profile & Sub-tabs */}
-            <Route path="my-profile" element={<MyProfile />}>
-              {/* Default to /basic */}
-              {/* <Route index element={<Navigate to="basic" replace />} /> */}
-              <Route index element={<Navigate to="basic" replace />} />
-              {/* Sub-tabs under my-profile */}
-              <Route path="basic" element={<BasicDetails />} />
-              <Route path="advanced" element={<AdvancedDetails />} />
-              <Route path="interview" element={<InterviewUserDetails />} />
-              <Route path="availability" element={<AvailabilityUser />} />
-
-              {/* Edit forms under each sub-tab */}
-              <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-              <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-              <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
-              <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
-            </Route>
-
-            {/* Wallet Section */}
-            <Route path="wallet" element={<Wallet />} >
-
-              <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-
-              <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
-
-            </Route>
-
-            {/* Interviewer Groups (Org Only) */}
-            {
-              organization &&
-              <Route path="interviewer-groups" element={<InterviewerGroups />} >
-
-                <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
-
-                <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
-
-                <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
-
-              </Route>
-            }
-
-            {/* Users Section (Org Only) */}
-            {
-              organization &&
-              <Route path="users" element={<UsersLayout />}>
-                <Route index element={null} />
-                <Route path="new" element={<UserForm mode="create" />} />
-                <Route path="edit/:id" element={<UserForm mode="edit" />} />
-                <Route path="details/:id" element={<UserProfileDetails />} />
-              </Route>
-            }
-
-            {/* Email templates  */}
-            <Route path="email-settings" element={<EmailTemplate />} />
-
-
-
-            {/* other tabs */}
-            <Route path="billing" element={<BillingDetails />} />
-            <Route path="subscription" element={<Subscription />} />
-            {/* <Route path="wallet" element={<Wallet />} /> */}
-            <Route path="security" element={<Security />} />
-            <Route path="notifications" element={<NotificationsDetails />} />
-            <Route path="usage" element={<Usage />} />
-
-
-            {/* Org-Only Tabs */}
-            {
-              organization &&
-
-              <>
-                <Route path="roles" element={<Role />} >
-                  <Route index element={null} />
-                  <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-                </Route>
-
-                <Route path="sharing" element={<Sharing />} />
-                <Route path="sub-domain" element={<DomainManagement />} />
-                <Route path="webhooks" element={<Webhooks />} />
-                <Route path="hrms-ats" element={<HrmsAtsApi />} />
-              </>
-
-            }
-
-          </Route>
-
-          {/* ---------------------------account settings------------------- */}
-
-          {/* {/Intervie Templates/} */}
-          <Route path="/interview-templates" element={<InterviewTemplates />} />
-          <Route path="/interview-templates/:id" element={<TemplateDetail />} />
-          <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
-
-          {/* 404 */}
-          <Route path="/404" element={<NotFound />} />
-
-        </Routes>
-      </div>
+                  {/* 404 */}
+                  <Route path="/404" element={<NotFound />} />
+                </Routes>
+              </CustomProvider>
+            </PermissionsProvider>
+          )}
+        </div>
+      </Suspense>
     </React.Fragment>
   );
 };

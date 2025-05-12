@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 
 const CardDetails = () => {
+    console.log('card details')
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);

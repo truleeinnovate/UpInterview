@@ -13,6 +13,7 @@ import AvailabilityDetails from './AvailabilityDetails.jsx'
 import toast from "react-hot-toast";
 import { config } from '../../../config.js';
 import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { handleDomainRedirection } from '../../../middleware/domainRedirect.js';
 
 const FooterButtons = ({
   onNext,
@@ -45,6 +46,7 @@ const FooterButtons = ({
 };
 
 const MultiStepForm = () => {
+      console.log('MultiStepForm')
   const navigate = useNavigate();
   const location = useLocation();
   const { Freelancer, profession, linkedInData } = location.state || {}; //from profile3
@@ -362,7 +364,8 @@ const MultiStepForm = () => {
       }
   
       setLoading(false);
-      navigate('/subscription-plans');
+      handleDomainRedirection(null, navigate, token, 'subscription-plans');
+      // navigate('/subscription-plans');
     } catch (error) {
       console.error('Submission failed:', error);
       setLoading(false);

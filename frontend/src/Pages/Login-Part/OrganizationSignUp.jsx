@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { ReactComponent as MdArrowDropDown } from '../../../src/icons/MdArrowDropDown.svg';
@@ -16,8 +15,10 @@ import {
   validateConfirmPassword
 } from '../../utils/OrganizationSignUpValidation';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 export const Organization = () => {
+  console.log('org signup')
   const [selectedFirstName, setSelectedFirstName] = useState("");
   const [selectedLastName, setSelectedLastName] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
@@ -184,21 +185,6 @@ export const Organization = () => {
     setErrors((prev) => ({ ...prev, phone: validatePhone(selectedPhone, code) }));
   };
 
-  const organizationData = {
-    firstName: selectedFirstName,
-    lastName: selectedLastName,
-    email: selectedEmail,
-    countryCode: selectedCountryCode,
-    phone: selectedPhone,
-    profileId: selectedProfileId,
-    jobTitle: selectedJobTitle,
-    company: selectedCompany,
-    employees: selectedEmployees,
-    country: selectedCountry,
-    password: selectedPassword,
-    contactType: 'Organization'
-  };
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -241,14 +227,16 @@ export const Organization = () => {
 
     try {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
-      const { token } = response.data;
+      const { token, organization } = response.data;
+
+      console.log('response ', response)
 
       // Store JWT in cookies
       setAuthCookies(token);
-      
+
       // Show toast with message from backend
       toast.success(response.data.message || 'Organization created successfully');
-      
+
       // Send email silently
       axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
         email: organizationData.email,
@@ -257,8 +245,9 @@ export const Organization = () => {
         lastName: organizationData.lastName,
       }).catch((err) => console.error('Email error:', err));
 
+      handleDomainRedirection(organization, navigate, token, 'subscription-plans');
+
       toast.success('Organization created successfully!');
-      navigate('/subscription-plans');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong');
     } finally {

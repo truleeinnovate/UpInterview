@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 
 const LinkedInCallback = () => {
+  console.log('linked in call back')
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);

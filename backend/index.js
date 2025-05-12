@@ -93,9 +93,6 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-const authRoutes = require('./routes/authRoutes.js');
-app.use('/api/auth', authRoutes);
-
 // app.get('/api/validate-domain', (req, res) => {
 //   const token = req.cookies.token;
 //   const origin = req.headers.origin || req.headers.host;

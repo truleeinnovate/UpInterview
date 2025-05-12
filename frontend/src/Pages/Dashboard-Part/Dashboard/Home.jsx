@@ -44,10 +44,10 @@ import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManag
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Home = () => {
+
+  console.log("Home");
+
   useEffect(() => {
-    console.log("Home");
-  }, []);
-    useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
 
@@ -57,8 +57,8 @@ const Home = () => {
     }
   }, []);
   const freelancer = Cookies.get("freelancer");
-    // const { sharingPermissionscontext, objectPermissionscontext } = usePermissions();
-  
+  // const { sharingPermissionscontext, objectPermissionscontext } = usePermissions();
+
 
   const apps = [
     {
@@ -401,7 +401,7 @@ const Home = () => {
 
   const handleCandidateClick = (candidate) => {
     // if (objectPermissions.candidate?.View) {
-      setSelectedCandidate(candidate);
+    setSelectedCandidate(candidate);
     // } else {
     //   console.warn("Candidate data is not available or view permission is not available.");
     // }
@@ -416,7 +416,7 @@ const Home = () => {
 
   const handlePositionClick = (position) => {
     // if (objectPermissions.position?.View) {
-      setSelectedPosition(position);
+    setSelectedPosition(position);
     // } else {
     //   console.warn("Position data is not available or view permission is not available.");
     // }
@@ -431,7 +431,7 @@ const Home = () => {
 
   const handleTeamClick = (team) => {
     // if (objectPermissions.team?.View) {
-      setSelectedTeam(team);
+    setSelectedTeam(team);
     // } else {
     //   console.warn("Team data is not available or view permission is not available.");
     // }
@@ -447,7 +447,7 @@ const Home = () => {
 
   const handleInterviewClick = async (interview) => {
     // if (objectPermissions.interviews?.View) {
-      setSelectedInterview(interview);
+    setSelectedInterview(interview);
     // }
   };
 
@@ -730,7 +730,7 @@ const Home = () => {
                   <div className="flex justify-between items-center mb-2 mx-4">
                     <p className="font-bold text-lg">New Interview Requests</p>
                     <div className="flex items-center gap-2">
-                        <p><LuFilter /></p>
+                      <p><LuFilter /></p>
                       <span className="cursor-pointer text-2xl" onClick={handleViewMoreRequestClick}><FiMoreHorizontal /></span>
                     </div>
                   </div>

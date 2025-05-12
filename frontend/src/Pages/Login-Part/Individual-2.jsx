@@ -5,6 +5,7 @@ import Slideshow from './Slideshow';
 import { config } from '../../config.js';
 
 const Profile1 = () => {
+  console.log('profile1')
   const [selectedOption, setSelectedOption] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();

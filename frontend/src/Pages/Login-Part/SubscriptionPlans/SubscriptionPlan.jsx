@@ -7,15 +7,12 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
 import Cookies from "js-cookie";
 const SubscriptionPlan = () => {
+  console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-
-  useEffect(() => {
-    console.log('tokenPayload', tokenPayload);
-  }, [tokenPayload]);
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;

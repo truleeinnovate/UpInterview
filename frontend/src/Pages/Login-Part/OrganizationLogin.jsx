@@ -9,6 +9,7 @@ import { useCustomContext } from '../../Context/Contextfetch.js';
 import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 const OrganizationLogin = () => {
+console.log('org login')
   const { usersData } = useCustomContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +52,7 @@ const OrganizationLogin = () => {
     }
   };
 
-const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     const emailError = validateEmail(email);
@@ -61,38 +62,38 @@ const handleLogin = async (e) => {
     if (emailError || passwordError) return;
 
     try {
-        console.log("🔐 Attempting org login...");
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
-            email: email.trim().toLowerCase(),
-            password,
-        });
+      console.log("🔐 Attempting org login...");
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-        console.log('Login response data:', response.data);
+      console.log('Login response data:', response.data);
 
-        if (response.data.success) {
-            const { token, contactDataFromOrg } = response.data;
+      if (response.data.success) {
+        const { token } = response.data;
 
-            // Store JWT in cookies
-            console.log("Setting auth cookie...");
-            setAuthCookies(token);
-            console.log("Auth cookie set:", Cookies.get('authToken'));
+        // Store JWT in cookies
+        console.log("Setting auth cookie...");
+        setAuthCookies(token);
+        console.log("Auth cookie set:", Cookies.get('authToken'));
 
-            const organization = usersData.find(user => user.email === email)?.tenantId;
-            console.log('Organization data for logged-in user:', organization);
+        const organization = usersData.find(user => user.email === email)?.tenantId;
+        console.log('Organization data for logged-in user:', organization);
 
-            // Pass token and contactDataFromOrg to handleDomainRedirection
-            handleDomainRedirection(organization, contactDataFromOrg, navigate, token);
-        } else {
-            setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
-        }
+        // Pass token and contactDataFromOrg to handleDomainRedirection
+        handleDomainRedirection(organization, navigate, token, 'home');
+      } else {
+        setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
+      }
     } catch (error) {
-        console.error('Login error:', error);
-        setErrors((prev) => ({
-            ...prev,
-            email: error.response?.data.message || 'Login failed. Please try again.',
-        }));
+      console.error('Login error:', error);
+      setErrors((prev) => ({
+        ...prev,
+        email: error.response?.data.message || 'Login failed. Please try again.',
+      }));
     }
-};
+  };
 
   return (
     <>

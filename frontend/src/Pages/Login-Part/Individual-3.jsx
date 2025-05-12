@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import Slideshow from './Slideshow';
 
 const Profile3 = () => {
+    console.log('profile3')
     const [selectedTab, setSelectedTab] = useState('');
     const navigate = useNavigate();
     const [showPopup, setShowPopup] = useState(false);

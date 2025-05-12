@@ -23,6 +23,11 @@ const CustomProvider = ({ children }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
+  useEffect(() => {
+    console.log('tokenPayload', tokenPayload)
+  }, [tokenPayload])
+  
+
   const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({

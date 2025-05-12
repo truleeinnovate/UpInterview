@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom';
 
 const Login_1 = () => {
+	console.log('landing page')
 	const navigate = useNavigate()
 
 	const Login = () => {
