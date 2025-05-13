@@ -46,7 +46,7 @@ const MainContent = () => {
   const fetchCandidate = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${id}`);
-      console.log("response.data......... ", response.data);
+      console.log("response.data ", response.data);
 
       const { appliedPositions, ...candidateData } = response.data;
       setCandidate(candidateData);
@@ -78,7 +78,7 @@ const MainContent = () => {
   if (!candidate) return null;
 
   return (
-    <div className="flex lg:mr-6  xl:mr-6  2xl:mr-6 min-h-screen md:mt-20  sm:mt-20  lg:ms-14 2xl:ms-14 xl:ms-14  lg:mt-8 2xl:mt-20 xl:mt-14 lg:ml-14 2xl:ml-24 xl:ml-14">
+    <div className="flex lg:mr-6  xl:mr-6  2xl:mr-6 min-h-screen md:mt-20  sm:mt-20   lg:ms-6 2xl:ms-6 xl:ms-6  lg:mt-8 2xl:mt-20 xl:mt-14 lg:ml-14 2xl:ml-24 xl:ml-14">
 
       <Sidebar
         candidate={candidate}

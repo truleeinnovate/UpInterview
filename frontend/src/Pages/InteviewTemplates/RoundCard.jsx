@@ -28,12 +28,21 @@ const RoundCard = ({
   hideHeader = false,
 }) => {
 
+   const {
+    
+      sectionQuestions,
+      questionsLoading,
+      questionsError,
+      fetchQuestionsForAssessment,
+      setSectionQuestions,
+    } = useCustomContext();
+
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [questionDetails, setQuestionDetails] = useState({});
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const [sectionQuestions, setSectionQuestions] = useState({});
+  // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
@@ -49,82 +58,6 @@ const RoundCard = ({
 
 
 
-  const fetchQuestionsForAssessment = async (assessmentId) => {
-
-    if (!assessmentId) {
-      return null;
-    }
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-      const assessmentQuestions = response.data;
-
-      // console.log('Full assessment questions structure:', assessmentQuestions);
-
-      // Extract sections directly from the response
-      const sections = assessmentQuestions.sections || [];
-
-      // Check for empty sections or questions
-      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-        console.warn('No sections or questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
-
-      // Create section questions mapping with all section data
-      const newSectionQuestions = {};
-
-      sections.forEach((section) => {
-        if (!section._id) {
-          console.warn('Section missing _id:', section);
-          return;
-        }
-
-        // Store complete section data including sectionName, passScore, totalScore
-        newSectionQuestions[section._id] = {
-          sectionName: section?.sectionName,
-          passScore: Number(section.passScore || 0),
-          totalScore: Number(section.totalScore || 0),
-          questions: (section.questions || []).map(q => ({
-            _id: q._id,
-            questionId: q.questionId,
-            source: q.source || 'system',
-            score: Number(q.score || q.snapshot?.score || 0),
-            order: q.order || 0,
-            customizations: q.customizations || null,
-            snapshot: {
-              questionText: q.snapshot?.questionText || '',
-              questionType: q.snapshot?.questionType || '',
-              score: Number(q.snapshot?.score || q.score || 0),
-              options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-              correctAnswer: q.snapshot?.correctAnswer || '',
-              difficultyLevel: q.snapshot?.difficultyLevel || '',
-              hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-              skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-              tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-              technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-              questionNo: q.snapshot?.questionNo || ''
-            }
-          }))
-        };
-      });
-
-      // Verify that at least one section has questions
-      const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-      if (!hasQuestions) {
-        console.warn('No sections with questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
-
-      // Set the section questions state
-      setSectionQuestions(newSectionQuestions);
-      console.log('Updated sectionQuestions:', newSectionQuestions);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions({ error: 'Failed to load questions' });
-    }
-  };
-
   useEffect(() => {
     setSectionQuestions({});
     fetchQuestionsForAssessment(round?.assessmentId)
@@ -132,85 +65,128 @@ const RoundCard = ({
 
 
 
+  // const toggleSection = async (sectionId) => {
+  //   setExpandedSections(prev => ({
+  //     ...prev,
+  //     [sectionId]: !prev[sectionId]
+  //   }));
+
+  //   if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
+  //     await fetchQuestionsForAssessment(round?.assessmentId);
+  //     // await fetchAssessmentData(formData.assessmentTemplate[0].assessmentId)
+  //   }
+  // };
+
+
+  // Fetch question details when showing questions
+  
+  
   const toggleSection = async (sectionId) => {
+    // First close all questions in this section if we're collapsing
+    if (expandedSections[sectionId]) {
+      const newExpandedQuestions = {...expandedQuestions};
+      const section = sectionQuestions[sectionId];
+      if (section && section.questions) {
+        section.questions.forEach(question => {
+          newExpandedQuestions[question._id] = false;
+        });
+      }
+      setExpandedQuestions(newExpandedQuestions);
+    }
+  
+    // Then toggle the section
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
     }));
-
+  
+    // Fetch questions if expanding and not already loaded
     if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
       await fetchQuestionsForAssessment(round?.assessmentId);
-      // await fetchAssessmentData(formData.assessmentTemplate[0].assessmentId)
     }
   };
 
-
-  // Fetch question details when showing questions
-  const fetchQuestionDetails = useCallback(async () => {
-    if (!showQuestions || !round.assessmentQuestions?.length) return;
-
-    setLoadingQuestions(true);
-    try {
-      const questionIds = [...new Set(
-        round.assessmentQuestions
-          .map(q => q.questionId)
-          .filter(id => id?.length > 0) // More robust empty check
-      )];
-
-      if (!questionIds.length) {
-        console.error('No valid question IDs found');
-        return;
-      }
-
-      const questions = await Promise.all(
-        questionIds.map(async (questionId) => {
-          try {
-            const response = await axios.get(
-              `${process.env.REACT_APP_API_URL}/assessment-questions/${questionId}`
-            );
-            return response.data?.data;
-          } catch (error) {
-            console.error(`Error fetching question ${questionId}:`, error.message);
-            return null;
-          }
-        })
-      );
-
-      // Create map with full question data
-      const questionsMap = questions.reduce((acc, question) => {
-        if (question?._id && question?.snapshot) {
-          acc[question._id] = {
-            ...question.snapshot, // Spread snapshot properties
-            _id: question._id     // Preserve question ID
-          };
-        }
-        return acc;
-      }, {});
-
-      if (!Object.keys(questionsMap).length) {
-        console.error('No valid questions found');
-        return;
-      }
-
-      setQuestionDetails(questionsMap);
-    } catch (error) {
-      console.error('Fetch error:', error.message);
-    } finally {
-      setLoadingQuestions(false);
+  const toggleShowQuestions = () => {
+    if (showQuestions) {
+      // Collapse all when hiding
+      setExpandedSections({});
+      setExpandedQuestions({});
     }
-  }, [showQuestions, round.assessmentQuestions]);
+    setShowQuestions(!showQuestions);
+  };
+
+  
+  
+  // const fetchQuestionDetails = useCallback(async () => {
+  //   if (!showQuestions || !round.assessmentQuestions?.length) return;
+
+  //   setLoadingQuestions(true);
+  //   try {
+  //     const questionIds = [...new Set(
+  //       round.assessmentQuestions
+  //         .map(q => q.questionId)
+  //         .filter(id => id?.length > 0) // More robust empty check
+  //     )];
+
+  //     if (!questionIds.length) {
+  //       console.error('No valid question IDs found');
+  //       return;
+  //     }
+
+  //     const questions = await Promise.all(
+  //       questionIds.map(async (questionId) => {
+  //         try {
+  //           const response = await axios.get(
+  //             `${process.env.REACT_APP_API_URL}/assessment-questions/${questionId}`
+  //           );
+  //           return response.data?.data;
+  //         } catch (error) {
+  //           console.error(`Error fetching question ${questionId}:`, error.message);
+  //           return null;
+  //         }
+  //       })
+  //     );
+
+  //     // Create map with full question data
+  //     const questionsMap = questions.reduce((acc, question) => {
+  //       if (question?._id && question?.snapshot) {
+  //         acc[question._id] = {
+  //           ...question.snapshot, // Spread snapshot properties
+  //           _id: question._id     // Preserve question ID
+  //         };
+  //       }
+  //       return acc;
+  //     }, {});
+
+  //     if (!Object.keys(questionsMap).length) {
+  //       console.error('No valid questions found');
+  //       return;
+  //     }
+
+  //     setQuestionDetails(questionsMap);
+  //   } catch (error) {
+  //     console.error('Fetch error:', error.message);
+  //   } finally {
+  //     setLoadingQuestions(false);
+  //   }
+  // }, [showQuestions, round.assessmentQuestions]);
+
+
 
   // Reset question details when round changes
+  
+  
+  
   useEffect(() => {
     setQuestionDetails({});
   }, [round.assessmentTemplate]);
 
   // Fetch questions when showing them
-  useEffect(() => {
-    if (showQuestions && round.assessmentQuestions?.length > 0) {
-      fetchQuestionDetails();
-    }
-  }, [fetchQuestionDetails, showQuestions, round.assessmentQuestions]);
+  // useEffect(() => {
+  //   if (showQuestions && round.assessmentQuestions?.length > 0) {
+  //     fetchQuestionDetails();
+  //   }
+  // }, [fetchQuestionDetails, showQuestions, round.assessmentQuestions]);
 
   return (
     <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
@@ -284,7 +260,7 @@ const RoundCard = ({
                 </>
               ) : (
                 <>
-                  {round?.roundName !== 'Assessment' &&
+                  {round?.roundTitle !== 'Assessment' &&
                     <div className="flex items-center text-sm text-gray-500">
                       <User className="h-4 w-4 mr-1" />
                       <span>Interviewer Type: {round.interviewerType}</span>
@@ -304,7 +280,7 @@ const RoundCard = ({
 
           {/* Right Column */}
           <div>
-            {round.roundName === 'Technical' && (
+            {round.roundTitle === 'Technical' && (
               <>
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
@@ -344,7 +320,7 @@ const RoundCard = ({
           </div>
         </div>
 
-        {round.roundName === 'Technical' && (
+        {round.roundTitle === 'Technical' && (
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium text-gray-700">Questions</h4>
@@ -368,9 +344,8 @@ const RoundCard = ({
                         <li
                           key={qIndex}
                           className="text-sm text-gray-600"
-
                         >
-                          <span className="text-gray-900 font-medium">
+                          <span className="">
                             {/* {qIndex + 1}. */}
                             • {questionText || "No question text available"}
                           </span>
@@ -387,13 +362,13 @@ const RoundCard = ({
           </div>
         )}
 
-        {round.roundName === 'Assessment' && (
+        {round.roundTitle === 'Assessment' && (
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium text-gray-700">
                 Assessment Questions</h4>
               <button
-                onClick={() => setShowQuestions(!showQuestions)}
+               onClick={toggleShowQuestions}
                 className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
               >
                 {showQuestions ? 'Hide' : 'Show'}
@@ -577,7 +552,7 @@ const RoundCard = ({
 
 // RoundCard.propTypes = {
 //   round: PropTypes.shape({
-//     roundName: PropTypes.string,
+//     roundTitle: PropTypes.string,
 //     interviewType: PropTypes.string,
 //     interviewMode: PropTypes.string,
 //     interviewDuration: PropTypes.any,

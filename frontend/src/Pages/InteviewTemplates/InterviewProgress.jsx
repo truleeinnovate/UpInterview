@@ -67,7 +67,7 @@ const InterviewProgress = ({
                     {index + 1}
                   </span>
                   <div className="mr-2">{getStatusIcon(round)}</div>
-                  <span className="text-sm font-medium">{round.roundName}</span>
+                  <span className="text-sm font-medium">{round.roundTitle}</span>
                 </div>
               </button>
               

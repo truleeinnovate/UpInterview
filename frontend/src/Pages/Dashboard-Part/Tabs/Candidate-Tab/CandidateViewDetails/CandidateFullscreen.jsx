@@ -49,7 +49,7 @@ const CandidateFullscreen = () => {
 
         
           <button
-            onClick={() => navigate('/candidates')}
+            onClick={() => navigate('/candidate')}
             className=" hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />

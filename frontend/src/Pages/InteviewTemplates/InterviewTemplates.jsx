@@ -1,17 +1,23 @@
-import { ArrowLeft, ArrowRight, Search, Filter } from 'lucide-react';
+import { FiFilter } from "react-icons/fi";
+import { IoIosArrowBack, IoIosArrowForward, IoMdSearch } from 'react-icons/io';
 import { Plus, Layout, KanbanSquare, Table2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import KanbanView from "./KanbanView";
-import { X } from 'lucide-react';
+import { FaTimes } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import Loading from '../../Components/Loading';
 import Cookies from "js-cookie";
+import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
+import { useCustomContext } from "../../Context/Contextfetch";
 
 const InterviewTemplates = () => {
+
+  const { templates } = useCustomContext();
+  console.log('templates templates', templates)
   const navigate = useNavigate();
   const [isSlideoverOpen, setIsSlideoverOpen] = useState(false);
-  const [templates, setTemplates] = useState([]);
+  // const [templates, setTemplates] = useState([]);
   const [view, setView] = useState('kanban');
   const [newTemplate, setNewTemplate] = useState({
     templateTitle: '',
@@ -22,35 +28,40 @@ const InterviewTemplates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 6;
 
-  const organizationId = Cookies.get("organizationId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const organizationId = tokenPayload?.tenantId;
 
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setIsLoading(true);
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates`,
-          {
-            params: {
-              tenantId: organizationId
-            }
-          }
-        );
-        if (response.data && response.data.data) {
-          setTemplates(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching templates:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (organizationId) { 
-    fetchTemplates();
-    }
-  }, [refreshTrigger]);
+  // useEffect(() => {
+  //   const fetchTemplates = async () => {
+  //     console.log('1')
+  //     setIsLoading(true);
+  //     try {
+  //       console.log('2')
+  //       const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates`,
+  //         {
+  //           params: {
+  //             tenantId: organizationId
+  //           }
+  //         }
+  //       );
+  //       console.log('data is ', response)
+  //       if (response.data && response.data.data) {
+  //         setTemplates(response.data.data);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching templates:', error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   if (organizationId) {
+  //     fetchTemplates();
+  //   }
+  // }, [refreshTrigger]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -235,8 +246,8 @@ const InterviewTemplates = () => {
               <button
                 onClick={() => setView('kanban')}
                 className={`p-2 rounded-md transition-all duration-200 ${view === 'kanban'
-                    ? 'bg-white text-custom-blue shadow-sm'
-                    : 'text-gray-600 hover:bg-white/50'
+                  ? 'bg-white text-custom-blue shadow-sm'
+                  : 'text-gray-600 hover:bg-white/50'
                   }`}
               >
                 <KanbanSquare className="h-5 w-5" />
@@ -244,8 +255,8 @@ const InterviewTemplates = () => {
               <button
                 onClick={() => setView('table')}
                 className={`p-2 rounded-md transition-all duration-200 ${view === 'table'
-                    ? 'bg-white text-custom-blue shadow-sm'
-                    : 'text-gray-600 hover:bg-white/50'
+                  ? 'bg-white text-custom-blue shadow-sm'
+                  : 'text-gray-600 hover:bg-white/50'
                   }`}
               >
                 <Table2 className="h-5 w-5" />
@@ -257,7 +268,7 @@ const InterviewTemplates = () => {
                 <div className="searchintabs relative w-96">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-2">
                     <button type="submit" className="p-1">
-                      <Search className="text-custom-blue text-lg" />
+                      <IoMdSearch className="text-custom-blue text-lg" />
                     </button>
                   </div>
                   <input
@@ -280,17 +291,17 @@ const InterviewTemplates = () => {
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
-                    <ArrowLeft className="text-custom-blue text-xl" />
+                    <IoIosArrowBack className="text-custom-blue text-xl" />
                   </button>
                   <button
                     className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
-                    <ArrowRight className="text-custom-blue text-xl" />
+                    <IoIosArrowForward className="text-custom-blue text-xl" />
                   </button>
                   <button className="p-2 border border-gray-300 rounded relative">
-                    <Filter className="text-custom-blue text-xl" />
+                    <FiFilter className="text-custom-blue text-xl" />
                   </button>
                 </div>
               </div>
@@ -300,79 +311,79 @@ const InterviewTemplates = () => {
       </header>
 
       <main className="px-9 pb-9">
-        {isLoading ? (
-         <Loading />
+        {/* {isLoading ? (
+          <Loading />
         ) : (
-          <>
-            {view === 'kanban' ? (
-              <KanbanView
-                templates={paginatedTemplates}
-              />
-            ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-x-auto">
-                <table className="min-w-full table-auto divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                        Title
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
-                        Rounds
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-                        Last Modified
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedTemplates.map(template => (
-                      <tr
-                        key={template._id}
-                        className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {template.templateName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {template.rounds?.length || 0} rounds
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${template.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : template.status === 'draft'
-                                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                                : 'bg-slate-50 text-slate-700 border border-slate-200/60'
-                            }`}>
-                            {template.status ? template.status.charAt(0).toUpperCase() + template.status.slice(1) : 'Active'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatRelativeDate(template.updatedAt)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="relative">
-                            <button
-                              className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                              onClick={() => navigate(`/interview-templates/${template._id}`)}
-                            >
-                              ⋮
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
+          <> */}
+        {view === 'kanban' ? (
+          <KanbanView
+            templates={paginatedTemplates}
+          />
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-x-auto">
+            <table className="min-w-full table-auto divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                    Title
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    Rounds
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                    Last Modified
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedTemplates.map(template => (
+                  <tr
+                    key={template._id}
+                    className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {template.templateName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {template.rounds?.length || 0} rounds
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${template.status === 'active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                        : template.status === 'draft'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                          : 'bg-slate-50 text-slate-700 border border-slate-200/60'
+                        }`}>
+                        {template.status ? template.status.charAt(0).toUpperCase() + template.status.slice(1) : 'Active'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatRelativeDate(template.updatedAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="relative">
+                        <button
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                          onClick={() => navigate(`/interview-templates/${template._id}`)}
+                        >
+                          ⋮
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+        {/* </>
+        )} */}
       </main>
 
       {isSlideoverOpen && (
@@ -381,7 +392,7 @@ const InterviewTemplates = () => {
             <div className="sticky rounded-tl-xl top-0 z-10 w-full flex justify-between items-center px-5 py-6 border-b-2 bg-gradient-to-r from-custom-blue to-custom-blue/80">
               <h2 className="text-2xl text-teal-50 font-semibold">New Template</h2>
               <button onClick={() => setIsSlideoverOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <X className='text-teal-50' />
+                <FaTimes className='text-teal-50' />
               </button>
             </div>
             <form id="new-template-form" onSubmit={handleSave} className="flex-1 flex flex-col overflow-y-auto">
@@ -415,6 +426,7 @@ const InterviewTemplates = () => {
                       name="label"
                       placeholder="e.g., Senior_Front_End_Developer"
                       value={newTemplate.label}
+
                       readOnly
                       className="w-full mt-1 block border rounded-md sm:text-sm shadow-sm px-3 py-2 border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                     />

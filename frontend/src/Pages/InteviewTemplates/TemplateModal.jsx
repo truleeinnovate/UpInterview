@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Trash, Search, User } from 'lucide-react';
+import { FaPlus, FaTrash, FaSearch, FaRegUser } from 'react-icons/fa';
 
 
 const AssessmentType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndAddRound, onUpdate, onValidityChange, isEditMode, isViewMode, rounds }) => {
@@ -708,7 +708,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
           {formData.selectedInterviewers.map((interviewer, index) => (
             <div key={index} className="border rounded px-2 py-2 relative">
               <div className="flex items-center gap-2">
-                <User className="text-gray-600 text-xl" />
+                <FaRegUser className="text-gray-600 text-xl" />
                 <span className="text-sm">{interviewer}</span>
               </div>
             </div>
@@ -937,7 +937,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
                   readOnly={formData.interviewerType === 'Outsourced Interviewer'}
                 />
                 <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                  <Search className="text-gray-600 text-lg" />
+                  <FaSearch className="text-gray-600 text-lg" />
                 </div>
                 {showDropdown && formData.selectedInterviewersType && formData.interviewerType !== 'Outsourced Interviewer' && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
@@ -985,7 +985,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
           {formData.selectedInterviewers.map((interviewer, index) => (
             <div key={index} className="border rounded px-2 py-2 relative">
               <div className="flex items-center gap-2">
-                <User className="text-gray-600 text-xl" />
+                <FaRegUser className="text-gray-600 text-xl" />
                 <span className="text-sm">{interviewer}</span>
               </div>
               <button
@@ -1542,7 +1542,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                         onClick={() => handleRoundDelete(index)}
                         className="absolute -right-2 -top-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
                       >
-                        <Trash className="w-2.5 h-2.5" />
+                        <FaTrash className="w-2.5 h-2.5" />
                       </button>
                     )}
                   </div>
@@ -1556,7 +1556,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                   onClick={() => handleAddRoundAtIndex(rounds.length)}
                   className="h-6 w-6 rounded-full border-2 border-teal-200 bg-teal-50 flex items-center justify-center cursor-pointer hover:border-teal-600"
                 >
-                  <Plus className="h-3 w-3 text-teal-600" />
+                  <FaPlus className="h-3 w-3 text-teal-600" />
                 </div>
                 <div className="h-[1px] w-10 bg-teal-200"></div>
               </div>
@@ -1601,7 +1601,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                           : 'border-teal-200 bg-teal-50 hover:border-teal-600'
                       }`}
                     >
-                      <Plus className={`h-3 w-3 ${
+                      <FaPlus className={`h-3 w-3 ${
                         index < currentRoundNumber ? 'text-white' : 'text-teal-600'
                       }`} />
                     </div>
@@ -1633,7 +1633,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                         onClick={() => handleRoundDelete(index)}
                         className="absolute -right-2 -top-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
                       >
-                        <Trash className="w-2.5 h-2.5" />
+                        <FaTrash className="w-2.5 h-2.5" />
                       </button>
                     )}
                   </div>
@@ -1647,7 +1647,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                   onClick={() => handleAddRoundAtIndex(rounds.length)}
                   className="h-6 w-6 rounded-full border-2 border-teal-200 bg-teal-50 flex items-center justify-center cursor-pointer hover:border-teal-600"
                 >
-                  <Plus className="h-3 w-3 text-teal-600" />
+                  <FaPlus className="h-3 w-3 text-teal-600" />
                 </div>
                 <div className="h-[1px] w-10 bg-teal-200"></div>
               </div>
@@ -1663,7 +1663,7 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
                   <div className="flex items-center">
                     <div className="h-[1px] w-10 bg-teal-200"></div>
                     <div className="h-6 w-6 rounded-full border-2 border-teal-200 bg-teal-50 flex items-center justify-center">
-                      <Plus className="h-3 w-3 text-teal-600" />
+                      <FaPlus className="h-3 w-3 text-teal-600" />
                     </div>
                     <div className="h-[1px] w-12 bg-teal-200"></div>
                   </div>

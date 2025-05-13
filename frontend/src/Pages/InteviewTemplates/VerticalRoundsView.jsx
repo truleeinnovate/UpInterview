@@ -34,7 +34,7 @@ const VerticalRoundsView = ({
                 <span className="text-sm font-medium">{index + 1}</span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{round.roundName}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{round.roundTitle}</h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
                   <span className="mr-2">{round.interviewType}</span>
                   <span>•</span>

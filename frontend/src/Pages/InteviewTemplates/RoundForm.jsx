@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -13,16 +13,22 @@ import SuggesstedQuestions from '../Dashboard-Part/Tabs/QuestionBank-Tab/Suggess
 import MyQuestionListMain from "../Dashboard-Part/Tabs/QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
-import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
+
 
 function RoundForm() {
   const {
     assessmentData,
     loading,
+    sectionQuestions,
+    questionsLoading,
+    questionsError,
+    fetchQuestionsForAssessment,
+    setSectionQuestions,
   } = useCustomContext();
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
   const { id } = useParams();
+  const dropdownRef = useRef(null);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -65,16 +71,28 @@ function RoundForm() {
     ? selectedInterviewers.map(interviewer => interviewer?._id).filter(Boolean)
     : [];
 
-  const [sectionQuestions, setSectionQuestions] = useState({});
+  // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
 
-      const authToken = Cookies.get("authToken");
-      const tokenPayload = decodeJwt(authToken);
 
-      const tenantId = tokenPayload?.tenantId;
-      const ownerId = tokenPayload?.userId;
+  const tenantId = Cookies.get("organizationId");
+  const ownerId = Cookies.get("userId");
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
 
 
@@ -149,7 +167,7 @@ function RoundForm() {
              
 
               setFormData({
-                roundTitle: round.roundName || '',
+                roundTitle: round.roundTitle || '',
                 sequence: round.sequence || 1,
                 interviewMode: round.interviewMode || '',
                 duration: round.interviewDuration?.toString() || '',
@@ -159,7 +177,7 @@ function RoundForm() {
                 // minimumInterviewers: round.minimumInterviewers?.toString() || '1',
                 questions: round.questions || [],
                 internalInterviewers: internalInterviewers || [],
-                assessmentTemplate: round?.roundName === "Assessment" && round?.assessmentId
+                assessmentTemplate: round?.roundTitle === "Assessment" && round?.assessmentId
                   ? {
                     assessmentId: round.assessmentId,
                     assessmentName: assessmentData?.find(a => a._id === round?.assessmentId)?.AssessmentTitle || ''
@@ -191,81 +209,81 @@ function RoundForm() {
 
 
 
-  const fetchQuestionsForAssessment = async (assessmentId) => {
+  // const fetchQuestionsForAssessment = async (assessmentId) => {
 
-    if (!assessmentId) {
-      return null;
-    }
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-      const assessmentQuestions = response.data;
+  //   if (!assessmentId) {
+  //     return null;
+  //   }
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const assessmentQuestions = response.data;
 
-      // console.log('Full assessment questions structure:', assessmentQuestions);
+  //     // console.log('Full assessment questions structure:', assessmentQuestions);
 
-      // Extract sections directly from the response
-      const sections = assessmentQuestions.sections || [];
+  //     // Extract sections directly from the response
+  //     const sections = assessmentQuestions.sections || [];
 
-      // Check for empty sections or questions
-      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-        console.warn('No sections or questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
+  //     // Check for empty sections or questions
+  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
+  //       console.warn('No sections or questions found for assessment:', assessmentId);
+  //       setSectionQuestions({ noQuestions: true });
+  //       return;
+  //     }
 
-      // Create section questions mapping with all section data
-      const newSectionQuestions = {};
+  //     // Create section questions mapping with all section data
+  //     const newSectionQuestions = {};
 
-      sections.forEach((section) => {
-        if (!section._id) {
-          console.warn('Section missing _id:', section);
-          return;
-        }
+  //     sections.forEach((section) => {
+  //       if (!section._id) {
+  //         console.warn('Section missing _id:', section);
+  //         return;
+  //       }
 
-        // Store complete section data including sectionName, passScore, totalScore
-        newSectionQuestions[section._id] = {
-          sectionName: section?.sectionName,
-          passScore: Number(section.passScore || 0),
-          totalScore: Number(section.totalScore || 0),
-          questions: (section.questions || []).map(q => ({
-            _id: q._id,
-            questionId: q.questionId,
-            source: q.source || 'system',
-            score: Number(q.score || q.snapshot?.score || 0),
-            order: q.order || 0,
-            customizations: q.customizations || null,
-            snapshot: {
-              questionText: q.snapshot?.questionText || '',
-              questionType: q.snapshot?.questionType || '',
-              score: Number(q.snapshot?.score || q.score || 0),
-              options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-              correctAnswer: q.snapshot?.correctAnswer || '',
-              difficultyLevel: q.snapshot?.difficultyLevel || '',
-              hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-              skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-              tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-              technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-              questionNo: q.snapshot?.questionNo || ''
-            }
-          }))
-        };
-      });
+  //       // Store complete section data including sectionName, passScore, totalScore
+  //       newSectionQuestions[section._id] = {
+  //         sectionName: section?.sectionName,
+  //         passScore: Number(section.passScore || 0),
+  //         totalScore: Number(section.totalScore || 0),
+  //         questions: (section.questions || []).map(q => ({
+  //           _id: q._id,
+  //           questionId: q.questionId,
+  //           source: q.source || 'system',
+  //           score: Number(q.score || q.snapshot?.score || 0),
+  //           order: q.order || 0,
+  //           customizations: q.customizations || null,
+  //           snapshot: {
+  //             questionText: q.snapshot?.questionText || '',
+  //             questionType: q.snapshot?.questionType || '',
+  //             score: Number(q.snapshot?.score || q.score || 0),
+  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
+  //             correctAnswer: q.snapshot?.correctAnswer || '',
+  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
+  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
+  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
+  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
+  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
+  //             questionNo: q.snapshot?.questionNo || ''
+  //           }
+  //         }))
+  //       };
+  //     });
 
-      // Verify that at least one section has questions
-      const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-      if (!hasQuestions) {
-        console.warn('No sections with questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
+  //     // Verify that at least one section has questions
+  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
+  //     if (!hasQuestions) {
+  //       console.warn('No sections with questions found for assessment:', assessmentId);
+  //       setSectionQuestions({ noQuestions: true });
+  //       return;
+  //     }
 
-      // Set the section questions state
-      setSectionQuestions(newSectionQuestions);
-      console.log('Updated sectionQuestions:', newSectionQuestions);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions({ error: 'Failed to load questions' });
-    }
-  };
+  //     // Set the section questions state
+  //     setSectionQuestions(newSectionQuestions);
+  //     console.log('Updated sectionQuestions:', newSectionQuestions);
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //     setSectionQuestions({ error: 'Failed to load questions' });
+  //   }
+  // };
 
 
   const handleInternalInterviewerSelect = (interviewers) => {
@@ -614,7 +632,7 @@ function RoundForm() {
 
       if (formData.roundTitle === 'Assessment') {
 
-        roundData.roundName = formData.roundTitle;
+        roundData.roundTitle = formData.roundTitle;
         roundData.instructions = formData.instructions || '';
         roundData.interviewerType = "";
         roundData.selectedInterviewersType = '';
@@ -623,7 +641,7 @@ function RoundForm() {
         roundData.interviewDuration = 60;
       }
       else if (formData.roundTitle === 'Technical') {
-        roundData.roundName = formData.roundTitle;
+        roundData.roundTitle = formData.roundTitle;
         roundData.interviewDuration = formData.duration;
         roundData.sequence = formData.sequence;
         // roundData.interviewerType = formData.interviewerType;
@@ -654,7 +672,7 @@ function RoundForm() {
 
       } else {
         // Default case for other interview types (hr, culture-fit, system-design)
-        roundData.roundName = formData.roundTitle;
+        roundData.roundTitle = formData.roundTitle;
         roundData.sequence = formData.sequence;
 
         roundData.interviewerType = formData.interviewerType;
@@ -859,7 +877,7 @@ function RoundForm() {
                 <>
                   <div>
                     <label htmlFor="assessmentTemplate" className="block text-sm font-medium text-gray-700">Assessment Template </label>
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 " ref={dropdownRef}>
                       <input
                         type="text"
                         name="assessmentTemplate"
@@ -921,7 +939,7 @@ function RoundForm() {
                       Assessment
                     </label>
                     {errors.assessmentQuestions && <p className="text-red-500">{errors.assessmentQuestions}</p>}
-                    {loading ? (
+                    {questionsLoading  ? (
                       <p className="text-gray-500">Loading assessment data...</p>
                     ) : (
                       <div className="space-y-4">

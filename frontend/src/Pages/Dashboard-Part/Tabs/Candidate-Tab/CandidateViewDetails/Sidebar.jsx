@@ -25,7 +25,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
     <aside className={`
       fixed lg:relative  lg:block xl:relative 2xl:relative
       w-[100%] sm:w-[100%] md:w-[100%] lg:w-[25%] xl:w-[25%] 2xl:w-[25%]
-       h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen
+       h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen sm:pt-4 
       md:pt-3
       bg-white
       shadow-md lg:shadow-lg 
@@ -38,11 +38,11 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() =>navigate('/candidates')}
+                onClick={() =>navigate('/candidate')}
                 className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
                 title="Back to Dashboard"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-4 h-4" />
               </button>
               <h2 className="text-lg font-bold  text-custom-blue">
                 Profile
@@ -53,13 +53,13 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
                 onClick={() =>   navigate(`edit`)}
                 className="p-1.5 rounded-full bg-custom-bg text-custom-blue  transition-colors"
               >
-                {editMode ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                {editMode ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
               </button>
               <button
                onClick={() => onClose()}
                 className="sm:block md:block lg:hidden xl:hidden 2xl:hidden p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>

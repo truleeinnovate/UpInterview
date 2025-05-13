@@ -23,11 +23,6 @@ const CustomProvider = ({ children }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  useEffect(() => {
-    console.log('tokenPayload', tokenPayload)
-  }, [tokenPayload])
-
-
   const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
@@ -494,6 +489,109 @@ const CustomProvider = ({ children }) => {
     fetchUsersData();
   }, []);
 
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [questionsError, setQuestionsError] = useState(null);
+
+  const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
+    if (!assessmentId) {
+      return null;
+    }
+
+    setQuestionsLoading(true);
+    setQuestionsError(null);
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`
+      );
+      const assessmentQuestions = response.data;
+      const sections = assessmentQuestions.sections || [];
+
+      // Check for empty sections or questions
+      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
+        setSectionQuestions({ noQuestions: true });
+        return { noQuestions: true };
+      }
+
+      // Create section questions mapping
+      const newSectionQuestions = {};
+
+      sections.forEach((section) => {
+        if (!section._id) {
+          console.warn('Section missing _id:', section);
+          return;
+        }
+
+        newSectionQuestions[section._id] = {
+          sectionName: section?.sectionName,
+          passScore: Number(section.passScore || 0),
+          totalScore: Number(section.totalScore || 0),
+          questions: (section.questions || []).map(q => ({
+            _id: q._id,
+            questionId: q.questionId,
+            source: q.source || 'system',
+            score: Number(q.score || q.snapshot?.score || 0),
+            order: q.order || 0,
+            customizations: q.customizations || null,
+            snapshot: {
+              questionText: q.snapshot?.questionText || '',
+              questionType: q.snapshot?.questionType || '',
+              score: Number(q.snapshot?.score || q.score || 0),
+              options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
+              correctAnswer: q.snapshot?.correctAnswer || '',
+              difficultyLevel: q.snapshot?.difficultyLevel || '',
+              hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
+              skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
+              tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
+              technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
+              questionNo: q.snapshot?.questionNo || ''
+            }
+          }))
+        };
+      });
+
+      // Verify questions exist
+      const hasQuestions = Object.values(newSectionQuestions).some(
+        section => section.questions.length > 0
+      );
+
+      if (!hasQuestions) {
+        setSectionQuestions({ noQuestions: true });
+        return { noQuestions: true };
+      }
+
+      setSectionQuestions(newSectionQuestions);
+      return newSectionQuestions;
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      setQuestionsError('Failed to load questions');
+      return { error: 'Failed to load questions' };
+    } finally {
+      setQuestionsLoading(false);
+    }
+  }, []);
+
+  // interview templete
+  const [templates, setTemplates] = useState([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates`;
+        const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
+        const response = await axios.get(apiUrl);
+
+        setTemplates(response.data.data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    fetchUsers();
+  }, [tenantId]);
+
+  console.log("setTemplates", templates);
+
   return (
     <CustomContext.Provider
       value={{
@@ -577,6 +675,16 @@ const CustomProvider = ({ children }) => {
         // users
         usersData,
         fetchUsersData,
+
+        // assessment questions 
+        sectionQuestions,
+        questionsLoading,
+        questionsError,
+        fetchQuestionsForAssessment,
+        setSectionQuestions,
+
+        // interview templates
+        templates,
       }}
     >
       {children}

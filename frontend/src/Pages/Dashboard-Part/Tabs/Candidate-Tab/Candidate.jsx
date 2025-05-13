@@ -8,8 +8,6 @@ import Tooltip from "@mui/material/Tooltip";
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateViewDetails/CandidateDetails';
 import { useMediaQuery } from 'react-responsive';
-// import FaList from '../../icons/FaList.svg?react';
-// import TbLayoutGridRemove from '../../icons/TbLayoutGridRemove.svg?react';
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
@@ -269,7 +267,8 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResendLink, isAssessmentView - this things come from Assessment-view-AssessmentTab.jsx
-  const { candidateData, fetchCandidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
+  const { candidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
+  console.log('candidateData:-', candidateData);
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -284,25 +283,21 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
     tech: [],
     experience: { min: '', max: '' },
   });
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchCandidateData();
-  }, [fetchCandidateData])
+    const navigate = useNavigate();
 
   // Determine which data to use based on isAssessmentView
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
   // Automatically switch to Kanban view for tablet view (768px to 1024px)
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  // const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
 
-  useEffect(() => {
-    if (isTablet) {
-      setView('kanban');
-    } else {
-      setView('table');
-    }
-  }, [isTablet]);
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView('kanban');
+  //   } else {
+  //     setView('table');
+  //   }
+  // }, [isTablet]);
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -484,7 +479,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
           </div>
         )}
 
-        <div className="bg-white rounded-xl border">
+        <div className="bg-white rounded-xl border border-gray-100">
           {view === 'table' ? (
             <div className="flex  w-full mb-2">
               <div

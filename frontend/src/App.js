@@ -121,25 +121,25 @@ const App = () => {
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              <Home />
+              // </ProtectedRoute>
             }
           />
           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
           {/* tabs */}
 
-          <Route path="/candidates" element={<CandidateTab />} >
+          <Route path="/candidate" element={<CandidateTab />} >
             <Route index element={null} />
             <Route path="new" element={<AddCandidateForm mode="Create" />} />
             <Route path="view-details/:id" element={<CandidateDetails />} />
             <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
           </Route >
-          <Route path="/candidates/:id" element={<CandidateTabDetails />} >
+          <Route path="/candidate/:id" element={<CandidateTabDetails />} >
             <Route index element={null} />
             <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
           </Route>
-          <Route path="/candidates/full-screen/:id" element={<CandidateFullscreen />} />
+          <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
 
           {/* // position UI  */}
 
@@ -290,6 +290,7 @@ const App = () => {
           {/* {/Intervie Templates/} */}
           <Route path="/interview-templates" element={<InterviewTemplates />} />
           <Route path="/interview-templates/:id" element={<TemplateDetail />} />
+          <Route path="/interviews/:interviewId/rounds/new" element={<RoundForm />} />
           <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
 
         </Routes>

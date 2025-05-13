@@ -8,12 +8,12 @@ export const handleDomainRedirection = (organization, navigate, token, path = ''
   const tokenPayload = decodeJwt(authToken);
 
   if (tokenPayload.organization === true) {
-    console.log('organization?.subdomain', organization?.subdomain)
+    console.log('organization?.subdomain', organization?.subdomain);
     if (organization?.subdomain) {
       const sub = organization.subdomain;
       window.location.href = `https://${sub}.app.upinterview.io/${path}?token=${token}`;
     } else {
-      console.log('subdomain not found...')
+      console.log('subdomain not found...');
       navigate(`/${path}`);
     }
   } else {

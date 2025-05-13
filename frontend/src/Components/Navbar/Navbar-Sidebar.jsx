@@ -7,7 +7,7 @@ import { CgProfile } from "react-icons/cg";
 import { FaBell } from "react-icons/fa";
 import { IoHome } from "react-icons/io5";
 import { IoMdInformationCircleOutline } from "react-icons/io";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { IoMdSearch } from "react-icons/io";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import axios from "axios";
@@ -20,18 +20,20 @@ import { CiCreditCard1 } from "react-icons/ci";
 import { LiaWalletSolid } from "react-icons/lia";
 import { MdAppSettingsAlt } from "react-icons/md";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
-import NotificationPanel from '../../Pages/Push-Notification/NotificationPanel.jsx';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
+import NotificationPanel from '../../Pages/Push-Notification/NotificationPanel.jsx';
 
 const Navbar = () => {
 
+ const location = useLocation();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId =  tokenPayload?.userId;
+  const userId = tokenPayload?.userId;
   const userName = tokenPayload?.userName;
   const { logout } = useAuth0();
   const [assessmentDropdown, setAssessmentDropdown] = useState(false);
   const [interviewDropdown, setInterviewDropdown] = useState(false);
+  const [moreDropdown, setMoreDropdown] = useState(false);
   const [isDetailDropdownOpen, setIsDetailDropdownOpen] = useState(false);
   const [isGettingDropdownOpen, setIsGettingDropdownOpen] = useState(false);
   const [isQuestionDropdownOpen, setIsQuestionDropdownOpen] = useState(false);
@@ -43,6 +45,7 @@ const Navbar = () => {
 
   const assessmentRef = useRef(null);
   const interviewRef = useRef(null);
+  const moreRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +65,7 @@ const Navbar = () => {
     fetchProfileImage();
   }, [userId]);
 
+  // Helper functions for dropdown toggles
   const handleGettingToggle = () => {
     setIsGettingDropdownOpen(!isGettingDropdownOpen);
   };
@@ -84,16 +88,12 @@ const Navbar = () => {
     setIsLegalDropdownOpen(!isLegalDropdownOpen);
   };
 
-  const notifications = () => {
-    navigate("/notifications");
-  };
 
   const handleSettingsClick = () => {
     navigate('/account-settings');
   };
 
   const [outlineDropdown, setOutlineDropdown] = useState(false);
-  const [notificationDropdown, setNotificationDropdown] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -107,13 +107,14 @@ const Navbar = () => {
       notificationRef.current && !notificationRef.current.contains(event.target) &&
       profileRef.current && !profileRef.current.contains(event.target) &&
       interviewRef.current && !interviewRef.current.contains(event.target) &&
-      assessmentRef.current && !assessmentRef.current.contains(event.target)
+      assessmentRef.current && !assessmentRef.current.contains(event.target) &&
+      moreRef.current && !moreRef.current.contains(event.target)
     ) {
       setOutlineDropdown(false);
-      setNotificationDropdown(false);
       setProfileDropdown(false);
       setInterviewDropdown(false);
       setAssessmentDropdown(false);
+      setMoreDropdown(false);
     }
   };
 
@@ -126,46 +127,52 @@ const Navbar = () => {
 
   const toggleOutlineDropdown = () => {
     setOutlineDropdown(prev => !prev);
-    setNotificationDropdown(false);
     setProfileDropdown(false);
     setInterviewDropdown(false);
     setAssessmentDropdown(false);
+    setMoreDropdown(false);
   };
 
-  const toggleNotificationDropdown = () => {
-    setNotificationDropdown(prev => !prev);
-    setOutlineDropdown(false);
-    setProfileDropdown(false);
-    setInterviewDropdown(false);
-    setAssessmentDropdown(false);
-  };
 
   const toggleProfileDropdown = () => {
     setProfileDropdown(prev => !prev);
     setOutlineDropdown(false);
-    setNotificationDropdown(false);
     setInterviewDropdown(false);
     setAssessmentDropdown(false);
+    setMoreDropdown(false);
   };
 
   const toggleInterviewDropdown = () => {
     setInterviewDropdown(prev => !prev);
     setOutlineDropdown(false);
-    setNotificationDropdown(false);
     setProfileDropdown(false);
     setAssessmentDropdown(false);
+    setMoreDropdown(false);
   };
 
   const toggleAssessmentDropdown = () => {
     setAssessmentDropdown(prev => !prev);
     setOutlineDropdown(false);
-    setNotificationDropdown(false);
     setProfileDropdown(false);
     setInterviewDropdown(false);
+    setMoreDropdown(false);
+  };
+
+  const toggleMoreDropdown = () => {
+    setMoreDropdown(prev => !prev);
+    setOutlineDropdown(false);
+    setProfileDropdown(false);
+    setInterviewDropdown(false);
+    setAssessmentDropdown(false);
   };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
+  };
+
+  // Check if a nav item is active
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   const outlineDropdownContent = (
@@ -286,41 +293,6 @@ const Navbar = () => {
     </div>
   );
 
-  const notificationDropdownContent = (
-    <div className="absolute top-12 w-80 text-sm rounded-md bg-white border border-custom-blue right-0 z-50 -mr-10">
-      <div className="flex justify-between items-center px-4 py-2 border-b">
-        <h2 className="text-start font-medium text-custom-blue">Notifications</h2>
-        <button className="text-custom-blue hover:text-blue-500" onClick={toggleNotificationDropdown}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M15.293 4.293a1 1 0 1 1 1.414 1.414L11.414 10l5.293 5.293a1 1 0 1 1-1.414 1.414L10 11.414l-5.293 5.293a1 1 0 1 1-1.414-1.414L8.586 10 3.293 4.707a1 1 0 1 1 1.414-1.414L10 8.586l5.293-5.293z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-      <div>
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="flex text-sm border-b w-full justify-between bg-gray-100">
-            <div className="flex item-center mt-2">
-              <div className={`w-10 ml-3 mt-1 ${i === 2 ? "w-14 mr-5" : ""}`}>
-                {i === 2 ? <AiTwotoneSchedule className="text-xl text-custom-blue" /> : <PiNotificationBold className="text-xl text-custom-blue" />}
-              </div>
-              <div>
-                <p className="font-bold text-custom-blue">{i === 2 ? "Interview Scheduled" : "New Interview Requests"}</p>
-                <p className="text-custom-blue">Skill: Apex, AURA, LWC</p>
-                <p className="mb-2 text-custom-blue">15 May 2024, 05:40 PM</p>
-              </div>
-            </div>
-            <div className={`text-xl mt-12 mr-2 ${i === 2 ? "mt-28" : ""}`}>
-              <FaArrowRight className="text-custom-blue" />
-            </div>
-          </div>
-        ))}
-        <div>
-          <p onClick={notifications}
-            style={{ cursor: "pointer" }} className="float-right text-sm mr-2 p-2 text-custom-blue">View More</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const profileDropdownContent = (
     <div className="absolute top-10 border border-custom-blue w-40 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-10">
@@ -374,7 +346,6 @@ const Navbar = () => {
       </div>
     </div>
   );
-
   return (
     <>
       <div className="bg-white fixed top-0 left-0 right-0 z-50">
@@ -405,14 +376,11 @@ const Navbar = () => {
                       {outlineDropdown && outlineDropdownContent}
                     </div>
                   </div>
-                  <div className="icon-container border" ref={notificationRef}>
-                    <div className="relative">
-                      <p className="font-medium text-custom-blue" onClick={toggleNotificationDropdown}>
-                        <FaBell />
-                      </p>
-                      {notificationDropdown && notificationDropdownContent}
-                    </div>
+                 <div className=" hover:bg-gray-100 cursor-pointer" ref={notificationRef}>
+                  <div className="relative">
+                    <NotificationPanel />
                   </div>
+                </div>
                   <div className="icon-container border" ref={profileRef}>
                     <div className="relative">
                       <p className="font-medium" onClick={toggleProfileDropdown}>
@@ -433,7 +401,7 @@ const Navbar = () => {
               </div>
             </div>
 
-            <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
+            {/* <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
                 <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/candidates">
                   Candidates
@@ -505,7 +473,120 @@ const Navbar = () => {
                   Analytics
                 </NavLink>
               </p>
+            </nav> */}
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex xl:flex 2xl:flex h-full items-center space-x-8">
+              <NavLink 
+                to="/candidate" 
+                className={`h-full flex items-center relative px-1 ${isActive('/candidate') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+              >
+                Candidates
+                {isActive('/candidate') && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+              </NavLink>
+              
+              <NavLink 
+                to="/positions" 
+                className={`h-full flex items-center relative px-1 ${isActive('/positions') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+              >
+                Positions
+                {isActive('/positions') && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+              </NavLink>
+              
+              <div className="relative h-full flex items-center" ref={interviewRef}>
+                <button 
+                  className={`flex items-center h-full relative px-1 ${isActive('/interviewList') || isActive('/mockinterview') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`} 
+                  onClick={toggleInterviewDropdown}
+                >
+                  Interviews&nbsp;
+                  {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                  {(isActive('/interviewList') || isActive('/mockinterview')) && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+                </button>
+                {interviewDropdown && (
+                  <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                    <div className="space-y-1">
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/interviewList') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/interviewList"
+                        onClick={() => setInterviewDropdown(false)}
+                      >
+                        Interviews
+                      </NavLink>
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/mockinterview') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/mockinterview"
+                        onClick={() => setInterviewDropdown(false)}
+                      >
+                        Mock Interviews
+                      </NavLink>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="relative h-full flex items-center" ref={assessmentRef}>
+                <button 
+                  className={`flex items-center h-full relative px-1 ${isActive('/assessments') || isActive('/questionBank') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`} 
+                  onClick={toggleAssessmentDropdown}
+                >
+                  Assessments&nbsp;
+                  {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                  {(isActive('/assessments') || isActive('/questionBank')) && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+                </button>
+                {assessmentDropdown && (
+                  <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                    <div className="space-y-1">
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/assessments') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/assessments"
+                        onClick={() => setAssessmentDropdown(false)}
+                      >
+                        Assessments
+                      </NavLink>
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/questionBank') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/questionBank"
+                        onClick={() => setAssessmentDropdown(false)}
+                      >
+                        Question Bank
+                      </NavLink>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="relative h-full flex items-center" ref={moreRef}>
+                <button 
+                  className={`flex items-center h-full relative px-1 ${isActive('/analytics') || isActive('/interview-templates') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`} 
+                  onClick={toggleMoreDropdown}
+                >
+                  More&nbsp;
+                  {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                  {(isActive('/analytics') || isActive('/interview-templates')) && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+                </button>
+                {moreDropdown && (
+                  <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                    <div className="space-y-1">
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/analytics') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/analytics"
+                        onClick={() => setMoreDropdown(false)}
+                      >
+                        Analytics
+                      </NavLink>
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/interview-templates"
+                        onClick={() => setMoreDropdown(false)}
+                      >
+                        Interview Templates
+                      </NavLink>
+                    </div>
+                  </div>
+                )}
+              </div>
             </nav>
+
             <div className="flex space-x-2 sm:hidden md:hidden">
               <div className="search w-60">
                 <input type="text" placeholder="Search" className="rounded-full border h-8" />
@@ -547,41 +628,39 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+    {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 top-[70px] bg-gray-800 bg-opacity-75 z-40 block lg:hidden xl:hidden 2xl:hidden">
-          <div className="fixed mt-4 left-0 w-64 bg-white h-full z-50">
-            <p className="text-base font-medium p-4">
+        <div className="fixed inset-0 top-16 bg-gray-800 bg-opacity-75 z-40 lg:hidden xl:hidden 2xl:hidden">
+          <div className="fixed left-0 w-64 bg-white h-full z-50 overflow-y-auto">
+            <div className="p-4 space-y-1">
               <NavLink
-                activeClassName="bg-gray-200 text-custom-blue"
                 to="/candidates"
+                className={`block px-4 py-3 rounded-md ${isActive('/candidates') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                 onClick={toggleSidebar}
               >
                 Candidates
               </NavLink>
-            </p>
-            <p className="text-base font-medium p-4">
+              
               <NavLink
-                activeClassName="bg-gray-200 text-custom-blue"
                 to="/positions"
+                className={`block px-4 py-3 rounded-md ${isActive('/positions') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                 onClick={toggleSidebar}
               >
                 Positions
               </NavLink>
-            </p>
-            <div className="relative p-4" ref={interviewRef}>
-              <button
-                className="font-medium flex items-center mb-2"
-                onClick={toggleInterviewDropdown}
-              >
-                Interviews&nbsp;
-                {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-              </button>
-              {interviewDropdown && (
-                <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                  <div className="space-y-1">
+              
+              <div className="relative" ref={interviewRef}>
+                <button
+                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/interviewList') || isActive('/mockinterview') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={toggleInterviewDropdown}
+                >
+                  <span>Interviews</span>
+                  {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                </button>
+                {interviewDropdown && (
+                  <div className="mt-1 ml-4 space-y-1">
                     <NavLink
-                      className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeClassName="bg-gray-200 text-gray-800"
+                      className={`block px-4 py-2 rounded-md ${isActive('/interviewList') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
                       to="/interviewList"
                       onClick={() => {
                         setInterviewDropdown(false);
@@ -591,8 +670,7 @@ const Navbar = () => {
                       Interviews
                     </NavLink>
                     <NavLink
-                      className="block px-3 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeClassName="bg-gray-200 text-gray-800"
+                      className={`block px-4 py-2 rounded-md ${isActive('/mockinterview') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
                       to="/mockinterview"
                       onClick={() => {
                         setInterviewDropdown(false);
@@ -602,23 +680,21 @@ const Navbar = () => {
                       Mock Interviews
                     </NavLink>
                   </div>
-                </div>
-              )}
-            </div>
-            <div className="relative p-4" ref={assessmentRef}>
-              <button
-                className="font-medium flex items-center mb-2"
-                onClick={toggleAssessmentDropdown}
-              >
-                Assessments&nbsp;
-                {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-              </button>
-              {assessmentDropdown && (
-                <div className="mt-2 w-full rounded-md bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                  <div className="space-y-1">
+                )}
+              </div>
+              
+              <div className="relative" ref={assessmentRef}>
+                <button
+                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/assessments') || isActive('/questionBank') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={toggleAssessmentDropdown}
+                >
+                  <span>Assessments</span>
+                  {assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                </button>
+                {assessmentDropdown && (
+                  <div className="mt-1 ml-4 space-y-1">
                     <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeClassName="bg-gray-200 text-gray-800"
+                      className={`block px-4 py-2 rounded-md ${isActive('/assessments') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
                       to="/assessments"
                       onClick={() => {
                         setAssessmentDropdown(false);
@@ -628,8 +704,7 @@ const Navbar = () => {
                       Assessments
                     </NavLink>
                     <NavLink
-                      className="block px-4 py-1 hover:bg-gray-200 hover:text-custom-blue rounded-md"
-                      activeClassName="bg-gray-200 text-gray-800"
+                      className={`block px-4 py-2 rounded-md ${isActive('/questionBank') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
                       to="/questionBank"
                       onClick={() => {
                         setAssessmentDropdown(false);
@@ -639,18 +714,43 @@ const Navbar = () => {
                       Question Bank
                     </NavLink>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              
+              <div className="relative" ref={moreRef}>
+                <button
+                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/analytics') || isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                  onClick={toggleMoreDropdown}
+                >
+                  <span>More</span>
+                  {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                </button>
+                {moreDropdown && (
+                  <div className="mt-1 ml-4 space-y-1">
+                    <NavLink
+                      className={`block px-4 py-2 rounded-md ${isActive('/analytics') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
+                      to="/analytics"
+                      onClick={() => {
+                        setMoreDropdown(false);
+                        toggleSidebar();
+                      }}
+                    >
+                      Analytics
+                    </NavLink>
+                    <NavLink
+                      className={`block px-4 py-2 rounded-md ${isActive('/interview-templates') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
+                      to="/interview-templates"
+                      onClick={() => {
+                        setMoreDropdown(false);
+                        toggleSidebar();
+                      }}
+                    >
+                      Interview Templates
+                    </NavLink>
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="text-base font-medium p-4">
-              <NavLink
-                activeClassName="bg-gray-200 text-custom-blue"
-                to="/analytics"
-                onClick={toggleSidebar}
-              >
-                Analytics
-              </NavLink>
-            </p>
           </div>
         </div>
       )}
