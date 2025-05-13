@@ -11,7 +11,7 @@ export const handleDomainRedirection = (organization, navigate, token, path = ''
     console.log('organization?.subdomain', organization?.subdomain)
     if (organization?.subdomain) {
       const sub = organization.subdomain;
-      // window.location.href = `https://${sub}.app.upinterview.io/${path}?token=${token}`;
+      window.location.href = `https://${sub}.app.upinterview.io/${path}?token=${token}`;
     } else {
       console.log('subdomain not found...')
       navigate(`/${path}`);
