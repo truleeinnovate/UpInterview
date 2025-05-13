@@ -10,9 +10,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <PermissionsProvider>
     <Router>
-        <CustomProvider >
+        <CustomProvider>
           <Toaster />
+
           <App />
+
         </CustomProvider>
     </Router>
   </PermissionsProvider>

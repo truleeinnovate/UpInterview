@@ -72,17 +72,8 @@ console.log('org login')
 
       if (response.data.success) {
         const { token } = response.data;
-
-        // Store JWT in cookies
-        console.log("Setting auth cookie...");
         setAuthCookies(token);
-        console.log("Auth cookie set:", Cookies.get('authToken'));
-
-        const organization = usersData.find(user => user.email === email)?.tenantId;
-        console.log('Organization data for logged-in user:', organization);
-
-        // Pass token and contactDataFromOrg to handleDomainRedirection
-        handleDomainRedirection(organization, navigate, token, 'home');
+        navigate('/home');
       } else {
         setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
       }

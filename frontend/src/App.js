@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Cookies from "js-cookie";
 import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
 import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
@@ -86,7 +86,7 @@ import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
 
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
-import NotFound from './Components/NotFoundPage/NotFound.jsx';
+import ProtectedRoute from './Components/ProtectedRoute';
 
 const App = () => {
   const location = useLocation();
@@ -107,18 +107,26 @@ const App = () => {
       {shouldRenderLogo && <Logo />}
       <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
         <Routes>
+          {/* login pages */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/select-user-type" element={<UserTypeSelection />} />
           <Route path="/select-profession" element={<SelectProfession />} />
           <Route path="/complete-profile" element={<ProfileWizard />} />
           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-          <Route path="/home" element={<Home />} />
           <Route path="/organization-signup" element={<OrganizationSignUp />} />
           <Route path="/organization-login" element={<OrganizationLogin />} />
           <Route path="/callback" element={<LinkedInCallback />} />
           <Route path="/payment-details" element={<CardDetails />} />
-          <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
           {/* tabs */}
 
           <Route path="/candidates" element={<CandidateTab />} >
@@ -283,9 +291,6 @@ const App = () => {
           <Route path="/interview-templates" element={<InterviewTemplates />} />
           <Route path="/interview-templates/:id" element={<TemplateDetail />} />
           <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
-
-          {/* 404 */}
-          <Route path="/404" element={<NotFound />} />
 
         </Routes>
       </div>

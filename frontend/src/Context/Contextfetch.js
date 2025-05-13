@@ -26,7 +26,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     console.log('tokenPayload', tokenPayload)
   }, [tokenPayload])
-  
+
 
   const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -475,6 +475,8 @@ const CustomProvider = ({ children }) => {
     fetchGroupsData();
   }, [fetchGroupsData]);
 
+
+  // getting the user table total data and using it in the protectedroutes.jsx page for filtering the user and populating the tenant id and checking the subdomain is present or not in the ouganization data which is populated from the tenant id 
   // users
   const [usersData, setUsersData] = useState([]);
 
@@ -571,9 +573,10 @@ const CustomProvider = ({ children }) => {
         groups,
         fetchGroupsData,
 
+        // getting the user table total data and using it in the protectedroutes.jsx page for filtering the user and populating the tenant id and checking the subdomain is present or not in the ouganization data which is populated from the tenant id 
         // users
         usersData,
-        fetchUsersData
+        fetchUsersData,
       }}
     >
       {children}
