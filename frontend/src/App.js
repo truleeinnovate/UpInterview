@@ -86,7 +86,7 @@ import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
 
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
-import ProtectedRoute from './Components/ProtectedRoute';
+import ProtectedRoute from './Components/ProtectedRoute.jsx';
 
 const App = () => {
   const location = useLocation();

@@ -76,17 +76,37 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || origin === 'http://localhost:3000' || origin === 'http://localhost:3001' || origin.endsWith('.upinterview.io')) {
+    console.log('CORS Origin:', origin);
+    if (
+      !origin ||
+      origin.startsWith('http://localhost:3000') ||
+      origin.startsWith('http://localhost:3001') ||
+      origin.includes('localhost:3000') ||
+      origin.includes('localhost:3001') ||
+      origin.includes('upinterview.io')
+    ) {
       callback(null, true);
     } else {
-      callback(new Error('❌ Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   optionsSuccessStatus: 200
 };
+
+// Handle preflight requests explicitly
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.status(200).end();
+  }
+  next();
+});
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -115,31 +135,31 @@ app.use(bodyParser.json());
 
 
 // backend route (e.g. validate-domain.js or inside index.js)
-app.get('/api/validate-domain', (req, res) => {
-  const token = req.cookies.token;
-  const origin = req.headers.origin || req.headers.host;
+// app.get('/api/validate-domain', (req, res) => {
+//   const token = req.cookies.token;
+//   const origin = req.headers.origin || req.headers.host;
 
-  console.log('Received domain validation request from:', origin);
+//   console.log('Received domain validation request from:', origin);
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Decoded JWT:', decoded);
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     console.log('Decoded JWT:', decoded);
 
-    const subdomain = origin.split('.')[0];
-    console.log('Extracted subdomain:', subdomain);
+//     const subdomain = origin.split('.')[0];
+//     console.log('Extracted subdomain:', subdomain);
 
-    if (subdomain === decoded.organization.subdomain) {
-      console.log('Subdomain matches. Validation successful.');
-      return res.json({ isValid: true });
-    } else {
-      console.log('Subdomain mismatch. Validation failed.');
-      return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
-    }
-  } catch (err) {
-    console.error('JWT validation failed:', err.message);
-    return res.status(401).json({ isValid: false });
-  }
-});
+//     if (subdomain === decoded.organization.subdomain) {
+//       console.log('Subdomain matches. Validation successful.');
+//       return res.json({ isValid: true });
+//     } else {
+//       console.log('Subdomain mismatch. Validation failed.');
+//       return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
+//     }
+//   } catch (err) {
+//     console.error('JWT validation failed:', err.message);
+//     return res.status(401).json({ isValid: false });
+//   }
+// });
 
 
 // API Routes
