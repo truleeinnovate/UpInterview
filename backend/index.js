@@ -76,18 +76,44 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('CORS Origin:', origin); // Debug log to verify the origin
-    if (
-      !origin || // Allow non-origin requests (e.g., Postman)
-      origin.startsWith('http://localhost:3000') || // Allow local development
-      origin.includes('upinterview.io') // Allow any subdomain of upinterview.io
-    ) {
-      console.log('11')
-      callback(null, true);
-    } else {
-      console.log('22')
-      callback(new Error('Not allowed by CORS'));
+    console.log('Incoming CORS Origin:', origin); // Debug log
+    
+    // Allow requests with no origin (like mobile apps, server-to-server, or curl requests)
+    if (!origin) {
+      console.log('Allowing request with no origin');
+      return callback(null, true);
     }
+    
+    // Allow local development
+    if (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('https://localhost:')
+    ) {
+      console.log('Allowing localhost origin');
+      return callback(null, true);
+    }
+    
+    // Parse the origin URL
+    let originHost;
+    try {
+      const originUrl = new URL(origin);
+      originHost = originUrl.hostname;
+    } catch (e) {
+      console.log('Invalid origin URL:', origin);
+      return callback(new Error('Invalid origin URL'));
+    }
+    
+    // Allow main domain and all subdomains of app.upinterview.io
+    if (
+      originHost === 'app.upinterview.io' ||
+      /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
+    ) {
+      console.log('Allowing valid subdomain:', originHost);
+      return callback(null, true);
+    }
+    
+    console.log('Blocking invalid origin:', originHost);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
@@ -98,7 +124,7 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Explicitly handle preflight requests (for redundancy)
+// Explicitly handle preflight requests
 app.options('*', cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json());
