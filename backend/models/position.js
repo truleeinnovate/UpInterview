@@ -2,10 +2,8 @@ const mongoose = require("mongoose");
 
 const roundSchema = new mongoose.Schema(
   {
-
-
-    sequence: Number,
     roundTitle: String,
+    sequence: Number,
     interviewMode: String,
     interviewerType: String, // internal or external
     duration: String,

@@ -101,7 +101,7 @@ export const PermissionsProvider = ({ children }) => {
         }
 
       } catch (error) {
-        console.error('Error fetching authorization details:', error);
+        // console.error('Error fetching authorization details:', error);
       }
     };
 

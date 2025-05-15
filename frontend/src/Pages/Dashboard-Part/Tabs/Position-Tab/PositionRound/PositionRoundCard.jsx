@@ -14,6 +14,7 @@ import {
   User,
   ExternalLink
 } from 'lucide-react';
+// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 
@@ -32,9 +33,6 @@ const PositionRoundCard = ({
   hideHeader = false
 }) => {
 
-  const {
-    assessmentData,
-  } = useCustomContext();
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
@@ -186,60 +184,7 @@ const PositionRoundCard = ({
     setShowQuestions(!showQuestions);
   };
 
-  const toggleAllSections = (expand) => {
-    const newExpandedSections = {};
-    const newExpandedQuestions = {...expandedQuestions};
-    
-    Object.keys(sectionQuestions).forEach(sectionId => {
-      newExpandedSections[sectionId] = expand;
-      
-      // Handle questions in each section
-      const section = sectionQuestions[sectionId];
-      if (section && section.questions) {
-        section.questions.forEach(question => {
-          newExpandedQuestions[question._id] = expand;
-        });
-      }
-    });
-    
-    setExpandedSections(newExpandedSections);
-    setExpandedQuestions(newExpandedQuestions);
-  
-    // If expanding all sections, fetch questions for any sections that don't have them loaded
-    if (expand) {
-      Object.keys(newExpandedSections).forEach(async sectionId => {
-        if (!sectionQuestions[sectionId]) {
-          await fetchQuestionsForSection(sectionId);
-        }
-      });
-    }
-  };
-
-  const fetchQuestionsForSection = async (sectionId) => {
-    try {
-      const response = assessmentData.find(pos => pos._id === round.assessmentId)
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
-      const assessment = response;
-
-      const section = assessment.Sections.find(s => s._id === sectionId);
-      if (!section) {
-        throw new Error('Section not found');
-      }
-
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: section.Questions
-      }));
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: 'error'
-      }));
-    }
-  };
-
-
+ 
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not scheduled';
@@ -312,7 +257,7 @@ const PositionRoundCard = ({
 
 
   // Check if round is active (can be modified)
-  const isRoundActive = round.status !== 'Completed' && round.status !== 'Cancelled' && round.status !== 'Rejected' && !isInterviewCompleted;
+  // const isRoundActive = round.status !== 'Completed' && round.status !== 'Cancelled' && round.status !== 'Rejected' && !isInterviewCompleted;
 
   // Check if round has feedback
   const hasFeedback = round?.detailedFeedback || (round?.feedbacks && round.feedbacks.length > 0);
@@ -333,24 +278,8 @@ const PositionRoundCard = ({
 
   return (
     <>
-      <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
-        <div className="p-5">
-
-          {isRoundActive && (
-            <div className="mt-6 flex justify-end space-x-3">
-              {canEdit && (
-                <Button
-                  onClick={onEdit}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Round
-                </Button>
-              )}
-            </div>
-          )}
+      <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-custom-blue' : ''}`}>
+        <div className="p-2">
 
 
           {/* Tabs */}
@@ -503,17 +432,17 @@ const PositionRoundCard = ({
                   {showQuestions && round.questions && (
                     <div className="space-y-2">
                       {round?.questions.length > 0 ? (
-                        <ul className="mt-2 space-y-2">
+                        <ul className="mt-2 space-y-1">
                           {round.questions.map((question, qIndex) => {
                             const isMandatory = question?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li
                                 key={qIndex}
-                                className="text-sm text-gray-600"
+                              className="text-gray-600 font-sm"
 
                               >
-                                <span className="text-gray-900 font-medium">
+                                <span >
                                   {/* {qIndex + 1}. */}
                                   • {questionText || "No question text available"}
                                 </span>
@@ -722,7 +651,26 @@ const PositionRoundCard = ({
             </>
           )}
         </div>
+
+        {/* {isRoundActive && ( */}
+            <div className="m-4 flex justify-end space-x-3">
+              {canEdit && (
+                <Button
+                  onClick={onEdit}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit Round
+                </Button>
+              )}
+            </div>
+          {/* )} */}
+
       </div>
+
+ 
 
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">

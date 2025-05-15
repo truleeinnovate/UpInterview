@@ -28,14 +28,14 @@ const RoundCard = ({
   hideHeader = false,
 }) => {
 
-   const {
-    
-      sectionQuestions,
-      questionsLoading,
-      questionsError,
-      fetchQuestionsForAssessment,
-      setSectionQuestions,
-    } = useCustomContext();
+  const {
+
+    sectionQuestions,
+    questionsLoading,
+    questionsError,
+    fetchQuestionsForAssessment,
+    setSectionQuestions,
+  } = useCustomContext();
 
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
@@ -58,10 +58,28 @@ const RoundCard = ({
 
 
 
+  // useEffect(() => {
+  //   setSectionQuestions({});
+  //   fetchQuestionsForAssessment(round?.assessmentId)
+  // }, [round.assessmentId])
+
   useEffect(() => {
-    setSectionQuestions({});
-    fetchQuestionsForAssessment(round?.assessmentId)
-  }, [round.assessmentId])
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setSectionQuestions({});
+      await fetchQuestionsForAssessment(round?.assessmentId);
+    };
+
+    if (isMounted) {
+      fetchData();
+    }
+
+    return () => {
+      isMounted = false;
+      // Add any other cleanup here if needed
+    };
+  }, [round.assessmentId]);
 
 
 
@@ -79,12 +97,12 @@ const RoundCard = ({
 
 
   // Fetch question details when showing questions
-  
-  
+
+
   const toggleSection = async (sectionId) => {
     // First close all questions in this section if we're collapsing
     if (expandedSections[sectionId]) {
-      const newExpandedQuestions = {...expandedQuestions};
+      const newExpandedQuestions = { ...expandedQuestions };
       const section = sectionQuestions[sectionId];
       if (section && section.questions) {
         section.questions.forEach(question => {
@@ -93,13 +111,13 @@ const RoundCard = ({
       }
       setExpandedQuestions(newExpandedQuestions);
     }
-  
+
     // Then toggle the section
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
     }));
-  
+
     // Fetch questions if expanding and not already loaded
     if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
       await fetchQuestionsForAssessment(round?.assessmentId);
@@ -115,8 +133,8 @@ const RoundCard = ({
     setShowQuestions(!showQuestions);
   };
 
-  
-  
+
+
   // const fetchQuestionDetails = useCallback(async () => {
   //   if (!showQuestions || !round.assessmentQuestions?.length) return;
 
@@ -174,9 +192,9 @@ const RoundCard = ({
 
 
   // Reset question details when round changes
-  
-  
-  
+
+
+
   useEffect(() => {
     setQuestionDetails({});
   }, [round.assessmentTemplate]);
@@ -192,7 +210,7 @@ const RoundCard = ({
     <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
       <div className="p-5">
         {/* {!hideHeader && ( */}
-          {/* <div className="flex justify-between items-start">
+        {/* <div className="flex justify-between items-start">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mr-2">
                 {round.roundName}
@@ -207,7 +225,7 @@ const RoundCard = ({
         {/* )} */}
 
         {/* {hideHeader && isActive && ( */}
-          {/* <div className="flex justify-between items-start">
+        {/* <div className="flex justify-between items-start">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mr-2">
                 {round.roundName}
@@ -230,21 +248,21 @@ const RoundCard = ({
           </div> */}
         {/* // )} */}
 
-       
-                    <div className="mt-6 flex justify-end space-x-3">
-               
-                        <Button
-                          onClick={onEdit}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit Round
-                        </Button>
-                      
-                    </div>
-             
+
+        <div className="mt-6 flex justify-end space-x-3">
+
+          <Button
+            onClick={onEdit}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Edit Round
+          </Button>
+
+        </div>
+
 
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left Column */}
@@ -274,7 +292,7 @@ const RoundCard = ({
                 <span>Duration: {round?.interviewDuration} minutes</span>
               </div>
 
-          
+
             </div>
           </div>
 
@@ -368,7 +386,7 @@ const RoundCard = ({
               <h4 className="text-sm font-medium text-gray-700">
                 Assessment Questions</h4>
               <button
-               onClick={toggleShowQuestions}
+                onClick={toggleShowQuestions}
                 className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
               >
                 {showQuestions ? 'Hide' : 'Show'}

@@ -66,7 +66,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -77,7 +76,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || origin === 'http://localhost:3000' || origin.endsWith('.upinterview.io')) {
+    if (!origin || origin === 'http://localhost:3000' || origin === 'http://localhost:3001' || origin.endsWith('.upinterview.io')) {
       callback(null, true);
     } else {
       callback(new Error('❌ Not allowed by CORS'));
@@ -85,7 +84,7 @@ const corsOptions = {
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   optionsSuccessStatus: 200
 };
 

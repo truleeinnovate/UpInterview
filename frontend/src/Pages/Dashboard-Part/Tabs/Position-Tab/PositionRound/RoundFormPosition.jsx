@@ -12,17 +12,16 @@ import axios from "axios";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
 import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
+// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 function RoundFormPosition() {
   const {
     assessmentData,
-    positions,
-    groups,
     loading
   } = useCustomContext();
   const { resolveInterviewerDetails } = useInterviewerDetails();
@@ -32,9 +31,8 @@ function RoundFormPosition() {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-
-  const userId = tokenPayload?.userId;
-  const tenantId = tokenPayload?.tenantId;
+  // const userId = Cookies.get("userId");
+  const tenantId = tokenPayload.tenantId;
 
   // const orgId = Cookies.get("organizationId");
 
@@ -271,6 +269,7 @@ function RoundFormPosition() {
 
       // console.log("assessmentQuestions.sections", assessmentQuestions.sections);
 
+
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         console.warn('No sections or questions found for assessment:', assessmentId);
@@ -482,7 +481,7 @@ function RoundFormPosition() {
     }
 
     // Technical round validations
-    if (formData.roundTitle === 'Technical') {
+    if (formData.roundTitle !== 'Assessment') {
       if (!formData.duration) {
         newErrors.duration = 'Duration is required';
       }
@@ -523,8 +522,8 @@ function RoundFormPosition() {
       setIsLoading(false);
       return; // Stop submission if there are errors
     }
-  console.log("isValid", errors);
-  
+    console.log("isValid", errors);
+
 
     const roundData = {
       roundTitle: formData.roundTitle,
@@ -554,7 +553,7 @@ function RoundFormPosition() {
     };
 
     try {
-   // Include roundId only if editing
+      // Include roundId only if editing
       const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData }
 
       // console.log("payload roundData1", payload);
@@ -566,7 +565,7 @@ function RoundFormPosition() {
       // console.log("response", response.data);
 
       if (response.status === 201 || response.status === 200) {
-        navigate(`/positions/view-details/${positionId}`)
+        navigate(`/position/view-details/${positionId}`)
       }
 
 
@@ -630,8 +629,8 @@ function RoundFormPosition() {
   // Create breadcrumb items with status
   const breadcrumbItems = isPositionContext
     && [
-      { label: 'Positions', path: '/positions' },
-      { label: position?.title || 'Position', path: `/positions/view-details/${contextId}` },
+      { label: 'Positions', path: '/position' },
+      { label: position?.title || 'Position', path: `/position/view-details/${contextId}` },
       // { label: isEditing ? `Edit ${roundEditData?.roundTitle || 'Round'}` : 'Add New Round', path: '' }
     ]
 
@@ -722,7 +721,7 @@ function RoundFormPosition() {
                     {/* round title */}
                     <div>
                       <label htmlFor="roundTitle" className="block text-sm font-medium text-gray-700">
-                        Round Title *
+                        Round Title <span className='text-red-500'>*</span>
                       </label>
                       {formData.roundTitle === "Other" ? (
                         <input
@@ -738,7 +737,7 @@ function RoundFormPosition() {
                           onBlur={() => {
                             if (!formData.customRoundTitle.trim()) setFormData(prev => ({ ...prev, roundTitle: "" }));
                           }}
-                          
+
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
                           required
                           placeholder="Enter custom round title"
@@ -750,7 +749,7 @@ function RoundFormPosition() {
                           value={formData.roundTitle}
                           onChange={handleRoundTitleChange}
                           // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
-                             
+
                           className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 
                             ${errors.roundTitle ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}
                             focus:outline-none  sm:text-sm`}
@@ -764,12 +763,12 @@ function RoundFormPosition() {
                           <option value="Other">Other</option>
                         </select>
                       )}
-                      {errors.roundTitle && <p className="mt-1 text-xs text-red-500">{errors.roundTitle }</p>}
+                      {errors.roundTitle && <p className="mt-1 text-xs text-red-500">{errors.roundTitle}</p>}
                     </div>
 
                     <div>
                       <label htmlFor="mode" className="block text-sm font-medium text-gray-700">
-                        Interview Mode *
+                        Interview Mode <span className='text-red-500'>*</span>
                       </label>
                       <select
                         id="interviewMode"
@@ -848,7 +847,7 @@ function RoundFormPosition() {
                       <>
 
                         <div>
-                          <label htmlFor="assessmentTemplate" className="block text-sm font-medium text-gray-700">Assessment Template </label>
+                          <label htmlFor="assessmentTemplate" className="block text-sm font-medium text-gray-700">Assessment Template <span className='text-red-500'>*</span> </label>
                           <div className="relative flex-1">
                             <input
                               type="text"
@@ -898,9 +897,9 @@ function RoundFormPosition() {
                                   )
                                 )}
                               </div>
-                              
+
                             )}
-                             {errors.assessmentTemplate && <p className="mt-1 text-xs text-red-500">{errors.assessmentTemplate}</p>}
+                            {errors.assessmentTemplate && <p className="mt-1 text-xs text-red-500">{errors.assessmentTemplate}</p>}
                           </div>
 
                         </div>
@@ -1336,27 +1335,8 @@ function RoundFormPosition() {
                   )}
 
 
-
-                  {/* instructions */}
-                  {/* <div>
-                    <label htmlFor="feedback" className="block text-sm font-medium text-gray-700">
-                      Instructions
-                    </label>
-                    <textarea
-                      id="instructions"
-                      name="instructions"
-                      rows={3}
-                      value={formData.instructions}
-                      onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Add Instructions after the interview round is completed
-                    </p>
-                  </div> */}
-
                   <div>
-                    <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
+                    <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions <span className='text-red-500'>*</span></label>
                     <textarea
                       value={formData.instructions}
                       id="instructions"
@@ -1365,7 +1345,7 @@ function RoundFormPosition() {
                         setFormData(prev => ({ ...prev, instructions: e.target.value }));
                         clearError('instructions');
                       }}
-                      
+
                       className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-64
                           ${errors.instructions ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}    
                         `}
@@ -1375,8 +1355,24 @@ function RoundFormPosition() {
                       maxLength={1000}
                       readOnly={formData.roundTitle === 'Assessment'}
                     />
-
                     <div className="flex justify-between items-center mt-1">
+
+
+                      <span className="text-sm text-gray-500">
+                        {errors.instructions ? (
+                          <p className="text-red-500 text-xs pt-1">{errors.instructions}</p>
+                        ) : formData.instructions.length > 0 && formData.instructions.length < 250 ? (
+                          <p className="text-gray-500 text-xs">
+                            Minimum {250 - formData.instructions.length} more characters needed
+                          </p>
+                        ) : null}
+
+                      </span>
+                      <p className="text-sm text-gray-500">{formData.instructions.length}/1000</p>
+
+                    </div>
+
+                    {/* <div className="flex justify-between items-center mt-1">
                       {errors.instructions && (
                         <p className="mt-1 text-xs text-red-500">{errors.instructions}</p>
                       )}
@@ -1386,19 +1382,15 @@ function RoundFormPosition() {
                         </span>
                         <span className="text-sm text-gray-500"> {formData.instructions?.length || 0}/1000</span>
                       </span>
-                    </div>
+                    </div> */}
 
 
                   </div>
-
-
-
-
                   {/* footer */}
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() => navigate(`/positions/view-details/${contextId}`)}
+                      onClick={() => navigate(`/position/view-details/${contextId}`)}
                       className="mr-3 inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 "
                     >
                       Cancel

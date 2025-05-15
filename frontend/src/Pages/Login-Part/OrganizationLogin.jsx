@@ -10,7 +10,7 @@ import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 const OrganizationLogin = () => {
 console.log('org login')
-  const { usersData } = useCustomContext();
+  // const { usersData } = useCustomContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +71,7 @@ console.log('org login')
       console.log('Login response data:', response.data);
 
       if (response.data.success) {
+        console.log('Login successful!');
         const { token } = response.data;
         setAuthCookies(token);
         navigate('/home');

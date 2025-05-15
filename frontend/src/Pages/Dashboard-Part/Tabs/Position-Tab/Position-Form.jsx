@@ -4,7 +4,7 @@ import AssessmentDetails from './AssessmentType';
 import TechnicalType from './TechnicalType';
 import Cookies from 'js-cookie';
 import { format } from 'date-fns';
-import { validateForm, validateRoundPopup } from "../../../../utils/PositionValidation.js";
+import { validateForm, } from "../../../../utils/PositionValidation.js";
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
@@ -13,7 +13,7 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -122,158 +122,152 @@ const CustomDropdown = ({
   );
 };
 
-const RoundModal = ({ isOpen, onClose, onNext, currentRoundNumber }) => {
-  const [formData, setFormData] = useState({
-    roundName: '',
-    interviewType: ''
-  });
-  const [errors, setErrors] = useState({});
-  if (!isOpen) return null;
+// const RoundModal = ({ isOpen, onClose, onNext, currentRoundNumber }) => {
+//   const [formData, setFormData] = useState({
+//     roundName: '',
+//     interviewType: ''
+//   });
+//   const [errors, setErrors] = useState({});
+//   if (!isOpen) return null;
 
-  const handleNext = () => {
-    const validationErrors = validateRoundPopup(formData);
+//   const handleNext = () => {
+//     const validationErrors = validateRoundPopup(formData);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+//     if (Object.keys(validationErrors).length > 0) {
+//       setErrors(validationErrors);
+//       return;
+//     }
 
-    setErrors({});
-    onNext(formData.interviewType, formData);
-  };
+//     setErrors({});
+//     onNext(formData.interviewType, formData);
+//   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-[500px] border-2">
-        <div className="flex justify-between items-center p-4">
-          <h2 className="text-lg font-semibold"> {currentRoundNumber === 0 ? "Add Round" : `Add Round ${currentRoundNumber}`}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+//       <div className="bg-white rounded-lg w-[500px] border-2">
+//         <div className="flex justify-between items-center p-4">
+//           <h2 className="text-lg font-semibold"> {currentRoundNumber === 0 ? "Add Round" : `Add Round ${currentRoundNumber}`}</h2>
+//           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+//             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+//               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+//             </svg>
+//           </button>
+//         </div>
 
-        <div className="p-4">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Round Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.roundName}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData(prev => ({ ...prev, roundName: value }));
-                setErrors(prev => ({ ...prev, roundName: value ? '' : prev.roundName }));
-              }}
-              className={`w-full border px-2 py-1.5 rounded focus:outline-none ${errors.roundName ? 'border-red-500' : ''}`}
-              placeholder='Enter name'
-            />
+//         <div className="p-4">
+//           <div className="mb-4">
+//             <label className="block text-sm font-medium text-gray-700 mb-2">
+//               Round Name <span className="text-red-500">*</span>
+//             </label>
+//             <input
+//               type="text"
+//               value={formData.roundName}
+//               onChange={(e) => {
+//                 const value = e.target.value;
+//                 setFormData(prev => ({ ...prev, roundName: value }));
+//                 setErrors(prev => ({ ...prev, roundName: value ? '' : prev.roundName }));
+//               }}
+//               className={`w-full border px-2 py-1.5 rounded focus:outline-none ${errors.roundName ? 'border-red-500' : ''}`}
+//               placeholder='Enter name'
+//             />
 
-            {errors.roundName && <p className="text-red-500 text-sm mt-1">{errors.roundName}</p>}
-          </div>
+//             {errors.roundName && <p className="text-red-500 text-sm mt-1">{errors.roundName}</p>}
+//           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Interview Type <span className="text-red-500">*</span>
-            </label>
-            <div className={`px-2 py-1.5 border rounded ${errors.interviewType ? 'border-red-500' : ''}`}>
-              <select
-                value={formData.interviewType}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData(prev => ({ ...prev, interviewType: value }));
-                  setErrors(prev => ({ ...prev, interviewType: value ? '' : prev.interviewType }));
-                }}
-                className='w-full focus:outline-none'
-              >
-                <option value="">Select Type</option>
-                <option value="Technical">Technical</option>
-                <option value="Assessment">Assessment</option>
-              </select>
-            </div>
-            {errors.interviewType && <p className="text-red-500 text-sm mt-1">{errors.interviewType}</p>}
-          </div>
-        </div>
+//           <div className="mb-4">
+//             <label className="block text-sm font-medium text-gray-700 mb-2">
+//               Interview Type <span className="text-red-500">*</span>
+//             </label>
+//             <div className={`px-2 py-1.5 border rounded ${errors.interviewType ? 'border-red-500' : ''}`}>
+//               <select
+//                 value={formData.interviewType}
+//                 onChange={(e) => {
+//                   const value = e.target.value;
+//                   setFormData(prev => ({ ...prev, interviewType: value }));
+//                   setErrors(prev => ({ ...prev, interviewType: value ? '' : prev.interviewType }));
+//                 }}
+//                 className='w-full focus:outline-none'
+//               >
+//                 <option value="">Select Type</option>
+//                 <option value="Technical">Technical</option>
+//                 <option value="Assessment">Assessment</option>
+//               </select>
+//             </div>
+//             {errors.interviewType && <p className="text-red-500 text-sm mt-1">{errors.interviewType}</p>}
+//           </div>
+//         </div>
 
-        <div className="flex justify-end gap-3 p-4">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleNext}
-            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
-          // disabled={!formData.roundName || !formData.interviewType}
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+//         <div className="flex justify-end gap-3 p-4">
+//           <button
+//             onClick={onClose}
+//             className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
+//           >
+//             Cancel
+//           </button>
+//           <button
+//             onClick={handleNext}
+//             className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+//           // disabled={!formData.roundName || !formData.interviewType}
+//           >
+//             Next
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 
 
-const DeleteConfirmationModal = ({ isOpen, roundNumber, onConfirm, onCancel }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg border p-6 w-[400px]">
-        <h3 className="text-lg font-semibold mb-4">Delete Round {roundNumber}?</h3>
-        <p className="text-gray-600 mb-6">Are you sure you want to delete this round? This action cannot be undone.</p>
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-          >
-            No
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            Yes, Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+// const DeleteConfirmationModal = ({ isOpen, roundNumber, onConfirm, onCancel }) => {
+//   if (!isOpen) return null;
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+//       <div className="bg-white rounded-lg border p-6 w-[400px]">
+//         <h3 className="text-lg font-semibold mb-4">Delete Round {roundNumber}?</h3>
+//         <p className="text-gray-600 mb-6">Are you sure you want to delete this round? This action cannot be undone.</p>
+//         <div className="flex justify-end space-x-3">
+//           <button
+//             onClick={onCancel}
+//             className="px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+//           >
+//             No
+//           </button>
+//           <button
+//             onClick={onConfirm}
+//             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+//           >
+//             Yes, Delete
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
-const PositionForm = () => {
-  const { id } = useParams();
+const PositionForm = ({ mode }) => {
+  const { id, } = useParams();
   const location = useLocation();
+  const {
+    addOrUpdatePosition
+
+  } = useCustomContext();
+
+
+
+  // Get the previous path from navigation state
+  const fromPath = location.state?.from || '/position';
 
   // position details states
   const {
-    companies, 
+    companies,
     locations,
     templates,
     skills,
     positions
   } = useCustomContext();
 
-  // Add detailed template logging
-  useEffect(() => {
-    console.log('Template data update detected');
-    console.log('Raw templates:', templates);
-    if (templates) {
-      console.log('Templates count:', templates.length);
-      console.log('First template:', templates[0]);
-    } else {
-      console.log('Templates is null/undefined');
-    }
-  }, [templates]);
 
-  useEffect(() => {
-    console.log('companies:', companies);
-    console.log('locations:', locations);
-  }, [companies, locations]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -292,9 +286,6 @@ const PositionForm = () => {
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
 
-  // console.log("formData ", formData);
-
-  // console.log("selectedCandidate  PositionForm", selectedPosition);
 
   const [errors, setErrors] = useState("");
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
@@ -305,14 +296,16 @@ const PositionForm = () => {
       setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }))
     }
   };
+
   const [showDropdownTemplate, setShowDropdownTemplate] = useState(false);
-  const handleTemplateSelect = (template) => {
-    setFormData((prev) => ({ ...prev, template: template }));
-    setShowDropdownTemplate(false);
-    // if (errors.companyname) {
-    //   setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }))
-    // }
-  };
+
+
+  // const handleTemplateSelect = (template) => {
+  //   setFormData((prev) => ({ ...prev, template: template })); // Store entire template object
+  //   setShowDropdownTemplate(false);
+  // };
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [entries, setEntries] = useState([]);
@@ -381,9 +374,9 @@ const PositionForm = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" && 
-               (selectedSkill === currentSkill || 
-                !allSelectedSkills.includes(selectedSkill));
+        return selectedSkill !== "" &&
+          (selectedSkill === currentSkill ||
+            !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -474,7 +467,7 @@ const PositionForm = () => {
 
       const selectedPosition = positions.find(pos => pos._id === id);
       setIsEdit(true)
-      const matchingTemplate = templates?.find(
+      const matchingTemplate = templates.find(
         (template) => template.templateName === selectedPosition?.selectedTemplete
       );
       setPositionId(id);
@@ -490,11 +483,12 @@ const PositionForm = () => {
         additionalNotes: selectedPosition?.additionalNotes || "",
         NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
         Location: selectedPosition?.Location || "",
-        template: matchingTemplate
-          ? {
-            ...matchingTemplate
-          }
-          : {},
+        template: matchingTemplate || {},
+        // template: matchingTemplate
+        //   ? {
+        //     ...matchingTemplate
+        //   }
+        //   : {},
       });
 
       const formattedSkills = selectedPosition?.skills?.map(skill => ({
@@ -506,17 +500,14 @@ const PositionForm = () => {
 
       setEntries(formattedSkills);
       // setAllSelectedSkills(formattedSkills)
-      setAllSelectedSkills(selectedPosition?.skills?.map(skill => skill.skill) || []);
-
-      console.log("matchingTemplate ", matchingTemplate);
+      setAllSelectedSkills(selectedPosition.skills?.map(skill => skill.skill) || []);
     }
 
-  }, [isEdit, id, positions, templates]);
+  }, [isEdit, id, positions]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
       e.preventDefault();
-      console.log("Form submission prevented.");
     }
 
     // Function to check if two objects are equal
@@ -537,36 +528,31 @@ const PositionForm = () => {
       ? updatedData
       : formData;
 
-    console.log("Data to Submit:", dataToSubmit);
 
     if (!skipValidation) {
-      console.log("Validating form...");
       const { formIsValid, newErrors } = validateForm(dataToSubmit, entries, dataToSubmit.rounds);
-      console.log("Form Validation Result:", formIsValid, newErrors);
       if (!formIsValid) {
         setErrors(newErrors);
-        console.log("Validation failed, errors set.");
         return;
       }
     }
 
     setErrors({});
-    console.log("Form validation passed.");
-
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
-    const userId = tokenPayload?.userId;
-    const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.tenantId;
-    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+    const userId = tokenPayload.userId;
+    const userName = tokenPayload.userName;
+    const orgId = tokenPayload.tenantId;
 
-    console.log("User Info:", { userId, userName, orgId, currentDateTime });
+    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {
       ...dataToSubmit,
       companyname: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && { minexperience: parseInt(dataToSubmit.minexperience) }),
       ...(dataToSubmit.maxexperience && { maxexperience: parseInt(dataToSubmit.maxexperience) }),
+      // minexperience: dataToSubmit.minexperience || "",
+      // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
       CreatedBy: `${userName} at ${currentDateTime}`,
@@ -578,66 +564,67 @@ const PositionForm = () => {
       })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
+      templateId: dataToSubmit.template?._id,
+      // rounds: dataToSubmit.rounds || [],
     };
 
-    console.log("Payload to submit:", basicdetails);
 
     try {
-      let response;
-      if (isEdit && positionId) {
-        console.log("Updating existing position with ID:", positionId);
-        response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/position/${positionId}`,
-          basicdetails
-        );
-        console.log("Updated response:", response.data);
-      } else {
-        console.log("Creating new position...");
-        response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/position`,
-          basicdetails
-        );
-        setPositionId(response.data.data._id);
-        console.log("New position created, response:", response.data);
-      }
+      // let response;
+      // if (isEdit && positionId) {
+      //   response = await axios.patch(
+      //     `${process.env.REACT_APP_API_URL}/position/${positionId}`,
+      //     basicdetails
+      //   );
 
-      if (response.status === 201 || response.status === 200) {
-        console.log("Request successful, status:", response.status);
 
+      // } else {
+      //   response = await axios.post(
+      //     `${process.env.REACT_APP_API_URL}/position`,
+      //     basicdetails
+      //   );
+      //   setPositionId(response.data.data._id);
+      // }
+      const response = await addOrUpdatePosition.mutateAsync({
+        id: id || null,
+        data: basicdetails
+      });
+
+      if (response.status === 'success') {
+        // Handle navigation
         if (actionType === "BasicDetailsSave") {
-          const previousPage = location.state?.from || "/positions";
-          console.log("Navigating to previous page:", previousPage);
-          navigate(previousPage);
-        }
+          // onClose();
+          navigate(fromPath);
+          // navigate('/position')
+          // const previousPage = location.state?.from || "/position";
+          // navigate(previousPage);
+          // if (mode === "new" || 'edit'){
+          // navigate('/position')
+          // } else {
+          //   navigate(`/position/view-details/${positionId}`)
+          // }
 
+        }
         if (actionType === "BasicDetailsSave&AddRounds") {
-          console.log("Opening round modal.");
           setIsRoundModalOpen(true);
         }
-
         if (actionType === "BasicDetailsSave&Next") {
-          console.log("Navigating to next page.");
           handleNextNavigation();
         }
-
         if (actionType === "RoundDetailsSave") {
-          console.log("Saving round details...");
+          // onClose();
         }
-
         if (actionType === "RoundDetailsSave&AddRound") {
-          console.log("Opening round modal again.");
           setIsRoundModalOpen(true);
         }
-
         if (actionType === "RoundDetailsSave&Next") {
-          console.log("Navigating to next round.");
           handleNextNavigation();
         }
       }
     } catch (error) {
       console.error("Error saving position:", error);
     }
-};
+  };
 
   const [isRoundModalOpen, setIsRoundModalOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState(-1);
@@ -646,7 +633,15 @@ const PositionForm = () => {
   const [rounds, setRounds] = useState([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(-1);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, roundIndex: -1 });
+  const [hoveredRound, setHoveredRound] = useState(-1);
   const [hasRounds, setHasRounds] = useState(false);
+
+  // if (!isOpen) return null;
+  const maxRounds = 5;
+  const handleSave = (e) => {
+    e.preventDefault();
+    // onSubmit();
+  };
 
   const handleRoundNext = (interviewType, roundData) => {
     setHasRounds(true);
@@ -676,14 +671,14 @@ const PositionForm = () => {
     setInsertIndex(-1);
   };
 
-  // const handleAddRoundAtIndex = (index) => {
-  //   setInsertIndex(index);
-  //   setIsRoundModalOpen(true);
-  // };
+  const handleAddRoundAtIndex = (index) => {
+    setInsertIndex(index);
+    setIsRoundModalOpen(true);
+  };
 
-  // const handleRoundDelete = (index) => {
-  //   setDeleteConfirmation({ isOpen: true, roundIndex: index });
-  // };
+  const handleRoundDelete = (index) => {
+    setDeleteConfirmation({ isOpen: true, roundIndex: index });
+  };
 
   // const confirmDelete = () => {
   //   if (deleteIndex !== null) {
@@ -705,62 +700,7 @@ const PositionForm = () => {
     }
   };
 
-  // const confirmDelete = () => {
-  //   if (deleteIndex !== null) {
-  //     const deletedSkill = entries[deleteIndex].skill;
-  //     const updatedEntries = entries.filter((_, index) => index !== deleteIndex);
-  //     setEntries(updatedEntries);
-  //     setAllSelectedSkills(prev => prev.filter(skill => skill !== deletedSkill));
-  //     setDeleteIndex(null);
-  //   }
-  // };
 
-  // const confirmDelete = () => {
-  //   const index = deleteConfirmation.roundIndex;
-  //   const newRounds = [...rounds];
-  //   newRounds.splice(index, 1);
-
-  //   // Update round numbers in the titles
-  //   newRounds.forEach((round, idx) => {
-  //     round.roundName = round.roundName.replace(/Round \d+/, `Round ${idx + 1}`);
-  //   });
-
-  //   setRounds(newRounds);
-
-  //   // Navigate logic after deletion
-  //   if (newRounds.length === 0) {
-  //     // If no rounds left, go to basic state
-  //     setCurrentStage('basic');
-  //     setShowAssessment(false);
-  //     setSelectedInterviewType('');
-  //     setCurrentRoundIndex(-1);
-  //   } else {
-  //     // Navigate to the nearest available round
-  //     let newIndex;
-  //     if (index >= newRounds.length) {
-  //       // If deleted last round, go to new last round
-  //       newIndex = newRounds.length - 1;
-  //     } else {
-  //       // Stay on same index (which now has next round)
-  //       newIndex = index;
-  //     }
-
-  //     // Update state with new round's details
-  //     setCurrentStage(`round${newIndex + 1}`);
-  //     setCurrentRoundIndex(newIndex);
-  //     setSelectedInterviewType(newRounds[newIndex].interviewType || '');
-  //     setShowAssessment(true);
-  //   }
-
-  //   setDeleteConfirmation({ isOpen: false, roundIndex: -1 });
-  // };
-
-  // const handleRoundClick = (index) => {
-  //   setCurrentRoundIndex(index);
-  //   setSelectedInterviewType(rounds[index].interviewType);
-  //   setShowAssessment(true);
-  //   setCurrentStage('round' + (index + 1));
-  // };
 
   const handlePreviousNavigation = (stage) => {
     if (stage === 'basic') {
@@ -779,8 +719,6 @@ const PositionForm = () => {
   };
 
   const handleSaveRound = (roundData, actionType) => {
-    console.log('Before updating formData:', formData);
-    console.log('Received roundData:', roundData, "Action Type:", actionType);
 
     setFormData((prevData) => {
       let updatedRounds = [...(prevData.rounds || [])];
@@ -801,7 +739,6 @@ const PositionForm = () => {
         rounds: updatedRounds,
       };
 
-      console.log('After updating formData:', updatedFormData);
 
       // Call handleSubmit with updated data
       handleSubmit(null, actionType, true, updatedFormData);
@@ -813,8 +750,8 @@ const PositionForm = () => {
   const renderStageIndicator = () => {
 
     // Update flag when moving to rounds
-    // const isBasicStage = currentStage === 'basic';
-    // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
+    const isBasicStage = currentStage === 'basic';
+    const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
 
     return (
       <div className="flex items-center justify-center mb-4 mt-1 w-full overflow-x-auto py-2">
@@ -1057,7 +994,7 @@ const PositionForm = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Experience <span className="text-red-500">*</span>
-                        
+
                         </label>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -1072,25 +1009,25 @@ const PositionForm = () => {
                                 value={formData.minexperience ?? ""}
                                 onChange={(e) => {
                                   const minExp = e.target.value ? parseInt(e.target.value) : "";
-                                  
+
                                   // Validate min experience is not greater than current max experience
                                   if (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience) {
-                                    setErrors(prev => ({ 
-                                      ...prev, 
+                                    setErrors(prev => ({
+                                      ...prev,
                                       minexperience: "Min experience cannot be greater than max",
                                       maxexperience: "Max experience cannot be less than min"
                                     }));
                                   } else {
                                     setErrors(prev => ({ ...prev, minexperience: "", maxexperience: "" }));
                                   }
-                    
+
                                   // Update state
                                   setFormData({
                                     ...formData,
                                     minexperience: minExp,
                                     // Reset max experience if it's now less than min
-                                    maxexperience: (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience) 
-                                      ? "" 
+                                    maxexperience: (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience)
+                                      ? ""
                                       : formData.maxexperience
                                   });
                                 }}
@@ -1113,22 +1050,22 @@ const PositionForm = () => {
                                 value={formData.maxexperience ?? ""}
                                 onChange={(e) => {
                                   const maxExp = e.target.value ? parseInt(e.target.value) : "";
-                                  
+
                                   // Validate max experience is not less than current min experience
                                   if (maxExp !== "" && formData.minexperience && maxExp < formData.minexperience) {
-                                    setErrors(prev => ({ 
-                                      ...prev, 
+                                    setErrors(prev => ({
+                                      ...prev,
                                       maxexperience: "Max experience cannot be less than min",
                                       minexperience: "Min experience cannot be greater than max"
                                     }));
                                   } else {
                                     setErrors(prev => ({ ...prev, maxexperience: "", minexperience: "" }));
                                   }
-                    
+
                                   // Update state
-                                  setFormData({ 
-                                    ...formData, 
-                                    maxexperience: maxExp 
+                                  setFormData({
+                                    ...formData,
+                                    maxexperience: maxExp
                                   });
                                 }}
                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
@@ -1150,93 +1087,93 @@ const PositionForm = () => {
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                           {/* Min Experience */}
-                        
+
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Min</label>
-                            <div className='flex-col'>              
+                            <div className='flex-col'>
                               <div className="relative w-full">
-                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                              <input
-                                type="number"
-                                min={1}
-                                value={formData.minSalary ?? ""}
-                                onChange={(e) => {
-                                  const minSalary = e.target.value;
-                                  
-                                  // Validate min salary is not greater than current max salary
-                                  if (minSalary !== "" && formData.maxSalary && parseInt(minSalary) > parseInt(formData.maxSalary)) {
-                                    setErrors(prev => ({ 
-                                      ...prev, 
-                                      minsalary: "Min salary cannot be greater than max",
-                                      maxsalary: "Max salary cannot be less than min"
-                                    }));
-                                  } else {
-                                    setErrors(prev => ({ ...prev, minsalary: "", maxsalary: "" }));
-                                  }
-                                  
-                                  // Update state
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    minSalary: minSalary === "" ? "" : parseInt(minSalary)
-                                  }));
-                                }}
-                                className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={formData.minSalary ?? ""}
+                                  onChange={(e) => {
+                                    const minSalary = e.target.value;
 
-                              // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
-                              // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
-                              />
-                             
+                                    // Validate min salary is not greater than current max salary
+                                    if (minSalary !== "" && formData.maxSalary && parseInt(minSalary) > parseInt(formData.maxSalary)) {
+                                      setErrors(prev => ({
+                                        ...prev,
+                                        minsalary: "Min salary cannot be greater than max",
+                                        maxsalary: "Max salary cannot be less than min"
+                                      }));
+                                    } else {
+                                      setErrors(prev => ({ ...prev, minsalary: "", maxsalary: "" }));
+                                    }
+
+                                    // Update state
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      minSalary: minSalary === "" ? "" : parseInt(minSalary)
+                                    }));
+                                  }}
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
+
+                                // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                />
+
+                              </div>
+                              {errors.minsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.minsalary}</p>}
                             </div>
-                            {errors.minsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.minsalary}</p>}
-                            </div>
-     
+
                           </div>
 
                           {/* Max Experience */}
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">Max</label>
-                            <div className='flex-col'>   
-                            <div className="relative w-full">
-                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                              <input
-                                type="number"
-                                min={1}
-                                value={formData.maxSalary ?? ""}
-                                onChange={(e) => {
-                                  const maxSalary = e.target.value;
-                                  
-                                  // Validate max salary is not less than current min salary
-                                  if (maxSalary !== "" && formData.minSalary && parseInt(maxSalary) < parseInt(formData.minSalary)) {
-                                    setErrors(prev => ({ 
-                                      ...prev, 
-                                      maxsalary: "Max salary cannot be less than min",
-                                      minsalary: "Min salary cannot be greater than max"
+                            <div className='flex-col'>
+                              <div className="relative w-full">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={formData.maxSalary ?? ""}
+                                  onChange={(e) => {
+                                    const maxSalary = e.target.value;
+
+                                    // Validate max salary is not less than current min salary
+                                    if (maxSalary !== "" && formData.minSalary && parseInt(maxSalary) < parseInt(formData.minSalary)) {
+                                      setErrors(prev => ({
+                                        ...prev,
+                                        maxsalary: "Max salary cannot be less than min",
+                                        minsalary: "Min salary cannot be greater than max"
+                                      }));
+                                    } else {
+                                      setErrors(prev => ({ ...prev, maxsalary: "", minsalary: "" }));
+                                    }
+
+                                    // Update state
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      maxSalary: maxSalary === "" ? "" : parseInt(maxSalary)
                                     }));
-                                  } else {
-                                    setErrors(prev => ({ ...prev, maxsalary: "", minsalary: "" }));
-                                  }
-                                  
-                                  // Update state
-                                  setFormData(prev => ({ 
-                                    ...prev, 
-                                    maxSalary: maxSalary === "" ? "" : parseInt(maxSalary)
-                                  }));
-                                }}
-                                className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
+                                  }}
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary ? "border-red-500" : "border-gray-300"}`}
                                 // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
                                 // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
-                              />
-                                 
-                            </div>
-                            {errors.maxsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.maxsalary}</p>}
+                                />
+
+                              </div>
+                              {errors.maxsalary && <p className="text-red-500 text-xs pl-1 mt-1 ">{errors.maxsalary}</p>}
                             </div>
                           </div>
                         </div>
-                   
+
                       </div>
-                   
+
                     </div>
-                    
+
                     {/* location  and no of positions  */}
 
                     {/* <div> */}
@@ -1298,35 +1235,33 @@ const PositionForm = () => {
                         id="jobDescription"
                         name="jobDescription"
                         value={formData.jobDescription}
+
                         onChange={(e) => {
                           const value = e.target.value;
                           setFormData({ ...formData, jobDescription: value });
-                          if (value.trim() !== "") {
+                          // Clear jobdescription error when user starts typing
+                          if (errors.jobdescription) {
                             setErrors((prev) => ({ ...prev, jobdescription: "" }));
                           }
                         }}
-                        className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                        className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                         rows={10}
                         minLength={250}
                         maxLength={1000}
                       />
-                      <div className={`${errors.jobdescription && 'flex justify-between'}`}>
-                        <span>
-                          {errors.jobdescription && <p className="text-red-500 text-xs pt-1 ">{errors.jobdescription}</p>}
-                        </span>
+                      <div >
                         <div className="flex justify-between items-center mt-1">
-
-
                           <span className="text-sm text-gray-500">
-                            {formData.jobDescription.length > 0 && formData.jobDescription.length < 250 &&
-                              `Minimum ${250 - formData.jobDescription.length} more characters needed`}
+                            {errors.jobdescription ? (
+                              <p className="text-red-500 text-xs pt-1">{errors.jobdescription}</p>
+                            ) : formData.jobDescription.length > 0 && formData.jobDescription.length < 250 ? (
+                              <p className="text-gray-500 text-xs">
+                                Minimum {250 - formData.jobDescription.length} more characters needed
+                              </p>
+                            ) : null}
                           </span>
-                          <span className='flex justify-between'>
-
-                            <span className="text-sm text-gray-500">{formData.jobDescription.length}/1000</span>
-                          </span>
-
+                          <p className="text-sm text-gray-500">{formData.jobDescription.length}/1000</p>
                         </div>
                       </div>
 
@@ -1354,7 +1289,7 @@ const PositionForm = () => {
                       )}
 
                       <div className="space-y-2 mb-4 mt-5">
-                        {entries.map((entry, index,) => (
+                        {entries?.map((entry, index,) => (
                           <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[75%] sm:w-full md:w-full flex">
                             <div className="flex justify-between border bg-white rounded w-full mr-3">
                               <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
@@ -1417,10 +1352,10 @@ const PositionForm = () => {
                                                   className="mr-3"
                                                 />
                                                 {skill.SkillName}
-                                                {allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName 
-                                                // && <span className="text-gray-400 ml-2">(Already selected)</span>
+                                                {allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName
+                                                  // && <span className="text-gray-400 ml-2">(Already selected)</span>
 
-      }
+                                                }
                                               </label>
                                             ))
                                           ) : (
@@ -1555,13 +1490,15 @@ const PositionForm = () => {
                         value={formData.template?.templateName || ""}
                         options={templates}
                         onChange={(e) => {
-                          console.log('Template selected:', e.target.value);
-                          setFormData({ ...formData, template: e.target.value });
+                          const selectedTemplate = templates.find(t => t._id === e.target.value);
+                          setFormData({ ...formData, template: selectedTemplate });
                         }}
                         disabledError={false}
                         placeholder="Select Template"
-                        optionKey="templateName"
-                        optionValue="templateName"
+                        // optionKey="templateName"
+                        // optionValue="templateName"
+                        optionKey="templateName" // Display template name
+                        optionValue="_id"
                       />
                       {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Template
@@ -1616,8 +1553,8 @@ const PositionForm = () => {
               <div className="flex justify-end mt-4 space-x-3 mb-5">
                 <button className="px-3 py-1 border-custom-blue rounded border"
                   onClick={() => {
-                    const previousPage = location.state?.from || "/positions";
-                    navigate(previousPage);
+                    // const previousPage = location.state?.from || "/position";
+                    navigate(fromPath);
                   }}
                 >
                   Cancel
@@ -1626,8 +1563,8 @@ const PositionForm = () => {
                   type="button"
                   onClick={(e) => handleSubmit(e, "BasicDetailsSave")}
                   className="px-3 py-1 border bg-custom-blue text-white rounded hover:bg-custom-blue font-medium"
-                >
-                  Save
+                > {isEdit ? 'Update' : 'Save'}
+
                 </button>
 
                 {/* Show 'Save & Add Round' if no rounds are added */}
@@ -1642,7 +1579,7 @@ const PositionForm = () => {
                 )} */}
 
                 {/* Show 'Save & Next' only when positionId exists & at least one round is added */}
-                {positionId && hasRounds && (
+                {/* {positionId && hasRounds && (
                   <button
                     type="button"
                     onClick={(e) => handleSubmit(e, "BasicDetailsSave&Next")}
@@ -1650,14 +1587,14 @@ const PositionForm = () => {
                   >
                     Save & Next
                   </button>
-                )}
+                )} */}
 
               </div>
             </>
           )}
         </div>
         {/* Round Modal */}
-        {isRoundModalOpen && (
+        {/* {isRoundModalOpen && (
           <RoundModal
             isOpen={true}
             // onClose={() => {
@@ -1667,7 +1604,7 @@ const PositionForm = () => {
             onNext={handleRoundNext}
             currentRoundNumber={insertIndex + 1}
           />
-        )}
+        )} */}
 
         {/* Delete Confirmation Modal */}
         {/* <DeleteConfirmationModal

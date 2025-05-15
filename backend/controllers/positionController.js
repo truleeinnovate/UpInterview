@@ -1,5 +1,107 @@
 const { Position } = require('../models/position.js');
 
+// const createPosition = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = 'Create Position';
+
+//   if (!req.body.ownerId) {
+//     res.locals.responseData = {
+//       status: 'error',
+//       message: "OwnerId field is required",
+//     };
+//     return res.status(400).json(res.locals.responseData);
+//   }
+
+//   try {
+//     console.log("position data ", req.body);
+
+//     // const position = new Position({ ...req.body }); // Store all fields dynamically
+
+//     // Map request body to schema fields
+//     const positionData = {
+//       title: req.body.title || "",
+//       companyname: req.body.companyName || "",
+//       jobDescription: req.body.jobDescription || "",
+//       minexperience: req.body.minexperience || undefined,
+//       maxexperience: req.body.maxexperience || undefined,
+//       // selectedTemplete: req.body.template?._id || null,
+//       skills: req.body.skills || [],
+//       additionalNotes: req.body.additionalNotes || "",
+//       CreatedBy: req.body.ownerId || "",
+//       LastModifiedById: req.body.ownerId || "",
+//       ownerId: req.body.ownerId || "",
+//       tenantId: req.body.tenantId || "",
+//       minSalary: req.body.minSalary || "",
+//       maxSalary: req.body.maxSalary || "",
+//       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
+//       Location: req.body.Location || "",
+//       rounds: [], // Initialize as empty array
+//       selectedTemplete: req.body.template.templateName || null
+//     };
+
+//     if (req.body.template && req.body.template.rounds) {
+//       positionData.rounds = req.body.template.rounds.map((round) => ({
+//         roundName: round.roundName || "",
+//         interviewMode: round.interviewMode || "",
+//         interviewType: round.interviewType || "",
+//         duration: round.duration || "",
+//         instructions: round.instructions || ""
+//       }));
+//     }
+
+//     // console.log("createPosition position",positionData);
+
+//     const position = new Position(positionData);
+//     const newPosition = await position.save();
+
+//     res.locals.feedData = {
+//       tenantId: req.body.tenantId,
+//       feedType: 'info',
+//       action: {
+//         name: 'position_created',
+//         description: `Position was created`,
+//       },
+//       ownerId: req.body.ownerId,
+//       parentId: newPosition._id,
+//       parentObject: 'Position',
+//       metadata: req.body,
+//       severity: res.statusCode >= 500 ? 'high' : 'low',
+//       message: `Position was created successfully`,
+//     };
+
+//     res.locals.logData = {
+//       tenantId: req.body.tenantId,
+//       ownerId: req.body.ownerId,
+//       processName: 'Create Position',
+//       requestBody: req.body,
+//       status: 'success',
+//       message: 'Position created successfully',
+//       responseBody: newPosition,
+//     };
+
+//     res.status(201).json({
+//       status: 'success',
+//       message: 'Position created successfully',
+//       data: newPosition,
+//     });
+//   } catch (error) {
+//     res.locals.logData = {
+//       tenantId: req.body.tenantId,
+//       ownerId: req.body.ownerId,
+//       processName: 'Create Position',
+//       requestBody: req.body,
+//       message: error.message,
+//       status: 'error',
+//     };
+
+//     res.status(500).json({
+//       status: 'error',
+//       message: error.message,
+//     });
+//   }
+// };
+
+
 const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = 'Create Position';
@@ -15,8 +117,6 @@ const createPosition = async (req, res) => {
   try {
     console.log("position data ", req.body);
 
-    // const position = new Position({ ...req.body }); // Store all fields dynamically
-
     // Map request body to schema fields
     const positionData = {
       title: req.body.title || "",
@@ -24,7 +124,6 @@ const createPosition = async (req, res) => {
       jobDescription: req.body.jobDescription || "",
       minexperience: req.body.minexperience || undefined,
       maxexperience: req.body.maxexperience || undefined,
-      // selectedTemplete: req.body.template?._id || null,
       skills: req.body.skills || [],
       additionalNotes: req.body.additionalNotes || "",
       CreatedBy: req.body.ownerId || "",
@@ -35,21 +134,29 @@ const createPosition = async (req, res) => {
       maxSalary: req.body.maxSalary || "",
       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
       Location: req.body.Location || "",
-      rounds: [], // Initialize as empty array
-      selectedTemplete: req.body.template.templateName || null
+      selectedTemplete: req.body.template?.templateName || null
     };
 
-    if (req.body.template && req.body.template.rounds) {
-      positionData.rounds = req.body.template.rounds.map((round) => ({
-        roundName: round.roundName || "",
+    // Only add rounds if template exists and has rounds
+    if (req.body.template && req.body.template.rounds && req.body.template.rounds.length > 0) {
+      positionData.rounds = req.body.template.rounds.map(round => ({
+        roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
-        interviewType: round.interviewType || "",
-        duration: round.duration || "",
-        instructions: round.instructions || ""
+        interviewerType: round.interviewerType || "",
+        duration: round.interviewDuration ? round.interviewDuration.toString() : "",
+        instructions: round.instructions || "",
+        selectedInterviewersType: round.selectedInterviewersType || "",
+        interviewers: round.interviewers || [],
+        assessmentId: round.assessmentId || null,
+        sequence: round.sequence || 0,
+        questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
+          questionId: q.questionId || null,
+          snapshot: q.snapshot || null
+        })) : []
       }));
+    } else {
+      positionData.rounds = [];
     }
-
-    // console.log("createPosition position",positionData);
 
     const position = new Position(positionData);
     const newPosition = await position.save();
@@ -103,7 +210,6 @@ const createPosition = async (req, res) => {
 
 
 const updatePosition = async (req, res) => {
-  // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
   res.locals.processName = 'Update Position';
 
@@ -111,26 +217,18 @@ const updatePosition = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
-    console.log('Starting position update process');
-    console.log('Request parameters:', { positionId });
-    console.log('Request body:', req.body);
-    console.log('Update fields:', updateFields);
-
-    // Fetch current position details (keep as Mongoose document)
-    const currentPosition = await Position.findById(positionId);
+    const currentPosition = await Position.findById(positionId).lean();
 
     if (!currentPosition) {
-      console.log('Position not found');
       return res.status(404).json({ message: "Position not found" });
     }
 
-    console.log('Building position data with updates');
     const positionData = {
       title: updateFields.title || currentPosition.title,
       companyname: updateFields.companyName || currentPosition.companyname,
       jobDescription: updateFields.jobDescription || currentPosition.jobDescription,
-      minexperience: updateFields.experienceMin || currentPosition.minexperience,
-      maxexperience: updateFields.experienceMax || currentPosition.maxexperience,
+      minexperience: updateFields.minexperience || currentPosition.minexperience,
+      maxexperience: updateFields.maxexperience || currentPosition.maxexperience,
       selectedTemplete: updateFields.template?.templateName ?? currentPosition.selectedTemplete,
       skills: updateFields.skills || currentPosition.skills,
       additionalNotes: updateFields.additionalNotes || currentPosition.additionalNotes,
@@ -141,70 +239,66 @@ const updatePosition = async (req, res) => {
       minSalary: updateFields.minSalary || currentPosition.minSalary,
       maxSalary: updateFields.maxSalary || currentPosition.maxSalary,
       NoofPositions: updateFields.NoofPositions ? Number(updateFields.NoofPositions) : currentPosition.NoofPositions,
-      Location: updateFields.Location || currentPosition.Location,
-      rounds: updateFields.template?.rounds?.map(round => ({
-        roundName: round.roundName || "",
-        interviewMode: round.interviewMode || "",
-        interviewType: round.interviewType || "",
-        duration: round.duration || "",
-        instructions: round.instructions || ""
-      })) ?? currentPosition.rounds
+      Location: updateFields.Location || currentPosition.Location
     };
-    console.log('Position data with updates:', positionData);
+
+    // Handle rounds update only if template is provided and has rounds
+    if (updateFields.template?.rounds) {
+      positionData.rounds = updateFields.template.rounds.map(round => ({
+        roundTitle: round.roundTitle || "",
+        interviewMode: round.interviewMode || "",
+        interviewerType: round.interviewerType || "",
+        duration: round.interviewDuration ? round.interviewDuration.toString() : "",
+        instructions: round.instructions || "",
+        selectedInterviewersType: round.selectedInterviewersType || "",
+        interviewers: round.interviewers || [],
+        assessmentId: round.assessmentId || null,
+        sequence: round.sequence || 0,
+        questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
+          questionId: q.questionId || null,
+          snapshot: q.snapshot || null
+        })) : []
+      }));
+    } else {
+      // Keep existing rounds if no template rounds provided
+      positionData.rounds = currentPosition.rounds;
+    }
 
     // Compare current values with updateFields to identify changes
-    console.log('Comparing current values with updates');
     const changes = Object.entries(positionData)
       .filter(([key, newValue]) => {
         const oldValue = currentPosition[key];
-        console.log(`Comparing field: ${key}`, { oldValue, newValue });
-
-        // Handle arrays (e.g., `skills`) by comparing stringified versions
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
           const normalizeArray = (array) =>
             array.map(({ _id, ...rest }) => rest)
               .sort((a, b) => (a.skill || "").localeCompare(b.skill || ""));
-
-          const areDifferent = JSON.stringify(normalizeArray(oldValue)) !== JSON.stringify(normalizeArray(newValue));
-          console.log(`Array field ${key} changed:`, areDifferent);
-          return areDifferent;
+          return JSON.stringify(normalizeArray(oldValue)) !== JSON.stringify(normalizeArray(newValue));
         }
-
-        const hasChanged = oldValue !== newValue;
-        console.log(`Field ${key} changed:`, hasChanged);
-        return hasChanged;
+        return oldValue !== newValue;
       })
       .map(([key, newValue]) => ({
         fieldName: key,
         oldValue: currentPosition[key],
         newValue,
       }));
-    console.log('Changes detected:', changes);
 
-    // If no changes detected, return early
     if (changes.length === 0) {
-      console.log('No changes detected, returning');
       return res.status(200).json({
         status: 'no_changes',
         message: 'No changes detected, position details remain the same',
       });
     }
 
-    // Update the position
-    console.log('Applying updates to position');
-    Object.assign(currentPosition, positionData);
-
-    // Save to trigger middleware and timestamps
-    const updatedPosition = await currentPosition.save();
-    console.log('Position saved successfully:', updatedPosition);
+    const updatedPosition = await Position.findByIdAndUpdate(
+      positionId,
+      { $set: positionData },
+      { new: true }
+    );
 
     if (!updatedPosition) {
-      console.log('Failed to update position');
       return res.status(404).json({ message: "Position not found." });
     }
 
-    // Generate feed
-    console.log('Generating feed data');
     res.locals.feedData = {
       tenantId,
       feedType: 'update',
@@ -223,10 +317,7 @@ const updatePosition = async (req, res) => {
       })),
       history: changes,
     };
-    console.log('Feed data generated:', res.locals.feedData);
 
-    // Generate logs
-    console.log('Generating log data');
     res.locals.logData = {
       tenantId,
       ownerId,
@@ -236,24 +327,13 @@ const updatePosition = async (req, res) => {
       message: 'Position updated successfully',
       responseBody: updatedPosition,
     };
-    console.log('Log data generated:', res.locals.logData);
 
-    // Send response
-    console.log('Sending successful response');
     res.status(201).json({
       status: 'success',
       message: 'Position updated successfully',
       data: updatedPosition,
     });
   } catch (error) {
-    console.error('Error updating position:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      requestBody: req.body
-    });
-
-    // Handle errors
     res.locals.logData = {
       tenantId,
       ownerId,
@@ -261,7 +341,6 @@ const updatePosition = async (req, res) => {
       requestBody: req.body,
       message: error.message,
       status: 'error',
-      responseError: error.message // Store just the error message as string
     };
 
     res.status(500).json({

@@ -35,7 +35,7 @@ const PositionKanban = ({ positions}) => {
   const location= useLocation();
   return (
     <DndContext collisionDetection={closestCenter}>
-       <div className="w-full  bg-gray-50 rounded-xl p-4 h-[calc(100vh-11rem)]">
+       <div className="w-full  bg-gray-50 rounded-xl p-4">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-semibold text-gray-800">All Positions</h3>
       <span className="px-2 py-1 bg-white rounded-lg text-sm text-gray-600 shadow-sm">
@@ -43,11 +43,6 @@ const PositionKanban = ({ positions}) => {
       </span>
     </div>
     {/* Grid layout for position cards */}
-   {positions.length === 0 ? (
-    <div className="flex justify-center items-center h-full py-20 text-gray-500 text-lg">
-      No positions found.
-    </div>
-  ) : (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
       {positions.map((position) => (
         <div
@@ -62,7 +57,7 @@ const PositionKanban = ({ positions}) => {
                 {/* <StatusBadge status={position?.Status || "?"} /> */}
               </div>
               <div className=""
-               onClick={() =>  navigate(`/positions/view-details/${position._id}`, { state: { from: location.pathname }})}
+               onClick={() =>  navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }})}
               >
                 <h4 className="text-sm font-medium text-custom-blue">{position?.title || 'N/A'}</h4>
                 {/* <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -74,7 +69,7 @@ const PositionKanban = ({ positions}) => {
             {/* Action buttons */}
             <div className="flex items-center gap-1">
               <button
-               onClick={() =>  navigate(`/positions/view-details/${position._id}`, { state: { from: location.pathname }})}
+               onClick={() =>  navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }})}
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
@@ -82,7 +77,7 @@ const PositionKanban = ({ positions}) => {
               </button>
               
               <button
-               onClick={() =>   navigate(`/positions/edit-position/${position._id}`)}
+               onClick={() =>   navigate(`/position/edit-position/${position._id}`)}
                 className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 title="Edit"
               >
@@ -159,7 +154,6 @@ const PositionKanban = ({ positions}) => {
         </div>
       ))}
     </div>
-  )}
   </div>
     </DndContext>
   );

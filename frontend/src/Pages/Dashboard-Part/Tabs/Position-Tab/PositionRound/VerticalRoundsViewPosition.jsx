@@ -12,7 +12,8 @@ const VerticalRoundsViewPosition = ({
   rounds,
   interviewData,
   canEditRound,
-  onEditRound
+  onEditRound,
+  
 }) => {
   console.log("rounds", rounds)
   // Sort rounds by sequence
@@ -45,8 +46,8 @@ const VerticalRoundsViewPosition = ({
                 <span className="text-sm font-medium">{round.sequence}</span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{round.roundTitle
-                }</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {round.roundTitle}</h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
                   <span className="mr-2">{round.interviewType}</span>
                   <span>•</span>

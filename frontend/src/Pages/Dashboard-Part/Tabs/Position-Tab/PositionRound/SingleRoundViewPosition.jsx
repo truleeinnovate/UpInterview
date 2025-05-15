@@ -33,6 +33,7 @@ const SingleRoundViewPosition = ({
   const goToPrevious = () => {
     if (hasPrevious && previousRoundId) {
       onChangeRound(previousRoundId);
+      
     }
   };
 
@@ -52,9 +53,9 @@ const SingleRoundViewPosition = ({
         <button
           onClick={goToPrevious}
           disabled={!hasPrevious}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${
+          className={`inline-flex items-center px-3 py-2  shadow-sm text-sm font-medium rounded-md ${
             hasPrevious 
-              ? 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500' 
+              ? 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 ' 
               : 'text-gray-400 bg-gray-100 cursor-not-allowed'
           }`}
         >
@@ -69,12 +70,12 @@ const SingleRoundViewPosition = ({
         <button
           onClick={goToNext}
           disabled={!hasNext}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${
+          className={`inline-flex items-center px-3 py-2   shadow-sm text-sm font-medium rounded-md ${
             hasNext 
-              ? 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500' 
+              ? 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 ' 
               : 'text-gray-400 bg-gray-100 cursor-not-allowed'
           }`}
-        >-
+        >
           Next Round
           <ArrowRight className="h-4 w-4 ml-1" />
         </button>
@@ -97,6 +98,8 @@ const SingleRoundViewPosition = ({
 
 
 ))} */}
+
+   <div className="px-4 pb-4">
       <PositionRoundCard
         round={currentRound}
         interviewId={interviewId}
@@ -104,6 +107,7 @@ const SingleRoundViewPosition = ({
         onEdit={() => onEditRound(currentRound)}
         isActive={true}
       />
+      </div>
       
     </div>
   );

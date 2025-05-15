@@ -5,6 +5,7 @@ import { usePermissions } from "./PermissionsContext.js";
 import Cookies from "js-cookie";
 import { config } from '../config.js'
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {
@@ -177,60 +178,147 @@ const CustomProvider = ({ children }) => {
 
 
   // candidate
+  // const sharingPermissionscandidate = useMemo(() => sharingPermissionscontext.candidate || {}, [sharingPermissionscontext]);
+  // const [candidateData, setCandidateData] = useState([]);
+
+  // const fetchCandidateData = useCallback(async () => {
+  //   setLoading(true);
+
+  //   try {
+  //     const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
+
+  //     const candidatesWithImages = filteredCandidates.map((candidate) => {
+  //       if (candidate.ImageData && candidate.ImageData.filename) {
+  //         const imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
+  //         return { ...candidate, imageUrl };
+  //       }
+  //       return candidate;
+  //     });
+
+  //     // Reverse the data to show the most recent first
+  //     const reversedData = candidatesWithImages.reverse();
+
+  //     setCandidateData(reversedData);
+  //   } catch (error) {
+  //     console.error("❌ [fetchCandidateData] Error fetching candidate data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [sharingPermissionscandidate]);
+
+  // useEffect(() => {
+  //   fetchCandidateData();
+  // }, [fetchCandidateData]);
+
+  const queryClient = useQueryClient();
+
+  // candidate
   const sharingPermissionscandidate = useMemo(() => sharingPermissionscontext.candidate || {}, [sharingPermissionscontext]);
-  const [candidateData, setCandidateData] = useState([]);
 
-  const fetchCandidateData = useCallback(async () => {
-    setLoading(true);
-
-    try {
+  const { data: candidateData = [], isLoading: candidatesLoading } = useQuery({
+    queryKey: ['candidates', sharingPermissionscandidate],
+    queryFn: async () => {
       const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
 
-      const candidatesWithImages = filteredCandidates.map((candidate) => {
-        if (candidate.ImageData && candidate.ImageData.filename) {
-          const imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
-          return { ...candidate, imageUrl };
+      return filteredCandidates.map((candidate) => {
+        if (candidate.ImageData?.filename) {
+          return {
+            ...candidate,
+            imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`
+          };
         }
         return candidate;
-      });
+      }).reverse(); // show most recent first
+    },
+    enabled: !!sharingPermissionscandidate, // only run when permissions are available
+  });
 
-      // Reverse the data to show the most recent first
-      const reversedData = candidatesWithImages.reverse();
 
-      setCandidateData(reversedData);
-    } catch (error) {
-      console.error("❌ [fetchCandidateData] Error fetching candidate data:", error);
-    } finally {
-      setLoading(false);
+
+  // 3. Create a mutation for adding/updating candidate
+  const addOrUpdateCandidate = useMutation({
+    mutationFn: async ({ id, data, file }) => {
+      const url = id
+        ? `${config.REACT_APP_API_URL}/candidate/${id}`
+        : `${config.REACT_APP_API_URL}/candidate`;
+
+      const method = id ? 'patch' : 'post';
+      const response = await axios[method](url, data);
+
+      const candidateId = response.data.data._id;
+
+      if (file) {
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "candidate");
+        imageData.append("id", candidateId);
+
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['candidates']); // ✅ Refreshes the list
     }
-  }, [sharingPermissionscandidate]);
-
-  useEffect(() => {
-    fetchCandidateData();
-  }, [fetchCandidateData]);
+  });
 
   // position fetch
   const sharingPermissionsPosition = useMemo(() => sharingPermissionscontext.position || {}, [sharingPermissionscontext]);
-  const [positions, setSkillsData] = useState([]);
-  const fetchPositionsData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const filteredPositions = await fetchFilterData(
-        "position",
-        sharingPermissionsPosition
-      );
-      const reversedData = filteredPositions.reverse();
-      setSkillsData(reversedData);
-    } catch (error) {
-      // console.error("Error fetching position data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sharingPermissionsPosition]);
+  // const [positions, setSkillsData] = useState([]);
+  // const fetchPositionsData = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const filteredPositions = await fetchFilterData(
+  //       "position",
+  //       sharingPermissionsPosition
+  //     );
+  //     const reversedData = filteredPositions.reverse();
+  //     setSkillsData(reversedData);
+  //   } catch (error) {
+  //     // console.error("Error fetching position data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [sharingPermissionsPosition]);
 
-  useEffect(() => {
-    fetchPositionsData();
-  }, [fetchPositionsData]);
+  // useEffect(() => {
+  //   fetchPositionsData();
+  // }, [fetchPositionsData]);
+
+// 📦 Positions Query
+const {
+  data: positions = [],
+  isLoading: isPositionsLoading,
+  // refetch: refetchPositionData
+} = useQuery({
+  queryKey: ['positions', sharingPermissionsPosition],
+  queryFn: async () => {
+    const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
+    return filteredPositions.reverse(); // Latest first
+  },
+  enabled: !!sharingPermissionsPosition,
+});
+
+
+  // Add position mutation
+  const addOrUpdatePosition = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const url = id
+        ? `${config.REACT_APP_API_URL}/position/${id}`
+        : `${config.REACT_APP_API_URL}/position`;
+
+      const method = id ? 'patch' : 'post';
+      // return await axios[method](url, data);
+      const response = await axios[method](url, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['positions']);
+    }
+  });
 
   // Mockinterview
   const [mockinterviewData, setmockinterviewData] = useState([]);
@@ -479,6 +567,7 @@ const CustomProvider = ({ children }) => {
   const fetchUsersData = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
+      console.log('users response.data from context:', response.data);
       setUsersData(response.data);
     } catch (error) {
       console.error('Error fetching users data:', error);
@@ -590,7 +679,6 @@ const CustomProvider = ({ children }) => {
     fetchUsers();
   }, [tenantId]);
 
-  console.log("setTemplates", templates);
 
   return (
     <CustomContext.Provider
@@ -627,12 +715,22 @@ const CustomProvider = ({ children }) => {
         loading,
 
         // candidate
-        fetchCandidateData,
+        // fetchCandidateData,
+        // candidateData,
+
+        // candidate
         candidateData,
+        candidatesLoading,
+        addOrUpdateCandidate,
 
         // position
-        fetchPositionsData,
+        // fetchPositionsData,
+        // positions,
+
+        // position
         positions,
+        isPositionsLoading,
+        addOrUpdatePosition,
 
         // mockinterview
         mockinterviewData,

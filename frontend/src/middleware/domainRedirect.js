@@ -10,14 +10,15 @@ export const handleDomainRedirection = (organization, navigate, token, path = ''
   if (tokenPayload.organization === true) {
     console.log('organization?.subdomain', organization?.subdomain);
     if (organization?.subdomain) {
+      console.log('1');
       const sub = organization.subdomain;
-      window.location.href = `https://${sub}.app.upinterview.io/${path}?token=${token}`;
+      window.location.href = `https://${sub}.app.upinterview.io${path}`;
     } else {
       console.log('subdomain not found...');
-      navigate(`/${path}`);
+      window.location.href = `https://app.upinterview.io${path}`;
     }
   } else {
     console.log('Organization from the cookies is false');
-    navigate(`/${path}`);
+    window.location.href = `https://app.upinterview.io${path}`;
   }
 };

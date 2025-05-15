@@ -245,7 +245,9 @@ export const Organization = () => {
         lastName: organizationData.lastName,
       }).catch((err) => console.error('Email error:', err));
 
-      handleDomainRedirection(organization, navigate, token, 'subscription-plans');
+      // handleDomainRedirection(organization, navigate, token, 'subscription-plans');
+
+      navigate('/subscription-plans');
 
       toast.success('Organization created successfully!');
     } catch (error) {

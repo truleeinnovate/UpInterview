@@ -48,22 +48,22 @@ const Navbar = () => {
   const moreRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProfileImage = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/${userId}`);
-        const contact = response.data;
-        if (contact.ImageData && contact.ImageData.filename) {
-          const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`;
-          setProfileImage(imageUrl);
-        }
-      } catch (error) {
-        // console.error('Error fetching profile image:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchProfileImage = async () => {
+  //     try {
+  //       const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/${userId}`);
+  //       const contact = response.data;
+  //       if (contact.ImageData && contact.ImageData.filename) {
+  //         const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`;
+  //         setProfileImage(imageUrl);
+  //       }
+  //     } catch (error) {
+  //       // console.error('Error fetching profile image:', error);
+  //     }
+  //   };
 
-    fetchProfileImage();
-  }, [userId]);
+  //   fetchProfileImage();
+  // }, [userId]);
 
   // Helper functions for dropdown toggles
   const handleGettingToggle = () => {
@@ -486,11 +486,11 @@ const Navbar = () => {
               </NavLink>
               
               <NavLink 
-                to="/positions" 
-                className={`h-full flex items-center relative px-1 ${isActive('/positions') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+                to="/position" 
+                className={`h-full flex items-center relative px-1 ${isActive('/position') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
               >
                 Positions
-                {isActive('/positions') && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
+                {isActive('/position') && <div className="absolute bottom-0 left-0 right-0 h-1 bg-custom-blue"></div>}
               </NavLink>
               
               <div className="relative h-full flex items-center" ref={interviewRef}>
@@ -642,8 +642,8 @@ const Navbar = () => {
               </NavLink>
               
               <NavLink
-                to="/positions"
-                className={`block px-4 py-3 rounded-md ${isActive('/positions') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                to="/position"
+                className={`block px-4 py-3 rounded-md ${isActive('/position') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                 onClick={toggleSidebar}
               >
                 Positions

@@ -19,9 +19,9 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
-import axios from 'axios';
-import Cookies from "js-cookie";
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+// import axios from 'axios';
+// import Cookies from "js-cookie";
+
 Modal.setAppElement('#root');
 
 const PositionSlideDetails = () => {
@@ -43,63 +43,67 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const organizationId = tokenPayload.tenantId;
+  
+  // const organizationId = Cookies.get("organizationId");
 
-  // useEffect(() => {
-  //   const foundPosition = positions.find(pos => pos._id === id)
-  //  console.log("foundPosition", foundPosition);
-   
-  //   if (foundPosition) {
-  //     setPosition(foundPosition);
-  //     // Safely set rounds, defaulting to an empty array if rounds is undefined
-  //     setRounds(foundPosition.rounds || []);
-  //     setActiveRound(foundPosition.rounds[0]._id);
-  //   } else {
-  //     setPosition(null); // Ensure position is null if not found
-  //     setRounds([]); // Reset rounds to empty array
-  //   }
-  // }, [positions, id])
 
   useEffect(() => {
-    const fetchPosition = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`,
-          {
-            params: {
-              tenantId: organizationId
-            }
-          }
-        );
+    const foundPosition = positions.find(pos => pos._id === id)
+   console.log("foundPosition", foundPosition);
 
-        const foundPosition = response.data
-        console.log("foundPosition", foundPosition);
-        console.log("foundPosition. rounds", foundPosition.rounds);
-        
-        if (foundPosition) {
-          setPosition(foundPosition || []);
-          setRounds(foundPosition.rounds || []);
-          setActiveRound(foundPosition.rounds[0]._id);
-         
-        }
-      } catch (error) {
-        console.error('Error fetching template:', error);
-      } 
-    };
-    fetchPosition();
-  }, [id]);
+    if (foundPosition) {
+      setPosition(foundPosition);
+      // Safely set rounds, defaulting to an empty array if rounds is undefined
+      setRounds(foundPosition.rounds || []);
+      setActiveRound(foundPosition.rounds[0]._id);
+    } else {
+      setPosition(null); // Ensure position is null if not found
+      setRounds([]); // Reset rounds to empty array
+    }
+  }, [positions, id])
 
-  // console.log("position ", position);
+    
 
+  // useEffect(() => {
+  //   const fetchPosition = async () => {
+  //     try {
+  //       const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`,
+  //         {
+  //           params: {
+  //             tenantId: organizationId
+  //           }
+  //         }
+  //       );
+
+  //       const foundPosition = response.data
+  //       // console.log("foundPosition", foundPosition);
+  //       // console.log("foundPosition. rounds", foundPosition.rounds);
+
+  //       if (foundPosition) {
+  //         setPosition(foundPosition || []);
+  //         setRounds(foundPosition.rounds || []);
+  //         setActiveRound(foundPosition.rounds[0]._id);
+
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching template:', error);
+  //     }
+  //   };
+  //   fetchPosition();
+  // }, [id]);
+
+  console.log("position ", position);
+
+
+ console.log("setRounds", rounds);
 
 
   const handleAddRound = () => {
-    navigate(`/positions/view-details/${id}/rounds/new`);
+    navigate(`/position/view-details/${id}/rounds/new`);
   };
 
   const handleEditRound = (round) => {
-    navigate(`/positions/view-details/${id}/rounds/${round._id}`);
+    navigate(`/position/view-details/${id}/rounds/${round._id}`);
   };
 
   const canEditRound = (round) => {
@@ -158,7 +162,7 @@ const PositionSlideDetails = () => {
             </button>
           )} */}
           <button
-            onClick={() => navigate('/positions')}
+            onClick={() => navigate('/position')}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -237,10 +241,16 @@ const PositionSlideDetails = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <h4 className="font-semibold text-gray-800">Job Description</h4>
-            <div className="flex flex-wrap gap-2">
-              {position?.jobDescription}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              {position?.jobDescription ? (
+                <div className="text-gray-700 text-sm break-words whitespace-pre-line">
+                  {position.jobDescription}
+                </div>
+              ) : (
+                <p className="text-gray-400 italic">No job description provided</p>
+              )}
             </div>
           </div>
 
@@ -303,45 +313,45 @@ const PositionSlideDetails = () => {
             Position Rounds
           </h3>
 
-         
+
           <div className="flex space-x-2">
-          { rounds.length > 0 &&
+            {rounds.length > 0 &&
 
-          <>
-            <button
-              onClick={toggleViewMode}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {roundsViewMode === 'vertical' ? (
-                <>
-                  <LayoutGrid className="h-4 w-4 mr-1" />
-                  Horizontal View
-                </>
-              ) : (
-                <>
-                  <LayoutList className="h-4 w-4 mr-1" />
-                  Vertical View
-                </>
-              )}
-            </button>
+              <>
+                <button
+                  onClick={toggleViewMode}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none  "
+                >
+                  {roundsViewMode === 'vertical' ? (
+                    <>
+                      <LayoutGrid className="h-4 w-4 mr-1" />
+                      Horizontal View
+                    </>
+                  ) : (
+                    <>
+                      <LayoutList className="h-4 w-4 mr-1" />
+                      Vertical View
+                    </>
+                  )}
+                </button>
 
 
 
-            <button
-              onClick={handleAddRound}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Round
-            </button>
-            </>
-}
+                <button
+                  onClick={handleAddRound}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Round
+                </button>
+              </>
+            }
 
             <Link
               // onClick={() => navigate(`position/edit-position/${position._id}`)}
-              to={`/positions/edit-position/${position._id}`}
+              to={`/position/edit-position/${position._id}`}
               state={{ from: location.pathname }}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none "
             >
               <Edit className="h-4 w-4 mr-1" />
               Edit Position
@@ -352,10 +362,10 @@ const PositionSlideDetails = () => {
 
         <InterviewProgress
           rounds={rounds}
-          // interviewId={id}
-          // currentRoundId={activeRound}
-          // viewMode={roundsViewMode}
-          // onSelectRound={handleSelectRound}
+        // interviewId={id}
+        // currentRoundId={activeRound}
+        // viewMode={roundsViewMode}
+        // onSelectRound={handleSelectRound}
         />
 
 

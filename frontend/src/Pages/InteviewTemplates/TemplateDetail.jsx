@@ -7,9 +7,13 @@ import SingleRoundView from './SingleRoundView';
 import VerticalRoundsView from './VerticalRoundsView';
 import InterviewProgress from './InterviewProgress';
 import Cookies from "js-cookie";
+import { useCustomContext } from '../../Context/Contextfetch';
 
 
 const TemplateDetail = () => {
+    const {
+    templates,
+  } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
@@ -22,36 +26,41 @@ const TemplateDetail = () => {
   const organizationId = Cookies.get("organizationId");
 
   useEffect(() => {
-    const fetchTemplate = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`,
-          {
-            params: {
-              tenantId: organizationId
-            }
-          }
-        );
-        if (response.data && response.data.data) {
-          setTemplate(response.data.data);
+  
+        // const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`,
+
+           const foundTemplate = templates.find(tem => tem._id === id)
+
+           console.log("foundTemplate", foundTemplate);
+           
+          // templates
+        //   {
+        //     params: {
+        //       tenantId: organizationId
+        //     }
+        //   }
+        // );
+        
+        setIsLoading(true)
+        if (foundTemplate && foundTemplate) {
+          setTemplate(foundTemplate);
           // Set the first round as active by default
-          if (response.data.data.rounds?.length > 0) {
-            setActiveRound(response.data.data.rounds[0]._id);
+          if (foundTemplate.rounds?.length > 0) {
+            setActiveRound(foundTemplate?.rounds[0]._id);
           }
           setEditedTemplate({
-            templateName: response.data.data.templateName || '',
-            description: response.data.data.description || '',
-            label: response.data.data.label || '',
-            status: response.data.data.status || ''
+            templateName: foundTemplate?.templateName || '',
+            description:foundTemplate?.description || '',
+            label: foundTemplate?.label || '',
+            status: foundTemplate?.status || ''
           });
-        }
-      } catch (error) {
-        console.error('Error fetching template:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTemplate();
-  }, [id]);
+          setIsLoading(false);
+        }else {
+      setTemplate(null); // Ensure position is null if not found
+      setEditedTemplate(null); // Reset rounds to empty array
+    }
+    
+  }, [id,templates]);
 
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';
