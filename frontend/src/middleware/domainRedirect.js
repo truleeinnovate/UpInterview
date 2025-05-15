@@ -12,13 +12,13 @@ export const handleDomainRedirection = (organization, navigate, token, path = ''
     if (organization?.subdomain) {
       console.log('1');
       const sub = organization.subdomain;
-      window.location.href = `https://${sub}.app.upinterview.io${path}`;
+      // window.location.href = `https://${sub}.app.upinterview.io${path}`;
     } else {
-      console.log('subdomain not found...');
-      window.location.href = `https://app.upinterview.io${path}`;
+      console.log('2');
+      // window.location.href = `https://app.upinterview.io${path}`;
     }
   } else {
-    console.log('Organization from the cookies is false');
-    window.location.href = `https://app.upinterview.io${path}`;
+    console.log('3');
+    // window.location.href = `https://app.upinterview.io${path}`;
   }
 };
