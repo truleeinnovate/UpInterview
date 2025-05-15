@@ -19,6 +19,6 @@ export const handleDomainRedirection = (organization, navigate, token, path = ''
     }
   } else {
     console.log('3');
-    // window.location.href = `https://app.upinterview.io${path}`;
+    window.location.href = `https://app.upinterview.io${path}`;
   }
 };
