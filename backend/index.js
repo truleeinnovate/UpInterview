@@ -76,17 +76,16 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('CORS Origin:', origin);
+    console.log('CORS Origin:', origin); // Debug log to verify the origin
     if (
-      !origin ||
-      origin.startsWith('http://localhost:3000') ||
-      origin.startsWith('http://localhost:3001') ||
-      origin.includes('localhost:3000') ||
-      origin.includes('localhost:3001') ||
-      origin.includes('upinterview.io')
+      !origin || // Allow non-origin requests (e.g., Postman)
+      origin.startsWith('http://localhost:3000') || // Allow local development
+      origin.includes('upinterview.io') // Allow any subdomain of upinterview.io
     ) {
+      console.log('11')
       callback(null, true);
     } else {
+      console.log('22')
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -96,19 +95,11 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Handle preflight requests explicitly
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    return res.status(200).end();
-  }
-  next();
-});
-
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Explicitly handle preflight requests (for redundancy)
+app.options('*', cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json());
 
@@ -372,6 +363,7 @@ const modelMapping = {
 };
 
 const { InterviewRounds } = require('./models/InterviewRounds.js');
+
 app.get('/api/:model', async (req, res) => {
   const { model } = req.params;
   const { tenantId, ownerId } = req.query;
@@ -448,7 +440,6 @@ app.get('/api/:model', async (req, res) => {
       //     path: 'Sections.Questions',
       //     model: 'assessmentQuestions',
       //   });
-
       // break;
 
       case 'position':
