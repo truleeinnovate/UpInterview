@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from '../Context/Contextfetch';
+import Loading from './Loading';
 
 const ProtectedRoute = ({ children }) => {
-  const { usersData } = useCustomContext();
+  const { usersData } = useCustomContext() || {};
+  console.log('userData in protected route', usersData);
   const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,7 +56,7 @@ const ProtectedRoute = ({ children }) => {
   }, [usersData, navigate, location.pathname]);
 
   if (isChecking) {
-    return <div>Loading...</div>;
+    return <div><Loading /></div>;
   }
 
   return children;

@@ -750,6 +750,22 @@ app.use('/assessment-questions', assessmentQuestionsRoutes);
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use('/schedule-assessment', scheduledAssessmentRouter);
 
+const { Contacts } = require("./models/Contacts.js");
+app.get('/contacts', async (req, res) => {
+  try {
+    console.log('Contacts:', Contacts);
+    const contacts = await Contacts.find().populate('availability');
+    console.log('contacts', contacts);
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+  }
+});
+
+const contactRoutes = require('./routes/contactRoutes');
+app.use('/', contactRoutes);
+
 // ----------------------------------------------------->
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page

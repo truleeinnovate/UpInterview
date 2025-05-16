@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+ 
 // const ContactsSchema = new mongoose.Schema({
 //     name: String,
 //     firstname: String,
@@ -47,7 +47,7 @@ const mongoose = require('mongoose');
 //     //     type: String
 //     // }
 // });
-
+ 
 // const ContactsSchema = new mongoose.Schema({
 //     name: String,
 //     firstname: String,
@@ -69,15 +69,15 @@ const mongoose = require('mongoose');
 //     preferredDuration: String,
 //     location: String,
 //     introduction: String,
-
+ 
 //     ResumePdf: String,
 //     Coverletter:String,
 //     Technology:[String],
-
-//     IsReadyForMockInterviews:String, //this feild have to check from login page this feild data is not getting properly 
-    
+ 
+//     IsReadyForMockInterviews:String, //this feild have to check from login page this feild data is not getting properly
+   
 //    skills:[String],
-    
+   
 //     // Technologys: [String],diretly add from form
 //     // password: String,
 //     contactType: String,
@@ -110,8 +110,8 @@ const mongoose = require('mongoose');
 //     //     type: String
 //     // }
 // },{ timestamps: true,strict: false  });
-
-
+ 
+ 
 const ContactsSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
@@ -137,20 +137,20 @@ const ContactsSchema = new mongoose.Schema({
     introduction: String,
     resumePdf: String,
     coverLetter: String,
-    
-    // ranjith added have to check proeprly 
+   
+    // ranjith added have to check proeprly
     coverLetterdescription:String,
     professionalTitle:String,
     bio:String,
     InterviewFormatWeOffer:[String],
     NoShowPolicy:String,
     PreviousExperienceConductingInterviews:String,
-    PreviousExperienceConductingInterviewsYears:Number,
+    PreviousExperienceConductingInterviewsYears:String,
     ExpertiseLevel_ConductingInterviews:String,
-
-
+ 
+ 
     technologies: [String],
-    isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly 
+    isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
     contactType: String,
     experienceYears: String,
@@ -181,11 +181,11 @@ const ContactsSchema = new mongoose.Schema({
     //     type: String
     // }
 }, { timestamps: true});
-
-
-
+ 
+ 
+ 
 const Contacts = mongoose.model('Contacts', ContactsSchema);
-
+ 
 module.exports = {
     Contacts,
 };

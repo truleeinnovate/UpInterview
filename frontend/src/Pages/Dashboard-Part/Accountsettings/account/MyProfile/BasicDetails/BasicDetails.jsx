@@ -33,6 +33,7 @@ const BasicDetails = () => {
     const fetchData = () => {
       try {
 
+        console.log('contacts in basic details', contacts);
         const user = contacts.find(user => user.ownerId === userId);
 
         console.log("user", user);

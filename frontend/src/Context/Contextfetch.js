@@ -567,7 +567,6 @@ const CustomProvider = ({ children }) => {
   const fetchUsersData = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
-      console.log('users response.data from context:', response.data);
       setUsersData(response.data);
     } catch (error) {
       console.error('Error fetching users data:', error);
@@ -726,6 +725,29 @@ const CustomProvider = ({ children }) => {
     },
   });
 
+  const [contacts, setContacts] = useState([]);
+
+  const fetchContactsData = async () => {
+
+    try {
+      const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+      const allUsers_data = allUsers.data;
+
+      setContacts(allUsers_data);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContactsData()
+  }, [])
+
+  console.log('contacts', contacts);
+
   return (
     <CustomContext.Provider
       value={{
@@ -834,6 +856,11 @@ const CustomProvider = ({ children }) => {
         organizationData,
         organizationsLoading,
         addOrUpdateOrganization,
+
+        // contacts 
+        fetchContactsData,
+        contacts,
+        setContacts,
       }}
     >
       {children}

@@ -169,16 +169,19 @@ function AssessmentsTab({ assessment }) {
                   )}
                 </div>
               </div>
-
-              {openSchedules[schedule._id] && (
-                <div className="border-t border-gray-200">
-                  <Candidate
-                    candidates={formattedCandidates(schedule.candidates)}
-                    onResendLink={handleResendLink}
-                    isAssessmentView={true}
-                  />
-                </div>
-              )}
+   {openSchedules[schedule._id] && (
+  <div className="border-t border-gray-200">
+    <div className="overflow-auto max-h-[400px] py-2"> {/* Added padding */}
+      <div className="min-w-[800px] px-2"> {/* Added padding */}
+        <Candidate
+          candidates={formattedCandidates(schedule.candidates)}
+          onResendLink={handleResendLink}
+          isAssessmentView={true}
+        />
+      </div>
+    </div>
+  </div>
+)}
             </div>
           ))
         ) : (

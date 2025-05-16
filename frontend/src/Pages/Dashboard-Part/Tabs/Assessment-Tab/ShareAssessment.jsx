@@ -225,12 +225,12 @@ const ShareAssessment = ({
 
         {showMainContent ? (
           <>
-            <div className="sticky top-0 bg-custom-blue text-white p-4 rounded-t-lg flex justify-between items-center z-10">
+            <div className="sticky top-0 p-4 rounded-t-lg flex justify-between items-center z-10 border-b">
               <div>
                 <h2 className="text-xl font-semibold">Share Assessment</h2>
               </div>
               <button
-                className="text-white hover:text-blue-200 transition-colors p-1 rounded-full hover:bg-blue-700"
+                className=" transition-colors p-1 rounded-full"
                 onClick={onCloseshare}
               >
                 <IoMdClose className="text-2xl" />

@@ -37,45 +37,46 @@ const mongoose = require('mongoose');
 
 exports.getByAssessmentId = async (req, res) => {
   try {
-      const assessmentId = req.params.assessmentId;
-      console.log('Received assessmentId:', assessmentId);
-      
-      // If assessmentId is an object, extract the _id
-      const id = typeof assessmentId === 'object' ? assessmentId._id : assessmentId;
-      console.log('Using assessment ID:', id);
-      
-      // Validate if assessmentId is a valid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({ 
-              success: false,
-              message: 'Invalid assessment ID format' 
-          });
-      }
-
-      const assessmentQuestions = await AssessmentQuestionsSchema.findOne({
-          assessmentId: id
-      }).populate('assessmentId', 'name description');
-      
-      console.log('Found assessment questions:', assessmentQuestions);
-      
-      if (!assessmentQuestions) {
-          return res.status(404).json({ 
-              success: false,
-              message: 'Assessment questions not found' 
-          });
-      }
-
-      res.status(200).json({
-          success: true,
-          data: assessmentQuestions
+    const assessmentId = req.params.assessmentId;
+    
+    // If assessmentId is an object, extract the _id
+    const id = typeof assessmentId === 'object' ? assessmentId._id : assessmentId;
+    
+    // Validate if assessmentId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid assessment ID format' 
       });
+    }
+
+    const assessmentQuestions = await AssessmentQuestionsSchema.findOne({
+      assessmentId: id
+    }).populate('assessmentId', 'name description');
+    
+    if (!assessmentQuestions) {
+      // Return success with empty data instead of 404
+      return res.status(200).json({
+        success: true,
+        exists: false,
+        data: {
+          sections: []
+        }
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      exists: true,
+      data: assessmentQuestions
+    });
   } catch (error) {
-      console.error('Error in getByAssessmentId:', error);
-      res.status(500).json({ 
-          success: false,
-          message: 'Internal server error',
-          error: error.message 
-      });
+    console.error('Error in getByAssessmentId:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
   }
 }
 
