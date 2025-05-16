@@ -32,7 +32,7 @@ function SubmitConfirmation({ questions, answers, totalQuestions, answeredQuesti
                                         <div className="flex items-center space-x-2">
                                             <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                                                    className="h-full bg-custom-blue rounded-full transition-all duration-300"
                                                     style={{ width: `${percentage}%` }}
                                                 />
                                             </div>
@@ -48,13 +48,13 @@ function SubmitConfirmation({ questions, answers, totalQuestions, answeredQuesti
                     <div className="flex justify-center space-x-4">
                         <button
                             onClick={handleStartReview}
-                            className="px-6 py-3 border border-gray-300 rounded-xl text-base font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            className="px-6 py-3 border border-gray-300 rounded-xl text-base font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue transition-all duration-200"
                         >
                             Review Answers
                         </button>
                         <button
                             onClick={handleConfirmSubmit}
-                            className="px-6 py-3 rounded-xl text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                            className="px-6 py-3 rounded-xl text-base font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                         >
                             Submit Assessment
                         </button>

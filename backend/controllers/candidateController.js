@@ -279,10 +279,9 @@ const getCandidates = async (req, res) => {
 
 
 const getCandidateById = async (req, res) => {
-  console.log('getting 1')
   try {
     const { id } = req.params;
-    console.log("👉 [getCandidateById] Received ID:", id);
+    // console.log("👉 [getCandidateById] Received ID:", id);
 
     if (!id) {
       console.log("❌ [getCandidateById] No ID provided");
@@ -290,7 +289,7 @@ const getCandidateById = async (req, res) => {
     }
 
     const candidate = await Candidate.findById(id);
-    console.log("✅ [getCandidateById] Candidate fetched:", candidate);
+    // console.log("✅ [getCandidateById] Candidate fetched:", candidate);
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
@@ -316,7 +315,7 @@ const getCandidateById = async (req, res) => {
       }
     ]);
 
-    console.log("📦 [getCandidateById] Candidate Positions:", candidatePositions);
+    // console.log("📦 [getCandidateById] Candidate Positions:", candidatePositions);
 
     const positionDetails = candidatePositions.map(pos => ({
       positionId: pos.positionId,
@@ -349,7 +348,7 @@ const getCandidateById = async (req, res) => {
       appliedPositions: positionDetails || []
     };
 
-    console.log("🟢 [getCandidateById] Final response:", response);
+    // console.log("🟢 [getCandidateById] Final response:", response);
 
     res.status(200).json(response);
   } catch (error) {

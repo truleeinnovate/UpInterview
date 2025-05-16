@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
+import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
 const InterviewUserDetails = (
   // {userData, setUserData }
@@ -12,14 +13,18 @@ const InterviewUserDetails = (
   const navigate = useNavigate();
   const [userData, setUserData] = useState({})
 
-  const userId = Cookies.get("userId");
+ 
+   const authToken = Cookies.get("authToken");
+   const tokenPayload = decodeJwt(authToken);
+ 
+   const userId = tokenPayload.userId;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
 
         // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user._id === userId);
+        const user = contacts.find(user => user.ownerId === userId);
         // console.log("user", user);
 
         if (user) {
@@ -64,8 +69,8 @@ const InterviewUserDetails = (
           <div className='mt-2'>
             <p className="text-sm text-gray-500">Technologies</p>
             <div className="flex flex-wrap gap-2 mt-1">
-              {userData?.Technology && Array.isArray(userData.Technology) && userData.Technology.length > 0 ? (
-                userData.Technology.map((technology, index) => (
+              {userData?.technologies && Array.isArray(userData.technologies) && userData.technologies.length > 0 ? (
+                userData.technologies.map((technology, index) => (
                   <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                     {technology || "N/A"}
                   </span>
@@ -154,7 +159,7 @@ const InterviewUserDetails = (
 
           <div>
             <p className="text-sm text-gray-500">No Show Policy</p>
-            <p>{userData?.NoShowPolicy || "N/A"}</p>
+            <p className="font-medium">{userData?.NoShowPolicy || "N/A"}</p>
           </div>
 
 
@@ -163,39 +168,7 @@ const InterviewUserDetails = (
             <p>{userData?.professionalTitle || "N/A"}</p>
           </div>
 
-          {/* NoShowPolicy */}
-          {/* {
-
-            userData?.IsReadyForMockInterviews === "yes" &&
-
-            <div>
-              <p className="text-sm text-gray-500">Expected Price Per Mock Interview</p>
-              <p className="font-medium ">
-                <span className="text-sm text-gray-500">min</span>{" "} {" "}
-                {userData?.ExpectedRatePerMockInterviewMin || "0"}{" "} - {" "}
-                <span className="text-sm text-gray-500">max</span>{" "} {" "}
-                {userData?.ExpectedRatePerMockInterviewMax || "N/A"}
-              </p>
-
-            </div>
-          } */}
-
-
-
-
-
-          {/* <div>
-          <p className="text-sm text-gray-500">Gender</p>
-          <p className="font-medium">{userData.gender || "N/A"}</p>
-        </div>
-        <div>
-             <p className="text-sm text-gray-500">Linked In</p>
-             <p className="font-medium">{userData.linkedinUrl || "N/A"}</p>
-           </div> */}
-          {/* <div>
-          <p className="text-sm text-gray-500">Location</p>
-          <p className="font-medium">{userData.location || "N/A"}</p>
-        </div> */}
+          
 
 
         </div>

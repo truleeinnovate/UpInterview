@@ -5,32 +5,39 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import axios from 'axios';
 import Cookies from "js-cookie";
-import { X, Camera, Trash, Minimize, Maximize } from 'lucide-react';
+import { X, Camera, Trash, Minimize, Maximize, ChevronDown, Search, } from 'lucide-react';
 import { validateCompanyProfile } from '../../../../../utils/AccountSettingOrganizationValidations';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useCustomContext } from '../../../../../Context/Contextfetch';
 Modal.setAppElement('#root');
 
 export const companySizes = ['1-10', '11-50', '51-200', '201-500', '501+'];
-export const industries = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing'];
+// export const industries = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing'];
 
 export function CompanyEditProfile() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        company:  '',
-        industry:  '',
-        employees:  '',
-        website: '',
-        country:  '',
-        firstName: '',
-        lastName:  '',
-        email:  '',
-        phone:  '',
-        jobTitle:  '',
-        location: '',
-        logo:  '',
 
-        headquarters:  {
+    const {
+        locations,
+        industries,
+        addOrUpdateOrganization,
+    } = useCustomContext();
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        company: '',
+        industry: '',
+        employees: '',
+        website: '',
+        country: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        jobTitle: '',
+        location: '',
+        logo: '',
+
+        headquarters: {
             address: '', city: '', state: '', zip: '', country: '', phone: ''
         },
         regionalOffice: {
@@ -41,75 +48,146 @@ export function CompanyEditProfile() {
 
         // Added social media fields
         socialMedia: {
-            linkedin:'',
-            twitter:  '',
-            facebook:  ''
+            linkedin: '',
+            twitter: '',
+            facebook: ''
         }
 
     });
     const [errors, setErrors] = useState({});
- 
+
 
     const imageInputRef = useRef(null);
-    const [logoPreview, setLogoPreview] = useState( '');
+    const [logoPreview, setLogoPreview] = useState('');
     const [logoFile, setLogoFile] = useState(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
 
-    
+    // Location
+    const [showDropdownLocation, setShowDropdownLocation] = useState(false);
+    const [searchTermLocation, setSearchTermLocation] = useState('');
+    const dropdownRef = useRef(null);
+
+    // Industry
+    const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
+    const [searchTermIndustry, setSearchTermIndustry] = useState('');
+    const industryDropdownRef = useRef(null);
+
+
+    // Toggle location dropdown
+    const toggleLocation = () => {
+        setShowDropdownLocation(!showDropdownLocation);
+        if (!showDropdownLocation) {
+            setSearchTermLocation('');
+        }
+    };
+
+    // Handle location selection
+    const handleLocationSelect = (location) => {
+        setFormData(prev => ({
+            ...prev,
+            location: location.LocationName
+        }));
+        setShowDropdownLocation(false);
+        setSearchTermLocation('');
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Close Location Dropdown
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdownLocation(false);
+                setSearchTermLocation('');
+            }
+
+            // Close Industry Dropdown
+            if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
+                setShowDropdownIndustry(false);
+                setSearchTermIndustry('');
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+
+
+    const toggleIndustry = () => {
+        setShowDropdownIndustry(!showDropdownIndustry);
+        if (!showDropdownIndustry) {
+            setSearchTermIndustry('');
+        }
+    };
+
+    const handleIndustrySelect = (industry) => {
+        setFormData(prev => ({
+            ...prev,
+            industry: industry.IndustryName
+        }));
+        setShowDropdownIndustry(false);
+        setSearchTermIndustry('');
+    };
+
+
+
+
     useEffect(() => {
         const fetchData = async () => {
-          try {
-            const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`);
-              // Find user based on userId
+            try {
+                const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`);
+                // Find user based on userId
 
-            const organizationDetails = organization_Data.data;  
-          
-              console.log("organizationDetails", organizationDetails);
+                const organizationDetails = organization_Data.data;
+
+                console.log("organizationDetails", organizationDetails);
 
 
-            // Update form data with API response
-        setFormData({
-            company: organizationDetails?.company || '',
-            industry: organizationDetails?.industry || '',
-            employees: organizationDetails?.employees || '',
-            website: organizationDetails?.website || '',
-            country: organizationDetails?.country || '',
-            firstName: organizationDetails?.firstName || '',
-            lastName: organizationDetails?.lastName || '',
-            email: organizationDetails?.email || '',
-            phone: organizationDetails?.phone || '',
-            jobTitle: organizationDetails?.jobTitle || '',
-            location: organizationDetails?.location || '',
-            logo: organizationDetails?.branding?.logo || '',
-            headquarters: organizationDetails?.offices?.find(office => office.type === "Headquarters") || {
-              address: '', city: '', state: '', zip: '', country: '', phone: ''
-            },
-            regionalOffice: organizationDetails?.offices?.find(office => office.type === "Regional Office") || {
-              address: '', city: '', state: '', zip: '', country: '', phone: ''
-            },
-            socialMedia: {
-              linkedin: organizationDetails?.socialMedia?.linkedin || '',
-              twitter: organizationDetails?.socialMedia?.twitter || '',
-              facebook: organizationDetails?.socialMedia?.facebook || ''
+                // Update form data with API response
+                setFormData({
+                    company: organizationDetails?.company || '',
+                    industry: organizationDetails?.industry || '',
+                    employees: organizationDetails?.employees || '',
+                    website: organizationDetails?.website || '',
+                    country: organizationDetails?.country || '',
+                    firstName: organizationDetails?.firstName || '',
+                    lastName: organizationDetails?.lastName || '',
+                    email: organizationDetails?.email || '',
+                    phone: organizationDetails?.phone || '',
+                    jobTitle: organizationDetails?.jobTitle || '',
+                    location: organizationDetails?.location || '',
+                    logo: organizationDetails?.branding?.logo || '',
+                    headquarters: organizationDetails?.offices?.find(office => office.type === "Headquarters") || {
+                        address: '', city: '', state: '', zip: '', country: '', phone: ''
+                    },
+                    regionalOffice: organizationDetails?.offices?.find(office => office.type === "Regional Office") || {
+                        address: '', city: '', state: '', zip: '', country: '', phone: ''
+                    },
+                    socialMedia: {
+                        linkedin: organizationDetails?.socialMedia?.linkedin || '',
+                        twitter: organizationDetails?.socialMedia?.twitter || '',
+                        facebook: organizationDetails?.socialMedia?.facebook || ''
+                    }
+                });
+
+                setLogoPreview(organizationDetails?.branding?.logo || '');
+                //   setCompanyProfile(organizationDetails);
+
+
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                // setLoading(false);
             }
-          });
-
-          setLogoPreview(organizationDetails?.branding?.logo || '');
-        //   setCompanyProfile(organizationDetails);
-            
-
-            
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          } finally {
-            // setLoading(false);
-          }
         };
-    
-     
-          fetchData();
-      
-      }, [ id]);
+
+
+        fetchData();
+
+    }, [id]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -132,6 +210,19 @@ export function CompanyEditProfile() {
                     [fieldName]: value
                 }
             }));
+
+        } else if (name.startsWith('location')) {
+            // Handle nested office fields
+            const [fieldType, fieldName] = name.split('.');
+            setFormData(prev => ({
+                ...prev,
+                [fieldType]: {
+                    ...prev[fieldType],
+                    [fieldName]: value
+                }
+            }));
+
+
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -163,6 +254,7 @@ export function CompanyEditProfile() {
             setErrors(validationErrors);
             return;
         }
+console.log("validationErrors",validationErrors);
 
 
         try {
@@ -194,6 +286,7 @@ export function CompanyEditProfile() {
                 phone: formData.phone,
                 jobTitle: formData.jobTitle,
                 socialMedia: formData.socialMedia,
+                location: formData.location,
 
                 // Updated to include offices array
                 offices: [
@@ -205,20 +298,33 @@ export function CompanyEditProfile() {
                 // branding: { logo: logoUrl }
             };
 
-            const response = await axios.patch(
-                `${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`,
-                updatedData,
-                { headers: { 'Content-Type': 'application/json' } }
-            );
+            console.log("updatedData", updatedData);
 
-            if (response.status === 200) {
+
+            // const response = await axios.patch(
+            //     `${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`,
+            //     updatedData,
+            //     { headers: { 'Content-Type': 'application/json' } }
+            // );
+
+
+            const response = await addOrUpdateOrganization.mutateAsync({
+                id: id,      // Pass `undefined` or null for new
+                data: updatedData,       // JSON data for org details
+                // file: selectedImageFile,
+            });
+
+            console.log("response response", response);
+            
+
+            if (response.status === 'success') {
                 navigate('/account-settings/profile');
             }
 
-           
+
 
             // setCompanyProfile(response.data);
-          
+
         } catch (error) {
             console.error('Error updating company profile:', error);
         }
@@ -235,7 +341,7 @@ export function CompanyEditProfile() {
     return (
         <Modal
             isOpen={true}
-            onRequestClose={() => 
+            onRequestClose={() =>
                 navigate('/account-settings/profile')
                 // setIsEditing(false)
             }
@@ -261,7 +367,7 @@ export function CompanyEditProfile() {
                                 )}
                             </button>
                             <button
-                                onClick={() =>   navigate('/account-settings/profile')}
+                                onClick={() => navigate('/account-settings/profile')}
                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5 text-gray-500" />
@@ -323,7 +429,7 @@ export function CompanyEditProfile() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             name="company"
@@ -333,45 +439,90 @@ export function CompanyEditProfile() {
                                         />
                                         {errors.company && <span className="text-red-500 text-xs">{errors.company}</span>}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Industry *</label>
-                                        <select
-                                            name="industry"
-                                            value={formData.industry}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
-                                        >
-                                            <option value="">Select Industry</option>
-                                            {industries.map((industry,index) => (
-                                                <option key={index} value={industry}>
-                                                    {industry}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {errors.industry && <span className="text-red-500 text-xs">{errors.industry}</span>}
+
+                                    {/* // industry  */}
+                                    {/* Industry */}
+                                    <div ref={industryDropdownRef}>
+                                        <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Industry <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                name="industry"
+                                                type="text"
+                                                id="industry"
+                                                value={formData.industry}
+                                                placeholder="Information Technology"
+                                                autoComplete="off"
+                                                onClick={toggleIndustry}
+                                                readOnly
+                                                className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? 'border-red-500' : 'border-gray-300'}`}
+                                            />
+                                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                                                <ChevronDown className="text-lg" onClick={toggleIndustry} />
+                                            </div>
+                                            {showDropdownIndustry && (
+                                                <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                                                    <div className="border-b">
+                                                        <div className="flex items-center border rounded px-2 py-1 m-2">
+                                                            <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Search Industry"
+                                                                value={searchTermIndustry}
+                                                                onChange={(e) => setSearchTermIndustry(e.target.value)}
+                                                                className="pl-8 focus:border-black focus:outline-none w-full"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    {industries.filter(industry =>
+                                                        industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
+                                                    ).length > 0 ? (
+                                                        industries.filter(industry =>
+                                                            industry.IndustryName.toLowerCase().includes(searchTermIndustry.toLowerCase())
+                                                        ).map((industry) => (
+                                                            <div
+                                                                key={industry._id}
+                                                                onClick={() => handleIndustrySelect(industry)}
+                                                                className="cursor-pointer hover:bg-gray-200 p-2"
+                                                            >
+                                                                {industry.IndustryName}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-2 text-gray-500">No industries found</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {errors.industry && <p className="text-red-500 text-sm sm:text-xs">{errors.industry}</p>}
                                     </div>
+
+
+
+
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Size *</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Size <span className="text-red-500">*</span></label>
                                         <select
-                                        name="employees"
-                                        value={formData.employees}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">Select Size</option>
-                                        {companySizes.map((size,index) => (
-                                            <option key={index} value={size}>
-                                                {size} employees
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.employees && <span className="text-red-500 text-xs">{errors.employees}</span>}
+                                            name="employees"
+                                            value={formData.employees}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            <option value="">Select Size</option>
+                                            {companySizes.map((size, index) => (
+                                                <option key={index} value={size}>
+                                                    {size} employees
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.employees && <span className="text-red-500 text-xs">{errors.employees}</span>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Website *</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Website <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             name="website"
@@ -392,26 +543,77 @@ export function CompanyEditProfile() {
                                             name="country"
                                             value={formData.country}
                                             onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                                         />
                                     </div>
-                                    <div>
+                                    <div ref={dropdownRef}>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                        <input
-                                            type="text"
-                                            name="location"
-                                            value={formData.location}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                name="location"
+                                                type="text"
+                                                id="location"
+                                                value={formData.location}
+                                                placeholder="Delhi,India"
+                                                autoComplete="off"
+
+                                                onChange={handleInputChange}
+                                                onClick={toggleLocation}
+                                                readOnly
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                            />
+
+                                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                                                <ChevronDown className="text-lg" onClick={toggleLocation} />
+                                            </div>
+                                            {showDropdownLocation && (
+                                                <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
+                                                    <div className="border-b">
+                                                        <div className="flex items-center border rounded px-2 py-1 m-2">
+                                                            <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Search Location"
+                                                                value={searchTermLocation}
+                                                                autoComplete="off"
+                                                                onChange={(e) => setSearchTermLocation(e.target.value)}
+                                                                className="pl-8 focus:border-black focus:outline-none w-full"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    {(() => {
+                                                        const filteredLocations = locations.filter(location =>
+                                                            location.LocationName && location.LocationName.toLowerCase().includes(searchTermLocation.toLowerCase())
+                                                        );
+
+                                                        return filteredLocations.length > 0 ? (
+                                                            filteredLocations.map((location) => (
+                                                                <div
+                                                                    key={location._id}
+                                                                    onClick={() => handleLocationSelect(location)}
+                                                                    className="cursor-pointer hover:bg-gray-200 p-2"
+                                                                >
+                                                                    {location.LocationName}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-2 text-gray-500">No locations found</div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
+
+
+
                                 </div>
 
-                            
+
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             name="firstName"
@@ -422,7 +624,7 @@ export function CompanyEditProfile() {
                                         {errors.firstName && <span className="text-red-500 text-xs">{errors.firstName}</span>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             name="lastName"
@@ -437,7 +639,7 @@ export function CompanyEditProfile() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                                         <input
                                             type="email"
                                             name="email"
@@ -448,12 +650,18 @@ export function CompanyEditProfile() {
                                         {errors.email && <span className="text-red-500 text-xs">{errors.email}</span>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
                                         <input
-                                            type="tel"
+                                            type="text"
                                             name="phone"
                                             value={formData.phone}
-                                            onChange={handleInputChange}
+                                            onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, ''); // remove non-digits
+                          if (value.length <= 10) {
+                            handleInputChange({ target: { name: 'phone', value } });
+                          }
+                        }}
+                                            // onChange={handleInputChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                         {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
@@ -462,7 +670,7 @@ export function CompanyEditProfile() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Job Title <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             name="jobTitle"
@@ -473,199 +681,199 @@ export function CompanyEditProfile() {
                                         {errors.jobTitle && <span className="text-red-500 text-xs">{errors.jobTitle}</span>}
                                     </div>
                                     <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
-                                    <input
-                                        type="text"
-                                        name="socialMedia.linkedin"
-                                        value={formData.socialMedia.linkedin}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                                        <input
+                                            type="text"
+                                            name="socialMedia.linkedin"
+                                            value={formData.socialMedia.linkedin}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
 
 
                                 </div>
 
-                                    {/* Social Media Fields */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
-                                    <input
-                                        type="text"
-                                        name="socialMedia.twitter"
-                                        value={formData.socialMedia.twitter}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
-                                    <input
-                                        type="text"
-                                        name="socialMedia.facebook"
-                                        value={formData.socialMedia.facebook}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
+                                {/* Social Media Fields */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
+                                        <input
+                                            type="text"
+                                            name="socialMedia.twitter"
+                                            value={formData.socialMedia.twitter}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                                        <input
+                                            type="text"
+                                            name="socialMedia.facebook"
+                                            value={formData.socialMedia.facebook}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* <h3 className="text-lg font-semibold text-gray-800 mb-4">Locations</h3> */}
-                            
-                            {/* <div className='className="grid grid-cols-1 md:grid-cols-2 gap-4"'> */}
+
+                                {/* <div className='className="grid grid-cols-1 md:grid-cols-2 gap-4"'> */}
 
                                 {/* Headquarters Section */}
-                            <div className=" pt-6">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Headquarters</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                        <input
-                                            type="text"
-                                            name="headquarters.address"
-                                            value={formData.headquarters.address}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                                        <input
-                                            type="text"
-                                            name="headquarters.city"
-                                            value={formData.headquarters.city}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    </div>
-                                    
+                                <div className=" pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Headquarters</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                                        <input
-                                            type="text"
-                                            name="headquarters.state"
-                                            value={formData.headquarters.state}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                                        <input
-                                            type="text"
-                                            name="headquarters.zip"
-                                            value={formData.headquarters.zip}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <input
+                                                    type="text"
+                                                    name="headquarters.address"
+                                                    value={formData.headquarters.address}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                                <input
+                                                    type="text"
+                                                    name="headquarters.city"
+                                                    value={formData.headquarters.city}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                                        <input
-                                            type="text"
-                                            name="headquarters.country"
-                                            value={formData.headquarters.country}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                        <input
-                                            type="tel"
-                                            name="headquarters.phone"
-                                            value={formData.headquarters.phone}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    </div>
-                                    
-                                </div>
-                            </div>
 
-                            {/* Regional Office Section */}
-                            <div className=" pt-6">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Regional Office</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                   
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                        <input
-                                            type="text"
-                                            name="regionalOffice.address"
-                                            value={formData.regionalOffice.address}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                                        <input
-                                            type="text"
-                                            name="regionalOffice.city"
-                                            value={formData.regionalOffice.city}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                                        <input
-                                            type="text"
-                                            name="regionalOffice.state"
-                                            value={formData.regionalOffice.state}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                                        <input
-                                            type="text"
-                                            name="regionalOffice.zip"
-                                            value={formData.regionalOffice.zip}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                   </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                                        <input
-                                            type="text"
-                                            name="regionalOffice.country"
-                                            value={formData.regionalOffice.country}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                        <input
-                                            type="tel"
-                                            name="regionalOffice.phone"
-                                            value={formData.regionalOffice.phone}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                                <input
+                                                    type="text"
+                                                    name="headquarters.state"
+                                                    value={formData.headquarters.state}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                                                <input
+                                                    type="text"
+                                                    name="headquarters.zip"
+                                                    value={formData.headquarters.zip}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                                <input
+                                                    type="text"
+                                                    name="headquarters.country"
+                                                    value={formData.headquarters.country}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    name="headquarters.phone"
+                                                    value={formData.headquarters.phone}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
-                            </div>
-                            {/* </div> */}
+
+                                {/* Regional Office Section */}
+                                <div className=" pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Regional Office</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <input
+                                                    type="text"
+                                                    name="regionalOffice.address"
+                                                    value={formData.regionalOffice.address}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                                <input
+                                                    type="text"
+                                                    name="regionalOffice.city"
+                                                    value={formData.regionalOffice.city}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                                <input
+                                                    type="text"
+                                                    name="regionalOffice.state"
+                                                    value={formData.regionalOffice.state}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                                                <input
+                                                    type="text"
+                                                    name="regionalOffice.zip"
+                                                    value={formData.regionalOffice.zip}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                                <input
+                                                    type="text"
+                                                    name="regionalOffice.country"
+                                                    value={formData.regionalOffice.country}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    name="regionalOffice.phone"
+                                                    value={formData.regionalOffice.phone}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* </div> */}
 
                             </div>
                         </div>
@@ -673,7 +881,7 @@ export function CompanyEditProfile() {
                         <div className="flex justify-end gap-3 pt-6">
                             <button
                                 type="button"
-                                onClick={() => 
+                                onClick={() =>
                                     navigate('/account-settings/profile')
                                     // setIsEditing(false)
                                 }

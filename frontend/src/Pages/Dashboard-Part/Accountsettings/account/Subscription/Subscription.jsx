@@ -101,7 +101,7 @@ export function Subscription() {
               planId: plan._id,
               monthlyPrice: monthlyPricing?.price || 0,
               annualPrice: annualPricing?.price || 0,
-              isDefault: plan.name === "Pro" ? true : false,
+              // isDefault: plan.name === "Pro" ? true : false,
   
               features: plan.features.map(
                 (feature) => `${feature.name} (${feature.description})`

@@ -20,18 +20,18 @@ function CompletionScreen() {
                             Your responses have been successfully submitted. We appreciate the time and effort you took to participate.
                         </p>
                         <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                            <h3 className="text-lg font-semibold text-blue-600 mb-3">Contact Us</h3>
+                            <h3 className="text-lg font-semibold text-custom-blue mb-3">Contact Us</h3>
                             <p className="text-gray-600 text-sm">
                                 Need help or have questions? Reach out to us at{' '}
-                                <a href="mailto:Upinterview@gmail.com" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                                <a href="mailto:Upinterview@gmail.com" className="font-medium text-custom-blue hover:text-custom-blue/80 transition-colors">
                                     Upinterview@gmail.com
                                 </a>
                             </p>
                         </div>
                     </div>
                     <button
-                        onClick={() => window.close()}
-                        className="mt-8 inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-medium hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        onClick={() => window.open("", "_self").close()}
+                        className="mt-8 inline-flex items-center px-6 py-2 bg-gradient-to-r from-custom-blue to-custom-blue/80 text-white rounded-xl text-base font-medium hover:from-custom-blue/80 hover:to-custom-blue/80 transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-offset-2"
                     >
                         <span>Close Assessment</span>
                     </button>

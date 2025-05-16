@@ -45,7 +45,7 @@ const AvailabilityUser = (
   
   
     // "67d77741a9e3fc000cbf61fd"
-    const user = contacts.find(user => user._id === userId);
+    const user = contacts.find(user => user.ownerId === userId);
     // console.log("user", user);
   
     if (user) {

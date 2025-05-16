@@ -753,11 +753,53 @@ const deactivateSubdomain = async (req, res) => {
   }
 };
 
+// patch organization details 
+
+const updateBasedIdOrganizations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Validate ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid organization ID' });
+    }
+
+    // Update the organization
+    const organization = await Organization.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { 
+        new: true, // Return the updated document
+        runValidators: true // Run schema validators
+      }
+    );
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    res.status(200).json(
+      {
+        status: 'success',
+        message: 'Organization updated success',
+        data: organization
+    });
+  } catch (error) {
+    console.error('Error updating organization:', error);
+    res.status(500).json({ 
+      message: 'Error updating organization',
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
-  deactivateSubdomain
+  deactivateSubdomain,
+  updateBasedIdOrganizations
 };
 

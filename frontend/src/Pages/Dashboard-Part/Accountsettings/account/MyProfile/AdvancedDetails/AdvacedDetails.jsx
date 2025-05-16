@@ -17,15 +17,15 @@ const AdvancedDetails = () => {
 
   const userId = tokenPayload.userId;
 
-  console.log("userId AdvancedDetails", userId);
+  // console.log("userId AdvancedDetails", userId);
 
   useEffect(() => {
     const fetchData = () => {
       try {
 
         // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user._id === userId);
-        // console.log("user", user);
+        const user = contacts.find(user => user.ownerId === userId);
+        console.log("user", user);
 
         if (user) {
           setUserData(user);
@@ -67,7 +67,7 @@ const AdvancedDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
-            <p className="font-medium">{userData.CurrentRole || "N/A"}</p>
+            <p className="font-medium">{userData.currentRole || "N/A"}</p>
           </div>
 
 
@@ -81,7 +81,7 @@ const AdvancedDetails = () => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{userData.YearsOfExperience || "N/A"} Years</p>
+            <p className="font-medium">{userData.experienceYears || "N/A"} Years</p>
           </div>
 
           <div>
@@ -129,7 +129,7 @@ const AdvancedDetails = () => {
                   Cover Letter Description
                 </span>
 
-                <p className="text-gray-800 text-sm sm:text-xs float-right mt-3 font-medium">
+                <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium">
                   {userData.coverLetterdescription || "N/A"}
                 </p>
               </div>

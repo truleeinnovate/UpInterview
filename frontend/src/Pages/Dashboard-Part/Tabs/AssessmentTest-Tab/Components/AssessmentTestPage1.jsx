@@ -136,7 +136,7 @@ const AssessmentTestPage1 = ({
     <React.Fragment>
       <div className="max-w-[90rem] mx-auto py-8 px-8">
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden border border-white/20">
-          <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 relative overflow-hidden">
+          <div className="bg-custom-blue p-8 relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTI0IDQ4YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnptMC0xMmMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA6IDYgNi02IDIuNjktNiA2LTZ6IiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')] opacity-10" />
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
@@ -186,7 +186,7 @@ const AssessmentTestPage1 = ({
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
-                    <BookOpenIcon className="h-5 w-5 text-blue-600" />
+                    <BookOpenIcon className="h-5 w-5 text-custom-blue" />
                   </div>
                   <h2 className="ml-3 text-lg font-semibold text-gray-900">Instructions</h2>
                 </div>
@@ -201,7 +201,7 @@ const AssessmentTestPage1 = ({
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                      <ShieldCheckIcon className="h-6 w-6 text-blue-600" />
+                      <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
@@ -211,7 +211,7 @@ const AssessmentTestPage1 = ({
 
                   <button
                     onClick={handleSendOtp}
-                    className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                    className="text-custom-blue font-medium flex items-center"
                   >
                     Send Code
                   </button>
@@ -222,7 +222,7 @@ const AssessmentTestPage1 = ({
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                      <ShieldCheckIcon className="h-6 w-6 text-blue-600" />
+                      <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
@@ -239,7 +239,7 @@ const AssessmentTestPage1 = ({
                           value={digit}
                           onChange={(e) => handleChange(e.target, index)}
                           onKeyDown={(e) => handleKeyDown(e, index)}
-                          className="w-full h-14 text-center text-2xl font-semibold border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          className="w-full h-14 text-center text-2xl font-semibold border-2 rounded-xl focus:border-custom-blue focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         />
                       </div>
                     ))}
@@ -252,7 +252,7 @@ const AssessmentTestPage1 = ({
                       <button
                         onClick={handleResend}
                         disabled={isResending}
-                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                        className="text-custom-blue font-medium flex items-center"
                       >
                         {isResending ? (
                           <>
@@ -286,7 +286,7 @@ const AssessmentTestPage1 = ({
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <div className="flex items-center mb-4">
                     <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
-                      <ClipboardDocumentListIcon className="h-5 w-5 text-indigo-600" />
+                      <ClipboardDocumentListIcon className="h-5 w-5 text-custom-blue" />
                     </div>
                     <h2 className="ml-3 text-lg font-semibold text-gray-900">Additional Notes</h2>
                   </div>
@@ -301,8 +301,8 @@ const AssessmentTestPage1 = ({
               {/* Terms and Conditions */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
-                    <ShieldCheckIcon className="h-5 w-5 text-purple-600" />
+                  <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
+                    <ShieldCheckIcon className="h-5 w-5 text-custom-blue" />
                   </div>
                   <h2 className="ml-3 text-lg font-semibold text-gray-900">Terms and Conditions</h2>
                 </div>
@@ -314,7 +314,7 @@ const AssessmentTestPage1 = ({
                           type="checkbox"
                           checked={isAgreed}
                           onChange={(e) => setIsAgreed(e.target.checked)}
-                          className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-lg transition-colors"
+                          className="h-5 w-5 text-custom-blue focus:ring-custom-blue border-gray-300 rounded-lg transition-colors"
                         />
                       </div>
                     </div>
@@ -352,7 +352,7 @@ const AssessmentTestPage1 = ({
                   transition-all duration-300 transform
                   ${
                     isVerified && isAgreed
-                      ? 'text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:-translate-y-1 hover:shadow-lg'
+                      ? 'text-white bg-custom-blue hover:bg-custom-blue/90'
                       : 'text-gray-500 bg-gray-300 cursor-not-allowed'
                   }
                 `}

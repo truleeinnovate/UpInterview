@@ -18,7 +18,7 @@ const EditAdvacedDetails = () => {
     skills,
     locations,
     industries,
-    CurrentRole,
+    currentRole,
     contacts,setContacts
   } = useCustomContext();
 
@@ -54,18 +54,18 @@ const EditAdvacedDetails = () => {
         const fetchUserData =  () => {
           try {
 
-             const user = contacts.find(user => user._id === id);
+             const user = contacts.find(user => user.ownerId === id);
             
       console.log("user user", user);
       
       if (user) {
              setFormData({
-              currentRole: user.CurrentRole || '',
+              currentRole: user.currentRole || '',
               industry: user.industry || '',
-              experience: user.YearsOfExperience || '',
+              experience: user.experienceYears || '',
               location: user.location || '',
               coverLetterdescription: user.coverLetterdescription || '',
-             
+              id:user._id
             });
           
             // setFormData(user); // Update parent state
@@ -152,12 +152,13 @@ const EditAdvacedDetails = () => {
       return; // Don't submit if there are validation errors
     }
     const cleanFormData = {
-      CurrentRole: formData.currentRole?.trim() || '',
+      currentRole: formData.currentRole?.trim() || '',
       industry: formData.industry?.trim() || '',
-      YearsOfExperience: formData.experience?.trim() || '',
+      experienceYears: formData.experience?.trim() || '',
       location: formData.location?.trim() || '',
       coverLetterdescription: formData.coverLetterdescription?.trim() || '',
       // skills: formData.skills
+      id:formData._id
     };
 
     // validateAdvancedForm
@@ -165,9 +166,12 @@ const EditAdvacedDetails = () => {
     
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData
       );
+
+      console.log("response cleanFormData",response);
+      
 
       if (response.status === 200) {
         // setUserData(prev => ({ ...prev, ...cleanFormData }));
@@ -224,7 +228,7 @@ const EditAdvacedDetails = () => {
     location?.LocationName?.toLowerCase()?.includes(searchTermLocation.toLowerCase() || '')
   ) : [];
 
-  const filteredCurrentRoles = Array.isArray(CurrentRole) ? CurrentRole.filter((role) =>
+  const filteredCurrentRoles = Array.isArray(currentRole) ? currentRole.filter((role) =>
     role?.RoleName?.toLowerCase()?.includes(searchTermCurrentRole.toLowerCase() || '')
   ) : [];
 
@@ -549,7 +553,7 @@ const EditAdvacedDetails = () => {
 
 
             <div className='mt-6'>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cover Letter Description <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cover Letter Description </label>
               <textarea
                 name="coverLetterdescription"
                 value={formData.coverLetterdescription}

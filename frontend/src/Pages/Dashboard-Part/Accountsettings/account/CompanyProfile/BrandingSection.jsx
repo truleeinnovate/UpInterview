@@ -70,27 +70,27 @@ export function BrandingSection({ branding, onUpdate, readOnly = false }) {
               </div>
             ) : (
               <div className="text-center">
-                <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                {!readOnly && (
-                  <>
-                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <label className="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500">
-                        <span>Upload a file</span>
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept="image/*"
-                          onChange={handleChange}
-                          disabled={readOnly}
-                        />
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs leading-5 text-gray-600">
-                      PNG, JPG, GIF up to 10MB
-                    </p>
-                  </>
-                )}
+                <PhotoIcon className="mx-auto h-24 w-24 text-gray-400" />
+                {/* {!readOnly && (
+                  // <>
+                  //   <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                  //     <label className="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500">
+                  //       <span>Upload a file</span>
+                  //       <input
+                  //         type="file"
+                  //         className="sr-only"
+                  //         accept="image/*"
+                  //         onChange={handleChange}
+                  //         disabled={readOnly}
+                  //       />
+                  //     </label>
+                  //     <p className="pl-1">or drag and drop</p>
+                  //   </div>
+                  //   <p className="text-xs leading-5 text-gray-600">
+                  //     PNG, JPG, GIF up to 10MB
+                  //   </p>
+                  // </>
+                )} */}
               </div>
             )}
           </div>

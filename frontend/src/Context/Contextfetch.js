@@ -288,19 +288,19 @@ const CustomProvider = ({ children }) => {
   //   fetchPositionsData();
   // }, [fetchPositionsData]);
 
-// 📦 Positions Query
-const {
-  data: positions = [],
-  isLoading: isPositionsLoading,
-  // refetch: refetchPositionData
-} = useQuery({
-  queryKey: ['positions', sharingPermissionsPosition],
-  queryFn: async () => {
-    const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
-    return filteredPositions.reverse(); // Latest first
-  },
-  enabled: !!sharingPermissionsPosition,
-});
+  // 📦 Positions Query
+  const {
+    data: positions = [],
+    isLoading: isPositionsLoading,
+    // refetch: refetchPositionData
+  } = useQuery({
+    queryKey: ['positions', sharingPermissionsPosition],
+    queryFn: async () => {
+      const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
+      return filteredPositions.reverse(); // Latest first
+    },
+    enabled: !!sharingPermissionsPosition,
+  });
 
 
   // Add position mutation
@@ -680,6 +680,52 @@ const {
   }, [tenantId]);
 
 
+  // organzation code 
+  // In your organizationData component
+  const { data: organizationData, isLoading: organizationsLoading, error: organizationError } = useQuery({
+    queryKey: ['organization', tenantId],
+    queryFn: async () => {
+      if (!tenantId) {
+        throw new Error('Invalid organization ID');
+      }
+      const response = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`);
+      return response.data;
+    },
+    enabled: !!tenantId,
+    retry: false
+  });
+
+  const addOrUpdateOrganization = useMutation({
+    mutationFn: async ({ id, data, file }) => {
+      const url = `${config.REACT_APP_API_URL}/Organization/organization-details/${id}`;
+      const method = 'patch'
+      const response = await axios[method](url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const organizationId = response.data.data._id;
+
+      // Handle image upload if a file is provided
+      if (file) {
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "organization");
+        imageData.append("id", organizationId);
+
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['organizations']); // ✅ Refresh the org list
+    },
+  });
+
   return (
     <CustomContext.Provider
       value={{
@@ -783,6 +829,11 @@ const {
 
         // interview templates
         templates,
+
+        // organzation 
+        organizationData,
+        organizationsLoading,
+        addOrUpdateOrganization,
       }}
     >
       {children}

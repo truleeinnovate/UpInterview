@@ -53,7 +53,7 @@ const EditAvailabilityDetails = () => {
    try {
 
 
-    const user = contacts.find(user => user._id === id);
+    const user = contacts.find(user => user.ownerId === id);
             
 
     console.log("availability user" , user);
@@ -75,7 +75,8 @@ const EditAvailabilityDetails = () => {
     setFormData({
       times: updatedTimes, // Deep copy
       selectedTimezone: user.timeZone ,
-      selectedOption: user?.preferredDuration || ''
+      selectedOption: user?.preferredDuration || '',
+      id:user._id
     });
     setErrors({});
     
@@ -227,7 +228,7 @@ const EditAvailabilityDetails = () => {
 
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData
       );
 

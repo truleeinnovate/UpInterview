@@ -4,7 +4,8 @@ const { registerOrganization, loginOrganization,resetPassword,organizationUserCr
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
-  deactivateSubdomain } = require('../controllers/organizationLoginController');
+  deactivateSubdomain,
+  updateBasedIdOrganizations } = require('../controllers/organizationLoginController');
 
 router.post('/Signup', registerOrganization);
 router.post('/Login', loginOrganization);
@@ -16,6 +17,7 @@ router.get('/roles/:tenantId', getRolesByTenant);
 
 router.get('/organization-details/:id', getBasedIdOrganizations);
 
+router.patch('/organization-details/:id',updateBasedIdOrganizations);
 
 // Subdomain management routes
 router.post('/check-subdomain', checkSubdomainAvailability);

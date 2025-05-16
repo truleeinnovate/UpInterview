@@ -44,6 +44,9 @@ import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.js
 import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
 import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails.jsx";
 
+// Assessment test
+import AssessmentTest from './Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest.jsx';
+
 //-----------------------------------account settings
 import UsersLayout from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx';
 import UserForm from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm.jsx';
@@ -121,9 +124,9 @@ const App = () => {
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <Home />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
 
@@ -173,6 +176,9 @@ const App = () => {
           <Route path="/assessment-details" element={<AssessmentDetails />} />
           <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
           <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
+
+{/* AssessmentTest */}
+          <Route path="/assessmenttest" element={<AssessmentTest />} />
 
           {/* ---------------------------account settings------------------- */}
 

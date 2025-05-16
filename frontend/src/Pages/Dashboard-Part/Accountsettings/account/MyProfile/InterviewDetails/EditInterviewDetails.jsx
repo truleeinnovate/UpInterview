@@ -86,7 +86,7 @@ const EditInterviewDetails = () => {
 
 
         // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user._id === id);
+        const user = contacts.find(user => user.ownerId === id);
         // console.log("user", user);
         setFormData({
           PreviousExperienceConductingInterviews: user.PreviousExperienceConductingInterviews || '',
@@ -95,21 +95,21 @@ const EditInterviewDetails = () => {
           // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
           // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
           // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
-          Technology: Array.isArray(user.Technology) ? user.Technology : [],
+          Technology: Array.isArray(user.technologies) ? user.technologies : [],
           NoShowPolicy: user.NoShowPolicy || '',
           // ExpectedRateMin: String(user.ExpectedRateMin || ''),
           // ExpectedRateMax: String(user.ExpectedRateMax || ''),
           skills: Array.isArray(user.skills) ? user.skills : [],
           interviewFormatWeOffer: Array.isArray(user.InterviewFormatWeOffer) ? user.InterviewFormatWeOffer : [], professionalTitle: user.professionalTitle || "",
           bio: user.bio || "",
-          hourlyRate: user.hourlyRate
-
+          hourlyRate: user.hourlyRate,
+          id:user._id
         });
         setSelectedSkills(Array.isArray(user.skills) ? user.skills : []);
         setInterviewPreviousExperience(user.PreviousExperienceConductingInterviews || '');
         setExpertiseLevel(user.ExpertiseLevel_ConductingInterviews || '');
         setIsReady(user.IsReadyForMockInterviews === 'yes');
-        setSelectedCandidates(user.Technology.map(tech => ({ TechnologyMasterName: tech })) || []);
+        setSelectedCandidates(user.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
         setErrors({});
 
       } catch (error) {
@@ -317,25 +317,26 @@ const EditInterviewDetails = () => {
 
     try {
       const cleanFormData = {
-        PreviousExperienceConductingInterviews: formData.PreviousExperienceConductingInterviews?.trim() || '',
-        PreviousExperienceConductingInterviewsYears: formData.PreviousExperienceConductingInterviewsYears?.trim() || '',
-        ExpertiseLevel_ConductingInterviews: formData.ExpertiseLevel_ConductingInterviews?.trim() || '',
+        PreviousExperienceConductingInterviews: String(formData.PreviousExperienceConductingInterviews?.trim() || '').trim(),
+        PreviousExperienceConductingInterviewsYears: String(formData.PreviousExperienceConductingInterviewsYears || '').trim(),
+        ExpertiseLevel_ConductingInterviews: String(formData.ExpertiseLevel_ConductingInterviews || '').trim() ,
         hourlyRate: Number(formData.hourlyRate) || '',
         // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
         // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
         // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
-        Technology: formData.Technology,
-        skills: formData.skills,
-        NoShowPolicy: formData.NoShowPolicy?.trim() || '',
+        technologies: Array.isArray(formData.Technology) ? formData.Technology : [],
+        skills: Array.isArray(formData.skills) ? formData.skills : [],
+        NoShowPolicy: String(formData.NoShowPolicy || '').trim() ,
         // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
         // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
         InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-        professionalTitle: formData.professionalTitle || "",
-        bio: formData.bio || "",
+        professionalTitle: String(formData.professionalTitle || "").trim(),
+        bio: String(formData.bio || "").trim(),
+         id:formData.id
       };
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData
       );
 

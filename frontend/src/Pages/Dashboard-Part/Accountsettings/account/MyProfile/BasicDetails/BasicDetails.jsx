@@ -33,7 +33,7 @@ const BasicDetails = () => {
     const fetchData = () => {
       try {
 
-        const user = contacts.find(user => user._id === userId);
+        const user = contacts.find(user => user.ownerId === userId);
 
         console.log("user", user);
 
@@ -50,10 +50,10 @@ const BasicDetails = () => {
       }
     };
 
-    if (userId) {
+
       fetchData();
-    }
-  }, [userId, contacts]);
+ 
+  }, [userId]);
 
 
 

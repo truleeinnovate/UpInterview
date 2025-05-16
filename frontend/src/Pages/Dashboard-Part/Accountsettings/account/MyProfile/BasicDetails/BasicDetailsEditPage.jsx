@@ -30,7 +30,7 @@ const BasicDetailsEditPage = () => {
                     // console.log("userId", userId);
                     // console.log("user", allUsers_data);
               // "67d77741a9e3fc000cbf61fd"
-              const user = contacts.find(user => user._id === id);
+              const user = contacts.find(user => user.ownerId === id);
               // console.log("user", user);
             
               if (user) {
@@ -47,7 +47,7 @@ const BasicDetailsEditPage = () => {
                       linkedinUrl: user.linkedinUrl || '',
                       portfolioUrl:user.portfolioUrl || '',
                     
-                      // id:user._id
+                      id:user._id
                     });
                     // Set initial date for DatePicker
                     if (user.dateOfBirth) {
@@ -176,7 +176,8 @@ const extractPhoneParts = (fullPhone) => {
       dateOfBirth: formData.dateOfBirth || '',
       gender: formData.gender || '',
       linkedinUrl: formData.linkedinUrl?.trim() || '',
-      portfolioUrl:formData.portfolioUrl?.trim() || ''
+      portfolioUrl:formData.portfolioUrl?.trim() || '',
+       id:formData.id
     };
 
 
@@ -186,7 +187,7 @@ const extractPhoneParts = (fullPhone) => {
   
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData, // Removed extra nesting
        
       );

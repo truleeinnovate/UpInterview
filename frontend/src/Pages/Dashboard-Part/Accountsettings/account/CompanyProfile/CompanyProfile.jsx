@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react'
 import { GlobeAltIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { MapPin, Globe } from 'lucide-react'; // ✅ Import correct icons
+
 // import { companyProfile,companySizes,industries } from '../mockData/companyData'
-import axios from 'axios'
 import Cookies from "js-cookie";
-import { CompanyEditProfile } from './CompanyProfileEdit';
 import { BrandingSection } from './BrandingSection';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { useCustomContext } from '../../../../../Context/Contextfetch';
 
 export function CompanyProfile() {
+
+    const {
+      organizationsLoading,
+      organizationData
+    } = useCustomContext();
   const [brandingSettings, setBrandingSettings] = useState({})
   const [companyProfile, setCompanyProfile] = useState({});
-  const [isEditing, setIsEditing] = useState(false)
   const navigate = useNavigate();
 
   const authToken = Cookies.get("authToken");
@@ -19,35 +24,38 @@ export function CompanyProfile() {
   const organizationId = tokenPayload.tenantId;
   console.log("organizationId 2", organizationId);
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+      
+  //       // const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${organizationId}`);
+  //       // Find user based on userId
+  //       if (organizationsLoading){
+  //         return <h4>Loading ...</h4>
+  //       }else {
+  // setBrandingSettings(organizationData?.branding || {});
+  //       setCompanyProfile(organizationData);
+  //       }
+
+  //       // const organizationDetails = organization_Data.data;
+  //       // console.log("organizationDetails", organizationDetails);
+
+  //     };
+  //   fetchData();
+
+  // }, [organizationId]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${organizationId}`);
-        // Find user based on userId
+    if (organizationData) {
+      setBrandingSettings(organizationData?.branding || {});
+      setCompanyProfile(organizationData);
+    }
+  }, [organizationData]);
 
-        const organizationDetails = organization_Data.data;
+  if (organizationsLoading) {
+    return <h4>Loading ...</h4>
+  }
 
-        console.log("organizationDetails", organizationDetails);
-
-
-        setBrandingSettings(organizationDetails?.branding || {});
-        setCompanyProfile(organizationDetails);
-
-
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        // setLoading(false);
-      }
-    };
-
-
-    fetchData();
-
-  }, [organizationId]);
-
-
+  
   return (
     <>
       <div className="space-y-6 md:mt-4 sm:mt-4">
@@ -101,12 +109,22 @@ export function CompanyProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <label className="block text-sm font-medium text-gray-700">Country</label>
                   <div className="flex items-center mt-1">
-                    <MapPinIcon className="h-5 w-5 text-gray-400 mr-2" />
+                    <Globe className="h-5 w-5 text-gray-400 mr-2" />
                     <p > {companyProfile?.country || "N/A"}</p>
                   </div>
                 </div>
+
+                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <div className="flex items-center mt-1">
+                    <MapPin className="h-5 w-5 text-gray-400 mr-2" />
+                    <p > {companyProfile?.location || "N/A"}</p>
+                  </div>
+                </div>
+
+
               </div>
             </div>
           </div>

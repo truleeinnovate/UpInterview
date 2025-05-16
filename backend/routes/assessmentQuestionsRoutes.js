@@ -13,6 +13,6 @@ router.post('/upsert',AssessmentQuestionsController.upsertAssessmentQuestions)
 router.get('/list/:assessmentId', AssessmentQuestionsController.getByAssessmentId)
 
 // Get question by ID
-router.get('/:id', AssessmentQuestionsController.getByAssessmentQuestionsId)
+// router.get('/:id', AssessmentQuestionsController.getByAssessmentQuestionsId)
 
 module.exports = router

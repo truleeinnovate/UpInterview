@@ -158,13 +158,13 @@ exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
   try {
     const {id}= req.params 
     if (!id){
-      // console.log("id is missing")
+      console.log("id is missing")
       return res.status(400).send({message:"id is missing"})
     }
     const document = await CandidateAssessment.findById(id) 
-    // console.log("document",document)
+    console.log("document",document)
     if (!document){
-      // console.log("no document found")
+      console.log("no document found")
       return res.status(400).send({message:`no document found for given candidate assessment id:${id}`})
     }
     return res.status(200).send({
@@ -195,7 +195,6 @@ exports.verifyOtp = async (req, res) => {
   try {
     const storedOtp = await Otp.findOne({ candidateAssessmentId });
     if (!storedOtp) {
-      // console.log("No stored OTP found for candidate assessment ID:", candidateAssessmentId);
       return res.status(404).json({
         isValid: false,
         message: 'Invalid OTP. Please request a new one.',
@@ -204,7 +203,6 @@ exports.verifyOtp = async (req, res) => {
 
     if (new Date() > storedOtp.expiresAt) {
       await Otp.findByIdAndDelete(storedOtp._id);
-      // console.log("OTP has expired and has been deleted.");
       return res.status(410).json({
         isValid: false,
         message: 'OTP has expired. Please request a new one.',
@@ -237,7 +235,7 @@ exports.submitCandidateAssessment = async (req, res) => {
   console.log('Started backend process');
   try {
     const {
-      candidateAssessmentId,
+      candidateAssessmentId, // Add candidateAssessmentId
       scheduledAssessmentId,
       candidateId,
       status,

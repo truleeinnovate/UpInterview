@@ -5,8 +5,9 @@ import { useLocation } from 'react-router-dom';
 import AssessmentTestPage1 from './Components/AssessmentTestPage1.jsx';
 import AssessmentTestPage2 from './Components/AssessmentTestPage2.jsx';
 import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
-import { SparklesIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import logo from "../../../Dashboard-Part/Images/upinterviewLogo.png";
+
 
 const AssessmentTest = () => {
   const [isVerified, setIsVerified] = useState(false);
@@ -22,12 +23,12 @@ const AssessmentTest = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [candidateAssessmentId, setCandidateAssessmentId] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000'; // Fallback URL
+ // Fallback URL
 
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
       console.log('Fetching assessment questions for ID:', assessment.assessmentId._id);
-      axios.get(`${API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
+      axios.get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
         .then(response => {
           console.log('API Response:', response.data);
           if (response.data.success) {
@@ -47,7 +48,7 @@ const AssessmentTest = () => {
 
   const getCandidateAssessmentDetails = async (candidateAssessmentId) => {
     try {
-      const response = await axios.get(`${API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
       if (response.data.success) {
         const document = response.data.candidateAssessment;
         return {
@@ -155,7 +156,7 @@ const AssessmentTest = () => {
         setCandidateId(candidateId);
 
         // Fetch assessment details
-        const assessmentResponse = await axios.get(`${API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
+        const assessmentResponse = await axios.get(`${process.env.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
         if (assessmentResponse.data.scheduledAssessment) {
           setAssessment(assessmentResponse.data.scheduledAssessment);
           console.log('Assessment Data:', assessmentResponse.data);
@@ -164,7 +165,7 @@ const AssessmentTest = () => {
         }
 
         // Fetch candidate details
-        const candidateResponse = await axios.get(`${API_URL}/candidate/${candidateId}`);
+        const candidateResponse = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}`);
         const candidateData = candidateResponse.data;
         console.log('Candidate Data:', candidateData);
 
@@ -176,7 +177,7 @@ const AssessmentTest = () => {
         const candidateWithImage = {
           ...candidateData,
           imageUrl: candidateData.ImageData?.filename
-            ? `${API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
+            ? `${process.env.REACT_APP_API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
             : null,
         };
         setCandidate(candidateWithImage);
@@ -195,10 +196,7 @@ const AssessmentTest = () => {
       <div className="max-w-[90rem] mx-auto px-8 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <SparklesIcon className="h-6 w-6 text-blue-600" />
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
-              UpInterview
-            </span>
+        <img src={logo} alt="Logo" className="w-20" />
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500">Powered by</span>

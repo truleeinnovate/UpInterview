@@ -76,11 +76,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('Incoming CORS Origin:', origin); // Debug log
     
     // Allow requests with no origin (like mobile apps, server-to-server, or curl requests)
     if (!origin) {
-      console.log('Allowing request with no origin');
       return callback(null, true);
     }
     
@@ -89,7 +87,6 @@ const corsOptions = {
       origin.startsWith('http://localhost:') || 
       origin.startsWith('https://localhost:')
     ) {
-      console.log('Allowing localhost origin');
       return callback(null, true);
     }
     
@@ -108,11 +105,9 @@ const corsOptions = {
       originHost === 'app.upinterview.io' ||
       /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
     ) {
-      console.log('Allowing valid subdomain:', originHost);
       return callback(null, true);
     }
     
-    console.log('Blocking invalid origin:', originHost);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,

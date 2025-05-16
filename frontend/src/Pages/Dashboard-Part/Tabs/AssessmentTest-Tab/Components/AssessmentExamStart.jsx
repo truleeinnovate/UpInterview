@@ -190,7 +190,7 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
                             <div className="p-8 border-b border-gray-100">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center space-x-4">
-                                        <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                                        <span className="px-4 py-2 bg-blue-100 text-custom-blue rounded-lg text-sm font-medium">
                                             Question {currentQuestionIndex + 1} of {currentSectionData?.questions?.length || 0}
                                         </span>
                                         <span className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium">
@@ -201,20 +201,20 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
                                         {isReviewing ? (
                                             <button
                                                 onClick={handleCancelReview}
-                                                className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                                                className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-custom-blue bg-gray-100 hover:bg-gray-200 transition-colors"
                                             >
                                                 <XMarkIcon className="h-5 w-5 mr-2" />
                                                 Exit Review
                                             </button>
                                         ) : (
-                                            <div className={`flex items-center px-4 py-2 rounded-xl ${timeLeft < 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            <div className={`flex items-center px-4 py-2 rounded-xl ${timeLeft < 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-custom-blue'}`}>
                                                 <ClockIcon className="h-6 w-6 mr-3" />
                                                 <span className="font-mono font-medium">{formatTime(timeLeft)}</span>
                                             </div>
                                         )}
                                         <button
                                             onClick={handleSubmit}
-                                            className="inline-flex items-center px-4 py-2 rounded-xl font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-1 transition-all duration-300"
+                                            className="inline-flex items-center px-4 py-2 rounded-xl font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300"
                                         >
                                             {isReviewing ? 'Finish Review' : 'Review & Submit'}
                                         </button>

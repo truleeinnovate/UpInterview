@@ -47,7 +47,7 @@ export function MyProfile() {
   useEffect(() => {
     const fetchData = () => {
       try {
-        const user = contacts.find(user => user._id === "67d77741a9e3fc000cbf61fd");
+        const user = contacts.find(user => user.ownerId === userId);
 
         // console.log("user subtab ",user);
 
@@ -92,7 +92,7 @@ export function MyProfile() {
   useEffect(() => {
     const validSubtabs = isFreelancer || roleName === "Internal_Interviewer"
     ? ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced'];
+    : ['basic', 'advanced',];
     // const validSubtabs = ['basic', 'advanced', 'interview', 'availability'];
     if (!validSubtabs.includes(subtab)) {
       navigate('/account-settings/my-profile/basic', { replace: true });

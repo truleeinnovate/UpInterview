@@ -19,13 +19,13 @@ function AssessmentSidebar({ questions, currentSection, setCurrentSection, setCu
                                     setCurrentQuestionIndex(0);
                                 }}
                                 className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-all duration-300 ${currentSection === index
-                                    ? 'bg-blue-50 text-blue-900'
+                                    ? 'bg-blue-50 text-custom-blue'
                                     : 'text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
                                 <span className="font-medium">{section.sectionName}</span>
                                 <span className={`px-3 py-1 rounded-lg text-sm font-medium ${answeredCount === questionCount
-                                    ? 'bg-green-100 text-green-800'
+                                    ? 'bg-custom-blue text-white'
                                     : 'bg-gray-100 text-gray-600'
                                     }`}>
                                     {answeredCount}/{questionCount}
