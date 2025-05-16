@@ -732,8 +732,6 @@ const App = () => {
       '/assessmenttest',
       '/assessmenttext',
       '/assessmentsubmit',
-      '/candidatevc',
-      '/jitsimeetingstart',
       '/organization',
     ]);
     const settingsSidebarPaths = [

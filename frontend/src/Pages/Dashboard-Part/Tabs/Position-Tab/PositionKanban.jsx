@@ -34,16 +34,19 @@ const PositionKanban = ({ positions}) => {
   const navigate = useNavigate();
   const location= useLocation();
   return (
-    <DndContext collisionDetection={closestCenter}>
-       <div className="w-full  bg-gray-50 rounded-xl p-4">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-800">All Positions</h3>
-      <span className="px-2 py-1 bg-white rounded-lg text-sm text-gray-600 shadow-sm">
+   <div className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10">
+   
+        <div className="h-full">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-xl font-semibold text-gray-800">All Positions</h3>
+      <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
         {positions?.length} Positions
       </span>
     </div>
+
+
     {/* Grid layout for position cards */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
       {positions.map((position) => (
         <div
           key={position._id}
@@ -155,7 +158,7 @@ const PositionKanban = ({ positions}) => {
       ))}
     </div>
   </div>
-    </DndContext>
+   </div>
   );
 };
 

@@ -19,8 +19,9 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
-// import axios from 'axios';
-// import Cookies from "js-cookie";
+import axios from 'axios';
+import Cookies from "js-cookie";
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 Modal.setAppElement('#root');
 
@@ -43,59 +44,63 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  
-  // const organizationId = Cookies.get("organizationId");
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId =  tokenPayload?.userId;
+
+  const tenantId = tokenPayload?.tenantId;
 
 
-  useEffect(() => {
-    const foundPosition = positions.find(pos => pos._id === id)
-   console.log("foundPosition", foundPosition);
 
-    if (foundPosition) {
-      setPosition(foundPosition);
-      // Safely set rounds, defaulting to an empty array if rounds is undefined
-      setRounds(foundPosition.rounds || []);
-      setActiveRound(foundPosition.rounds[0]._id);
-    } else {
-      setPosition(null); // Ensure position is null if not found
-      setRounds([]); // Reset rounds to empty array
-    }
-  }, [positions, id])
+  // useEffect(() => {
+  //   const foundPosition = positions.find(pos => pos._id === id)
+  //  console.log("foundPosition", foundPosition);
+
+  //   if (foundPosition) {
+  //     setPosition(foundPosition);
+  //     // Safely set rounds, defaulting to an empty array if rounds is undefined
+  //     setRounds(foundPosition.rounds || []);
+  //     setActiveRound(foundPosition.rounds[0]._id);
+  //   } else {
+  //     setPosition(null); // Ensure position is null if not found
+  //     setRounds([]); // Reset rounds to empty array
+  //   }
+  // }, [positions, id])
 
     
 
-  // useEffect(() => {
-  //   const fetchPosition = async () => {
-  //     try {
-  //       const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`,
-  //         {
-  //           params: {
-  //             tenantId: organizationId
-  //           }
-  //         }
-  //       );
+  useEffect(() => {
+    const fetchPosition = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`,
+          {
+            params: {
+              tenantId: tenantId
+            }
+          }
+        );
 
-  //       const foundPosition = response.data
-  //       // console.log("foundPosition", foundPosition);
-  //       // console.log("foundPosition. rounds", foundPosition.rounds);
+        const foundPosition = response.data
+        // console.log("foundPosition", foundPosition);
+        // console.log("foundPosition. rounds", foundPosition.rounds);
 
-  //       if (foundPosition) {
-  //         setPosition(foundPosition || []);
-  //         setRounds(foundPosition.rounds || []);
-  //         setActiveRound(foundPosition.rounds[0]._id);
+        if (foundPosition) {
+          setPosition(foundPosition || []);
+          setRounds(foundPosition.rounds || []);
+          setActiveRound(foundPosition.rounds[0]._id);
 
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching template:', error);
-  //     }
-  //   };
-  //   fetchPosition();
-  // }, [id]);
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
+      }
+    };
+    fetchPosition();
+  }, [id]);
 
   console.log("position ", position);
 
 
- console.log("setRounds", rounds);
+//  console.log("setRounds", rounds);
 
 
   const handleAddRound = () => {

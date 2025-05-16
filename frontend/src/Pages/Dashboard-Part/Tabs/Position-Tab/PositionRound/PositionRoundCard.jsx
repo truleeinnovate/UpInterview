@@ -33,6 +33,16 @@ const PositionRoundCard = ({
   hideHeader = false
 }) => {
 
+    const {
+      assessmentData,
+      loading,
+       sectionQuestions,
+      questionsLoading,
+      questionsError,
+      fetchQuestionsForAssessment,
+      setSectionQuestions,
+    } = useCustomContext();
+
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
@@ -40,7 +50,6 @@ const PositionRoundCard = ({
   const [activeTab, setActiveTab] = useState('details');
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [sectionQuestions, setSectionQuestions] = useState({});
   // console.log("sectionQuestions", sectionQuestions);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -49,86 +58,88 @@ const PositionRoundCard = ({
   const interview = interviewData;
   const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
 
+  console.log("resolveInterviewerDetails", resolveInterviewerDetails());
+  
 
-  const fetchQuestionsForAssessment = async (assessmentId) => {
+  // const fetchQuestionsForAssessment = async (assessmentId) => {
 
-    if (!assessmentId) {
-      return null;
-    }
-    setLoadingQuestions(true);
+  //   if (!assessmentId) {
+  //     return null;
+  //   }
+  //   setLoadingQuestions(true);
 
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-      const assessmentQuestions = response.data;
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const assessmentQuestions = response.data;
 
-      // console.log('Full assessment questions structure:', assessmentQuestions);
+  //     // console.log('Full assessment questions structure:', assessmentQuestions);
 
-      // Extract sections directly from the response
-      const sections = assessmentQuestions.sections || [];
+  //     // Extract sections directly from the response
+  //     const sections = assessmentQuestions.sections || [];
 
-      // Check for empty sections or questions
-      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-        console.warn('No sections or questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
+  //     // Check for empty sections or questions
+  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
+  //       console.warn('No sections or questions found for assessment:', assessmentId);
+  //       setSectionQuestions({ noQuestions: true });
+  //       return;
+  //     }
 
-      // Create section questions mapping with all section data
-      const newSectionQuestions = {};
+  //     // Create section questions mapping with all section data
+  //     const newSectionQuestions = {};
 
-      sections.forEach((section) => {
-        if (!section._id) {
-          console.warn('Section missing _id:', section);
-          return;
-        }
+  //     sections.forEach((section) => {
+  //       if (!section._id) {
+  //         console.warn('Section missing _id:', section);
+  //         return;
+  //       }
 
-        // Store complete section data including sectionName, passScore, totalScore
-        newSectionQuestions[section._id] = {
-          sectionName: section?.sectionName,
-          passScore: Number(section.passScore || 0),
-          totalScore: Number(section.totalScore || 0),
-          questions: (section.questions || []).map(q => ({
-            _id: q._id,
-            questionId: q.questionId,
-            source: q.source || 'system',
-            score: Number(q.score || q.snapshot?.score || 0),
-            order: q.order || 0,
-            customizations: q.customizations || null,
-            snapshot: {
-              questionText: q.snapshot?.questionText || '',
-              questionType: q.snapshot?.questionType || '',
-              score: Number(q.snapshot?.score || q.score || 0),
-              options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-              correctAnswer: q.snapshot?.correctAnswer || '',
-              difficultyLevel: q.snapshot?.difficultyLevel || '',
-              hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-              skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-              tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-              technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-              questionNo: q.snapshot?.questionNo || ''
-            }
-          }))
-        };
-      });
+  //       // Store complete section data including sectionName, passScore, totalScore
+  //       newSectionQuestions[section._id] = {
+  //         sectionName: section?.sectionName,
+  //         passScore: Number(section.passScore || 0),
+  //         totalScore: Number(section.totalScore || 0),
+  //         questions: (section.questions || []).map(q => ({
+  //           _id: q._id,
+  //           questionId: q.questionId,
+  //           source: q.source || 'system',
+  //           score: Number(q.score || q.snapshot?.score || 0),
+  //           order: q.order || 0,
+  //           customizations: q.customizations || null,
+  //           snapshot: {
+  //             questionText: q.snapshot?.questionText || '',
+  //             questionType: q.snapshot?.questionType || '',
+  //             score: Number(q.snapshot?.score || q.score || 0),
+  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
+  //             correctAnswer: q.snapshot?.correctAnswer || '',
+  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
+  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
+  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
+  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
+  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
+  //             questionNo: q.snapshot?.questionNo || ''
+  //           }
+  //         }))
+  //       };
+  //     });
 
-      // Verify that at least one section has questions
-      const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-      if (!hasQuestions) {
-        console.warn('No sections with questions found for assessment:', assessmentId);
-        setSectionQuestions({ noQuestions: true });
-        return;
-      }
+  //     // Verify that at least one section has questions
+  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
+  //     if (!hasQuestions) {
+  //       console.warn('No sections with questions found for assessment:', assessmentId);
+  //       setSectionQuestions({ noQuestions: true });
+  //       return;
+  //     }
 
-      // Set the section questions state
-      setSectionQuestions(newSectionQuestions);
-      // console.log('Updated sectionQuestions:', newSectionQuestions);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions({ error: 'Failed to load questions' });
-    } finally {
-      setLoadingQuestions(false);
-    }
-  };
+  //     // Set the section questions state
+  //     setSectionQuestions(newSectionQuestions);
+  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //     setSectionQuestions({ error: 'Failed to load questions' });
+  //   } finally {
+  //     setLoadingQuestions(false);
+  //   }
+  // };
 
 
   useEffect(() => {
@@ -273,7 +284,7 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  // console.log("roundsab svdvs sdfad",round);
+  console.log("internalInterviewers",internalInterviewers,round);
 
 
   return (
@@ -342,7 +353,9 @@ const PositionRoundCard = ({
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
                       <button
-                        onClick={() => setShowInterviewers(!showInterviewers)}
+                        onClick={() => {setShowInterviewers(!showInterviewers)
+                       
+                        }}
                         className="text-sm text-custom-blue hover:text-custom-blue flex items-center"
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
@@ -350,7 +363,7 @@ const PositionRoundCard = ({
                       </button>
                     </div>
 
-                    {showInterviewers && round.interviewers && (
+                    {showInterviewers && round?.interviewers && (
                       <div className="space-y-2">
                         {internalInterviewers.length > 0 && (
                           <div>
@@ -361,6 +374,7 @@ const PositionRoundCard = ({
                                 {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
                               </span>
                             </div>
+                             {showInterviewers && round.interviewers && (
                             <div className="flex flex-wrap gap-2">
                               {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
                                 <div key={index} className="flex items-center">
@@ -379,6 +393,7 @@ const PositionRoundCard = ({
                                 </div>
                               ))}
                             </div>
+                              )}
                           </div>
                         )}
 
