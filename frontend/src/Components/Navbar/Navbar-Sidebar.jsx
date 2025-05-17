@@ -756,6 +756,8 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      <div className="mb-16"></div>
     </>
   );
 };
