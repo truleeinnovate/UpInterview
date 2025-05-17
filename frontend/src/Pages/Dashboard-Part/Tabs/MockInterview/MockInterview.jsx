@@ -18,13 +18,12 @@ import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
-import { usePermissions } from '../../../../Context/PermissionsContext.js';
-import { useMemo } from 'react';
 import CancelPopup from "./ScheduleCancelPopup.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import MockinterviewTable from "./MockinterviewTable.jsx";
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { useNavigate } from "react-router-dom";
+import Loading from "../../../../Components/Loading.js";
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -267,8 +266,6 @@ const MockInterview = () => {
     mockinterviewData,
     loading,
   } = useCustomContext();
-  const { objectPermissionscontext } = usePermissions();
-  const objectPermissions = useMemo(() => objectPermissionscontext.mockInterviews || {}, [objectPermissionscontext]);
   useEffect(() => {
     document.title = "Mockinterview Tab";
   }, []);
@@ -485,276 +482,219 @@ const MockInterview = () => {
     setActionViewMore(false);
   };
 
-  const ActionMoreMenu = ({
-    mockInterview,
-    actionViewMore,
-    toggleAction,
-    iconType,
-  }) => {
-    const Icon = iconType === "MdMoreVert" ? MdMoreVert : FiMoreHorizontal;
 
-    return (
-      <div className="relative">
-        <button
-          onClick={() => toggleAction(mockInterview._id)}
-          aria-label="Toggle action menu"
-          className="focus:outline-none"
-        >
-          <Icon className="text-3xl mt-1" />
-        </button>
-
-        {actionViewMore === mockInterview._id && (
-          <div className="absolute text-xs z-10 w-36 rounded-md shadow-lg bg-white ring-1 p-4 ring-black ring-opacity-5 -ml-28">
-            <div className="space-y-1">
-              <p
-                className="hover:bg-gray-200 cursor-pointer p-1 rounded pl-3"
-                onClick={() => handleMockInterviewClick(mockInterview)}
-              >
-                View
-              </p>
-              {mockInterview.interviewType === "ScheduleforLater" && (
-                <>
-                  <p
-                    className="hover:bg-gray-200 cursor-pointer p-1 rounded pl-3"
-                    onClick={() => onEditClick(mockInterview)}
-                  >
-                    Edit
-                  </p>
-                  <p
-                    className="hover:bg-gray-200 cursor-pointer p-1 rounded pl-3"
-                    onClick={() => onRescheduleClick(mockInterview)}
-                  >
-                    Reschedule
-                  </p>
-                  <p
-                    className="hover:bg-gray-200 cursor-pointer p-1 rounded pl-3"
-                    onClick={() => onCancelClick()}
-                  >
-                    Cancel
-                  </p>
-                </>
-              )}
-
-
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
   return (
-    <div className=" bg-background">
-      {!isSchedulePopupVisible && !mockinterviewDataView && !editform && (
-        <main className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8">
-         
-            <div className="sm:px-0">
+    <div className="bg-background min-h-screen">
+      <div className="fixed top-16 left-0 right-0 bg-background">
+        <main className="px-6">
+          <div className="sm:px-0">
+            <motion.div
+              className="flex justify-between items-center py-4"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h1 className="text-lg font-semibold">Mock Interviews</h1>
+              <button
+                onClick={() => navigate('/mockinterview-create')}
+                className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add  interview
+              </button>
+            </motion.div>
 
+            {/* 2 */}
+            <motion.div
+              className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+            >
 
-      
+              <div className="flex items-center sm:hidden md:hidden">
 
-               <motion.div
-                        className="flex justify-between items-center mb-3"
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                  <h1 className="text-lg font-semibold">Mock Interviews</h1>
+                <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
+                  <span onClick={() => setViewMode('table')}>
+                    <FaList
+                      className={`text-xl mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
+                        }`}
+                    />
+                  </span>
+                </Tooltip>
 
-
-                
-
-                          <button
-                                    onClick={() => navigate('/mockinterview-create')}
-                                    className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
-                                  >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Add  interview
-                                  </button>
-               </motion.div>
-
-                {/* 2 */}
-                <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end mb-4">
-
-                <div className="flex items-center sm:hidden md:hidden">
-
-                   <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
-                                <span onClick={() => setViewMode('table')}>
-                                  <FaList 
-                                    className={`text-xl mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
-                                      }`}
-                                  />
-                                </span>
-                              </Tooltip>
-
-                    {/* <button onClick={() => setViewMode('table')}
+                {/* <button onClick={() => setViewMode('table')}
                       className={`p-1.5 rounded-lg transition-colors ${viewMode === "table" ? "text-custom-blue" : "bg-white text-gray-600 hover:bg-gray-100"
                         }`}
                     >
                       <FaList className="w-4 h-4" />
                     </button> */}
 
-                     <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-                                  <span onClick={() => setViewMode('kanban')}>
-                                    <TbLayoutGridRemove
-                                      className={`text-xl ${viewMode === "kanban" ? "text-custom-blue" : ""
-                                        }`}
-                                    />
-                                  </span>
-                                </Tooltip>
+                <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
+                  <span onClick={() => setViewMode('kanban')}>
+                    <TbLayoutGridRemove
+                      className={`text-xl ${viewMode === "kanban" ? "text-custom-blue" : ""
+                        }`}
+                    />
+                  </span>
+                </Tooltip>
 
 
-                    {/* <button onClick={() => setViewMode('kanban')}
+                {/* <button onClick={() => setViewMode('kanban')}
                       className={`p-1.5 rounded-lg transition-colors ${viewMode === "kanban" ? "text-custom-blue" : "bg-white text-gray-600 hover:bg-gray-100"
                         }`}>
                       <TbLayoutGridRemove className="w-4 h-4" />
                     </button> */}
+              </div>
+
+              <div className="flex order-2 sm:order-2  items-center ">
+
+                <div className="relative flex-1">
+
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+
+
+                  <input
+                    type="text"
+                    placeholder="Search by Candidate, Position."
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    className="w-[100%] pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center ml-2 space-x-1">
+                  <span  // className="p-2 text-xl sm:text-sm md:text-sm" 
+                  >
+                    {currentPage + 1}/{totalPages}
+                  </span>
+
+
+                  <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""
+                        } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
+                      onClick={prevPage}
+                      disabled={currentPage === 0}
+                    >
+                      <IoIosArrowBack className="text-custom-blue" />
+                    </span>
+                  </Tooltip>
+
+                  <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : ""
+                        } ${activeArrow === "next" ? "text-blue-500" : ""}`}
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages - 1}
+                    >
+                      <IoIosArrowForward className="text-custom-blue" />
+                    </span>
+                  </Tooltip>
+                </div>
+
+                <div className="relative ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
+                  <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+                    <span
+                      onClick={handleFilterIconClick}
+                      style={{
+                        opacity: mockinterviewData.length === 0 ? 0.2 : 1,
+                        pointerEvents: mockinterviewData.length === 0 ? "none" : "auto",
+                      }}
+                    >
+                      {isFilterActive ? (
+                        <LuFilterX className="text-custom-blue" />
+                      ) : (
+                        <FiFilter className="text-custom-blue" />
+                      )}
+                    </span>
+                  </Tooltip>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </main>
+      </div>
+      <main className="fixed top-48 left-0 right-0 bg-background">
+
+
+
+
+
+        <div className="sm:px-0">
+          {loading ? (
+            <Loading />
+          ) : (
+
+            <motion.div className="bg-white">
+              {currentFilteredRows.length === 0 ? (
+                <div className="text-center py-10 text-gray-500 text-lg">
+                  No templates found.
+                </div>
+              ) : viewMode === "table" ?
+
+
+                <div className="flex relative w-full overflow-hidden">
+                  <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
+                    }`} >
+                    <MockinterviewTable
+                      mockinterviews={currentFilteredRows}
+                      mockinterviewData={mockinterviewData}
+                      loading={loading}
+                      mockinterviewDataView={setmockinterviewDataView}
+                      onRescheduleClick={onRescheduleClick}
+                      onCancel={onCancelClick}
+                    />
                   </div>
 
-                  <div className="flex order-2 sm:order-2  items-center ">
-
-                    <div className="relative flex-1">
-
-                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-
-
-                      <input
-                        type="text"
-                        placeholder="Search by Candidate, Position."
-                        value={searchQuery}
-                        onChange={handleSearchInputChange}
-                        className="w-[100%] pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
+                  {isMenuOpen && (
+                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                      <OffcanvasMenu
+                        isOpen={isMenuOpen}
+                        closeOffcanvas={handleFilterIconClick}
+                        onFilterChange={handleFilterChange}
+                        isMenuOpen={isMenuOpen}
                       />
                     </div>
+                  )}
+                </div>
 
-                    <div className="flex items-center ml-2 space-x-1">
-                      <span  // className="p-2 text-xl sm:text-sm md:text-sm" 
-                      >
-                        {currentPage + 1}/{totalPages}
-                      </span>
+                :
+                // kanban view
+                <div className="flex relative w-full overflow-hidden">
+                  <div className={` transition-all duration-300 ${isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
+                    }`} >
+                    <MockInterviewKanban
+                      mockinterviews={currentFilteredRows}
+                      mockinterviewData={mockinterviewData}
+                      loading={loading}
+                      mockinterviewDataView={setmockinterviewDataView}
+                      onRescheduleClick={onRescheduleClick}
+                      onCancel={onCancelClick}
+                    //  onEdit={handleEdit}
+                    />
 
-
-                      <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                        <span
-                          className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""
-                            } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
-                          onClick={prevPage}
-                          disabled={currentPage === 0}
-                        >
-                          <IoIosArrowBack className="text-custom-blue" />
-                        </span>
-                      </Tooltip>
-
-                      <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                        <span
-                          className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : ""
-                            } ${activeArrow === "next" ? "text-blue-500" : ""}`}
-                          onClick={nextPage}
-                          disabled={currentPage === totalPages - 1}
-                        >
-                          <IoIosArrowForward className="text-custom-blue" />
-                        </span>
-                      </Tooltip>
-                    </div>
-
-                    <div className="relative ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                      <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                        <span
-                          onClick={handleFilterIconClick}
-                          style={{
-                            opacity: mockinterviewData.length === 0 ? 0.2 : 1,
-                            pointerEvents: mockinterviewData.length === 0 ? "none" : "auto",
-                          }}
-                        >
-                          {isFilterActive ? (
-                            <LuFilterX className="text-custom-blue" />
-                          ) : (
-                            <FiFilter className="text-custom-blue" />
-                          )}
-                        </span>
-                      </Tooltip>
-                    </div>
                   </div>
-                </motion.div>
 
-            
-
-              {/* 3 */}
-
-              {loading ? (
-                < h1>loading...</h1>
-              ) : (
-
-                <motion.div className="bg-white">
-                  {viewMode === "table" ?
-
-
-                    <div className="flex relative w-full overflow-hidden">
-                      <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                        }`} >
-                        <MockinterviewTable
-                          mockinterviews={currentFilteredRows}
-                          mockinterviewData={mockinterviewData}
-                          loading={loading}
-                          mockinterviewDataView={setmockinterviewDataView}
-                          onRescheduleClick={onRescheduleClick}
-                          onCancel={onCancelClick}
-                        />
-                      </div>
-
-                      {isMenuOpen && (
-                        <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                          <OffcanvasMenu
-                            isOpen={isMenuOpen}
-                            closeOffcanvas={handleFilterIconClick}
-                            onFilterChange={handleFilterChange}
-                            isMenuOpen={isMenuOpen}
-                          />
-                        </div>
-                      )}
+                  {isMenuOpen && (
+                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                      <OffcanvasMenu
+                        isOpen={isMenuOpen}
+                        closeOffcanvas={handleFilterIconClick}
+                        onFilterChange={handleFilterChange}
+                      />
                     </div>
+                  )}
+                </div>
+              }
+            </motion.div>
+          )}
+        </div>
+      </main>
 
-                    :
-                    // kanban view
-                    <div className="flex relative w-full overflow-hidden">
-                      <div className={` transition-all duration-300 ${isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                        }`} >
-                        <MockInterviewKanban
-                          mockinterviews={currentFilteredRows}
-                          mockinterviewData={mockinterviewData}
-                          loading={loading}
-                          mockinterviewDataView={setmockinterviewDataView}
-                          onRescheduleClick={onRescheduleClick}
-                          onCancel={onCancelClick}
-                        //  onEdit={handleEdit}
-                        />
-
-                      </div>
-
-                      {isMenuOpen && (
-                           <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                          <OffcanvasMenu
-                            isOpen={isMenuOpen}
-                            closeOffcanvas={handleFilterIconClick}
-                            onFilterChange={handleFilterChange}
-                          />
-                        </div>
-                      )}
-
-                    </div>
-                  }
-
-                </motion.div>
-
-
-              )}
-            </div>
-
-        </main>
-)}
-    
-      {mockinterviewDataView && (
+      {/* {mockinterviewDataView && (
         <MockProfileDetails mockinterviewId={mockinterviewDataView._id} onCloseprofile={handlecloseview} />
-      )}
+      )} */}
       {cancelSchedule && (
         <CancelPopup
           onClose={closepopup}

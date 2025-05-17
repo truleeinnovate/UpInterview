@@ -29,7 +29,6 @@ const MockInterviewDetails = () => {
 
   const mockinterview = mockinterviewData.find((data) => data._id === id);
 
-   console.log("mockinterview", mockinterview);
  
 
   useEffect(() => {
@@ -122,7 +121,8 @@ const MockInterviewDetails = () => {
             ]} />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
-              <Link to="/interviewList" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
+              <Link to="/mockinterview" className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4">
+                <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>
             </div>
@@ -248,7 +248,7 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
         <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center mb-4">
-              <Link to="/mockinterview" className="text-blue-600 hover:text-blue-800 flex items-center mr-4">
+              <Link to="/mockinterview" className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>

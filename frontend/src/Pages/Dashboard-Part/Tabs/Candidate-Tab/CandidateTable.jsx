@@ -9,6 +9,9 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
 
   const menuRefs = useRef([]);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const menuButtonRefs = useRef([]);
+  const scrollContainerRef = useRef(null);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -28,38 +31,52 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
     setOpenMenuIndex(openMenuIndex === index ? null : index);
   };
 
-  return (
-    // <div className={`w-full ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'} flex flex-col`}>
+  const handleMenuOpen = (index) => {
+    setOpenMenuIndex(index);
+    const container = scrollContainerRef.current;
+    const button = menuButtonRefs.current[index];
 
-      // <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
-        // <div className="overflow-x-auto">
-          // <div className="inline-block min-w-full align-middle">
+    if (container && button) {
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      const dropdownHeight = 120;
+      const spaceBelow = containerRect.bottom - buttonRect.bottom;
+      setOpenUpwards(spaceBelow < dropdownHeight);
+    }
+  };
+
+  return (
+    <div className={`w-full ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'} flex flex-col`}>
+
+      <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1">
+        <div className="overflow-x-auto">
+          <div className="inline-block min-w-full align-middle">
             <div
-              className={`${isMenuOpen ? 'overflow-x-auto' : ""} rounded-lg ${candidates.length > 0 ? 'border border-gray-200' : ''
-                }`}
+              className="h-[calc(100vh-12rem)] overflow-y-auto pb-6"
+              ref={scrollContainerRef}
             >
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 border-b">
+              <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                <thead className="bg-gray-50 border-b sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Candidate Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Contact
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Higher Qualification
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Current Experience
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Skills/Technology
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">
                       Action
                     </th>
                   </tr>
@@ -74,8 +91,10 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                   ) : (
                     candidates.map((candidate, index) =>
                       candidate ? (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap">
+                        <tr key={index}
+                          className={`hover:bg-gray-50 ${index === candidates.length - 1 ? 'mb-6' : ''}`}
+                        >
+                          <td className="px-6 py-1 text-sm text-custom-blue cursor-pointer" >
                             <div className="flex items-center">
                               <div className="h-8 w-8 flex-shrink-0">
                                 {candidate?.ImageData ? (
@@ -107,7 +126,7 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-4 py-2 text-sm text-gray-600">
                             <div className="flex items-center gap-2">
                               <div className="flex items-center gap-1 text-sm text-gray-600">
                                 <Mail className="w-4 h-4" />
@@ -116,27 +135,25 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 text-sm text-gray-600">
-                                <span>{candidate.Phone || 'N/A'}</span>
-                              </div>
-                            </div>
+                          <td className="px-4 py-2 text-sm text-gray-600">
+
+                            {candidate.Phone || 'N/A'}
+
                           </td>
 
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="flex items-center gap-1 text-sm text-gray-600">
-                              {candidate.HigherQualification || 'N/A'}
-                            </span>
+                          <td className="px-4 py-2 text-sm text-gray-600">
+
+                            {candidate.HigherQualification || 'N/A'}
+
                           </td>
 
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <span>{candidate.CurrentExperience || 'N/A'}</span>
-                            </div>
+                          <td className="px-4 py-2 text-sm text-gray-600">
+
+                            {candidate.CurrentExperience || 'N/A'}
+
                           </td>
 
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <div className="flex flex-wrap gap-1">
                               {candidate.skills.slice(0, 2).map((skill, idx) => (
                                 <span
@@ -154,83 +171,86 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                             </div>
                           </td>
 
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                            <div as="div" className="relative inline-block " ref={el => menuRefs.current[index] = el}>
+                          <td className="px-6 py-2 text-sm text-gray-600">
+                            <Menu as="div" className="relative">
                               {/* <Menu.Button className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none"> */}
-                                   <button
-                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={(e) => toggleMenu(e, index)}
-                      >
-                                <FiMoreHorizontal className="w-4 h-4 text-gray-600" />
-                                </button>
+                              <Menu.Button
+                                ref={(el) => (menuButtonRefs.current[index] = el)}
+                                onClick={() => handleMenuOpen(index)}
+                                className="p-1 hover:bg-gray-100 rounded-lg"
+                              >
+                                <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
+                              </Menu.Button>
                               {/* </Menu.Button> */}
-                             {openMenuIndex === index && (
-                        <div className={`
-                        absolute z-50 right-0 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1
-                        ${index > 3 ? 'bottom-full mb-1' : 'top-full mt-1'}
-                      `}>
-                               
-                                {/* <Menu.Item> */}
-                                  {/* {({ active }) => ( */}
-                                    <button
-                                      onClick={() => navigate(`view-details/${candidate._id}`)}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                    >
-                                      <Eye className="w-4 h-4 text-blue-600" />
-                                      View Details
-                                    </button>
-                                  {/* )} */}
-                                {/* </Menu.Item> */}
+                              {openMenuIndex === index && (
+                                <Menu.Items
+                                  className={`absolute w-48 bg-white rounded-lg shadow-lg border py-1 z-50 ${openUpwards ? 'bottom-full mb-2 right-0' : 'top-full mt-2 right-0'
+                                    }`}
+                                >
+
+                                  <Menu.Item>
+                                  {({ active }) => (
+                                  <button
+                                    onClick={() => navigate(`view-details/${candidate._id}`)}
+                                    className={`${active ? 'bg-gray-50' : ''
+                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}       >
+                                    <Eye className="w-4 h-4 text-blue-600" />
+                                    View Details
+                                  </button>
+                                  )}
+                                  </Menu.Item>
 
 
-                                
-                                {!isAssessmentView ? (
-                                  <>
-                                    {/* <Menu.Item>
-                                      {({ active }) => ( */}
-                                        <button
-                                          onClick={() =>
-                                            candidate?._id &&
-                                            navigate(`/candidate/${candidate._id}`)
-                                          }
-  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                        >
-                                          <UserCircle className="w-4 h-4 text-purple-600" />
-                                          360° View
-                                        </button>
-                                      {/* )}
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      {({ active }) => ( */}
-                                        <button
-                                          onClick={() => navigate(`edit/${candidate._id}`)}
-                                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                        >
-                                          <Pencil className="w-4 h-4 text-green-600" />
-                                          Edit
-                                        </button>
-                                      {/* )}
-                                    </Menu.Item> */}
-                                  </>
-                                ) : (
-                                  // <Menu.Item>
-                                  //   {({ active }) => (
+
+                                  {!isAssessmentView ? (
+                                    <>
+                                      <Menu.Item>
+                                      {({ active }) => (
                                       <button
-                                        onClick={() => onResendLink(candidate.id)}
-                                        // className={`${active ? 'bg-gray-100' : ''} flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${candidate.status === 'completed' ? 'opacity-50 cursor-not-allowed' : ''
-                                        //   }`}
-                                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" 
-                                        disabled={candidate.status === 'completed'}
+                                        onClick={() =>
+                                          candidate?._id &&
+                                          navigate(`/candidate/${candidate._id}`)
+                                        }
+                                       className={`${active ? 'bg-gray-50' : ''
+                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                       >
-                                        <Mail className="w-4 h-4 text-blue-600" />
-                                        Resend Link
+                                        <UserCircle className="w-4 h-4 text-purple-600" />
+                                        360° View
                                       </button>
-                                  //   )}
-                                  // </Menu.Item>
-                                )}
-                                 </div>
-                                   )}
-                            </div>
+                                       )}
+                                    </Menu.Item>
+                                     <Menu.Item>
+                                     {({ active }) => ( 
+                                      <button
+                                        onClick={() => navigate(`edit/${candidate._id}`)}
+                                        className={`${active ? 'bg-gray-50' : ''
+                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                      >
+                                        <Pencil className="w-4 h-4 text-green-600" />
+                                        Edit
+                                      </button>
+                                       )}
+                                    </Menu.Item> 
+                                    </>
+                                  ) : (
+                                    <Menu.Item>
+                                     {({ active }) => (
+                                    <button
+                                      onClick={() => onResendLink(candidate.id)}
+                                      className={`${active ? 'bg-gray-50' : ''
+                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                     
+                                      disabled={candidate.status === 'completed'}
+                                    >
+                                      <Mail className="w-4 h-4 text-blue-600" />
+                                      Resend Link
+                                    </button>
+                                      )}
+                                    </Menu.Item>
+                                  )}
+                                </Menu.Items>
+                              )}
+                            </Menu>
                           </td>
                         </tr>
                       ) : null
@@ -239,10 +259,10 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                 </tbody>
               </table>
             </div>
-          // </div>
-        // </div>
-      // </div>
-    // </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -18,6 +18,11 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 import CandidateTable from './CandidateTable';
 import { Outlet, useNavigate } from 'react-router-dom';
 
+
+import { motion } from 'framer-motion';
+import { Button } from '../CommonCode-AllTabs/ui/button';
+import Loading from '../../../../Components/Loading';
+
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
@@ -104,7 +109,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   return (
     <div
       // absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]
-      className="  w-[100%] h-[calc(80vh-80px)]  text-sm    flex flex-col"
+      className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
       style={{
         visibility: isOpen ? "visible" : "hidden",
         transform: isOpen ? "" : "translateX(50%)",
@@ -112,8 +117,8 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
       }}
     >
       {/* relative h-full flex flex-col */}
-      <div className=" h-full  flex flex-col ">
-        <div className="   border-b flex justify-between p-2 items-center bg-white ">
+      <div className="relative h-full flex flex-col ">
+        <div className="absolute w-72 sm:w-full md:w-full  border-b flex justify-between p-2 items-center bg-white z-10">
           <div>
             <h2 className="text-lg font-bold ">Filters</h2>
           </div>
@@ -128,7 +133,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
             {/* )} */}
           </div>
         </div>
-        <div className="p-4 flex-grow overflow-y-auto   ">
+        <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
           {/* Higher Qualification */}
           <div className="flex justify-between">
             <div className="cursor-pointer">
@@ -283,21 +288,44 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
     tech: [],
     experience: { min: '', max: '' },
   });
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   // Determine which data to use based on isAssessmentView
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
   // Automatically switch to Kanban view for tablet view (768px to 1024px)
-  // const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
 
-  // useEffect(() => {
-  //   if (isTablet) {
-  //     setView('kanban');
-  //   } else {
-  //     setView('table');
-  //   }
-  // }, [isTablet]);
+  useEffect(() => {
+    if (isTablet) {
+      setView('kanban');
+    } else {
+      setView('table');
+    }
+  }, [isTablet]);
+
+
+    // useEffect(() => {
+    //   const handleResize = () => {
+    //     if (window.innerWidth < 1024) {
+    //       setView("kanban");
+    //     } else {
+    //       setView("table");
+    //     }
+    //   };
+  
+    //   // Set initial view mode based on current window size
+    //   handleResize();
+  
+    //   // Add event listener to handle window resize
+    //   window.addEventListener("resize", handleResize);
+  
+    //   // Cleanup event listener on component unmount
+    //   return () => {
+    //     window.removeEventListener("resize", handleResize);
+    //   };
+    // }, []);
+  
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -382,111 +410,151 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
   }
 
   return (
-    <main className="h-full -mt-2 w-full bg-white">
+    <div className="bg-background min-h-screen">
       <main className={isAssessmentView ? "p-2" : "w-full px-9 py-2 sm:mt-20 md:mt-24  sm:px-2 lg:px-8 xl:px-8 2xl:px-8"} >
         {!isAssessmentView && (
-          <div className="mb-3">
-            <div className="flex sm:flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row justify-between items-start sm:items-center gap-2 mb-3">
-              <h1 className="text-2xl font-bold text-custom-blue">Candidates</h1>
-              <button
-                onClick={() => navigate('new')}
-                className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Candidate
-              </button>
-            </div>
-
-            <div className="flex md:flex-row sm:flex-row items-stretch sm:items-center gap-2 justify-between">
-              <div className="flex items-center gap-1 order-1 sm:order-1">
-                <button
-                  onClick={() => setView('table')}
-                  className={`p-[1px] rounded-lg transition-colors ${view === 'table'
-                    ? 'text-custom-blue'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                    }`}
+          <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+            <main className="px-6">
+              <div className="sm:px-0 ">
+                {/* Header */}
+                <motion.div
+                  className="flex justify-between items-center py-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <FaList className="w-7 h-7" />
-                </button>
-                <button
-                  onClick={() => setView('kanban')}
-                  className={`p-[2px] rounded-lg transition-colors ${view === 'kanban'
-                    ? 'text-custom-blue'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                  <TbLayoutGridRemove className="w-5 h-5" />
-                </button>
+                  <h1 className="text-2xl  font-semibold  text-custom-blue">Candidates</h1>
+                  <Button
+                    onClick={() => navigate('new')}
+                    size="sm" className="bg-custom-blue hover:bg-custom-blue/90 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Candidate
+                  </Button>
+                </motion.div>
+
+                {/* Toolbar */}
+                <motion.div className="lg:flex xl:flex   2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between mb-4">
+                  <div className="flex items-center sm:hidden md:hidden">
+                    <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
+                      <span
+                        onClick={() => setView('table')}
+                      // className={`p-[1px] rounded-lg transition-colors ${view === 'table'
+                      //   ? 'text-custom-blue'
+                      //   : 'bg-white text-gray-600 hover:bg-gray-100'
+                      //   }`}
+                      >
+                        <FaList className={`text-xl mr-4 ${view === "table" ? "text-custom-blue" : ""}`} />
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
+                      <span
+                        onClick={() => setView('kanban')}
+                      // className={`p-[2px] rounded-lg transition-colors ${view === 'kanban'
+                      //   ? 'text-custom-blue'
+                      //   : 'bg-white text-gray-600 hover:bg-gray-100'
+                      //   }`}
+                      >
+                        <TbLayoutGridRemove className={`text-xl ${view === "kanban" ? "text-custom-blue" : ""}`} />
+                      </span>
+                    </Tooltip>
+                  </div>
+
+                  <div className="flex items-center  ">
+                    <div className="sm:mt-0   flex justify-end w-full sm:w-auto">
+                      <div className="max-w-lg w-full">
+                        <label htmlFor="search" className="sr-only">Search</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <IoMdSearch className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Search candidates..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <div>
+
+                      <span className="p-2 text-xl sm:text-sm md:text-sm">
+                        {currentPage + 1}/{totalPages}
+                      </span>
+                    </div>
+
+                    <div className="flex">
+                      <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+                        <span
+                          className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md  ${currentPage === 0 ? ' cursor-not-allowed' : ''
+                            }`}
+                          onClick={prevPage}
+                        >
+                          <IoIosArrowBack className="text-custom-blue" />
+                        </span>
+                      </Tooltip>
+
+                      <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+                        <span
+                          className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md  ${(currentPage + 1) * rowsPerPage >= FilteredData().length
+                            ? ' cursor-not-allowed'
+                            : ''
+                            }`}
+                          onClick={nextPage}
+                        >
+                          <IoIosArrowForward className="text-custom-blue" />
+                        </span>
+                      </Tooltip>
+                    </div>
+
+
+                    <div className="ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
+                      <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+                        <span
+                          onClick={handleFilterIconClick}
+                          style={{
+                            opacity: dataToUse.length === 0 ? 0.2 : 1,
+                            pointerEvents: dataToUse.length === 0 ? 'none' : 'auto',
+                          }}
+                        >
+                          {isFilterActive ? (
+                            <LuFilterX className="text-custom-blue" />
+                          ) : (
+                            <LuFilter className="text-custom-blue" />
+                          )}
+                        </span>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                </motion.div>
               </div>
-
-              <div className="flex order-2 sm:order-2 items-center">
-                <div className="relative flex-1">
-                  <IoMdSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search candidates..."
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    className="w-[100%] pl-8 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
-                  />
-                </div>
-
-                <div className="flex items-center ml-2 space-x-1">
-                  <span>
-                    {currentPage + 1} / {totalPages}
-                  </span>
-                  <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      className={`border py-1.5 pr-3 pl-2 mr-1 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? ' cursor-not-allowed' : ''
-                        }`}
-                      onClick={prevPage}
-                    >
-                      <IoIosArrowBack className="text-custom-blue" />
-                    </span>
-                  </Tooltip>
-
-                  <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      className={`border py-1.5 pr-2 pl-2 text-xl sm:text-md md:text-md rounded-md ${(currentPage + 1) * rowsPerPage >= FilteredData().length
-                        ? ' cursor-not-allowed'
-                        : ''
-                        }`}
-                      onClick={nextPage}
-                    >
-                      <IoIosArrowForward className="text-custom-blue" />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="relative ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                  <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      onClick={handleFilterIconClick}
-                      style={{
-                        opacity: dataToUse.length === 0 ? 0.2 : 1,
-                        pointerEvents: dataToUse.length === 0 ? 'none' : 'auto',
-                      }}
-                    >
-                      {isFilterActive ? (
-                        <LuFilterX className="text-custom-blue" />
-                      ) : (
-                        <LuFilter className="text-custom-blue" />
-                      )}
-                    </span>
-                  </Tooltip>
-                </div>
-              </div>
-            </div>
+            </main>
           </div>
+
         )}
 
-        <div className="bg-white rounded-xl border border-gray-100">
-          {view === 'table' ? (
-            <div className="flex  w-full mb-2">
+
+      {/* Main Content */}
+        <main className="fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background">
+          <div className="sm:px-0">
+
+            {
+              loading ? (
+                 <Loading />
+              ) : (
+                  <motion.div className="bg-white">
+                   {view === 'table' ? (
+            <div className="flex relative w-full overflow-hidden">
               <div
                 className={`transition-all duration-300 ${isMenuOpen
-                  ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                  : 'w-full'
-                  }`}
+                        ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                        : 'w-full'
+                        }`}
               >
                 <CandidateTable
                   candidates={currentFilteredRows}
@@ -512,9 +580,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
             <div className="flex relative w-full overflow-hidden">
               <div
                 className={`transition-all duration-300 ${isMenuOpen
-                  ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                  : 'w-full'
-                  }`}
+                        ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                        : 'w-full'
+                        }`}
               >
                 <CandidateKanban
                   candidates={currentFilteredRows}
@@ -534,8 +602,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
                 </div>
               )}
             </div>
-          )}
-        </div>
+          )
+        }
+          </motion.div>
+        )
+            }
+       
+          </div>
+        </main>
       </main>
 
       {
@@ -562,7 +636,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
         )
       }
       <Outlet />
-    </main >
+    </div >
   );
 }
 

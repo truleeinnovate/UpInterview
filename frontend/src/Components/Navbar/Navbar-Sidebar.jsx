@@ -408,7 +408,7 @@ const Navbar = () => {
                 </NavLink>
               </p>
               <p className="text-base font-medium hidden lg:block xl:block 2xl:block">
-                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/positions">
+                <NavLink activeClassName="bg-gray-200 text-custom-blue" to="/position">
                   Positions
                 </NavLink>
               </p>
@@ -488,11 +488,11 @@ const Navbar = () => {
               </NavLink>
 
               <NavLink
-                to="/positions"
-                className={`h-full flex items-center relative px-1 ${isActive('/positions') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+                to="/position"
+                className={`h-full flex items-center relative px-1 ${isActive('/position') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
               >
                 Positions
-                {isActive('/positions') && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
+                {isActive('/position') && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
               </NavLink>
 
               <div className="relative h-full flex items-center" ref={interviewRef}>
@@ -644,8 +644,8 @@ const Navbar = () => {
               </NavLink>
 
               <NavLink
-                to="/positions"
-                className={`block px-4 py-3 rounded-md ${isActive('/positions') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                to="/position"
+                className={`block px-4 py-3 rounded-md ${isActive('/position') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                 onClick={toggleSidebar}
               >
                 Positions

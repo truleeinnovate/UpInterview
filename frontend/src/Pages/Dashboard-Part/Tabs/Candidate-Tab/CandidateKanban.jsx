@@ -3,11 +3,11 @@ import { Eye, Mail, UserCircle, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentView, navigate }) => (
-  <div className={`w-full bg-gray-50 rounded-xl p-4 ${isAssessmentView ? '' : 'min-h-screen'}`}>
-
+  <div className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10 ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'}`}>
+ <div className="h-full">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-semibold text-gray-800">All Candidates</h3>
-      <span className="px-2 py-1 bg-white rounded-lg text-sm text-gray-600 shadow-sm">
+      <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
         {candidates.length} candidates
       </span>
     </div>
@@ -143,6 +143,7 @@ const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentV
         ))}
       </div>
     )}
+    </div>
   </div>
 );
 

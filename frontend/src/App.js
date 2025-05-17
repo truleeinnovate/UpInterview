@@ -157,10 +157,10 @@
 
 //           <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
 
-//           <Route path="/mockinterview" element={<MockInterview />} />
-//           <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-//           <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-//           <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+          // <Route path="/mockinterview" element={<MockInterview />} />
+          // <Route path="/mockinterview-create" element={<MockSchedulelater />} />
+          // <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
+          // <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
 
 //           <Route path="/interviewList" element={<InterviewList />} />
 //           <Route path="/interviews/new" element={<InterviewForm />} />
@@ -319,7 +319,6 @@
 
 
 
-
 import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -331,6 +330,10 @@ import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import Loading from './Components/Loading';
+import { CustomProvider } from './Context/Contextfetch';
+
+// Placeholder PermissionsProvider (implement as needed)
+const PermissionsProvider = ({ children }) => children; // Replace with actual implementation
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -684,14 +687,26 @@ const renderProtectedRoute = ({ path, element, children }) => (
   <Route
     key={path}
     path={path}
-    element={<ProtectedRoute>{element}</ProtectedRoute>}
+    element={
+      <ProtectedRoute>
+        <PermissionsProvider>
+          <CustomProvider>{element}</CustomProvider>
+        </PermissionsProvider>
+      </ProtectedRoute>
+    }
   >
     {children?.map((child) =>
       child.element ? (
         <Route
           key={child.path}
           path={child.path}
-          element={<ProtectedRoute>{child.element}</ProtectedRoute>}
+          element={
+            <ProtectedRoute>
+              <PermissionsProvider>
+                <CustomProvider>{child.element}</CustomProvider>
+              </PermissionsProvider>
+            </ProtectedRoute>
+          }
         />
       ) : (
         <Route key={child.path} path={child.path} element={child.element} />
@@ -726,55 +741,78 @@ const App = () => {
   const organization = tokenPayload?.organization;
   const [isLoading, setIsLoading] = useState(false);
 
-  // Memoize UI rendering conditions
-  const { showNavbar, showSettingsSidebar, showAppSettings, showLogo } = useMemo(() => {
-    const noNavbarPaths = Object.values(PATHS.PUBLIC).concat([
-      '/assessmenttest',
-      '/assessmenttext',
-      '/assessmentsubmit',
-      '/organization',
-    ]);
-    const settingsSidebarPaths = [
-      '/profile',
-      '/availability',
-      '/billing_details',
-      '/invoice',
-      '/user_details',
-      '/company_info',
-      '/invoiceline',
-      '/sharing_settings',
-      '/sharing_rules',
-      '/paymentHistory',
-      '/SubscriptionDetails',
-      '/Paymentmethods',
-      '/emailSettings',
-    ];
-    const appSettingsPaths = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
-    const logoPaths = Object.values(PATHS.PUBLIC).filter(
-      (path) =>
-        path !== PATHS.PUBLIC.LANDING &&
-        path !== PATHS.PUBLIC.CALLBACK &&
-        path !== PATHS.PUBLIC.ORG_LOGIN
-    );
+  // Define paths where navbar should be hidden
+  const noNavbarPaths = useMemo(() => [
+    '/', 
+    '/select-user-type',
+    '/select-profession',
+    '/complete-profile',
+    '/organization-login',
+    '/organization-signup',
+    '/subscription-plans',
+    '/payment-details',
+    '/callback'
+  ], []);
 
-    return {
-      showNavbar: !noNavbarPaths.includes(location.pathname),
-      showSettingsSidebar: settingsSidebarPaths.includes(location.pathname),
-      showAppSettings: appSettingsPaths.includes(location.pathname),
-      showLogo: logoPaths.includes(location.pathname),
-    };
-  }, [location.pathname]);
+  // Define paths where logo should be shown
+  const showLogoPaths = useMemo(() => [
+    '/organization-signup',
+    '/organization-login',
+    '/select-user-type',
+    '/select-profession',
+    '/complete-profile',
+    '/subscription-plans',
+    '/payment-details'
+  ], []);
 
+  // Define paths that need settings sidebar
+  const settingsSidebarPaths = useMemo(() => [
+    '/account-settings/profile',
+    '/account-settings/my-profile',
+    '/account-settings/wallet',
+    '/account-settings/interviewer-groups',
+    '/account-settings/users',
+    '/account-settings/email-settings',
+    '/account-settings/billing',
+    '/account-settings/subscription',
+    '/account-settings/security',
+    '/account-settings/notifications',
+    '/account-settings/usage',
+    '/account-settings/roles',
+    '/account-settings/sharing',
+    '/account-settings/sub-domain',
+    '/account-settings/webhooks',
+    '/account-settings/hrms-ats'
+  ], []);
+
+  // Define paths that need app settings sidebar
+  const appSettingsPaths = useMemo(() => [
+    '/connected_apps',
+    '/access_token',
+    '/auth_token',
+    '/apis'
+  ], []);
+
+  // Calculate visibility flags
+  const showNavbar = useMemo(() => !noNavbarPaths.includes(location.pathname), [location.pathname, noNavbarPaths]);
+  const showLogo = useMemo(() => showLogoPaths.includes(location.pathname), [location.pathname, showLogoPaths]);
+  const showSettingsSidebar = useMemo(() => settingsSidebarPaths.some(path => location.pathname.startsWith(path)), [location.pathname, settingsSidebarPaths]);
+  const showAppSettings = useMemo(() => appSettingsPaths.includes(location.pathname), [location.pathname, appSettingsPaths]);
+
+  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  
   return (
     <ErrorBoundary>
       <SuspenseWithLoading
         fallback={<div><Loading /></div>}
         onLoadingChange={setIsLoading}
       >
-        {!isLoading && showNavbar && <Navbar />}
+        {/* {showNavbar && !isLoading && <Navbar />} */}
+        {shouldRenderNavbar && <Navbar />}
         {showSettingsSidebar && <Settingssidebar />}
         {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
+        
         <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
           <Routes>
             {/* Public Routes */}
