@@ -21,7 +21,7 @@ import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
 import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
 import Logo from './Pages/Login-Part/Logo.jsx';
 
-// tabs
+// tab
 import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
 import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent.jsx';
 import AddCandidateForm from './Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm.jsx';
