@@ -7,7 +7,6 @@ import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.j
 import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
 
 
-
 import LandingPage from './Pages/Login-Part/Individual-1.jsx';
 import UserTypeSelection from './Pages/Login-Part/Individual-2.jsx';
 import SelectProfession from './Pages/Login-Part/Individual-3.jsx';
