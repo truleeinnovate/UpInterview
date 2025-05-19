@@ -13,6 +13,7 @@ import SuggesstedQuestions from '../Dashboard-Part/Tabs/QuestionBank-Tab/Suggess
 import MyQuestionListMain from "../Dashboard-Part/Tabs/QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
+import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 
 
 function RoundForm() {
@@ -75,10 +76,13 @@ function RoundForm() {
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    // const userName = tokenPayload?.userName;
+    const tenantId = tokenPayload?.tenantId;
 
-
-  const tenantId = Cookies.get("organizationId");
-  const ownerId = Cookies.get("userId");
+  // const tenantId = Cookies.get("organizationId");
+  // const ownerId = Cookies.get("userId");
 
 
   useEffect(() => {
@@ -699,16 +703,18 @@ function RoundForm() {
         );
 
         await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+        tenantId,
           rounds: updatedRounds,
-          tenantId: tenantId
+        
         });
       } else {
         // Add new round
         const updatedRounds = [...(template.rounds || []), roundData];
 
         await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+          tenantId,
           rounds: updatedRounds,
-          tenantId: tenantId
+          
         });
       }
 

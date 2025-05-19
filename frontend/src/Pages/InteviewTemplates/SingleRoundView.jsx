@@ -76,58 +76,26 @@ const VerticalRoundsView = ({
           }`}
         >
           Next Round
-          <ChevronRight className="h-5 w-5 ml-1" />
+          <ChevronRight className="h-4 w-4 ml-1" />
         </button>
       </div>
 
       {/* Current Round Card */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-     
-        {/* <div className="flex justify-between items-center p-4 hover:bg-gray-50">
-          <div 
-            className="flex items-center flex-1 min-w-0 cursor-pointer" 
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-          
-            
-            <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {currentRound.roundName}
-              </h3>
-              <div className="flex items-center mt-1 text-sm text-gray-600">
-                <span className="">{currentRound.interviewType}</span>
-             
-                <span className="">{currentRound.interviewMode}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 ml-4">
-            <button
-              onClick={() => onEditRound(currentRound)}
-              className="flex items-center px-3 py-1.5 text-sm font-medium text-custom-blue  rounded-md"
-            >
-              <Edit className="h-4 w-4 mr-1.5" />
-              Edit
-            </button>
-     
-          </div>
-        </div> */}
+    
 
         {/* Round Details (conditionally shown) */}
         {/* {isExpanded && ( */}
-          {/* <div className="border-t border-gray-200">
-            <div className="p-4 pt-3"> */}
+           {/* <div className="border-t border-gray-200"> */}
+            <div className="px-4 pb-4"> 
               <RoundCard
                 round={currentRound}
                 onEdit={() => onEditRound(currentRound)} 
                 isActive={true}
                 hideHeader={true}
               />
-            {/* </div>
-          </div> */}
-        {/* )} */}
-      </div>
+           </div>
+          
+       
     </div>
   );
 };

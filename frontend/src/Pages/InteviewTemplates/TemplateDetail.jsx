@@ -1,66 +1,50 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { X, Plus, ArrowLeft, Calendar, Layers, Edit2, LayoutGrid, LayoutList } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+
+import {  Plus, ArrowLeft, Calendar, Layers, Edit2, LayoutGrid, LayoutList } from 'lucide-react';
+import { useParams, useNavigate, Outlet } from 'react-router-dom';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import SingleRoundView from './SingleRoundView';
 import VerticalRoundsView from './VerticalRoundsView';
 import InterviewProgress from './InterviewProgress';
-import Cookies from "js-cookie";
+
 import { useCustomContext } from '../../Context/Contextfetch';
 
 
 const TemplateDetail = () => {
-    const {
+  const {
     templates,
   } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editedTemplate, setEditedTemplate] = useState(null);
+  // const [editedTemplate, setEditedTemplate] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState('vertical');
   const [activeRound, setActiveRound] = useState(null);
 
-  const organizationId = Cookies.get("organizationId");
-
   useEffect(() => {
-  
-        // const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`,
-
-           const foundTemplate = templates.find(tem => tem._id === id)
-
-           console.log("foundTemplate", foundTemplate);
-           
-          // templates
-        //   {
-        //     params: {
-        //       tenantId: organizationId
-        //     }
-        //   }
-        // );
-        
-        setIsLoading(true)
-        if (foundTemplate && foundTemplate) {
-          setTemplate(foundTemplate);
-          // Set the first round as active by default
-          if (foundTemplate.rounds?.length > 0) {
-            setActiveRound(foundTemplate?.rounds[0]._id);
-          }
-          setEditedTemplate({
-            templateName: foundTemplate?.templateName || '',
-            description:foundTemplate?.description || '',
-            label: foundTemplate?.label || '',
-            status: foundTemplate?.status || ''
-          });
-          setIsLoading(false);
-        }else {
+    const foundTemplate = templates.find(tem => tem._id === id)
+    console.log("foundTemplate", foundTemplate);
+    setIsLoading(true)
+    if (foundTemplate && foundTemplate) {
+      setTemplate(foundTemplate);
+      // Set the first round as active by default
+      if (foundTemplate.rounds?.length > 0) {
+        setActiveRound(foundTemplate?.rounds[0]._id);
+      }
+      // setEditedTemplate({
+      //   templateName: foundTemplate?.templateName || '',
+      //   description: foundTemplate?.description || '',
+      //   label: foundTemplate?.label || '',
+      //   status: foundTemplate?.status || ''
+      // });
+      setIsLoading(false);
+    } else {
       setTemplate(null); // Ensure position is null if not found
-      setEditedTemplate(null); // Reset rounds to empty array
+      // setEditedTemplate(null); // Reset rounds to empty array
     }
-    
-  }, [id,templates]);
+
+  }, [id, templates]);
 
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';
@@ -98,57 +82,14 @@ const TemplateDetail = () => {
     return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedTemplate(prev => ({
-      ...prev,
-      [name]: value,
-      ...(name === 'templateName' && { label: value.trim().replace(/\s+/g, "_").toUpperCase() })
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!editedTemplate.templateName || !editedTemplate.label) {
-      alert('Template name and label are required.');
-      return;
-    }
-
-    try {
-      // Prepare update data while preserving required fields
-      const updateData = {
-        templateName: editedTemplate.templateName,
-        label: editedTemplate.label,
-        description: editedTemplate.description || '',
-        status: editedTemplate.status || 'active',
-        tenantId: template.tenantId || "670286b86ebcb318dab2f676",
-        createdBy: template.createdBy || "670286b86ebcb318dab2f676",
-        rounds: template.rounds || [], // Preserve existing rounds
-        updatedAt: new Date().toISOString()
-      };
-
-      const response = await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, updateData);
-
-      if (response.data && response.data.success) {
-        setIsEditModalOpen(false);
-        // Update the local template state with new data
-        setTemplate(response.data.data);
-      } else {
-        throw new Error(response.data?.message || 'Failed to update template');
-      }
-    } catch (error) {
-      console.error('Error updating template:', error);
-      alert(error.response?.data?.message || error.message || 'Failed to update template. Please try again.');
-    }
-  };
-
 
   const handleAddRound = () => {
     // Since this is a new round, we'll use 'new' as the roundId
-    navigate(`/interview-templates/${id}/rounds`);
+    navigate(`/interview-templates/${id}/round/new`);
   }
 
   const handleEditRound = (round) => {
-    navigate(`/interview-templates/${id}/rounds?roundId=${round._id}&type=${round.roundName}`);
+    navigate(`/interview-templates/${id}/round?roundId=${round._id}&type=${round.roundName}`);
   }
 
   // Create breadcrumb items with status
@@ -204,17 +145,11 @@ const TemplateDetail = () => {
             </button>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsEditModalOpen(true)}
+            onClick={() => navigate(`edit`)}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 text-custom-blue bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors duration-200 text-sm sm:text-base"
               >
                 <Edit2 className="h-4 w-4" />
                 Edit Template
-              </button>
-              <button
-                onClick={() => navigate('/interview-templates')}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
           </div>
@@ -249,10 +184,10 @@ const TemplateDetail = () => {
                 </div>
               </div>
               <span className={`inline-flex h-8 items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium ${template.status === 'active'
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                  : template.status === 'draft'
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                    : 'bg-slate-50 text-slate-700 border border-slate-200/60'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                : template.status === 'draft'
+                  ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                  : 'bg-slate-50 text-slate-700 border border-slate-200/60'
                 }`}>
                 {template.status.charAt(0).toUpperCase() + template.status.slice(1)}
               </span>
@@ -364,95 +299,8 @@ const TemplateDetail = () => {
 
       </div>
 
-      {/* Edit Template Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900">Edit Template</h3>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="px-4 sm:px-6 py-4">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="templateName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    id="templateName"
-                    name="templateName"
-                    value={editedTemplate.templateName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-custom-blue focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="label" className="block text-sm font-medium text-gray-700 mb-1">
-                    Label
-                  </label>
-                  <input
-                    type="text"
-                    id="label"
-                    name="label"
-                    value={editedTemplate.label}
-                    readOnly
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg sm:rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    rows={4}
-                    value={editedTemplate.description}
-                    onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-custom-blue focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={editedTemplate.status}
-                    onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-custom-blue focus:border-transparent bg-white"
-                  >
-                    <option value="active">Active</option>
-                    <option value="draft">Draft</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-3 sm:px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg sm:rounded-xl hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-3 sm:px-4 py-2 text-sm text-white bg-custom-blue rounded-lg sm:rounded-xl hover:bg-custom-blue/80"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    
+      <Outlet />
     </div>
   );
 };

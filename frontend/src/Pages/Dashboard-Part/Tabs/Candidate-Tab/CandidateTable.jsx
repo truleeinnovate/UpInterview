@@ -200,8 +200,6 @@ const CandidateTable = ({ candidates, onView, onEdit, onResendLink, isAssessment
                                   )}
                                   </Menu.Item>
 
-
-
                                   {!isAssessmentView ? (
                                     <>
                                       <Menu.Item>

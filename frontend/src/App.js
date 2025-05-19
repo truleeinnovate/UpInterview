@@ -1,21 +1,27 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Cookies from "js-cookie";
 import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
 import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx';
 import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
+
+
+
 import LandingPage from './Pages/Login-Part/Individual-1.jsx';
 import UserTypeSelection from './Pages/Login-Part/Individual-2.jsx';
 import SelectProfession from './Pages/Login-Part/Individual-3.jsx';
 import ProfileWizard from './Pages/Login-Part/Individual-4/Individual-4.jsx';
-import Logo from './Pages/Login-Part/Logo.jsx';
 import OrganizationSignUp from './Pages/Login-Part/OrganizationSignUp.jsx';
 import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
 import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
 import LinkedInCallback from './Components/LinkedInCallback.jsx';
 import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
+
+
+
 import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
+import Logo from './Pages/Login-Part/Logo.jsx';
 
 // tabs
 import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
@@ -86,6 +92,7 @@ import EmailTemplate from './Pages/Dashboard-Part/Accountsettings/account/EmailS
 import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplates.jsx';
 import TemplateDetail from '../src/Pages/InteviewTemplates/TemplateDetail';
 import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
+import InterviewTemplateForm from '../src/Pages/InteviewTemplates/InterviewTemplateForm.jsx';
 
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 
@@ -298,10 +305,22 @@ const App = () => {
           {/* ---------------------------account settings------------------- */}
 
           {/* {/Intervie Templates/} */}
-          <Route path="/interview-templates" element={<InterviewTemplates />} />
-          <Route path="/interview-templates/:id" element={<TemplateDetail />} />
-          <Route path="/interviews/:interviewId/rounds/new" element={<RoundForm />} />
-          <Route path="/interview-templates/:id/rounds" element={<RoundFormTemplate />} />
+          <Route path="/interview-templates" element={<InterviewTemplates />} >
+          <Route index element={null} />
+          <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
+          <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
+
+          </Route >
+
+          <Route path="/interview-templates/:id" element={<TemplateDetail />} >
+          <Route index element={null} />
+          <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
+
+          </Route >
+
+          <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
+
+          <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
 
         </Routes>
       </div>

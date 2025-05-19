@@ -660,23 +660,56 @@ const CustomProvider = ({ children }) => {
     }
   }, []);
 
+  // // interview templete
+  // const [templates, setTemplates] = useState([]);
+
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       // const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates`;
+  //       const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
+  //       const response = await axios.get(apiUrl);
+
+  //       setTemplates(response.data.data);
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error);
+  //     }
+  //   };
+  //   fetchUsers();
+  // }, [tenantId]);
+
   // interview templete
-  const [templates, setTemplates] = useState([]);
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['interviewTemplates', tenantId],
+    queryFn: async () => {
+      const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
+      const response = await axios.get(apiUrl);
+      return response.data.data;
+    },
+    enabled: !!tenantId,
+  });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates`;
-        const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
-        const response = await axios.get(apiUrl);
-
-        setTemplates(response.data.data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
+  // Mutation for creating/updating templates
+  const saveTemplateMutation = useMutation({
+    mutationFn: async ({ id, templateData, isEditMode }) => {
+      let response;
+      if (isEditMode) {
+        response = await axios.patch(
+          `${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`,
+          { tenantId, templateData }
+        );
+      } else {
+        response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/interviewTemplates`,
+          { ...templateData, tenantId }
+        );
       }
-    };
-    fetchUsers();
-  }, [tenantId]);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['interviewTemplates']); // Refresh templates list
+    }
+  });
 
 
   // organzation code 
@@ -851,6 +884,8 @@ const CustomProvider = ({ children }) => {
 
         // interview templates
         templates,
+        saveTemplateMutation,
+        templatesLoading,
 
         // organzation 
         organizationData,

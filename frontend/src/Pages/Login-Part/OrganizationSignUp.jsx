@@ -15,7 +15,6 @@ import {
   validateConfirmPassword
 } from '../../utils/OrganizationSignUpValidation';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
-import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 export const Organization = () => {
   console.log('org signup')
@@ -244,8 +243,6 @@ export const Organization = () => {
         ownerId: response.data.ownerId,
         lastName: organizationData.lastName,
       }).catch((err) => console.error('Email error:', err));
-
-      // handleDomainRedirection(organization, navigate, token, 'subscription-plans');
 
       navigate('/subscription-plans');
 

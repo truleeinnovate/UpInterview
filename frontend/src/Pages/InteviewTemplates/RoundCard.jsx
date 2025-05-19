@@ -58,28 +58,10 @@ const RoundCard = ({
 
 
 
-  // useEffect(() => {
-  //   setSectionQuestions({});
-  //   fetchQuestionsForAssessment(round?.assessmentId)
-  // }, [round.assessmentId])
-
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      setSectionQuestions({});
-      await fetchQuestionsForAssessment(round?.assessmentId);
-    };
-
-    if (isMounted) {
-      fetchData();
-    }
-
-    return () => {
-      isMounted = false;
-      // Add any other cleanup here if needed
-    };
-  }, [round.assessmentId]);
+    setSectionQuestions({});
+    fetchQuestionsForAssessment(round?.assessmentId)
+  }, [round.assessmentId])
 
 
 
@@ -207,62 +189,10 @@ const RoundCard = ({
   // }, [fetchQuestionDetails, showQuestions, round.assessmentQuestions]);
 
   return (
-    <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
+    <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-custom-blue' : ''}`}>
       <div className="p-5">
-        {/* {!hideHeader && ( */}
-        {/* <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mr-2">
-                {round.roundName}
-              </h3>
-              <div className="flex items-center mt-1 text-sm text-gray-600">
-                <span className="mr-2">{round.interviewType}</span>
-                <span>•</span>
-                <span className="mx-2">{round.interviewMode}</span>
-              </div>
-            </div>
-          </div> */}
-        {/* )} */}
 
-        {/* {hideHeader && isActive && ( */}
-        {/* <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mr-2">
-                {round.roundName}
-              </h3>
-              <div className="flex items-center mt-1 text-sm text-gray-600">
-                <span className="mr-2">{round.interviewType}</span>
-                <span>•</span>
-                <span className="mx-2">{round.interviewMode}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onEditRound(round)}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80"
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Edit Round
-              </button>
-            </div>
-          </div> */}
-        {/* // )} */}
-
-
-        <div className="mt-6 flex justify-end space-x-3">
-
-          <Button
-            onClick={onEdit}
-            variant="outline"
-            size="sm"
-            className="flex items-center"
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Edit Round
-          </Button>
-
-        </div>
-
+        
 
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left Column */}
@@ -314,7 +244,7 @@ const RoundCard = ({
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <Users className="h-4 w-4 mr-1" />
                   <span>
-                    {round?.interviewers.length} interviewers{resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                    {round?.interviewers.length} interviewer{resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
                   </span>
                 </div>
 
@@ -564,6 +494,18 @@ const RoundCard = ({
           </div>
         )}
       </div>
+
+      <div className="m-4 flex justify-end space-x-3">
+          <Button
+            onClick={onEdit}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Edit Round
+          </Button>
+        </div>
     </div>
   );
 };

@@ -3,14 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import Cookies from 'js-cookie';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
-import { useCustomContext } from '../../Context/Contextfetch.js';
-import { handleDomainRedirection } from '../../middleware/domainRedirect.js';
 
 const OrganizationLogin = () => {
 console.log('org login')
-  // const { usersData } = useCustomContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
