@@ -8,6 +8,7 @@
 //   REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000'
 // };
 
+
 // export const linkedInConfig = {
 //   clientId: config.REACT_APP_CLIENT_ID,
 //   redirectUri: config.REACT_APP_REDIRECT_URI,
