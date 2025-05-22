@@ -22,14 +22,21 @@ import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentT
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 
+// import { useAddOrUpdateAssessment, useUpsertAssessmentQuestions } from '../../../../../Context/Contextfetch.js';
+
+
 const NewAssessment = () => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
+  // const { mutateAsync: saveAssessment } = useAddOrUpdateAssessment();
+// const { mutateAsync: upsertQuestions } = useUpsertAssessmentQuestions();
+
+
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
-  const { positions, assessmentData } = useCustomContext();
+  const { positions, assessmentData,useAddOrUpdateAssessment,useUpsertAssessmentQuestions } = useCustomContext();
 
   const { id } = useParams();
 
@@ -320,47 +327,59 @@ const NewAssessment = () => {
     try {
       let response;
 
-      if (isEditing) {
-        console.log("✏️ Editing mode. Sending PATCH request...");
-        response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
-          assessmentData
-        );
-        console.log("✅ Assessment updated successfully:", response.data);
+        await useAddOrUpdateAssessment.mutateAsync({   isEditing,
+          id: isEditing ? id : tabsSubmitStatus.responseId,
+          assessmentData: assessmentData,
+          tabsSubmitStatus });
 
-        setTabsSubmitStatus((prev) => ({
+           setTabsSubmitStatus((prev) => ({
           ...prev,
           [currentTab]: true,
+          responseId: isEditing ? id : response._id,
+          responseData: response
         }));
-      } else {
-        if (!tabsSubmitStatus["Basicdetails"]) {
-          console.log("🆕 Creating new assessment. Sending POST request...");
-          response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
-            assessmentData
-          );
-          console.log("✅ New assessment created:", response.data);
 
-          setTabsSubmitStatus((prev) => ({
-            ...prev,
-            [currentTab]: true,
-            responseId: response.data._id,
-            responseData: response.data,
-          }));
-        } else {
-          console.log("♻️ Updating existing assessment (after Basicdetails). Sending PATCH...");
-          response = await axios.patch(
-            `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
-            assessmentData
-          );
-          console.log("✅ Assessment updated successfully:", response.data);
+      // if (isEditing) {
+      //   console.log("✏️ Editing mode. Sending PATCH request...");
+      //   response = await axios.patch(
+      //     `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
+      //     assessmentData
+      //   );
+      //   console.log("✅ Assessment updated successfully:", response.data);
 
-          setTabsSubmitStatus((prev) => ({
-            ...prev,
-            [currentTab]: true,
-          }));
-        }
-      }
+      //   setTabsSubmitStatus((prev) => ({
+      //     ...prev,
+      //     [currentTab]: true,
+      //   }));
+      // } else {
+      //   if (!tabsSubmitStatus["Basicdetails"]) {
+      //     console.log("🆕 Creating new assessment. Sending POST request...");
+      //     response = await axios.post(
+      //       `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
+      //       assessmentData
+      //     );
+      //     console.log("✅ New assessment created:", response.data);
+
+      //     setTabsSubmitStatus((prev) => ({
+      //       ...prev,
+      //       [currentTab]: true,
+      //       responseId: response.data._id,
+      //       responseData: response.data,
+      //     }));
+      //   } else {
+      //     console.log("♻️ Updating existing assessment (after Basicdetails). Sending PATCH...");
+      //     response = await axios.patch(
+      //       `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+      //       assessmentData
+      //     );
+      //     console.log("✅ Assessment updated successfully:", response.data);
+
+      //     setTabsSubmitStatus((prev) => ({
+      //       ...prev,
+      //       [currentTab]: true,
+      //     }));
+      //   }
+      // }
 
       if (currentTab === "Questions") {
         const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
@@ -371,10 +390,11 @@ const NewAssessment = () => {
 
         console.log("📦 Prepared questions data:", assessmentQuestionsData);
         console.log("📤 Sending questions to API...");
-        response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
-          assessmentQuestionsData
-        );
+        // response = await axios.post(
+        //   `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
+        //   assessmentQuestionsData
+        // );
+         response = await useUpsertAssessmentQuestions.mutateAsync(assessmentQuestionsData);
         console.log("✅ Questions saved successfully:", response.data.message);
       }
 

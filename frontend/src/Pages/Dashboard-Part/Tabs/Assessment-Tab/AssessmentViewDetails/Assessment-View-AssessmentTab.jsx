@@ -95,8 +95,10 @@ function AssessmentsTab({ assessment }) {
   if (loading) return <div className="p-4 text-gray-600">Loading assessments...</div>;
 
   const formattedCandidates = (candidates) =>
+   
     candidates.map((candidate) => ({
       id: candidate._id,
+      _id:candidate.candidateId._id,
       FirstName: candidate.candidateId?.FirstName || 'Unknown',
       LastName: candidate.candidateId?.LastName || '',
       Email: candidate.candidateId?.Email || 'No email',
@@ -116,7 +118,11 @@ function AssessmentsTab({ assessment }) {
       CurrentExperience: candidate.candidateId?.CurrentExperience || 'N/A',
       skills: candidate.candidateId?.skills || [],
       ImageData: candidate.candidateId?.ImageData || null,
+      assessmentId:assessment._id
     }));
+
+    
+    //  console.log("scheduledAssessments ", scheduledAssessments);
 
   return (
     <div className="space-y-6">
@@ -171,8 +177,8 @@ function AssessmentsTab({ assessment }) {
               </div>
    {openSchedules[schedule._id] && (
   <div className="border-t border-gray-200">
-    <div className="overflow-auto max-h-[400px] py-2"> {/* Added padding */}
-      <div className="min-w-[800px] px-2"> {/* Added padding */}
+    <div className="overflow-auto max-h-[400px] "> {/* Added padding */}
+      <div className="min-w-[800px] "> {/* Added padding */}
         <Candidate
           candidates={formattedCandidates(schedule.candidates)}
           onResendLink={handleResendLink}

@@ -26,16 +26,18 @@ const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }
                   <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                {notification?.message || 'No message'}
-              </p>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <p className="text-xs text-gray-500">
-                  {notification?.timestamp ? new Date(notification.timestamp).toLocaleString() : 'No date'}
+              <div className="space-y-1">
+                <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                  {notification?.message || 'No message'}
                 </p>
-                <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
-                  {notification?.type || 'unknown'}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-gray-500">
+                    {notification?.timestamp ? new Date(notification.timestamp).toLocaleString() : 'No date'}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
+                    {notification?.type || 'unknown'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

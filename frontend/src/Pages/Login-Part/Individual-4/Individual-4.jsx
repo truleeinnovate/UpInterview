@@ -86,8 +86,6 @@ const MultiStepForm = () => {
     gender: "",
   });
 
-  console.log("basicDetailsData", basicDetailsData);
-
   // const checkProfileIdExists = useCallback(async (profileId) => {
   //   if (!profileId) return false;
   //   try {
@@ -148,8 +146,6 @@ const MultiStepForm = () => {
     resume: null,
   });
 
-  console.log("additionalDetailsData", additionalDetailsData);
-
   const [interviewDetailsData, setInterviewDetailsData] = useState({
     skills: [],
     technologies: [],
@@ -164,15 +160,11 @@ const MultiStepForm = () => {
     professionalTitle: "",
   });
 
-  console.log("interviewDetailsData", interviewDetailsData);
-
   const [availabilityDetailsData, setAvailabilityDetailsData] = useState({
     timeZone: "",
     preferredDuration: "",
     availability: ""
   });
-
-  console.log("availabilityDetailsData", availabilityDetailsData);
 
   // Determine if we should show limited steps (only 0 and 1) or all steps
   const showLimitedSteps = isProfileComplete && roleName !== "Internal_Interviewer";

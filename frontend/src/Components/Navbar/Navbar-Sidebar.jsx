@@ -395,10 +395,10 @@ const Navbar = () => {
                   </div>
                 </div>
               </div>
-              <div className="search search-small-width mx-auto mt-2">
+              {/* <div className="search search-small-width mx-auto mt-2">
                 <input type="text" placeholder="Search" className="rounded-full border h-7" />
                 <button type="submit" className="text-custom-blue"><IoMdSearch /></button>
-              </div>
+              </div> */}
             </div>
 
             {/* <nav className="flex justify-center items-center lg:flex xl:flex 2xl:flex lg:space-x-10 xl:space-x-10 2xl:space-x-10">
@@ -497,12 +497,12 @@ const Navbar = () => {
 
               <div className="relative h-full flex items-center" ref={interviewRef}>
                 <button
-                  className={`flex items-center h-full relative px-1 ${isActive('/interviewList') || isActive('/mockinterview') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+                  className={`flex items-center h-full relative px-1 ${isActive('/interviewList') || isActive('/mockinterview') || isActive('/interview-templates') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
                   onClick={toggleInterviewDropdown}
                 >
                   Interviews&nbsp;
                   {interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  {(isActive('/interviewList') || isActive('/mockinterview')) && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
+                  {(isActive('/interviewList') || isActive('/mockinterview') || isActive('/interview-templates')) && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
                 </button>
                 {interviewDropdown && (
                   <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -520,6 +520,13 @@ const Navbar = () => {
                         onClick={() => setInterviewDropdown(false)}
                       >
                         Mock Interviews
+                      </NavLink>
+                      <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/interview-templates"
+                        onClick={() => setMoreDropdown(false)}
+                      >
+                        Interview Templates
                       </NavLink>
                     </div>
                   </div>
@@ -559,12 +566,12 @@ const Navbar = () => {
 
               <div className="relative h-full flex items-center" ref={moreRef}>
                 <button
-                  className={`flex items-center h-full relative px-1 ${isActive('/analytics') || isActive('/interview-templates') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
+                  className={`flex items-center h-full relative px-1 ${isActive('/analytics') || isActive('/support-desk') ? 'text-custom-blue font-bold' : 'text-gray-600 hover:text-custom-blue'}`}
                   onClick={toggleMoreDropdown}
                 >
                   More&nbsp;
                   {moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  {(isActive('/analytics') || isActive('/interview-templates')) && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
+                  {(isActive('/analytics') || isActive('/support-desk')) && <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>}
                 </button>
                 {moreDropdown && (
                   <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
@@ -577,23 +584,24 @@ const Navbar = () => {
                         Analytics
                       </NavLink>
                       <NavLink
-                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue' : ''}`}
-                        to="/interview-templates"
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/support-desk') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/support-desk"
                         onClick={() => setMoreDropdown(false)}
                       >
-                        Interview Templates
+                        Support Desk
                       </NavLink>
+
                     </div>
                   </div>
                 )}
               </div>
             </nav>
 
-            <div className="flex space-x-2 sm:hidden md:hidden">
-              <div className="search w-60">
+            <div className="flex space-x-3 sm:hidden md:hidden">
+              {/* <div className="search w-60">
                 <input type="text" placeholder="Search" className="rounded-full border h-8" />
                 <button type="submit" className="text-custom-blue"><IoMdSearch /></button>
-              </div>
+              </div> */}
               <div className="text-xl border rounded-md p-2 text-custom-blue">
                 <NavLink to="/home">
                   <IoHome />
@@ -609,9 +617,7 @@ const Navbar = () => {
               </div>
               <div className="text-xl border rounded-md" ref={notificationRef}>
                 <div className="relative">
-                  <p>
-                    <NotificationPanel />
-                  </p>
+                  <NotificationPanel />
                 </div>
               </div>
               <div className="text-xl border rounded-md px-1 py-1 flex items-center" ref={profileRef}>
@@ -653,7 +659,7 @@ const Navbar = () => {
 
               <div className="relative" ref={interviewRef}>
                 <button
-                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/interviewList') || isActive('/mockinterview') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/interviewList') || isActive('/mockinterview') || isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                   onClick={toggleInterviewDropdown}
                 >
                   <span>Interviews</span>
@@ -680,6 +686,16 @@ const Navbar = () => {
                       }}
                     >
                       Mock Interviews
+                    </NavLink>
+                              <NavLink
+                      className={`block px-4 py-2 rounded-md ${isActive('/interview-templates') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
+                      to="/interview-templates"
+                      onClick={() => {
+                        setMoreDropdown(false);
+                        toggleSidebar();
+                      }}
+                    >
+                      Interview Templates
                     </NavLink>
                   </div>
                 )}
@@ -721,7 +737,7 @@ const Navbar = () => {
 
               <div className="relative" ref={moreRef}>
                 <button
-                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/analytics') || isActive('/interview-templates') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive('/analytics') || isActive('/support-desk') ? 'bg-gray-100 text-custom-blue font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                   onClick={toggleMoreDropdown}
                 >
                   <span>More</span>
@@ -739,16 +755,13 @@ const Navbar = () => {
                     >
                       Analytics
                     </NavLink>
-                    <NavLink
-                      className={`block px-4 py-2 rounded-md ${isActive('/interview-templates') ? 'bg-gray-200 text-custom-blue' : 'hover:bg-gray-100'}`}
-                      to="/interview-templates"
-                      onClick={() => {
-                        setMoreDropdown(false);
-                        toggleSidebar();
-                      }}
-                    >
-                      Interview Templates
-                    </NavLink>
+                        <NavLink
+                        className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive('/support-desk') ? 'bg-gray-100 text-custom-blue' : ''}`}
+                        to="/support-desk"
+                        onClick={() => setMoreDropdown(false)}
+                      >
+                        Support Desk
+                      </NavLink>
                   </div>
                 )}
               </div>

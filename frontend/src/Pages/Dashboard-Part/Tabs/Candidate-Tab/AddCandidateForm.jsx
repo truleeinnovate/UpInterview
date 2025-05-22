@@ -15,11 +15,13 @@ import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  Minimize , 
-  Expand  
+import {
+  Minimize,
+  Expand
 } from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../config';
+import { useCandidates } from '../../../../apiHooks/useCandidates';
 
 
 // Reusable CustomDropdown Component
@@ -135,15 +137,14 @@ const AddCandidateForm = ({ mode }) => {
     college,
     qualification,
     currentRole,
-    candidateData,
-    addOrUpdateCandidate
+    // candidateData,
+    // addOrUpdateCandidate
   } = useCustomContext();
 
-  //  const {
-  // addOrUpdateCandidate 
-  // } = useCustomContext(CandidateContext);
+  const { addOrUpdateCandidate, candidateData } = useCandidates();
 
-console.log("currentRole", currentRole);
+
+  console.log("currentRole", currentRole);
 
 
   const { id } = useParams();
@@ -218,7 +219,7 @@ console.log("currentRole", currentRole);
 
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
-    
+
       setFormData({
         FirstName: selectedCandidate.FirstName || '',
         LastName: selectedCandidate.LastName || '',
@@ -260,7 +261,7 @@ console.log("currentRole", currentRole);
     setFormData((prev) => ({ ...prev, CurrentRole: role }));
     setShowDropdownCurrentRole(false);
     setSearchTermCurrentRole(''); // Clear the search term
-  };
+  };
 
 
   const filteredCurrentRoles = currentRole?.filter(role =>
@@ -366,7 +367,7 @@ console.log("currentRole", currentRole);
   const handleEdit = (index) => {
     const entry = entries[index];
     // setSelectedSkill(entry.skill);
-    setSelectedSkill(entry.skill || ""); 
+    setSelectedSkill(entry.skill || "");
     setSelectedExp(entry.experience);
     setSelectedLevel(entry.expertise);
     setEditingIndex(index);
@@ -385,9 +386,9 @@ console.log("currentRole", currentRole);
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" && 
-               (selectedSkill === currentSkill || 
-                !allSelectedSkills.includes(selectedSkill));
+        return selectedSkill !== "" &&
+          (selectedSkill === currentSkill ||
+            !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -476,14 +477,10 @@ console.log("currentRole", currentRole);
     console.log('Starting add candidate process...');
 
     // Get user token information
-    // const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    // const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
-    // const orgId = tokenPayload?.orgId;
-
-       const userId = Cookies.get('userId');
-    const userName = Cookies.get('userName')
-    const orgId = Cookies.get('organizationId')
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.orgId;
 
     console.log('User info:', { userId, userName, orgId });
 
@@ -532,35 +529,14 @@ console.log("currentRole", currentRole);
     console.log('Submitting candidate data:', data);
 
     try {
-      // Create candidate
-      // const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
-      // console.log('Candidate creation response:', response.data);
-
-      // const candidateId = response.data.data._id;
-      // console.log('New candidate created with ID:', candidateId);
-
-      // // Upload image if available
-      // if (file) {
-      //   console.log('Uploading candidate image...');
-      //   const imageData = new FormData();
-      //   imageData.append("image", file);
-      //   imageData.append("type", "candidate");
-      //   imageData.append("id", candidateId);
-
-      //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      //   console.log('Image upload completed successfully');
-      // }
-
-
+      // getting the API from the apihooks for add or update candidate (post or patch)
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
       // Reset form and close
       resetFormData();
       console.log('Form reset completed');
 
       // Navigate to candidate list
-      // navigate('/candidate');
+      navigate('/candidate');
       console.log('Navigation to candidate list completed');
     } catch (error) {
       console.error('Failed to add candidate:', error);
@@ -576,14 +552,9 @@ console.log("currentRole", currentRole);
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    // const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
-    // const orgId = tokenPayload?.tenantId;
-
-
-    const userId = Cookies.get('userId');
-    const userName = Cookies.get('userName')
-    const orgId = Cookies.get('organizationId')
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.tenantId;
 
     console.log('User info:', { userId, userName, orgId });
 
@@ -615,77 +586,52 @@ console.log("currentRole", currentRole);
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
-        Date_Of_Birth: formData.Date_Of_Birth,
-        skills: entries.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        resume: null,
-        CurrentRole: formData.CurrentRole,
-        CreatedBy: `${userName} at ${currentDateTime}`,
-        LastModifiedById: `${userName} at ${currentDateTime}`,
-        ownerId: userId,
-        tenantId: orgId
-      };
-
-      console.log('Submitting candidate data:', data);
-
-      try {
-        let candidateId;
-        let response;
-
-        await addOrUpdateCandidate.mutateAsync({ id, data, file });
-
-        // if (id) {
-        //   // Update existing candidate
-        //   console.log('Updating existing candidate with ID:', id);
-        //   response = await axios.patch(
-        //     `${process.env.REACT_APP_API_URL}/candidate/${id}`,
-        //     data
-        //   );
-        // } else {
-        //   // Create new candidate
-        //   console.log('Creating new candidate...');
-        //   response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
-        // }
-
-        // console.log('API response:', response.data);
-        // candidateId = response.data.data._id;
-
-        // // Upload image if available
-        // if (file) {
-        //   console.log('Uploading candidate image...');
-        //   const imageData = new FormData();
-        //   imageData.append("image", file);
-        //   imageData.append("type", "candidate");
-        //   imageData.append("id", candidateId);
-
-        //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-        //     headers: { "Content-Type": "multipart/form-data" },
-        //   });
-        //   console.log('Image upload completed successfully');
-        // }
-
-        // Handle navigation based on mode
-        switch (mode) {
-          case 'Edit':
-            navigate(`/candidate`);
-            break;
-          case 'Candidate Edit':
-            navigate(`/candidate/${id || candidateId}`);
-         
-
-            break;
-          default: // Create mode
-            navigate('/candidate');
-        }
-
-        resetFormData();
-      } catch (error) {
-        console.error("Error adding candidate:", error);
-      }
+      Date_Of_Birth: formData.Date_Of_Birth,
+      skills: entries.map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      })),
+      resume: null,
+      CurrentRole: formData.CurrentRole,
+      CreatedBy: `${userName} at ${currentDateTime}`,
+      LastModifiedById: `${userName} at ${currentDateTime}`,
+      ownerId: userId,
+      tenantId: orgId
     };
+
+    console.log('Submitting candidate data:', data);
+
+    try {
+      let candidateId;
+
+      // getting the API from the apihooks for add or update candidate (post or patch)
+      console.log('Candidate data:', data);
+      console.log('Candidate file:', file);
+      console.log('Candidate id:', id);
+      console.log('Candidate addOrUpdateCandidate:', addOrUpdateCandidate);
+      await addOrUpdateCandidate.mutateAsync({ id, data, file });
+      console.log('Candidate added/updated successfully');
+
+      // Handle navigation based on mode
+      switch (mode) {
+        case 'Edit':
+          navigate(`/candidate`);
+          break;
+        case 'Candidate Edit':
+          navigate(`/candidate/${id || candidateId}`);
+
+
+          break;
+        default: // Create mode
+          navigate('/candidate');
+      }
+
+      resetFormData();
+    } catch (error) {
+      console.error("Error adding candidate:", error);
+    }
+  };
 
   const resetFormData = () => {
     setFormData({
@@ -701,7 +647,7 @@ console.log("currentRole", currentRole);
       RelevantExperience: '',
       skills: [],
       CurrentRole: '',
-      CountryCode:''
+      CountryCode: ''
     });
 
     setErrors({});
@@ -738,8 +684,8 @@ console.log("currentRole", currentRole);
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
-              {id ? "Update Candidate" :"Add New Candidate" }
-                
+                {id ? "Update Candidate" : "Add New Candidate"}
+
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -958,7 +904,7 @@ console.log("currentRole", currentRole);
                   <CustomDatePicker
                     selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
                     onChange={handleDateChange}
-                    placeholder="Select date of birth" 
+                    placeholder="Select date of birth"
                   />
                 </div>
 
@@ -975,7 +921,7 @@ console.log("currentRole", currentRole);
 
                 <div ref={currentRoleDropdownRef}>
                   <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Role 
+                    Current Role
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -1083,7 +1029,7 @@ console.log("currentRole", currentRole);
                     className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Enter relevant experience"
                   />
-                {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
+                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
                 </div>
               </div>
 
@@ -1097,7 +1043,8 @@ console.log("currentRole", currentRole);
 
                   <button
                     type="button"
-                    onClick={() => { setIsModalOpen(true)
+                    onClick={() => {
+                      setIsModalOpen(true)
                       if (editingIndex === null) {
                         setSelectedSkill(""); // Reset selection when adding new skill
                         setSelectedExp("");
@@ -1117,10 +1064,10 @@ console.log("currentRole", currentRole);
                   <div className="space-y-2 mb-4 mt-5">
                     {entries.map((entry, index) => (
                       <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
-                          <div className="flex justify-between border bg-white rounded w-full mr-3">
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
-                        <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
+                        <div className="flex justify-between border bg-white rounded w-full mr-3">
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
+                          <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
                         </div>
                         <div className="flex space-x-2">
                           <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
@@ -1170,7 +1117,7 @@ console.log("currentRole", currentRole);
                   onClick={handleSubmit}
                   className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
                 >
-                  {id ? "Update" :"Save" }
+                  {id ? "Update" : "Save"}
                 </button>
 
                 {!id && (

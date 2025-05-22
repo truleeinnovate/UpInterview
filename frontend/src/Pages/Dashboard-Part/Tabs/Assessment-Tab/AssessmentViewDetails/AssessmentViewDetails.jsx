@@ -37,17 +37,20 @@ function AssessmentView() {
       if (foundAssessment) {
         setAssessment(foundAssessment);
         setIsModalOpen(true);
-      } else {
-        const fetchedAssessment = await fetchAssessmentData(id);
-        if (fetchedAssessment) {
-          setAssessment(fetchedAssessment);
-          setIsModalOpen(true);
-        }
       }
+      
+      // else {
+      //   const fetchedAssessment = await fetchAssessmentData(id);
+      //   if (fetchedAssessment) {
+      //     setAssessment(fetchedAssessment);
+      //     setIsModalOpen(true);
+      //   }
+      // }
     };
 
     loadData();
-  }, [id, assessmentData, fetchAssessmentData]);
+  }, [id, assessmentData, ]);
+  // fetchAssessmentData
 
   useEffect(() => {
     if (assessment) {

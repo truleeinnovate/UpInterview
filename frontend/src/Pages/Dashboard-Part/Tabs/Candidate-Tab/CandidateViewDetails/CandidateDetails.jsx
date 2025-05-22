@@ -3,10 +3,11 @@ import Modal from 'react-modal';
 import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import Loading from '../../../../../Components/Loading';
 Modal.setAppElement('#root');
 
-const CandidateDetails = () => {
+const CandidateDetails = ({mode}) => {
   const {
     candidateData,
     loading,
@@ -15,14 +16,18 @@ const CandidateDetails = () => {
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const { id } = useParams();
+    const location = useLocation();
+
+
 
   useEffect(() => {
     let isMounted = true; // flag to track component mount status
 
     const fetchCandidate = async () => {
-      try {
+      try { 
         const selectedCandidate = candidateData.find(candidate => candidate._id === id);
         if (isMounted && selectedCandidate) {
+
           setCandidate(selectedCandidate);
           console.log("candidate", selectedCandidate);
         }
@@ -38,8 +43,20 @@ const CandidateDetails = () => {
     };
   }, [id, candidateData]);
 
+ // With this:
+const getFromPath = () => {
+  if (mode === "Assessment") {
+    // If coming from assessment, go back to assessment details
+    return `/assessment-details/${location.state?.assessmentId}`;
+  }
+  // Default to candidate list or use the stored from path
+  return location.state?.from || '/candidate';
+};
 
-  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'>Loading...</div>;
+const fromPath = getFromPath();
+
+
+  if (!candidate || loading) return <Loading />
 
   const content = (
     <div className="h-full flex flex-col">
@@ -65,7 +82,7 @@ const CandidateDetails = () => {
 
 
           <button
-            onClick={() => navigate('/candidate')}
+            onClick={() => navigate(fromPath)}
             className=" hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />

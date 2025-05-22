@@ -5,7 +5,6 @@ import {
   Building,
   Calendar,
   Clock,
-  Users,
   Briefcase
 } from 'lucide-react';
 

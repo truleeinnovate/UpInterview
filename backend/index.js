@@ -768,6 +768,14 @@ app.use('/', contactRoutes);
 
 // ----------------------------------------------------->
 
+// support desk
+const supportUserRoutes = require('./routes/supportUserRoutes')
+app.use('/', supportUserRoutes);
+
+// question bank
+const MyQuestionListRoutes = require('./routes/MyQuestionListRoutes.js');
+app.use('/', MyQuestionListRoutes);
+
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {
 //   try {
@@ -805,5 +813,3 @@ app.use('/', contactRoutes);
 //     res.status(500).json({ error: 'Error checking profileId' });
 //   }
 // });
-
-// i am adding this text - mansoor

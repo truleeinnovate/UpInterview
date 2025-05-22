@@ -13,6 +13,8 @@ import AddCandidateForm from '../AddCandidateForm';
 import { User, } from 'lucide-react';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import Documents from './Documents';
+import Loading from '../../../../../Components/Loading';
+import { config } from '../../../../../config';
 
 const tabs = [
   { id: 'interviews', name: 'Interviews', icon: '👥' },
@@ -29,7 +31,6 @@ const MainContent = () => {
   const { id } = useParams();
   const [candidate, setCandidate] = useState(null);
   const [positions, setPositions] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
@@ -45,8 +46,8 @@ const MainContent = () => {
 
   const fetchCandidate = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${id}`);
-      console.log("response.data ", response.data);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate/${id}`);
+      console.log("response.data from the candidate view details", response.data);
 
       const { appliedPositions, ...candidateData } = response.data;
       setCandidate(candidateData);
@@ -57,9 +58,7 @@ const MainContent = () => {
     }
   };
 
-
-  if (!candidate) return <div className='w-full h-full flex justify-center items-center'>Loading...</div>;
-
+  if (!candidate) return  <Loading />
 
   const handleViewInterview = (interviewId) => {
     const interview = candidate?.interviews?.find(i => i.id === interviewId);
