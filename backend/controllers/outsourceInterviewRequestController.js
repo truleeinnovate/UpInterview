@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const OutsourceInterviewRequest = require('../models/OutsourceInterviewRequest.js');
 const Interview = require('../models/Interview.js')
+
 //old mansoor code i have changed this code because each interviwer send one request
+
 // exports.createRequest = async (req, res) => {
 //     try {
 //         const { 
 //             tenantId, ownerId, scheduledInterviewId, interviewerType, 
-//             dateTime, duration, interviewerIds, candidateId, 
+//             dateTime, duration, interviewerIds, candidateId,
 //             positionId, status, roundId, requestMessage, expiryDateTime 
 //         } = req.body;
 
@@ -41,6 +43,7 @@ const Interview = require('../models/Interview.js')
 // };
 
 // each interviwer send one request
+
 exports.createRequest = async (req, res) => {
     try {
       const {
@@ -50,7 +53,7 @@ exports.createRequest = async (req, res) => {
         interviewerType,
         dateTime,
         duration,
-        interviewerId, // Now passing only one interviewer ID
+        interviewerId,
         candidateId,
         positionId,
         status,
@@ -83,6 +86,7 @@ exports.createRequest = async (req, res) => {
       res.status(500).json({ message: "Internal server error", error: error.message });
     }
   };
+
 exports.getAllRequests = async (req, res) => {
     try {
         const requests = await OutsourceInterviewRequest.find()
