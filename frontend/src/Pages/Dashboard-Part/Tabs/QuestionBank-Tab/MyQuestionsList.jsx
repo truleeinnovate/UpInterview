@@ -521,11 +521,10 @@ return (
   <div className="bg-white z-50 w-full px-4 py-2">
     {/* Add Question Button (UI improvement) */}
     <div
-      className={`relative block ${section === "interviewerSection" ? "flex justify-end" : ""
-        }`}
+      className={`relative `}
     >
       <button
-        className="text-md absolute top-[-50px] right-0 bg-custom-blue text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+        className="text-md absolute top-[8px] right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
         onClick={toggleSidebar}
       >
         <Plus /> Add Question
@@ -612,8 +611,8 @@ return (
       {/* Empty State (UI improvement) */}
       {!selectedLabel && (
         <div className="flex justify-center items-center h-[calc(100vh-400px)]">
-          <div className="text-center">
-            <div className="text-gray-400 mb-4">
+          <div className="text-center flex flex-col items-center ">
+            <div className="text-gray-400 ">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
@@ -638,7 +637,7 @@ return (
                 >
                   <div className="flex items-center w-3/4">
                     <p className="font-semibold truncate">{listName}</p>
-                    <span className="ml-4 text-sm bg-blue-700 px-2 py-1 rounded-full">
+                    <span className="ml-4 text-sm text-white border border-white  px-2 py-1 rounded-full">
                       {items.length} questions
                     </span>
                   </div>
@@ -647,13 +646,13 @@ return (
                       <div className="flex items-center">
                         <button
                           onClick={() => toggleActionSection(listName)}
-                          className="hover:bg-blue-700 p-1 rounded-full transition-colors"
+                          className="p-1 rounded-full transition-colors"
                         >
                           <MdMoreVert className="text-xl" />
                         </button>
                         <button
                           onClick={() => toggleSection(listName)}
-                          className="hover:bg-blue-700 p-1 rounded-full ml-2 transition-colors"
+                          className=" p-1 rounded-full ml-2 transition-colors"
                         >
                           {isOpen[listName] ? (
                             <IoIosArrowUp className="text-xl" />
@@ -845,7 +844,7 @@ return (
 
                         {/* Answer (UI improvement) */}
                         <div className="p-4 pt-0">
-                          <p className="text-sm">
+                          <p className="text-sm  break-words whitespace-pre-wrap">
                             <span className="font-medium text-gray-700">
                               Answer:{" "}
                             </span>

@@ -546,11 +546,11 @@ const SuggestedQuestionsComponent = ({
 
     const ReturnSearchFilterSection = () => {
         return (
-            <div className={`flex gap-4 justify-between items-center`}>
+            <div className={`flex sm:flex-col gap-4 justify-between items-center`}>
                 <div
                     className={` ${section === "Popup" && !questionBankPopupVisibility
-                        ? "w-[35%] "
-                        : "w-1/2"
+                        ? "w-[35%] sm:w-full"
+                        : "w-full sm:w-full"
                         } `}
                 >
                     <div
@@ -573,14 +573,14 @@ const SuggestedQuestionsComponent = ({
                 </div>
                 <div
                     className={`${section === "Popup" && !questionBankPopupVisibility
-                        ? "w-[75%]"
-                        : "w-[50%]"
-                        }  flex items-center justify-between`}
+                        ? "w-[75%] sm:w-full"
+                        : "w-1/2 sm:w-full"
+                        }  flex items-center `}
                 >
                     <div
                         className={`${section === "Popup" && !questionBankPopupVisibility
                             ? "w-[240px]"
-                            : " w-[300px]"
+                            : "w-[200px] sm:w-full"
                             } relative flex items-center rounded-md border`}
                     >
                         <span className={`p-2 text-[#227a8a]`}>
@@ -592,7 +592,7 @@ const SuggestedQuestionsComponent = ({
                             className={` p-2 pr-none border-none  h-outline-none w-[85%]`}
                         />
                     </div>
-                    <div className="flex items-center ml-2 w-[120px]">
+                    <div className="flex items-center ml-2 ">
                         <p className="text-custom-blue">
                             {suggestedQuestionsFilteredData.length} Questions{" "}
                         </p>
