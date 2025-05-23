@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcrypt');
 const { Organization } = require('../models/Organization');
 const { Users } = require('../models/Users');
@@ -12,10 +11,8 @@ const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
 const { generateToken } = require('../utils/jwt');
-
 const saltRounds = 10;
 const mongoose = require('mongoose');
-
 
 const registerOrganization = async (req, res) => {
   let savedOrganization = null;

@@ -24,6 +24,7 @@ import MockinterviewTable from "./MockinterviewTable.jsx";
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../../Components/Loading.js";
+import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -485,7 +486,7 @@ const MockInterview = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed top-16 left-0 right-0 bg-background">
+      <div className="fixed md:mt-6 sm:mt-5 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
             <motion.div
@@ -494,14 +495,14 @@ const MockInterview = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <h1 className="text-lg font-semibold">Mock Interviews</h1>
-              <button
+              <h1 className="text-xl sm:text-base  font-semibold  text-custom-blue ">Mock Interviews</h1>
+              <Button
                 onClick={() => navigate('/mockinterview-create')}
-                className="flex items-center justify-center bg-custom-blue hover:bg-custom-blue/90 text-white text-sm font-medium rounded-md px-3 py-2"
+              size="sm" className="bg-custom-blue sm:w-28 hover:bg-custom-blue/90 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add  interview
-              </button>
+              </Button>
             </motion.div>
 
             {/* 2 */}

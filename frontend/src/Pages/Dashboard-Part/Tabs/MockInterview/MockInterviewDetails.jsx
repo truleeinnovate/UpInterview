@@ -24,16 +24,16 @@ const MockInterviewDetails = () => {
 
   const {
     mockinterviewData,
-    fetchMockInterviewData
+    // fetchMockInterviewData
   } = useCustomContext();
 
   const mockinterview = mockinterviewData.find((data) => data._id === id);
 
  
 
-  useEffect(() => {
-    fetchMockInterviewData();
-  }, [fetchMockInterviewData]);
+  // useEffect(() => {
+  //   fetchMockInterviewData();
+  // }, [fetchMockInterviewData]);
 
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);

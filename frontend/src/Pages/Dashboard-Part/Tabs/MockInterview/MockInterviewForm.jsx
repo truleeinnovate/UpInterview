@@ -45,10 +45,12 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const {
-    fetchMockInterviewData,
+    // fetchMockInterviewData,
+    addOrUpdateMockInterview,
     qualification,
     technologies,
     skills,
+    currentRole,
     mockinterviewData
   } = useCustomContext();
   const { id } = useParams();
@@ -112,17 +114,17 @@ const MockSchedulelater = () => {
   const [showDropdownRole, setShowDropdownRole] = useState(false);
 
 
-const toggleDropdownRole = () => {
-  setShowDropdownRole(!showDropdownRole);
-};
+  const toggleDropdownRole = () => {
+    setShowDropdownRole(!showDropdownRole);
+  };
 
-const handleRoleSelect = (role) => {
-  setFormData((prevData) => ({
-    ...prevData,
-    Role: role.roleName,
-  }));
-  setShowDropdownRole(false);
-};
+  const handleRoleSelect = (role) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      Role: role.RoleName,
+    }));
+    setShowDropdownRole(false);
+  };
 
   const handleExternalInterviewerSelect = (interviewers) => {
 
@@ -144,14 +146,15 @@ const handleRoleSelect = (role) => {
           `${process.env.REACT_APP_API_URL}/auth/users/${userId}`
         );
 
-        const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
-        const allRoles = allRolesResponse.data;
+        // const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
+        // const allRoles = allRolesResponse.data;
 
-        console.log("allRoles", allRoles)
+        // console.log("allRoles", currentRole);
         setUserProfile(response.data);
 
         // console.log("response.data", response.data);
-        setRoles(allRoles)
+        // setRoles(allRoles)
+        setRoles(currentRole)
 
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -159,10 +162,10 @@ const handleRoleSelect = (role) => {
     };
 
     fetchData();
-  }, [userId]);
+  }, [userId, currentRole]);
 
 
-  
+
   const handleRemoveExternalInterviewer = (interviewerId) => {
     setExternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i.id !== interviewerId);
@@ -229,29 +232,30 @@ const handleRoleSelect = (role) => {
         const updatedEntries = MockEditData?.skills.map((entry, index) =>
           index === editingIndex ? { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel } : entry
         );
-        setEntries(updatedEntries);
+        setEntries(MockEditData?.skills || []);
+        setAllSelectedSkills(MockEditData.skills?.map(skill => skill.skill) || [])
 
         setInterviewType(MockEditData.rounds?.interviewType || "scheduled");
-     // Change: Parse and set dateTime for editing
-     if (MockEditData.rounds?.dateTime) {
-      const [startStr, endStr] = MockEditData.rounds.dateTime.split(" - ");
-      const startDate = parseCustomDateTime(startStr);
-      if (startDate && !isNaN(startDate.getTime())) {
-        setScheduledDate(startDate.toISOString().slice(0, 16));
-        setStartTime(startDate.toISOString());
-        const endDate = endStr ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`) : null;
-        setEndTime(endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : "");
-        setCombinedDateTime(MockEditData.rounds.dateTime);
+        // Change: Parse and set dateTime for editing
+        if (MockEditData.rounds?.dateTime) {
+          const [startStr, endStr] = MockEditData.rounds.dateTime.split(" - ");
+          const startDate = parseCustomDateTime(startStr);
+          if (startDate && !isNaN(startDate.getTime())) {
+            setScheduledDate(startDate.toISOString().slice(0, 16));
+            setStartTime(startDate.toISOString());
+            const endDate = endStr ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`) : null;
+            setEndTime(endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : "");
+            setCombinedDateTime(MockEditData.rounds.dateTime);
+          }
+        }
       }
+    } else {
+      // Change: Set default instant interview time for new form
+      updateTimes(formData.rounds.duration);
     }
-  }
-} else {
-  // Change: Set default instant interview time for new form
-  updateTimes(formData.rounds.duration);
-}
-       
-      
-    
+
+
+
   }, [mockEdit, id]);
 
 
@@ -283,7 +287,21 @@ const handleRoleSelect = (role) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const errorMessage = getErrorMessage(name, value);
+
+
+
+    let errorMessage = getErrorMessage(name, value);
+  if (name === 'currentExperience') {
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+      errorMessage = 'Experience must be between 1 and 15';
+    }
+  } else {
+    errorMessage = getErrorMessage(name, value);
+  }
+
+
+ 
     if (name.startsWith("rounds.")) {
       const roundField = name.split(".")[1];
       setFormData((prev) => ({
@@ -296,6 +314,25 @@ const handleRoleSelect = (role) => {
     setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   };
 
+
+  const handleExperienceKeyDown = (e) => {
+  // Allow: backspace, delete, tab, escape, enter
+  if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
+    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    (e.keyCode === 65 && e.ctrlKey === true) ||
+    (e.keyCode === 67 && e.ctrlKey === true) ||
+    (e.keyCode === 86 && e.ctrlKey === true) ||
+    (e.keyCode === 88 && e.ctrlKey === true) ||
+    // Allow: home, end, left, right
+    (e.keyCode >= 35 && e.keyCode <= 39)) {
+    return;
+  }
+  
+  // Block everything except numbers (0-9)
+  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+    e.preventDefault();
+  }
+};
 
 
 
@@ -311,95 +348,22 @@ const handleRoleSelect = (role) => {
       return;
     }
 
-    try {
-
-      const status = formData.rounds.interviewers.length > 0 ? "Requests Sent" : "Draft";
-      // Prepare the payload
-      const payload = {
-        skills: entries.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        Role: formData.Role,
-        candidateName: formData.candidateName,
-        higherQualification: formData.higherQualification,
-        currentExperience: formData.currentExperience,
-        technology: formData.technology,
-        jobDescription: formData.jobDescription,
-        rounds: {
-          ...formData.rounds,
-          dateTime: combinedDateTime,
-          status: status,
-        },
-        createdById: userId,
-        lastModifiedById: userId,
-        ownerId: userId,
-        tenantId: organizationId,
-      };
-
-      // Add additional fields for new interviews
-      // if (!mockEdit) {
-      //   // payload.status = "Scheduled";
-      //   payload.interviewType = InterviewType;
-
-      // }
-
-      // // Add tenant ID if applicable
-      // if (organizationId) {
-      //   payload.tenantId = organizationId;
-      // }
-
-      console.log("Payload:", payload);
-
-      let response;
-
-      if (mockEdit) {
-        response = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`,
-          payload
-        );
-      } else {
-        // Create a new mock interview
-        response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/mockinterview`,
-          payload
-        );
-      }
-
-      console.log(mockEdit ? "Mock updated:" : "Mock created:", response.data);
-
-      // Handle successful response
-      if (response?.data) {
-
-        if (formData.rounds.interviewers && formData.rounds.interviewers.length > 0) {
-
-
-          for (const interviewer of formData.rounds.interviewers) {
-            const outsourceRequestData = {
-              tenantId: organizationId,
-              ownerId: userId,
-              scheduledInterviewId: interviewer,
-              // interviewerType: selectedInterviewType,
-              id: interviewer._id, // Directly passing the interviewer ID
-              // status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
-              dateTime: combinedDateTime,
-              duration: formData.rounds.duration,
-              candidateId: candidate?._id,
-              // positionId: position?._id,
-              roundId: response.data.savedRound._id,
-              requestMessage: "Outsource interview request",
-              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            };
-
-            console.log("Sending outsource request:", outsourceRequestData);
-
-            await axios.post(
-              `${process.env.REACT_APP_API_URL}/interviewrequest`,
-              outsourceRequestData
-            );
-          }
-        }
+    // Call the mutation
+    addOrUpdateMockInterview.mutate({
+      formData: {
+        ...formData,
+        entries,
+        combinedDateTime, // Make sure this is included
+        candidate // Include if needed
+      },
+      id: mockEdit ? id : undefined,
+      isEdit: mockEdit,
+      userId,
+      organizationId
+    }, {
+      onSuccess: () => {
+        // Reset form if needed
+        navigate('/mockinterview');
 
         // Reset form data
         setFormData({
@@ -421,21 +385,134 @@ const handleRoleSelect = (role) => {
             dateTime: "",
           },
         })
-
-        // if (formData.rounds.interviewType === 'InstantInterview') {
-        //   Navigate('/');
-        // }
-
-
-        navigate('/mockinterview');
-        await fetchMockInterviewData();
-        toast.success(mockEdit ? "Mock Interview updated successfully" : "Candidate saved successfully");
       }
-    } catch (error) {
-      console.error("Error creating/updating mock interview:", error);
-      toast.error(mockEdit ? "Failed to update mock interview" : "Failed to save mock interview");
+    });
 
-    }
+    // try {
+
+    //   const status = formData.rounds.interviewers.length > 0 ? "Requests Sent" : "Draft";
+    //   // Prepare the payload
+    //   const payload = {
+    //     skills: entries.map((entry) => ({
+    //       skill: entry.skill,
+    //       experience: entry.experience,
+    //       expertise: entry.expertise,
+    //     })),
+    //     Role: formData.Role,
+    //     candidateName: formData.candidateName,
+    //     higherQualification: formData.higherQualification,
+    //     currentExperience: formData.currentExperience,
+    //     technology: formData.technology,
+    //     jobDescription: formData.jobDescription,
+    //     rounds: {
+    //       ...formData.rounds,
+    //       dateTime: combinedDateTime,
+    //       status: status,
+    //     },
+    //     createdById: userId,
+    //     lastModifiedById: userId,
+    //     ownerId: userId,
+    //     tenantId: organizationId,
+    //   };
+
+    //   // Add additional fields for new interviews
+    //   // if (!mockEdit) {
+    //   //   // payload.status = "Scheduled";
+    //   //   payload.interviewType = InterviewType;
+
+    //   // }
+
+    //   // // Add tenant ID if applicable
+    //   // if (organizationId) {
+    //   //   payload.tenantId = organizationId;
+    //   // }
+
+    //   console.log("Payload:", payload);
+
+    //   let response;
+
+    //   if (mockEdit) {
+    //     response = await axios.patch(
+    //       `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`,
+    //       payload
+    //     );
+    //   } else {
+    //     // Create a new mock interview
+    //     response = await axios.post(
+    //       `${process.env.REACT_APP_API_URL}/mockinterview`,
+    //       payload
+    //     );
+    //   }
+
+    //   console.log(mockEdit ? "Mock updated:" : "Mock created:", response.data);
+
+    //   // Handle successful response
+    //   if (response?.data) {
+
+    //     if (formData.rounds.interviewers && formData.rounds.interviewers.length > 0) {
+
+
+    //       for (const interviewer of formData.rounds.interviewers) {
+    //         const outsourceRequestData = {
+    //           tenantId: organizationId,
+    //           ownerId: userId,
+    //           scheduledInterviewId: interviewer,
+    //           // interviewerType: selectedInterviewType,
+    //           id: interviewer._id, // Directly passing the interviewer ID
+    //           // status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
+    //           dateTime: combinedDateTime,
+    //           duration: formData.rounds.duration,
+    //           candidateId: candidate?._id,
+    //           // positionId: position?._id,
+    //           roundId: response.data.savedRound._id,
+    //           requestMessage: "Outsource interview request",
+    //           expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    //         };
+
+    //         console.log("Sending outsource request:", outsourceRequestData);
+
+    //         await axios.post(
+    //           `${process.env.REACT_APP_API_URL}/interviewrequest`,
+    //           outsourceRequestData
+    //         );
+    //       }
+    //     }
+
+    //     // Reset form data
+    //     setFormData({
+    //       skills: [],
+    //       candidateName: "",
+    //       higherQualification: "",
+    //       currentExperience: "",
+    //       technology: "",
+    //       jobDescription: "",
+    //       Role: "",
+    //       rounds: {
+    //         roundTitle: "",
+    //         interviewMode: "",
+    //         duration: "30",
+    //         instructions: "",
+    //         interviewType: "",
+    //         interviewers: [],
+    //         status: "Pending",
+    //         dateTime: "",
+    //       },
+    //     })
+
+    //     // if (formData.rounds.interviewType === 'InstantInterview') {
+    //     //   Navigate('/');
+    //     // }
+
+
+    //     navigate('/mockinterview');
+    //     // await fetchMockInterviewData();
+    //     toast.success(mockEdit ? "Mock Interview updated successfully" : "Candidate saved successfully");
+    //   }
+    // } catch (error) {
+    //   console.error("Error creating/updating mock interview:", error);
+    //   toast.error(mockEdit ? "Failed to update mock interview" : "Failed to save mock interview");
+
+    // }
   };
 
 
@@ -523,16 +600,54 @@ const handleRoleSelect = (role) => {
 
   const handleAddEntry = () => {
     if (editingIndex !== null) {
+      const oldSkill = entries[editingIndex].skill;
       const updatedEntries = entries.map((entry, index) =>
-        index === editingIndex ? { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel } : entry
+        index === editingIndex
+          ? {
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
+          : entry
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
+      setAllSelectedSkills(prev => {
+        const newSkills = prev.filter(skill => skill !== oldSkill);
+        newSkills.push(selectedSkill);
+        return newSkills;
+      });
+
+      setEditingIndex(null);
+
+      // setAllSelectedSkills([selectedSkill]);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        skills: updatedEntries,
+      }));
     } else {
-      setEntries([...entries, { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel }]);
+      const newEntry = {
+        skill: selectedSkill,
+        experience: selectedExp,
+        expertise: selectedLevel,
+      };
+
+      const updatedEntries = [...entries, newEntry];
+
+      setEntries(updatedEntries);
       setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        skills: updatedEntries,
+      }));
     }
-    setErrors((prev) => ({ ...prev, skills: "" }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      skills: "",
+    }));
+
     resetForm();
   };
 
@@ -549,7 +664,10 @@ const handleRoleSelect = (role) => {
   const isNextEnabled = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
-        return selectedSkill !== "";
+        const currentSkill = entries[editingIndex]?.skill;
+        return selectedSkill !== "" &&
+          (selectedSkill === currentSkill ||
+            !allSelectedSkills.includes(selectedSkill));
       } else {
         return (
           selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
@@ -591,7 +709,7 @@ const handleRoleSelect = (role) => {
     if (deleteIndex !== null) {
       const entry = entries[deleteIndex];
       setAllSelectedSkills(
-        allSelectedSkills.filter((skill) => skill !== entry.skills[0])
+        allSelectedSkills.filter((skill) => skill !== entry.skill)
       );
       setEntries(entries.filter((_, i) => i !== deleteIndex));
       setDeleteIndex(null);
@@ -742,36 +860,36 @@ const handleRoleSelect = (role) => {
   };
 
 
- const updateTimes = (newDuration) => {
-  let start = null;
-  let end = null;
+  const updateTimes = (newDuration) => {
+    let start = null;
+    let end = null;
 
-  if (interviewType === "instant") {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 15); // Start 15 minutes from now
-    start = now;
-    end = new Date(now);
-    end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
-  } else if (interviewType === "scheduled" && scheduledDate) {
-    start = new Date(scheduledDate); // Parse ISO string from datetime-local
-    if (isNaN(start.getTime())) return; // Exit if invalid date
-    end = new Date(start);
-    end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
-  }
+    if (interviewType === "instant") {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 15); // Start 15 minutes from now
+      start = now;
+      end = new Date(now);
+      end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
+    } else if (interviewType === "scheduled" && scheduledDate) {
+      start = new Date(scheduledDate); // Parse ISO string from datetime-local
+      if (isNaN(start.getTime())) return; // Exit if invalid date
+      end = new Date(start);
+      end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
+    }
 
-  if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
-    setStartTime(start.toISOString());
-    setEndTime(end.toISOString());
-    const formattedStart = formatToCustomDateTime(start);
-    const formattedEnd = formatToCustomDateTime(end).split(" ")[1]; // Only time part
-    setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
-    // Change: Update formData.rounds.dateTime
-    setFormData((prev) => ({
-      ...prev,
-      rounds: { ...prev.rounds, dateTime: `${formattedStart} - ${formattedEnd}` },
-    }));
-  }
-};
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      setStartTime(start.toISOString());
+      setEndTime(end.toISOString());
+      const formattedStart = formatToCustomDateTime(start);
+      const formattedEnd = formatToCustomDateTime(end).split(" ")[1]; // Only time part
+      setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+      // Change: Update formData.rounds.dateTime
+      setFormData((prev) => ({
+        ...prev,
+        rounds: { ...prev.rounds, dateTime: `${formattedStart} - ${formattedEnd}` },
+      }));
+    }
+  };
 
   // Update times when mode, date, or duration changes
   useEffect(() => {
@@ -779,7 +897,7 @@ const handleRoleSelect = (role) => {
   }, [formData.rounds.interviewType, scheduledDate, formData.rounds.duration]);
 
 
-// Change: Handle interview type change and set default duration
+  // Change: Handle interview type change and set default duration
   useEffect(() => {
     if (interviewType === "instant") {
       const date = new Date();
@@ -793,7 +911,7 @@ const handleRoleSelect = (role) => {
   }, [interviewType]);
 
   console.log("role data", formData.Role);
-  
+
 
   return (
     <div className="flex items-center justify-center">
@@ -974,6 +1092,7 @@ const handleRoleSelect = (role) => {
                             min="1"
                             max="15"
                             autoComplete="off"
+                             onKeyDown={handleExperienceKeyDown}
                             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
                               }`}
                           />
@@ -1019,7 +1138,7 @@ const handleRoleSelect = (role) => {
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
                                   onClick={() => handleRoleSelect(role)}
                                 >
-                                  {role.roleName}
+                                  {role.RoleName}
                                 </div>
                               ))}
                             </div>
@@ -1036,7 +1155,7 @@ const handleRoleSelect = (role) => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center mb-2">
                           <label htmlFor="Skills" className="text-sm font-medium text-gray-900" >
-                            Skills
+                            Skills <span className="text-red-500">*</span>
                             {/* <span className="text-red-500">*</span> */}
                           </label>
                         </div>
@@ -1058,190 +1177,199 @@ const handleRoleSelect = (role) => {
                         <p className="text-red-500 text-sm">{errors.skills}</p>
                       )}
 
-                      <div className="space-y-2 mb-4 mt-5">
-                        {entries.map((entry, index,) => (
-                          <div key={index} className="flex flex-wrap -mx-2 border p-3 rounded-lg items-center bg-toggle-bg">
-                            <div className="w-1/3 px-2">{entry.skill}</div>
-                            <div className="w-1/3 px-2">{entry.experience}</div>
-                            <div className="w-1/3 px-2">{entry.expertise}</div>
-                            <div className="w-full flex justify-end space-x-2 -mt-5">
-                              <button type="button" onClick={() => handleEdit(index)} className="text-black text-md">
-                                <FaEdit />
-                              </button>
-                              <button type="button" onClick={() => handleDelete(index)} className="text-red-500 text-md">
-                                <FaTrash />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
 
-                      {
-                        isModalOpen && (
-                          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-lg shadow-lg w-80 relative">
-                              <header className="flex justify-between items-center w-full border-b py-3 px-4">
-                                <h2 className="text-lg font-bold">Select Skills</h2>
-                                <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
-                                  <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" />
+                      <div>
+                        <div className="space-y-2 mb-4 mt-5">
+                          {entries.map((entry, index,) => (
+                            <div key={index}
+                              className="border p-2 rounded-lg bg-gray-100 w-[85%] sm:w-full md:w-full flex"
+                            // className="flex flex-wrap -mx-2 border p-3 rounded-lg items-center bg-toggle-bg"
+                            >
+                              <div className="flex justify-between border bg-white rounded w-full mr-3">
+                                <div className="w-1/3 px-2 text-center">{entry.skill}</div>
+                                <div className="w-1/3 px-2 text-center">{entry.experience}</div>
+                                <div className="w-1/3 px-2 text-center">{entry.expertise}</div>
+                                {/* <div className="w-full flex justify-end space-x-2 -mt-5"> */}
+                              </div>
+                              <div className="flex space-x-2">
+                                <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
+                                  <FaEdit />
                                 </button>
-                              </header>
-                              <div>
-                                {currentStep === 0 && (
-                                  <div>
-                                    <div className="max-h-56 overflow-y-auto">
-                                      <div className="mt-3 ml-4 mb-3">
-                                        <div>
-                                          <input
-                                            type="text"
-                                            placeholder="Search skills..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
-                                          />
-                                          <div className="min-h-56">
-                                            {skills.length > 0 ? (
-                                              skills.map(skill => (
-                                                <label key={skill._id} className="block mb-1">
-                                                  <input
-                                                    type="radio"
-                                                    value={skill.SkillName}
-                                                    checked={selectedSkill === skill.SkillName}
-                                                    disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
-                                                    onChange={(e) => setSelectedSkill(e.target.value)}
-                                                    className="mr-3"
-                                                  />
-                                                  {skill.SkillName}
-                                                </label>
-                                              ))
-                                            ) : (
-                                              <p className="text-gray-500">No skills available</p>
-                                            )}
+                                <button type="button" onClick={() => handleDelete(index)} className=" text-md">
+                                  <FaTrash fill='red' />
+                                </button>
+                              </div>
+                            </div>
+                            // </div>
+                          ))}
+                        </div>
+
+                        {
+                          isModalOpen && (
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
+                              <div className="bg-white rounded-lg shadow-lg w-80 relative">
+                                <header className="flex justify-between items-center w-full border-b py-3 px-4">
+                                  <h2 className="text-lg font-bold">Select Skills</h2>
+                                  <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
+                                    <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" />
+                                  </button>
+                                </header>
+                                <div>
+                                  {currentStep === 0 && (
+                                    <div>
+                                      <div className="max-h-56 overflow-y-auto">
+                                        <div className="mt-3 ml-4 mb-3">
+                                          <div>
+                                            <input
+                                              type="text"
+                                              placeholder="Search skills..."
+                                              value={searchTerm}
+                                              onChange={(e) => setSearchTerm(e.target.value)}
+                                              className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
+                                            />
+                                            <div className="min-h-56">
+                                              {skills.length > 0 ? (
+                                                skills.map(skill => (
+                                                  <label key={skill._id} className="block mb-1">
+                                                    <input
+                                                      type="radio"
+                                                      value={skill.SkillName}
+                                                      checked={selectedSkill === skill.SkillName}
+                                                      disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
+                                                      onChange={(e) => setSelectedSkill(e.target.value)}
+                                                      className="mr-3"
+                                                    />
+                                                    {skill.SkillName}
+                                                  </label>
+                                                ))
+                                              ) : (
+                                                <p className="text-gray-500">No skills available</p>
+                                              )}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                                {currentStep === 1 && (
-                                  <div>
-                                    <div className="max-h-56 overflow-y-auto">
-                                      <div className="mt-3 ml-4 mb-3">
-                                        {experienceOptions.map(exp => (
-                                          <label key={exp} className="block mb-1">
-                                            <input
-                                              type="radio"
-                                              name="experience"
-                                              value={exp}
-                                              checked={selectedExp === exp}
-                                              onChange={(e) => setSelectedExp(e.target.value)}
-                                              className="mr-3"
-                                            />
-                                            {exp}
-                                          </label>
-                                        ))}
+                                  )}
+                                  {currentStep === 1 && (
+                                    <div>
+                                      <div className="max-h-56 overflow-y-auto">
+                                        <div className="mt-3 ml-4 mb-3">
+                                          {experienceOptions.map(exp => (
+                                            <label key={exp} className="block mb-1">
+                                              <input
+                                                type="radio"
+                                                name="experience"
+                                                value={exp}
+                                                checked={selectedExp === exp}
+                                                onChange={(e) => setSelectedExp(e.target.value)}
+                                                className="mr-3"
+                                              />
+                                              {exp}
+                                            </label>
+                                          ))}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                                {currentStep === 2 && (
-                                  <div>
-                                    <div className="min-h-56 overflow-y-auto">
-                                      <div className="mt-3 ml-4 mb-3">
-                                        {expertiseOptions.map(exp => (
-                                          <label key={exp} className="block mb-1">
-                                            <input
-                                              type="radio"
-                                              name="expertise"
-                                              value={exp}
-                                              checked={selectedLevel === exp}
-                                              onChange={(e) => setSelectedLevel(e.target.value)}
-                                              className="mr-3"
-                                            />
-                                            {exp}
-                                          </label>
-                                        ))}
+                                  )}
+                                  {currentStep === 2 && (
+                                    <div>
+                                      <div className="min-h-56 overflow-y-auto">
+                                        <div className="mt-3 ml-4 mb-3">
+                                          {expertiseOptions.map(exp => (
+                                            <label key={exp} className="block mb-1">
+                                              <input
+                                                type="radio"
+                                                name="expertise"
+                                                value={exp}
+                                                checked={selectedLevel === exp}
+                                                onChange={(e) => setSelectedLevel(e.target.value)}
+                                                className="mr-3"
+                                              />
+                                              {exp}
+                                            </label>
+                                          ))}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                              </div>
-                              <footer className="flex justify-end border-t py-2 px-4">
-                                {currentStep === 0 && (
-                                  <button
-                                    onClick={() => {
-                                      setCurrentStep(1);
-                                      setSearchTerm("");
-                                    }}
-                                    className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    disabled={!isNextEnabled()}
-                                  >
-                                    Next
-                                  </button>
-                                )}
-                                {currentStep === 1 && (
-                                  <div className="flex justify-between gap-4">
-                                    <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                      Back
-                                    </button>
+                                  )}
+                                </div>
+                                <footer className="flex justify-end border-t py-2 px-4">
+                                  {currentStep === 0 && (
                                     <button
-                                      type="button"
-                                      onClick={() => setCurrentStep(2)}
-                                      className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      onClick={() => {
+                                        setCurrentStep(1);
+                                        setSearchTerm("");
+                                      }}
+                                      className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
                                       disabled={!isNextEnabled()}
                                     >
                                       Next
                                     </button>
-                                  </div>
-                                )}
-                                {currentStep === 2 && (
-                                  <div className="flex justify-between gap-4">
-                                    <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                      Back
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={handleAddEntry}
-                                      className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                      disabled={!isNextEnabled()}
-                                    >
-                                      {editingIndex !== null ? 'Update' : 'Add'}
-                                    </button>
-                                  </div>
-                                )}
-                              </footer>
-                            </div>
-                          </div>
-                        )
-                      }
-
-                      {
-                        deleteIndex !== null && (
-                          <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
-                            <div className="bg-white p-5 rounded shadow-lg">
-                              <p>Are you sure you want to delete this Skill?</p>
-                              <div className="flex justify-end space-x-2 mt-4">
-                                <button
-                                  type="button"
-                                  onClick={confirmDelete}
-                                  className="bg-red-500 text-white px-4 py-2 rounded"
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={cancelDelete}
-                                  className="bg-gray-300 text-black px-4 py-2 rounded"
-                                >
-                                  No
-                                </button>
+                                  )}
+                                  {currentStep === 1 && (
+                                    <div className="flex justify-between gap-4">
+                                      <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                                        Back
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setCurrentStep(2)}
+                                        className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={!isNextEnabled()}
+                                      >
+                                        Next
+                                      </button>
+                                    </div>
+                                  )}
+                                  {currentStep === 2 && (
+                                    <div className="flex justify-between gap-4">
+                                      <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                                        Back
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={handleAddEntry}
+                                        className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={!isNextEnabled()}
+                                      >
+                                        {editingIndex !== null ? 'Update' : 'Add'}
+                                      </button>
+                                    </div>
+                                  )}
+                                </footer>
                               </div>
                             </div>
-                          </div>
-                        )
-                      }
-                    </div>
+                          )
+                        }
 
+                        {
+                          deleteIndex !== null && (
+                            <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
+                              <div className="bg-white p-5 rounded shadow-lg">
+                                <p>Are you sure you want to delete this Skill?</p>
+                                <div className="flex justify-end space-x-2 mt-4">
+                                  <button
+                                    type="button"
+                                    onClick={confirmDelete}
+                                    className="bg-red-500 text-white px-4 py-2 rounded"
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={cancelDelete}
+                                    className="bg-gray-300 text-black px-4 py-2 rounded"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        }
+                      </div>
+                    </div>
                     {/* Job Responsibilities */}
                     <div >
 
@@ -1352,7 +1480,7 @@ const handleRoleSelect = (role) => {
                           value={formData.rounds.interviewMode}
                           onChange={(event) => {
                             const { name, value } = event.target;
-                      
+
                             setFormData((prevData) => ({
                               ...prevData,
                               rounds: {
@@ -1360,7 +1488,7 @@ const handleRoleSelect = (role) => {
                                 [name.split(".")[1]]: value, // Extracts "interviewMode"
                               },
                             }));
-                      
+
                             // Clear error if a valid selection is made
                             setErrors((prevErrors) => ({
                               ...prevErrors,
@@ -1621,7 +1749,7 @@ const handleRoleSelect = (role) => {
                         value={formData.rounds.instructions}
                         onChange={handleChange}
                         placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                
+
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       />
                       {/* <p className="mt-1 text-sm text-gray-500">
@@ -1633,8 +1761,8 @@ const handleRoleSelect = (role) => {
 
 
 
-                
-                  {/* <div>
+
+                    {/* <div>
                     <label
                       htmlFor="Interviewer"
                      className="block text-sm font-medium text-gray-700 mb-1"
@@ -1654,9 +1782,9 @@ const handleRoleSelect = (role) => {
                       )}
                     </div>
                   </div> */}
-               
-              
-                {/* <div >
+
+
+                    {/* <div >
                 
                     <label
                       htmlFor="Instructions"
@@ -1714,7 +1842,7 @@ const handleRoleSelect = (role) => {
                   className="bg-custom-blue text-white p-3 rounded py-1"
                   onClick={handleNext}
                 >
-                  Save & Next
+                 {mockEdit ? "Update" :"Save"} & Next
                 </button>
               </div>
 

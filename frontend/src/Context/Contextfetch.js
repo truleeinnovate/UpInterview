@@ -294,77 +294,159 @@ const CustomProvider = ({ children }) => {
   });
 
   // Mockinterview
-  const [mockinterviewData, setmockinterviewData] = useState([]);
   const sharingPermissionsMock = useMemo(
     () => sharingPermissionscontext.mockInterviews || {},
     [sharingPermissionscontext]
   );
 
-  const fetchMockInterviewData = useCallback(async () => {
-    setLoading(true);
-    try {
+  // Query for fetching mock interviews
+  const {
+    data: mockinterviewData = [],
+    isLoading: mockInterviewsLoading,
+    refetch: refetchMockInterviews
+  } = useQuery({
+    queryKey: ['mockinterviews', sharingPermissionsMock],
+    queryFn: async () => {
       const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
-      setmockinterviewData(filteredInterviews.reverse());
-    } catch (error) {
-      // console.error('Error fetching InterviewData:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sharingPermissionsMock]);
+      return filteredInterviews.reverse(); // Show most recent first
+    },
+    enabled: !!sharingPermissionsMock,
+  });
 
-  useEffect(() => {
-    fetchMockInterviewData();
-  }, [fetchMockInterviewData]);
+  // Mutation for creating/updating mock interviews
+  const addOrUpdateMockInterview = useMutation({
+    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+
+      const payload = {
+        skills: formData.entries?.map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
+        Role: formData.Role,
+        candidateName: formData.candidateName,
+        higherQualification: formData.higherQualification,
+        currentExperience: formData.currentExperience,
+        technology: formData.technology,
+        jobDescription: formData.jobDescription,
+        rounds: {
+          ...formData.rounds,
+          dateTime: formData.combinedDateTime, // Expecting combinedDateTime in formData
+          status: status,
+        },
+        createdById: userId,
+        lastModifiedById: userId,
+        ownerId: userId,
+        tenantId: organizationId,
+      };
+
+      const url = isEdit
+        ? `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${process.env.REACT_APP_API_URL}/mockinterview`;
+
+      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+
+      // Handle interviewer requests if any
+      if (formData.rounds.interviewers?.length > 0) {
+        await Promise.all(
+          formData.rounds.interviewers.map(async (interviewer) => {
+            const outsourceRequestData = {
+              tenantId: organizationId,
+              ownerId: userId,
+              scheduledInterviewId: interviewer,
+              id: interviewer._id,
+              dateTime: formData.combinedDateTime,
+              duration: formData.rounds.duration,
+              candidateId: formData.candidate?._id,
+              roundId: response.data.savedRound._id,
+              requestMessage: "Outsource interview request",
+              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            };
+            await axios.post(`${process.env.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+          })
+        );
+      }
+
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(['mockinterviews']); // Refresh the list
+      // You can add navigation here if needed
+      // variables.navigate('/mockinterview');
+    },
+    onError: (error) => {
+      console.error("Mock interview error:", error);
+      // You can add toast notifications here
+      // toast.error(error.message);
+    }
+  });
+
+  // const fetchMockInterviewData = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
+  //     setmockinterviewData(filteredInterviews.reverse());
+  //   } catch (error) {
+  //     // console.error('Error fetching InterviewData:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [sharingPermissionsMock]);
+
+  // useEffect(() => {
+  //   fetchMockInterviewData();
+  // }, [fetchMockInterviewData]);
 
   // teams
-  const sharingPermissionsTeam = useMemo(
-    () => sharingPermissionscontext.team || {},
-    [sharingPermissionscontext]
-  );
+  // const sharingPermissionsTeam = useMemo(
+  //   () => sharingPermissionscontext.team || {},
+  //   [sharingPermissionscontext]
+  // );
 
-  const [teamsData, setTeamsData] = useState([]);
-  const fetchTeamsData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const filteredTeams = await fetchFilterData('team', sharingPermissionsTeam);
+  // const [teamsData, setTeamsData] = useState([]);
+  // const fetchTeamsData = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const filteredTeams = await fetchFilterData('team', sharingPermissionsTeam);
 
-      const teamsWithContacts = filteredTeams.map((team) => {
-        let processedTeam = { ...team };
+  //     const teamsWithContacts = filteredTeams.map((team) => {
+  //       let processedTeam = { ...team };
 
-        // Process image URL if exists
-        if (team.ImageData && team.ImageData.filename) {
-          const imageUrl = `${config.REACT_APP_API_URL}/${team.ImageData.path.replace(/\\/g, '/')}`;
-          processedTeam.imageUrl = imageUrl;
-        }
+  //       // Process image URL if exists
+  //       if (team.ImageData && team.ImageData.filename) {
+  //         const imageUrl = `${config.REACT_APP_API_URL}/${team.ImageData.path.replace(/\\/g, '/')}`;
+  //         processedTeam.imageUrl = imageUrl;
+  //       }
 
-        // Process availability data if exists
-        if (team.contactId && team.contactId.availability) {
-          // Format availability data for easier frontend use
-          const availabilityData = team.contactId.availability.map((schedule) => ({
-            contactId: schedule.contact,
-            schedule: schedule.days.map((day) => ({
-              day: day.day,
-              timeSlots: day.timeSlots.map((slot) => ({
-                startTime: new Date(slot.startTime),
-                endTime: new Date(slot.endTime),
-              })),
-            })),
-          }));
-          processedTeam.availabilitySchedule = availabilityData;
-        }
-        return processedTeam;
-      });
-      setTeamsData(teamsWithContacts);
-    } catch (error) {
-      // console.error('Error fetching team data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sharingPermissionsTeam]);
+  //       // Process availability data if exists
+  //       if (team.contactId && team.contactId.availability) {
+  //         // Format availability data for easier frontend use
+  //         const availabilityData = team.contactId.availability.map((schedule) => ({
+  //           contactId: schedule.contact,
+  //           schedule: schedule.days.map((day) => ({
+  //             day: day.day,
+  //             timeSlots: day.timeSlots.map((slot) => ({
+  //               startTime: new Date(slot.startTime),
+  //               endTime: new Date(slot.endTime),
+  //             })),
+  //           })),
+  //         }));
+  //         processedTeam.availabilitySchedule = availabilityData;
+  //       }
+  //       return processedTeam;
+  //     });
+  //     setTeamsData(teamsWithContacts);
+  //   } catch (error) {
+  //     // console.error('Error fetching team data:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [sharingPermissionsTeam]);
 
-  useEffect(() => {
-    fetchTeamsData();
-  }, [fetchTeamsData]);
+  // useEffect(() => {
+  //   fetchTeamsData();
+  // }, [fetchTeamsData]);
 
   // interview
   const sharingPermissionsInterview = useMemo(
@@ -738,11 +820,12 @@ const CustomProvider = ({ children }) => {
 
         // mockinterview
         mockinterviewData,
-        fetchMockInterviewData,
+        mockInterviewsLoading,
+        addOrUpdateMockInterview,
 
         // teams
-        teamsData,
-        fetchTeamsData,
+        // teamsData,
+        // fetchTeamsData,
 
         // outsource interviewers
         interviewers,
