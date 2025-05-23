@@ -6,6 +6,7 @@ const PositionProfileDetails = ({ positionId, onCloseprofile }) => {
   const { positions } = useCustomContext();
   const position = positions.find((data) => data._id === positionId);
 
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     title: "",
