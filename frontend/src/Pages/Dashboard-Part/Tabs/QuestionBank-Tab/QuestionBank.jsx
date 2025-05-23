@@ -28,7 +28,7 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
     setActiveTab("MyQuestionsList");
   };
   return (
-    <div className={`${section === "interviewerSection" || section === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
+    <div className={`sm:pt-10 md:pt-10${section === "interviewerSection" || section === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
       {/* Header Section */}
       <div className={`${section === "interviewerSection" || section === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}`}>
         {(section === "Popup" || section === "interviewerSection" || section === "assessment") && (
@@ -119,7 +119,7 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
       </div>
   
       {/* Tab Navigation */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "w-full px-4" : "z-10 top-28 sm:top-32 md:top-36 left-0 right-0 px-4"}`}>
+      <div className={`${section === "interviewerSection" || section === "assessment" ? "w-full px-4" : "w-full z-10 top-28 sm:top-32 md:top-36 left-0 right-0 px-4"}`}>
         <div className="flex border-b border-gray-200">
           <button
             className={`px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
@@ -137,7 +137,7 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
       </div>
   
       {/* Tab Content */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "h-[calc(100%-110px)]" : "h-[calc(100%-100px)]"} overflow-auto transition-all duration-300`}>
+      <div className={` ${section === "interviewerSection" || section === "assessment" ? "h-[calc(100%-110px)]" : "h-[calc(100%-100px)]"} overflow-auto transition-all duration-300`}>
         {activeTab === "SuggesstedQuestions" && (
           <SuggesstedQuestions
             sectionName={sectionName}

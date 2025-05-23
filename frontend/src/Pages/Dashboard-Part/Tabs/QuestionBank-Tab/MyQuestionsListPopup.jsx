@@ -3,19 +3,19 @@ import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "re
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Search } from 'lucide-react';
+import { Search ,Trash2, X,User,BookOpen} from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
-const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList,setSelectedLabelnew}, ref) => {
+const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew }, ref) => {
     const {
         fetchMyQuestionsData,
         createdLists,
         setCreatedLists,
         fetchLists,
-      } = useCustomContext();
+    } = useCustomContext();
     const [selectedListIds, setSelectedListIds] = useState([]);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
     const [newListName, setNewListName] = useState("");
@@ -57,7 +57,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         if (isEditing) {
             // PUT request for updating the list (no need for questionId)
             if (editingSectionId) {
-                const response =  await fetch(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                 if (response.ok) {
                     console.log('List updated successfully');
                     setSelectedLabelnew(newListName);
-          Cookies.set("lastSelectedLabel", newListName);
+                    Cookies.set("lastSelectedLabel", newListName);
                 } else {
                     console.error("Failed to update the list");
                 }
@@ -108,11 +108,11 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
     useEffect(() => {
         const savedLabel = Cookies.get("lastSelectedLabel");
-    
+
         if (savedLabel && typeof setSelectedLabelnew === "function") {
-          setSelectedLabelnew(savedLabel); // Call only if the function exists
+            setSelectedLabelnew(savedLabel); // Call only if the function exists
         }
-      }, [setSelectedLabelnew]);
+    }, [setSelectedLabelnew]);
 
     const handleCreateNewList = () => {
         setShowNewListPopup(true);
@@ -231,32 +231,29 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                 </div>
             )}
             {fromform && (
-                <div className="flex gap-5 mb-5 relative">
+
+                <>                
+                <div className="flex flex-col gap-2 mb-5 relative">
                     <div>
-                        <label htmlFor="technology" className="block text-sm font-medium leading-6 text-gray-900 w-36">
+                        <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
                             Question List <span className="text-red-500">*</span>
                         </label>
                     </div>
-                    <div className="flex-grow relative" ref={popupRef}>
-                        <div
-                            className={`border-b focus:outline-none mb-5 w-full min-h-5 ${error
+                    <div className=" relative" ref={popupRef}>
+                       
+                        <input
+                            className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${error
                                 ? "border-red-500"
                                 : "border-gray-300 focus:border-black"
                                 }`}
-                            onClick={togglePopup}>
-                            {selectedCandidates.map((candidate, index) => (
-                                <div key={index} className="bg-slate-200 rounded px-2 m-1 py-1 inline-block mr-2 text-sm">
-                                    {candidate.label}
-                                    <button type="button" onClick={() => handleRemoveCandidate(index)} className="ml-2 bg-gray-300 rounded px-2">x</button>
-                                </div>
-                            ))}
-                            {selectedCandidates.length > 0 && (
-                                <button type="button" onClick={clearRemoveCandidate} className="bg-slate-300 rounded px-2 absolute top-0 text-sm float-end right-4">X</button>
-                            )}
-                        </div>
-                        <MdArrowDropDown className="absolute top-0 text-gray-500 text-lg mt-1 cursor-pointer right-0" onClick={togglePopup} />
+                            onClick={togglePopup}
+
+                        />
+                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <MdArrowDropDown className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1" onClick={togglePopup} />
+                           </div>
                         {showPopup && (
-                            <div className="absolute w-full -mt-3 z-10 rounded-md bg-white shadow-md max-h-60 overflow-y-auto">
+                            <div className="absolute w-full mt-1 z-10 rounded-md bg-white shadow-md max-h-60 overflow-y-auto">
                                 <div className="border-b">
                                     <div className="flex items-center border rounded px-2 py-1 m-2">
                                         <Search className="absolute ml-1 text-gray-500" />
@@ -299,9 +296,77 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                             </div>
                         )}
 
-                        {error && <p className="text-red-500 text-sm -mt-3">{error}</p>}
+                        {/* {selectedCandidates.map((candidate, index) => (
+                            <div key={index} className="bg-slate-200 rounded px-2 m-1 py-1 inline-block mr-2 text-sm">
+                                {candidate.label}
+                                <button type="button" onClick={() => handleRemoveCandidate(index)} className="ml-2 bg-gray-300 rounded px-2">x</button>
+                            </div>
+                        ))}
+                        {selectedCandidates.length > 0 && (
+                            <button type="button" onClick={clearRemoveCandidate} className="bg-slate-300 rounded px-2 absolute top-0 text-sm float-end right-4">X</button>
+                        )} */}
+
+
+                        {error && <p className="text-red-500 text-sm ">{error}</p>}
                     </div>
+
                 </div>
+
+                 <div className=" px-4 py-3 rounded-md border border-gray-200 -mt-3">
+                {selectedCandidates.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center">No Question List selected</p>
+                ) :(
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center">
+                                    <BookOpen className="h-4 w-4 text-gray-500 mr-2" />
+                                    <span className="text-sm text-gray-700">
+                                        {selectedCandidates.length} Question List{selectedCandidates.length !== 1 ? "s" : ""} selected
+                                    </span>
+                                </div>
+                                {selectedCandidates.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={clearRemoveCandidate}
+                                        className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                    >
+                                        <Trash2 className="h-3 w-3 mr-1" />
+                                        Clear All
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Selected Skills */}
+                            <div className="flex flex-wrap gap-2">
+                                {selectedCandidates.map((candidate, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                        style={{ minWidth: '150px', maxWidth: '250px' }}
+                                    >
+                                        <div className="flex-1 overflow-hidden">
+                                            <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                                {candidate.label}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveCandidate(index)}
+                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                            title="Remove skill"
+                                        >
+                                            <X className="h-4 w-4 text-red-400" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        )}
+                        </div>
+
+
+                </>
+
             )}
 
 

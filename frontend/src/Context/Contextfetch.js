@@ -602,40 +602,42 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
-
+ 
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
-
+ 
     setQuestionsLoading(true);
     setQuestionsError(null);
-
+ 
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
+      );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
-
+ 
       // Check for empty sections or questions
-      if (sections.length === 0 || sections.every((section) => !section.questions || section.questions.length === 0)) {
+      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
-
+ 
       // Create section questions mapping
       const newSectionQuestions = {};
-
+ 
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
-
+ 
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
           totalScore: Number(section.totalScore || 0),
-          questions: (section.questions || []).map((q) => ({
+          questions: (section.questions || []).map(q => ({
             _id: q._id,
             questionId: q.questionId,
             source: q.source || 'system',
@@ -653,20 +655,22 @@ const CustomProvider = ({ children }) => {
               skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
               tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
               technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-              questionNo: q.snapshot?.questionNo || '',
-            },
-          })),
+              questionNo: q.snapshot?.questionNo || ''
+            }
+          }))
         };
       });
-
+ 
       // Verify questions exist
-      const hasQuestions = Object.values(newSectionQuestions).some((section) => section.questions.length > 0);
-
+      const hasQuestions = Object.values(newSectionQuestions).some(
+        section => section.questions.length > 0
+      );
+ 
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
-
+ 
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
