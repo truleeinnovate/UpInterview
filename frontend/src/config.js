@@ -16,6 +16,7 @@
 //   state: Math.random().toString(36).substring(7)
 // };
 
+
 export const config = {
   REACT_APP_CLIENT_ID: "77eq6sdds9ol1a",
   REACT_APP_CLIENT_SECRET: "WPL_AP1.rW1TQVlAI93U3fuN.61yPig==",
