@@ -1,9 +1,8 @@
 const Feeds = require('../models/Feeds.js');
-
 // Create new feed
 exports.createFeed = async (feedDetails) => { 
     try {
-        // console.log('Creating new feed with details:', feedDetails);
+        console.log('Creating new feed with details:', feedDetails);
         
         // Validate required fields
         const requiredFields = ['tenantId', 'feedType', 'action', 'ownerId', 'parentId', 'parentObject'];
@@ -15,15 +14,15 @@ exports.createFeed = async (feedDetails) => {
         }
 
         const feed = new Feeds(feedDetails); 
-        // console.log('Feed model created:', feed);
+        console.log('Feed model created:', feed);
         
         const savedFeed = await feed.save();
-        // console.log('Feed saved successfully:', savedFeed);
+        console.log('Feed saved successfully:', savedFeed);
         
         return savedFeed;
     } catch (error) { 
-        // console.error('Error in createFeed:', error);
-        // console.error('Stack trace:', error.stack);
+        console.error('Error in createFeed:', error);
+        console.error('Stack trace:', error.stack);
         throw error;
     }  
 }; 
@@ -37,3 +36,21 @@ exports.getAllFeeds = async (req, res) => {
     }
 };
 
+// Get feeds by parentId
+exports.getFeedsByParentId = async (req, res) => {
+  try {
+    const { parentId } = req.query;
+
+    if (!parentId) {
+      return res.status(400).json({ message: 'parentId is required' });
+    }
+
+    const feeds = await Feeds.find({ parentId });
+    console.log('Fetched feeds by parentId:', feeds);
+
+    res.status(200).json({ data: feeds });
+  } catch (error) {
+    console.error('Error in getFeedsByParentId:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}

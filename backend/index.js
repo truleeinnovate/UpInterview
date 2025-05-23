@@ -67,7 +67,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT;
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true, useUnifiedTopology: true
@@ -775,6 +775,9 @@ app.use('/', supportUserRoutes);
 // question bank
 const MyQuestionListRoutes = require('./routes/MyQuestionListRoutes.js');
 app.use('/', MyQuestionListRoutes);
+
+const razorpayRoutes = require('./routes/RazorpayRoutes.js');
+app.use('/', razorpayRoutes);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 // app.get('/check-email', async (req, res) => {

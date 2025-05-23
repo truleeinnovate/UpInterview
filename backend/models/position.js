@@ -2,8 +2,10 @@ const mongoose = require("mongoose");
 
 const roundSchema = new mongoose.Schema(
   {
-    roundTitle: String,
+
+
     sequence: Number,
+    roundTitle: String,
     interviewMode: String,
     interviewerType: String, // internal or external
     duration: String,
@@ -43,13 +45,9 @@ const positionSchema = new mongoose.Schema({
   additionalNotes: String,
 
   rounds: [roundSchema],
-  CreatedBy: String,
-  LastModifiedById: String,
   ownerId: String,
   tenantId: String,
-  createdDate: { type: Date, default: Date.now },
   // added new feilds ranjith from here
-
   minSalary: String,
   maxSalary: String,
   // EmployementType:String,
@@ -57,8 +55,11 @@ const positionSchema = new mongoose.Schema({
   Location: String,
   // workMode:String,
 
-  // added new feilds ranjith to here
-});
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  ownerId: String,
+  tenantId: String,
+}, { timestamps: true });
 
 
 const Position = mongoose.model("Position", positionSchema);

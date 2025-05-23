@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { config } from "../../config";
 
 const OrganizationLogin = () => {
 console.log('org login')
@@ -59,7 +60,7 @@ console.log('org login')
 
     try {
       console.log("🔐 Attempting org login...");
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Organization/Login`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
         email: email.trim().toLowerCase(),
         password,
       });

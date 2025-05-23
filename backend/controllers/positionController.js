@@ -102,10 +102,119 @@ const { Position } = require('../models/position.js');
 // };
 
 
+// feed and log data added in this code but not saving the data in the database due to the error of owner is required
+// const createPosition = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = 'Create Position';
+//   console.log("createPosition", req.body);
+
+//   if (!req.body.ownerId) {
+//     res.locals.responseData = {
+//       status: 'error',
+//       message: "OwnerId field is required",
+//     };
+//     return res.status(400).json(res.locals.responseData);
+//   }
+
+//   try {
+//     console.log("position data ", req.body);
+
+//     // Map request body to schema fields
+//     const positionData = {
+//       title: req.body.title || "",
+//       companyname: req.body.companyName || "",
+//       jobDescription: req.body.jobDescription || "",
+//       minexperience: req.body.minexperience || undefined,
+//       maxexperience: req.body.maxexperience || undefined,
+//       skills: req.body.skills || [],
+//       additionalNotes: req.body.additionalNotes || "",
+//       ownerId: req.body.ownerId || "",
+//       tenantId: req.body.tenantId || "",
+//       minSalary: req.body.minSalary || "",
+//       maxSalary: req.body.maxSalary || "",
+//       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
+//       Location: req.body.Location || "",
+//       selectedTemplete: req.body.template?.templateName || null,
+//       createdBy: ownerId,
+//     };
+
+//     // Only add rounds if template exists and has rounds
+//     if (req.body.template && req.body.template.rounds && req.body.template.rounds.length > 0) {
+//       positionData.rounds = req.body.template.rounds.map(round => ({
+//         roundTitle: round.roundTitle || "",
+//         interviewMode: round.interviewMode || "",
+//         interviewerType: round.interviewerType || "",
+//         duration: round.interviewDuration ? round.interviewDuration.toString() : "",
+//         instructions: round.instructions || "",
+//         selectedInterviewersType: round.selectedInterviewersType || "",
+//         interviewers: round.interviewers || [],
+//         assessmentId: round.assessmentId || null,
+//         sequence: round.sequence || 0,
+//         questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
+//           questionId: q.questionId || null,
+//           snapshot: q.snapshot || null
+//         })) : []
+//       }));
+//     } else {
+//       positionData.rounds = [];
+//     }
+
+//     const position = new Position(positionData);
+//     const newPosition = await position.save();
+
+//     res.locals.feedData = {
+//       tenantId: req.body.tenantId,
+//       feedType: 'info',
+//       action: {
+//         name: 'position_created',
+//         description: `Position was created`,
+//       },
+//       ownerId: req.body.ownerId,
+//       parentId: newPosition._id,
+//       parentObject: 'Position',
+//       metadata: req.body,
+//       severity: res.statusCode >= 500 ? 'high' : 'low',
+//       message: `Position was created successfully`,
+//     };
+
+//     res.locals.logData = {
+//       tenantId: req.body.tenantId,
+//       ownerId: req.body.ownerId,
+//       processName: 'Create Position',
+//       requestBody: req.body,
+//       status: 'success',
+//       message: 'Position created successfully',
+//       responseBody: newPosition,
+//     };
+
+//     res.status(201).json({
+//       status: 'success',
+//       message: 'Position created successfully',
+//       data: newPosition,
+//     });
+//   } catch (error) {
+//     res.locals.logData = {
+//       tenantId: req.body.tenantId,
+//       ownerId: req.body.ownerId,
+//       processName: 'Create Position',
+//       requestBody: req.body,
+//       message: error.message,
+//       status: 'error',
+//     };
+
+//     res.status(500).json({
+//       status: 'error',
+//       message: error.message,
+//     });
+//   }
+// };
+
 const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = 'Create Position';
+  console.log("🔁 Incoming request to createPosition:", req.body);
 
+  // Check if ownerId exists
   if (!req.body.ownerId) {
     res.locals.responseData = {
       status: 'error',
@@ -115,7 +224,7 @@ const createPosition = async (req, res) => {
   }
 
   try {
-    console.log("position data ", req.body);
+    console.log("📦 Position data received:", req.body);
 
     // Map request body to schema fields
     const positionData = {
@@ -126,18 +235,17 @@ const createPosition = async (req, res) => {
       maxexperience: req.body.maxexperience || undefined,
       skills: req.body.skills || [],
       additionalNotes: req.body.additionalNotes || "",
-      CreatedBy: req.body.ownerId || "",
-      LastModifiedById: req.body.ownerId || "",
       ownerId: req.body.ownerId || "",
       tenantId: req.body.tenantId || "",
       minSalary: req.body.minSalary || "",
       maxSalary: req.body.maxSalary || "",
       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
       Location: req.body.Location || "",
-      selectedTemplete: req.body.template?.templateName || null
+      selectedTemplete: req.body.template?.templateName || null,
+      createdBy: req.body.ownerId, // ✅ Fixed: use req.body.ownerId instead of undefined ownerId
     };
 
-    // Only add rounds if template exists and has rounds
+    // Handle rounds if template exists
     if (req.body.template && req.body.template.rounds && req.body.template.rounds.length > 0) {
       positionData.rounds = req.body.template.rounds.map(round => ({
         roundTitle: round.roundTitle || "",
@@ -158,9 +266,14 @@ const createPosition = async (req, res) => {
       positionData.rounds = [];
     }
 
+    console.log("🛠️ Mapped Position Data:", positionData);
+
+    // Save to database
     const position = new Position(positionData);
     const newPosition = await position.save();
+    console.log("✅ Position saved to DB:", newPosition);
 
+    // Feed and log data
     res.locals.feedData = {
       tenantId: req.body.tenantId,
       feedType: 'info',
@@ -186,12 +299,14 @@ const createPosition = async (req, res) => {
       responseBody: newPosition,
     };
 
-    res.status(201).json({
+    return res.status(201).json({
       status: 'success',
       message: 'Position created successfully',
       data: newPosition,
     });
   } catch (error) {
+    console.error("❌ Error creating position:", error.message);
+
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
@@ -201,7 +316,7 @@ const createPosition = async (req, res) => {
       status: 'error',
     };
 
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: error.message,
     });
@@ -232,14 +347,13 @@ const updatePosition = async (req, res) => {
       selectedTemplete: updateFields.template?.templateName ?? currentPosition.selectedTemplete,
       skills: updateFields.skills || currentPosition.skills,
       additionalNotes: updateFields.additionalNotes || currentPosition.additionalNotes,
-      CreatedBy: ownerId || currentPosition.CreatedBy,
-      LastModifiedById: ownerId || currentPosition.LastModifiedById,
       ownerId: ownerId || currentPosition.ownerId,
       tenantId: tenantId || currentPosition.tenantId,
       minSalary: updateFields.minSalary || currentPosition.minSalary,
       maxSalary: updateFields.maxSalary || currentPosition.maxSalary,
       NoofPositions: updateFields.NoofPositions ? Number(updateFields.NoofPositions) : currentPosition.NoofPositions,
-      Location: updateFields.Location || currentPosition.Location
+      Location: updateFields.Location || currentPosition.Location,
+      updatedBy: ownerId
     };
 
     // Handle rounds update only if template is provided and has rounds

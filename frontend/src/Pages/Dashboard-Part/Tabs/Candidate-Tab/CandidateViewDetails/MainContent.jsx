@@ -14,13 +14,14 @@ import { User, } from 'lucide-react';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import Documents from './Documents';
 import Loading from '../../../../../Components/Loading';
-import { config } from '../../../../../config';
+import Activity from '../../CommonCode-AllTabs/Activity';
 
 const tabs = [
   { id: 'interviews', name: 'Interviews', icon: '👥' },
   { id: 'positions', name: 'Positions', icon: '💼' },
   { id: 'timeline', name: 'Timeline', icon: '📅' },
-  { id: 'documents', name: 'Documents', icon: '📄' }
+  { id: 'documents', name: 'Documents', icon: '📄' },
+  { id: 'Activity', name: 'Activity', icon: '📊' }
 ];
 
 const MainContent = () => {
@@ -31,6 +32,7 @@ const MainContent = () => {
   const { id } = useParams();
   const [candidate, setCandidate] = useState(null);
   const [positions, setPositions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
@@ -46,8 +48,8 @@ const MainContent = () => {
 
   const fetchCandidate = async () => {
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate/${id}`);
-      console.log("response.data from the candidate view details", response.data);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${id}`);
+      console.log("response.data ", response.data);
 
       const { appliedPositions, ...candidateData } = response.data;
       setCandidate(candidateData);
@@ -58,7 +60,9 @@ const MainContent = () => {
     }
   };
 
+
   if (!candidate) return  <Loading />
+
 
   const handleViewInterview = (interviewId) => {
     const interview = candidate?.interviews?.find(i => i.id === interviewId);
@@ -177,6 +181,9 @@ const MainContent = () => {
               )}
               {activeTab === 'documents' && (
                 <Documents documents={candidate.documents || []} />
+              )}
+               {activeTab === 'Activity' && (
+                <Activity parentId={id} />
               )}
             </div>
           </div>

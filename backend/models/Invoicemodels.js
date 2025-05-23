@@ -16,6 +16,8 @@ const InvoiceSchema = new mongoose.Schema({
         enum: ['subscription', 'wallet', 'payout', 'custom'], 
         required: true 
     },
+    price: { type: Number }, // Original price before discount
+    discount: { type: Number, default: 0 }, // Amount of discount applied
     totalAmount: { type: Number, required: true },
     amountPaid: { type: Number, default: 0 },
     outstandingAmount: { type: Number, default: function() { return this.totalAmount - this.amountPaid; } },
