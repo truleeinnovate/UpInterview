@@ -11,9 +11,8 @@ import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
   label,
@@ -247,13 +246,16 @@ const CustomDropdown = ({
 const PositionForm = ({ mode }) => {
   const { id, } = useParams();
   const location = useLocation();
-    const {
+  const {
     addOrUpdatePosition
-  
-    } = useCustomContext();
 
+  } = useCustomContext();
+  // Get user token information
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const userId = tokenPayload?.userId;
+  const orgId = tokenPayload?.tenantId;
+  console.log('User info:', { userId, orgId });
   
-
   // Get the previous path from navigation state
   const fromPath = location.state?.from || '/position';
 
@@ -537,9 +539,7 @@ const PositionForm = ({ mode }) => {
     }
 
     setErrors({});
-    const userId = Cookies.get("userId");
-    const userName = Cookies.get("userName");
-    const orgId = Cookies.get("organizationId");
+
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {
@@ -551,8 +551,6 @@ const PositionForm = ({ mode }) => {
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: userId,
       skills: entries.map(entry => ({
         skill: entry.skill,
         experience: entry.experience,
@@ -572,7 +570,7 @@ const PositionForm = ({ mode }) => {
       //     `${process.env.REACT_APP_API_URL}/position/${positionId}`,
       //     basicdetails
       //   );
-       
+
 
       // } else {
       //   response = await axios.post(
@@ -581,17 +579,17 @@ const PositionForm = ({ mode }) => {
       //   );
       //   setPositionId(response.data.data._id);
       // }
-          const response = await addOrUpdatePosition.mutateAsync({
-      id: id || null,
-      data: basicdetails
-    });
+      const response = await addOrUpdatePosition.mutateAsync({
+        id: id || null,
+        data: basicdetails
+      });
 
-      if (response.status === 'success' ) {
+      if (response.status === 'success') {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
           // onClose();
           navigate(fromPath);
-            // navigate('/position')
+          // navigate('/position')
           // const previousPage = location.state?.from || "/position";
           // navigate(previousPage);
           // if (mode === "new" || 'edit'){
@@ -1231,7 +1229,7 @@ const PositionForm = ({ mode }) => {
                         id="jobDescription"
                         name="jobDescription"
                         value={formData.jobDescription}
-                      
+
                         onChange={(e) => {
                           const value = e.target.value;
                           setFormData({ ...formData, jobDescription: value });
@@ -1257,7 +1255,7 @@ const PositionForm = ({ mode }) => {
                               </p>
                             ) : null}
                           </span>
-                            <p className="text-sm text-gray-500">{formData.jobDescription.length}/1000</p>
+                          <p className="text-sm text-gray-500">{formData.jobDescription.length}/1000</p>
                         </div>
                       </div>
 

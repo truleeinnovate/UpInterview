@@ -5,13 +5,10 @@ const candidateSchema = new mongoose.Schema({
     LastName: String,
     Email: String,
     Phone: String,
-    CountryCode: String,
     Date_Of_Birth: Date,
     Gender: String,
     HigherQualification: String,
     UniversityCollege: String,
-    CurrentRole: String,
-    RelevantExperience: Number,
     CurrentExperience: Number,
     // PositionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Position' },
     // PositionId: [{ 
@@ -30,12 +27,11 @@ const candidateSchema = new mongoose.Schema({
         path: String,
         contentType: String,
     },
-    CreatedBy: String,
-    LastModifiedById: String,
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     ownerId: String,
     tenantId: String,
-    CreatedDate: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 
 const Candidate = mongoose.model("Candidate", candidateSchema);

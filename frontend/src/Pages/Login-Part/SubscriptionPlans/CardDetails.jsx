@@ -1,14 +1,68 @@
 import { XCircle } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
 import { config } from '../../../config.js'
-
-import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { handlePaymentInputChange, handleMembershipChange, validateCardFields } from "../../../utils/PaymentpageValidations.js";
+import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js";
 import { useCustomContext } from "../../../Context/Contextfetch";
-import toast from "react-hot-toast";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
+
+// Function to load scripts dynamically
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            resolve(true);
+        };
+        script.onerror = () => {
+            resolve(false);
+        };
+        document.body.appendChild(script);
+    });
+};
+
+// Check if Razorpay is available in the window object
+const isRazorpayAvailable = () => {
+    return typeof window.Razorpay === 'function';
+};
+
+// Function to load the Razorpay script if not already available
+const loadRazorpayScript = async () => {
+    // If Razorpay is already available, return true immediately
+    if (isRazorpayAvailable()) {
+        return true;
+    }
+    
+    // Otherwise, try to load the script with the latest version
+    const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+    if (!res) {
+        toast.error('Razorpay SDK failed to load. Please check your internet connection.');
+        return false;
+    }
+    
+    // Wait a moment for the script to initialize
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Verify that Razorpay is now available and has the required methods
+    if (!isRazorpayAvailable()) {
+        console.error('Razorpay is not available as a constructor after loading');
+        toast.error('Payment gateway is not available. Please try again later.');
+        return false;
+    }
+    
+    // Additional check for required methods
+    if (typeof window.Razorpay.createToken === 'undefined') {
+        console.error('Razorpay tokenization methods not available');
+        toast.error('Payment gateway initialization failed. Please refresh and try again.');
+        return false;
+    }
+    
+    return true;
+};
 
 const CardDetails = () => {
     console.log('card details')
@@ -27,15 +81,13 @@ const CardDetails = () => {
     } = useCustomContext();
 
     const [cardDetails, setCardDetails] = useState({
-        cardHolderName: "",
-        cardNumber: "",
-        cardexpiry: "",
-        cvv: "",
-        country: "United States",
-        zipCode: "",
         membershipType: "",
         addOn: "",
+        autoRenew: true // Default to auto-renewal enabled
     });
+    
+    const [processing, setProcessing] = useState(false);
+    const [buttonLoading, setButtonLoading] = useState(false);
 
 
     const navigate = useNavigate();
@@ -50,171 +102,488 @@ const CardDetails = () => {
     });
 
 
+    // Function to initialize Razorpay payment
+    const initializeRazorpayPayment = async (orderData) => {
+        // Ensure Razorpay is loaded before proceeding
+        if (!isRazorpayAvailable()) {
+            // Try loading it again if not available
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded) {
+                setProcessing(false);
+                toast.error('Payment gateway failed to load. Please try again.');
+                return; // Exit if loading fails
+            }
+        }
+        
+        console.log('Initializing Razorpay popup with data:', orderData);
+    
+    // Debug Razorpay key
+    console.log('Razorpay key from response:', { 
+        razorpayKeyId: orderData.razorpayKeyId,
+        key_id: orderData.key_id,
+        fromOrder: orderData.order?.key_id
+    });
+    
+    // Get the amount from the order response
+    // The backend should have converted it to cents already
+    let amount;
+    if (orderData.order?.amount) {
+        // If we have the amount in the order object, use that
+        amount = orderData.order.amount;
+    } else if (orderData.amount) {
+        // If we have the amount directly in the response
+        amount = orderData.amount;
+    } else {
+        // Fallback to calculating it ourselves
+        amount = Math.round(totalPaid * 100);
+    }
+
+    // Log the amount for debugging
+    console.log('Payment amount in cents:', amount, '($' + (amount/100).toFixed(2) + ')');
+        
+        // Keep loading active while Razorpay payment window is open
+        const options = {
+            key: orderData.razorpayKeyId,
+            amount: amount,
+            currency: 'USD', // Explicitly setting USD currency for dollar payments
+            name: "Upinterview",
+            description: `${planDetails.name || 'Subscription Plan'} - $${(amount/100).toFixed(2)}`,
+            order_id: orderData.orderId,
+            // Customer details
+            prefill: {
+                name: userProfile?.name || '',
+                email: userProfile?.email || '',
+                contact: userProfile?.phone || ''
+            },
+            // Notes for the payment
+            notes: {
+                planId: planDetails.planId || planDetails.subscriptionPlanId || '',
+                planName: planDetails.name || 'Subscription',
+                billingCycle: cardDetails.membershipType || 'monthly',
+                autoRenew: cardDetails.autoRenew ? '1' : '0',
+                tenantId: tenantId,
+                ownerId: ownerId,
+                isSubscription: '1'
+            },
+            // Theme configuration
+            theme: {
+                color: "#3399cc"
+            },
+            // Enable card saving for future payments
+            save: 1,
+            // Enable recurring payments
+            recurring: 1,
+            modal: {
+                // This will be called when the user closes the Razorpay popup
+                // without completing the payment
+                ondismiss: function() {
+                    console.log('Payment popup closed by user');
+                    
+                    toast.info('Payment cancelled');
+                    setButtonLoading(false);
+                }
+            },
+            handler: async function (response) {
+                try {
+                    // No need to verify card details as we're using Razorpay's secure form
+
+                    // Log payment response for debugging
+                    console.log('Razorpay payment response:', response);
+                    
+                    // Extract card details from Razorpay response if available
+                    // Razorpay might provide card details in the response that we can use
+                    const cardInfo = response.razorpay_payment_id ? {
+                        // We only store the last 4 digits for reference, not the full number
+                        cardNumber: response.card?.last4 || '',
+                        cardHolderName: userProfile?.name || '',
+                        // We don't store CVV at all
+                        // We don't need to store full expiry, just month/year if provided
+                        expiryMonth: response.card?.expiry_month || '',
+                        expiryYear: response.card?.expiry_year || '',
+                        cardBrand: response.card?.network || '',
+                        currency: 'USD'
+                    } : null;
+                    
+                    // Prepare comprehensive data for verification and webhook processing
+                    const verificationData = {
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        planDetails: {
+                            ...planDetails,
+                            // Ensure invoiceId is included when sending to backend
+                            invoiceId: planDetails.invoiceId || ''
+                        },
+                        // Only include card info if we have it from Razorpay
+                        ...(cardInfo && { 
+                            cardDetails: cardInfo,
+                            // Add token information for recurring payments
+                            token: response.razorpay_payment_id ? {
+                                card_id: response.razorpay_payment_id,
+                                last4: response.card?.last4 || '',
+                                network: response.card?.network || '',
+                                type: response.card?.type || '',
+                                recurring: true
+                            } : null
+                        }),
+                        metadata: {
+                            ownerId: ownerId,
+                            tenantId: tenantId,
+                            planId: planDetails.planId || '',
+                            planName: planDetails.name || 'Subscription',
+                            billingCycle: cardDetails.membershipType || 'monthly',
+                            autoRenew: cardDetails.autoRenew,
+                            invoiceId: planDetails.invoiceId || '' // Also include invoiceId in metadata
+                        }
+                    };
+                    
+                    console.log('Sending verification data to backend:', JSON.stringify(verificationData, null, 2));
+                    
+                    // Verify the payment signature with backend
+                    const verifyResponse = await axios.post(
+                        `${config.REACT_APP_API_URL}/payment/verify`, 
+                        verificationData
+                    );
+
+                    console.log('Payment verification response:', verifyResponse.data);
+        
+                    // Check for successful payment - be more flexible with the response format
+                    const isSuccess = verifyResponse.data.status === 'paid' || 
+                                     verifyResponse.data.status === 'success' ||
+                                     verifyResponse.data.message?.toLowerCase().includes('success');
+
+                    if (isSuccess) {
+                        // Set processing state to true only after successful payment
+                        // This ensures the spinner is only shown after payment success
+                        setProcessing(true);
+                        
+                        // Show success toast
+                        toast.success("Payment successfully completed! Your subscription is now active.");
+                        
+                        // Log payment details for reference
+                        console.log("Payment completed successfully:", {
+                            paymentId: response.razorpay_payment_id,
+                            orderId: response.razorpay_order_id
+                        });
+                        
+                        // Delay navigation to allow toast to be visible
+                        setTimeout(() => {
+                            console.log('Navigating after successful payment');
+                            // Only set processing to false right before navigation
+                            setProcessing(false);
+                            if (isUpgrading) {
+                                navigate("/SubscriptionDetails");
+                            } else {
+                                navigate("/home");
+                            }
+                        }, 2000); // 2 second delay before navigation
+                    } else {
+                        setProcessing(false);
+                        toast.error("Payment verification failed!");
+                    }
+                } catch (error) {
+                    console.error("Error verifying payment:", error);
+                    setProcessing(false);
+                    toast.error("Payment verification failed. Please try again.");
+                }
+            }
+        };
+
+        try {
+            // Double-check that Razorpay is available right before using it
+            if (!isRazorpayAvailable()) {
+                throw new Error('Razorpay is not available as a constructor');
+            }
+            
+            // Create the Razorpay instance and open the payment form
+            const razorpay = new window.Razorpay(options);
+            razorpay.open();
+        } catch (error) {
+            console.error('Error creating Razorpay instance:', error);
+            toast.error('Unable to initialize payment gateway. Please try again later.');
+            setButtonLoading(false);
+        }
+    };
+    
     useEffect(() => {
         if (planDetails) {
             const { monthlyPrice, annualPrice } = planDetails;
 
+            // Ensure prices are numbers and have proper defaults
+            const monthly = parseFloat(monthlyPrice) || 0;
+            const annual = parseFloat(annualPrice) || 0;
+
+            console.log('Setting up plan details:', { monthly, annual, planDetails });
+
             // Set monthly and annual prices dynamically
             setPricePerMember({
-                monthly: monthlyPrice || 0,
-                annually: annualPrice || 0,
+                monthly: monthly,
+                annually: annual,
             });
 
             // Default selection logic
             const defaultMembershipType = planDetails.billingCycle === "annual" ? "annual" : "monthly";
-            setCardDetails((prevData) => ({
+            
+            // Update card details with membership type and user info
+            setCardDetails(prevData => ({
                 ...prevData,
                 membershipType: defaultMembershipType,
-            }));
-            // Calculate the initial total
-            const initialTotal =
-                defaultMembershipType === "annual"
-                    ? parseInt(annualPrice || 0) - (planDetails.annualDiscount || 0)
-                    : parseInt(monthlyPrice || 0) - (planDetails.monthDiscount || 0);
-
-            setTotalPaid(initialTotal);
-
-            setCardDetails((prevDetails) => ({
-                ...prevDetails,
                 tenantId: tenantId || "",
                 ownerId: ownerId || "",
                 userType: planDetails.user?.userType || ""
             }));
+
+            // Calculate the initial total using the same logic as updateTotalPaid
+            const price = defaultMembershipType === "annual" ? annual : monthly;
+            const discount = defaultMembershipType === "annual" 
+                ? parseFloat(planDetails.annualDiscount) || 0 
+                : parseFloat(planDetails.monthDiscount) || 0;
+                
+            const initialTotal = Math.max(0, price - discount);
+            console.log('Initial total calculation:', { price, discount, initialTotal });
+            
+            setTotalPaid(initialTotal.toFixed(2));
         }
-    }, [planDetails]);
+    }, [ownerId, planDetails, tenantId]);
 
+    // Validate details before submitting to payment processor
+    const validateCardDetailsBeforeSubmit = () => {
+        const errors = {};
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
+        if (!cardDetails.membershipType)
+            errors.membershipType = "Membership Type is required";
 
-    //     // Validate card fields
-    //     if (!validateCardFields(setErrors, cardDetails)) {
-    //         return;
-    //     }
-    //     try {
-    //         const updatedCardDetails = {
-    //             ...cardDetails,
-    //             cardNumber: cardDetails.cardNumber.replace(/-/g, "")
-    //         };
-    //         // Send the token to your backend to complete the payment
-    //         const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
-    //             cardDetails: updatedCardDetails//card creation
-    //         });
-    //         const { message, transactionId, status } = paymentResponse.data;
+        if (Object.keys(errors).length > 0) {
+            setErrors(errors);
+            return false;
+        }
 
-    //         if (status === "paid") {
-    //             toast.success("Payment successfully compeleted!");
+        // Additional pre-submission validation if needed
+        if (totalPaid <= 0) {
+            toast.error("Invalid payment amount");
+            return false;
+        }
+        
+        return true;
+    };
 
-    //             console.log("caedssssssssss", {
-    //                 planDetails,
-    //                 cardDetails,
-    //                 status,
-    //                 totalPaid,
-    //                 InvoiceId: planDetails.invoiceId,
-    //                 transactionId
-    //             });
-
-    //             const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
-    //                 planDetails,
-    //                 cardDetails,
-    //                 status,
-    //                 totalPaid,
-    //                 InvoiceId: planDetails.invoiceId,
-    //                 transactionId
-
-    //             });
-    //             const response = await axios.post(`${config.REACT_APP_API_URL}/emailCommon/afterSubscribePlan`, {
-    //                 ownerId,
-    //                 tenantId,
-    //                 // ccEmail: "shaikmansoor1200@gmail.com",
-    //             });
-    //             if (isUpgrading) {
-    //                 navigate("/SubscriptionDetails"); // Redirect to upgraded dashboard
-    //             } else {
-    //                 navigate("/home"); // Default navigation
-    //             }
-
-    //             console.log("Payment and Subscription submitted successfully", subscriptionResponse.data);
-    //         } else if (paymentResponse.data.status === "failed") {
-    //             toast.error("Payment Failed!");
-    //         }
-    //         else {
-    //             console.log("Error submitting payment", message);
-    //         }
-
-    //     } catch (error) {
-    //         console.error("Error processing payment:", error);
-    //     }
-    // };
-
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-         // Validate card fields
-            if (!validateCardFields(setErrors, cardDetails)) {
+        // Validate form fields
+        if (!validateCardDetailsBeforeSubmit()) {
+            return;
+        }
+
+        try {
+            // Set button loading state to true when Pay button is clicked
+            setButtonLoading(true);
+            
+            // Load Razorpay script
+            const isScriptLoaded = await loadRazorpayScript();
+            if (!isScriptLoaded) {
+                toast.error('Payment gateway failed to load. Please try again.');
+                setButtonLoading(false);
                 return;
             }
-        try {
-            const updatedCardDetails = {
-                ...cardDetails,
-                cardNumber: cardDetails.cardNumber.replace(/-/g, "")
-            };
-              // Send the token to your backend to complete the payment
-              const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
-                cardDetails:updatedCardDetails//card creation
-        });
-            const { message,transactionId, status } = paymentResponse.data;
-           
-            if (status === "paid") {
-                toast.success("Payment successfully compeleted!");
 
-                console.log( "caedssssssssss",{
-                    planDetails,
-                    cardDetails,
-                    status,
-                    totalPaid,
-                    InvoiceId:planDetails.invoiceId,
-                    transactionId
-                });
-                
-                const subscriptionResponse = await axios.post(`${config.REACT_APP_API_URL}/update-customer-subscription`, {//invoice,customer subscription status update and recipt genearte
-                    planDetails,
-                    cardDetails,
-                    status,
-                    totalPaid,
-                    InvoiceId:planDetails.invoiceId,
-                    transactionId
-                });
-                const response = await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/paid`, {
-                    ownerId,
-                    tenantId,
-                    // ccEmail: "shaikmansoor1200@gmail.com",
-                  });  
-                  if (isUpgrading) {
-                    navigate("/SubscriptionDetails"); // Redirect to upgraded dashboard
-                } else {
-                    navigate("/home"); // Default navigation
+            // No need to update card details as we're not collecting them anymore
+
+            // Ensure totalAmount is a valid number and properly formatted
+            const amountToCharge = parseFloat(totalPaid) || 0;
+            console.log('Creating order with amount:', amountToCharge, 'USD');
+            
+            // Create order data object
+            const orderData = {
+                planDetails: {
+                    ...planDetails,
+                    // Ensure prices are numbers
+                    monthlyPrice: parseFloat(planDetails.monthlyPrice) || 0,
+                    annualPrice: parseFloat(planDetails.annualPrice) || 0,
+                    monthDiscount: parseFloat(planDetails.monthDiscount) || 0,
+                    annualDiscount: parseFloat(planDetails.annualDiscount) || 0,
+                },
+                ownerId,
+                tenantId,
+                planId: planDetails.planId || planDetails._id || '',
+                membershipType: cardDetails.membershipType,
+                userProfile,
+                amount: amountToCharge, // Send amount in dollars, backend will convert to cents
+                currency: 'USD',
+                autoRenew: cardDetails.autoRenew,
+                // Additional metadata for better tracking
+                metadata: {
+                    billingCycle: cardDetails.membershipType,
+                    userId: ownerId,
+                    timestamp: new Date().toISOString()
                 }
+            };
+            
+            console.log('Sending order to backend:', {
+                amount: amountToCharge,
+                currency: 'USD',
+                membershipType: cardDetails.membershipType,
+                planId: orderData.planId,
+                autoRenew: cardDetails.autoRenew
+            });
 
-                console.log("Payment and Subscription submitted successfully", subscriptionResponse.data);
-            } else if(paymentResponse.data.status === "failed"){
-                toast.error("Payment Failed!");
-            }
-            else {
-                console.log("Error submitting payment", message);
-            }
+            // Send request to create order
+            const orderResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/payment/create-order`,
+                orderData
+            );
 
+            console.log('Order response:', orderResponse.data);
+
+            // Check if this is a subscription or one-time payment
+            if (orderResponse.data.isSubscription) {
+                // Handle subscription flow - if we have isMockSubscription flag
+                // if (orderResponse.data.isMockSubscription) {
+                //     handleMockSubscription(orderResponse.data);
+                //     return;
+                // }
+                
+                // If we have authLink, we need to check if we should use popup or redirect
+                if (orderResponse.data.authLink && orderResponse.data.authLink !== '#') {
+                    // Save subscription info for confirmation later
+                    localStorage.setItem('pendingSubscription', JSON.stringify({
+                        subscriptionId: orderResponse.data.subscriptionId,
+                        planId: planDetails.planId || planDetails._id || '',
+                        membershipType: cardDetails.membershipType,
+                        ownerId,
+                        tenantId
+                    }));
+                    
+                    // Redirect to Razorpay's authorization page for subscriptions
+                    window.location.href = orderResponse.data.authLink;
+                    return;
+                }
+                
+                // For normal orders, open Razorpay popup
+                if (orderResponse.data.orderId || orderResponse.data.order?.id) {
+                    initializeRazorpayPayment(orderResponse.data);
+                } else {
+                    toast.error("Failed to create payment order. Please try again.");
+                    setProcessing(false);
+                }
+            } else {
+                // Regular payment flow - open Razorpay popup
+                initializeRazorpayPayment(orderResponse.data);
+            }
         } catch (error) {
             console.error("Error processing payment:", error);
+            toast.error("Error processing payment: " + (error.response?.data?.message || error.message));
+            setButtonLoading(false);
         }
     };
+    
+    // // Handle mock subscription during testing
+    // const handleMockSubscription = async (subscriptionData) => {
+    //     try {
+    //         const { subscriptionId } = subscriptionData;
+            
+    //         toast.success("Test mode: Subscription created successfully");
+            
+    //         // For development/testing: simulate a successful subscription
+    //         const verificationResponse = await axios.post(
+    //             `${config.REACT_APP_API_URL}/payment/test-subscription-success`, 
+    //             {
+    //                 subscriptionId,
+    //                 ownerId,
+    //                 tenantId,
+    //                 planId: planDetails.subscriptionPlanId,
+    //                 membershipType: cardDetails.membershipType
+    //             }
+    //         );
+    //             };
+
+    //             // Log payment response for debugging
+    //             console.log('Razorpay payment response:', response);
+    //         setProcessing(false);
+    //     }
+    
+
+    useEffect(() => {
+        const checkSubscriptionStatus = async () => {
+            // Check if we're returning from a subscription authorization
+            const pendingSubscription = localStorage.getItem('pendingSubscription');
+            const params = new URLSearchParams(window.location.search);
+            const razorpayPaymentId = params.get('razorpay_payment_id');
+            const razorpaySignature = params.get('razorpay_signature');
+            
+            if (pendingSubscription && (razorpayPaymentId || params.get('error_code'))) {
+                const subscriptionData = JSON.parse(pendingSubscription);
+                
+                // Clear the pending subscription data
+                localStorage.removeItem('pendingSubscription');
+                
+                // If we have a payment ID, verify the payment
+                if (razorpayPaymentId && razorpaySignature) {
+                    try {
+                        toast.loading("Verifying subscription...");
+                        
+                        const verificationResponse = await axios.post(
+                            `${config.REACT_APP_API_URL}/payment/verify-subscription`, 
+                            {
+                                razorpay_payment_id: razorpayPaymentId,
+                                razorpay_subscription_id: subscriptionData.subscriptionId,
+                                razorpay_signature: razorpaySignature,
+                                ownerId: subscriptionData.ownerId,
+                                tenantId: subscriptionData.tenantId,
+                                planId: subscriptionData.planId,
+                                membershipType: subscriptionData.membershipType
+                            }
+                        );
+                        
+                        toast.dismiss();
+                        
+                        if (verificationResponse.data.status === "success") {
+                            toast.success("Subscription successfully activated!");
+                            
+                            // Send email notification
+                            await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/paid`, {
+                                ownerId: subscriptionData.ownerId,
+                                tenantId: subscriptionData.tenantId,
+                            });
+                            
+                            // Navigate based on upgrade status
+                            if (isUpgrading) {
+                                navigate("/SubscriptionDetails");
+                            } else {
+                                navigate("/home");
+                            }
+                        } else {
+                            toast.error("Subscription verification failed. Please contact support.");
+                        }
+                    } catch (error) {
+                        console.error("Error verifying subscription:", error);
+                        toast.error("Failed to verify subscription. Please contact support.");
+                    }
+                } else if (params.get('error_code')) {
+                    // Handle payment failure
+                    toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`); 
+                }
+            }
+        };
+        
+        checkSubscriptionStatus();
+    }, [isUpgrading, navigate]); // Added isUpgrading and navigate to dependency array
 
     return (
-        <div className="flex  mt-2 flex-col h-full w-full items-center  bg-white">
-
-            <form
-                className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center  h-[70%]  p-5 bg-white border-2 border-gray-300 rounded-md "
-                onSubmit={handleSubmit}
+        <div className="flex pt-4 flex-col h-full w-full items-center bg-white">
+            {/* Add ToastContainer to display toast notifications */}
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+            
+            {processing ? (
+                <div className="flex flex-col items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
+                    <p className="mt-4 text-lg font-medium text-gray-700">Processing your Home...</p>
+                </div>
+            ) : (
+                <form
+                    className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border-2 border-gray-300 rounded-md"
+                    onSubmit={handleSubmit}
             >
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold mb-2">
@@ -233,111 +602,26 @@ const CardDetails = () => {
 
                     <div className="w-9/12 md:w-7/12  sm:w-6/12">
 
-                        {/* Name */}
-                        <label className="block mb-1  text-md font-medium text-gray-500">
-                            Billed to
-                        </label>
-                        <input
-                            type="text"
-                            name="cardHolderName"
-                            value={cardDetails.cardHolderName}
-                            // name
-                            onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-                            placeholder="Enter Name"
-                            className="w-full p-2 mb-1 border rounded-lg focus:outline-none focus:ring-2 "
-                        />
-                        {errors.cardHolderName && (
-                            <span className="text-red-500 text-sm pb-1">{errors.cardHolderName}</span>
-                        )}
-
-                        {/* Card Number */}
-                        <label className="block  mb-1  text-md font-medium text-gray-500">
-                            Card Number
-                        </label>
-                        <div className="relative w-full">
-                            <input
-                                type="text"
-                                name="cardNumber"
-                                value={cardDetails.cardNumber}
-                                onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-
-                                placeholder='0000-0000-0000-0000'
-                                className="w-full p-2 mb-1 border rounded-lg focus:outline-none  pr-12"
-                            />
-                            <div className="absolute flex top-1/2 transform -translate-y-1/2 right-2">
-                                <img alt="VisaCard" className="h-4 w-6 sm:h-2 md:h-6 md:w-10 border " src="https://dwglogo.com/wp-content/uploads/2016/08/Visa-logo-02.png" />
-                                <img alt="MasterCard" className="h-4 w-6 sm:h-2 md:h-6 md:w-10 border ms-2" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
-                                <img alt="Paypal" className="h-4 w-6 sm:h-2 md:h-6 md:w-10 border ms-2" src="https://cdn.pixabay.com/photo/2018/05/08/21/29/paypal-3384015_640.png" />
+                        <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
+                            <h3 className="text-lg font-medium text-blue-800 mb-2">Secure Payment</h3>
+                            <p className="text-blue-600">
+                                Your payment information will be securely collected by Razorpay's payment form.
+                                No card details are stored on our servers.
+                            </p>
+                            
+                            <div className="mt-3 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                                <span className="text-blue-600">Your payment is protected with industry-standard encryption</span>
                             </div>
-
-
-                        </div>
-                        {errors.cardNumber && (
-                            <p className="text-red-500 text-sm pb-1">{errors.cardNumber}</p>
-                        )}
-
-                        {/* cardexpiry and CVV */}
-                        <div className="flex space-x-2 mt-2">
-                            <div className="flex w-1/2  flex-col">
-                                <input
-                                    type="text"
-                                    name="cardexpiry"
-                                    value={cardDetails.cardexpiry}
-                                    onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-                                    placeholder="MM / YY"
-                                    className="p-2 mb-1 border rounded-lg focus:outline-none  "
-                                />
-                                {errors.cardexpiry && (
-                                    <p className="text-red-500 text-sm pb-1">{errors.cardexpiry}</p>
-                                )}
-                            </div>
-
-                            <div className="flex w-1/2  flex-col">
-                                <input
-                                    type="text"
-                                    name="cvv"
-                                    value={cardDetails.cvv}
-                                    onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-                                    placeholder="CVV"
-                                    className="p-2 mb-1 border rounded-lg focus:outline-none  "
-                                />
-                                {errors.cvv && (
-                                    <p className="text-red-500 text-sm pb-1">{errors.cvv}</p>
-                                )}
+                            
+                            <div className="mt-3 flex justify-center">
+                                <img alt="VisaCard" className="h-8 mx-1" src="https://dwglogo.com/wp-content/uploads/2016/08/Visa-logo-02.png" />
+                                <img alt="MasterCard" className="h-8 mx-1" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
+                                <img alt="Razorpay" className="h-8 mx-1" src="https://razorpay.com/assets/razorpay-logo.svg" />
                             </div>
                         </div>
-
-                        {/* Country and Zip Code */}
-                        <label className="block mb-1  text-md font-medium text-gray-500">
-                            Country
-                        </label>
-                        <input
-                            type="text"
-                            name="country"
-                            value={cardDetails.country}
-                            onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-                            className="w-full p-2 mb-1 border rounded-lg focus:outline-none  "
-                        />
-                        {errors.country && (
-                            <p className="text-red-500 text-sm pb-1">{errors.country}</p>
-                        )}
-                        <input
-                            type="text"
-                            name="zipCode"
-                            value={cardDetails.zipCode}
-                            onChange={(e) => handlePaymentInputChange(e.target, cardDetails, setCardDetails, setErrors, errors)}
-
-                            placeholder="Zip Code"
-                            className="w-full p-2 mb-2 border rounded-lg focus:outline-none  "
-                        />
-                        {errors.zipCode && (
-                            <p className="text-red-500 text-sm pb-1">{errors.zipCode}</p>
-                        )}
 
                         <div className="mt-6 mb-4 flex flex-col">
                             <span className="font-semibold text-lg"> {cardDetails.membershipType === "monthly"
@@ -488,19 +772,19 @@ const CardDetails = () => {
                         </p>
                         <button
                             type="submit"
-                            className="w-full p-3 bg-[#217989]  text-[#C7EBF2] font-medium rounded-lg "
+                            className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
+                            disabled={buttonLoading || processing}
                         >
-                            Pay
+                            {buttonLoading ? "Processing..." : "Pay"}
                         </button>
 
                     </div>
                 </div>
             </form>
-
+            )}
         </div>
     );
 };
-
 
 
 

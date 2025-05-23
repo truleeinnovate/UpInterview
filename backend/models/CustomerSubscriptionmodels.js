@@ -7,7 +7,7 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     selectedBillingCycle: { type: String, enum: ['monthly', 'quarterly', 'annual'], required: true },
     startDate: { type: Date, default: Date.now },
     nextBillingDate: { type: Date, required: false },
-    status: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled'], default: 'inactive' },
+    status: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending'], default: 'pending' },
     endDate: { type: Date, default: null },
     endReason: { type: String, enum: ['upgrade', 'downgrade', 'cancelled'], default: null },
     price: { type: Number, required: true },

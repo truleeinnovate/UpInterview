@@ -371,16 +371,16 @@ const SubscriptionPlan = () => {
               </p>
               <button
                 onClick={() => submitPlans(plan)}
-                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs ${
-                  isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"
-                } ${
-                  subscriptionData.subscriptionPlanId === plan.planId
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-                disabled={subscriptionData.subscriptionPlanId === plan.planId}
+                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
+                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
-                {subscriptionData.subscriptionPlanId === plan.planId ? "Subscribed" : "Choose"}
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+              ? "Subscribed"
+              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "pending"
+              ? "Continue to Payment"
+              : "Choose"}
               </button>
             </div>
           ))}

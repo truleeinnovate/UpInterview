@@ -4,7 +4,6 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import { format } from "date-fns";
 import axios from 'axios';
-import { ChevronDown, X } from 'lucide-react';
 import { Search } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
@@ -15,13 +14,8 @@ import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Minimize,
-  Expand
-} from 'lucide-react';
+import {Minimize,Expand,ChevronDown,X} from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import { config } from '../../../../config';
-import { useCandidates } from '../../../../apiHooks/useCandidates';
 
 
 // Reusable CustomDropdown Component
@@ -137,12 +131,13 @@ const AddCandidateForm = ({ mode }) => {
     college,
     qualification,
     currentRole,
-    // candidateData,
-    // addOrUpdateCandidate
+    candidateData,
+    addOrUpdateCandidate
   } = useCustomContext();
 
-  const { addOrUpdateCandidate, candidateData } = useCandidates();
-
+  //  const {
+  // addOrUpdateCandidate 
+  // } = useCustomContext(CandidateContext);
 
   console.log("currentRole", currentRole);
 
@@ -477,10 +472,14 @@ const AddCandidateForm = ({ mode }) => {
     console.log('Starting add candidate process...');
 
     // Get user token information
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.orgId;
+    // const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    // const userId = tokenPayload?.userId;
+    // const userName = tokenPayload?.userName;
+    // const orgId = tokenPayload?.orgId;
+
+    const userId = Cookies.get('userId');
+    const userName = Cookies.get('userName')
+    const orgId = Cookies.get('organizationId')
 
     console.log('User info:', { userId, userName, orgId });
 
@@ -529,14 +528,35 @@ const AddCandidateForm = ({ mode }) => {
     console.log('Submitting candidate data:', data);
 
     try {
-      // getting the API from the apihooks for add or update candidate (post or patch)
+      // Create candidate
+      // const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
+      // console.log('Candidate creation response:', response.data);
+
+      // const candidateId = response.data.data._id;
+      // console.log('New candidate created with ID:', candidateId);
+
+      // // Upload image if available
+      // if (file) {
+      //   console.log('Uploading candidate image...');
+      //   const imageData = new FormData();
+      //   imageData.append("image", file);
+      //   imageData.append("type", "candidate");
+      //   imageData.append("id", candidateId);
+
+      //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+      //   console.log('Image upload completed successfully');
+      // }
+
+
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
       // Reset form and close
       resetFormData();
       console.log('Form reset completed');
 
       // Navigate to candidate list
-      navigate('/candidate');
+      // navigate('/candidate');
       console.log('Navigation to candidate list completed');
     } catch (error) {
       console.error('Failed to add candidate:', error);
@@ -556,7 +576,6 @@ const AddCandidateForm = ({ mode }) => {
     const userName = tokenPayload?.userName;
     const orgId = tokenPayload?.tenantId;
 
-    console.log('User info:', { userId, userName, orgId });
 
     // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
@@ -594,8 +613,6 @@ const AddCandidateForm = ({ mode }) => {
       })),
       resume: null,
       CurrentRole: formData.CurrentRole,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: `${userName} at ${currentDateTime}`,
       ownerId: userId,
       tenantId: orgId
     };
@@ -604,14 +621,39 @@ const AddCandidateForm = ({ mode }) => {
 
     try {
       let candidateId;
+      let response;
 
-      // getting the API from the apihooks for add or update candidate (post or patch)
-      console.log('Candidate data:', data);
-      console.log('Candidate file:', file);
-      console.log('Candidate id:', id);
-      console.log('Candidate addOrUpdateCandidate:', addOrUpdateCandidate);
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
-      console.log('Candidate added/updated successfully');
+
+      // if (id) {
+      //   // Update existing candidate
+      //   console.log('Updating existing candidate with ID:', id);
+      //   response = await axios.patch(
+      //     `${process.env.REACT_APP_API_URL}/candidate/${id}`,
+      //     data
+      //   );
+      // } else {
+      //   // Create new candidate
+      //   console.log('Creating new candidate...');
+      //   response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
+      // }
+
+      // console.log('API response:', response.data);
+      // candidateId = response.data.data._id;
+
+      // // Upload image if available
+      // if (file) {
+      //   console.log('Uploading candidate image...');
+      //   const imageData = new FormData();
+      //   imageData.append("image", file);
+      //   imageData.append("type", "candidate");
+      //   imageData.append("id", candidateId);
+
+      //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+      //   console.log('Image upload completed successfully');
+      // }
 
       // Handle navigation based on mode
       switch (mode) {
@@ -814,6 +856,8 @@ const AddCandidateForm = ({ mode }) => {
 
             <form className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                <p className='text-lg font-semibold col-span-2'>Personal Details</p>
+                {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
@@ -827,6 +871,7 @@ const AddCandidateForm = ({ mode }) => {
                     placeholder="Enter First Name"
                   />
                 </div>
+                {/* Last Name */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Last Name <span className="text-red-500">*</span>
@@ -841,6 +886,32 @@ const AddCandidateForm = ({ mode }) => {
                   />
                   {errors.LastName && <p className="text-red-500 text-xs pt-1">{errors.LastName}</p>}
                 </div>
+                {/* Date of Birth */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" >
+                    Date of Birth
+                  </label>
+                  <CustomDatePicker
+                    selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
+                    onChange={handleDateChange}
+                    placeholder="Select date of birth"
+                  />
+                </div>
+                {/* Gender */}
+
+                <CustomDropdown
+                  label="Gender"
+                  name="Gender"
+                  value={formData.Gender}
+                  options={genderOptions}
+                  onChange={handleChange}
+                  error={errors.Gender}
+                  placeholder="Select Gender"
+                  disableSearch={true}
+                />
+                <p className='text-lg font-semibold col-span-2'>Contact Details</p>
+
+                {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email <span className="text-red-500">*</span>
@@ -855,6 +926,7 @@ const AddCandidateForm = ({ mode }) => {
                   />
                   {errors.Email && <p className="text-red-500 text-xs pt-1">{errors.Email}</p>}
                 </div>
+                {/* Phone */}
                 <div>
 
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -897,27 +969,73 @@ const AddCandidateForm = ({ mode }) => {
                     </div>
                   </div>
                 </div>
+                <p className='text-lg font-semibold col-span-2'>Education Details</p>
+
+
+                {/* higher qualification */}
+                <CustomDropdown
+                  label="Higher Qualification"
+                  name="HigherQualification"
+                  value={formData.HigherQualification}
+                  options={qualification}
+                  onChange={handleChange}
+                  error={errors.HigherQualification}
+                  placeholder="Select Higher Qualification"
+                  optionKey="QualificationName"
+                  optionValue="QualificationName"
+                />
+
+                {/* University/College */}
+                <CustomDropdown
+                  label="University College"
+                  name="UniversityCollege"
+                  value={formData.UniversityCollege}
+                  options={college}
+                  onChange={handleChange}
+                  error={errors.UniversityCollege}
+                  placeholder="Select University College"
+                  optionKey="University_CollegeName"
+                  optionValue="University_CollegeName"
+                />
+                <p className='text-lg font-semibold col-span-2'>Experience Details</p>
+                {/* current experience */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700" >
-                    Date of Birth
+                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Experience <span className="text-red-500">*</span>
                   </label>
-                  <CustomDatePicker
-                    selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
-                    onChange={handleDateChange}
-                    placeholder="Select date of birth"
+                  <input
+                    type="number"
+                    name="CurrentExperience"
+                    id="CurrentExperience"
+                    min="1"
+                    max="15"
+                    value={formData.CurrentExperience}
+                    onChange={handleChange}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Enter current experience"
                   />
+                  {errors.CurrentExperience && <p className="text-red-500 text-xs pt-1">{errors.CurrentExperience}</p>}
+                </div>
+                {/* Relevant Experience */}
+                <div>
+                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                    Relevant Experience <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="RelevantExperience"
+                    id="RelevantExperience"
+                    min="1"
+                    max="15"
+                    value={formData.RelevantExperience}
+                    onChange={handleChange}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Enter relevant experience"
+                  />
+                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
                 </div>
 
-                <CustomDropdown
-                  label="Gender"
-                  name="Gender"
-                  value={formData.Gender}
-                  options={genderOptions}
-                  onChange={handleChange}
-                  error={errors.Gender}
-                  placeholder="Select Gender"
-                  disableSearch={true}
-                />
+                {/* Current Role */}
 
                 <div ref={currentRoleDropdownRef}>
                   <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
@@ -972,66 +1090,14 @@ const AddCandidateForm = ({ mode }) => {
                   {errors.CurrentRole && <p className="text-red-500 text-xs pt-1">{errors.CurrentRole}</p>}
                 </div>
 
-                <CustomDropdown
-                  label="Higher Qualification"
-                  name="HigherQualification"
-                  value={formData.HigherQualification}
-                  options={qualification}
-                  onChange={handleChange}
-                  error={errors.HigherQualification}
-                  placeholder="Select Higher Qualification"
-                  optionKey="QualificationName"
-                  optionValue="QualificationName"
-                />
 
-                <CustomDropdown
-                  label="University College"
-                  name="UniversityCollege"
-                  value={formData.UniversityCollege}
-                  options={college}
-                  onChange={handleChange}
-                  error={errors.UniversityCollege}
-                  placeholder="Select University College"
-                  optionKey="University_CollegeName"
-                  optionValue="University_CollegeName"
-                />
 
-                <div>
-                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Experience <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="CurrentExperience"
-                    id="CurrentExperience"
-                    min="1"
-                    max="15"
-                    value={formData.CurrentExperience}
-                    onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter current experience"
-                  />
-                  {errors.CurrentExperience && <p className="text-red-500 text-xs pt-1">{errors.CurrentExperience}</p>}
-                </div>
 
-                <div>
-                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
-                    Relevant Experience <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="RelevantExperience"
-                    id="RelevantExperience"
-                    min="1"
-                    max="15"
-                    value={formData.RelevantExperience}
-                    onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter relevant experience"
-                  />
-                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
-                </div>
+
+
+
               </div>
+                <p className='text-lg font-semibold col-span-2'>Skills Details</p>
 
               <div>
                 <div className="flex justify-between items-center">

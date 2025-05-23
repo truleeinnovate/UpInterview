@@ -13,8 +13,10 @@ export const useCandidates = () => {
 
   const { data: candidateData = [], isLoading } = useQuery({
     queryKey: ['candidates', candidatePermissions],
+    
     queryFn: async () => {
       const filteredCandidates = await fetchFilterData('candidate', candidatePermissions);
+      console.log('filteredCandidates', filteredCandidates);
       return filteredCandidates.map(candidate => {
         if (candidate.ImageData?.filename) {
           return {
@@ -22,6 +24,7 @@ export const useCandidates = () => {
             imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`,
           };
         }
+        console.log('candidate', candidate);
         return candidate;
       }).reverse();
     },

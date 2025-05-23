@@ -1,5 +1,5 @@
 // Import necessary dependencies and icons
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Plus } from "lucide-react";
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
@@ -22,10 +22,8 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../CommonCode-AllTabs/ui/button';
 import Loading from '../../../../Components/Loading';
-import { useCandidates } from '../../../../apiHooks/useCandidates';
 
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
-  
   const {
     skills,
     qualification,
@@ -271,8 +269,11 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   );
 };
 
-function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResendLink, isAssessmentView - this things come from Assessment-view-AssessmentTab.jsx
 
+
+function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResendLink, isAssessmentView - this things come from Assessment-view-AssessmentTab.jsx
+  const { candidateData, loading } = useCustomContext(); // Fetch data from context when not in assessment view
+  // console.log('candidateData:-', candidateData);
   const [view, setView] = useState('table');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -289,6 +290,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
   });
   const navigate = useNavigate();
 
+  
+
+  // Determine which data to use based on isAssessmentView
+  const dataToUse = isAssessmentView ? candidates : candidateData;
+
+  // console.log("dataToUse", dataToUse);
+  
+
   // Automatically switch to Kanban view for tablet view (768px to 1024px)
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
 
@@ -300,49 +309,28 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
     }
   }, [isTablet]);
 
-  const { candidateData, candidatesLoading } = useCandidates();
 
-
-  console.log('Mansoor [Candidate] candidateData from the candidate tab:', candidateData);
-
-  if (candidatesLoading) {
-    return <div>Loading candidates...</div>;
-  }
-
-  if (!candidateData || candidateData.length === 0) {
-    return <div>No candidates found.</div>;
-  }
-
-  // Determine which data to use based on isAssessmentView
-  const dataToUse = isAssessmentView ? candidates : candidateData;
-
-  // console.log("dataToUse", dataToUse);
-
-
-
-
-
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     if (window.innerWidth < 1024) {
-  //       setView("kanban");
-  //     } else {
-  //       setView("table");
-  //     }
-  //   };
-
-  //   // Set initial view mode based on current window size
-  //   handleResize();
-
-  //   // Add event listener to handle window resize
-  //   window.addEventListener("resize", handleResize);
-
-  //   // Cleanup event listener on component unmount
-  //   return () => {
-  //     window.removeEventListener("resize", handleResize);
-  //   };
-  // }, []);
-
+    // useEffect(() => {
+    //   const handleResize = () => {
+    //     if (window.innerWidth < 1024) {
+    //       setView("kanban");
+    //     } else {
+    //       setView("table");
+    //     }
+    //   };
+  
+    //   // Set initial view mode based on current window size
+    //   handleResize();
+  
+    //   // Add event listener to handle window resize
+    //   window.addEventListener("resize", handleResize);
+  
+    //   // Cleanup event listener on component unmount
+    //   return () => {
+    //     window.removeEventListener("resize", handleResize);
+    //   };
+    // }, []);
+  
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -556,7 +544,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
         )}
 
 
-        {/* Main Content */}
+      {/* Main Content */}
         <main className={isAssessmentView ? '' : 'fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background '}
         // w-full px-4 py-2 
         // className="fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background"
@@ -564,70 +552,70 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
           <div className="sm:px-0">
 
             {
-              candidatesLoading && !isAssessmentView ? (
-                <Loading />
+              loading && !isAssessmentView ? (
+                 <Loading />
               ) : (
-                <motion.div className="bg-white">
-                  {view === 'table' ? (
-                    <div className={isAssessmentView ? "" : "flex relative w-full overflow-hidden"}>
-                      <div
-                        className={`transition-all duration-300 ${isMenuOpen
-                          ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                          : 'w-full'
-                          }`}
-                      >
-                        <CandidateTable
-                          candidates={currentFilteredRows}
-                          onView={handleView}
-                          onEdit={handleEdit}
-                          onResendLink={onResendLink}
-                          isAssessmentView={isAssessmentView}
-                          isMenuOpen={isMenuOpen}
-                        />
-                      </div>
+                  <motion.div className="bg-white">
+                   {view === 'table' ? (
+            <div className={isAssessmentView ? "" : "flex relative w-full overflow-hidden"}>
+              <div
+                className={`transition-all duration-300 ${isMenuOpen
+                        ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                        : 'w-full'
+                        }`}
+              >
+                <CandidateTable
+                  candidates={currentFilteredRows}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onResendLink={onResendLink}
+                  isAssessmentView={isAssessmentView}
+                  isMenuOpen={isMenuOpen}
+                />
+              </div>
 
-                      {!isAssessmentView && isMenuOpen && (
-                        <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                          <OffcanvasMenu
-                            isOpen={isMenuOpen}
-                            closeOffcanvas={handleFilterIconClick}
-                            onFilterChange={handleFilterChange}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex relative w-full overflow-hidden">
-                      <div
-                        className={`transition-all duration-300 ${isMenuOpen
-                          ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                          : 'w-full'
-                          }`}
-                      >
-                        <CandidateKanban
-                          candidates={currentFilteredRows}
-                          onView={handleView}
-                          onEdit={handleEdit}
-                          onResendLink={onResendLink}
-                          isAssessmentView={isAssessmentView}
-                        />
-                      </div>
-                      {!isAssessmentView && isMenuOpen && (
-                        <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                          <OffcanvasMenu
-                            isOpen={isMenuOpen}
-                            closeOffcanvas={handleFilterIconClick}
-                            onFilterChange={handleFilterChange}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-                  }
-                </motion.div>
-              )
+              {!isAssessmentView && isMenuOpen && (
+                <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                  <OffcanvasMenu
+                    isOpen={isMenuOpen}
+                    closeOffcanvas={handleFilterIconClick}
+                    onFilterChange={handleFilterChange}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex relative w-full overflow-hidden">
+              <div
+                className={`transition-all duration-300 ${isMenuOpen
+                        ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
+                        : 'w-full'
+                        }`}
+              >
+                <CandidateKanban
+                  candidates={currentFilteredRows}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onResendLink={onResendLink}
+                  isAssessmentView={isAssessmentView}
+                />
+              </div>
+              {!isAssessmentView && isMenuOpen && (
+                <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
+                  <OffcanvasMenu
+                    isOpen={isMenuOpen}
+                    closeOffcanvas={handleFilterIconClick}
+                    onFilterChange={handleFilterChange}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        }
+          </motion.div>
+        )
             }
-
+       
           </div>
         </main>
       </main>

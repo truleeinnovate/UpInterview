@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { config } from '../config';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const getAllSubordinateRoles = async (currentRoleId, allRoles) => {
@@ -23,7 +24,7 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
     let relevantSharingRules = [];
     try {
         if (sharingPermissions.ObjName) {
-            const sharingRulesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/sharing-rules`, {
+            const sharingRulesResponse = await axios.get(`${config.REACT_APP_API_URL}/api/sharing-rules`, {
                 params: {
                     tenantId: organizationId,
                     objectName: sharingPermissions.ObjName,
@@ -53,7 +54,7 @@ const getSharingRulesUserIds = async (currentUserRoleId, sharingPermissions, use
     }
 
     if (recordsOwnedByRoleIds.size > 0) {
-        const usersResponse = await axios.get(`${process.env.REACT_APP_API_URL}/getUsersByRoleId`, {
+        const usersResponse = await axios.get(`${config.REACT_APP_API_URL}/getUsersByRoleId`, {
             params: {
                 organizationId: organizationId,
                 roleId: Array.from(recordsOwnedByRoleIds)
@@ -78,6 +79,9 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     const userId = tokenPayload?.userId;
     const organizationId = tokenPayload?.tenantId;
     const organization = tokenPayload?.organization;
+    console.log('userId', userId);
+    console.log('organizationId', organizationId);
+    console.log('organization', organization);
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");
         return [];
@@ -85,7 +89,10 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     let filteredData = [];
     try {
         // Fetch current user's role
-        const currentUserResponse = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);
+        console.log('userId sdf', userId);
+        console.log('config.REACT_APP_API_URL', config.REACT_APP_API_URL);
+        const currentUserResponse = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
+        console.log('currentUserResponse', currentUserResponse);
         let currentUserRoleId;
         if (currentUserResponse.data) {
             const currentUser = currentUserResponse.data;
@@ -96,7 +103,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
         // Fetch role details if needed
         let currentUserRole;
         if (currentUserRoleId) {
-            const roleResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata/${currentUserRoleId}`);
+            const roleResponse = await axios.get(`${config.REACT_APP_API_URL}/rolesdata/${currentUserRoleId}`);
             currentUserRole = roleResponse.data.roleName;
         }
         // if (organizationId) {
@@ -106,7 +113,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
 
         // const response = await axios.get(url);
         if (!userId) return [];
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/${endpoint}`, {
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/${endpoint}`, {
             params: { tenantId: organizationId, ownerId: userId }
         });
         if (response.data) {
@@ -117,12 +124,12 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
                 if (sharingPermissions.Access === 'Private' && sharingPermissions.GrantAccess === true && currentUserRole !== 'Admin') {
                     const sharingRuleUserIds = await getSharingRulesUserIds(currentUserRoleId, sharingPermissions, userId, organizationId);
                     const visibleUserIds = [userId];
-                    const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
+                    const allRolesResponse = await axios.get(`${config.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
                     const allRoles = allRolesResponse.data;
 
                     const visibleRoles = await getAllSubordinateRoles(currentUserRoleId, allRoles);
 
-                    const visibleUsersResponse = await axios.get(`${process.env.REACT_APP_API_URL}/users?organizationId=${organizationId}`);
+                    const visibleUsersResponse = await axios.get(`${config.REACT_APP_API_URL}/users?organizationId=${organizationId}`);
                     const visibleUsers = visibleUsersResponse.data.filter(user =>
                         visibleRoles.includes(user.RoleId)
                     );

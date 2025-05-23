@@ -5,6 +5,8 @@ const ReceiptSchema = new mongoose.Schema({
     tenantId: { type: String},
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number, required: true },
+    price: { type: Number }, // Original price before discount
+    discount: { type: Number, default: 0 }, // Amount of discount applied
     paymentMethod: { type: String, required: true },
     transactionId: { type: String, required: true },
     status: { type: String, enum: ['success', 'failed', 'pending'], default: 'success' },
