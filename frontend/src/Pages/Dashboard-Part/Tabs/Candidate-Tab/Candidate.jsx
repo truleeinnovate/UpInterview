@@ -36,7 +36,7 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const [isTechMainChecked, setTechMainChecked] = useState(false);
   const [selectedStatusOptions, setSelectedStatusOptions] = useState([]);
   const [selectedTechOptions, setSelectedTechOptions] = useState([]);
-  const isAnyOptionSelected = selectedStatusOptions.length > 0 || selectedTechOptions.length > 0;
+  const isAnyOptionSelected = selectedStatusOptions?.length > 0 || selectedTechOptions?.length > 0;
   const handleUnselectAll = () => {
     setSelectedStatusOptions([]);
     setSelectedTechOptions([]);
@@ -361,7 +361,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
   };
 
   const handleFilterIconClick = () => {
-    if (dataToUse.length !== 0) {
+    if (dataToUse?.length !== 0) {
       setIsFilterActive((prev) => !prev);
       toggleMenu();
     }
@@ -377,7 +377,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
-        selectedFilters.status.length === 0 ||
+        selectedFilters?.status.length === 0 ||
         selectedFilters.status.includes(user.HigherQualification);
       const matchesTech =
         selectedFilters.tech.length === 0 ||
@@ -397,9 +397,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
   };
 
   const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
+    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
@@ -410,7 +410,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
   };
 
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const handleSearch = (e) => {
@@ -514,7 +514,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
 
                       <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
                         <span
-                          className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md  ${(currentPage + 1) * rowsPerPage >= FilteredData().length
+                          className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md  ${(currentPage + 1) * rowsPerPage >= FilteredData()?.length
                             ? ' cursor-not-allowed'
                             : ''
                             }`}
@@ -531,8 +531,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) { // onResend
                         <span
                           onClick={handleFilterIconClick}
                           style={{
-                            opacity: dataToUse.length === 0 ? 0.2 : 1,
-                            pointerEvents: dataToUse.length === 0 ? 'none' : 'auto',
+                            opacity: dataToUse?.length === 0 ? 0.2 : 1,
+                            pointerEvents: dataToUse?.length === 0 ? 'none' : 'auto',
                           }}
                         >
                           {isFilterActive ? (
