@@ -816,3 +816,6 @@ app.use('/', razorpayRoutes);
 //     res.status(500).json({ error: 'Error checking profileId' });
 //   }
 // });
+
+const historyFeedsRoutes = require('./routes/feedsRoutes');
+app.use('/feeds', historyFeedsRoutes);
