@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react'
-
-import noImage from '../../../../../Dashboard-Part/Images/no-photo.png';
-import BasicDetailsEditPage from './BasicDetailsEditPage';
-import axios from 'axios';
+// import noImage from '../../../../../Dashboard-Part/Images/no-photo.png';
+// import BasicDetailsEditPage from './BasicDetailsEditPage';
+// import axios from 'axios';
 import Cookies from "js-cookie";
-import SidebarProfile from '../../Sidebar';
-import { navigation } from '../../../mockData/navigationData';
-import { Outlet, useNavigate } from 'react-router-dom';
+// import SidebarProfile from '../../Sidebar';
+// import { navigation } from '../../../mockData/navigationData';
+import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
 const BasicDetails = () => {
-  const { contacts, setContacts } = useCustomContext();
+  const { contacts } = useCustomContext();
 
 
   const [userData, setUserData] = useState({})
   const navigate = useNavigate();
   // const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isBasicUserModalOpen, setIsBasicUserModalOpen] = useState(false);
+  // const [isBasicUserModalOpen, setIsBasicUserModalOpen] = useState(false);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -54,7 +53,7 @@ const BasicDetails = () => {
 
       fetchData();
  
-  }, [userId]);
+  }, [contacts, userId]);
 
 
 
@@ -174,4 +173,3 @@ const BasicDetails = () => {
 }
 
 export default BasicDetails
-

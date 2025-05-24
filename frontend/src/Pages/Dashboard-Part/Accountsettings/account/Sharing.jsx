@@ -5,7 +5,7 @@ import { EditButton } from '../common/Buttons'
 import { SharingSettingsPopup } from './SharingSettingsPopup'
 import { ShareContentPopup } from './ShareContentPopup'
 
-export function Sharing() {
+const Sharing = () => {
   const [isEditingSettings, setIsEditingSettings] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [selectedContent, setSelectedContent] = useState(null)
@@ -142,3 +142,5 @@ export function Sharing() {
     </div>
   )
 }
+
+export default Sharing

@@ -915,6 +915,8 @@ const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogi
 const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan'));
 const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback'));
 const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails'));
+const ForgetPassword = lazy(() => import('./Pages/Login-Part/ForgetPassword'));
+const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
 
 const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home'));
 const OutsourceInterviewerAdmin = lazy(() => import('./Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers'));
@@ -939,13 +941,13 @@ const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab
 const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
 const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
 const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const SettingsPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar'));
-const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile'));
-const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails'));
-const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage'));
-const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails'));
-const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails'));
-const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails'));
+const AccountSettingsSidebar = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
+const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
+const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
+const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));
+const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx'));
+const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx'));
+const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx'));
 const EditInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails'));
 const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser'));
 const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails'));
@@ -983,6 +985,7 @@ const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/Supp
 
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
+
   useEffect(() => {
     onLoadingChange(true);
     return () => onLoadingChange(false);
@@ -992,6 +995,7 @@ const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
 };
 
 const App = () => {
+
   const location = useLocation();
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
@@ -1077,6 +1081,9 @@ const App = () => {
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<CardDetails />} />
 
+            <Route path="/resetPassword" element={<ResetPassword />} />
+            <Route path="/forgetPassword" element={<ForgetPassword />} />
+
             <Route
               element={
                 <ProtectedRoute>
@@ -1140,8 +1147,10 @@ const App = () => {
                 <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
               </Route>
 
+              <Route path="/assessmenttest" element={<AssessmentTest />} />
+
               {/* Account Settings Routes */}
-              <Route path="/account-settings" element={<SettingsPage />}>
+              <Route path="/account-settings" element={<AccountSettingsSidebar />}>
                 <Route index element={
                   organization ? (
                     <>

@@ -1,7 +1,7 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+// import { XMarkIcon } from '@heroicons/react/24/outline'
 import { securitySettings } from '../mockData/securityData'
 
-export function Security() {
+function Security() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Security Settings</h2>
@@ -83,3 +83,5 @@ export function Security() {
     </div>
   )
 }
+
+export default Security;

@@ -49,14 +49,18 @@ exports.sendSignUpEmail = async (req, res) => {
 // this code will send email for forgot password and also organization new user creation then user can create there password from mail
 exports.forgotPasswordSendEmail = async (req, res) => {
     try {
+        console.log('req.body', req.body)
         const { email, type } = req.body;
+        console.log('email', email)
+        console.log('type', type)
         if (!email) {
             return res.status(400).json({ success: false, message: "Email is required" });
         }
 
         const user = await Users.findOne({ email });
+        console.log('user', user)
         if (!user) {
-            return res.status(404).json({ success: false, message: "Email not found" });
+            return res.status(404).json({ success: false, message: "user not found" });
         }
 
         // Generate a secure token

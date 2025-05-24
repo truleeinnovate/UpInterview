@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+// import { useState } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
-import { WalletBalancePopup } from './WalletBalancePopup'
-import { WalletTransactionPopup } from './WalletTransactionPopup'
+// import { WalletBalancePopup } from './WalletBalancePopup'
+// import { WalletTransactionPopup } from './WalletTransactionPopup'
 
-import axios from 'axios'
-import Cookies from "js-cookie";
+// import axios from 'axios'
+// import Cookies from "js-cookie";
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 
@@ -21,7 +21,7 @@ export const getTransactionTypeStyle = (type) => {
   }
 }
 
-export  const calculatePendingBalance = (walletBalance) => {
+export const calculatePendingBalance = (walletBalance) => {
   if (!walletBalance?.transactions) return 0;
   
   return walletBalance.transactions.reduce((total, transaction) => {
@@ -34,11 +34,11 @@ export  const calculatePendingBalance = (walletBalance) => {
 
 
 
-export function Wallet() {
+const Wallet = () => {
   const {walletBalance} = useCustomContext();
   const navigate = useNavigate();
   
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // const userId = Cookies.get("userId");
   // console.log("user", userId);
@@ -221,3 +221,5 @@ export function Wallet() {
     </>
   )
 }
+
+export default Wallet

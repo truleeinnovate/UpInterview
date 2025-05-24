@@ -4,7 +4,7 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
-export function DomainManagement() {
+const DomainManagement = () => {
   const [subdomain, setSubdomain] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [availability, setAvailability] = useState(null)
@@ -454,3 +454,5 @@ console.log("organizationId in subdomainmanagement", organizationId);
     </div>
   )
 }
+
+export default DomainManagement

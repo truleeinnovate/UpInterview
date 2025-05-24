@@ -14,9 +14,9 @@ import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
-import {Minimize,Expand,ChevronDown,X} from 'lucide-react';
+import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-
+import { useCandidates } from '../../../../apiHooks/useCandidates';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -131,13 +131,11 @@ const AddCandidateForm = ({ mode }) => {
     college,
     qualification,
     currentRole,
-    candidateData,
-    addOrUpdateCandidate
+    // candidateData,
+    // addOrUpdateCandidate
   } = useCustomContext();
 
-  //  const {
-  // addOrUpdateCandidate 
-  // } = useCustomContext(CandidateContext);
+  const { addOrUpdateCandidate, candidateData } = useCandidates();
 
   console.log("currentRole", currentRole);
 
@@ -528,35 +526,12 @@ const AddCandidateForm = ({ mode }) => {
     console.log('Submitting candidate data:', data);
 
     try {
-      // Create candidate
-      // const response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate/`, data);
-      // console.log('Candidate creation response:', response.data);
-
-      // const candidateId = response.data.data._id;
-      // console.log('New candidate created with ID:', candidateId);
-
-      // // Upload image if available
-      // if (file) {
-      //   console.log('Uploading candidate image...');
-      //   const imageData = new FormData();
-      //   imageData.append("image", file);
-      //   imageData.append("type", "candidate");
-      //   imageData.append("id", candidateId);
-
-      //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      //   console.log('Image upload completed successfully');
-      // }
-
-
+      // getting the API from the apihooks for add or update candidate (post or patch)
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
       // Reset form and close
       resetFormData();
       console.log('Form reset completed');
 
-      // Navigate to candidate list
-      // navigate('/candidate');
       console.log('Navigation to candidate list completed');
     } catch (error) {
       console.error('Failed to add candidate:', error);
@@ -621,39 +596,9 @@ const AddCandidateForm = ({ mode }) => {
 
     try {
       let candidateId;
-      let response;
+      // getting the API from the apihooks for add or update candidate (post or patch)
 
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
-
-      // if (id) {
-      //   // Update existing candidate
-      //   console.log('Updating existing candidate with ID:', id);
-      //   response = await axios.patch(
-      //     `${process.env.REACT_APP_API_URL}/candidate/${id}`,
-      //     data
-      //   );
-      // } else {
-      //   // Create new candidate
-      //   console.log('Creating new candidate...');
-      //   response = await axios.post(`${process.env.REACT_APP_API_URL}/candidate`, data);
-      // }
-
-      // console.log('API response:', response.data);
-      // candidateId = response.data.data._id;
-
-      // // Upload image if available
-      // if (file) {
-      //   console.log('Uploading candidate image...');
-      //   const imageData = new FormData();
-      //   imageData.append("image", file);
-      //   imageData.append("type", "candidate");
-      //   imageData.append("id", candidateId);
-
-      //   await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      //   console.log('Image upload completed successfully');
-      // }
 
       // Handle navigation based on mode
       switch (mode) {
@@ -1097,7 +1042,7 @@ const AddCandidateForm = ({ mode }) => {
 
 
               </div>
-                <p className='text-lg font-semibold col-span-2'>Skills Details</p>
+              <p className='text-lg font-semibold col-span-2'>Skills Details</p>
 
               <div>
                 <div className="flex justify-between items-center">

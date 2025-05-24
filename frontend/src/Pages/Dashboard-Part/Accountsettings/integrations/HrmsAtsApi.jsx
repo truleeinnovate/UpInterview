@@ -4,7 +4,7 @@ import { ViewDetailsButton, EditButton } from '../common/Buttons'
 import { SidePopup } from '../common/SidePopup'
 import { IntegrationFormPopup } from './IntegrationFormPopup'
 
-export function HrmsAtsApi() {
+const HrmsAtsApi = () => {
   const [selectedIntegration, setSelectedIntegration] = useState(null)
   const [editingIntegration, setEditingIntegration] = useState(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -273,3 +273,5 @@ export function HrmsAtsApi() {
     </div>
   )
 }
+
+export default HrmsAtsApi

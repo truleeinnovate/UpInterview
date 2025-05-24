@@ -2,7 +2,7 @@ import { BellIcon, CheckIcon, CreditCardIcon, ShieldCheckIcon } from '@heroicons
 import { recentNotifications,notificationPreferences } from '../mockData/notificationsData'
 
 
-export function NotificationsDetails() {
+const NotificationsDetails = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Notifications</h2>
@@ -68,3 +68,5 @@ export function NotificationsDetails() {
     </div>
   )
 }
+
+export default NotificationsDetails

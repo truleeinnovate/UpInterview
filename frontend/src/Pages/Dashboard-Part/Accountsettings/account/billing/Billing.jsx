@@ -4,7 +4,7 @@ import { CreditCardIcon } from '@heroicons/react/24/outline'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
 import { InvoicePopup } from './InvoicePopup'
 import { PaymentMethodPopup } from './PaymentMethodPopup'
-import { billingHistory,paymentMethods } from '../../mockData/billingData'
+import { paymentMethods } from '../../mockData/billingData'
 // import { invoices } from '../mockData/invoiceData'
 
 import axios from 'axios';
@@ -20,7 +20,7 @@ export  const formatDateTable = (date) => {
 };
 
 
-export function BillingDetails() {
+const BillingDetails = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [editingPaymentMethod, setEditingPaymentMethod] = useState(null)
   const [viewingPaymentMethod, setViewingPaymentMethod] = useState(null)
@@ -36,12 +36,10 @@ export function BillingDetails() {
         setBillingHistory(Sub_Invoice_data);
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        // setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [ownerId]);
 
   return (
     <div className="">
@@ -203,3 +201,5 @@ export function BillingDetails() {
     </div>
   )
 }
+
+export default BillingDetails

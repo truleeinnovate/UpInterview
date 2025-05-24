@@ -259,39 +259,39 @@ const CustomProvider = ({ children }) => {
   //   },
   // });
 
-  // position fetch
-  const sharingPermissionsPosition = useMemo(
-    () => sharingPermissionscontext.position || {},
-    [sharingPermissionscontext]
-  );
+  // // position fetch
+  // const sharingPermissionsPosition = useMemo(
+  //   () => sharingPermissionscontext.position || {},
+  //   [sharingPermissionscontext]
+  // );
 
-  // 📦 Positions Query
-  const {
-    data: positions = [],
-    isLoading: isPositionsLoading,
-    // refetch: refetchPositionData
-  } = useQuery({
-    queryKey: ['positions', sharingPermissionsPosition],
-    queryFn: async () => {
-      const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
-      return filteredPositions.reverse(); // Latest first
-    },
-    enabled: !!sharingPermissionsPosition,
-  });
+  // // 📦 Positions Query
+  // const {
+  //   data: positions = [],
+  //   isLoading: isPositionsLoading,
+  //   // refetch: refetchPositionData
+  // } = useQuery({
+  //   queryKey: ['positions', sharingPermissionsPosition],
+  //   queryFn: async () => {
+  //     const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
+  //     return filteredPositions.reverse(); // Latest first
+  //   },
+  //   enabled: !!sharingPermissionsPosition,
+  // });
 
-  // Add position mutation
-  const addOrUpdatePosition = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const url = id ? `${config.REACT_APP_API_URL}/position/${id}` : `${config.REACT_APP_API_URL}/position`;
+  // // Add position mutation
+  // const addOrUpdatePosition = useMutation({
+  //   mutationFn: async ({ id, data }) => {
+  //     const url = id ? `${config.REACT_APP_API_URL}/position/${id}` : `${config.REACT_APP_API_URL}/position`;
 
-      const method = id ? 'patch' : 'post';
-      const response = await axios[method](url, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['positions']);
-    },
-  });
+  //     const method = id ? 'patch' : 'post';
+  //     const response = await axios[method](url, data);
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries(['positions']);
+  //   },
+  // });
 
   // Mockinterview
   const sharingPermissionsMock = useMemo(
@@ -817,10 +817,10 @@ const CustomProvider = ({ children }) => {
         // candidatesLoading,
         // addOrUpdateCandidate,
 
-        // position
-        positions,
-        isPositionsLoading,
-        addOrUpdatePosition,
+        // // position
+        // positions,
+        // isPositionsLoading,
+        // addOrUpdatePosition,
 
         // mockinterview
         mockinterviewData,

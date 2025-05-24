@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Cookies from "js-cookie";
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import BasicDetailsTab from './BasicDetails/BasicDetails'
 import AdvancedDetails from './AdvancedDetails/AdvacedDetails';
 import InterviewUserDetails from './InterviewDetails/InterviewDetails'
 import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser'
-import SidebarProfile from '../Sidebar';
-import { navigation } from '../../mockData/navigationData';
+// import SidebarProfile from '../Sidebar';
+// import { navigation } from '../../mockData/navigationData';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
-export function MyProfile() {
+const MyProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -23,7 +23,7 @@ export function MyProfile() {
 
   const userId = tokenPayload.userId;
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isEditMode = location.pathname.includes('-edit');
   const [isFreelancer, setIsFreelancer] = useState(false);
   const [roleName, setRoleName] = useState("");
@@ -97,11 +97,11 @@ export function MyProfile() {
     if (!validSubtabs.includes(subtab)) {
       navigate('/account-settings/my-profile/basic', { replace: true });
     }
-  }, [subtab, navigate]);
+  }, [subtab, navigate, isFreelancer, roleName]);
 
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
-  }, []);
+  // const toggleSidebar = useCallback(() => {
+  //   setIsSidebarOpen((prev) => !prev);
+  // }, []);
 
 
 
@@ -190,3 +190,5 @@ export function MyProfile() {
     </div>
   )
 }
+
+export default MyProfile;
