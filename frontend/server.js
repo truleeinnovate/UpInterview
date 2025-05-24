@@ -10,7 +10,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
-
+ 
 console.log('frontend server.js process.env.PORT :', process.env.PORT)
 
 // Use the PORT environment variable provided by Azure
