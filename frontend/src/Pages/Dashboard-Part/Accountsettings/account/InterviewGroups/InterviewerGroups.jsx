@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react'
+// import { useState } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
-import { SidePopup } from '../../common/SidePopup'
-import { InterviewerGroupFormPopup } from './InterviewerGroupFormPopup'
-import { teamMembers } from '../../mockData/teamData'
+// import { SidePopup } from '../../common/SidePopup'
+// import { InterviewerGroupFormPopup } from './InterviewerGroupFormPopup'
+// import { teamMembers } from '../../mockData/teamData'
 import { useCustomContext } from '../../../../../Context/Contextfetch'
-import axios from 'axios'
+// import axios from 'axios'
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from 'react-router-dom'
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
-export function InterviewerGroups() {
+const InterviewerGroups = () => {
   const { groups } = useCustomContext();
   const navigate = useNavigate();
-  const [selectedGroup, setSelectedGroup] = useState(null)
-  const [editingGroup, setEditingGroup] = useState(null)
-  const [isCreating, setIsCreating] = useState(false)
+  // const [selectedGroup, setSelectedGroup] = useState(null)
+  // const [editingGroup, setEditingGroup] = useState(null)
+  // const [isCreating, setIsCreating] = useState(false)
   // const [groups, setGroups] = useState([
   //   {
   //     id: 1,
@@ -38,7 +38,7 @@ export function InterviewerGroups() {
   //     status: 'active'
   //   }
   // ])
-  const [groupsData, setGroupsData] = useState([])
+  // const [groupsData, setGroupsData] = useState([])
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -65,17 +65,17 @@ export function InterviewerGroups() {
   //   fetchGroups()
   // }, [])
 
-  const handleSaveGroup = (groupData) => {
-    if (editingGroup) {
-      // setGroups(prev => prev.map(group => 
-      //   group.id === editingGroup.id ? { ...group, ...groupData } : group
-      // ))
-      setEditingGroup(null)
-    } else {
-      // setGroups(prev => [...prev, { ...groupData, id: prev.length + 1 }])
-      setIsCreating(false)
-    }
-  }
+  // const handleSaveGroup = (groupData) => {
+  //   if (editingGroup) {
+  //     // setGroups(prev => prev.map(group => 
+  //     //   group.id === editingGroup.id ? { ...group, ...groupData } : group
+  //     // ))
+  //     setEditingGroup(null)
+  //   } else {
+  //     // setGroups(prev => [...prev, { ...groupData, id: prev.length + 1 }])
+  //     // setIsCreating(false)
+  //   }
+  // }
 
   return (
     <>
@@ -163,3 +163,5 @@ export function InterviewerGroups() {
     </>
   )
 }
+
+export default InterviewerGroups

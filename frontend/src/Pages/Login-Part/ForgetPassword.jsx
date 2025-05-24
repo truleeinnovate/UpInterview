@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Lock } from 'lucide-react';
+import { config } from '../../config';
 
 const ForgotPassword = () => {
-  const [Email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -10,10 +11,10 @@ const ForgotPassword = () => {
     e.preventDefault();
     setMessage(""); // Clear previous messages
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/emailCommon/forgot-password`, {
+      const response = await fetch(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Email }),
+        body: JSON.stringify({ email }),
       });
   
       const data = await response.json();
@@ -62,7 +63,7 @@ const ForgotPassword = () => {
                   required
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your email"
-                  value={Email}
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>

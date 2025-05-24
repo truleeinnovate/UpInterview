@@ -3,13 +3,13 @@ import { CheckIcon, ArrowDownIcon } from '@heroicons/react/24/outline'
 import axios from 'axios';
 import Cookies from 'js-cookie'
 import { EditButton } from './Buttons'
-import { RoleFormPopup } from './RoleFormPopup';
+// import { RoleFormPopup } from './RoleFormPopup';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
-export function Role() {
-  const [editingRole, setEditingRole] = useState(null)
-  const [isCreating, setIsCreating] = useState(false)
+const Role = () => {
+  // const [editingRole, setEditingRole] = useState(null)
+  // const [isCreating, setIsCreating] = useState(false)
   const [roles, setRoles] = useState([])
    const navigate = useNavigate();
   const authToken = Cookies.get("authToken");
@@ -33,19 +33,19 @@ console.log("tenantId in role", tenantId);
     fetchRoles();
   }, [tenantId]);
 
-  const handleCreateRole = (newRole) => {
-    console.log('Create new role:', newRole)
-    setIsCreating(false)
-    // Refresh roles after creating
-    // fetchRoles();
-  }
+  // const handleCreateRole = (newRole) => {
+  //   console.log('Create new role:', newRole)
+  //   setIsCreating(false)
+  //   // Refresh roles after creating
+  //   // fetchRoles();
+  // }
 
-  const handleEditRole = (updatedRole) => {
-    console.log('Update role:', updatedRole)
-    setEditingRole(null)
-    // Refresh roles after updating
-    // fetchRoles();
-  }
+  // const handleEditRole = (updatedRole) => {
+  //   console.log('Update role:', updatedRole)
+  //   setEditingRole(null)
+  //   // Refresh roles after updating
+  //   // fetchRoles();
+  // }
 
   // const fetchRoles = async () => {
   //   try {
@@ -208,3 +208,5 @@ console.log("tenantId in role", tenantId);
     </>
   )
 }
+
+export default Role

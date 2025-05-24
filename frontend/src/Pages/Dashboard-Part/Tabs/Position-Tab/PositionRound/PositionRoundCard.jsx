@@ -23,6 +23,7 @@ import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates';
+import { usePositions } from '../../../../../apiHooks/usePositions';
 
 const PositionRoundCard = ({
   round,
@@ -33,14 +34,16 @@ const PositionRoundCard = ({
   hideHeader = false
 }) => {
 
+  const { addOrUpdateRound } = usePositions();
+
     const {
-      assessmentData,
-      loading,
+      // assessmentData,
+      // loading,
        sectionQuestions,
-      questionsLoading,
-      questionsError,
+      // questionsLoading,
+      // questionsError,
       fetchQuestionsForAssessment,
-      setSectionQuestions,
+      // setSectionQuestions,
     } = useCustomContext();
 
   const { resolveInterviewerDetails } = useInterviewerDetails();
@@ -59,106 +62,11 @@ const PositionRoundCard = ({
   const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
 
   console.log("resolveInterviewerDetails", resolveInterviewerDetails());
-  
-
-  // const fetchQuestionsForAssessment = async (assessmentId) => {
-
-  //   if (!assessmentId) {
-  //     return null;
-  //   }
-  //   setLoadingQuestions(true);
-
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-  //     const assessmentQuestions = response.data;
-
-  //     // console.log('Full assessment questions structure:', assessmentQuestions);
-
-  //     // Extract sections directly from the response
-  //     const sections = assessmentQuestions.sections || [];
-
-  //     // Check for empty sections or questions
-  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-  //       console.warn('No sections or questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Create section questions mapping with all section data
-  //     const newSectionQuestions = {};
-
-  //     sections.forEach((section) => {
-  //       if (!section._id) {
-  //         console.warn('Section missing _id:', section);
-  //         return;
-  //       }
-
-  //       // Store complete section data including sectionName, passScore, totalScore
-  //       newSectionQuestions[section._id] = {
-  //         sectionName: section?.sectionName,
-  //         passScore: Number(section.passScore || 0),
-  //         totalScore: Number(section.totalScore || 0),
-  //         questions: (section.questions || []).map(q => ({
-  //           _id: q._id,
-  //           questionId: q.questionId,
-  //           source: q.source || 'system',
-  //           score: Number(q.score || q.snapshot?.score || 0),
-  //           order: q.order || 0,
-  //           customizations: q.customizations || null,
-  //           snapshot: {
-  //             questionText: q.snapshot?.questionText || '',
-  //             questionType: q.snapshot?.questionType || '',
-  //             score: Number(q.snapshot?.score || q.score || 0),
-  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-  //             correctAnswer: q.snapshot?.correctAnswer || '',
-  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
-  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-  //             questionNo: q.snapshot?.questionNo || ''
-  //           }
-  //         }))
-  //       };
-  //     });
-
-  //     // Verify that at least one section has questions
-  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-  //     if (!hasQuestions) {
-  //       console.warn('No sections with questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Set the section questions state
-  //     setSectionQuestions(newSectionQuestions);
-  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   } finally {
-  //     setLoadingQuestions(false);
-  //   }
-  // };
 
 
   useEffect(() => {
     fetchQuestionsForAssessment(round.assessmentId)
   }, [round.assessmentId])
-
-
-
-  // const toggleSection = async (sectionId) => {
-  //   setExpandedSections(prev => ({
-  //     ...prev,
-  //     [sectionId]: !prev[sectionId]
-  //   }));
-
-  //   // Fetch questions if the section is being expanded and questions are not already loaded
-  //   if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-  //     await fetchQuestionsForAssessment(round?.assessmentId);
-  //   }
-  // };
 
   const toggleSection = async (sectionId) => {
     // First close all questions in this section if we're collapsing
@@ -224,14 +132,21 @@ const PositionRoundCard = ({
     };
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
-        payload
-      );
-      console.log("Status updated:", response.data);
-      // Show success toast
-      toast.success(`Round status updated to ${newStatus}`, {
+      // const response = await axios.post(
+      //   `${process.env.REACT_APP_API_URL}/interview/save-round`,
+      //   payload
+      // );
+      // console.log("Status updated:", response.data);
+      // // Show success toast
+      // toast.success(`Round status updated to ${newStatus}`, {
+      // });
+      await addOrUpdateRound.mutateAsync({
+        positionId: interview.positionId,
+        round: roundData,
+        roundId: round._id
       });
+      
+      toast.success(`Round status updated to ${newStatus}`);
     } catch (error) {
       console.error("Error updating status:", error);
     }

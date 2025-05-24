@@ -2,18 +2,18 @@ import { CheckIcon } from '@heroicons/react/24/outline'
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 // import { useCustomContext } from "../../../Context/Contextfetch";
 import { useLocation } from "react-router-dom";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
-export function Subscription() {
+function Subscription() {
   // const currentPlan = subscriptionPlans.find(plan => plan.id === currentSubscription.planId);
 
     const location = useLocation();
-    const isUpgrading = location.state?.isUpgrading || false;
+    // const isUpgrading = location.state?.isUpgrading || false;
   
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
@@ -22,24 +22,23 @@ export function Subscription() {
     const organization = tokenPayload.organization;
   
   
-    const [isAnnual, setIsAnnual] = useState(false);
+    const [isAnnual] = useState(false);
     const [plans, setPlans] = useState([]);
   
-    const [hoveredPlan, setHoveredPlan] = useState(null);
+    // const [hoveredPlan] = useState(null);
     const [user] = useState({
       userType: organization === "true" ? "organization" : "individual",
       tenantId: orgId,
       ownerId: userId
     });
 
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
   
-    const toggleBilling = () => setIsAnnual(!isAnnual);
+    // const toggleBilling = () => setIsAnnual(!isAnnual);
     const [currentPlan, setcurrentPlan] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     // this will check that that plans is already set or not
 
-    
     useEffect(() => {
       const fetchData = async () => {
         try {
@@ -54,15 +53,13 @@ export function Subscription() {
           }
         } catch (error) {
           console.error('Error fetching data:', error);
-        } finally {
-          setLoading(false);
         }
       };
   
       if (userId) {
         fetchData();
       }
-    }, [userId]);
+    }, [userId, user.ownerId]);
   
   
     useEffect(() => {
@@ -142,74 +139,74 @@ export function Subscription() {
     }, [user.userType, location.pathname]);
   
   
-    const submitPlans = async (plan) => {
+    // const submitPlans = async (plan) => {
   
-      if (!plan) {
-        toast.success("No plan is selected");
-        return;
-      }
-      const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+    //   if (!plan) {
+    //     toast.success("No plan is selected");
+    //     return;
+    //   }
+    //   const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
   
-      const payload = {
-        planDetails: {
-          subscriptionPlanId: plan.planId,
-          monthlyPrice: plan.monthlyPrice,
-          annualPrice: plan.annualPrice,
-          monthDiscount: plan.monthlyDiscount,
-          annualDiscount: plan.annualDiscount,
-        },
-        userDetails: {
-          tenantId: user.tenantId,
-          ownerId: user.ownerId,
-          userType: user.userType,
-          membershipType: isAnnual ? "annual" : "monthly",
-        },
-        totalAmount,
-        status: "pending",
-      };
+    //   const payload = {
+    //     planDetails: {
+    //       subscriptionPlanId: plan.planId,
+    //       monthlyPrice: plan.monthlyPrice,
+    //       annualPrice: plan.annualPrice,
+    //       monthDiscount: plan.monthlyDiscount,
+    //       annualDiscount: plan.annualDiscount,
+    //     },
+    //     userDetails: {
+    //       tenantId: user.tenantId,
+    //       ownerId: user.ownerId,
+    //       userType: user.userType,
+    //       membershipType: isAnnual ? "annual" : "monthly",
+    //     },
+    //     totalAmount,
+    //     status: "pending",
+    //   };
   
-      try {
-        const subscriptionResponse = await axios.post(
-          `${process.env.REACT_APP_API_URL}/create-customer-subscription`,
-          payload
-        );
+    //   try {
+    //     const subscriptionResponse = await axios.post(
+    //       `${process.env.REACT_APP_API_URL}/create-customer-subscription`,
+    //       payload
+    //     );
   
-        console.log(
-          "Payment and Subscription submitted successfully",
-          subscriptionResponse.data
-        );
-        console.log(organization, plan.name, "organization");
-        if ((organization === "false" || !organization) && plan.name === "Base") {
-          await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/free`, {
-            ownerId: user.ownerId,
-            tenantId: user.tenantId,
-          });
+    //     console.log(
+    //       "Payment and Subscription submitted successfully",
+    //       subscriptionResponse.data
+    //     );
+    //     console.log(organization, plan.name, "organization");
+    //     if ((organization === "false" || !organization) && plan.name === "Base") {
+    //       await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/free`, {
+    //         ownerId: user.ownerId,
+    //         tenantId: user.tenantId,
+    //       });
   
-          // If upgrading, navigate to a specific page; otherwise, go to home
-          navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
-        } else {
-          navigate("/payment-details", {
-            state: {
-              plan: {
-                ...plan,
-                billingCycle: isAnnual ? "annual" : "monthly",
-                user,
-                invoiceId: subscriptionResponse?.data?.invoiceId,
-              },
-              isUpgrading, // Pass the upgrading flag to next page if needed
-            },
-          });
-        }
+    //       // If upgrading, navigate to a specific page; otherwise, go to home
+    //       navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
+    //     } else {
+    //       navigate("/payment-details", {
+    //         state: {
+    //           plan: {
+    //             ...plan,
+    //             billingCycle: isAnnual ? "annual" : "monthly",
+    //             user,
+    //             invoiceId: subscriptionResponse?.data?.invoiceId,
+    //           },
+    //           isUpgrading, // Pass the upgrading flag to next page if needed
+    //         },
+    //       });
+    //     }
   
   
-      } catch (error) {
-        console.error("Error submitting subscription:", error);
-      }
+    //   } catch (error) {
+    //     console.error("Error submitting subscription:", error);
+    //   }
   
-    };
+    // };
   
-    const isHighlighted = (plan) =>
-      hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
+    // const isHighlighted = (plan) =>
+    //   hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
   
     console.log("setPlans", plans);
     
@@ -353,3 +350,5 @@ export function Subscription() {
     </div>
   )
 }
+
+export default Subscription;

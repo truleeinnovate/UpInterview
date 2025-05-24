@@ -6,7 +6,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import SidebarProfile from './account/Sidebar'
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode';
 
-function SettingsPage() {
+const AccountSettingsSidebar = () => {
   // const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -153,4 +153,5 @@ useEffect(() => {
   )
 }
 
-export default SettingsPage
+// Export as default to ensure compatibility with lazy loading
+export default AccountSettingsSidebar;

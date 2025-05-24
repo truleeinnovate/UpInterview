@@ -3,6 +3,7 @@ import { Lock, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 const ResetPassword = () => {
+  console.log("ResetPassword");
   const location = useLocation();
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

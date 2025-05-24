@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import maleImage from "../../../Dashboard-Part/Images/man.png";
 import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';

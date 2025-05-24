@@ -9,7 +9,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 
-export function CompanyProfile() {
+const CompanyProfile = () => {
 
     const {
       organizationsLoading,
@@ -164,5 +164,7 @@ export function CompanyProfile() {
       </div>
       <Outlet />
     </>
-  )
+  );
 }
+
+export default CompanyProfile;

@@ -18,6 +18,7 @@ import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
+import { usePositions } from '../../../../../apiHooks/usePositions.js';
 
 
 function RoundFormPosition() {
@@ -35,6 +36,8 @@ function RoundFormPosition() {
 
   const positionId = id;
 
+  const { addOrUpdateRound, usePositionDetails } = usePositions();
+  const { data: positions } = usePositionDetails(positionId);
 
   // Get user token information
     const tokenPayload = decodeJwt(Cookies.get('authToken'));
@@ -170,30 +173,14 @@ function RoundFormPosition() {
     const fetchPositionData = async () => {
       try {
         if (isPositionContext && positionId) {
-          // Fetch position details from API
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/position/details/${positionId}`,
-            {
-              params: {
-                tenantId: tenantId
-              }
-            }
-          );
-
-          const foundPosition = response.data;
-
-          if (!foundPosition) {
-            setError('Position not found');
-            return;
-          }
 
           // Only update rounds if they're different to prevent unnecessary re-renders
-          setPosition(foundPosition || []);
-          setRounds(foundPosition.rounds || [])
+          setPosition(positions || []);
+          setRounds(positions.rounds || []);
 
           if (isEditing && roundId) {
             // Add safety check for foundPosition.rounds
-            const roundEditData = foundPosition.rounds?.find(r => r._id === roundId);
+            const roundEditData = positions.rounds?.find(r => r._id === roundId);
 
             if (!roundEditData) {
               setError('Round not found');
@@ -240,8 +227,8 @@ function RoundFormPosition() {
             }
           } else {
             // For new round, set the sequence to be after the last round
-            const maxSequence = foundPosition.rounds?.length > 0
-              ? Math.max(...foundPosition.rounds.map(r => r.sequence))
+            const maxSequence = positions.rounds?.length > 0
+              ? Math.max(...positions.rounds.map(r => r.sequence))
               : 0;
             setFormData(prev => ({ ...prev, sequence: maxSequence + 1 }));
           }
@@ -257,84 +244,6 @@ function RoundFormPosition() {
       fetchPositionData();
     }
   }, [isPositionContext, positionId, isEditing, roundId, tenantId, assessmentData]); // Removed problematic dependencies
-
-
-  // const fetchQuestionsForSection = async (assessmentId) => {
-
-  //   if (!assessmentId) {
-  //     return null;
-  //   }
-
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-  //     const assessmentQuestions = response.data;
-
-  //     const sections = assessmentQuestions.sections || [];
-
-  //     // console.log("assessmentQuestions.sections", assessmentQuestions.sections);
-
-
-  //     // Check for empty sections or questions
-  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-  //       console.warn('No sections or questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Create section questions mapping with all section data
-  //     const newSectionQuestions = {};
-
-  //     sections.forEach((section) => {
-  //       if (!section._id) {
-  //         console.warn('Section missing _id:', section);
-  //         return;
-  //       }
-
-  //       // Store complete section data including sectionName, passScore, totalScore
-  //       newSectionQuestions[section._id] = {
-  //         sectionName: section?.sectionName,
-  //         passScore: Number(section.passScore || 0),
-  //         totalScore: Number(section.totalScore || 0),
-  //         questions: (section.questions || []).map(q => ({
-  //           _id: q._id,
-  //           questionId: q.questionId,
-  //           source: q.source || 'system',
-  //           score: Number(q.score || q.snapshot?.score || 0),
-  //           order: q.order || 0,
-  //           customizations: q.customizations || null,
-  //           snapshot: {
-  //             questionText: q.snapshot?.questionText || '',
-  //             questionType: q.snapshot?.questionType || '',
-  //             score: Number(q.snapshot?.score || q.score || 0),
-  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-  //             correctAnswer: q.snapshot?.correctAnswer || '',
-  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
-  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-  //             questionNo: q.snapshot?.questionNo || ''
-  //           }
-  //         }))
-  //       };
-  //     });
-
-  //     // Verify that at least one section has questions
-  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-  //     if (!hasQuestions) {
-  //       console.warn('No sections with questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Set the section questions state
-  //     setSectionQuestions(newSectionQuestions);
-  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   }
-  // };
 
   const toggleSection = async (sectionId) => {
     setExpandedSections(prev => ({
@@ -555,67 +464,14 @@ function RoundFormPosition() {
     };
 
     try {
-      // Include roundId only if editing
-      const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData }
 
-      // console.log("payload roundData1", payload);
-
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/position/add-rounds`,
-        payload
-      );
-      // console.log("response", response.data);
-
-      if (response.status === 201 || response.status === 200) {
-        navigate(`/position/view-details/${positionId}`)
-      }
-
-
-      // const preparingTeamRequestBody = {
-      //   name: `Interview with ${candidate}-${candidate._id.slice(-5, -1)} for the position of ${position._id}`,
-      //   description: "description",
-      //   owner: userId,
-      //   createdBy: userId,
-      // };
-
-      // const teamResponse = await axios.post(`${process.env.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
-
-      // if (selectedInterviewers && selectedInterviewers.length > 0) {
-      //   const interviewerObjects = selectedInterviewers.map(id => ({
-      //     id: id._id,
-      //     status: "inprogress"
-      //   }));
-      //   const outsourceRequestData = {
-      //     tenantId: orgId,
-      //     ownerId: userId,
-      //     scheduledInterviewId: interviewId,
-      //     interviewerType: selectedInterviewType,
-      //     interviewerIds: interviewerObjects, // Fixed mapping here
-      //     dateTime: combinedDateTime,
-      //     duration,
-      //     candidateId: candidate?._id,
-      //     positionId: position?._id,
-      //     status: "inprogress",
-      //     roundNumber: sequence,
-      //     requestMessage: "Outsource interview request",
-      //     expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      //   };
-
-      //   await axios.post(
-      //     `${process.env.REACT_APP_API_URL}/interviewrequest`,
-      //     outsourceRequestData
-      //   );
-      // }
-
-
-      // setStatus((prevStatus) => {
-      //   const newStatus = [...prevStatus];
-      //   newStatus = "Request Sent";
-      //   return newStatus;
-      // });
-
-      // navigate(`/interviews/${interviewId}`);
-
+        await addOrUpdateRound.mutateAsync({
+          positionId,
+          round: roundData,
+          roundId: isEditing ? roundId : null
+        });
+        
+        navigate(`/position/view-details/${positionId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import img1 from '../Dashboard-Part/Images/slideshow1.png';
-import img2 from '../Dashboard-Part/Images/slideshow2.png';
+import img1 from '../Dashboard-Part/Images/slideshow1.webp';
+import img2 from '../Dashboard-Part/Images/slideshow2.webp';
 import img3 from '../Dashboard-Part/Images/slideshow3.webp';
 
 const images = [img1, img2, img3];

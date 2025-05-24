@@ -18,6 +18,7 @@ import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { ReactComponent as LuFilter } from '../../../../icons/LuFilter.svg';
 import { Button } from '../CommonCode-AllTabs/ui/button';
 import Loading from '../../../../Components/Loading';
+import { usePositions } from '../../../../apiHooks/usePositions';
 
 export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -262,11 +263,16 @@ export const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 };
 
 const PositionTab = () => {
-  const {
-    isPositionsLoading,
+  // const {
+  //   isPositionsLoading,
+  //   positions,
+  //   // fetchPositionsData
+  // } = useCustomContext();
+  const { 
     positions,
-    // fetchPositionsData
-  } = useCustomContext();
+    isPositionsLoading 
+  } = usePositions();
+  console.log('getting the data from the usepositions : ', positions);
   const navigate = useNavigate();
   const [view, setView] = useState('table');
   const [selectedPosition, setSelectedPosition] = useState(null);
