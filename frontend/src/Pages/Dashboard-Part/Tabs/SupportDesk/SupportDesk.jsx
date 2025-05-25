@@ -15,6 +15,7 @@ import TableView from './TableView';
 import KanbanView from './KanbanView';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
+import { config } from '../../../../config.js';
 
 const OffcanvasMenu = ({ userRole, isOpen, onFilterChange, closeOffcanvas, currentUserId }) => {
   const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -414,13 +415,13 @@ function SupportDesk() {
   const getTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const url = `${process.env.REACT_APP_API_URL}/get-tickets`;
+      const url = `${config.REACT_APP_API_URL}/get-tickets`;
       const response = await axios.get(url);
 
       if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
         setTickets(response.data.tickets);
       } else if (userRole === 'Admin' && currentOrganizationId) {
-        const filteredTickets = response.data.tickets.filter((ticket) => ticket.owner === currentOrganizationId);
+        const filteredTickets = response.data.tickets.filter((ticket) => ticket.tenantId === currentOrganizationId);
         setTickets(filteredTickets);
       } else if (currentUserId) {
         const filteredTickets = response.data.tickets.filter((ticket) => ticket.assignedToId === currentUserId);
