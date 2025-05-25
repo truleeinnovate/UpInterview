@@ -13,8 +13,6 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import { usePositions } from '../../../../apiHooks/usePositions.js';
-
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
   label,
@@ -246,9 +244,12 @@ const CustomDropdown = ({
 // };
 
 const PositionForm = ({ mode }) => {
-  const { id } = useParams();
-  const { addOrUpdatePosition } = usePositions();
+  const { id, } = useParams();
   const location = useLocation();
+  const {
+    addOrUpdatePosition
+
+  } = useCustomContext();
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
@@ -563,7 +564,21 @@ const PositionForm = ({ mode }) => {
 
 
     try {
-      // addOrUpdatePosition is a mutation function taking id and data as parameters from the usePositions hook
+      // let response;
+      // if (isEdit && positionId) {
+      //   response = await axios.patch(
+      //     `${process.env.REACT_APP_API_URL}/position/${positionId}`,
+      //     basicdetails
+      //   );
+
+
+      // } else {
+      //   response = await axios.post(
+      //     `${process.env.REACT_APP_API_URL}/position`,
+      //     basicdetails
+      //   );
+      //   setPositionId(response.data.data._id);
+      // }
       const response = await addOrUpdatePosition.mutateAsync({
         id: id || null,
         data: basicdetails

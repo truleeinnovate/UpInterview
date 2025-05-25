@@ -13,25 +13,27 @@ import {
   Users
 } from 'lucide-react';
 import Modal from 'react-modal';
+import { useCustomContext } from '../../../../Context/Contextfetch';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
+import axios from 'axios';
+import Cookies from "js-cookie";
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
-import { usePositions } from '../../../../apiHooks/usePositions';
 
 
 Modal.setAppElement('#root');
 
 const PositionSlideDetails = () => {
   const { id } = useParams();
-  const { usePositionDetails } = usePositions();
-  console.log('usePositionDetails in details', usePositionDetails(id));
-  const { data: positions } = usePositionDetails(id);
-  console.log('positions', positions);
-  const [position, setPosition] = useState(null);
+  const {
+    positions,
+  } = useCustomContext();
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState('vertical');
+  const [position, setPosition] = useState(null);
   const [activeTab, setActiveTab] = useState('Details');
 
   // Count internal and external interviewers across all rounds
@@ -42,19 +44,33 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // const authToken = Cookies.get("authToken");
-  // const tokenPayload = decodeJwt(authToken);
-  // const userId = tokenPayload?.userId;
-  // const tenantId = tokenPayload?.tenantId;
-
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
 
   useEffect(() => {
-    if (positions) {
-      setPosition(positions || []);
-      setRounds(positions.rounds || []);
-      setActiveRound(positions.rounds[0]?._id);
-    }
-  }, [positions]);
+    const fetchPosition = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`, {
+          params: {
+            tenantId: tenantId
+          }
+        });
+
+        const foundPosition = response.data;
+
+        if (foundPosition) {
+          setPosition(foundPosition || []);
+          setRounds(foundPosition.rounds || []);
+          setActiveRound(foundPosition.rounds[0]?._id);
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
+      }
+    };
+    fetchPosition();
+  }, [id]);
 
   const handleAddRound = () => {
     navigate(`/position/view-details/${id}/rounds/new`);
@@ -90,7 +106,7 @@ const PositionSlideDetails = () => {
     { id: 'Activity', name: 'Activity', icon: '📊' }
   ];
 
-  if (!positions) return <div className='flex justify-center items-center h-full w-full'>Loading...</div>;
+  if (!position) return <div className='flex justify-center items-center h-full w-full'>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, Pencil } from 'lucide-react';
 import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 
-const PositionTable = ({ positions }) => {
+const PositionTable = ({ positions, isMenuOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollContainerRef = useRef(null);
@@ -26,10 +26,10 @@ const PositionTable = ({ positions }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenuIndex]);
 
-  // const toggleMenu = (e, index) => {
-  //   e.stopPropagation();
-  //   setOpenMenuIndex(openMenuIndex === index ? null : index);
-  // };
+  const toggleMenu = (e, index) => {
+    e.stopPropagation();
+    setOpenMenuIndex(openMenuIndex === index ? null : index);
+  };
 
   const handleMenuOpen = (index) => {
     setOpenMenuIndex(index);
@@ -61,7 +61,7 @@ const PositionTable = ({ positions }) => {
                     <tr>
                       <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">Title</th>
                       <th
-                        className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
+                       className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
                       >Company Name</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
                       >Location</th>
@@ -70,14 +70,14 @@ const PositionTable = ({ positions }) => {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
                       >Rounds</th>
                       {/* <th 
-                        className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort('Status')}
-                      >
-                        <div className="flex items-center gap-2">
-                          Status
-                          <FaSort className="w-4 h-4" />
-                        </div>
-                      </th> */}
+            className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+            onClick={() => handleSort('Status')}
+          >
+            <div className="flex items-center gap-2">
+              Status
+              <FaSort className="w-4 h-4" />
+            </div>
+          </th> */}
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
                       >Skills/Technology</th>
                       <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]"
@@ -89,15 +89,15 @@ const PositionTable = ({ positions }) => {
                     {positions.map((position, index) => position ?
                       (
                         <tr
-                          key={index}
+                         key={index} 
                           className={`hover:bg-gray-50 ${index === positions.length - 1 ? 'mb-6' : ''}`}
                         //  className="hover:bg-gray-50"
-                        >
+                         >
                           {/* Position Title column */}
-                          <td
-                            className="px-6 py-1 text-sm text-custom-blue cursor-pointer"
+                          <td 
+                          className="px-6 py-1 text-sm text-custom-blue cursor-pointer" 
                             onClick={() => navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } })}
-                          >{position?.title || 'N/A'}</td>
+                            >{position?.title || 'N/A'}</td>
 
                           <td className="px-4 py-2 text-sm text-gray-600"
                           >{position?.companyname || 'N/A'}</td>
