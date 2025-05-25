@@ -4,14 +4,14 @@ const SupportUser = require("../models/SupportUser")
 exports.createTicket = async(req,res)=>{
     try {
         console.log(req.body)
-        const {issueType,description,status,contact,priority,createdDate,owner,organization}=req.body 
+        const {issueType,description,status,contact,priority,ownerId,tenantId}=req.body 
         if (!issueType){
             return res.status(400).send({message:"Issue type is required"})
         }
         if (!description){
             return res.status(400).send({message:"Description is required"})
         }
-        const ticket = await SupportUser.create({issueType,description,status,contact,priority,createdDate,owner,organization})
+        const ticket = await SupportUser.create({issueType,description,status,contact,priority,ownerId,tenantId})
         return res.status(201).send({
             message:"Ticket created successfully",
             success:true,

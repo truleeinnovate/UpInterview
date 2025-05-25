@@ -4,16 +4,21 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
+import { toast } from "react-toastify";
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import Cookies from 'js-cookie';
 
 const maxDescriptionLen = 500;
 
 const SupportForm = () => {
+      const tokenPayload = decodeJwt(Cookies.get('authToken'));
+      const ownerId = tokenPayload?.userId;
+      const tenantId = tokenPayload?.tenantId;
   const navigate = useNavigate();
   const location = useLocation();
   const initialTicketData = location.state?.ticketData;
   const editMode = location.pathname.includes('/edit-ticket');
   const [isFullWidth, setIsFullWidth] = useState(false);
-  const ownerID = "67f77613588be9a9ef019765"; // this is the organization id of the current user for now we're using a userid in owner field  and this id used for getting and sending Admin tickets
 
   const issuesData = useMemo(() => [
     { id: 0, issue: "Payment" },
@@ -43,10 +48,10 @@ const SupportForm = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/users/${ownerID}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/users/${ownerId}`);
         setContact(response.data.Name);
 
-        const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/organization/${response.data.organizationId}`);
+        const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/organization/${response.data.tenantId}`);
         setOrganization(response2.data.Organization);
         
       } catch (error) {
@@ -115,8 +120,8 @@ const SupportForm = () => {
     file: file !== "No file selected" ? file : null,
     ...(editMode ? {} : {
       contact: "Anu",//this is the contact of the current user
-      organization: "IBM",//this is the organization of the current user
-      owner: ownerID //this is the owner of the ticket
+      tenantId,//this is the organization of the current user
+      ownerId,
     })
   }), [selectedIssue, otherIssue, description, file, editMode]);
 
@@ -131,7 +136,7 @@ const SupportForm = () => {
       
       const response = await axios[editMode ? 'patch' : 'post'](url, formData);
       
-      alert(response.data.message);
+      toast.success(response.data.message);
       
       if (response.data.success) {
         setFormState(initialFormState);
@@ -139,7 +144,7 @@ const SupportForm = () => {
       }
     } catch (error) {
       console.error(error);
-      alert(editMode 
+      toast.error(editMode 
         ? "Failed to update ticket. Please try again."
         : "Something went wrong while sending the ticket."
       );
