@@ -67,7 +67,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true, useUnifiedTopology: true

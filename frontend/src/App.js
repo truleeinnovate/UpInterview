@@ -928,7 +928,7 @@ const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candi
 const Position = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position'));
 const PositionForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form'));
 const PositionSlideDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails'));
-const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition'));
+const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx'));
 const MockInterview = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview'));
 const MockInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails'));
 const MockSchedulelater = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm'));
