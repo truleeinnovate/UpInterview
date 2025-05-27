@@ -8,8 +8,14 @@ import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm, validateEmail } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { useCustomContext } from "../../../../../Context/Contextfetch";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
+  const {usersRes, 
+    usersLoading, 
+    addOrUpdateUser, 
+    toggleUserStatus,
+    deleteUser} = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;
@@ -210,8 +216,8 @@ console.log("tenantId in userform", tenantId);
   );
 
   // Form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = (e) => {
+      e.preventDefault();
 
     if (isSubmitting) return; // Prevent multiple submissions
 
@@ -221,74 +227,93 @@ console.log("tenantId in userform", tenantId);
       setErrors(newErrors);
       return;
     }
+    setIsSubmitting(true);
 
-    setIsSubmitting(true); // Set loading state
-
-    try {
-      const payload = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        tenantId: userData.tenantId,
-        phone: userData.phone,
-        roleId: selectedCurrentRoleId,
-        countryCode: userData.countryCode,
-        isProfileCompleted: false,
-        editMode: editMode,
-        _id: editMode ? initialUserData._id : undefined
-      };
-
-      // Use the same endpoint for both create and edit
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/organization/new-user-Creation`,
-        {
-          UserData: { ...payload, roleId: selectedCurrentRoleId },
-          contactData: {
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            phone: userData.phone,
-            tenantId: userData.tenantId,
-            countryCode: userData.countryCode
-          }
-        }
-      );
-
-      if (file) {
-        const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "contact");
-        imageData.append("id", response.data.contactId);
-
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else if (!isImageUploaded && !filePreview && editMode) {
-        await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
-      }
-
-      // Send welcome email only for new user creation
-      if (!editMode) {
-        await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
-          email: userData.email,
-          type: "usercreatepass"
-        });
-      }
-
-      // Clear form and navigate on success
-      resetForm();
-      navigate('/users');
-      if (onDataAdded) onDataAdded();
-    } catch (error) {
-      console.error("Submission error:", error);
-      const errorMsg = error.response?.data?.message || "An error occurred";
-      setErrors(prev => ({ ...prev, form: errorMsg }));
-    } finally {
-      setIsSubmitting(false); // Reset loading state
-    }
+    addOrUpdateUser.mutate({ userData, file, editMode });
   };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (isSubmitting) return; // Prevent multiple submissions
+
+  //   // Form validation
+  //   const newErrors = validateUserForm(userData);
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true); // Set loading state
+
+  //   try {
+  //     const payload = {
+  //       firstName: userData.firstName,
+  //       lastName: userData.lastName,
+  //       email: userData.email,
+  //       tenantId: userData.tenantId,
+  //       phone: userData.phone,
+  //       roleId: selectedCurrentRoleId,
+  //       countryCode: userData.countryCode,
+  //       isProfileCompleted: false,
+  //       editMode: editMode,
+  //       _id: editMode ? initialUserData._id : undefined
+  //     };
+
+  //     // Use the same endpoint for both create and edit
+  //     const response = await axios.post(
+  //       `${process.env.REACT_APP_API_URL}/organization/new-user-Creation`,
+  //       {
+  //         UserData: { ...payload, roleId: selectedCurrentRoleId },
+  //         contactData: {
+  //           firstName: userData.firstName,
+  //           lastName: userData.lastName,
+  //           email: userData.email,
+  //           phone: userData.phone,
+  //           tenantId: userData.tenantId,
+  //           countryCode: userData.countryCode
+  //         }
+  //       }
+  //     );
+
+  //     if (file) {
+  //       const imageData = new FormData();
+  //       imageData.append("image", file);
+  //       imageData.append("type", "contact");
+  //       imageData.append("id", response.data.contactId);
+
+  //       await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       });
+  //     } else if (!isImageUploaded && !filePreview && editMode) {
+  //       await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
+  //     }
+
+  //     // Send welcome email only for new user creation
+  //     if (!editMode) {
+  //       await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
+  //         email: userData.email,
+  //         type: "usercreatepass"
+  //       });
+  //     }
+
+  //     // Clear form and navigate on success
+  //     resetForm();
+  //     navigate('/users');
+  //     if (onDataAdded) onDataAdded();
+  //   } catch (error) {
+  //     console.error("Submission error:", error);
+  //     const errorMsg = error.response?.data?.message || "An error occurred";
+  //     setErrors(prev => ({ ...prev, form: errorMsg }));
+  //   } finally {
+  //     setIsSubmitting(false); // Reset loading state
+  //   }
+  // };
 
   // Close handler
+  
+  
+  
+  
   const handleClose = () => {
     const isFormEmpty = Object.values(userData).every(
       val => !val || val === "+91"
@@ -536,7 +561,10 @@ console.log("tenantId in userform", tenantId);
           </div>
         </div>
         {showConfirmationPopup && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className=
+          "fixed inset-0  bg-gray-500 bg-opacity-50 flex justify-end items-center right-0 pr-44 z-50"
+          // " w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2 right-0 inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+          >
             <div className="bg-white p-6 rounded-lg shadow-xl">
               <p className="mb-4">Do you want to save changes before closing?</p>
               <div pinning="true" className="flex justify-end gap-3">

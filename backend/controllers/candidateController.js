@@ -258,11 +258,11 @@ const getCandidates = async (req, res) => {
   console.log('[getCandidates] Starting fetch');
   try {
     const { tenantId, ownerId } = req.query;
-    console.log('[getCandidates] Query params:', { tenantId, ownerId });
+    // console.log('[getCandidates] Query params:', { tenantId, ownerId });
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
-    console.log('[getCandidates] Mongo query:', query);
+    // console.log('[getCandidates] Mongo query:', query);
     const candidates = await Candidate.find(query);
-    console.log('[getCandidates] Candidates found:', candidates.length);
+    // console.log('[getCandidates] Candidates found:', candidates.length);
     res.json(candidates);
   } catch (error) {
     console.error('[getCandidates] Error:', error.message);
@@ -282,12 +282,12 @@ const getCandidateById = async (req, res) => {
     console.log("👉 [getCandidateById] Received ID:", id);
 
     if (!id) {
-      console.log("❌ [getCandidateById] No ID provided");
+      // console.log("❌ [getCandidateById] No ID provided");
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
     const candidate = await Candidate.findById(id);
-    console.log("✅ [getCandidateById] Candidate fetched:", candidate);
+    // console.log("✅ [getCandidateById] Candidate fetched:", candidate);
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
@@ -313,7 +313,7 @@ const getCandidateById = async (req, res) => {
       }
     ]);
 
-    console.log("📦 [getCandidateById] Candidate Positions:", candidatePositions);
+    // console.log("📦 [getCandidateById] Candidate Positions:", candidatePositions);
 
     const positionDetails = candidatePositions.map(pos => ({
       positionId: pos.positionId,

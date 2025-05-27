@@ -287,10 +287,15 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
 
     const subscriptionsWithPlanNames = customerSubscriptions.map((sub) => {
       const plan = subscriptionPlans.find((plan) => String(plan._id) === String(sub.subscriptionPlanId));
+      console.log("plan", plan);
+      
       return {
         ...sub,
+        ...plan,
         planName: plan ? plan.name : null,
-        Sub_Plan_features: plan.features
+        Sub_Plan_features: plan.features,
+        // maxUsers:plan.maxUsers || 0
+         maxUsers: plan?.maxUsers ?? 0,
       };
     });
 

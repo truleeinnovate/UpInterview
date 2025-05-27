@@ -904,6 +904,9 @@ import Loading from './Components/Loading';
 import { PermissionsProvider } from './Context/PermissionsContext';
 import { CustomProvider } from './Context/Contextfetch';
 import PageSetter from './Components/PageSetter';
+import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx';
+import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
+import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -953,7 +956,7 @@ const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettin
 const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails'));
 const CompanyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile'));
 const CompanyEditProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit'));
-const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing'));
+// const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing'));
 const Subscription = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription'));
 const Wallet = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet'));
 const WalletBalancePopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup'));
@@ -1166,6 +1169,8 @@ const App = () => {
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
+               
+               {/* my-profile */}
                 <Route path="my-profile" element={<MyProfile />}>
                   <Route index element={<Navigate to="basic" replace />} />
                   <Route path="basic" element={<BasicDetails />} />
@@ -1177,10 +1182,12 @@ const App = () => {
                   <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
                   <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
                 </Route>
+
                 <Route path="wallet" element={<Wallet />}>
                   <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
                   <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
                 </Route>
+                
                 {organization && (
                   <Route path="interviewer-groups" element={<InterviewerGroups />}>
                     <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
@@ -1197,7 +1204,25 @@ const App = () => {
                   </Route>
                 )}
                 <Route path="email-settings" element={<EmailTemplate />} />
-                <Route path="billing" element={<BillingDetails />} />
+                
+                
+                {/* BillingSubtabs */}
+                {/* <Route path="billing-details" element={<BillingSubtabs />} >
+                   <Route index element={<Navigate to="billing" replace />} />
+                    <Route path="billing" element={<BillingDetails />} />
+                  <Route path="invoice" element={<InvoiceDetails />} />
+                  <Route path="receipts" element={<ReceiptsTab />} />
+                  <Route path="payments" element={<PaymentDetailsTab />} />
+
+                </Route> */}
+                <Route path="billing-details" element={<BillingSubtabs />} >
+                 <Route index element={null} />
+                    <Route path="details/:id" element={<UserInvoiceDetails />} />
+                </Route>
+
+
+
+
                 <Route path="subscription" element={<Subscription />} />
                 <Route path="security" element={<Security />} />
                 <Route path="notifications" element={<NotificationsDetails />} />
@@ -1215,6 +1240,13 @@ const App = () => {
                   </>
                 )}
               </Route>
+
+              {/* Billing invoice  */}
+               <Route path="/billing" element={<InvoiceTab />} >
+                <Route index element={null} />
+                <Route path="details/:id" element={<UserInvoiceDetails />} />
+
+               </Route>
 
               {/* Interview Templates */}
               <Route path="/interview-templates" element={<InterviewTemplates />}>
