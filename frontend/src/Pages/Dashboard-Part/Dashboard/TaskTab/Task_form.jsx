@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { MdArrowDropDown } from "react-icons/md"; // Import the dropdown icon
+import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { fetchFilterData } from "../../../../utils/dataUtils";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
-import { IoArrowBack } from "react-icons/io5";
+import { ReactComponent as IoArrowBack } from '../../../../icons/IoArrowBack.svg';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 
 const TaskForm = ({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCustomContext } from '../../../Context/Contextfetch';
-import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
+import { ReactComponent as IoIosArrowUp } from "../../../icons/IoIosArrowUp.svg";
+import { ReactComponent as IoIosArrowDown } from "../../../icons/IoIosArrowDown.svg";
 
 export const FilterPopup = ({ 
   isOpen, 

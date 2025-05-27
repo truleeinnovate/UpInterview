@@ -5,6 +5,7 @@ import { MdOutlineCancel } from "react-icons/md";
 import { IoArrowBack } from "react-icons/io5";
 
 
+
 const TaskProfileDetails =  ({task, onClosetask}) => {
     const [showMainContent, setShowMainContent] = useState(true);
     useEffect(() => {

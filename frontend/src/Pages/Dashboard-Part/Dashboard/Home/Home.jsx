@@ -40,7 +40,6 @@
 // import { ReactComponent as BsBuildingCheck } from '../../../icons/BsBuildingCheck.svg';
 // import { ReactComponent as MdOutlineSchedule } from '../../../icons/MdOutlineSchedule.svg';
 // import { ReactComponent as FaArrowRightSvg } from '../../../icons/FaArrowRight.svg';
-// import { FaEllipsisV, FaSyncAlt } from "react-icons/fa";
 // // import { usePermissions } from "../../../Context/PermissionsContext.js";
 // import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 // import { useCustomContext } from "../../../Context/Contextfetch.js";

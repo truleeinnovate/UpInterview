@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import manImage from '../../../Images/man.png';
-import { IoIosArrowDown, IoIosArrowUp, IoIosArrowBack } from 'react-icons/io';
+import { ReactComponent as IoIosArrowBack } from '../../../../../icons/IoIosArrowBack.svg';
+import { ReactComponent as IoIosArrowUp } from '../../../../../icons/IoIosArrowUp.svg';
+import { ReactComponent as IoIosArrowDown } from '../../../../../icons/IoIosArrowDown.svg';
 
 function AssessmentResultView({ 
   candidate, 

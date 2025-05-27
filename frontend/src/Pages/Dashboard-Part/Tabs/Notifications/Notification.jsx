@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
-import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
+// import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
+// import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
 import { ReactComponent as FaArrowRight } from '../../../../icons/FaArrowRight.svg';
-import { ReactComponent as AiTwotoneSchedule } from '../../../../icons/AiTwotoneSchedule.svg';
-import { ReactComponent as PiNotificationBold } from '../../../../icons/PiNotificationBold.svg';
+// import { ReactComponent as AiTwotoneSchedule } from '../../../../icons/AiTwotoneSchedule.svg';
+// import { ReactComponent as PiNotificationBold } from '../../../../icons/PiNotificationBold.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
