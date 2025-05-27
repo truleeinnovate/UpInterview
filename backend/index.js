@@ -175,6 +175,7 @@ app.use(bodyParser.json());
 
 
 // API Routes
+
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
