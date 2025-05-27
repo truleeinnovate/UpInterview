@@ -56,13 +56,13 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        console.log('Fetching user profile...');
+        // console.log('Fetching user profile...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
-        console.log('User profile fetched successfully:', response.data);
+        // console.log('User profile fetched successfully:', response.data);
         setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
-      }
+      }  
     };
 
     if (userId) {
@@ -73,7 +73,7 @@ const CustomProvider = ({ children }) => {
   // Fetch master data
   useEffect(() => {
     const fetchMasterData = async () => {
-      console.log('Fetching master data...');
+      // console.log('Fetching master data...');
       try {
         const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
@@ -86,15 +86,15 @@ const CustomProvider = ({ children }) => {
           axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
 
-        console.log('Master data fetched successfully');
-        console.log('Locations:', locationsRes.data.length);
-        console.log('Industries:', industriesRes.data.length);
-        console.log('Roles:', rolesRes.data.length);
-        console.log('Skills:', skillsRes.data.length);
-        console.log('Technologies:', TechnologyRes.data.length);
-        console.log('Qualifications:', QualificationRes.data.length);
-        console.log('Colleges:', CollegeRes.data.length);
-        console.log('Companies:', CompanyRes.data.length);
+        // console.log('Master data fetched successfully');
+        // console.log('Locations:', locationsRes.data.length);
+        // console.log('Industries:', industriesRes.data.length);
+        // console.log('Roles:', rolesRes.data.length);
+        // console.log('Skills:', skillsRes.data.length);
+        // console.log('Technologies:', TechnologyRes.data.length);
+        // console.log('Qualifications:', QualificationRes.data.length);
+        // console.log('Colleges:', CollegeRes.data.length);
+        // console.log('Companies:', CompanyRes.data.length);
 
         setLocations(locationsRes.data);
         setIndustries(industriesRes.data);
@@ -117,10 +117,10 @@ const CustomProvider = ({ children }) => {
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
     try {
-      console.log('Fetching interviewer questions...');
+      // console.log('Fetching interviewer questions...');
       const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
       const response = await axios.get(url);
-      console.log('Interviewer questions fetched successfully:', response.data.questions.length);
+      // console.log('Interviewer questions fetched successfully:', response.data.questions.length);
 
       const formattedList = response.data.questions.map((question) => ({
         id: question._id,
@@ -144,9 +144,9 @@ const CustomProvider = ({ children }) => {
   // Fetch My Questions Data
   const fetchMyQuestionsData = useCallback(async () => {
     try {
-      console.log('Fetching my questions data...');
+      // console.log('Fetching my questions data...');
       const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
-      console.log('My questions data filtered:', filteredPositions);
+      // console.log('My questions data filtered:', filteredPositions);
 
       const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
         acc[key] = Array.isArray(filteredPositions[key])
@@ -155,7 +155,7 @@ const CustomProvider = ({ children }) => {
         return acc;
       }, {});
 
-      console.log('Processed my questions data:', newObject);
+      // console.log('Processed my questions data:', newObject);
       setMyQuestionsList(newObject);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -167,12 +167,12 @@ const CustomProvider = ({ children }) => {
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
-      console.log(`Fetching lists for user ${userId}...`);
+      // console.log(`Fetching lists for user ${userId}...`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
-      console.log('User lists fetched successfully:', response.data);
+      // console.log('User lists fetched successfully:', response.data);
       setCreatedLists(response.data.reverse());
     } catch (error) {
-      console.error('Error fetching lists:', error);
+      // console.error('Error fetching lists:', error);
     }
   }, [userId]);
 
@@ -185,13 +185,13 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const getQuestions = async () => {
       try {
-        console.log('Fetching suggested questions...');
+        // console.log('Fetching suggested questions...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
-        console.log('Suggested questions response:', response.data);
+        // console.log('Suggested questions response:', response.data);
 
         if (response.data.success) {
           const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
-          console.log('Processed suggested questions:', newList);
+          // console.log('Processed suggested questions:', newList);
           setSuggestedQuestions(newList);
           setSuggestedQuestionsFilteredData(newList);
         }
@@ -779,6 +779,192 @@ const CustomProvider = ({ children }) => {
     fetchContactsData();
   }, []);
 
+
+
+    // Query for fetching users
+  const {
+    data: usersRes = [],
+    isLoading: usersLoading,
+    refetch: refetchUsers
+  } = useQuery({
+    queryKey: ['users', tenantId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
+      );
+      
+      // Process image URLs and reverse the array (newest first)
+      return response.data
+        .map((contact) => {
+          if (contact.imageData?.filename) {
+            const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+            return { ...contact, imageUrl };
+          }
+          return contact;
+        })
+        .reverse();
+    },
+    enabled: !!tenantId,
+  });
+
+  // Mutation for creating/updating users
+  const addOrUpdateUser = useMutation({
+    mutationFn: async ({ userData, file, editMode }) => {
+      const payload = {
+        UserData: { 
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          tenantId: userData.tenantId,
+          phone: userData.phone,
+          roleId: userData.roleId,
+          countryCode: userData.countryCode,
+          isProfileCompleted: false,
+          ...(editMode && { _id: userData._id }) // Only include _id in edit mode
+        },
+        contactData: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          phone: userData.phone,
+          tenantId: userData.tenantId,
+          countryCode: userData.countryCode
+        }
+      };
+
+      // Use the same endpoint for both create and edit
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/Organization/new-user-Creation`,
+        payload
+      );
+
+      // Handle image upload if file is present
+      if (file) {
+        const imageData = new FormData();
+        imageData.append("image", file);
+        imageData.append("type", "contact");
+        imageData.append("id", response.data.contactId);
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else if (!userData.imageUrl && editMode) {
+        // Delete image if no file and no existing image in edit mode
+        await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
+      }
+
+      // Send welcome email only for new user creation
+      if (!editMode) {
+        await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
+          email: userData.email,
+          type: "usercreatepass"
+        });
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']); // Refresh the users list
+    },
+    onError: (error) => {
+      console.error("User operation error:", error);
+      // You can add toast notifications here
+      // toast.error(error.response?.data?.message || "An error occurred");
+    }
+  });
+
+  // Mutation for toggling user status
+  const toggleUserStatus = useMutation({
+    mutationFn: async ({userId,newStatus}) => {
+      const response = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/users/${userId}/status`,
+        {
+          status: newStatus, // or you could send the new status explicitly
+          modifiedBy: `admin - ${tenantId}` // Track who made the change
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']); // Refresh the users list
+    },
+    onError: (error) => {
+      console.error("Status toggle error:", error);
+      // toast.error("Failed to update user status");
+    }
+  });
+
+  // Delete user mutation
+  const deleteUser = useMutation({
+    mutationFn: async (userId) => {
+      const response = await axios.delete(
+        `${process.env.REACT_APP_API_URL}/users/${userId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']); // Refresh the users list
+    },
+    onError: (error) => {
+      console.error("Delete user error:", error);
+      // toast.error("Failed to delete user");
+    }
+  });
+
+
+     const [currentPlan, setcurrentPlan] = useState([]);
+      // const [loading, setLoading] = useState(true);
+      // this will check that that plans is already set or not
+  
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const Sub_res = await axios.get(`${process.env.REACT_APP_API_URL}/subscriptions/${userId}`);
+            const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
+            // If subscription exists, set it; otherwise, keep it empty
+        //  console.log("Sub_res Sub_res",Subscription_data);
+  
+  
+            if (Subscription_data.subscriptionPlanId) {
+              setcurrentPlan(Subscription_data);
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        };
+    
+        if (userId) {
+          fetchData();
+        }
+      }, [userId]);
+
+          const [walletBalance, SetWalletBalance] = useState([]);
+      // const [loading, setLoading] = useState(true);
+      // this will check that that plans is already set or not
+  
+      useEffect(() => {
+        const fetchWalletData = async () => {
+          try {
+            const WalletBalance_res = await axios.get(`${process.env.REACT_APP_API_URL}/wallet/${userId}`);
+            const WalletBalance_data = WalletBalance_res.data || {};
+            // If subscription exists, set it; otherwise, keep it empty
+        //  console.log("WalletBalance_res ",WalletBalance_res);
+  
+  
+            if (WalletBalance_data) {
+              SetWalletBalance(WalletBalance_data);
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        };
+    
+        if (userId) {
+          fetchWalletData();
+        }
+      }, [userId]);
+
+
   return (
     <CustomContext.Provider
       value={{
@@ -811,6 +997,20 @@ const CustomProvider = ({ children }) => {
         setPagination,
         pagination,
         loading,
+
+        // users
+         usersRes,
+    usersLoading,
+    refetchUsers,
+    addOrUpdateUser,
+    toggleUserStatus,
+    deleteUser,
+
+    // wallet Balance
+    walletBalance,
+
+    // subscription current plan 
+    currentPlan,
 
         // // candidate
         // candidateData,

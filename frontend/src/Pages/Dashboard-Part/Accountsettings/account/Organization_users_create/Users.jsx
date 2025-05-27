@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import Loading from '../../../../../Components/Loading.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { useCustomContext } from "../../../../../Context/Contextfetch.js";
+import toast from 'react-hot-toast';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -262,45 +264,66 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 
 const Users = () => {
   const navigate = useNavigate();
+   const {usersRes, 
+    usersLoading, 
+    currentPlan,
+    addOrUpdateUser, 
+    toggleUserStatus,
+    deleteUser
+  } = useCustomContext();
+
+      console.log("currentPlan", currentPlan);
+const [userLimitReached, setUserLimitReached] = useState(false);
+
+
+ 
+
+
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState([]);
-  console.log("userData:", userData);
+  // console.log("userData:", userData);
   
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
   const tenantId = tokenPayload.tenantId;
-console.log("tenantId in users", tenantId);
-  const fetchUserData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
-      );
-      const contactWithImages = response.data.map((contact) => {
-        if (contact.imageData && contact.imageData.filename) {
-          const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
-          return { ...contact, imageUrl };
-        }
-        return contact;
-      });
-      const reversedData = contactWithImages.reverse();
+// console.log("tenantId in users", tenantId);
 
-      setUserData(reversedData);
 
-    } catch (error) {
-      console.error("Error fetching users data:", error);
-    }
-    setLoading(false);
-  }, [tenantId]);
 
-  useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
 
-  const handleDataAdded = () => {
-    fetchUserData();
-  };
+
+
+  // const fetchUserData = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
+  //     );
+  //     const contactWithImages = response.data.map((contact) => {
+  //       if (contact.imageData && contact.imageData.filename) {
+  //         const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+  //         return { ...contact, imageUrl };
+  //       }
+  //       return contact;
+  //     });
+  //     const reversedData = contactWithImages.reverse();
+
+  //     setUserData(reversedData);
+
+  //   } catch (error) {
+  //     console.error("Error fetching users data:", error);
+  //   }
+  //   setLoading(false);
+  // }, [tenantId]);
+
+  // useEffect(() => {
+  //   fetchUserData();
+  // }, [fetchUserData]);
+
+  // const handleDataAdded = () => {
+  //   fetchUserData();
+  // };
 
 
 
@@ -461,7 +484,7 @@ console.log("tenantId in users", tenantId);
 
   const [isFilterActive, setIsFilterActive] = useState(false);
   const handleFilterIconClick = () => {
-    if (userData.length !== 0) {
+    if (usersRes.length !== 0) {
       setIsFilterActive((prev) => !prev);
       toggleMenu();
     }
@@ -470,8 +493,8 @@ console.log("tenantId in users", tenantId);
 
 
   const FilteredData = () => {
-    if (!Array.isArray(userData)) return [];
-    const sortedData = [...userData];
+    if (!Array.isArray(usersRes)) return [];
+    const sortedData = [...usersRes];
 
     return sortedData.filter((users) => {
       const fieldsToSearch = [
@@ -515,6 +538,24 @@ console.log("tenantId in users", tenantId);
   return (
     <div className="w-full bg-background">
       <main className="w-full mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-2">
+     {/* {userLimitReached && (
+
+      
+  // <motion.div
+  //   initial={{ opacity: 0, y: -20 }}
+  //   animate={{ opacity: 1, y: 0 }}
+  //   transition={{ duration: 0.3 }}
+  //   className="w-full flex justify-center mt-4"
+  // >
+  //   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center max-w-3xl w-full">
+  //     <strong className="font-bold">User limit reached: </strong>
+  //     <span className="block sm:inline">
+  //       Please upgrade your plan or deactivate existing users to add more.
+  //     </span>
+  //   </div>
+  // </motion.div>
+// )} */}
+
         <div className="sm:px-0">
           <motion.div
             className="mb-6"
@@ -556,11 +597,42 @@ console.log("tenantId in users", tenantId);
                   <span className="text-lg text-custom-blue font-semibold">Users</span>
                 </div>
 
-                <div onClick={() => { navigate('new') }} >
-                  <span className="p-2 bg-custom-blue cursor-pointer text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded">
+                 {/* {userLimitReached && (
+      <div className="mr-4 text-sm text-red-600 font-semibold">
+         User limit reached. Please upgrade your plan to add more users. or In Active the Existing Users.
+      </div>
+    )} */}
+
+                <button 
+                  onClick={() => {
+      if (usersRes.length >= currentPlan.maxUsers) {
+        // setUserLimitReached(true);
+         toast('Please upgrade your plan or deactivate existing users to add more.', {
+      icon: '⚠️',
+      style: {
+        background: '#fff3cd',
+        color: '#856404',
+        border: '1px solid #ffeeba'
+      }
+    });
+        //  toast.warning(' Please upgrade your plan or deactivate existing users to add more.')
+          return;
+      } else {
+        navigate('new');
+      }
+    }}
+    className={`p-2 ${
+      usersRes.length >= currentPlan.maxUsers ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-custom-blue cursor-pointer'
+    } text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded`}
+                // onClick={() => { navigate('new') }}
+                
+                >
+                  
+                  {/* // className="p-2 bg-custom-blue cursor-pointer text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded" */}
+                  
                     Add
-                  </span>
-                </div>
+                 
+                </button>
           </motion.div>
           <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end mb-4">
             <div className="flex items-center sm:hidden md:hidden">
@@ -623,8 +695,8 @@ console.log("tenantId in users", tenantId);
                   <span
                     onClick={handleFilterIconClick}
                     style={{
-                      opacity: userData.length === 0 ? 0.2 : 1,
-                      pointerEvents: userData.length === 0 ? "none" : "auto",
+                      opacity: usersRes.length === 0 ? 0.2 : 1,
+                      pointerEvents: usersRes.length === 0 ? "none" : "auto",
                     }}
                   >
                     {isFilterActive ? (
@@ -637,7 +709,7 @@ console.log("tenantId in users", tenantId);
               </div>
             </div>
           </motion.div>
-          {loading ? (
+          {usersLoading ? (
             <Loading />
           ) : (
             <motion.div className="bg-white">
@@ -650,8 +722,11 @@ console.log("tenantId in users", tenantId);
                       currentFilteredRows={currentFilteredRows}
                       toggleAction={handleMoreClick}
                       actionViewMore={actionViewMore}
-                      loading={loading}
-                      userData={userData}
+                      setActionViewMore={setActionViewMore}
+                      // toggleUserStatus={toggleUserStatus}
+                      //  handleUserClick={handleUserClick} 
+                      loading={usersLoading}
+                      userData={usersRes}
                       toggleSidebar={toggleSidebar}
                     />
                   </div>
@@ -672,8 +747,10 @@ console.log("tenantId in users", tenantId);
                     }`} >
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
-                      loading={loading}
-                      userData={userData}
+                      loading={usersLoading}
+                      setActionViewMore={setActionViewMore}
+                      // toggleUserStatus={toggleUserStatus}
+                      userData={usersRes}
                       toggleSidebar={toggleSidebar}
                     />
                   </div>

@@ -79,9 +79,9 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     const userId = tokenPayload?.userId;
     const organizationId = tokenPayload?.tenantId;
     const organization = tokenPayload?.organization;
-    console.log('userId', userId);
-    console.log('organizationId', organizationId);
-    console.log('organization', organization);
+    // console.log('userId', userId);
+    // console.log('organizationId', organizationId);
+    // console.log('organization', organization);
     if (!endpoint || !userId) {
         console.error("Missing required parameters: endpoint, userId, or organizationId");
         return [];
@@ -89,10 +89,10 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
     let filteredData = [];
     try {
         // Fetch current user's role
-        console.log('userId sdf', userId);
-        console.log('config.REACT_APP_API_URL', config.REACT_APP_API_URL);
+        // console.log('userId sdf', userId);
+        // console.log('config.REACT_APP_API_URL', config.REACT_APP_API_URL);
         const currentUserResponse = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
-        console.log('currentUserResponse', currentUserResponse);
+        // console.log('currentUserResponse', currentUserResponse);
         let currentUserRoleId;
         if (currentUserResponse.data) {
             const currentUser = currentUserResponse.data;

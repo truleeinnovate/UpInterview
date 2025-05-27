@@ -7,31 +7,65 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getTransactionTypeStyle } from './Wallet';
 Modal.setAppElement('#root');
 
-export function WalletTransactionPopup({  onClose }) {
-    const {walletBalance} = useCustomContext();
+ const  WalletTransactionPopup = ({  onClose })  => {
+    
       const { id } = useParams();
       const navigate = useNavigate();
       const [transaction, setTransaction ] = useState(null)
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const {walletBalance} = useCustomContext();
+
+    console.log("walletBalance ", walletBalance);
+
+
+  // useEffect(() => {
+  //   const fetchTransaction = () => {
+
+  //     const  transaction = walletBalance?.transactions.find(transaction => transaction._id === id );
+      
+  //     console.log("transaction", transaction);
+
+  //     if(transaction){
+  //       setTransaction(transaction || null)
+  //     }
+
+  //   }
+
+  //   fetchTransaction();
+
+  // },[id])
+  const [loading, setIsLoading] = useState();
+  const [error,setError] = useState();
 
 
   useEffect(() => {
     const fetchTransaction = () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        if (!walletBalance?.transactions) {
+          throw new Error('No transactions available');
+        }
 
-      const  transaction = walletBalance?.transactions.find(transaction => transaction._id === id );
-      
-      console.log("transaction", transaction);
+        const foundTransaction = walletBalance.transactions.find(
+          transaction => transaction._id === id
+        );
 
-      if(transaction){
-        setTransaction(transaction || null)
+        if (!foundTransaction) {
+          throw new Error('Transaction not found');
+        }
+
+        setTransaction(foundTransaction);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
-
-    }
+    };
 
     fetchTransaction();
-
-  },[id])
-
+  }, [id, walletBalance]);
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
@@ -129,3 +163,5 @@ export function WalletTransactionPopup({  onClose }) {
     </Modal>
   )
 }
+
+export default WalletTransactionPopup

@@ -415,6 +415,7 @@ const getUsersByTenant = async (req, res) => {
         label: role.label || '',
         imageData: contact.imageData || '',
         createdAt: user.createdAt,
+        status:user.status,
         updatedAt: user.updatedAt
       };
     });

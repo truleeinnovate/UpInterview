@@ -5,7 +5,7 @@ const InvoiceSchema = new mongoose.Schema({
     tenantId: { 
         type: String,
     }, 
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
     planId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'SubscriptionPlan', 

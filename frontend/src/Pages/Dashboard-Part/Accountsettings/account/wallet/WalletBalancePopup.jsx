@@ -7,7 +7,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { calculatePendingBalance } from './Wallet';
 Modal.setAppElement('#root');
 
-export function WalletBalancePopup({ onClose }) {
+const  WalletBalancePopup = ({ onClose }) =>  {
   const { walletBalance } = useCustomContext();
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -139,3 +139,6 @@ export function WalletBalancePopup({ onClose }) {
     </Modal>
   )
 }
+
+
+export default WalletBalancePopup
