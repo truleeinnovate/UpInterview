@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from "axios";
 import Cookies from "js-cookie";
-
-import { ReactComponent as IoIosArrowUp } from '../../../../icons/IoIosArrowUp.svg';
-import { ReactComponent as IoIosArrowDown } from '../../../../icons/IoIosArrowDown.svg';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as HiArrowsUpDown } from '../../../../icons/HiArrowsUpDown.svg';
@@ -118,7 +116,7 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
                         className="flex items-center text-3xl ml-3 mr-3"
                         onClick={toggleArrow}
                     >
-                        {isArrowUp ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                        {isArrowUp ? <ChevronUp /> : <ChevronDown />}
                     </p>
                 </div>
                 <div

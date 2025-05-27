@@ -3,7 +3,7 @@ import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDrop
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
-import { fetchFilterData } from "../../../../utils/dataUtils";
+// import { fetchFilterData } from "../../../../utils/dataUtils";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
 import { ReactComponent as IoArrowBack } from '../../../../icons/IoArrowBack.svg';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
@@ -13,7 +13,7 @@ const TaskForm = ({
   onTaskAdded,
   onDataAdded,
 }) => {
-    const { candidateData,positions, loading } = useCustomContext();
+    const { candidateData,positions } = useCustomContext();
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
@@ -47,10 +47,10 @@ const TaskForm = ({
   const [selectedOptionRelatedTo, setSelectedOptionRelatedTo] = useState("");
   const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] =
     useState(false);
-  const optionsRelatedTo = {
-    Candidate: ["60d21b4667d0d8992e610c85", "60d21b4967d0d8992e610c86"], // Example ObjectIds
-    Position: ["60d21b4b67d0d8992e610c87", "60d21b4d67d0d8992e610c88"], // Example ObjectIds
-  };
+  // const optionsRelatedTo = {
+  //   Candidate: ["60d21b4667d0d8992e610c85", "60d21b4967d0d8992e610c86"], // Example ObjectIds
+  //   Position: ["60d21b4b67d0d8992e610c87", "60d21b4d67d0d8992e610c88"], // Example ObjectIds
+  // };
   const toggleDropdownPriority = () => {
     setShowDropdownPriority(!showDropdownPriority);
   };
@@ -90,12 +90,12 @@ const TaskForm = ({
   };
 
 
-  const [teams, setTeams] = useState([]);
-  const [assessments, setAssessments] = useState([]);
-  const [questionBanks, setQuestionBanks] = useState([]);
-  const [interviews, setInterviews] = useState([]);
-  const [mockInterviews, setMockInterviews] = useState([]);
-  const [analytics, setAnalytics] = useState([]);
+  const [teams] = useState([]);
+  // const [assessments, setAssessments] = useState([]);
+  // const [questionBanks, setQuestionBanks] = useState([]);
+  const [interviews] = useState([]);
+  const [mockInterviews] = useState([]);
+  // const [analytics, setAnalytics] = useState([]);
 
   // useEffect(() => {
   //   if (selectedCategoryRelatedTo === "Candidates") {
@@ -178,10 +178,10 @@ const TaskForm = ({
     }
   };
 
-  const toggleDropdownOptionRelatedTo = () => {
-    setShowDropdownOptionRelatedTo(!showDropdownOptionRelatedTo);
-  };
-  const [selectedOptionId, setSelectedOptionId] = useState("");
+  // const toggleDropdownOptionRelatedTo = () => {
+  //   setShowDropdownOptionRelatedTo(!showDropdownOptionRelatedTo);
+  // };
+  // const [selectedOptionId, setSelectedOptionId] = useState("");
   // const handleOptionSelectRelatedTo = (optionName, optionId) => {
   //   console.log("Selected option:", optionName, "ID:", optionId); // Debugging log
   //   setSelectedOptionRelatedTo(optionName);
@@ -293,7 +293,7 @@ const TaskForm = ({
 
   const handleOptionSelectRelatedTo = (optionName, optionId) => {
     setSelectedOptionRelatedTo(optionName);
-    setSelectedOptionId(optionId); // Store the ID
+    // setSelectedOptionId(optionId); // Store the ID
     setShowDropdownOptionRelatedTo(false); // Close the dropdown
     setFormData((prevFormData) => ({
       ...prevFormData,
