@@ -7,16 +7,16 @@ const interviewSchema = new mongoose.Schema({
     templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     status: String, // draft --> if accept - inprogress - after all rounds selected or rejected
     scheduleType: String,
-    createdById: mongoose.Schema.Types.ObjectId,
-    lastModifiedById: mongoose.Schema.Types.ObjectId,
     ownerId: mongoose.Schema.Types.ObjectId,
     tenantId: mongoose.Schema.Types.ObjectId,
     completionReason: String,
-    
+
     // createdOn: { type: Date, default: Date.now },
     // teamId:String
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
 }, { timestamps: true });
 
 const Interview = mongoose.model('Interview', interviewSchema);
 
-module.exports = {Interview};
+module.exports = { Interview };

@@ -1576,7 +1576,7 @@
 //                 ))}
 //               </div>
 
-             
+
 //               <div className="border mt-9 rounded-md border-[#217989]">
 //                 <div className="bg-[#217989] bg-opacity-5 p-2 rounded-md">
 //                   <p className="mb-2 font-bold">Newly added</p>
@@ -2249,7 +2249,7 @@
 // export default Home;
 
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 // import Header from './components/Header/Header';
@@ -2263,21 +2263,46 @@ import NotificationSection from "../NotificationTab/NotificationsSection"
 import TaskList from './TaskList';
 import InterviewerSchedule from './InterviewManagement/UpcomingInterviews';
 // import { notificationsData } from './data/notifications';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import Cookies from 'js-cookie';
+import axios from 'axios';
+import { config } from '../../../../config';
+
 
 const Home = () => {
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const isOrganization = tokenPayload?.organization;
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const chartData = [
-    { name: 'Jan', interviews: 65 },
-    { name: 'Feb', interviews: 85 },
-    { name: 'Mar', interviews: 73 },
-    { name: 'Apr', interviews: 92 },
-    { name: 'May', interviews: 78 },
-    { name: 'Jun', interviews: 95 },
-  ];
+const freelancer = Cookies.get("freelancer");
+
+  const [stats, setStats] = useState({
+    totalInterviews: 0,
+    interviewChange: '0%',
+    successRate: '0%',
+    successRateChange: '0%',
+    chartData: [],
+  });
+  const [period, setPeriod] = useState('monthly');
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get(`${config.REACT_APP_API_URL}/interview/dashboard-stats`, {
+          params: { isOrganization, tenantId, ownerId, period },
+        });
+        setStats(response.data);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+    fetchStats();
+  }, [isOrganization, tenantId, ownerId, period]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-white">
-      <main className="sm:pt-28 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1600px] mx-auto">
+      <main className="sm:pt-28 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-6 xl:px-8 2xl:px-12 max-w-[1600px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2287,7 +2312,7 @@ const Home = () => {
           <WelcomeSection selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 sm:gap-8 mt-6">
+        <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row sm:gap-8 gap-6 mt-6">
           {/* Main Content Area */}
           <div className="flex-grow space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6">
@@ -2298,8 +2323,8 @@ const Home = () => {
               >
                 <StatsCard
                   title="Total Interviews"
-                  value="248"
-                  change="+12%"
+                  value={stats.totalInterviews.toString()}
+                  change={stats.interviewChange}
                   icon={TrendingUp}
                   color="indigo"
                 />
@@ -2325,22 +2350,25 @@ const Home = () => {
               >
                 <StatsCard
                   title="Success Rate"
-                  value="76%"
-                  change="+8%"
+                  value={stats.successRate}
+                  change={stats.successRateChange}
                   icon={UserCheck}
                   color="green"
                 />
               </motion.div>
             </div>
-
+            {freelancer && (
             <InterviewRequests />
+            )}
+
+
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <AnalyticsChart data={chartData} />
+              <AnalyticsChart data={stats.chartData} setPeriod={setPeriod} period={period} />
             </motion.div>
 
             <FeedbackList />

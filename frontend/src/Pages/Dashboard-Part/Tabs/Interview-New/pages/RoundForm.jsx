@@ -16,14 +16,18 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import {config} from '../../../../../config';
 
-function RoundForm() {
+
+const RoundForm = () => {
   const {
     assessmentData,
     interviewData,
     loading
   } = useCustomContext();
   const { interviewId, roundId } = useParams();
+  console.log("interviewId", interviewId);
+ console.log("roundId", roundId);
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -530,7 +534,7 @@ function RoundForm() {
 
       // Submit the form data
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("response", response.data);
@@ -554,8 +558,8 @@ function RoundForm() {
             ownerId: userId,
             scheduledInterviewId: interviewId,
             interviewerType: selectedInterviewType,
-            id: interviewer._id, // Directly passing the interviewer ID
-            // status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
+            interviewerId: interviewer._id, // Directly passing the interviewer ID
+            status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
             dateTime: combinedDateTime,
             duration,
             candidateId: candidate?._id,

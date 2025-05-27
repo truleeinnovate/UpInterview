@@ -502,12 +502,12 @@ const CustomProvider = ({ children }) => {
   }, [fetchInterviewData]);
 
   // outsource interviewers
-  const [interviewers, setInterviewers] = useState([]);
+  const [Outsourceinterviewers, setOutsourceInterviewers] = useState([]);
   const fetchoutsourceInterviewers = useCallback(async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
       const reversedData = response.data.reverse();
-      setInterviewers(reversedData);
+      setOutsourceInterviewers(reversedData);
     } catch (err) {
       // console.error('❌ Error fetching interviewers:', err);
     }
@@ -832,7 +832,7 @@ const CustomProvider = ({ children }) => {
         // fetchTeamsData,
 
         // outsource interviewers
-        interviewers,
+        Outsourceinterviewers,
         fetchoutsourceInterviewers,
 
         // assessment

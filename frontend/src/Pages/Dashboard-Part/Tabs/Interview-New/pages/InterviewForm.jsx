@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
+import { useCandidates } from '../../../../../apiHooks/useCandidates';
 
 // Reusable Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onProceed, message }) => {
@@ -44,7 +45,8 @@ const InterviewForm = () => {
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { interviewData, candidateData, positions, templates } = useCustomContext();
+  const { interviewData, positions, templates } = useCustomContext();
+  const {  candidateData } = useCandidates();
 
   const [candidateId, setCandidateId] = useState('');
   const [positionId, setPositionId] = useState('');

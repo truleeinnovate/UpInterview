@@ -1,4 +1,8 @@
 const { Users } = require('../models/Users');
+const Role = require('../models/RolesData');
+const { Contacts } = require('../models/Contacts');
+const Interviewavailability = require('../models/InterviewAvailability');
+const mongoose = require('mongoose');
 
 // Controller to fetch all users with populated tenantId
 const getUsers = async (req, res) => {
@@ -11,4 +15,189 @@ const getUsers = async (req, res) => {
     }
 };
 
-module.exports = { getUsers };
+
+
+
+
+// Helper function to determine availability and next available time
+const getAvailabilityInfo = async (availabilityIds) => {
+  if (!availabilityIds || availabilityIds.length === 0) {
+    return { availability: 'Unknown', nextAvailable: 'Unknown' };
+  }
+
+  // Fetch availability data
+  const availabilityData = await Interviewavailability.find({
+    _id: { $in: availabilityIds },
+  }).lean();
+
+  // Current date and time (in IST, as per context: May 27, 2025, 12:21 PM IST)
+  const now = new Date('2025-05-27T12:21:00+05:30');
+  const today = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Kolkata' });
+
+  // Filter valid time slots (exclude invalid dates like 1970-01-01)
+  const validTimeSlots = [];
+  for (const avail of availabilityData) {
+    for (const day of avail.days) {
+      for (const slot of day.timeSlots) {
+        const startTime = new Date(slot.startTime);
+        const endTime = new Date(slot.endTime);
+
+        // Skip invalid or placeholder dates (1970-01-01)
+        if (startTime.getFullYear() === 1970) {
+          continue;
+        }
+
+        // Adjust the slot's date to the next occurrence of the day
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDayIndex = daysOfWeek.indexOf(today);
+        const slotDayIndex = daysOfWeek.indexOf(day.day);
+        let daysUntilNext = slotDayIndex - currentDayIndex;
+        if (daysUntilNext < 0) {
+          daysUntilNext += 7; // Move to next week
+        } else if (daysUntilNext === 0 && startTime.getHours() * 60 + startTime.getMinutes() < now.getHours() * 60 + now.getMinutes()) {
+          daysUntilNext += 7; // If today's slot is in the past, move to next week
+        }
+
+        const slotDate = new Date(now);
+        slotDate.setDate(now.getDate() + daysUntilNext);
+        slotDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+        validTimeSlots.push({
+          day: day.day,
+          startTime: slotDate,
+          formattedTime: startTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Kolkata',
+          }),
+        });
+      }
+    }
+  }
+
+  // Sort time slots by date to find the earliest
+  validTimeSlots.sort((a, b) => a.startTime - b.startTime);
+
+  // Determine availability and next available time
+  const hasAvailableSlots = validTimeSlots.length > 0;
+  let nextAvailable = 'Unknown';
+  if (hasAvailableSlots) {
+    const nextSlot = validTimeSlots[0];
+    const isToday = nextSlot.startTime.toDateString() === now.toDateString();
+    nextAvailable = isToday
+      ? `Today, ${nextSlot.formattedTime}`
+      : `${nextSlot.day}, ${nextSlot.formattedTime}`;
+  }
+
+  return {
+    availability: hasAvailableSlots ? 'Available' : 'Busy',
+    nextAvailable,
+  };
+};
+
+// Controller to fetch interviewers
+const getInterviewers = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    console.log('✅ [getInterviewers] Called with tenantId:', tenantId);
+
+    // Validate tenantId
+    if (!tenantId || tenantId === 'undefined') {
+      console.error('❌ [getInterviewers] Missing or invalid tenantId:', tenantId);
+      return res.status(400).json({ error: 'Tenant ID is required' });
+    }
+    if (!mongoose.isValidObjectId(tenantId)) {
+      console.error('❌ [getInterviewers] Invalid tenantId format:', tenantId);
+      return res.status(400).json({ error: 'Invalid Tenant ID format' });
+    }
+
+    // Fetch external interviewers
+    const externalUsers = await Users.find({ isFreelancer: "true" }).lean();
+    console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
+
+    // Fetch internal roles
+    const internalRoles = await Role.find({
+      roleName: "Internal_Interviewer",
+      tenantId,
+    }).select('_id').lean();
+    console.log('✅ [getInterviewers] Internal roles fetched:', internalRoles.length);
+
+    const internalRoleIds = internalRoles.map((role) => role._id.toString());
+
+    // Fetch internal interviewers
+    const internalUsers = await Users.find({
+      roleId: { $in: internalRoleIds },
+      tenantId,
+    }).lean();
+    console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length);
+
+    // Combine all users
+    const allUsers = [...internalUsers, ...externalUsers];
+    console.log('✅ [getInterviewers] Total users:', allUsers.length);
+
+    // Fetch contacts
+    const contacts = await Contacts.find({
+      ownerId: { $in: allUsers.map((user) => user._id) },
+    }).lean();
+    console.log('✅ [getInterviewers] Contacts fetched:', contacts.length);
+
+    // Fetch availabilities
+    const contactIds = contacts.map((contact) => contact._id);
+    const availabilities = await Interviewavailability.find({
+      contact: { $in: contactIds },
+    }).lean();
+    console.log('✅ [getInterviewers] Availabilities fetched:', availabilities.length);
+
+    // Map contacts to availability
+    const contactAvailabilityMap = {};
+    availabilities.forEach((avail) => {
+      contactAvailabilityMap[avail.contact.toString()] = avail;
+    });
+
+    // Construct the final interviewers array
+    const interviewers = await Promise.all(
+      allUsers.map(async (user) => {
+        const contact = contacts.find(
+          (c) => c.ownerId.toString() === user._id.toString()
+        );
+
+        const availabilityIds = contact?.availability || [];
+        const { availability, nextAvailable } = await getAvailabilityInfo(availabilityIds);
+
+        const isInternal = internalUsers.some(
+          (u) => u._id.toString() === user._id.toString()
+        );
+        const type = isInternal ? 'Internal' : 'External';
+
+        return {
+          id: user._id.toString(),
+          name: contact
+            ? `${contact.firstName} ${contact.lastName}`
+            : `${user.firstName} ${user.lastName}`,
+          role: contact?.currentRole || (isInternal ? 'Internal Interviewer' : 'Freelance Interviewer'),
+          specialization: contact?.expertiseLevel || 'Unknown',
+          rating: 4.8, // Placeholder; replace with actual data if available
+          completedInterviews: contact?.PreviousExperienceConductingInterviewsYears
+            ? parseInt(contact.PreviousExperienceConductingInterviewsYears) * 50
+            : 50,
+          availability,
+          nextAvailable,
+          type,
+          department: isInternal ? 'Engineering' : undefined,
+          company: !isInternal ? contact?.industry || 'Freelancer' : undefined,
+          location: contact?.location || 'Unknown',
+          image:
+            contact?.imageData?.path,
+        };
+      })
+    );
+
+    console.log('✅ [getInterviewers] Final interviewers prepared:', interviewers.length);
+    res.json(interviewers);
+  } catch (error) {
+    console.error('❌ [getInterviewers] Error fetching interviewers:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+module.exports = { getUsers, getInterviewers };

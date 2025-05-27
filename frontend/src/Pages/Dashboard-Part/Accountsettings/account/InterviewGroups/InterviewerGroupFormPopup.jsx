@@ -11,7 +11,7 @@ import { validateGroupForm } from '../../../../../utils/InterviewGroupValidation
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 Modal.setAppElement('#root');
-export function InterviewerGroupFormPopup() {
+const InterviewerGroupFormPopup = () => {
   const {id} = useParams();
   const {  groups } = useCustomContext();
   const [formData, setFormData] = useState({
@@ -378,3 +378,5 @@ export function InterviewerGroupFormPopup() {
      </Modal>
   )
 }
+
+export default InterviewerGroupFormPopup

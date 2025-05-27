@@ -770,7 +770,7 @@ const Navbar = () => {
         </div>
       )}
 
-      <div className="mb-16"></div>
+      <div className="mb-12"></div>
     </>
   );
 };
