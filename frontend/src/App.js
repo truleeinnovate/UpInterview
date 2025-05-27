@@ -918,8 +918,8 @@ const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/Card
 const ForgetPassword = lazy(() => import('./Pages/Login-Part/ForgetPassword'));
 const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
 
-const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home'));
-const OutsourceInterviewerAdmin = lazy(() => import('./Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers'));
+const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home/Home.jsx'));
+const OutsourceInterviewerRequest = lazy(() => import('./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx'));
 const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
 const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
 const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
@@ -982,6 +982,11 @@ const SupportDesk = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportD
 const SupportDetails = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails'));
 const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm'));
 const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
+const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
+const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
+
+
+
 
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
@@ -1098,7 +1103,8 @@ const App = () => {
             >
               {/* Protected Routes */}
               <Route path="/home" element={<Home />} />
-              <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
+              <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
+              <Route path="/outsource-interview-request" element={<InterviewRequest />} />
 
               {/* Candidate Routes */}
               <Route path="/candidate" element={<CandidateTab />}>
@@ -1235,6 +1241,8 @@ const App = () => {
               <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
               <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
               <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+              {/* task */}
+              <Route path="/task" element={<Task />} />
             </Route>
           </Routes>
         </div>

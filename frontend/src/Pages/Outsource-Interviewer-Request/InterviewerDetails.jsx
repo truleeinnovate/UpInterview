@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { config } from '../../../../config.js';
-import InterviewStatusIndicator from './InterviewStatusIndicator.jsx';
-import FeedbackStatusChangeModal from './FeedbackStatusChangeModal.jsx';
-import maleImage from "../../../Dashboard-Part/Images/man.png";
-import Availability from '../CommonCode-AllTabs/Availability.jsx';
+import InterviewStatusIndicator from './InterviewStatusIndicator';
+import FeedbackStatusChangeModal from './FeedbackStatusChangeModal';
+import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
+import Availability from '../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';
 import axios from 'axios';
 
 const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const interviewer = selectedInterviewersData.contactId;
-
-  console.log('selectedInterviewersData:', selectedInterviewersData)
 
   const [timeZone] = useState(interviewer.TimeZone || "Not Provided");
   const [selectedDuration, setSelectedDuration] = useState(interviewer.PreferredDuration + " mints" || "Not Provided");
@@ -24,7 +20,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const fetchInterviewers = async () => {
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`);
 
       console.log('✅ response:', response.data);
 
@@ -49,7 +45,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
       }
 
     } catch (err) {
-      // console.error('❌ Error fetching interviewers:', err);
+      console.error('❌ Error fetching interviewers:', err);
     }
   };
 

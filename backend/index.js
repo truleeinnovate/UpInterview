@@ -821,3 +821,7 @@ app.use('/', razorpayRoutes);
 
 const historyFeedsRoutes = require('./routes/feedsRoutes');
 app.use('/feeds', historyFeedsRoutes);
+
+// task
+const taskRoutes = require('./routes/taskRoutes');
+app.use('/tasks', taskRoutes);
