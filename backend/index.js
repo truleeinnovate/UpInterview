@@ -67,7 +67,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true, useUnifiedTopology: true
@@ -175,6 +175,7 @@ app.use(bodyParser.json());
 
 
 // API Routes
+
 const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
@@ -829,6 +830,12 @@ const WalletRouter = require('./routes/WalletRoutes.js');
 app.use('/feeds', historyFeedsRoutes);
 
 
+
 app.use('/get-invoice-id', InvoiceRouter);
 
 app.use('/wallet', WalletRouter)
+
+// task
+const taskRoutes = require('./routes/taskRoutes');
+app.use('/tasks', taskRoutes);
+

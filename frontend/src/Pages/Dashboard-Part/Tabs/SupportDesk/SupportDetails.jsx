@@ -407,7 +407,7 @@ function SupportDetails() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created Date</p>
-                    <p className="text-gray-700">{formatDate(currentTicket.createdDate)}</p>
+                    <p className="text-gray-700">{formatDate(currentTicket.createdAt)}</p>
                   </div>
                 </div>
             </div>
@@ -443,7 +443,7 @@ function SupportDetails() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Modified By</p>
-                    <p className="text-gray-700">{currentTicket.modifiedBy || 'Unknown'}, {formatDate(currentTicket.modifiedDate)}</p>
+                    <p className="text-gray-700">{currentTicket.updatedBy || 'Unknown'}, {formatDate(currentTicket.modifiedDate)}</p>
                   </div>
                 </div>
               </div>

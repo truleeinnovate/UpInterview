@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
-import maleImage from "../../../Dashboard-Part/Images/man.png";
-import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
-import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import maleImage from "../Dashboard-Part/Images/man.png";
+import { ReactComponent as FaList } from '../../icons/FaList.svg';
+import axios from 'axios';
+import { ReactComponent as IoMdSearch } from '../../icons/IoMdSearch.svg';
+import { ReactComponent as TbLayoutGridRemove } from '../../icons/TbLayoutGridRemove.svg';
+import { ReactComponent as FiFilter } from '../../icons/FiFilter.svg';
 import Tooltip from "@mui/material/Tooltip";
-import InterviewerDetails from '../Outsource-Interviewer-Admin/InterviewerDetails.jsx'
-import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
-import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
+import InterviewerDetails from './InterviewerDetails'
+import { ReactComponent as LuFilterX } from '../../icons/LuFilterX.svg';
+import { useCustomContext } from "../../Context/Contextfetch.js";
+import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
+import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
+import { ReactComponent as CgInfo } from '../../icons/CgInfo.svg';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -193,8 +198,6 @@ const OutsourceInterviewers = () => {
     loading,
   } = useCustomContext();
 
-  console.log('interviewers data :', interviewers)
-
   const [searchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
@@ -366,7 +369,7 @@ const OutsourceInterviewers = () => {
                         } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
                       onClick={prevPage}
                     >
-                      {/* <IoIosArrowBack className="text-custom-blue" /> */}
+                      <IoIosArrowBack className="text-custom-blue" />
                     </span>
                   </Tooltip>
 
@@ -376,7 +379,7 @@ const OutsourceInterviewers = () => {
                         } ${activeArrow === "next" ? "text-blue-500" : ""}`}
                       onClick={nextPage}
                     >
-                      {/* <IoIosArrowForward className="text-custom-blue" /> */}
+                      <IoIosArrowForward className="text-custom-blue" />
 
                     </span>
                   </Tooltip>
@@ -504,7 +507,7 @@ const OutsourceInterviewers = () => {
                                     <td className="py-2 px-6">{interviewer.status}</td>
                                     <td className="py-2 px-6">
                                       <button className="text-gray-700 hover:text-gray-600">
-                                        {/* <BsThreeDotsVertical /> */}
+                                        <BsThreeDotsVertical />
                                       </button>
                                     </td>
                                   </tr>
@@ -537,7 +540,7 @@ const OutsourceInterviewers = () => {
                                 <div className="relative">
                                   <div className="float-right">
                                     <button className="text-gray-700 hover:text-gray-600">
-                                      {/* <BsThreeDotsVertical /> */}
+                                      <BsThreeDotsVertical />
                                     </button>
                                   </div>
                                 </div>

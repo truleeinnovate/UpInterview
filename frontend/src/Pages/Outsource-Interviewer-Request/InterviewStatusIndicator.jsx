@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { FaCheckCircle, FaCircle } from "react-icons/fa";
 
 function InterviewStatusIndicator({ currentStatus }) {
   // Define base status steps
@@ -40,7 +41,7 @@ function InterviewStatusIndicator({ currentStatus }) {
                 }`}
             >
               {/* First circle has no tick */}
-              {/* {index === 0 ? (
+              {index === 0 ? (
                 <FaCircle className="text-teal-600 h-5 w-5 text-base" />
               ) : isFinalRed && index === statusSteps.length - 1 ? (
                 <FaCheckCircle className="text-red-600 h-5 w-5 text-base" />
@@ -52,7 +53,7 @@ function InterviewStatusIndicator({ currentStatus }) {
                 <div className="h-5 w-5 rounded-full bg-orange-500"></div>
               ) : (
                 <div className="h-5 w-5 rounded-full bg-gray-300"></div>
-              )} */}
+              )}
             </div>
           </div>
 

@@ -114,22 +114,22 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                         transition={{ duration: 0.3 }}
                         className="hover:bg-gray-50"
                       >
-                       <td
-  className="px-6 py-2 whitespace-nowrap text-sm font-medium text-custom-blue cursor-pointer"
-  onClick={() => {
-    if (userRole === 'Admin') {
-      navigate(`/support-desk/${ticket._id}`, {
-        state: { ticketData: ticket },
-      });
-    } else if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
-      navigate(`/support-desk/view/${ticket._id}`, {
-        state: { ticketData: ticket },
-      });
-    }
-  }}
->
-  #{ticket._id.slice(-5, -1)}
-</td>
+                        <td
+                          className="px-6 py-2 whitespace-nowrap text-sm font-medium text-custom-blue cursor-pointer"
+                          onClick={() => {
+                            if (userRole === 'Admin') {
+                              navigate(`/support-desk/${ticket._id}`, {
+                                state: { ticketData: ticket },
+                              });
+                            } else if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
+                              navigate(`/support-desk/view/${ticket._id}`, {
+                                state: { ticketData: ticket },
+                              });
+                            }
+                          }}
+                        >
+                          #{ticket._id.slice(-5, -1)}
+                        </td>
 
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{ticket.contact || 'N/A'}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{ticket.issueType || 'N/A'}</td>
@@ -174,9 +174,8 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                             )}
                             {openMenuIndex === index && (
                               <Menu.Items
-                                className={`absolute w-48 bg-white rounded-lg shadow-lg border py-1 z-50 ${
-                                  openUpwards ? 'bottom-full mb-2 right-0' : 'top-full mt-2 right-0'
-                                }`}
+                                className={`absolute w-48 bg-white rounded-lg shadow-lg border py-1 z-50 ${openUpwards ? 'bottom-full mb-2 right-0' : 'top-full mt-2 right-0'
+                                  }`}
                               >
                                 {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
                                   <Menu.Item>
@@ -188,9 +187,8 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                                           });
                                           setOpenMenuIndex(null);
                                         }}
-                                        className={`${
-                                          active ? 'bg-gray-50' : ''
-                                        } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                        className={`${active ? 'bg-gray-50' : ''
+                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                       >
                                         <Eye className="w-4 h-4 text-blue-600" />
                                         View Details
@@ -209,9 +207,8 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                                             });
                                             setOpenMenuIndex(null);
                                           }}
-                                          className={`${
-                                            active ? 'bg-gray-50' : ''
-                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                          className={`${active ? 'bg-gray-50' : ''
+                                            } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                         >
                                           <Eye className="w-4 h-4 text-blue-600" />
                                           View Details
@@ -227,9 +224,8 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                                             });
                                             setOpenMenuIndex(null);
                                           }}
-                                          className={`${
-                                            active ? 'bg-gray-50' : ''
-                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                          className={`${active ? 'bg-gray-50' : ''
+                                            } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                         >
                                           <Pencil className="w-4 h-4 text-green-600" />
                                           Edit
