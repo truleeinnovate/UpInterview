@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,7 +17,6 @@ import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../icons/MdOutlineCancel.svg";
 import { ReactComponent as VscSave } from "../../../../icons/VscSave.svg";
 import { ReactComponent as FaRegEdit } from "../../../../icons/FaRegEdit.svg";
-import { ReactComponent as IoIosAddCircle } from "../../../../icons/IoIosAddCircle.svg";
 import '../styles/tabs.scss'
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
