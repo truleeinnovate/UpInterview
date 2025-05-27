@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import {
   Calendar,
   Clock,
   Edit,
-  CheckCircle,
-  XCircle,
-  ThumbsDown,
+  // CheckCircle,
+  // XCircle,
+  // ThumbsDown,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  Users,
+  // MessageSquare,
+  // Users,
   User,
   ExternalLink
 } from 'lucide-react';
 // import { FaChevronUp, FaSearch } from 'react-icons/fa';
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
+// import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 
 import { Button } from '../../CommonCode-AllTabs/ui/button';
@@ -34,29 +34,29 @@ const PositionRoundCard = ({
 }) => {
 
     const {
-      assessmentData,
-      loading,
+      // assessmentData,
+      // loading,
        sectionQuestions,
-      questionsLoading,
-      questionsError,
+      // questionsLoading,
+      // questionsError,
       fetchQuestionsForAssessment,
-      setSectionQuestions,
+      // setSectionQuestions,
     } = useCustomContext();
 
   const { resolveInterviewerDetails } = useInterviewerDetails();
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  // const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
-  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   // console.log("sectionQuestions", sectionQuestions);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [loadingQuestions] = useState(false);
 
   const interview = interviewData;
-  const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
+  // const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
 
   console.log("resolveInterviewerDetails", resolveInterviewerDetails());
   
@@ -244,10 +244,10 @@ const PositionRoundCard = ({
     setShowConfirmModal(false);
   };
 
-  const handleReject = (reason) => {
-    handleStatusChange("Rejected", reason);
-    setShowRejectionModal(false);
-  };
+  // const handleReject = (reason) => {
+  //   handleStatusChange("Rejected", reason);
+  //   setShowRejectionModal(false);
+  // };
 
   // const handleRemoveInterviewer = (interviewerId) => {
   //   const updatedRound = {
@@ -263,7 +263,7 @@ const PositionRoundCard = ({
     round?.interviewerType === "external" ? round?.interviewers || [] : [];
 
   // Get questions
-  const questions = round?.questions || [];
+  // const questions = round?.questions || [];
   // console.log("questions", questions);
 
 
@@ -449,7 +449,7 @@ const PositionRoundCard = ({
                       {round?.questions.length > 0 ? (
                         <ul className="mt-2 space-y-1">
                           {round.questions.map((question, qIndex) => {
-                            const isMandatory = question?.mandatory === "true";
+                            // const isMandatory = question?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li

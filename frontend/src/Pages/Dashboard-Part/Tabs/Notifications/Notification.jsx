@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
-// import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
 import { ReactComponent as FaArrowRight } from '../../../../icons/FaArrowRight.svg';
 // import { ReactComponent as AiTwotoneSchedule } from '../../../../icons/AiTwotoneSchedule.svg';
