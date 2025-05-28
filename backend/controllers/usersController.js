@@ -200,7 +200,6 @@ const getInterviewers = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-module.exports = { getUsers, getInterviewers };
 
 // PATCH /api/users/:id/status
 const UpdateUser  = async (req, res) => {
@@ -230,5 +229,5 @@ const UpdateUser  = async (req, res) => {
 };
 
 
-module.exports = { getUsers,UpdateUser };
+module.exports = { getUsers,UpdateUser,getInterviewers };
 
