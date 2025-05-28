@@ -184,7 +184,7 @@ const App = () => {
         {showSettingsSidebar && <Settingssidebar />}
         {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
-        <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
+        <div>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -214,8 +214,8 @@ const App = () => {
             >
               {/* Protected Routes */}
               <Route path="/home" element={<Home />} />
-              <Route path="/outsource-interviewer-request" element={<OutsourceInterviewerRequest />} />
-              <Route path="/interview-request" element={<InterviewRequest />} />
+              <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
+              <Route path="/outsource-interview-request" element={<InterviewRequest />} />
 
               {/* Candidate Routes */}
               <Route path="/candidate" element={<CandidateTab />}>

@@ -62,7 +62,6 @@ function SupportDesk() {
       }
     } catch (error) {
       console.error("Error fetching tickets:", error);
-      alert("Failed to fetch tickets");
     } finally {
       setLoading(false);
     }
@@ -338,21 +337,8 @@ function SupportDesk() {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {loading ? (
-            <Loading />
-          ) : (
             <motion.div className="bg-white">
-              {tickets.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-lg">
-                  {userRole === "Admin"
-                    ? "You don't have any tickets yet. Create a new ticket."
-                    : "You don't have any tickets yet."}
-                </div>
-              ) : currentFilteredRows.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-lg">
-                  No tickets found matching your search criteria.
-                </div>
-              ) : viewMode === "table" ? ( // Changed from "list" to "table"
+              {viewMode === "table" ? (
                 <TableView
                   data={currentFilteredRows}
                   columns={tableColumns}
@@ -408,7 +394,6 @@ function SupportDesk() {
                 </div>
               </FilterPopup>
             </motion.div>
-          )}
         </div>
       </main>
     </div>

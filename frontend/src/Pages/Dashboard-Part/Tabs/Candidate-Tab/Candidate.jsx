@@ -41,7 +41,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   const { skills, qualification } = useCustomContext();
 
-  const { candidateData, candidatesLoading } = useCandidates();
+  const { candidateData, loading } = useCandidates();
 
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -105,10 +105,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       setView('table');
     }
   }, [isTablet]);
-
-  if (candidatesLoading) {
-    return <Loading />;
-  }
 
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
@@ -383,9 +379,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         )}
         <main className={isAssessmentView ? '' : 'fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background'}>
           <div className="sm:px-0">
-            {candidatesLoading && !isAssessmentView ? (
-              <Loading />
-            ) : (
               <motion.div className="bg-white">
                 <div className="relative w-full">
                   {view === 'table' ? (
@@ -393,7 +386,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       <TableView
                         data={currentFilteredRows}
                         columns={tableColumns}
-                        loading={candidatesLoading}
+                        loading={loading}
                         actions={tableActions}
                         emptyState="No candidates found."
                       />
@@ -411,7 +404,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                           isAssessmentView: isAssessmentView
                         }))}
                         columns={kanbanColumns}
-                        loading={candidatesLoading}
+                        loading={loading}
                         renderActions={renderKanbanActions}
                         emptyState="No candidates found."
                       />
@@ -552,7 +545,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   </FilterPopup>
                 </div>
               </motion.div>
-            )}
           </div>
         </main>
       </main>

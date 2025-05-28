@@ -154,27 +154,27 @@ function InterviewList() {
         interview.status,
         interview.createdAt,
       ].filter(Boolean);
-  
+
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
-  
+
       const matchesStatus =
         selectedFilters.status.length === 0 ||
         selectedFilters.status.includes(interview.status); // Updated to use interview.status
-  
+
       const matchesTech =
         selectedFilters.tech.length === 0 ||
         interview.candidateId?.skills?.some((skill) =>
           selectedFilters.tech.includes(skill.SkillName || skill.skill)
         );
-  
+
       const matchesExperience =
         (!selectedFilters.experience.min ||
           interview.candidateId?.CurrentExperience >= Number(selectedFilters.experience.min)) &&
         (!selectedFilters.experience.max ||
           interview.candidateId?.CurrentExperience <= Number(selectedFilters.experience.max));
-  
+
       return matchesSearchQuery && matchesStatus && matchesTech && matchesExperience;
     });
   };
@@ -402,35 +402,44 @@ function InterviewList() {
       </div>
       <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {loading ? (
-            <Loading />
-          ) : (
-            <motion.div className="bg-white">
-              <div className="relative w-full">
-                {viewMode === 'kanban' ? (
-                  <div className="w-full">
+          <motion.div className="bg-white">
+            <div className="relative w-full">
+              {viewMode === 'kanban' ? (
+                <div className="w-full">
+                  {loading ? (
+                    <div className="py-10">
+                      <Loading />
+                    </div>
+                  ) : (
                     <KanbanBoard
                       interviews={currentFilteredRows}
                       onView={handleView}
                       onViewPosition={handleViewPosition}
                     />
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block xl:block 2xl:block w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      actions={tableActions}
+                      loading={loading}
+                      emptyState="No interviews found."
+                      className="table-fixed w-full"
+                    />
                   </div>
-                ) : (
-                  <>
-                    {/* Desktop Table View */}
-                    <div className="hidden lg:block xl:block 2xl:block w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        actions={tableActions}
-                        loading={loading}
-                        emptyState="No interviews found."
-                        className="table-fixed w-full"
-                      />
-                    </div>
-                    {/* Mobile Card View */}
-                    <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
-                      {currentFilteredRows.map((interview) => {
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
+                    {loading ? (
+                      <div className="py-10">
+                        <Loading />
+                      </div>
+                    ) : (
+                      currentFilteredRows.map((interview) => {
                         const candidate = interview.candidateId;
                         const position = interview.positionId;
                         const rounds = interview.rounds || [];
@@ -485,6 +494,7 @@ function InterviewList() {
                               </div>
                               <StatusBadge status={interview.status} size="lg" />
                             </div>
+
                             <div className="space-y-3">
                               <div>
                                 <div className="flex items-center justify-between">
@@ -507,6 +517,7 @@ function InterviewList() {
                                   {position?.companyname || 'No Company'} • {position?.Location || 'No location'}
                                 </div>
                               </div>
+
                               <div>
                                 <div className="flex justify-between items-center mb-1">
                                   <span className="text-sm text-gray-700">Progress</span>
@@ -522,6 +533,7 @@ function InterviewList() {
                                 </div>
                               </div>
                             </div>
+
                             <button
                               onClick={() => toggleRowExpansion(interview._id)}
                               className="mt-4 w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700"
@@ -538,6 +550,7 @@ function InterviewList() {
                                 </>
                               )}
                             </button>
+
                             {isExpanded && (
                               <div className="mt-4 pt-4 border-t border-gray-200">
                                 {nextRound ? (
@@ -580,55 +593,49 @@ function InterviewList() {
                             )}
                           </motion.div>
                         );
-                      })}
-                    </div>
-                  </>
-                )}
-                <FilterPopup
-                  isOpen={isFilterPopupOpen}
-                  onClose={() => setFilterPopupOpen(false)}
-                  onApply={handleApplyFilters}
-                  onClearAll={handleClearAll}
-                  filterIconRef={filterIconRef}
-                >
-                  <div className="space-y-3">
-                    {/* Status Section */}
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsStatusOpen(!isStatusOpen)}
-                      >
-                        <span className="font-medium text-gray-700">Status</span>
-                        {isStatusOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
-                        ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
-                        )}
-                      </div>
-                      {isStatusOpen && (
-                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                          {['Draft', 'Cancelled', 'Completed'].map((status) => (
-                            <label
-                              key={status}
-                              className="flex items-center space-x-2"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedStatus.includes(status)}
-                                onChange={() => handleStatusToggle(status)}
-                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                              />
-                              <span className="text-sm">{status}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      })
+                    )}
                   </div>
-                </FilterPopup>
-              </div>
-            </motion.div>
-          )}
+                </>
+              )}
+
+              <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={handleApplyFilters}
+                onClearAll={handleClearAll}
+                filterIconRef={filterIconRef}
+              >
+                <div className="space-y-3">
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsStatusOpen(!isStatusOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Status</span>
+                      {isStatusOpen ? <ChevronUp className="text-xl text-gray-700" /> : <ChevronDown className="text-xl text-gray-700" />}
+                    </div>
+                    {isStatusOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {['Draft', 'Cancelled', 'Completed'].map((status) => (
+                          <label key={status} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedStatus.includes(status)}
+                              onChange={() => handleStatusToggle(status)}
+                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{status}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </FilterPopup>
+            </div>
+          </motion.div>
+
         </div>
       </main>
       {selectPositionView && (

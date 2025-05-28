@@ -964,165 +964,161 @@ const PositionTab = () => {
       </div>
       <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {isPositionsLoading ? (
-            <Loading />
-          ) : (
-            <motion.div className="bg-white">
-              <div className="relative w-full">
-                {view === 'table' ? (
-                  <div className="w-full">
-                    <TableView
-                      data={currentFilteredRows}
-                      columns={tableColumns}
-                      loading={isPositionsLoading}
-                      actions={tableActions}
-                      emptyState="No positions found."
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    <PositionKanban
-                      positions={currentFilteredRows}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                    />
-                  </div>
-                )}
-                <FilterPopup
-                  isOpen={isFilterPopupOpen}
-                  onClose={() => setFilterPopupOpen(false)}
-                  onApply={handleApplyFilters}
-                  onClearAll={handleClearAll}
-                  filterIconRef={filterIconRef}
-                >
-                  <div className="space-y-3">
-                    {/* Location Section */}
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsLocationOpen(!isLocationOpen)}
-                      >
-                        <span className="font-medium text-gray-700">Location</span>
-                        {isLocationOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
-                        ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
-                        )}
-                      </div>
-                      {isLocationOpen && (
-                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                          {uniqueLocations.length > 0 ? (
-                            uniqueLocations.map((location) => (
-                              <label
-                                key={location}
-                                className="flex items-center space-x-2"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedLocation.includes(location)}
-                                  onChange={() => handleLocationToggle(location)}
-                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                                />
-                                <span className="text-sm">{location}</span>
-                              </label>
-                            ))
-                          ) : (
-                            <span className="text-sm text-gray-500">
-                              No locations available
-                            </span>
-                          )}
-                        </div>
+          <motion.div className="bg-white">
+            <div className="relative w-full">
+              {view === 'table' ? (
+                <div className="w-full">
+                  <TableView
+                    data={currentFilteredRows}
+                    columns={tableColumns}
+                    loading={isPositionsLoading}
+                    actions={tableActions}
+                    emptyState="No positions found."
+                  />
+                </div>
+              ) : (
+                <div className="w-full">
+                  <PositionKanban
+                    positions={currentFilteredRows}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                  />
+                </div>
+              )}
+              <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={handleApplyFilters}
+                onClearAll={handleClearAll}
+                filterIconRef={filterIconRef}
+              >
+                <div className="space-y-3">
+                  {/* Location Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsLocationOpen(!isLocationOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Location</span>
+                      {isLocationOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
                       )}
                     </div>
-
-                    {/* Skills/Technology Section */}
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsSkillsOpen(!isSkillsOpen)}
-                      >
-                        <span className="font-medium text-gray-700">Skills/Technology</span>
-                        {isSkillsOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
+                    {isLocationOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {uniqueLocations.length > 0 ? (
+                          uniqueLocations.map((location) => (
+                            <label
+                              key={location}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedLocation.includes(location)}
+                                onChange={() => handleLocationToggle(location)}
+                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{location}</span>
+                            </label>
+                          ))
                         ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
+                          <span className="text-sm text-gray-500">
+                            No locations available
+                          </span>
                         )}
                       </div>
-                      {isSkillsOpen && (
-                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                          {skills?.length > 0 ? (
-                            skills.map((skill) => (
-                              <label
-                                key={skill.SkillName}
-                                className="flex items-center space-x-2"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedTech.includes(skill.SkillName)}
-                                  onChange={() => handleTechToggle(skill.SkillName)}
-                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                                />
-                                <span className="text-sm">{skill.SkillName}</span>
-                              </label>
-                            ))
-                          ) : (
-                            <span className="text-sm text-gray-500">No skills available</span>
-                          )}
-                        </div>
+                    )}
+                  </div>
+
+                  {/* Skills/Technology Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsSkillsOpen(!isSkillsOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Skills/Technology</span>
+                      {isSkillsOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
                       )}
                     </div>
-
-                    {/* Experience Section */}
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsExperienceOpen(!isExperienceOpen)}
-                      >
-                        <span className="font-medium text-gray-700">Experience</span>
-                        {isExperienceOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
+                    {isSkillsOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {skills?.length > 0 ? (
+                          skills.map((skill) => (
+                            <label
+                              key={skill.SkillName}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedTech.includes(skill.SkillName)}
+                                onChange={() => handleTechToggle(skill.SkillName)}
+                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{skill.SkillName}</span>
+                            </label>
+                          ))
                         ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
+                          <span className="text-sm text-gray-500">No skills available</span>
                         )}
                       </div>
-                      {isExperienceOpen && (
-                        <div className="mt-1 space-y-2 pl-3">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-1">
-                              <label className="block text-sm font-medium text-gray-700">
-                                Min (years)
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="15"
-                                value={experience.min}
-                                onChange={(e) => handleExperienceChange(e, 'min')}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="block text-sm font-medium text-gray-700">
-                                Max (years)
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="15"
-                                value={experience.max}
-                                onChange={(e) => handleExperienceChange(e, 'max')}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
-                              />
-                            </div>
+                    )}
+                  </div>
+
+                  {/* Experience Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsExperienceOpen(!isExperienceOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Experience</span>
+                      {isExperienceOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isExperienceOpen && (
+                      <div className="mt-1 space-y-2 pl-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Min (years)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="15"
+                              value={experience.min}
+                              onChange={(e) => handleExperienceChange(e, 'min')}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Max (years)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="15"
+                              value={experience.max}
+                              onChange={(e) => handleExperienceChange(e, 'max')}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                </FilterPopup>
-              </div>
-            </motion.div>
-          )}
+                </div>
+              </FilterPopup>
+            </div>
+          </motion.div>
         </div>
       </main>
       {selectPositionView && (

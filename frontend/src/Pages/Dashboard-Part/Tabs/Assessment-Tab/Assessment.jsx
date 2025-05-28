@@ -298,15 +298,9 @@ const Assessment = () => {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {loading ? (
-            <Loading />
-          ) : (
-            <motion.div className="bg-white">
-              {currentFilteredRows.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-lg">
-                  No assessments found.
-                </div>
-              ) : viewMode === "table" ? (
+          <motion.div className="bg-white">
+            {viewMode === "table" ? (
+              <>
                 <TableView
                   data={currentFilteredRows}
                   columns={tableColumns}
@@ -315,7 +309,9 @@ const Assessment = () => {
                   emptyState="No assessments found."
                   className="table-fixed w-full"
                 />
-              ) : (
+              </>
+            ) : (
+              <>
                 <AssessmentKanban
                   assessments={currentFilteredRows}
                   onView={handleView}
@@ -323,75 +319,80 @@ const Assessment = () => {
                   onShare={handleShareClick}
                   assessmentSections={assessmentSections}
                 />
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearFilters}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Difficulty Level</span>
-                      {isDifficultyOpen ? (
-                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                      ) : (
-                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isDifficultyOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {difficultyOptions.map((option) => (
-                          <label key={option} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedDifficulty.includes(option)}
-                              onChange={() => handleDifficultyToggle(option)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                            />
-                            <span className="text-sm">{option}</span>
-                          </label>
-                        ))}
-                      </div>
+              </>
+            )}
+
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearFilters}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                {/* Difficulty Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Difficulty Level</span>
+                    {isDifficultyOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
                     )}
                   </div>
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsDurationOpen(!isDurationOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Duration</span>
-                      {isDurationOpen ? (
-                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                      ) : (
-                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                      )}
+                  {isDifficultyOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {difficultyOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedDifficulty.includes(option)}
+                            onChange={() => handleDifficultyToggle(option)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
                     </div>
-                    {isDurationOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {durationOptions.map((option) => (
-                          <label key={option} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedDuration.includes(option)}
-                              onChange={() => handleDurationToggle(option)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                            />
-                            <span className="text-sm">{option}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-              </FilterPopup>
-            </motion.div>
-          )}
+
+                {/* Duration Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDurationOpen(!isDurationOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Duration</span>
+                    {isDurationOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isDurationOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {durationOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedDuration.includes(option)}
+                            onChange={() => handleDurationToggle(option)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </FilterPopup>
+          </motion.div>
+
         </div>
       </main>
       {isShareOpen && (

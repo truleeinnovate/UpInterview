@@ -100,7 +100,7 @@ const InterviewerSchedule = () => {
     <div className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Upcoming Interview Rounds</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Upcoming Interviews</h2>
           <p className="text-sm text-gray-500">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
