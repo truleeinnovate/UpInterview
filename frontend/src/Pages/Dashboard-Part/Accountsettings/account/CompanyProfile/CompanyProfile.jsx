@@ -58,7 +58,7 @@ const CompanyProfile = () => {
   
   return (
     <>
-      <div className="space-y-6 md:mt-4 sm:mt-4">
+      <div className="space-y-6 md:mt-4  sm:mt-4">
         <div className='flex justify-between items-center'>
           <h2 className="text-2xl font-bold">Company Profile</h2>
           <button

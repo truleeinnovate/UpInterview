@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useRef,
   useCallback,
-  useMemo,
+  // useMemo,
 } from "react";
 import axios from "axios";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
@@ -18,7 +18,7 @@ import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
-import { usePermissions } from "../../../../Context/PermissionsContext.js";
+// import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 
@@ -41,11 +41,11 @@ const MyQuestionsList = ({
   fromScheduleLater,
   onAddQuestion,
 }) => {
-  const { objectPermissionscontext } = usePermissions();
-  const objectPermissions = useMemo(
-    () => objectPermissionscontext.questionBank || {},
-    [objectPermissionscontext]
-  );
+  // const { objectPermissionscontext } = usePermissions();
+  // const objectPermissions = useMemo(
+  //   () => objectPermissionscontext.questionBank || {},
+  //   [objectPermissionscontext]
+  // );
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,12 +55,12 @@ const MyQuestionsList = ({
   const [isFilterByDifficultyOpen, setIsFilterByDifficultyOpen] =
     useState(false);
   const {
-    interviewerSectionData,
+    // interviewerSectionData,
     setInterviewerSectionData,
     myQuestionsList,
     setMyQuestionsList,
-    fetchMyQuestionsData,
-    getInterviewerQuestions,
+    // fetchMyQuestionsData,
+    // getInterviewerQuestions,
   } = useCustomContext();
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
@@ -155,8 +155,8 @@ const MyQuestionsList = ({
   const [filteredMyQuestionsList, setFilteredMyQuestionsList] = useState({});
 
   //changes made by shashank - [09/01/2025]
-  const [questionScore, setQuestionScore] = useState("");
-  const [questionScoreError, setQuestionScoreError] = useState("");
+  // const [questionScore, setQuestionScore] = useState("");
+  // const [questionScoreError, setQuestionScoreError] = useState("");
 
   useEffect(() => {
     if (myQuestionsList && Object.keys(myQuestionsList).length > 0) {

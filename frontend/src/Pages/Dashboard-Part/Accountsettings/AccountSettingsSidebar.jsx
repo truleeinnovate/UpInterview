@@ -119,7 +119,11 @@ useEffect(() => {
 // };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen fixed w-full pb-14  bg-gray-50 flex "
+    // " min-h-screen bg-gray-50 flex"
+    >
+
+      {/* h-[calc(100vh-12rem)] overflow-y-auto */}
 
         {/* Sidebar */}
 
@@ -128,13 +132,15 @@ useEffect(() => {
         toggleSidebar={toggleSidebar}
         handleTabChange ={handleTabChange} 
         activeTab ={activeTab} 
-        filteredNavigation={filteredNavigation}/>
-      
+        filteredNavigation={filteredNavigation}
+        />
+   
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-        <div className="flex-grow overflow-y-auto h-screen">
-          <div className="p-4 sm:p-8 mt-12 lg:mt-0 xl:mt-0  2xl:mt-0">
+        <div 
+    className="flex-1 flex flex-col ml-0 h-full overflow-y-auto" >
+        <div className="flex-grow  ">
+          <div className="p-4 sm:p-8 mt-1 lg:mt-0 xl:mt-0  2xl:mt-0 ">
             {/* {renderContent()} */}
             <Outlet />
           </div>

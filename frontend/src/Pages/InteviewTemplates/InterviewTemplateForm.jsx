@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
-import axios from 'axios';
+// import axios from 'axios';
 import { useCustomContext } from '../../Context/Contextfetch';
-import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode.js";
-import Cookies from 'js-cookie';
+// import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode.js";
+// import Cookies from 'js-cookie';
 
 const InterviewSlideover = ({ mode }) => {
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    const tenantId = tokenPayload?.tenantId;
+    // const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    // const userId = tokenPayload?.userId;
+    // const tenantId = tokenPayload?.tenantId;
 
     const { templates, saveTemplateMutation } = useCustomContext();
     const { id } = useParams();

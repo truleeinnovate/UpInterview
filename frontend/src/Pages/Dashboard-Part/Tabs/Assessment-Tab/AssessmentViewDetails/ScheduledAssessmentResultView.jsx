@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import manImage from '../../../Images/man.png';
-import { IoIosArrowDown, IoIosArrowUp, IoIosArrowBack } from 'react-icons/io';
+import { ReactComponent as IoIosArrowBack } from '../../../../../icons/IoIosArrowBack.svg';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 function AssessmentResultView({ 
   candidate, 
@@ -148,7 +149,7 @@ function AssessmentResultView({
                       </div>
                     </div>
                     <button className="text-gray-500 hover:text-gray-700">
-                      {toggleStates[index] ? <IoIosArrowUp size={16} /> : <IoIosArrowDown size={16} />}
+                      {toggleStates[index] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                   </div>
 
