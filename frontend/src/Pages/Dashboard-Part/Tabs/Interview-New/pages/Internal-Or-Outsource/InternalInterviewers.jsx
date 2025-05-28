@@ -7,7 +7,7 @@ import { useCustomContext } from "../../../../../../Context/Contextfetch.js";
 import { Search, X, ChevronDown } from 'lucide-react';
 
 const InternalInterviews = ({ onClose, onSelectCandidates }) => {
-  const { teamsData, groups } = useCustomContext();
+  const { interviewers, groups } = useCustomContext();
   const [selectedInterviewerIds, setSelectedInterviewerIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -15,8 +15,6 @@ const InternalInterviews = ({ onClose, onSelectCandidates }) => {
   const [viewType, setViewType] = useState("individuals");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
-  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -36,11 +34,13 @@ const InternalInterviews = ({ onClose, onSelectCandidates }) => {
 
   const FilteredData = useMemo(() => {
     if (viewType === "individuals") {
-      if (!Array.isArray(teamsData)) {
-        console.log("teamData is not an array:", teamsData);
+      console.log('interviews from sfsdf', interviewers)
+      if (!Array.isArray(interviewers)) {
+        console.log("interviewers is not an array:", interviewers);
         return [];
       }
-      return teamsData.filter((team) => {
+      return interviewers.filter((team) => {
+        console.log('team', team)
         const matchesSearchQuery = [team.contactId?.name, team.contactId?.email, team.contactId?.phone].some(
           (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -59,7 +59,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates }) => {
         return matchesSearchQuery;
       });
     }
-  }, [teamsData, groups, searchQuery, viewType]);
+  }, [interviewers, groups, searchQuery, viewType]);
 
   useEffect(() => {
     setFilteredData(FilteredData);
@@ -98,7 +98,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates }) => {
 
   const selectViewType = (type) => {
     setViewType(type);
-    setSelectedInterviewerIds([]); // Clear selection when switching view types
+    setSelectedInterviewerIds([]);
     setShowDropdown(false);
   };
 

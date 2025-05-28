@@ -246,7 +246,7 @@ const App = () => {
               <Route path="/interviews/new" element={<InterviewForm />} />
               <Route path="/interviews/:id" element={<InterviewDetail />} />
               <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:id/rounds/:roundId" element={<RoundForm />} />
+              <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
 
               {/* Question Bank */}
               <Route path="/questionBank" element={<QuestionBank />} />
