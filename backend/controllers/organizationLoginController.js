@@ -487,7 +487,7 @@ const resetPassword = async (req, res) => {
 const getBasedIdOrganizations = async (req, res) => {
   try {
     const { id } = req.params; // This is the _id of the organization
-    console.log("Requested Organization ID:", id);
+    // console.log("Requested Organization ID:", id);
 
     if (!id) {
       return res.status(400).json({ message: 'Organization ID is required.' });

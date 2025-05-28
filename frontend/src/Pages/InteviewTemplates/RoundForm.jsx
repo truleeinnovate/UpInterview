@@ -15,7 +15,6 @@ import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 
-
 function RoundForm() {
   const {
     assessmentData,
