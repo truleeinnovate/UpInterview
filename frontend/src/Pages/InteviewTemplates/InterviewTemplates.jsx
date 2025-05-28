@@ -200,15 +200,8 @@ const InterviewTemplates = () => {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {templatesLoading ? (
-            <Loading />
-          ) : (
             <motion.div className="bg-white">
-              {paginatedTemplates.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-lg">
-                  No templates found.
-                </div>
-              ) : view === 'kanban' ? (
+              {view === 'kanban' ? (
                 <KanbanView templates={paginatedTemplates} />
               ) : (
                 <TableView
@@ -262,7 +255,6 @@ const InterviewTemplates = () => {
                 </div>
               </FilterPopup>
             </motion.div>
-          )}
         </div>
       </main>
       <Outlet />

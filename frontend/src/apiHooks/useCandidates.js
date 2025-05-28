@@ -11,7 +11,7 @@ export const useCandidates = () => {
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const candidatePermissions = sharingPermissionscontext?.candidate || {};
 
-  const { data: candidateData = [], isLoading } = useQuery({
+  const { data: candidateData = [], loading } = useQuery({
     queryKey: ['candidates', candidatePermissions],
     
     queryFn: async () => {
@@ -60,5 +60,5 @@ export const useCandidates = () => {
     }
   });
 
-  return { candidateData, isLoading, addOrUpdateCandidate };
+  return { candidateData, loading, addOrUpdateCandidate };
 };

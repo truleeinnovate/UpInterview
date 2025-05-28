@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
-  
+
   return (
     <div className={`${detailed ? 'space-y-4' : 'max-h-96 overflow-y-auto'}`}>
       {notifications.map((notification) => (
@@ -55,31 +55,28 @@ NotificationList.propTypes = {
       message: PropTypes.string,
       type: PropTypes.string,
       unread: PropTypes.bool,
-      timestamp: PropTypes.string
+      timestamp: PropTypes.string,
     })
   ),
   detailed: PropTypes.bool,
-  onMarkAsRead: PropTypes.func.isRequired
+  onMarkAsRead: PropTypes.func.isRequired,
 };
 
-export default function NotificationPanel() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function NotificationPanel({ isOpen, setIsOpen }) {
   const [notificationList, setNotificationList] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
- // const tenantd = "670286b86ebcb318dab2f676"; // This should come from your auth context
-  const ownerId = "670286b86ebcb318dab2f678"; // // This should come from your auth context
+  const ownerId = "670286b86ebcb318dab2f678"; // This should come from your auth context
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/push-notifications/${ownerId}`);
-      // Sort notifications by timestamp in descending order (newest first)
-      const sortedNotifications = Array.isArray(response.data) 
+      const sortedNotifications = Array.isArray(response.data)
         ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         : [];
       setNotificationList(sortedNotifications);
@@ -92,18 +89,16 @@ export default function NotificationPanel() {
     }
   };
 
-  // Fetch notifications on component mount and when panel opens
   useEffect(() => {
     fetchNotifications();
-  }, []); // Empty dependency array means this runs once on mount
-
+  }, []);
 
   const markAsRead = async (id) => {
     if (!id) return;
     try {
       await axios.patch(`${process.env.REACT_APP_API_URL}/push-notifications/${id}/read`);
-      setNotificationList(prevList => 
-        prevList.map(notification => 
+      setNotificationList((prevList) =>
+        prevList.map((notification) =>
           notification._id === id ? { ...notification, unread: false } : notification
         )
       );
@@ -115,10 +110,10 @@ export default function NotificationPanel() {
   const markAllAsRead = async () => {
     try {
       await axios.patch(`${process.env.REACT_APP_API_URL}/push-notifications/${ownerId}/read-all`);
-      setNotificationList(prevList => 
-        prevList.map(notification => ({
+      setNotificationList((prevList) =>
+        prevList.map((notification) => ({
           ...notification,
-          unread: false
+          unread: false,
         }))
       );
     } catch (err) {
@@ -126,17 +121,7 @@ export default function NotificationPanel() {
     }
   };
 
-  // const clearAllNotifications = async () => {
-  //   try {
-  //     await axios.delete(`${process.env.REACT_APP_API_URL}/push-notifications/${ownerId}`);
-  //     setNotificationList([]);
-  //   } catch (err) {
-  //     console.error('Error clearing notifications:', err);
-  //   }
-  // };
-
-  // First filter notifications based on type/category
-  const typeFilteredNotifications = (notificationList || []).filter(notification => {
+  const typeFilteredNotifications = (notificationList || []).filter((notification) => {
     if (!notification) return false;
     if (filter === 'all') return true;
     if (filter === 'unread') return notification.unread;
@@ -148,20 +133,18 @@ export default function NotificationPanel() {
     return notification.category === filter;
   });
 
-  // Then sort to show unread notifications at the top
   const filteredNotifications = [...typeFilteredNotifications].sort((a, b) => {
     if (a.unread === b.unread) return 0;
-    return a.unread ? -1 : 1; // Unread notifications come first
+    return a.unread ? -1 : 1;
   });
 
-  const unreadCount = (notificationList || []).filter(n => n?.unread).length;
+  const unreadCount = (notificationList || []).filter((n) => n?.unread).length;
 
   return (
     <div className="relative">
       <button
         onClick={() => {
           setIsOpen(!isOpen);
-          //if (!isOpen) 
           setShowAllNotifications(false);
         }}
         className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
@@ -175,11 +158,10 @@ export default function NotificationPanel() {
       </button>
 
       {isOpen && !showAllNotifications && (
-        <div className="absolute right-0 mt-2 w-80  bg-white rounded-lg shadow-lg py-2 z-50 mx-4 sm:mx-0">
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 mx-4 sm:mx-0">
           <div className="px-3 sm:px-4 py-2 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
           </div>
-          
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>
           ) : error ? (
@@ -188,10 +170,7 @@ export default function NotificationPanel() {
             <div className="p-4 text-center text-gray-500">No notifications</div>
           ) : (
             <>
-              <NotificationList 
-                notifications={filteredNotifications.slice(0, 3)} 
-                onMarkAsRead={markAsRead}
-              />
+              <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />
               <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
                 <button
                   className="w-full text-sm text-blue-600 hover:text-blue-800 font-semibold py-1"
@@ -210,10 +189,7 @@ export default function NotificationPanel() {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-800">All Notifications</h2>
-              <button
-                onClick={() => setShowAllNotifications(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <button onClick={() => setShowAllNotifications(false)} className="text-gray-500 hover:text-gray-700">
                 <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
@@ -243,7 +219,7 @@ export default function NotificationPanel() {
                     Mark all as read
                   </button>
                   <button
-                    //onClick={clearAllNotifications}
+                    // onClick={clearAllNotifications}
                     className="flex-1 sm:flex-none text-sm text-red-600 hover:text-red-800 px-3 py-1.5 border border-red-600 rounded-md hover:bg-red-50"
                   >
                     Clear all
@@ -258,15 +234,9 @@ export default function NotificationPanel() {
               ) : error ? (
                 <div className="text-center text-red-500 py-8">{error}</div>
               ) : filteredNotifications.length > 0 ? (
-                <NotificationList 
-                  notifications={filteredNotifications} 
-                  detailed={true} 
-                  onMarkAsRead={markAsRead}
-                />
+                <NotificationList notifications={filteredNotifications} detailed={true} onMarkAsRead={markAsRead} />
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  No notifications found
-                </div>
+                <div className="text-center text-gray-500 py-8">No notifications found</div>
               )}
             </div>
           </div>
@@ -275,3 +245,8 @@ export default function NotificationPanel() {
     </div>
   );
 }
+
+NotificationPanel.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  setIsOpen: PropTypes.func.isRequired,
+};

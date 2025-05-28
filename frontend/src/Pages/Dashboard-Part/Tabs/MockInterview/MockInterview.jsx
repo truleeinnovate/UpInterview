@@ -236,76 +236,69 @@ const MockInterview = () => {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {loading ? (
-            <Loading />
-          ) : (
-            <motion.div className="bg-white">
-              {currentFilteredRows.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-lg">
-                  No interviews found.
-                </div>
-              ) : viewMode === "kanban" ? (
-                <MockInterviewKanban
-                  mockinterviews={currentFilteredRows}
-                  mockinterviewData={mockinterviewData}
-                  loading={loading}
-                  mockinterviewDataView={setmockinterviewDataView}
-                  onRescheduleClick={onRescheduleClick}
-                  onCancel={onCancelClick}
-                />
-              ) : (
-                <TableView
-                  data={currentFilteredRows}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={loading}
-                  emptyState="No interviews found."
-                  className="table-fixed w-full"
-                />
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearAll}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsStatusOpen(!isStatusOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Status</span>
-                      {isStatusOpen ? (
-                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                      ) : (
-                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isStatusOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {['Draft', 'Scheduled', 'Cancelled'].map((status) => (
-                          <label
-                            key={status}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedStatus.includes(status)}
-                              onChange={() => handleStatusToggle(status)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                            />
-                            <span className="text-sm">{status}</span>
-                          </label>
-                        ))}
-                      </div>
+          <motion.div className="bg-white">
+            {viewMode === "kanban" ? (
+              <MockInterviewKanban
+                mockinterviews={currentFilteredRows}
+                mockinterviewData={mockinterviewData}
+                loading={loading}
+                mockinterviewDataView={setmockinterviewDataView}
+                onRescheduleClick={onRescheduleClick}
+                onCancel={onCancelClick}
+              />
+            ) : (
+              <TableView
+                data={currentFilteredRows}
+                columns={tableColumns}
+                actions={tableActions}
+                loading={loading}
+                emptyState="No interviews found."
+                className="table-fixed w-full"
+              />
+            )}
+
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearAll}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Status</span>
+                    {isStatusOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
                     )}
                   </div>
+                  {isStatusOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {['Draft', 'Scheduled', 'Cancelled'].map((status) => (
+                        <label
+                          key={status}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStatus.includes(status)}
+                            onChange={() => handleStatusToggle(status)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </FilterPopup>
-            </motion.div>
-          )}
+              </div>
+            </FilterPopup>
+          </motion.div>
         </div>
       </main>
       {mockinterviewDataView && (
