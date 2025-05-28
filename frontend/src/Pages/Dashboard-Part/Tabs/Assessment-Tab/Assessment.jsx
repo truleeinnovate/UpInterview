@@ -269,8 +269,8 @@ const Assessment = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed md:mt-6 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <main className="px-6 max-w-7xl mx-auto">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
           <div className="sm:px-0">
             <Header
               title="Assessment Templates"

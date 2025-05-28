@@ -4,7 +4,6 @@ import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
 import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
@@ -170,7 +169,6 @@ const App = () => {
   const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
   const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
-  const showAppSettings = appSettingsPaths.includes(location.pathname);
 
   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
 
@@ -182,7 +180,6 @@ const App = () => {
       >
         {shouldRenderNavbar && <Navbar />}
         {showSettingsSidebar && <Settingssidebar />}
-        {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
         <div>
           <Routes>
