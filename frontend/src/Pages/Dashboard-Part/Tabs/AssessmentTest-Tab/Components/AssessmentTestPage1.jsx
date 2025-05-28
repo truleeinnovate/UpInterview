@@ -13,6 +13,7 @@ import {
   LightBulbIcon,
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import { config } from '../../../../../config';
 
 const AssessmentTestPage1 = ({
   scheduledAssessmentId,
@@ -47,7 +48,7 @@ const AssessmentTestPage1 = ({
   }, [timer]);
 
   const verifyOtp = async (candidateAssessmentId, otp) => {
-    const url = `${process.env.REACT_APP_API_URL}/candidate-assessment/verify-otp`;
+    const url = `${config.REACT_APP_API_URL}/candidate-assessment/verify-otp`;
     try {
       const response = await axios.post(url, { candidateAssessmentId, otp });
       return response.data.isValid;
@@ -100,7 +101,7 @@ const AssessmentTestPage1 = ({
     setOtp(['', '', '', '', '']); // Clear existing OTP inputs
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
+        `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
       );
       if (response.data.success) {
         setTimer(30);
@@ -118,7 +119,7 @@ const AssessmentTestPage1 = ({
   const handleSendOtp = async () => {
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
+        `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
       );
       if (response.data.success) {
         setShowOtpInput(true);

@@ -10,6 +10,7 @@ import axios from 'axios';
 import { validateGroupForm } from '../../../../../utils/InterviewGroupValidations';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../../config';
 Modal.setAppElement('#root');
 const InterviewerGroupFormPopup = () => {
   const {id} = useParams();
@@ -72,7 +73,7 @@ const InterviewerGroupFormPopup = () => {
     useEffect(() => {
         const fetchUsers = async () => {
           try {
-            const response = await axios.get(`${process.env.REACT_APP_API_URL}/org-users`, 
+            const response = await axios.get(`${config.REACT_APP_API_URL}/org-users`, 
               {
                 params: {
                   tenantId: tenantId
@@ -103,7 +104,7 @@ const InterviewerGroupFormPopup = () => {
           // Different API calls for create vs update
           if (id) {
             // Update existing group
-            await axios.patch(`${process.env.REACT_APP_API_URL}/groups/update/${id}`, {
+            await axios.patch(`${config.REACT_APP_API_URL}/groups/update/${id}`, {
               name: formData.name,
               description: formData.description,
               status: formData.status,
@@ -112,7 +113,7 @@ const InterviewerGroupFormPopup = () => {
             });
           } else {
             // Create new group
-            await axios.post(`${process.env.REACT_APP_API_URL}/groups`, {
+            await axios.post(`${config.REACT_APP_API_URL}/groups`, {
               name: formData.name,
               description: formData.description,
               status: formData.status,
@@ -155,7 +156,7 @@ const InterviewerGroupFormPopup = () => {
   //       }
       
   //       try {
-  //         const response = await axios.post(`${process.env.REACT_APP_API_URL}/groups`, {
+  //         const response = await axios.post(`${config.REACT_APP_API_URL}/groups`, {
   //           name: formData.name,
   //           description: formData.description,
   //           status: formData.status,

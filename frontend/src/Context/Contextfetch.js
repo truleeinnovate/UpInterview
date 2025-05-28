@@ -342,8 +342,8 @@ const CustomProvider = ({ children }) => {
       };
 
       const url = isEdit
-        ? `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${process.env.REACT_APP_API_URL}/mockinterview`;
+        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview`;
 
       const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
 
@@ -363,7 +363,7 @@ const CustomProvider = ({ children }) => {
               requestMessage: "Outsource interview request",
               expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             };
-            await axios.post(`${process.env.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
           })
         );
       }
@@ -558,7 +558,7 @@ const CustomProvider = ({ children }) => {
     }
 
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups/data`, {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/groups/data`, {
         params: {
           tenantId: tenantId,
         },
@@ -588,7 +588,7 @@ const CustomProvider = ({ children }) => {
   // Fetch users data
   const fetchUsersData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
       setUsersData(response.data);
     } catch (error) {
       console.error('Error fetching users data:', error);
@@ -686,7 +686,7 @@ const CustomProvider = ({ children }) => {
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ['interviewTemplates', tenantId],
     queryFn: async () => {
-      const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
+      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
       const response = await axios.get(apiUrl);
       return response.data.data;
     },
@@ -698,12 +698,12 @@ const CustomProvider = ({ children }) => {
     mutationFn: async ({ id, templateData, isEditMode }) => {
       let response;
       if (isEditMode) {
-        response = await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+        response = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
           templateData,
         });
       } else {
-        response = await axios.post(`${process.env.REACT_APP_API_URL}/interviewTemplates`, {
+        response = await axios.post(`${config.REACT_APP_API_URL}/interviewTemplates`, {
           ...templateData,
           tenantId,
         });
@@ -811,14 +811,14 @@ const CustomProvider = ({ children }) => {
     queryKey: ['users', tenantId],
     queryFn: async () => {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
+        `${config.REACT_APP_API_URL}/organization/${tenantId}`
       );
       
       // Process image URLs and reverse the array (newest first)
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
-            const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+            const imageUrl = `${config.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
             return { ...contact, imageUrl };
           }
           return contact;
@@ -855,7 +855,7 @@ const CustomProvider = ({ children }) => {
 
       // Use the same endpoint for both create and edit
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/Organization/new-user-Creation`,
+        `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
       );
 
@@ -866,17 +866,17 @@ const CustomProvider = ({ children }) => {
         imageData.append("type", "contact");
         imageData.append("id", response.data.contactId);
 
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else if (!userData.imageUrl && editMode) {
         // Delete image if no file and no existing image in edit mode
-        await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
+        await axios.delete(`${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
       }
 
       // Send welcome email only for new user creation
       if (!editMode) {
-        await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
+        await axios.post(`${config.REACT_APP_API_URL}/forgot-password`, {
           email: userData.email,
           type: "usercreatepass"
         });
@@ -898,7 +898,7 @@ const CustomProvider = ({ children }) => {
   const toggleUserStatus = useMutation({
     mutationFn: async ({userId,newStatus}) => {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/users/${userId}/status`,
+        `${config.REACT_APP_API_URL}/users/${userId}/status`,
         {
           status: newStatus, // or you could send the new status explicitly
           modifiedBy: `admin - ${tenantId}` // Track who made the change
@@ -919,7 +919,7 @@ const CustomProvider = ({ children }) => {
   const deleteUser = useMutation({
     mutationFn: async (userId) => {
       const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL}/users/${userId}`
+        `${config.REACT_APP_API_URL}/users/${userId}`
       );
       return response.data;
     },
@@ -940,7 +940,7 @@ const CustomProvider = ({ children }) => {
       useEffect(() => {
         const fetchData = async () => {
           try {
-            const Sub_res = await axios.get(`${process.env.REACT_APP_API_URL}/subscriptions/${userId}`);
+            const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
             const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
             // If subscription exists, set it; otherwise, keep it empty
         //  console.log("Sub_res Sub_res",Subscription_data);
@@ -966,7 +966,7 @@ const CustomProvider = ({ children }) => {
       useEffect(() => {
         const fetchWalletData = async () => {
           try {
-            const WalletBalance_res = await axios.get(`${process.env.REACT_APP_API_URL}/wallet/${userId}`);
+            const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
             const WalletBalance_data = WalletBalance_res.data || {};
             // If subscription exists, set it; otherwise, keep it empty
         //  console.log("WalletBalance_res ",WalletBalance_res);

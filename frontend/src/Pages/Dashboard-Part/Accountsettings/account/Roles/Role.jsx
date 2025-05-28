@@ -6,6 +6,7 @@ import { EditButton } from './Buttons'
 // import { RoleFormPopup } from './RoleFormPopup';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../../config';
 
 const Role = () => {
   // const [editingRole, setEditingRole] = useState(null)
@@ -22,7 +23,7 @@ console.log("tenantId in role", tenantId);
     const fetchRoles = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/rolesdata?tenantId=${tenantId}`
+          `${config.REACT_APP_API_URL}/rolesdata?tenantId=${tenantId}`
         );
         setRoles(response.data);
         console.log('Fetched roles:', response.data);

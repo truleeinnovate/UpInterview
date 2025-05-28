@@ -19,6 +19,7 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import AssessmentKanban from "./AssessmentKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
+import { config } from "../../../../config.js";
 
 const Assessment = () => {
   const { assessmentData, fetchAssessmentData, loading, skills, qualification } = useCustomContext();
@@ -58,7 +59,7 @@ const Assessment = () => {
         try {
           const sectionPromises = currentAssessments.map(async (assessment) => {
             const response = await axios.get(
-              `${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
+              `${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
             );
             const sections = response.data.exists === false
               ? 0
@@ -275,7 +276,7 @@ const Assessment = () => {
             <Header
               title="Assessment Templates"
               onAddClick={() => navigate("/assessment/new")}
-              addButtonText="New"
+              addButtonText="New Template"
             />
             <Toolbar
               view={viewMode}

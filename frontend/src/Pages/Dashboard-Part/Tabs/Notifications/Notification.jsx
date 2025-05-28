@@ -9,6 +9,7 @@ import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBa
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
+import { config } from '../../../../config';
 
 const Notification = ({ isassesmentProfileDetails, objectId, candidateId, category }) => {
   console.log("ObjectId", objectId);
@@ -22,7 +23,7 @@ const Notification = ({ isassesmentProfileDetails, objectId, candidateId, catego
   useEffect(() => {
     const fetchNotificationData = async () => {
       try {
-        let url = `${process.env.REACT_APP_API_URL}/notification?category=${category}`;
+        let url = `${config.REACT_APP_API_URL}/notification?category=${category}`;
 
         if (category === "assessment" || category === "interview") {
           url += `&objectId=${objectId}`;

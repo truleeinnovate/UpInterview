@@ -7,6 +7,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import axios from 'axios';
 import { isEmptyObject, validateAdvancedForm } from '../../../../../../utils/MyProfileValidations';
 import { useNavigate, useParams } from 'react-router-dom';
+import { config } from '../../../../../../config';
 
 // Skills.svg
 
@@ -166,7 +167,7 @@ const EditAdvacedDetails = () => {
     
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData
       );
 

@@ -23,8 +23,8 @@ const SidebarProfile = ({isSidebarOpen,toggleSidebar, handleTabChange, activeTab
         <div className={`
             fixed inset-y-0 left-0 z-30 w-72 bg-white transform 
             lg:relative xl:relative 2xl:relative lg:translate-x-0  xl:translate-x-0   2xl:translate-x-0 
-            lg:shadow-lg sm:mt-8 md:mt-8 pb-10
-            transition-transform duration-300 ease-in-out
+            lg:shadow-lg sm:mt-8 md:mt-8 pb-1
+            
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}>
             <div className="flex flex-col h-full">

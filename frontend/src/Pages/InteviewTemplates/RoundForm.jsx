@@ -14,6 +14,7 @@ import MyQuestionListMain from "../Dashboard-Part/Tabs/QuestionBank-Tab/MyQuesti
 import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
+import { config } from '../../config.js';
 
 function RoundForm() {
   const {
@@ -141,7 +142,7 @@ function RoundForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`,
+        const response = await axios.get(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
           {
             params: {
               tenantId: tenantId
@@ -218,7 +219,7 @@ function RoundForm() {
   //     return null;
   //   }
   //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
   //     const assessmentQuestions = response.data;
 
   //     // console.log('Full assessment questions structure:', assessmentQuestions);
@@ -416,7 +417,7 @@ function RoundForm() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/users`);
         if (response.data && Array.isArray(response.data)) {
           setUsers(response.data);
         } else {
@@ -701,7 +702,7 @@ function RoundForm() {
           round._id === roundId ? { ...round, ...roundData } : round
         );
 
-        await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+        await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
         tenantId,
           rounds: updatedRounds,
         
@@ -710,7 +711,7 @@ function RoundForm() {
         // Add new round
         const updatedRounds = [...(template.rounds || []), roundData];
 
-        await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+        await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
           rounds: updatedRounds,
           

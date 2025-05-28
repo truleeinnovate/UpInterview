@@ -5,6 +5,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as HiArrowsUpDown } from '../../../../icons/HiArrowsUpDown.svg';
+import { config } from '../../../../config';
 
 const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
     const [positionData, setPositionData] = useState(setPositionData1);
@@ -19,7 +20,7 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
     const handleChangePositionOwner = async () => {
         try {
             const response = await axios.put(
-                `${process.env.REACT_APP_API_URL}/position/${positionData._id}`,
+                `${config.REACT_APP_API_URL}/position/${positionData._id}`,
                 { OwnerId: selectedCandidate }
             );
             console.log("Position owner updated successfully:", response.data);
@@ -59,7 +60,7 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
             setLoading(true);
             try {
                 const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL}/api/users/organization/${organizationId}`
+                    `${config.REACT_APP_API_URL}/api/users/organization/${organizationId}`
                 );
                 setUserData(response.data);
             } catch (error) {
@@ -80,7 +81,7 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
         setLoading(true);
         try {
             const matchedUser = await axios.get(
-                `${process.env.REACT_APP_API_URL}/auth/users/${positionData.ownerId}`
+                `${config.REACT_APP_API_URL}/auth/users/${positionData.ownerId}`
             );
             setUserProfile(matchedUser.data);
         } catch (error) {

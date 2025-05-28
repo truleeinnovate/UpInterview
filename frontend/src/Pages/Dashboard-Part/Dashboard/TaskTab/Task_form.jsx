@@ -7,6 +7,7 @@ import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
 import { ReactComponent as IoArrowBack } from '../../../../icons/IoArrowBack.svg';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { config } from "../../../../config.js";
 
 const TaskForm = ({
   onClose,
@@ -235,7 +236,7 @@ const TaskForm = ({
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/tasks`,
+        `${config.REACT_APP_API_URL}/tasks`,
         {
           ...formData,
           priority: selectedPriority,

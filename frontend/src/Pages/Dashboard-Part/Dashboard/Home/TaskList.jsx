@@ -4,6 +4,7 @@ import { Calendar, Clock, CheckCircle, AlertCircle, ChevronRight, Filter } from 
 import { format, isToday, isTomorrow, isThisWeek, parseISO, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { config } from '../../../../config';
 
 const TaskList = () => {
   const [taskData, setTaskData] = useState([]);
@@ -25,7 +26,7 @@ const TaskList = () => {
     const fetchTasks = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/tasks`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
         setTaskData(response.data);
       } catch (error) {
         console.error('Error fetching tasks:', error);

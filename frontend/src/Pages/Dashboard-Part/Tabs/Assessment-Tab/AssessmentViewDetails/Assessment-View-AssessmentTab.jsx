@@ -7,6 +7,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from '../../../../../config.js';
 
 function AssessmentsTab({ assessment }) {
 
@@ -24,7 +25,7 @@ function AssessmentsTab({ assessment }) {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
       );
       setScheduledAssessments(response.data);
       const initialOpenState = response.data.reduce((acc, schedule) => {
@@ -59,7 +60,7 @@ function AssessmentsTab({ assessment }) {
       }
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/emails/resend-link`,
+        `${config.REACT_APP_API_URL}/emails/resend-link`,
         {
           candidateAssessmentId,
           userId,

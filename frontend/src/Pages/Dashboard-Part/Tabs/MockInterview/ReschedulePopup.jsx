@@ -4,6 +4,7 @@ import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDrop
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 const ReschedulePopup = ({ onClose, MockEditData }) => {
     const {
@@ -152,7 +153,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
             // Create a new mock interview
             const response = await axios.patch(
-                `${process.env.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
+                `${config.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
                 payload
             );
             if (response?.data) {

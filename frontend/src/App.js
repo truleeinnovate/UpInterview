@@ -14,6 +14,8 @@ import PageSetter from './Components/PageSetter';
 import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx';
 import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
 import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
+import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
+
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -51,7 +53,6 @@ const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab
 const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
 const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
 const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const AccountSettingsSidebar = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
 const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
 const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
 const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));

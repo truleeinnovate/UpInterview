@@ -27,7 +27,7 @@ const CompanyProfile = () => {
   // useEffect(() => {
   //   const fetchData = async () => {
       
-  //       // const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${organizationId}`);
+  //       // const organization_Data = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-details/${organizationId}`);
   //       // Find user based on userId
   //       if (organizationsLoading){
   //         return <h4>Loading ...</h4>

@@ -16,6 +16,7 @@ import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 // import OutsourceOption from "../Interviews/OutsourceOption.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -143,10 +144,10 @@ const MockSchedulelater = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/auth/users/${userId}`
+          `${config.REACT_APP_API_URL}/auth/users/${userId}`
         );
 
-        // const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
+        // const allRolesResponse = await axios.get(`${config.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
         // const allRoles = allRolesResponse.data;
 
         // console.log("allRoles", currentRole);
@@ -433,13 +434,13 @@ const MockSchedulelater = () => {
 
     //   if (mockEdit) {
     //     response = await axios.patch(
-    //       `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`,
+    //       `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
     //       payload
     //     );
     //   } else {
     //     // Create a new mock interview
     //     response = await axios.post(
-    //       `${process.env.REACT_APP_API_URL}/mockinterview`,
+    //       `${config.REACT_APP_API_URL}/mockinterview`,
     //       payload
     //     );
     //   }
@@ -472,7 +473,7 @@ const MockSchedulelater = () => {
     //         console.log("Sending outsource request:", outsourceRequestData);
 
     //         await axios.post(
-    //           `${process.env.REACT_APP_API_URL}/interviewrequest`,
+    //           `${config.REACT_APP_API_URL}/interviewrequest`,
     //           outsourceRequestData
     //         );
     //       }

@@ -5,6 +5,7 @@ import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 import InterviewerAvatar from '../../../CommonCode-AllTabs/InterviewerAvatar.jsx';
 import InterviewerDetailsModal from '../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx';
 import axios from 'axios';
+import { config } from '../../../../../../config.js';
 
 const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -132,7 +133,7 @@ function OutsourcedInterviewerModal({
       console.log('candidateSkills, candidateExperience:', candidateSkills, candidateExperience);
       try {
         console.log("Fetching interviewers from API...");
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/contacts/outsource`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/contacts/outsource`);
         console.log("API Response:", response.data);
 
         const timeToMinutes = (timeStr) => {

@@ -53,7 +53,7 @@ const InterviewerGroups = () => {
   //   const fetchGroups = async () => {
   //     try {
   //       // setLoading(true);
-  //       const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups/data/${tenantId}`)
+  //       const response = await axios.get(`${config.REACT_APP_API_URL}/groups/data/${tenantId}`)
   //       console.log('Fetched groups:', response.data);
   //       setGroupsData(response.data);
   //     } catch (error) {

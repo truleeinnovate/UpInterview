@@ -17,6 +17,7 @@ import StatusBadge from '../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../CommonCode-AllTabs/Breadcrumb.jsx';
 import MoockRoundCard from './MockInterviewRoundCard.jsx';
 import MockCandidateDetails from './MockinterviewCandidate.jsx';
+import { config } from '../../../../config.js';
 
 
 const MockInterviewDetails = () => {
@@ -149,7 +150,7 @@ const MockInterviewDetails = () => {
       };
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
           ...interviewData,
           interviewId: id,
           updatingInterviewStatus: true

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { config } from '../config';
 
-const BASE_URL = `${process.env.REACT_APP_API_URL}`;
+const BASE_URL = `${config.REACT_APP_API_URL}`;
 
 const fetchOrganizationData = async (model) => {
   const organizationId = Cookies.get('organizationId');

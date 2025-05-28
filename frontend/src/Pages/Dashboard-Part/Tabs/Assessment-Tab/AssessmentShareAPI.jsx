@@ -2,6 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from '../../../../config.js';
 
 export const shareAssessmentAPI = async ({
   assessmentId,
@@ -29,7 +30,7 @@ export const shareAssessmentAPI = async ({
 
   try {
     const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/emails/share`,
+      `${config.REACT_APP_API_URL}/emails/share`,
       {
         assessmentId,
         selectedCandidates,

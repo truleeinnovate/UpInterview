@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { IoClose } from "react-icons/io5";
 import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 import axios from 'axios';
+import { config } from '../../../../config';
 
 const statusOptions = ['New', 'Assigned', 'Inprogress', 'Resolved', "Close"];
 
@@ -43,7 +44,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
       };
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/update-ticket/${ticketId}/status`, 
+        `${config.REACT_APP_API_URL}/update-ticket/${ticketId}/status`, 
         statusData
       );
 

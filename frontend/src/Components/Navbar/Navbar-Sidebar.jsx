@@ -14,6 +14,7 @@ import Cookies from "js-cookie";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
+import { config } from "../../config.js";
 
 const Navbar = () => {
   const location = useLocation();
@@ -93,10 +94,10 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProfileImage = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/${userId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/contacts/${userId}`);
         const contact = response.data;
         if (contact.ImageData && contact.ImageData.filename) {
-          const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, "/")}`;
+          const imageUrl = `${config.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, "/")}`;
           setProfileImage(imageUrl);
         }
       } catch (error) {

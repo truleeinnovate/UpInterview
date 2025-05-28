@@ -29,13 +29,13 @@ const InvoiceTab = () => {
         setLoading(true);
         try {
             //   const response = await axios.get(
-            //     `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
+            //     `${config.REACT_APP_API_URL}/organization/${tenantId}`
             //   );
 
 
             //   const contactWithImages = response.data.map((contact) => {
             //     if (contact.imageData && contact.imageData.filename) {
-            //       const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+            //       const imageUrl = `${config.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
             //       return { ...contact, imageUrl };
             //     }
             //     return contact;

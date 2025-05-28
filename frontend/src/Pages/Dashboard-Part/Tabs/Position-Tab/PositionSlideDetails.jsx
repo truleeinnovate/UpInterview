@@ -21,6 +21,7 @@ import axios from 'axios';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
+import { config } from '../../../../config';
 
 
 Modal.setAppElement('#root');
@@ -52,7 +53,7 @@ const PositionSlideDetails = () => {
   useEffect(() => {
     const fetchPosition = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`, {
+        const response = await axios.get(`${config.REACT_APP_API_URL}/position/details/${id}`, {
           params: {
             tenantId: tenantId
           }
