@@ -22,6 +22,7 @@ import { Button } from '../../CommonCode-AllTabs/ui/button';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { config } from '../../../../../config';
 
 const RoundCard = ({
   round,
@@ -45,7 +46,7 @@ const RoundCard = ({
       // Fetch the assessment data once
       setIsLoadingSections(true);
       const response = assessmentData.find(pos => pos._id === assessmentId);
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
       const assessment = response;
 
       // Get all section IDs and prepare section questions
@@ -97,7 +98,7 @@ const RoundCard = ({
   const fetchQuestionsForSection = async (sectionId) => {
     try {
       const response = assessmentData.find(pos => pos._id === round.assessmentId)
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
+      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
       const assessment = response;
 
       const section = assessment.Sections.find(s => s._id === sectionId);
@@ -158,7 +159,7 @@ const RoundCard = ({
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("Status updated:", response.data);

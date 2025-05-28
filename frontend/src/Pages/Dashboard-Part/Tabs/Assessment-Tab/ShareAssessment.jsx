@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from '../../../../config.js';
 
 const ShareAssessment = ({
   isOpen,
@@ -39,7 +40,7 @@ const ShareAssessment = ({
   const fetchAssignedCandidates = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
       );
       const assigned = response.data.flatMap((schedule) =>
         schedule.candidates.map((candidate) => ({

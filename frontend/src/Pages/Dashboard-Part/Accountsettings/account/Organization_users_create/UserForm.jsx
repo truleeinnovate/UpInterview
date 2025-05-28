@@ -9,6 +9,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm, validateEmail } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { config } from "../../../../../config";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const {usersRes, 
@@ -85,7 +86,7 @@ console.log("tenantId in userform", tenantId);
     if (!email) return false;
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/check-email?email=${email}`
+        `${config.REACT_APP_API_URL}/check-email?email=${email}`
       );
       return response.data.exists;
     } catch (error) {
@@ -141,7 +142,7 @@ console.log("tenantId in userform", tenantId);
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organization/roles/${tenantId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/organization/roles/${tenantId}`);
         setCurrentRole(response.data);
       } catch (error) {
         console.error('Error fetching roles:', error);
@@ -261,7 +262,7 @@ console.log("tenantId in userform", tenantId);
 
   //     // Use the same endpoint for both create and edit
   //     const response = await axios.post(
-  //       `${process.env.REACT_APP_API_URL}/organization/new-user-Creation`,
+  //       `${config.REACT_APP_API_URL}/organization/new-user-Creation`,
   //       {
   //         UserData: { ...payload, roleId: selectedCurrentRoleId },
   //         contactData: {
@@ -281,16 +282,16 @@ console.log("tenantId in userform", tenantId);
   //       imageData.append("type", "contact");
   //       imageData.append("id", response.data.contactId);
 
-  //       await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+  //       await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
   //         headers: { "Content-Type": "multipart/form-data" },
   //       });
   //     } else if (!isImageUploaded && !filePreview && editMode) {
-  //       await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
+  //       await axios.delete(`${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
   //     }
 
   //     // Send welcome email only for new user creation
   //     if (!editMode) {
-  //       await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
+  //       await axios.post(`${config.REACT_APP_API_URL}/forgot-password`, {
   //         email: userData.email,
   //         type: "usercreatepass"
   //       });

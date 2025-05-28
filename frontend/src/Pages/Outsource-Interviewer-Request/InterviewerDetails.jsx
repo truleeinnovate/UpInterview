@@ -4,6 +4,7 @@ import FeedbackStatusChangeModal from './FeedbackStatusChangeModal';
 import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
 import Availability from '../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';
 import axios from 'axios';
+import { config } from '../../config';
 
 const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
@@ -20,7 +21,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const fetchInterviewers = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
 
       console.log('✅ response:', response.data);
 

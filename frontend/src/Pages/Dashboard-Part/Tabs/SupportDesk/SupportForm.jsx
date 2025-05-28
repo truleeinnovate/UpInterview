@@ -7,6 +7,7 @@ import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 import { toast } from "react-toastify";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
+import { config } from "../../../../config";
 
 const maxDescriptionLen = 500;
 
@@ -48,10 +49,10 @@ const SupportForm = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/users/${ownerId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/auth/users/${ownerId}`);
         setContact(response.data.Name);
 
-        const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/organization/${response.data.tenantId}`);
+        const response2 = await axios.get(`${config.REACT_APP_API_URL}/organization/${response.data.tenantId}`);
         setOrganization(response2.data.Organization);
         
       } catch (error) {
@@ -131,8 +132,8 @@ const SupportForm = () => {
     
     try {
       const url = editMode 
-        ? `${process.env.REACT_APP_API_URL}/update-ticket/${initialTicketData._id}`
-        : `${process.env.REACT_APP_API_URL}/create-ticket`;
+        ? `${config.REACT_APP_API_URL}/update-ticket/${initialTicketData._id}`
+        : `${config.REACT_APP_API_URL}/create-ticket`;
       
       const response = await axios[editMode ? 'patch' : 'post'](url, formData);
       

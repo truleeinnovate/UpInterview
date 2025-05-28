@@ -21,6 +21,7 @@ import Popup from "reactjs-popup";
 // import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { config } from "../../../../config.js";
 
 // const MyQuestionsList = ({ interviewQuestionsList, setInterviewQuestionsList, section, questionBankPopupVisibility }) => {
 // changes made by shashank
@@ -327,7 +328,7 @@ const MyQuestionsList = ({
     //     [listName]: requiredObj,
     //   }));
 
-    //   const url = `${process.env.REACT_APP_API_URL}/interview-questions/add-question`;
+    //   const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
 
     //   const questionToAdd = {
     //     // id: interviewerSectionData.length + 1,
@@ -361,11 +362,11 @@ const MyQuestionsList = ({
       [listName]: requiredObj,
     }));
     try {
-      const url = `${process.env.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+      const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response = await axios.delete(url);
       alert(response.data.message);
       // getInterviewerQuestions()
-      const addedQuestionUrl = `${process.env.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+      const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response2 = await axios.get(addedQuestionUrl);
       setInterviewerSectionData((prev) => [...prev, response2.data.question]);
     } catch (error) {

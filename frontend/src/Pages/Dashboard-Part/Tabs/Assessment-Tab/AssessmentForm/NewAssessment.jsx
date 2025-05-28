@@ -21,6 +21,7 @@ import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
 import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentTab.jsx';
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from "../../../../../config.js";
 
 // import { useAddOrUpdateAssessment, useUpsertAssessmentQuestions } from '../../../../../Context/Contextfetch.js';
 
@@ -167,7 +168,7 @@ const NewAssessment = () => {
     if (isEditing && assessment && id) {
       console.log("Fetching assessment questions for ID:", id);
       axios
-        .get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${id}`)
+        .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${id}`)
         .then((response) => {
           console.log("API Response:", response.data);
           if (response.data.success) {
@@ -342,7 +343,7 @@ const NewAssessment = () => {
       // if (isEditing) {
       //   console.log("✏️ Editing mode. Sending PATCH request...");
       //   response = await axios.patch(
-      //     `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
+      //     `${config.REACT_APP_API_URL}/assessments/update/${id}`,
       //     assessmentData
       //   );
       //   console.log("✅ Assessment updated successfully:", response.data);
@@ -355,7 +356,7 @@ const NewAssessment = () => {
       //   if (!tabsSubmitStatus["Basicdetails"]) {
       //     console.log("🆕 Creating new assessment. Sending POST request...");
       //     response = await axios.post(
-      //       `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
+      //       `${config.REACT_APP_API_URL}/assessments/new-assessment`,
       //       assessmentData
       //     );
       //     console.log("✅ New assessment created:", response.data);
@@ -369,7 +370,7 @@ const NewAssessment = () => {
       //   } else {
       //     console.log("♻️ Updating existing assessment (after Basicdetails). Sending PATCH...");
       //     response = await axios.patch(
-      //       `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+      //       `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
       //       assessmentData
       //     );
       //     console.log("✅ Assessment updated successfully:", response.data);
@@ -391,7 +392,7 @@ const NewAssessment = () => {
         console.log("📦 Prepared questions data:", assessmentQuestionsData);
         console.log("📤 Sending questions to API...");
         // response = await axios.post(
-        //   `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
+        //   `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
         //   assessmentQuestionsData
         // );
          response = await useUpsertAssessmentQuestions.mutateAsync(assessmentQuestionsData);

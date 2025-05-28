@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, MessageSquare, ChevronRight, Paperclip } from 'lucide-react';
 import AllNotificationsModal from './AllNotificationsModal';
 import NotificationDetailsModal from './NotificationDetailsModal';
+import { config } from '../../../../config';
 
 const NotificationsSection = () => {
   const [activeTab, setActiveTab] = useState('email');
@@ -18,7 +19,7 @@ const NotificationsSection = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/notifications/all?organizationId=${organizationId}&tenantId=${tenantId}&ownerId=${ownerId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/notifications/all?organizationId=${organizationId}&tenantId=${tenantId}&ownerId=${ownerId}`);
         
         // Process the flat array into categorized structure
         const categorizedNotifications = {

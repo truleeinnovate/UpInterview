@@ -9,6 +9,7 @@ import { X, Camera, Trash, Minimize, Maximize, ChevronDown, Search, } from 'luci
 import { validateCompanyProfile } from '../../../../../utils/AccountSettingOrganizationValidations';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { config } from '../../../../../config';
 Modal.setAppElement('#root');
 
 export const companySizes = ['1-10', '11-50', '51-200', '201-500', '501+'];
@@ -137,7 +138,7 @@ export function CompanyEditProfile() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const organization_Data = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`);
+                const organization_Data = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-details/${id}`);
                 // Find user based on userId
 
                 const organizationDetails = organization_Data.data;
@@ -267,7 +268,7 @@ console.log("validationErrors",validationErrors);
                 formDataUpload.append('id', id);
 
                 const uploadResponse = await axios.post(
-                    `${process.env.REACT_APP_API_URL}/upload`,
+                    `${config.REACT_APP_API_URL}/upload`,
                     formDataUpload,
                     { headers: { 'Content-Type': 'multipart/form-data' } }
                 );
@@ -302,7 +303,7 @@ console.log("validationErrors",validationErrors);
 
 
             // const response = await axios.patch(
-            //     `${process.env.REACT_APP_API_URL}/Organization/organization-details/${id}`,
+            //     `${config.REACT_APP_API_URL}/Organization/organization-details/${id}`,
             //     updatedData,
             //     { headers: { 'Content-Type': 'application/json' } }
             // );

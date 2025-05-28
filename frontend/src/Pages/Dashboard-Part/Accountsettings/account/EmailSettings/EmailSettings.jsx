@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../../config';
 
 function EmailSettings() {
 
@@ -92,7 +93,7 @@ Template Manager Team
     setError(null);
 
     try {
-      const response = await fetch(process.env.REACT_APP_API_URL + '/emailTemplate/email-settings', {
+      const response = await fetch(config.REACT_APP_API_URL + '/emailTemplate/email-settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ Template Manager Team
     const fetchEmailSettings = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/emailTemplate/email-settings?tenantId=${tenantId}&ownerId=${ownerId}`
+          `${config.REACT_APP_API_URL}/emailTemplate/email-settings?tenantId=${tenantId}&ownerId=${ownerId}`
         );
         if (response.ok) {
           const data = await response.json();

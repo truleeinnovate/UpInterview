@@ -23,6 +23,7 @@ import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates';
+import { config } from '../../../../../config';
 
 const PositionRoundCard = ({
   round,
@@ -69,7 +70,7 @@ const PositionRoundCard = ({
   //   setLoadingQuestions(true);
 
   //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
   //     const assessmentQuestions = response.data;
 
   //     // console.log('Full assessment questions structure:', assessmentQuestions);
@@ -225,7 +226,7 @@ const PositionRoundCard = ({
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("Status updated:", response.data);

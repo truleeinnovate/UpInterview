@@ -121,14 +121,14 @@ const InterviewSlideover = ({ mode }) => {
 
             // if (isEditMode) {
             //     response = await axios.patch(
-            //         `${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+            //         `${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
             //         tenantId,
             //         templateData,
             //     }
             //     );
             // } else {
             //     response = await axios.post(
-            //         `${process.env.REACT_APP_API_URL}/interviewTemplates`,
+            //         `${config.REACT_APP_API_URL}/interviewTemplates`,
             //         { ...templateData, tenantId, }
             //     );
             // }

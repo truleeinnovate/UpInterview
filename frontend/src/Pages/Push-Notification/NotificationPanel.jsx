@@ -4,6 +4,7 @@ import axios from 'axios';
 import PropTypes from 'prop-types';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
+import { config } from '../../config';
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
@@ -79,7 +80,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/push-notifications/${ownerId}`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}`);
       const sortedNotifications = Array.isArray(response.data)
         ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         : [];
@@ -106,7 +107,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
   const markAsRead = async (id) => {
     if (!id) return;
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/push-notifications/${id}/read`);
+      await axios.patch(`${config.REACT_APP_API_URL}/push-notifications/${id}/read`);
       setNotificationList((prevList) =>
         prevList.map((notification) =>
           notification._id === id ? { ...notification, unread: false } : notification
@@ -119,7 +120,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
 
   const markAllAsRead = async () => {
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/push-notifications/${ownerId}/read-all`);
+      await axios.patch(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}/read-all`);
       setNotificationList((prevList) =>
         prevList.map((notification) => ({
           ...notification,
