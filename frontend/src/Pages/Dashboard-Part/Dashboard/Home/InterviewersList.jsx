@@ -1,66 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, ChevronRight, Calendar, CheckCircle, Building, MapPin, Briefcase } from 'lucide-react';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import Cookies from 'js-cookie';
+import { config } from '../../../../config';
 
 const InterviewersList = () => {
-  const interviewers = [
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      role: "Senior Technical Interviewer",
-      specialization: "System Design",
-      rating: 4.9,
-      completedInterviews: 156,
-      availability: "Available",
-      nextAvailable: "Today",
-      type: "Internal",
-      department: "Engineering",
-      location: "San Francisco",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    },
-    {
-      id: 2,
-      name: "Michael Chang",
-      role: "Frontend Specialist",
-      specialization: "UI/UX",
-      rating: 4.7,
-      completedInterviews: 98,
-      availability: "Busy",
-      nextAvailable: "Tomorrow",
-      type: "External",
-      company: "Design Masters LLC",
-      location: "Remote",
-      image: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    },
-    {
-      id: 3,
-      name: "Emily Roberts",
-      role: "Leadership Assessor",
-      specialization: "Behavioral",
-      rating: 4.8,
-      completedInterviews: 124,
-      availability: "Available",
-      nextAvailable: "Today",
-      type: "Internal",
-      department: "HR",
-      location: "New York",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    }
-  ];
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    const tenantId = tokenPayload?.tenantId;
+    
+
+  const [interviewers, setInterviewers] = useState([]);
+  console.log('interviewers from home', interviewers);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchInterviewers = async () => {
+      try {
+        const response = await fetch(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch interviewers');
+        }
+        const data = await response.json();
+        setInterviewers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviewers();
+  }, [tenantId]);
+
+  if (loading) {
+    return <div className="text-center p-6">Loading...</div>;
+  }
+
+  // if (error) {
+  //   return <div className="text-center p-6 text-red-600">Error: {error}</div>;
+  // }
 
   return (
-    <div className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300">
+   <div className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Available Interviewers</h2>
           <p className="text-sm text-gray-500">Expert interviewers ready to help</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300">
+        <button className="flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-xl hover:bg-custom-blue/90 transition-all duration-300">
           <span className="text-sm font-medium">View All</span>
           <ChevronRight size={18} />
+
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-1  gap-4 max-h-[calc(100vh-400px)] overflow-y-auto pr-2 -mr-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-1 gap-4 max-h-[calc(100vh-400px)] overflow-y-auto pr-2 -mr-2">
         {interviewers.map((interviewer) => (
           <div 
             key={interviewer.id} 

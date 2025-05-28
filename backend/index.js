@@ -756,9 +756,7 @@ app.use('/schedule-assessment', scheduledAssessmentRouter);
 const { Contacts } = require("./models/Contacts.js");
 app.get('/contacts', async (req, res) => {
   try {
-    console.log('Contacts:', Contacts);
     const contacts = await Contacts.find().populate('availability');
-    console.log('contacts', contacts);
     res.status(200).json(contacts);
   } catch (error) {
     console.error('Error fetching contacts:', error);
@@ -838,4 +836,30 @@ app.use('/wallet', WalletRouter)
 // task
 const taskRoutes = require('./routes/taskRoutes');
 app.use('/tasks', taskRoutes);
+
+//i am using this code for outsource interviewers we need to change his into contact controller
+app.get('/api/contacts/outsource', async (req, res) => {
+  try {
+    const contacts = await Contacts.find({ interviewerType: "Outsource" })
+      .populate({
+        path: 'availability',
+        model: 'Interviewavailability'
+      });
+
+    res.json(contacts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching contacts', error });
+  }
+});
+
+const outsourceInterviewRequestRoutes = require('./routes/InterviewRequestRoute.js');
+app.use('/interviewrequest', outsourceInterviewRequestRoutes);
+
+const outsourceInterviewerRoutes = require('./routes/outsourceInterviewerRoutes');
+app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
+
+const InterviewRoutes = require('./routes/interviewRoutes.js')
+app.use('/interview', InterviewRoutes);
+const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
+app.use('/candidateposition', candidatePositionRoutes);
 

@@ -470,14 +470,14 @@ const AddCandidateForm = ({ mode }) => {
     console.log('Starting add candidate process...');
 
     // Get user token information
-    // const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    // const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
-    // const orgId = tokenPayload?.orgId;
+    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
+    const orgId = tokenPayload?.orgId;
 
-    const userId = Cookies.get('userId');
-    const userName = Cookies.get('userName')
-    const orgId = Cookies.get('organizationId')
+    // const userId = Cookies.get('userId');
+    // const userName = Cookies.get('userName')
+    // const orgId = Cookies.get('organizationId')
 
     console.log('User info:', { userId, userName, orgId });
 
