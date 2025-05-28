@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
@@ -62,14 +64,16 @@ NotificationList.propTypes = {
   onMarkAsRead: PropTypes.func.isRequired,
 };
 
-export default function NotificationPanel({ isOpen, setIsOpen }) {
+export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdowns }) {
   const [notificationList, setNotificationList] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const ownerId = "670286b86ebcb318dab2f678"; // This should come from your auth context
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const ownerId = tokenPayload?.userId;
 
   const fetchNotifications = async () => {
     try {
@@ -92,6 +96,12 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowAllNotifications(false); // Reset when panel closes
+    }
+  }, [isOpen]);
 
   const markAsRead = async (id) => {
     if (!id) return;
@@ -140,16 +150,23 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
 
   const unreadCount = (notificationList || []).filter((n) => n?.unread).length;
 
+  const togglePanel = () => {
+    setIsOpen(!isOpen);
+    if (isOpen) {
+      setShowAllNotifications(false); // Reset full view when closing
+    }
+    if (!isOpen) {
+      closeOtherDropdowns(); // Close other dropdowns when opening
+    }
+  };
+
   return (
     <div className="relative">
       <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setShowAllNotifications(false);
-        }}
-        className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
+        onClick={togglePanel}
+        className={`relative p-2 ${isOpen ? 'text-custom-blue' : 'text-black'} hover:text-gray-800 focus:outline-none rounded-lg`}
       >
-        <BellIcon className="h-5 w-5 text-custom-blue" />
+        <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
             {unreadCount}
@@ -165,7 +182,7 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>
           ) : error ? (
-            <div className="p-4 text-center text-red-500">{error}</div>
+            <div className="p-4 text-center">{error}</div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-4 text-center text-gray-500">No notifications</div>
           ) : (
@@ -173,7 +190,7 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
               <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />
               <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
                 <button
-                  className="w-full text-sm text-blue-600 hover:text-blue-800 font-semibold py-1"
+                  className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium rounded-md px-3 py-1.5"
                   onClick={() => setShowAllNotifications(true)}
                 >
                   View All Notifications
@@ -185,30 +202,30 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
       )}
 
       {isOpen && showAllNotifications && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">All Notifications</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-1 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-md shadow-lg w-full max-w-2xl max-h-[600px] overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 border-b flex justify-between items-center">
+              <h2 className="text-lg sm:text-sm font-semibold text-gray-600">All Notifications</h2>
               <button onClick={() => setShowAllNotifications(false)} className="text-gray-500 hover:text-gray-700">
-                <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                <XMarkIcon className="h-5 w-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-              <div className="flex sm:flex-col flex-row sm:items-center justify-between gap-20 sm:gap-4">
+            <div className="px-4 sm:px-6 py-4 border-b">
+              <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-2 sm:gap-4">
                 <div className="w-full sm:w-auto">
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="w-full sm:w-auto text-sm border rounded-md px-2 py-1.5"
+                    className="w-full text-sm border rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All</option>
                     <option value="unread">Unread</option>
-                    <option value="subscription">Subscription</option>
-                    <option value="interviews">Interviews</option>
-                    <option value="assessments">Assessments</option>
-                    <option value="feedback">Feedback</option>
-                    <option value="schedule">Schedule</option>
+                    <option value="Subscription">Subscription</option>
+                    <option value="Interviews">Interviews</option>
+                    <option value="Assessments">Assessments</option>
+                    <option value="Feedback">Feedback</option>
+                    <option value="Schedule">Schedule</option>
                   </select>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
@@ -219,7 +236,6 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
                     Mark all as read
                   </button>
                   <button
-                    // onClick={clearAllNotifications}
                     className="flex-1 sm:flex-none text-sm text-red-600 hover:text-red-800 px-3 py-1.5 border border-red-600 rounded-md hover:bg-red-50"
                   >
                     Clear all
@@ -228,7 +244,7 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-200px)] sm:max-h-[calc(80vh-200px)]">
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[400px]">
               {loading ? (
                 <div className="text-center text-gray-500 py-8">Loading notifications...</div>
               ) : error ? (
@@ -249,4 +265,5 @@ export default function NotificationPanel({ isOpen, setIsOpen }) {
 NotificationPanel.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   setIsOpen: PropTypes.func.isRequired,
+  closeOtherDropdowns: PropTypes.func.isRequired,
 };
