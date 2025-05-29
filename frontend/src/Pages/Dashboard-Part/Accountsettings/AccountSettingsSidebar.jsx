@@ -138,7 +138,7 @@ const AccountSettingsSidebar = () => {
 
       {/* Main Content */}
       <div
-        className="flex-1 flex flex-col ml-0 h-full overflow-y-auto" >
+        className="flex-1 flex flex-col ml-0 h-full overflow-y-auto z-50" >
         <div className="flex-grow  ">
           <div className="p-4 sm:p-8 mt-1 lg:mt-0 xl:mt-0  2xl:mt-0 ">
             {/* {renderContent()} */}

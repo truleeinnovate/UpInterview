@@ -1,12 +1,13 @@
 const InterviewTemplate = require('../models/InterviewTemplate');
 
+
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
     try {
         const template = new InterviewTemplate({
             ...req.body,
             // For now, we'll use a default user ID since auth is not implemented
-            createdBy: req.body.tenantId ,
+            createdBy: req.body.tenantId,
             tenantId: req.body.tenantId 
         });
         
@@ -24,14 +25,27 @@ exports.createInterviewTemplate = async (req, res) => {
 };
 
 // Get all interview templates for a tenant
+// Get all interview templates based on organization or owner
 exports.getAllTemplates = async (req, res) => {
     try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        // const tenantId = "670286b86ebcb318dab2f676";
-        const tenantId = req.query.tenantId;
-        const templates = await InterviewTemplate.find({ tenantId })
-            .sort({ createdAt: -1 });
-            
+        const { tenantId, ownerId, organization } = req.query;
+
+        let filter = {};
+
+        if (organization === 'true') {
+            if (!tenantId) {
+                return res.status(400).json({ success: false, message: 'tenantId is required for organization' });
+            }
+            filter.tenantId = tenantId;
+        } else {
+            if (!ownerId) {
+                return res.status(400).json({ success: false, message: 'ownerId is required for individual user' });
+            }
+            filter.ownerId = ownerId;
+        }
+
+        const templates = await InterviewTemplate.find(filter).sort({ createdAt: -1 });
+
         res.status(200).json({
             success: true,
             data: templates
@@ -43,6 +57,7 @@ exports.getAllTemplates = async (req, res) => {
         });
     }
 };
+
 
 // Get template by ID
 exports.getTemplateById = async (req, res) => {

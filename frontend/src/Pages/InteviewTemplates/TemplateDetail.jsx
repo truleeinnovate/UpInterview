@@ -143,15 +143,15 @@ const TemplateDetail = () => {
               <ArrowLeft className="h-5 w-5 mr-2" />
               <span className="text-sm sm:text-base">Back to templates</span>
             </button>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <button
-            onClick={() => navigate(`edit`)}
+            onClick={() => navigate(`edit/${template._id}`)}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 text-custom-blue bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors duration-200 text-sm sm:text-base"
               >
                 <Edit2 className="h-4 w-4" />
                 Edit Template
               </button>
-            </div>
+            </div> */}
           </div>
 
           <Breadcrumb items={breadcrumbItems} />

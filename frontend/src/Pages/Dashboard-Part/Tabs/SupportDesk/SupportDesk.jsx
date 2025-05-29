@@ -39,33 +39,39 @@ function SupportDesk() {
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
-  const getTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
-      let filteredTickets = response.data.tickets || [];
+const getTickets = useCallback(async () => {
+  setLoading(true);
+  try {
+    const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+    let filteredTickets = response.data.tickets || [];
 
-      if (userRole === "SuperAdmin" || userRole === "Support Team") {
-        setTickets(filteredTickets);
-      } else if (userRole === "Admin" && currentOrganizationId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.tenantId === currentOrganizationId
-        );
-        setTickets(filteredTickets);
-      } else if (currentUserId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.assignedToId === currentUserId
-        );
-        setTickets(filteredTickets);
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-    } finally {
-      setLoading(false);
+    if (userRole === "SuperAdmin" || userRole === "Support Team") {
+      setTickets(filteredTickets);
+    } else if (userRole === "Admin" && currentOrganizationId) {
+      filteredTickets = filteredTickets.filter(
+        (ticket) => ticket.tenantId === currentOrganizationId
+      );
+      setTickets(filteredTickets);
+    } else if (userRole === "Individual" && currentUserId) {
+      filteredTickets = filteredTickets.filter(
+        (ticket) => ticket.ownerId === currentUserId
+      );
+      setTickets(filteredTickets);
+    } else if (currentUserId) {
+      filteredTickets = filteredTickets.filter(
+        (ticket) => ticket.assignedToId === currentUserId
+      );
+      setTickets(filteredTickets);
+    } else {
+      setTickets([]);
     }
-  }, [userRole, currentUserId, currentOrganizationId]);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+  } finally {
+    setLoading(false);
+  }
+}, [userRole, currentUserId, currentOrganizationId]);
+
 
   useEffect(() => {
     getTickets();

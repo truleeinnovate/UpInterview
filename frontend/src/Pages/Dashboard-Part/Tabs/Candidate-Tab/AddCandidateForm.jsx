@@ -670,6 +670,7 @@ const AddCandidateForm = ({ mode }) => {
         <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
+
               <h2 className="text-2xl font-semibold text-custom-blue">
                 {id ? "Update Candidate" : "Add New Candidate"}
 
@@ -677,7 +678,7 @@ const AddCandidateForm = ({ mode }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsFullScreen(!isFullScreen)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
                 >
                   {isFullScreen ? (
                     <Minimize className="w-5 h-5 text-gray-500" />
