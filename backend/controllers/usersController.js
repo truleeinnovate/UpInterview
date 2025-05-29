@@ -228,6 +228,93 @@ const UpdateUser  = async (req, res) => {
   }
 };
 
+const getUsersByTenant = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
 
-module.exports = { getUsers,UpdateUser,getInterviewers };
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Invalid tenant ID' });
+    }
+
+    // Fetch users with minimal fields
+    const users = await Users.find({ tenantId }, '_id roleId status').lean();
+    if (!users || users.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Fetch contacts and roles in parallel
+    const [contacts, roles] = await Promise.all([
+      Contacts.find({ tenantId }).lean(),
+      Role.find({ tenantId }, 'label roleName').lean(),
+    ]);
+
+    // Create role map for label lookup
+    const roleMap = roles.reduce((acc, role) => {
+      acc[role._id.toString()] = role;
+      return acc;
+    }, {});
+
+    // Create contact map by ownerId
+    const contactMap = contacts.reduce((acc, contact) => {
+      if (contact.ownerId) {
+        acc[contact.ownerId.toString()] = contact;
+      }
+      return acc;
+    }, {});
+
+    // Combine user data, pulling most fields from Contacts
+    const combinedUsers = users.map(user => {
+      const contact = contactMap[user._id.toString()] || {};
+      const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
+
+      return {
+        _id: user._id,
+        firstName: contact.firstName || 'N/A',
+        lastName: contact.lastName || 'N/A',
+        email: contact.email || 'N/A',
+        countryCode: contact.countryCode || 'N/A',
+        gender: contact.gender || 'N/A',
+        phone: contact.phone || 'N/A',
+        roleId: user.roleId || 'N/A',
+        roleName: role.roleName || 'N/A',
+        label: role.label || 'N/A',
+        imageData: contact.imageData || null,
+        createdAt: user.createdAt || contact.createdAt,
+        status: user.status || 'N/A',
+        updatedAt: user.updatedAt || contact.updatedAt,
+        profileId: contact.profileId || 'N/A',
+        linkedinUrl: contact.linkedinUrl || 'N/A',
+        portfolioUrl: contact.portfolioUrl || 'N/A',
+        hourlyRate: contact.hourlyRate || 'N/A',
+        currentRole: contact.currentRole || 'N/A',
+        industry: contact.industry || 'N/A',
+        experienceYears: contact.experienceYears || 'N/A',
+        location: contact.location || 'N/A',
+        resumePdf: contact.resumePdf || 'N/A',
+        coverLetter: contact.coverLetter || 'N/A',
+        coverLetterDescription: contact.coverLetterdescription || 'N/A',
+        professionalTitle: contact.professionalTitle || 'N/A',
+        bio: contact.bio || 'N/A',
+        interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+        noShowPolicy: contact.NoShowPolicy || 'N/A',
+        previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || 'N/A',
+        previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || 'N/A',
+        expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || 'N/A',
+        technologies: contact.technologies || [],
+        skills: contact.skills || [],
+        timeZone: contact.timeZone || 'N/A',
+        preferredDuration: contact.preferredDuration || 'N/A',
+        availability: contact.availability || [],
+        dateOfBirth: contact.dateOfBirth || 'N/A',
+      };
+    });
+
+    res.status(200).json(combinedUsers);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getUsers,UpdateUser,getInterviewers,getUsersByTenant };
 

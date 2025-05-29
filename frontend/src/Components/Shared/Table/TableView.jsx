@@ -8,14 +8,13 @@ const TableView = ({
   columns = [],
   loading = false,
   actions = [],
-  emptyState = 'No data found.'
+  emptyState = 'No data found.',
 }) => {
   const menuRefs = useRef({});
   const menuButtonRefs = useRef({});
   const scrollContainerRef = useRef(null);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [openUpwards, setOpenUpwards] = useState(false);
-
   const [delayedLoading, setDelayedLoading] = useState(loading);
   const [showEmptyState, setShowEmptyState] = useState(false);
 
@@ -171,12 +170,19 @@ const TableView = ({
                                         action.onClick(row);
                                         setOpenMenuIndex(null);
                                       }}
-                                      className={`${active ? 'bg-gray-50' : ''
-                                        } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                      className={`${
+                                        active ? 'bg-gray-50' : ''
+                                      } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
                                       disabled={action.disabled ? action.disabled(row) : false}
                                     >
-                                      {action.icon}
-                                      {action.label}
+                                      {/* Render icon as a function if it is one, otherwise render directly */}
+                                      {typeof action.icon === 'function'
+                                        ? action.icon(row)
+                                        : action.icon}
+                                      {/* Render label as a function if it is one, otherwise render directly */}
+                                      {typeof action.label === 'function'
+                                        ? action.label(row)
+                                        : action.label}
                                     </button>
                                   )}
                                 </Menu.Item>
