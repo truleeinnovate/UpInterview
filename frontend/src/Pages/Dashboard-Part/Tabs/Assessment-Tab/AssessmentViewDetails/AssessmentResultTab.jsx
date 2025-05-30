@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { ChevronUpIcon, ChevronDownIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ScheduledAssessmentResultView from './ScheduledAssessmentResultView';
+import { config } from '../../../../../config';
 
 function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullscreen, assessmentQuestions }) {
   const [results, setResults] = useState([]);
@@ -16,7 +17,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
       try {
         setLoading(true);
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/assessments/${assessment._id}/results`
+          `${config.REACT_APP_API_URL}/assessments/${assessment._id}/results`
         );
         setResults(response.data);
       } catch (error) {

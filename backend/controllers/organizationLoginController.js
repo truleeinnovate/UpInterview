@@ -232,7 +232,7 @@ const organizationUserCreation = async (req, res) => {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, name, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id } = UserData;
 
     if (editMode && _id) {
       // Update existing user
@@ -243,7 +243,7 @@ const organizationUserCreation = async (req, res) => {
 
       // Update user fields
       existingUser.firstName = firstName;
-      existingUser.name = lastName;
+      existingUser.lastName = lastName;
       existingUser.email = email;
       existingUser.tenantId = tenantId;
       existingUser.roleId = roleId;
@@ -256,7 +256,7 @@ const organizationUserCreation = async (req, res) => {
       const existingContact = await Contacts.findOne({ ownerId: _id });
       if (existingContact) {
         existingContact.firstName = contactData.firstName;
-        existingContact.name = contactData.lastName;
+        existingContact.lastName = contactData.lastName;
         existingContact.email = contactData.email;
         existingContact.phone = contactData.phone;
         existingContact.tenantId = contactData.tenantId;
@@ -278,7 +278,7 @@ const organizationUserCreation = async (req, res) => {
 
       const newUser = new Users({
         firstName,
-        name,
+        lastName,
         email,
         tenantId,
         roleId,
@@ -368,63 +368,7 @@ const loginOrganization = async (req, res) => {
   }
 };
 
-const getUsersByTenant = async (req, res) => {
-  try {
-    const { tenantId } = req.params;
 
-    if (!tenantId) {
-      return res.status(400).json({ message: 'Invalid tenant ID' });
-    }
-
-    const users = await Users.find({ tenantId }).lean();
-    if (!users || users.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    const [contacts, roles] = await Promise.all([
-      Contacts.find({ tenantId }).lean(),
-      Role.find({ tenantId }).lean() // ✅ Fix: using correct field
-    ]);
-
-    const roleMap = roles.reduce((acc, role) => {
-      acc[role._id.toString()] = role;
-      return acc;
-    }, {});
-
-    const contactMap = contacts.reduce((acc, contact) => {
-      if (contact.ownerId) {
-        acc[contact.ownerId.toString()] = contact;
-      }
-      return acc;
-    }, {});
-
-    const combinedUsers = users.map(user => {
-      const contact = contactMap[user._id.toString()] || {};
-      const role = user.roleId ? roleMap[user.roleId] : {};
-
-      return {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        countryCode: user.countryCode,
-        gender: user.gender,
-        phone: contact.phone || '',
-        roleId: user.roleId,
-        roleName: role.roleName || '',
-        label: role.label || '',
-        imageData: contact.imageData || '',
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      };
-    });
-
-    res.status(200).json(combinedUsers);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
 
 const getRolesByTenant = async (req, res) => {
   try {
@@ -486,7 +430,7 @@ const resetPassword = async (req, res) => {
 const getBasedIdOrganizations = async (req, res) => {
   try {
     const { id } = req.params; // This is the _id of the organization
-    console.log("Requested Organization ID:", id);
+    // console.log("Requested Organization ID:", id);
 
     if (!id) {
       return res.status(400).json({ message: 'Organization ID is required.' });
@@ -792,7 +736,7 @@ const updateBasedIdOrganizations = async (req, res) => {
 };
 
 module.exports = {
-  registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getUsersByTenant, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
+  registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,

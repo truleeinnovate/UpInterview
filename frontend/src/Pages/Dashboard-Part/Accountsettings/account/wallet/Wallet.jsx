@@ -37,6 +37,9 @@ export const calculatePendingBalance = (walletBalance) => {
 const Wallet = () => {
   const {walletBalance} = useCustomContext();
   const navigate = useNavigate();
+
+  console.log("walletBalance ", walletBalance);
+  
   
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -48,7 +51,7 @@ const Wallet = () => {
   //   const fetchData = async () => {
   //     try {
   //       setIsLoading(true);
-  //       const wallet_res = await axios.get(`${process.env.REACT_APP_API_URL}/get-top-up/${userId}`);
+  //       const wallet_res = await axios.get(`${config.REACT_APP_API_URL}/get-top-up/${userId}`);
   //       // Find user based on userId
 
   //       const walletDetailsArray = wallet_res.data.walletDetials;
@@ -100,10 +103,10 @@ const Wallet = () => {
     <div >
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Wallet</h2>
-        <EditButton
+        {/* <EditButton
           onClick={() => alert('Edit wallet settings')}
           className="bg-gray-100 rounded-lg"
-        />
+        /> */}
       </div>
 
       {/* Balance Card */}
@@ -137,7 +140,7 @@ const Wallet = () => {
               })}
             </p>
             <ViewDetailsButton
-              onClick={() => navigate(`/account-settings/wallet/wallet-details/${walletBalance._id}`)}
+              onClick={() => navigate(`wallet-details/${walletBalance._id}`)}
               className="mt-2"
             />
           </div>

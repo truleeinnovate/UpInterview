@@ -673,7 +673,8 @@
 // export default Candidate;
 
 // Candidate.jsx
-import React, { useEffect, useState, useRef } from "react";
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import { useNavigate } from "react-router-dom";
@@ -688,6 +689,8 @@ import { useMediaQuery } from "react-responsive";
 import Loading from "../../../../Components/Loading";
 import { Outlet } from "react-router-dom";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { useCustomContext } from '../../../../Context/Contextfetch';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [view, setView] = useState("table");
@@ -704,10 +707,71 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     tech: [],
     experience: { min: "", max: "" },
   });
+  const [isQualificationOpen, setIsQualificationOpen] = useState(false);
+  const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+  const [isExperienceOpen, setIsExperienceOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedTech, setSelectedTech] = useState([]);
+  const [experience, setExperience] = useState({ min: '', max: '' });
+
+  const { skills, qualification } = useCustomContext();
+
+  const { candidateData, loading } = useCandidates();
+
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  const { candidateData, candidatesLoading } = useCandidates();
   const filterIconRef = useRef(null); // Ref for filter icon
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setSelectedTech(selectedFilters.tech);
+      setExperience(selectedFilters.experience);
+      setIsQualificationOpen(false);
+      setIsSkillsOpen(false);
+      setIsExperienceOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleStatusToggle = (status) => {
+    setSelectedStatus(prev =>
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const handleTechToggle = (tech) => {
+    setSelectedTech(prev =>
+      prev.includes(tech)
+        ? prev.filter(t => t !== tech)
+        : [...prev, tech]
+    );
+  };
+
+  const handleExperienceChange = (e, type) => {
+    const value = Math.max(0, Math.min(15, Number(e.target.value) || ''));
+    setExperience(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      tech: [],
+      experience: { min: '', max: '' }
+    };
+    setSelectedStatus([]);
+    setSelectedTech([]);
+    setExperience({ min: '', max: '' });
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
 
   useEffect(() => {
     if (isTablet) {
@@ -717,17 +781,17 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     }
   }, [isTablet]);
 
-  if (candidatesLoading) {
-    return <Loading />;
-  }
-
-  if (!candidateData || candidateData.length === 0) {
-    return <div>No candidates found.</div>;
-  }
-
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
-  const handleFilterChange = (filters) => {
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      tech: selectedTech,
+      experience: {
+        min: Number(experience.min) || 0,
+        max: Number(experience.max) || 15
+      }
+    };
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
@@ -736,6 +800,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         filters.experience.min ||
         filters.experience.max
     );
+    setIsFilterActive(filters.status.length > 0 || filters.tech.length > 0 || filters.experience.min || filters.experience.max);
+    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {
@@ -1012,7 +1078,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   isFilterActive={isFilterActive}
                   dataLength={dataToUse?.length}
                   searchPlaceholder="Search candidates..."
-                  filterIconRef={filterIconRef} // Pass ref to Toolbar
+                  filterIconRef={filterIconRef}
                 />
               </div>
             </main>
@@ -1026,9 +1092,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           }
         >
           <div className="sm:px-0">
-            {candidatesLoading && !isAssessmentView ? (
-              <Loading />
-            ) : (
               <motion.div className="bg-white">
                 <div className="relative w-full">
                   {view === "table" ? (
@@ -1036,7 +1099,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       <TableView
                         data={currentFilteredRows}
                         columns={tableColumns}
-                        loading={candidatesLoading}
+                        loading={loading}
                         actions={tableActions}
                         emptyState="No candidates found."
                       />
@@ -1061,7 +1124,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                           isAssessmentView: isAssessmentView,
                         }))}
                         columns={kanbanColumns}
-                        loading={candidatesLoading}
+                        loading={loading}
                         renderActions={renderKanbanActions}
                         emptyState="No candidates found."
                       />
@@ -1071,13 +1134,137 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   <FilterPopup
                     isOpen={isFilterPopupOpen}
                     onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
-                    filterIconRef={filterIconRef} // Pass ref to FilterPopup
-                  />
+                    onApply={handleApplyFilters}
+                    onClearAll={handleClearAll}
+                    filterIconRef={filterIconRef}
+                  >
+                    <div className="space-y-3">
+                      {/* Qualification Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => setIsQualificationOpen(!isQualificationOpen)}
+                        >
+                          <span className="font-medium text-gray-700">Qualification</span>
+                          {isQualificationOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isQualificationOpen && (
+                          <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                            {qualification?.length > 0 ? (
+                              qualification.map((q) => (
+                                <label
+                                  key={q.QualificationName}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedStatus.includes(q.QualificationName)}
+                                    onChange={() => handleStatusToggle(q.QualificationName)}
+                                    className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                  />
+                                  <span className="text-sm">{q.QualificationName}</span>
+                                </label>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                No qualifications available
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Skills Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => setIsSkillsOpen(!isSkillsOpen)}
+                        >
+                          <span className="font-medium text-gray-700">Skills</span>
+                          {isSkillsOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isSkillsOpen && (
+                          <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                            {skills?.length > 0 ? (
+                              skills.map((skill) => (
+                                <label
+                                  key={skill.SkillName}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedTech.includes(skill.SkillName)}
+                                    onChange={() => handleTechToggle(skill.SkillName)}
+                                    className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                  />
+                                  <span className="text-sm">{skill.SkillName}</span>
+                                </label>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500">No skills available</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Experience Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => setIsExperienceOpen(!isExperienceOpen)}
+                        >
+                          <span className="font-medium text-gray-700">Experience</span>
+                          {isExperienceOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isExperienceOpen && (
+                          <div className="mt-1 space-y-2 pl-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700">
+                                  Min (years)
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="15"
+                                  value={experience.min}
+                                  onChange={(e) => handleExperienceChange(e, 'min')}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700">
+                                  Max (years)
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="15"
+                                  value={experience.max}
+                                  onChange={(e) => handleExperienceChange(e, 'max')}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FilterPopup>
                 </div>
               </motion.div>
-            )}
           </div>
         </main>
       </main>

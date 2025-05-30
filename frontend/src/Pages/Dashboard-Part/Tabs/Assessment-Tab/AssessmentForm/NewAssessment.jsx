@@ -21,6 +21,7 @@ import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
 import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentTab.jsx';
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from "../../../../../config.js";
 
 // import { useAddOrUpdateAssessment, useUpsertAssessmentQuestions } from '../../../../../Context/Contextfetch.js';
 
@@ -31,12 +32,12 @@ const NewAssessment = () => {
   const organizationId = tokenPayload?.tenantId;
 
   // const { mutateAsync: saveAssessment } = useAddOrUpdateAssessment();
-// const { mutateAsync: upsertQuestions } = useUpsertAssessmentQuestions();
+  // const { mutateAsync: upsertQuestions } = useUpsertAssessmentQuestions();
 
 
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
-  const { positions, assessmentData,useAddOrUpdateAssessment,useUpsertAssessmentQuestions } = useCustomContext();
+  const { positions, assessmentData, useAddOrUpdateAssessment, useUpsertAssessmentQuestions } = useCustomContext();
 
   const { id } = useParams();
 
@@ -167,7 +168,7 @@ const NewAssessment = () => {
     if (isEditing && assessment && id) {
       console.log("Fetching assessment questions for ID:", id);
       axios
-        .get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${id}`)
+        .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${id}`)
         .then((response) => {
           console.log("API Response:", response.data);
           if (response.data.success) {
@@ -225,6 +226,8 @@ const NewAssessment = () => {
     Questions: false,
     Candidates: false
   });
+  console.log("Tabs Submit Status:", tabsSubmitStatus);
+
 
   const handleIconClick = (e) => {
     if (e) {
@@ -325,24 +328,28 @@ const NewAssessment = () => {
     console.log("✅ Validation passed. Prepared assessment data:", assessmentData);
 
     try {
-      let response;
+      // let response;
 
-        await useAddOrUpdateAssessment.mutateAsync({   isEditing,
-          id: isEditing ? id : tabsSubmitStatus.responseId,
-          assessmentData: assessmentData,
-          tabsSubmitStatus });
+      const response = await useAddOrUpdateAssessment.mutateAsync({
+        isEditing,
+        id: isEditing ? id : tabsSubmitStatus.responseId,
+        assessmentData,
+        tabsSubmitStatus
+      });
 
-           setTabsSubmitStatus((prev) => ({
-          ...prev,
-          [currentTab]: true,
-          responseId: isEditing ? id : response._id,
-          responseData: response
-        }));
+
+      setTabsSubmitStatus((prev) => ({
+        ...prev,
+        [currentTab]: true,
+        responseId: isEditing ? id : response?._id || prev.responseId,
+        responseData: response
+      }));
+
 
       // if (isEditing) {
       //   console.log("✏️ Editing mode. Sending PATCH request...");
       //   response = await axios.patch(
-      //     `${process.env.REACT_APP_API_URL}/assessments/update/${id}`,
+      //     `${config.REACT_APP_API_URL}/assessments/update/${id}`,
       //     assessmentData
       //   );
       //   console.log("✅ Assessment updated successfully:", response.data);
@@ -355,7 +362,7 @@ const NewAssessment = () => {
       //   if (!tabsSubmitStatus["Basicdetails"]) {
       //     console.log("🆕 Creating new assessment. Sending POST request...");
       //     response = await axios.post(
-      //       `${process.env.REACT_APP_API_URL}/assessments/new-assessment`,
+      //       `${config.REACT_APP_API_URL}/assessments/new-assessment`,
       //       assessmentData
       //     );
       //     console.log("✅ New assessment created:", response.data);
@@ -369,7 +376,7 @@ const NewAssessment = () => {
       //   } else {
       //     console.log("♻️ Updating existing assessment (after Basicdetails). Sending PATCH...");
       //     response = await axios.patch(
-      //       `${process.env.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+      //       `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
       //       assessmentData
       //     );
       //     console.log("✅ Assessment updated successfully:", response.data);
@@ -381,22 +388,33 @@ const NewAssessment = () => {
       //   }
       // }
 
-      if (currentTab === "Questions") {
-        const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
-        const assessmentQuestionsData = prepareAssessmentQuestionsData(
-          addedSections,
-          assessmentId
-        );
+    if (currentTab === "Questions") {
+  const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
 
-        console.log("📦 Prepared questions data:", assessmentQuestionsData);
-        console.log("📤 Sending questions to API...");
-        // response = await axios.post(
-        //   `${process.env.REACT_APP_API_URL}/assessment-questions/upsert`,
-        //   assessmentQuestionsData
-        // );
-         response = await useUpsertAssessmentQuestions.mutateAsync(assessmentQuestionsData);
-        console.log("✅ Questions saved successfully:", response.data.message);
-      }
+  if (!assessmentId) {
+    console.error("❌ Missing assessmentId before saving questions.");
+    return;
+  }
+
+  const assessmentQuestionsData = prepareAssessmentQuestionsData(
+    addedSections,
+    assessmentId
+  );
+
+  console.log("📦 Prepared questions data:", assessmentQuestionsData);
+
+  if (!assessmentQuestionsData.sections?.length) {
+    console.error("❌ Sections array is empty. Cannot proceed.");
+    return;
+  }
+
+  const questionsResponse = await useUpsertAssessmentQuestions.mutateAsync(
+    assessmentQuestionsData
+  );
+
+  console.log("✅ Questions saved successfully:", questionsResponse.message);
+}
+
 
       // 🧠 Action after save
       if (actionType === "close") {
@@ -995,116 +1013,116 @@ const NewAssessment = () => {
     navigate('/assessments');
   };
 
- const TabFooter = ({ currentTab }) => {
-  const handleBack = () => {
-    if (currentTab === "Details") setActiveTab("Basicdetails");
-    else if (currentTab === "Questions") setActiveTab("Details");
-    else if (currentTab === "Candidates") setActiveTab("Questions");
-  };
+  const TabFooter = ({ currentTab }) => {
+    const handleBack = () => {
+      if (currentTab === "Details") setActiveTab("Basicdetails");
+      else if (currentTab === "Questions") setActiveTab("Details");
+      else if (currentTab === "Candidates") setActiveTab("Questions");
+    };
 
-  const getNextTab = () => {
-    if (currentTab === "Basicdetails") return "Details";
-    if (currentTab === "Details") return "Questions";
-    if (currentTab === "Questions") return "Candidates";
-    return null;
-  };
+    const getNextTab = () => {
+      if (currentTab === "Basicdetails") return "Details";
+      if (currentTab === "Details") return "Questions";
+      if (currentTab === "Questions") return "Candidates";
+      return null;
+    };
 
-  const selectedCount = getSelectedQuestionsCount();
+    const selectedCount = getSelectedQuestionsCount();
 
-  return (
-    <div className="flex justify-between px-6 pt-6">
-      {currentTab !== "Basicdetails" && (
-        <button
-          onClick={handleBack}
-          className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Back
-        </button>
-      )}
-
-      <div className="flex gap-3">
-        {currentTab === "Candidates" ? (
+    return (
+      <div className="flex justify-between px-6 pt-6">
+        {currentTab !== "Basicdetails" && (
           <button
-            type="button"
-            onClick={NavigateToAssessmentList}
+            onClick={handleBack}
             className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
-            Close
+            Back
           </button>
-        ) : currentTab === "Questions" ? (
-          <>
-            {/* Always show Delete Selected if questions are selected */}
-            {selectedCount > 0 && (
-              <button
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                onClick={() => openDeleteConfirmation("bulk", null, null)}
-              >
-                Delete Selected ({selectedCount})
-              </button>
-            )}
+        )}
 
-            {isPassScoreSubmitted ? (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => handleSave(e, "Questions")}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  {isEditing ? "Update" : "Save"}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => handleSave(e, "Questions", "next")}
-                  className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
-                >
-                  {isEditing ? "Update & Next" : "Save & Create Assessment"}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  const totalQuestions = addedSections.reduce(
-                    (acc, eachSection) => acc + eachSection.Questions.length,
-                    0
-                  );
-                  if (totalQuestions !== questionsLimit) {
-                    setIsQuestionLimitErrorPopupOpen(true);
-                    return;
-                  }
-                  setSidebarOpen(true);
-                }}
-                className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
-              >
-                Add Score
-              </button>
-            )}
-          </>
-        ) : (
-          <>
+        <div className="flex gap-3">
+          {currentTab === "Candidates" ? (
             <button
               type="button"
-              onClick={(e) => handleSave(e, currentTab, "close")}
+              onClick={NavigateToAssessmentList}
               className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
-              {isEditing ? "Update" : "Save"}
+              Close
             </button>
+          ) : currentTab === "Questions" ? (
+            <>
+              {/* Always show Delete Selected if questions are selected */}
+              {selectedCount > 0 && (
+                <button
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  onClick={() => openDeleteConfirmation("bulk", null, null)}
+                >
+                  Delete Selected ({selectedCount})
+                </button>
+              )}
 
-            {getNextTab() && (
+              {isPassScoreSubmitted ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSave(e, "Questions")}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  >
+                    {isEditing ? "Update" : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSave(e, "Questions", "next")}
+                    className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+                  >
+                    {isEditing ? "Update & Next" : "Save & Create Assessment"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const totalQuestions = addedSections.reduce(
+                      (acc, eachSection) => acc + eachSection.Questions.length,
+                      0
+                    );
+                    if (totalQuestions !== questionsLimit) {
+                      setIsQuestionLimitErrorPopupOpen(true);
+                      return;
+                    }
+                    setSidebarOpen(true);
+                  }}
+                  className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+                >
+                  Add Score
+                </button>
+              )}
+            </>
+          ) : (
+            <>
               <button
                 type="button"
-                onClick={(e) => handleSave(e, currentTab, "next")}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                onClick={(e) => handleSave(e, currentTab, "close")}
+                className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
-                {isEditing ? "Update & Next" : "Save & Next"}
+                {isEditing ? "Update" : "Save"}
               </button>
-            )}
-          </>
-        )}
+
+              {getNextTab() && (
+                <button
+                  type="button"
+                  onClick={(e) => handleSave(e, currentTab, "next")}
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                >
+                  {isEditing ? "Update & Next" : "Save & Next"}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <>

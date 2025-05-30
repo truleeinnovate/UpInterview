@@ -2,7 +2,7 @@ const { Users } = require("../models/Users.js");
 const { Contacts } = require("../models/Contacts.js");
 const availabilityController = require("./interviewAvailabilityController.js");
 const { loginSendEmail } = require("./loginEmailCommonController.js");
-const OutsourceInterviewer = require("../models/OutsourceInterviewersSchema.js");
+const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require('../utils/jwt');
 
 exports.individualLogin = async (req, res) => {

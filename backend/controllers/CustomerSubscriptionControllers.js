@@ -260,7 +260,7 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
     // console.log(req.params);
 
     const { ownerId } = req.params;
-    console.log("ownerId", ownerId)
+    // console.log("ownerId", ownerId)
 
     if (!ownerId) {
       return res.status(400).json({ message: 'ownerId ID is required.' });
@@ -287,10 +287,15 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
 
     const subscriptionsWithPlanNames = customerSubscriptions.map((sub) => {
       const plan = subscriptionPlans.find((plan) => String(plan._id) === String(sub.subscriptionPlanId));
+      // console.log("plan", plan);
+      
       return {
         ...sub,
+        ...plan,
         planName: plan ? plan.name : null,
-        Sub_Plan_features: plan.features
+        Sub_Plan_features: plan.features,
+        // maxUsers:plan.maxUsers || 0
+         maxUsers: plan?.maxUsers ?? 0,
       };
     });
 

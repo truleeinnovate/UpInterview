@@ -3,6 +3,7 @@ import React from "react";
 import { IoClose } from "react-icons/io5";
 import axios from 'axios';
 import toast from "react-hot-toast";
+import { config } from "../../config";
 
 const FeedbackStatusChangeModal = ({
   showStatusModal,
@@ -26,7 +27,7 @@ const FeedbackStatusChangeModal = ({
     const updatedComments = newStatus.comments;
 
     try {
-        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/outsourceInterviewers`, {
+        const response = await axios.patch(`${config.REACT_APP_API_URL}/outsourceInterviewers`, {
             contactId: interviewer._id,
             givenBy: interviewer._id,
             status: updatedStatus,

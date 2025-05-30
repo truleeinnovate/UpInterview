@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { useCustomContext } from '../../../../Context/Contextfetch';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
 import { IoMdClose } from 'react-icons/io';
 import { FiX } from 'react-icons/fi';
@@ -9,18 +8,20 @@ import toast from 'react-hot-toast';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from '../../../../config.js';
+import { useCandidates } from '../../../../apiHooks/useCandidates';
 
 const ShareAssessment = ({
   isOpen,
   onCloseshare,
   assessment
 }) => {
+  const { candidateData, loading } = useCandidates();
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const organizationId = tokenPayload?.tenantId;
   const userId = tokenPayload?.userId;
 
-  const { candidateData } = useCustomContext();
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -39,7 +40,7 @@ const ShareAssessment = ({
   const fetchAssignedCandidates = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
       );
       const assigned = response.data.flatMap((schedule) =>
         schedule.candidates.map((candidate) => ({

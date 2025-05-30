@@ -7,6 +7,7 @@ import AssessmentTestPage2 from './Components/AssessmentTestPage2.jsx';
 import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
 import toast from 'react-hot-toast';
 import logo from "../../../Dashboard-Part/Images/upinterviewLogo.png";
+import { config } from "../../../../config.js";
 
 
 const AssessmentTest = () => {
@@ -28,7 +29,7 @@ const AssessmentTest = () => {
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
       console.log('Fetching assessment questions for ID:', assessment.assessmentId._id);
-      axios.get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
+      axios.get(`${config.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
         .then(response => {
           console.log('API Response:', response.data);
           if (response.data.success) {
@@ -48,7 +49,7 @@ const AssessmentTest = () => {
 
   const getCandidateAssessmentDetails = async (candidateAssessmentId) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
       if (response.data.success) {
         const document = response.data.candidateAssessment;
         return {
@@ -156,7 +157,7 @@ const AssessmentTest = () => {
         setCandidateId(candidateId);
 
         // Fetch assessment details
-        const assessmentResponse = await axios.get(`${process.env.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
+        const assessmentResponse = await axios.get(`${config.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
         if (assessmentResponse.data.scheduledAssessment) {
           setAssessment(assessmentResponse.data.scheduledAssessment);
           console.log('Assessment Data:', assessmentResponse.data);
@@ -165,7 +166,7 @@ const AssessmentTest = () => {
         }
 
         // Fetch candidate details
-        const candidateResponse = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}`);
+        const candidateResponse = await axios.get(`${config.REACT_APP_API_URL}/candidate/${candidateId}`);
         const candidateData = candidateResponse.data;
         console.log('Candidate Data:', candidateData);
 
@@ -177,7 +178,7 @@ const AssessmentTest = () => {
         const candidateWithImage = {
           ...candidateData,
           imageUrl: candidateData.ImageData?.filename
-            ? `${process.env.REACT_APP_API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
+            ? `${config.REACT_APP_API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
             : null,
         };
         setCandidate(candidateWithImage);

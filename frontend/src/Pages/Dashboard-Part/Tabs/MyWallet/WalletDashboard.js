@@ -8,6 +8,7 @@ import axios from 'axios';
 import { encryptData } from '../../../../utils/PaymentCard';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../config';
 
   
 export  const formatDate = (date) => {
@@ -54,7 +55,7 @@ const WalletDashboard = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/get-top-up/${ownerId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/get-top-up/${ownerId}`);
   
         const walletDetailsArray = response.data.walletDetials; // Ensure this exists
         const walletDetails = Array.isArray(walletDetailsArray) && walletDetailsArray.length > 0 

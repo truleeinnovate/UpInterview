@@ -61,4 +61,4 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model('OutsourceInterviewRequest', OutsourceInterviewRequestSchema);
+module.exports = mongoose.model('InterviewRequest', OutsourceInterviewRequestSchema);

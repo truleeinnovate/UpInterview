@@ -7,7 +7,6 @@ const { Users } = require('../models/Users');
 const { Candidate } = require('../models/candidate');
 const { encrypt, generateOTP } = require('../utils/generateOtp');
 const sendEmail = require('../utils/sendEmail');
-const TeamsOtpSchema = require('../models/teamOtp');
 const interviewQuestions = require('../models/interviewQuestions');
 const { Position } = require('../models/position.js');
 const Assessment = require("../models/assessment");
@@ -591,8 +590,6 @@ const createInterview = async (req, res) => {
             positionId,
             templateId: template ? templateId : undefined, // Only include if template is selected
             status, // Preserve status if editing
-            createdById: interview ? interview.createdById : userId, // Preserve createdById if editing
-            lastModifiedById: userId,
             ownerId: userId,
             tenantId: orgId || undefined,
             completionReason
@@ -601,8 +598,10 @@ const createInterview = async (req, res) => {
         // Create or update interview
         let savedInterview;
         if (interviewId) {
+            interviewData.updatedById = userId;
             savedInterview = await Interview.findByIdAndUpdate(interviewId, interviewData, { new: true });
         } else {
+            interviewData.createdBy = userId;
             const newInterview = new Interview(interviewData);
             savedInterview = await newInterview.save();
         }
@@ -718,6 +717,9 @@ const saveInterviewRound = async (req, res) => {
     try {
 
         const { interviewId, round, roundId, questions } = req.body;
+        console.log("saveInterviewRound called with body:", req.body);
+        console.log("interviewId", interviewId);
+        
 
         if (!interviewId || !round) {
             return res.status(400).json({ message: "Interview ID and round data are required." });
@@ -1162,4 +1164,146 @@ const { log } = require('util');
 //     }
 // };
 
-module.exports = { createInterview, saveInterviewRound };
+
+//home page code
+const getDateRanges = () => {
+  const now = new Date();
+  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  return { startOfCurrentMonth, startOfLastMonth, endOfLastMonth };
+};
+
+// Controller to fetch dashboard statistics
+const getDashboardStats = async (req, res) => {
+  try {
+    const { isOrganization, tenantId, ownerId, period = 'monthly' } = req.query;
+
+    // Validate inputs
+    if (!tenantId && !ownerId) {
+      return res.status(400).json({ error: 'tenantId or ownerId is required' });
+    }
+
+    // Define `now` for consistent date calculations
+    const now = new Date();
+    const { startOfCurrentMonth, startOfLastMonth, endOfLastMonth } = getDateRanges(now);
+
+    // Build query based on organization or owner
+    const query = isOrganization === 'true' ? { tenantId: new mongoose.Types.ObjectId(tenantId) } : { ownerId: new mongoose.Types.ObjectId(ownerId) };
+
+    // 1. Total Interviews
+    const totalInterviews = await Interview.countDocuments(query);
+
+    // 2. Interviews This Month and Last Month for Percentage Change
+    const interviewsThisMonth = await Interview.countDocuments({
+      ...query,
+      createdAt: { $gte: startOfCurrentMonth },
+    });
+
+    const interviewsLastMonth = await Interview.countDocuments({
+      ...query,
+      createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
+    });
+
+    let interviewChange = '0%';
+    let trendSymbol = '';
+    if (interviewsLastMonth > 0) {
+      const percentageChange = ((interviewsThisMonth - interviewsLastMonth) / interviewsLastMonth) * 100;
+      interviewChange = percentageChange >= 0 ? `+${percentageChange.toFixed(1)}%` : `${percentageChange.toFixed(1)}%`;
+      trendSymbol = percentageChange < 0 ? '↓' : '↑';
+    } else if (interviewsThisMonth > 0) {
+      interviewChange = '+100%';
+      trendSymbol = '↑';
+    }
+
+    // 3. Success Rate (status: "selected")
+    const selectedThisMonth = await Interview.countDocuments({
+      ...query,
+      status: 'selected',
+      createdAt: { $gte: startOfCurrentMonth },
+    });
+
+    const selectedLastMonth = await Interview.countDocuments({
+      ...query,
+      status: 'selected',
+      createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
+    });
+
+    const successRateThisMonth = interviewsThisMonth > 0 ? ((selectedThisMonth / interviewsThisMonth) * 100).toFixed(1) : 0;
+    let successRateChange = '0%';
+    if (selectedLastMonth > 0 && interviewsLastMonth > 0) {
+      const lastMonthSuccessRate = (selectedLastMonth / interviewsLastMonth) * 100;
+      const percentageChange = successRateThisMonth - lastMonthSuccessRate;
+      successRateChange = percentageChange >= 0 ? `+${percentageChange.toFixed(1)}%` : `${percentageChange.toFixed(1)}%`;
+    } else if (selectedThisMonth > 0) {
+      successRateChange = '+100%';
+    }
+
+    // 4. Analytics Chart Data
+    let chartData = [];
+    if (period === 'weekly') {
+      // Last 4 weeks
+      const weeks = [];
+      for (let i = 3; i >= 0; i--) {
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        const count = await Interview.countDocuments({
+          ...query,
+          createdAt: { $gte: weekStart, $lte: weekEnd },
+        });
+        weeks.push({
+          name: `Week ${4 - i}`,
+          interviews: count,
+        });
+      }
+      chartData = weeks;
+    } else if (period === 'yearly') {
+      // Last 12 months
+      const months = [];
+      for (let i = 11; i >= 0; i--) {
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+        const count = await Interview.countDocuments({
+          ...query,
+          createdAt: { $gte: monthStart, $lte: monthEnd },
+        });
+        months.push({
+          name: monthStart.toLocaleString('default', { month: 'short', year: '2-digit' }),
+          interviews: count,
+        });
+      }
+      chartData = months;
+    } else {
+      // Monthly (default): Last 30 days
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const dayEnd = new Date(dayStart);
+        dayEnd.setHours(23, 59, 59, 999);
+        const count = await Interview.countDocuments({
+          ...query,
+          createdAt: { $gte: dayStart, $lte: dayEnd },
+        });
+        days.push({
+          name: dayStart.toLocaleString('default', { day: 'numeric', month: 'short' }),
+          interviews: count,
+        });
+      }
+      chartData = days;
+    }
+
+    res.json({
+      totalInterviews,
+      interviewChange: `${interviewChange} ${trendSymbol}`,
+      successRate: `${successRateThisMonth}%`,
+      successRateChange,
+      chartData,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+module.exports = { createInterview, saveInterviewRound,getDashboardStats };

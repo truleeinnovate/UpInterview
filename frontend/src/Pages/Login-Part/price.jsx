@@ -10,6 +10,7 @@ import { ReactComponent as MdOutlineSchedule } from '../../icons/MdOutlineSchedu
 import { ReactComponent as RiFoldersFill } from '../../icons/RiFoldersFill.svg';
 import { ReactComponent as MdOutlineLock } from '../../icons/MdOutlineLock.svg';
 import { ReactComponent as FaRegAddressCard } from '../../icons/FaRegAddressCard.svg';
+import { config } from '../../config';
 
 const Price = () => {
 
@@ -63,7 +64,7 @@ const Price = () => {
         };
 
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/organization/invoice`, {
+            await axios.post(`${config.REACT_APP_API_URL}/organization/invoice`, {
                 invoice,
                 invoiceLines,
                 payment,
@@ -82,7 +83,7 @@ const Price = () => {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/plans`);
+                const response = await axios.get(`${config.REACT_APP_API_URL}/api/plans`);
                 const contentType = response.headers['content-type'];
 
                 if (contentType && contentType.includes('application/json')) {
@@ -102,7 +103,7 @@ const Price = () => {
     const handleBuyClick = async (plan) => {
         try {
             if (plan === 'free') {
-                await axios.post(`${process.env.REACT_APP_API_URL}/organization/free`);
+                await axios.post(`${config.REACT_APP_API_URL}/organization/free`);
                 navigate('/home');
             } else {
                 setSelectedPlan(plan);

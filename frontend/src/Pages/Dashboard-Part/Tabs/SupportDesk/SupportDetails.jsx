@@ -8,6 +8,7 @@ import { format, parseISO, isValid } from "date-fns";
 import StatusChangeModal from './StatusChangeModal';
 import StatusHistory from './StatusHistory';
 import axios from 'axios';
+import { config } from '../../../../config';
 
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
@@ -40,7 +41,7 @@ function SupportDetails() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/users`);
         const filteredUsers = response.data.filter(user => 
           user.RoleId === "67f77613588be9a9ef019765" || 
           user.RoleId === "67f77640588be9a9ef019767"
@@ -141,7 +142,7 @@ function SupportDetails() {
     setIsUpdatingOwner(true);
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/api/update-ticket/${currentTicket._id}`,
+        `${config.REACT_APP_API_URL}/api/update-ticket/${currentTicket._id}`,
         { 
           assignedTo: selectedOwner,
           assignedToId: selectedOwnerId,

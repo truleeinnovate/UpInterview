@@ -11,6 +11,7 @@ import { ReactComponent as Technology } from '../../../../../../icons/technology
 import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { useNavigate, useParams } from 'react-router-dom';
+import { config } from '../../../../../../config';
 
 
 
@@ -336,7 +337,7 @@ const EditInterviewDetails = () => {
       };
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${formData.id}`,
         cleanFormData
       );
 

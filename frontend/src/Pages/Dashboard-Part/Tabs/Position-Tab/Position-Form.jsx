@@ -567,14 +567,14 @@ const PositionForm = ({ mode }) => {
       // let response;
       // if (isEdit && positionId) {
       //   response = await axios.patch(
-      //     `${process.env.REACT_APP_API_URL}/position/${positionId}`,
+      //     `${config.REACT_APP_API_URL}/position/${positionId}`,
       //     basicdetails
       //   );
 
 
       // } else {
       //   response = await axios.post(
-      //     `${process.env.REACT_APP_API_URL}/position`,
+      //     `${config.REACT_APP_API_URL}/position`,
       //     basicdetails
       //   );
       //   setPositionId(response.data.data._id);

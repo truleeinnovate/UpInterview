@@ -21,130 +21,136 @@ const AccountSettingsSidebar = () => {
   const organization = tokenPayload.organization;
 
   console.log("organization in accountsettings", organization);
-  
+
   // const isInMyProfile = location.pathname.includes('/my-profile');
 
 
-// console.log('tab tab tab:', activeTab, );
+  // console.log('tab tab tab:', activeTab, );
 
 
-const toggleSidebar = useCallback(() => {
-  setIsSidebarOpen((prev) => !prev);
-}, []);
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
 
-const handleTabChange = (tabId) => {
-  // If navigating to my-profile, default to basic subtab
-  if (tabId === 'my-profile') {
-    navigate(`/account-settings/my-profile/basic`);
-    setIsSidebarOpen(true); // Keep sidebar open for my-profile
-  } else if (tabId === 'profile' && organization) {
-    navigate(`/account-settings/profile`);
-  } else {
- 
-    navigate(`/account-settings/${tabId}`);
-  }
-};
-
-useEffect(() => {
-  if (location.pathname === '/account-settings') {
-    if (organization) {
-      navigate('/account-settings/profile', { replace: true });
+  const handleTabChange = (tabId) => {
+    // If navigating to my-profile, default to basic subtab
+    if (tabId === 'my-profile') {
+      navigate(`/account-settings/my-profile/basic`);
+      setIsSidebarOpen(true); // Keep sidebar open for my-profile
+    } else if (tabId === 'profile' && organization) {
+      navigate(`/account-settings/profile`);
     } else {
+
+      navigate(`/account-settings/${tabId}`);
+    }
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/account-settings') {
+      if (organization) {
+        navigate('/account-settings/profile', { replace: true });
+      } else {
+        navigate('/account-settings/my-profile/basic', { replace: true });
+      }
+    }
+
+    // For my-profile, ensure it goes to basic by default
+    if (location.pathname === '/account-settings/my-profile') {
       navigate('/account-settings/my-profile/basic', { replace: true });
     }
-  }
+    // if (location.pathname === '/account-settings/my-profile') {
+    //   navigate('/account-settings/my-profile/basic', { replace: true });
+    // }
+  }, [location.pathname, navigate, organization]);
 
-   // For my-profile, ensure it goes to basic by default
-   if (location.pathname === '/account-settings/my-profile') {
-    navigate('/account-settings/my-profile/basic', { replace: true });
-  }
-  // if (location.pathname === '/account-settings/my-profile') {
-  //   navigate('/account-settings/my-profile/basic', { replace: true });
-  // }
-}, [location.pathname, navigate,organization]);
+  // Filter navigation to exclude "Company Profile" when organization is false
+  // const filteredNavigation = navigation.map(section => ({
+  //   ...section,
+  //   items: section.items.filter(item => organization || item.id !== 'profile')
+  // }));
+  const filteredNavigation = navigation.map(section => ({
+    ...section,
+    items: section.items.filter(item => {
+      if (item.id === 'profile') return organization;
+      // if (item.id === 'my-profile') return !organization;
+      return true;
+    })
+  }));
 
-    // Filter navigation to exclude "Company Profile" when organization is false
-    // const filteredNavigation = navigation.map(section => ({
-    //   ...section,
-    //   items: section.items.filter(item => organization || item.id !== 'profile')
-    // }));
-    const filteredNavigation = navigation.map(section => ({
-      ...section,
-      items: section.items.filter(item => {
-        if (item.id === 'profile') return organization;
-        // if (item.id === 'my-profile') return !organization;
-        return true;
-      })
-    }));
+  // Main content renderer based on active tab
+  //  const renderContent = () => {
+  //   if (activeTab === 'my-profile') {
+  //     return <Outlet />;
+  //   }
 
- // Main content renderer based on active tab
-//  const renderContent = () => {
-//   if (activeTab === 'my-profile') {
-//     return <Outlet />;
-//   }
+  //   const tabComponents = {
+  //     'profile': <CompanyProfile />,
 
-//   const tabComponents = {
-//     'profile': <CompanyProfile />,
-    
-//     'billing': <BillingDetails />,
-//     'subscription': <Subscription />,
-//     'wallet': <Wallet />,
-//     'security': <Security />,
-//     'notifications': <NotificationsDetails />,
-//     'usage': <Usage />,
-//     // 'users': navigate('users'),
-//     'users':
-//     // navigate('/account-settings/users'),
-//      (
-//       <>
-//         <UsersLayout />
-//         {/* <Outlet />  */}
-       
-//              </>
-//     ),
-//     'my-team': <MyTeam />,
-//     'interviewer-groups': <InterviewerGroups />,
-//     'roles': <Role />,
-//     'sharing': <Sharing />,
-//     'webhooks': <Webhooks />,
-//     'hrms-ats': <HrmsAtsApi />
-//   };
+  //     'billing': <BillingDetails />,
+  //     'subscription': <Subscription />,
+  //     'wallet': <Wallet />,
+  //     'security': <Security />,
+  //     'notifications': <NotificationsDetails />,
+  //     'usage': <Usage />,
+  //     // 'users': navigate('users'),
+  //     'users':
+  //     // navigate('/account-settings/users'),
+  //      (
+  //       <>
+  //         <UsersLayout />
+  //         {/* <Outlet />  */}
 
-//   return tabComponents[activeTab] || (
-//     <div className="text-center py-10">
-//       <h2 className="text-2xl font-bold capitalize">{activeTab}</h2>
-//       <p className="text-gray-500 mt-2">This section is under development</p>
-//     </div>
-//   );
-// };
+  //              </>
+  //     ),
+  //     'my-team': <MyTeam />,
+  //     'interviewer-groups': <InterviewerGroups />,
+  //     'roles': <Role />,
+  //     'sharing': <Sharing />,
+  //     'webhooks': <Webhooks />,
+  //     'hrms-ats': <HrmsAtsApi />
+  //   };
+
+  //   return tabComponents[activeTab] || (
+  //     <div className="text-center py-10">
+  //       <h2 className="text-2xl font-bold capitalize">{activeTab}</h2>
+  //       <p className="text-gray-500 mt-2">This section is under development</p>
+  //     </div>
+  //   );
+  // };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen fixed w-full pb-14  bg-gray-50 flex mt-1"
+    // " min-h-screen bg-gray-50 flex"
+    >
 
-        {/* Sidebar */}
+      {/* h-[calc(100vh-12rem)] overflow-y-auto */}
 
-        <SidebarProfile 
-        isSidebarOpen = {isSidebarOpen}
+      {/* Sidebar */}
+
+      <SidebarProfile
+        isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
-        handleTabChange ={handleTabChange} 
-        activeTab ={activeTab} 
-        filteredNavigation={filteredNavigation}/>
-      
+        handleTabChange={handleTabChange}
+        activeTab={activeTab}
+        filteredNavigation={filteredNavigation}
+      />
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-        <div className="flex-grow overflow-y-auto h-screen">
-          <div className="p-4 sm:p-8 mt-12 lg:mt-0 xl:mt-0  2xl:mt-0">
+
+      {/* Main Content */}
+      <div
+        className="flex-1 flex flex-col ml-0 h-full overflow-y-auto z-50" >
+        <div className="flex-grow  ">
+          <div className="p-4 sm:p-8 mt-1 lg:mt-0 xl:mt-0  2xl:mt-0 ">
             {/* {renderContent()} */}
             <Outlet />
           </div>
-          </div>
         </div>
-      
+      </div>
+
 
       {/* Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden xl:hidden 2xl:hidden"
           onClick={toggleSidebar}
         />

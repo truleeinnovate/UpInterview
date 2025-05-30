@@ -21,6 +21,7 @@ import '../styles/tabs.scss'
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
@@ -258,12 +259,12 @@ const [isModalOpen, setIsModalOpen] = useState(false);
       // API call for saving/updating the question
       const questionResponse = isEdit
         ? await axios.patch(
-          `${process.env.REACT_APP_API_URL}/newquestion/${question._id}`,
+          `${config.REACT_APP_API_URL}/newquestion/${question._id}`,
           // questionData
           questionData
         )
         : await axios.post(
-          `${process.env.REACT_APP_API_URL}/newquestion`,
+          `${config.REACT_APP_API_URL}/newquestion`,
           questionData
         );
         console.log("tenant queston response",questionResponse)
@@ -271,7 +272,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
         //saving the question to the assessment child (questions) schema when added from assessement
 
         if (section==="assessment"){
-          // const questionExistResponse = await axios.get(`${process.env.REACT_APP_API_URL}/assessment-question/${assessmentId}`)
+          // const questionExistResponse = await axios.get(`${config.REACT_APP_API_URL}/assessment-question/${assessmentId}`)
           const reqBody ={
             // assessmentId:assessmentId,
             questionId:questionResponse.data._id,
@@ -1568,11 +1569,11 @@ export default Interviewcq;
 //       // API call for saving/updating the question
 //       const questionResponse = isEdit
 //         ? await axios.put(
-//           `${process.env.REACT_APP_API_URL}/newquestion/${question._id}`,
+//           `${config.REACT_APP_API_URL}/newquestion/${question._id}`,
 //           questionData
 //         )
 //         : await axios.post(
-//           `${process.env.REACT_APP_API_URL}/newquestion`,
+//           `${config.REACT_APP_API_URL}/newquestion`,
 //           questionData
 //         );
 //       console.log(isEdit ? "Question updated:" : "Question created:", questionResponse.data);

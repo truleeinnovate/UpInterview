@@ -26,7 +26,7 @@ import {
 const mainNavigation = [
   { name: 'Company Profile', icon: BuildingOfficeIcon, id: 'profile' },
   { name: 'My Profile', icon: UserIcon, id: 'my-profile' },
-  { name: 'Billing', icon: CreditCardIcon, id: 'billing' },
+  { name: 'Billing', icon: CreditCardIcon, id: 'billing-details' },
   { name: 'Subscription', icon: Cog6ToothIcon, id: 'subscription' },
   { name: 'Wallet', icon: WalletIcon, id: 'wallet' },
   { name: 'Security', icon: KeyIcon, id: 'security' },

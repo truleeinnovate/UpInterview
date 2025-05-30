@@ -30,6 +30,7 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import axios from "axios";
 // import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
+import { config } from '../../../../../config.js';
 
 
 const InterviewDetail = () => {
@@ -185,7 +186,7 @@ const InterviewDetail = () => {
       };
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
           ...interviewData,
           interviewId: id,
           updatingInterviewStatus: true

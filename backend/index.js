@@ -754,17 +754,15 @@ const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js"
 app.use('/schedule-assessment', scheduledAssessmentRouter);
 
 const { Contacts } = require("./models/Contacts.js");
-app.get('/contacts', async (req, res) => {
-  try {
-    console.log('Contacts:', Contacts);
-    const contacts = await Contacts.find().populate('availability');
-    console.log('contacts', contacts);
-    res.status(200).json(contacts);
-  } catch (error) {
-    console.error('Error fetching contacts:', error);
-    res.status(500).json({ message: 'Error fetching contacts', error: error.message });
-  }
-});
+// app.get('/contacts', async (req, res) => {
+//   try {
+//     const contacts = await Contacts.find().populate('availability');
+//     res.status(200).json(contacts);
+//   } catch (error) {
+//     console.error('Error fetching contacts:', error);
+//     res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+//   }
+// });
 
 const contactRoutes = require('./routes/contactRoutes');
 app.use('/', contactRoutes);
@@ -783,18 +781,22 @@ const razorpayRoutes = require('./routes/RazorpayRoutes.js');
 app.use('/', razorpayRoutes);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
-// app.get('/check-email', async (req, res) => {
-//   try {
-//     const { email } = req.query;
-//     if (!email) {
-//       return res.status(400).json({ message: "Email is required" });
-//     }
-//     const user = await Users.findOne({  email });
-//     res.json({ exists: !!user });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error checking email", error: error.message });
-//   }
-// });
+app.get('/check-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const user = await Users.findOne({  email });
+    res.json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: "Error checking email", error: error.message });
+  }
+});
+
+// const Emailrouter = require('./routes/emailCommonRoutes.js')
+// emailCommonRoutes.js
+// app.use('/', Emailrouter)
 
 // app.get('/check-profileId', async (req, res) => {
 //   try {
@@ -821,8 +823,43 @@ app.use('/', razorpayRoutes);
 // });
 
 const historyFeedsRoutes = require('./routes/feedsRoutes');
+const InvoiceRouter = require('./routes/InvoiceRoutes.js');
+const WalletRouter = require('./routes/WalletRoutes.js');
 app.use('/feeds', historyFeedsRoutes);
+
+
+
+app.use('/get-invoice-id', InvoiceRouter);
+
+app.use('/wallet', WalletRouter)
 
 // task
 const taskRoutes = require('./routes/taskRoutes');
 app.use('/tasks', taskRoutes);
+
+//i am using this code for outsource interviewers we need to change his into contact controller
+// app.get('/api/contacts/outsource', async (req, res) => {
+//   try {
+//     const contacts = await Contacts.find({ interviewerType: "Outsource" })
+//       .populate({
+//         path: 'availability',
+//         model: 'Interviewavailability'
+//       });
+
+//     res.json(contacts);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching contacts', error });
+//   }
+// });
+
+const outsourceInterviewRequestRoutes = require('./routes/InterviewRequestRoute.js');
+app.use('/interviewrequest', outsourceInterviewRequestRoutes);
+
+const outsourceInterviewerRoutes = require('./routes/outsourceInterviewerRoutes');
+app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
+
+const InterviewRoutes = require('./routes/interviewRoutes.js')
+app.use('/interview', InterviewRoutes);
+const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
+app.use('/candidateposition', candidatePositionRoutes);
+

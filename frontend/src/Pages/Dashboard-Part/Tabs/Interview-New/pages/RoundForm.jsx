@@ -16,14 +16,18 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import {config} from '../../../../../config';
 
-function RoundForm() {
+
+const RoundForm = () => {
   const {
     assessmentData,
     interviewData,
     loading
   } = useCustomContext();
   const { interviewId, roundId } = useParams();
+  console.log("interviewId", interviewId);
+ console.log("roundId", roundId);
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -315,7 +319,7 @@ function RoundForm() {
     try {
       // Fetch the assessment data once
       const response = assessmentData.find(pos => pos._id === assessmentId);
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
+      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
       const assessment = response;
 
       // Get all section IDs and prepare section questions
@@ -433,7 +437,7 @@ function RoundForm() {
   //       const payload = isEditing ? { interviewId, round: roundData, roundId, questions: interviewQuestionsList } : { interviewId, round: roundData, questions: interviewQuestionsList };
 
   //       const response = await axios.post(
-  //         `${process.env.REACT_APP_API_URL}/interview/save-round`,
+  //         `${config.REACT_APP_API_URL}/interview/save-round`,
   //         payload
   //       );
   //       console.log("response", response.data);
@@ -446,7 +450,7 @@ function RoundForm() {
   //       //   createdBy: userId,
   //       // };
 
-  //       // const teamResponse = await axios.post(`${process.env.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
+  //       // const teamResponse = await axios.post(`${config.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
 
   //       if (selectedInterviewers && selectedInterviewers.length > 0) {
   //         const interviewerObjects = selectedInterviewers.map(id => ({
@@ -470,7 +474,7 @@ function RoundForm() {
   //         };
 
   //         await axios.post(
-  //           `${process.env.REACT_APP_API_URL}/interviewrequest`,
+  //           `${config.REACT_APP_API_URL}/interviewrequest`,
   //           outsourceRequestData
   //         );
   //       }
@@ -530,7 +534,7 @@ function RoundForm() {
 
       // Submit the form data
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("response", response.data);
@@ -542,7 +546,7 @@ function RoundForm() {
       //       //   createdBy: userId,
       //       // };
 
-      //       // const teamResponse = await axios.post(`${process.env.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
+      //       // const teamResponse = await axios.post(`${config.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
 
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
@@ -554,8 +558,8 @@ function RoundForm() {
             ownerId: userId,
             scheduledInterviewId: interviewId,
             interviewerType: selectedInterviewType,
-            id: interviewer._id, // Directly passing the interviewer ID
-            // status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
+            interviewerId: interviewer._id, // Directly passing the interviewer ID
+            status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
             dateTime: combinedDateTime,
             duration,
             candidateId: candidate?._id,
@@ -570,7 +574,7 @@ function RoundForm() {
           console.log("Sending outsource request:", outsourceRequestData);
 
           await axios.post(
-            `${process.env.REACT_APP_API_URL}/interviewrequest`,
+            `${config.REACT_APP_API_URL}/interviewrequest`,
             outsourceRequestData
           );
         }
@@ -662,7 +666,7 @@ function RoundForm() {
   const fetchQuestionsForSection = async (sectionId) => {
     try {
       const response = assessmentData.find(pos => pos._id === assessmentTemplate.assessmentId)
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
+      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
       const assessment = response;
 
       const section = assessment.Sections.find(s => s._id === sectionId);

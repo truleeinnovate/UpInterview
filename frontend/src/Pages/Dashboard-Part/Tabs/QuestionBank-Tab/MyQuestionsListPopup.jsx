@@ -8,6 +8,7 @@ import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCirc
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew }, ref) => {
     const {
@@ -57,7 +58,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         if (isEditing) {
             // PUT request for updating the list (no need for questionId)
             if (editingSectionId) {
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
+                const response = await fetch(`${config.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         } else {
             if (newListName.trim()) {
                 try {
-                    const response = await axios.post(`${process.env.REACT_APP_API_URL}/tenant-list/lists`, {
+                    const response = await axios.post(`${config.REACT_APP_API_URL}/tenant-list/lists`, {
                         label: newListName,
                         name: newListNameForName,
                         ownerId: userId,
@@ -129,7 +130,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         }
         try {
             const questionResponse = await axios.post(
-                `${process.env.REACT_APP_API_URL}/newquestion`,
+                `${config.REACT_APP_API_URL}/newquestion`,
                 questionData
             );
             console.log('Question added successfully:', questionResponse.data);
