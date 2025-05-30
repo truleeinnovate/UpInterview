@@ -115,7 +115,7 @@ const InterviewDetail = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!interview) {
-    return <div className='flex justify-center items-center h-screen'>Invalid interview ID</div>;
+    return <div className='flex justify-center items-center h-screen'>No interview found</div>;
   }
 
   if (!interview) {
