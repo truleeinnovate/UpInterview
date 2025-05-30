@@ -18,27 +18,36 @@ const TableView = ({
   const [delayedLoading, setDelayedLoading] = useState(loading);
   const [showEmptyState, setShowEmptyState] = useState(false);
 
-  // Delay hiding loading by 1 second
-  useEffect(() => {
-    let timeout;
-    if (!loading) {
-      timeout = setTimeout(() => setDelayedLoading(false), 1000);
-    } else {
-      setDelayedLoading(true);
-    }
-    return () => clearTimeout(timeout);
-  }, [loading]);
+  // // Delay hiding loading by 1 second
+  // useEffect(() => {
+  //   let timeout;
+  //   if (!loading) {
+  //     timeout = setTimeout(() => setDelayedLoading(false), 1000);
+  //   } else {
+  //     setDelayedLoading(true);
+  //   }
+  //   return () => clearTimeout(timeout);
+  // }, [loading]);
 
-  // Delay empty state by 2 seconds after loading finishes
-  useEffect(() => {
-    let timeout;
-    if (!loading && data.length === 0) {
-      timeout = setTimeout(() => setShowEmptyState(true), 2000);
-    } else {
-      setShowEmptyState(false);
-    }
-    return () => clearTimeout(timeout);
-  }, [loading, data]);
+  // // Delay empty state by 2 seconds after loading finishes
+  // useEffect(() => {
+  //   let timeout;
+  //   if (!loading && data.length === 0) {
+  //     timeout = setTimeout(() => setShowEmptyState(true), 2000);
+  //   } else {
+  //     setShowEmptyState(false);
+  //   }
+  //   return () => clearTimeout(timeout);
+  // }, [loading, data]);
+
+    // Use these instead for immediate state updates
+    useEffect(() => {
+      setDelayedLoading(loading);
+    }, [loading]);
+  
+    useEffect(() => {
+      setShowEmptyState(!loading && data.length === 0);
+    }, [loading, data]);
 
   const handleMenuOpen = (row, e) => {
     e.stopPropagation();

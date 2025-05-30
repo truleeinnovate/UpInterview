@@ -285,6 +285,7 @@ const RoundForm = () => {
       return updatedInterviewers;
     });
   };
+
   const handleClearAllInterviewers = () => {
     setInternalInterviewers([]);
     setExternalInterviewers([]);

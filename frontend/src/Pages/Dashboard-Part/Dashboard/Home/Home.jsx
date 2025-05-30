@@ -2248,25 +2248,43 @@
 // export default Home;
 
 
-import { useState,useEffect } from 'react';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
-// import Header from './components/Header/Header';
 import WelcomeSection from './WelcomeSection';
 import StatsCard from './StatsCard';
 import AnalyticsChart from './AnalyticsChart';
 import InterviewRequests from './InterviewRequests';
-import InterviewersList from './InterviewersList';
+import OutsourceInterviewers from './DashboardOutsourceInterviewers.jsx';
+import InternalInterviewers from './DashboardInternalInterviewers.jsx';
 import FeedbackList from './FeedbackList';
-import NotificationSection from "../NotificationTab/NotificationsSection"
+import NotificationSection from '../NotificationTab/NotificationsSection';
 import TaskList from './TaskList';
 import InterviewerSchedule from './InterviewManagement/UpcomingInterviews';
-// import { notificationsData } from './data/notifications';
+import InternalInterviews from '../../Tabs/Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
+import OutsourceOption from '../../Tabs/Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { config } from '../../../../config';
-
 
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
@@ -2274,7 +2292,9 @@ const Home = () => {
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const [selectedFilter, setSelectedFilter] = useState('All');
-const freelancer = Cookies.get("freelancer");
+  const freelancer = Cookies.get('freelancer');
+  const [isInternalInterviews, setInternalInterviews] = useState(false);
+  const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
@@ -2356,11 +2376,7 @@ const freelancer = Cookies.get("freelancer");
                 />
               </motion.div>
             </div>
-            {freelancer && (
-            <InterviewRequests />
-            )}
-
-
+            {freelancer && <InterviewRequests />}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -2383,12 +2399,21 @@ const freelancer = Cookies.get("freelancer");
           >
             <TaskList />
             <InterviewerSchedule />
-            <InterviewersList />
+            <OutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />
+            <InternalInterviewers setInternalInterviews={setInternalInterviews} />
           </motion.div>
         </div>
       </main>
+
+      {showOutsourcePopup && (
+        <OutsourceOption onClose={() => setShowOutsourcePopup(false)} navigatedfrom="dashboard" />
+      )}
+
+      {isInternalInterviews && (
+        <InternalInterviews onClose={() => setInternalInterviews(false)} navigatedfrom="dashboard" />
+      )}
     </div>
   );
-}
+};
 
 export default Home;
