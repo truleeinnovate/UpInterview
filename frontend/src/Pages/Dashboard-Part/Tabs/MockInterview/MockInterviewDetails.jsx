@@ -96,7 +96,7 @@ const MockInterviewDetails = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!mockinterview) {
-    return <div className='flex justify-center items-center h-screen'>Invalid interview ID</div>;
+    return <div className='flex justify-center items-center h-screen'>No interview found</div>;
   }
 
     // Toggle round expansion
