@@ -10,6 +10,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
+  const organization = tokenPayload?.organization;
+  console.log('tokenPayload:', tokenPayload);
+
+
+
+
+
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const sharingPermissions = useMemo(
     () => sharingPermissionscontext.questionBank || {},
@@ -25,10 +36,7 @@ const CustomProvider = ({ children }) => {
   const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   const [createdLists, setCreatedLists] = useState([]);
 
-  const authToken = Cookies.get('authToken');
-  const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
@@ -62,7 +70,7 @@ const CustomProvider = ({ children }) => {
         setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
-      }  
+      }
     };
 
     if (userId) {
@@ -279,18 +287,22 @@ const CustomProvider = ({ children }) => {
     enabled: !!sharingPermissionsPosition,
   });
 
+
   // Add position mutation
   const addOrUpdatePosition = useMutation({
     mutationFn: async ({ id, data }) => {
-      const url = id ? `${config.REACT_APP_API_URL}/position/${id}` : `${config.REACT_APP_API_URL}/position`;
+      const url = id
+        ? `${config.REACT_APP_API_URL}/position/${id}`
+        : `${config.REACT_APP_API_URL}/position`;
 
       const method = id ? 'patch' : 'post';
+      // return await axios[method](url, data);
       const response = await axios[method](url, data);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['positions']);
-    },
+    }
   });
 
   // Mockinterview
@@ -520,31 +532,69 @@ const CustomProvider = ({ children }) => {
   // notifications
   const [notificationsData] = useState([]);
 
-  const [assessmentData, setAssessmentData] = useState([]);
   const assessmentPermissions = useMemo(
     () => sharingPermissionscontext.assessment || {},
     [sharingPermissionscontext]
   );
 
-  const fetchAssessmentData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
-      // Reverse the data to show the most recent first
-      const reversedData = filteredAssessments.reverse();
-      setAssessmentData(reversedData);
-    } catch (error) {
-      console.error('Error fetching assessment data:', error);
-    } finally {
-      setLoading(false);
+  const { data: assessmentData = [], isLoading: assessmentDataLoading } =
+    useQuery({
+      queryKey: ['assessments', assessmentPermissions],
+      queryFn: async () => {
+        const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
+        return filteredAssessments.reverse(); // recent first
+      },
+      enabled: !!assessmentPermissions,
+    });
+
+  const useAddOrUpdateAssessment = useMutation({
+    mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
+      let response;
+
+      if (isEditing) {
+        // Update existing assessment
+        response = await axios.patch(
+          `${config.REACT_APP_API_URL}/assessments/update/${id}`,
+          assessmentData
+        );
+      } else {
+        if (!tabsSubmitStatus?.["Basicdetails"]) {
+          // Create new assessment
+          response = await axios.post(
+            `${config.REACT_APP_API_URL}/assessments/new-assessment`,
+            assessmentData
+          );
+        } else {
+          // Update after Basicdetails
+          response = await axios.patch(
+            `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+            assessmentData
+          );
+        }
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['assessments']); // Refresh list
+    },
+    onError: (error) => {
+      console.error('Assessment save error:', error.message);
+      // You might want to show a toast notification here
     }
-  }, [assessmentPermissions]);
+  });
 
-  useEffect(() => {
-    fetchAssessmentData();
-  }, [fetchAssessmentData]);
 
-  const tenantId = tokenPayload?.tenantId;
+
+  const useUpsertAssessmentQuestions = useMutation({
+    mutationFn: async (questionsData) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
+        questionsData
+      );
+      return response.data;
+    }
+  });
 
   // Fetch groups
   const [groups, setGroups] = useState([]);
@@ -602,37 +652,37 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
- 
+
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
- 
+
     setQuestionsLoading(true);
     setQuestionsError(null);
- 
+
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
- 
+
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       // Create section questions mapping
       const newSectionQuestions = {};
- 
+
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
- 
+
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
@@ -660,17 +710,17 @@ const CustomProvider = ({ children }) => {
           }))
         };
       });
- 
+
       // Verify questions exist
       const hasQuestions = Object.values(newSectionQuestions).some(
         section => section.questions.length > 0
       );
- 
+
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
@@ -684,13 +734,22 @@ const CustomProvider = ({ children }) => {
 
   // interview template
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
-    queryKey: ['interviewTemplates', tenantId],
+    queryKey: ['interviewTemplates', tenantId, userId],
     queryFn: async () => {
-      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
+      const params = new URLSearchParams();
+      if (organization) {
+        params.append('tenantId', tenantId);
+        params.append('organization', 'true');
+      } else {
+        params.append('ownerId', userId);
+        params.append('organization', 'false');
+      }
+
+      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${params.toString()}`;
       const response = await axios.get(apiUrl);
       return response.data.data;
     },
-    enabled: !!tenantId,
+    enabled: !!authToken,
   });
 
   // Mutation for creating/updating templates
@@ -700,12 +759,14 @@ const CustomProvider = ({ children }) => {
       if (isEditMode) {
         response = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
+          ownerId: userId,
           templateData,
         });
       } else {
         response = await axios.post(`${config.REACT_APP_API_URL}/interviewTemplates`, {
           ...templateData,
           tenantId,
+          ownerId: userId,
         });
       }
       return response.data;
@@ -761,6 +822,7 @@ const CustomProvider = ({ children }) => {
   });
 
   const [contacts, setContacts] = useState([]);
+  
 
   const fetchContactsData = async () => {
     try {
@@ -779,6 +841,26 @@ const CustomProvider = ({ children }) => {
     fetchContactsData();
   }, []);
 
+  
+  const [singlecontact, setsingleContact] = useState([]);
+
+  
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchContacts = async () => {
+      try {
+        const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
+        setsingleContact(res.data);
+        console.log('Contacts for this user:', res.data);
+      } catch (err) {
+        console.error('Error fetching user contacts:', err);
+      }
+    };
+
+    fetchContacts();
+  }, [userId]);
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
     const [interviewers, setInterviewers] = useState([]);
     useEffect(() => {
@@ -793,14 +875,15 @@ const CustomProvider = ({ children }) => {
         } finally {
           setLoading(false);
         }
-      };
-  
-      fetchInterviewers();
-    }, [tenantId]);
+      }
+    };
+
+    fetchInterviewers();
+  }, [tenantId]);
 
 
 
-    // Query for fetching users
+  // Query for fetching users
   const {
     data: usersRes = [],
     isLoading: usersLoading,
@@ -809,9 +892,9 @@ const CustomProvider = ({ children }) => {
     queryKey: ['users', tenantId],
     queryFn: async () => {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/organization/${tenantId}`
+        `${config.REACT_APP_API_URL}/users/${tenantId}`
       );
-      
+
       // Process image URLs and reverse the array (newest first)
       return response.data
         .map((contact) => {
@@ -830,7 +913,7 @@ const CustomProvider = ({ children }) => {
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, editMode }) => {
       const payload = {
-        UserData: { 
+        UserData: {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -874,7 +957,7 @@ const CustomProvider = ({ children }) => {
 
       // Send welcome email only for new user creation
       if (!editMode) {
-        await axios.post(`${config.REACT_APP_API_URL}/forgot-password`, {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
           type: "usercreatepass"
         });
@@ -894,12 +977,12 @@ const CustomProvider = ({ children }) => {
 
   // Mutation for toggling user status
   const toggleUserStatus = useMutation({
-    mutationFn: async ({userId,newStatus}) => {
+    mutationFn: async ({ userId, newStatus }) => {
       const response = await axios.patch(
         `${config.REACT_APP_API_URL}/users/${userId}/status`,
         {
           status: newStatus, // or you could send the new status explicitly
-          modifiedBy: `admin - ${tenantId}` // Track who made the change
+          updatedBy: `${userId}` // Track who made the change
         }
       );
       return response.data;
@@ -931,57 +1014,57 @@ const CustomProvider = ({ children }) => {
   });
 
 
-     const [currentPlan, setcurrentPlan] = useState([]);
-      // const [loading, setLoading] = useState(true);
-      // this will check that that plans is already set or not
-  
-      useEffect(() => {
-        const fetchData = async () => {
-          try {
-            const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
-            const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-            // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("Sub_res Sub_res",Subscription_data);
-  
-  
-            if (Subscription_data.subscriptionPlanId) {
-              setcurrentPlan(Subscription_data);
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-    
-        if (userId) {
-          fetchData();
-        }
-      }, [userId]);
+  const [currentPlan, setcurrentPlan] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // this will check that that plans is already set or not
 
-          const [walletBalance, SetWalletBalance] = useState([]);
-      // const [loading, setLoading] = useState(true);
-      // this will check that that plans is already set or not
-  
-      useEffect(() => {
-        const fetchWalletData = async () => {
-          try {
-            const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
-            const WalletBalance_data = WalletBalance_res.data || {};
-            // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("WalletBalance_res ",WalletBalance_res);
-  
-  
-            if (WalletBalance_data) {
-              SetWalletBalance(WalletBalance_data);
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-    
-        if (userId) {
-          fetchWalletData();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
+        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
+        // If subscription exists, set it; otherwise, keep it empty
+        //  console.log("Sub_res Sub_res",Subscription_data);
+
+
+        if (Subscription_data.subscriptionPlanId) {
+          setcurrentPlan(Subscription_data);
         }
-      }, [userId]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
+
+  const [walletBalance, SetWalletBalance] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // this will check that that plans is already set or not
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
+        const WalletBalance_data = WalletBalance_res.data || {};
+        // If subscription exists, set it; otherwise, keep it empty
+        //  console.log("WalletBalance_res ",WalletBalance_res);
+
+
+        if (WalletBalance_data) {
+          SetWalletBalance(WalletBalance_data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    if (userId) {
+      fetchWalletData();
+    }
+  }, [userId]);
 
 
   return (
@@ -1018,18 +1101,18 @@ const CustomProvider = ({ children }) => {
         loading,
 
         // users
-         usersRes,
-    usersLoading,
-    refetchUsers,
-    addOrUpdateUser,
-    toggleUserStatus,
-    deleteUser,
+        usersRes,
+        usersLoading,
+        refetchUsers,
+        addOrUpdateUser,
+        toggleUserStatus,
+        deleteUser,
 
-    // wallet Balance
-    walletBalance,
+        // wallet Balance
+        walletBalance,
 
-    // subscription current plan 
-    currentPlan,
+        // subscription current plan 
+        currentPlan,
 
         // // candidate
         // candidateData,
@@ -1056,7 +1139,8 @@ const CustomProvider = ({ children }) => {
 
         // assessment
         assessmentData,
-        fetchAssessmentData,
+        useAddOrUpdateAssessment,
+
 
         // master data
         skills,
@@ -1104,6 +1188,7 @@ const CustomProvider = ({ children }) => {
         fetchContactsData,
         contacts,
         setContacts,
+        singlecontact,
 
         interviewers
       }}

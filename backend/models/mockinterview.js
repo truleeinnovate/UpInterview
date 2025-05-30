@@ -52,17 +52,11 @@ const mockInterviewSchema = new mongoose.Schema({
      dateTime: String,
   },
   resume: String,//in future we have to work on resume saving functionality
-  createdDate: { type: String, default: formatDateTime },
-  modifiedDate: Date,
-  modifiedBy: String,
-  createdBy: String,
-  createdById: String, 
-  lastModifiedById: String,
-  ownerId: String,
-  tenantId: String,
- 
-    
-});
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    ownerId: String,
+    tenantId: String,
+}, { timestamps: true });
 
 const MockInterview = mongoose.model('MockInterview', mockInterviewSchema);
 

@@ -754,15 +754,15 @@ const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js"
 app.use('/schedule-assessment', scheduledAssessmentRouter);
 
 const { Contacts } = require("./models/Contacts.js");
-app.get('/contacts', async (req, res) => {
-  try {
-    const contacts = await Contacts.find().populate('availability');
-    res.status(200).json(contacts);
-  } catch (error) {
-    console.error('Error fetching contacts:', error);
-    res.status(500).json({ message: 'Error fetching contacts', error: error.message });
-  }
-});
+// app.get('/contacts', async (req, res) => {
+//   try {
+//     const contacts = await Contacts.find().populate('availability');
+//     res.status(200).json(contacts);
+//   } catch (error) {
+//     console.error('Error fetching contacts:', error);
+//     res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+//   }
+// });
 
 const contactRoutes = require('./routes/contactRoutes');
 app.use('/', contactRoutes);

@@ -1,533 +1,138 @@
-/* eslint-disable react/prop-types */
-import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Filter, Grid, ChevronUp, ChevronDown, X, Search, List } from 'lucide-react';
-import Tooltip from "@mui/material/Tooltip";
-import axios from "axios";
-//import Cookies from "js-cookie";
-import { fetchMasterData } from '../../../../../utils/fetchMasterData.js';
-import TableView from "./TableView.jsx";
-import KanbanView from "./KanbanView.jsx";
-import UserProfileDetails from "./UserProfileDetails";
-import Sidebar from "./UserForm";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import Cookies from "js-cookie";
-import Loading from '../../../../../Components/Loading.js';
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Eye, Pencil, ChevronUp, ChevronDown, CheckCircle, XCircle, Info } from 'lucide-react';
+import { useCustomContext } from '../../../../../Context/Contextfetch';
+import Header from '../../../../../Components/Shared/Header/Header';
+import Toolbar from '../../../../../Components/Shared/Toolbar/Toolbar';
+import TableView from '../../../../../Components/Shared/Table/TableView';
+import { FilterPopup } from '../../../../../Components/Shared/FilterPopup/FilterPopup';
+import KanbanView from './KanbanView';
+import Loading from '../../../../../Components/Loading';
 import toast from 'react-hot-toast';
+import maleImage from '../../../Images/man.png';
+import femaleImage from '../../../Images/woman.png';
+import genderlessImage from '../../../Images/transgender.png';
+import ConfirmationModal from './ConfirmModel';
 
-const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
-  const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [isTechDropdownOpen, setTechDropdownOpen] = useState(false);
-  const [isStatusMainChecked, setStatusMainChecked] = useState(false);
-  const [isTechMainChecked, setTechMainChecked] = useState(false);
-  const [selectedStatusOptions, setSelectedStatusOptions] = useState([]);
-  const [selectedTechOptions, setSelectedTechOptions] = useState([]);
-  const isAnyOptionSelected = selectedStatusOptions.length > 0 || selectedTechOptions.length > 0;
-  const handleUnselectAll = () => {
-    setSelectedStatusOptions([]);
-    setSelectedTechOptions([]);
-    setStatusMainChecked(false);
-    setTechMainChecked(false);
-    setMinExperience('');
-    setMaxExperience('');
-    onFilterChange({ status: [], tech: [], experience: { min: '', max: '' } });
-  };
-  useEffect(() => {
-    if (!isStatusMainChecked) setSelectedStatusOptions([]);
-    if (!isTechMainChecked) setSelectedTechOptions([]);
-  }, [isStatusMainChecked, isTechMainChecked]);
-  const handleStatusMainToggle = () => {
-    const newStatusMainChecked = !isStatusMainChecked;
-    setStatusMainChecked(newStatusMainChecked);
-    const newSelectedStatus = newStatusMainChecked ? qualification.map(q => q.QualificationName) : [];
-    setSelectedStatusOptions(newSelectedStatus);
-
-  };
-  const handleTechMainToggle = () => {
-    const newTechMainChecked = !isTechMainChecked;
-    setTechMainChecked(newTechMainChecked);
-    const newSelectedTech = newTechMainChecked ? skills.map(s => s.SkillName) : [];
-    setSelectedTechOptions(newSelectedTech);
-
-  };
-  const handleStatusOptionToggle = (option) => {
-    const selectedIndex = selectedStatusOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedStatusOptions, option]
-      : selectedStatusOptions.filter((_, index) => index !== selectedIndex);
-
-    setSelectedStatusOptions(updatedOptions);
-  };
-  const handleTechOptionToggle = (option) => {
-    const selectedIndex = selectedTechOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedTechOptions, option]
-      : selectedTechOptions.filter((_, index) => index !== selectedIndex);
-
-    setSelectedTechOptions(updatedOptions);
-  };
-  const [skills, setSkills] = useState([]);
-  const [qualification, setQualification] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const skillsData = await fetchMasterData('skills');
-        setSkills(skillsData);
-        const qualificationData = await fetchMasterData('qualification');
-        setQualification(qualificationData);
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const [minExperience, setMinExperience] = useState('');
-  const [maxExperience, setMaxExperience] = useState('');
-
-  const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, e.target.value));
-    if (type === 'min') {
-      setMinExperience(value);
-    } else {
-      setMaxExperience(value);
-    }
-
-  };
-  const Apply = () => {
-    onFilterChange({
-      status: selectedStatusOptions,
-      tech: selectedTechOptions,
-      experience: { min: minExperience, max: maxExperience },
-    });
-    if (window.innerWidth < 1023) {
-      closeOffcanvas();
-    }
-  }
-  return (
-    <div
-      className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
-      style={{
-        visibility: isOpen ? "visible" : "hidden",
-        transform: isOpen ? "" : "translateX(50%)",
-      }}
-    >
-      <div className="relative h-full flex flex-col">
-        <div className="absolute w-72 sm:w-full md:w-full border-b flex justify-between p-2 items-center bg-white z-10">
-          <div>
-            <h2 className="text-lg font-bold ">Filters</h2>
-          </div>
-          {/* Unselect All Option */}
-          <div>
-            {(isAnyOptionSelected || minExperience || maxExperience) && (
-              <div>
-                <button onClick={handleUnselectAll} className="font-bold text-md">
-                  Clear Filters
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
-          {/* Higher Qualification */}
-          <div className="flex justify-between">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-4 w-4"
-                  checked={isStatusMainChecked}
-                  onChange={handleStatusMainToggle}
-                />
-                <span className="ml-3 font-bold">Higher Qualification</span>
-              </label>
-            </div>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
-            >
-              {isStatusDropdownOpen ? (
-                <ChevronUp />
-              ) : (
-                <ChevronDown />
-              )}
-            </div>
-          </div>
-          {isStatusDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {qualification.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedStatusOptions.includes(option.QualificationName)}
-                    onChange={() => handleStatusOptionToggle(option.QualificationName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.QualificationName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          {/* Skill/Technology */}
-          <div className="flex mt-2 justify-between">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-4 w-4"
-                  checked={isTechMainChecked}
-                  onChange={handleTechMainToggle}
-                />
-                <span className="ml-3 font-bold">Skill/Technology</span>
-              </label>
-            </div>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
-            >
-              {isTechDropdownOpen ? (
-                <ChevronUp />
-              ) : (
-                <ChevronDown />
-              )}
-            </div>
-          </div>
-          {isTechDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {skills.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedTechOptions.includes(option.SkillName)}
-                    onChange={() => handleTechOptionToggle(option.SkillName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.SkillName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-between mt-2 ml-5">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <span className="ml-3 font-bold">Experience</span>
-              </label>
-            </div>
-          </div>
-          <div className="bg-white py-2 mt-1">
-            <div className="flex items-center ml-10">
-              <input
-                type="number"
-                placeholder="Min"
-                value={minExperience}
-                min="0"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'min')}
-                className="border-b form-input w-20"
-              />
-              <span className="mx-3">to</span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={maxExperience}
-                min="1"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'max')}
-                className="border-b form-input w-20"
-              />
-            </div>
-          </div>
-        </div>
-        {/* Footer */}
-        <div className="fixed bottom-0 w-72 sm:w-full md:w-full bg-white space-x-3 flex justify-end border-t p-2">
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={closeOffcanvas}
-          >
-            Close
-          </button>
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={Apply}
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Users = () => {
+  const { usersRes, usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
   const navigate = useNavigate();
-   const {usersRes, 
-    usersLoading, 
-    currentPlan,
-    addOrUpdateUser, 
-    toggleUserStatus,
-    deleteUser
-  } = useCustomContext();
-
-      console.log("currentPlan", currentPlan);
-const [userLimitReached, setUserLimitReached] = useState(false);
-
-
- 
-
-
-  const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState([]);
-  // console.log("userData:", userData);
-  
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-
-  const tenantId = tokenPayload.tenantId;
-// console.log("tenantId in users", tenantId);
-
-
-
-
-
-
-  // const fetchUserData = useCallback(async () => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await axios.get(
-  //       `${config.REACT_APP_API_URL}/organization/${tenantId}`
-  //     );
-  //     const contactWithImages = response.data.map((contact) => {
-  //       if (contact.imageData && contact.imageData.filename) {
-  //         const imageUrl = `${config.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
-  //         return { ...contact, imageUrl };
-  //       }
-  //       return contact;
-  //     });
-  //     const reversedData = contactWithImages.reverse();
-
-  //     setUserData(reversedData);
-
-  //   } catch (error) {
-  //     console.error("Error fetching users data:", error);
-  //   }
-  //   setLoading(false);
-  // }, [tenantId]);
-
-  // useEffect(() => {
-  //   fetchUserData();
-  // }, [fetchUserData]);
-
-  // const handleDataAdded = () => {
-  //   fetchUserData();
-  // };
-
-
-
-
-  // const handleclose = () => {
-  //   setSelectedUser(false);
-  //   setActionViewMore(false);
-  //   setSidebarOpen(false);
-  //   setUserToEdit(null);
-  // };
-
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  // const [selectedFilters, setSelectedFilters] = useState({
-  //   status: [],
-  //   tech: [],
-  //   experience: [],
-  // });
-
-  // const toggleAction = (id) => {
-  //   setActionViewMore((prev) => (prev === id ? null : id));
-  // };
-
-  // eslint-disable-next-line no-unused-vars
-  const handleFilterChange = useCallback((filters) => {
-    //setSelectedFilters(filters);
-  }, []);
-  // const FilteredData = () => {
-  //   if (!Array.isArray(userData)) return [];
-  //   return userData.filter((users) => {
-  //     const fieldsToSearch = [
-  //       users.Firstname,
-  //       users.UserId,
-  //       users.Phone,
-  //       users.Email,
-  //       users.LinkedinUrl,
-  //     ];
-
-  //     return fieldsToSearch.some(
-  //       (field) =>
-  //         field !== undefined &&
-  //         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-  //     );
-  //   });
-  // };
-
-  // const [currentPage, setCurrentPage] = useState(0);
-  // const rowsPerPage = 10;
-  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  // const [activeArrow, setActiveArrow] = useState(null);
-
-  // const nextPage = () => {
-  //   if (currentPage < totalPages - 1) {
-  //     setCurrentPage(currentPage + 1);
-  //     setActiveArrow("next");
-  //   }
-  // };
-
-  // const prevPage = () => {
-  //   if (currentPage > 0) {
-  //     setCurrentPage(currentPage - 1);
-  //     setActiveArrow("prev");
-  //   }
-  // };
-
-  // const startIndex = currentPage * rowsPerPage;
-  // const endIndex = Math.min(startIndex + rowsPerPage, userData.length);
-  // const currentFilteredRows = FilteredData()
-  //   .slice(startIndex, endIndex)
-  //   .reverse();
-
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  // const [isPopupOpen, setPopupOpen] = useState(false);
+  const location = useLocation();
+  const [view, setView] = useState('table');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    roles: [],
+  });
+  const [isRolesOpen, setIsRolesOpen] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
+  const filterIconRef = useRef(null);
 
-  const toggleMenu = () => {
-    setMenuOpen(!isMenuOpen);
-  };
-
-  // const openPopup = (users) => {
-  //   setSelectedUser(users);
-  //   setPopupOpen(true);
-  // };
-
-  // const closePopup = () => {
-  //   setPopupOpen(false);
-  //   setSelectedUser(null);
-  // };
-
-  useEffect(() => {
-    document.title = "Users Tab";
-  }, []);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const sidebarRef = useRef(null);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
-
-  const handleOutsideClick = useCallback((event) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-      closeSidebar();
-    }
-  }, []);
-
-  const [actionViewMore, setActionViewMore] = useState(null);
-
-  const handleMoreClick = (userId) => {
-    setActionViewMore(prevId => prevId === userId ? null : userId);
-  };
-
-  const [viewMode, setViewMode] = useState("table");
-  const handleListViewClick = () => {
-    setViewMode("table");
-  };
-
-  const handleKanbanViewClick = () => {
-    setViewMode("kanban");
-  };
-
-  // const [selectedCandidate, setSelectedCandidate] = useState(null);
-
-  // const handleCandidateClick = (users) => {
-  //   // setSelectedCandidate(users);
-
-  //   setActionViewMore(false);
-  // };
-  // const handleCloseProfile = () => {
-  //   setSelectedCandidate(null);
-  // };
-
-  // Detect screen size and set view mode to "kanban" for sm
+  // Set view based on screen size
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        setViewMode("kanban");
+        setView('kanban');
       } else {
-        setViewMode("table");
+        setView('table');
       }
     };
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedRoles(selectedFilters.roles);
+      setIsRolesOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
 
-  const [isFilterActive, setIsFilterActive] = useState(false);
+  // Filter handling
+  const handleRoleToggle = (role) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role)
+        ? prev.filter((r) => r !== role)
+        : [...prev, role]
+    );
+  };
+
+  const handleClearAll = () => {
+    const clearedFilters = { roles: [] };
+    setSelectedRoles([]);
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = { roles: selectedRoles };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(filters.roles.length > 0);
+    setFilterPopupOpen(false);
+  };
+
   const handleFilterIconClick = () => {
-    if (usersRes.length !== 0) {
-      setIsFilterActive((prev) => !prev);
-      toggleMenu();
+    if (usersRes?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
     }
   };
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(0);
+  };
 
+  // Unique roles for filter options
+  const uniqueRoles = [
+    ...new Set(usersRes?.map((user) => user.label).filter(Boolean)),
+  ];
 
+  // Filtered data
   const FilteredData = () => {
     if (!Array.isArray(usersRes)) return [];
-    const sortedData = [...usersRes];
-
-    return sortedData.filter((users) => {
+    return usersRes.filter((user) => {
       const fieldsToSearch = [
-        users.firstName,
-        users.phone,
-        users.email,
-        users.label,
-      ];
+        user.firstName,
+        user.lastName,
+        user.email,
+        user.phone,
+        user.label,
+      ].filter((field) => field !== null && field !== undefined);
 
-      return fieldsToSearch.some(
-        (field) =>
-          field !== undefined &&
-          field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesRole =
+        selectedFilters.roles.length === 0 ||
+        selectedFilters.roles.includes(user.label);
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
+
+      return matchesSearchQuery && matchesRole;
     });
   };
 
-  const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  //const [activeArrow, setActiveArrow] = useState(null);
-
   const nextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-      //setActiveArrow("next");
+    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
+      setCurrentPage((prevPage) => prevPage + 1);
     }
   };
-
   const prevPage = () => {
     if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-      //setActiveArrow("prev");
+      setCurrentPage((prevPage) => prevPage - 1);
     }
   };
 
@@ -535,240 +140,333 @@ const [userLimitReached, setUserLimitReached] = useState(false);
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
-  return (
-    <div className="w-full bg-background">
-      <main className="w-full mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-2">
-     {/* {userLimitReached && (
+  // Action logic
+  const handleStatusToggleAction = (user) => {
+    const status = user.status === 'active' ? 'inactive' : 'active';
+    setSelectedUser(user);
+    setNewStatus(status);
+    setShowConfirmation(true);
+  };
 
-      
-  // <motion.div
-  //   initial={{ opacity: 0, y: -20 }}
-  //   animate={{ opacity: 1, y: 0 }}
-  //   transition={{ duration: 0.3 }}
-  //   className="w-full flex justify-center mt-4"
-  // >
-  //   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center max-w-3xl w-full">
-  //     <strong className="font-bold">User limit reached: </strong>
-  //     <span className="block sm:inline">
-  //       Please upgrade your plan or deactivate existing users to add more.
-  //     </span>
-  //   </div>
-  // </motion.div>
-// )} */}
+  const confirmStatusChange = () => {
+    if (selectedUser) {
+      toggleUserStatus.mutate({
+        userId: selectedUser._id,
+        newStatus,
+      });
+    }
+    setShowConfirmation(false);
+  };
 
-        <div className="sm:px-0">
-          <motion.div
-            className="mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">User Management</h3>
-                    <div className="mt-2 text-sm text-blue-700">
-                      <p>Manage all users who can conduct interviews, including:</p>
-                      <ul className="list-disc list-inside mt-1">
-                        <li>Create and manage interviewer accounts</li>
-                        <li>Set user roles and permissions</li>
-                        <li>Configure interview availability and expertise</li>
-                        <li>Track interviewer performance and ratings</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+  const cancelStatusChange = () => {
+    setShowConfirmation(false);
+    setSelectedUser(null);
+  };
+
+  const handleView = (user) => {
+    navigate(`details/${user._id}`, { state: { userData: user } });
+  };
+
+  const handleEdit = (user) => {
+    navigate(`edit/${user._id}`, { state: { userData: user } });
+  };
+
+  // Table Columns Configuration
+  const tableColumns = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (value, row) => (
+        <div className="flex items-center">
+          <div className="h-8 w-8 flex-shrink-0">
+            {row.imageUrl ? (
+              <img
+                className="h-8 w-8 rounded-full object-cover"
+                src={row.imageUrl}
+                alt={`${row.firstName || ''} ${row.lastName || ''}`}
+                onError={(e) => {
+                  e.target.src =
+                    row.gender === 'Male'
+                      ? maleImage
+                      : row.gender === 'Female'
+                        ? femaleImage
+                        : genderlessImage;
+                }}
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                {row.firstName ? row.firstName.charAt(0).toUpperCase() : '?'}
               </div>
-            </>
-          </motion.div>
-          <motion.div
-            className="flex justify-between items-center mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-                <div>
-                  <span className="text-lg text-custom-blue font-semibold">Users</span>
-                </div>
-
-                 {/* {userLimitReached && (
-      <div className="mr-4 text-sm text-red-600 font-semibold">
-         User limit reached. Please upgrade your plan to add more users. or In Active the Existing Users.
-      </div>
-    )} */}
-
-                <button 
-                  onClick={() => {
-      if (usersRes.length >= currentPlan.maxUsers) {
-        // setUserLimitReached(true);
-         toast('Please upgrade your plan or deactivate existing users to add more.', {
-      icon: '⚠️',
-      style: {
-        background: '#fff3cd',
-        color: '#856404',
-        border: '1px solid #ffeeba'
-      }
-    });
-        //  toast.warning(' Please upgrade your plan or deactivate existing users to add more.')
-          return;
-      } else {
-        navigate('new');
-      }
-    }}
-    className={`p-2 ${
-      usersRes.length >= currentPlan.maxUsers ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-custom-blue cursor-pointer'
-    } text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded`}
-                // onClick={() => { navigate('new') }}
-                
-                >
-                  
-                  {/* // className="p-2 bg-custom-blue cursor-pointer text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded" */}
-                  
-                    Add
-                 
-                </button>
-          </motion.div>
-          <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end mb-4">
-            <div className="flex items-center sm:hidden md:hidden">
-              <Tooltip title="table" enterDelay={300} leaveDelay={100} arrow>
-                <span onClick={handleListViewClick}>
-                  <List
-                    className={`text-xl cursor-pointer mr-4 ${viewMode === "table" ? "text-custom-blue" : ""
-                      }`}
-                  />
-                </span>
-              </Tooltip>
-              <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-                <span onClick={handleKanbanViewClick}>
-                  <Grid
-                    className={`text-xl cursor-pointer ${viewMode === "kanban" ? "text-custom-blue" : ""
-                      }`}
-                  />
-                </span>
-              </Tooltip>
-
+            )}
+          </div>
+          <div className="ml-3">
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer"
+              onClick={() => handleView(row)}
+            >
+              {`${row.firstName || ''} ${row.lastName || ''}`.trim() || 'Unknown'}
             </div>
-            <div className="flex items-center">
-              <div className="relative flex-1 w-[300px] sm:w-full flex-grow">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                <input
-                  type="text"
-                  placeholder="Search by Firstname, Email, Phone."
-                  value={searchQuery}
-                  onChange={handleSearchInputChange}
-                  className="w-[100%] pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-transparent text-sm"
-                />
-              </div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'email', header: 'Email', render: (value) => value || 'N/A' },
+    { key: 'phone', header: 'Phone', render: (value) => value || 'N/A' },
+    { key: 'label', header: 'Role', render: (value) => value || 'N/A' },
+  ];
 
-              <div>
-                <span className="p-2 text-xl sm:text-md md:text-md">
-                  {currentPage + 1}/{totalPages}
-                </span>
-              </div>
-              <div className="flex">
-                <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    className={`border p-2 mr-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === 0 ? " cursor-not-allowed" : "cursor-pointer"}`}
-                    onClick={prevPage}
-                  >
-                    <ChevronLeft className="text-custom-blue" />
-                  </span>
-                </Tooltip>
-
-                <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    className={`border p-2 text-lg sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : "cursor-pointer"}`}
-                    onClick={nextPage}
-                  >
-                    <ChevronRight className="text-custom-blue" />
-                  </span>
-                </Tooltip>
-              </div>
-              <div className="ml-2 text-lg sm:text-md md:text-md border rounded-md p-2">
-                <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    onClick={handleFilterIconClick}
-                    style={{
-                      opacity: usersRes.length === 0 ? 0.2 : 1,
-                      pointerEvents: usersRes.length === 0 ? "none" : "auto",
-                    }}
-                  >
-                    {isFilterActive ? (
-                      <X className="text-custom-blue cursor-pointer" />
-                    ) : (
-                      <Filter className="text-custom-blue cursor-pointer" />
-                    )}
-                  </span>
-                </Tooltip>
-              </div>
-            </div>
-          </motion.div>
-          {usersLoading ? (
-            <Loading />
+  // Table Actions Configuration
+  const tableActions = [
+    {
+      key: 'status',
+      label: (row) => {
+        if (!row.status) return 'Unknown Status';
+        return row.status === 'active' ? 'In Active' : 'Active';
+      },
+      icon: (row) => (
+        <div
+          className="flex items-center justify-center w-6 h-6"
+          title={row.status === 'active' ? 'Deactivate user' : 'Activate user'}
+        >
+          {row.status === 'active' ? (
+            <CheckCircle size={20} className="text-green-500" />
+          ) : row.status === 'inactive' ? (
+            <XCircle size={20} className="text-red-500" />
           ) : (
-            <motion.div className="bg-white">
-
-              {viewMode === 'table' ?
-                <div className="flex relative w-full overflow-hidden">
-                  <div className={` transition-all duration-300 ${isMenuOpen ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                    }`} >
-                    <TableView
-                      currentFilteredRows={currentFilteredRows}
-                      toggleAction={handleMoreClick}
-                      actionViewMore={actionViewMore}
-                      setActionViewMore={setActionViewMore}
-                      // toggleUserStatus={toggleUserStatus}
-                      //  handleUserClick={handleUserClick} 
-                      loading={usersLoading}
-                      userData={usersRes}
-                      toggleSidebar={toggleSidebar}
-                    />
-                  </div>
-                  {isMenuOpen && (
-                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                      <OffcanvasMenu
-                        isOpen={isMenuOpen}
-                        closeOffcanvas={handleFilterIconClick}
-                        onFilterChange={handleFilterChange}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                :
-                <div className="flex relative w-full overflow-hidden">
-                  <div className={` transition-all duration-300 ${isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
-                    }`} >
-                    <KanbanView
-                      currentFilteredRows={currentFilteredRows}
-                      loading={usersLoading}
-                      setActionViewMore={setActionViewMore}
-                      // toggleUserStatus={toggleUserStatus}
-                      userData={usersRes}
-                      toggleSidebar={toggleSidebar}
-                    />
-                  </div>
-                  {isMenuOpen && (
-                    <div className=" h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                      <OffcanvasMenu
-                        isOpen={isMenuOpen}
-                        closeOffcanvas={handleFilterIconClick}
-                        onFilterChange={handleFilterChange}
-                      />
-                    </div>
-                  )}
-                </div>
-              }
-            </motion.div>
+            <Info size={20} className="text-gray-500" />
           )}
         </div>
-      </main>
+      ),
+      onClick: (row) => {
+        handleStatusToggleAction(row);
+      },
+    },
+
+    {
+      key: 'view',
+      label: 'View Details',
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => handleView(row),
+    },
+    {
+      key: 'edit',
+      label: 'Edit',
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => handleEdit(row),
+    },
+  ];
+
+  return (
+    <div className="h-screen fixed w-full flex">
+      {/* Sidebar spacing from AccountSettingsSidebar */}
+      <div className="lg:w-64 xl:w-64 2xl:w-64" />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col ml-0 h-full overflow-y-auto">
+        <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+          {/* Info Icon for User Management Popup */}
+          <motion.div
+            className=""
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <button
+              onClick={() => setShowUserManagementPopup(true)}
+              className="p-1 text-custom-blue hover:text-custom-blue/80 focus:outline-none"
+              title="User Management Info"
+            >
+              <Info size={20} />
+            </button>
+          </motion.div>
+          {/* Header and Toolbar */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Header
+              title="Users"
+              onAddClick={() => {
+                if (usersRes.length >= currentPlan.maxUsers) {
+                  toast('Please upgrade your plan or deactivate existing users to add more.', {
+                    icon: '⚠️',
+                    style: {
+                      background: '#fff3cd',
+                      color: '#856404',
+                      border: '1px solid #ffeeba',
+                    },
+                  });
+                } else {
+                  navigate('new');
+                }
+              }}
+              addButtonText="Add User"
+            />
+          </motion.div>
+          <Toolbar
+            view={view}
+            setView={setView}
+            searchQuery={searchQuery}
+            onSearch={handleSearch}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            onFilterClick={handleFilterIconClick}
+            isFilterPopupOpen={isFilterPopupOpen}
+            isFilterActive={isFilterActive}
+            dataLength={usersRes?.length}
+            searchPlaceholder="Search by Firstname, Email, Phone..."
+            filterIconRef={filterIconRef}
+          />
+        </div>
+        <div className="fixed top-52 2xl:top-56 xl:top-56 lg:top-56 left-64 right-0 bg-background px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+          <motion.div className="bg-white">
+            <div className="relative w-full">
+              {view === 'table' ? (
+                <div className="w-full">
+
+
+                  <TableView
+                    data={currentFilteredRows}
+                    columns={tableColumns}
+                    loading={usersLoading}
+                    actions={tableActions}
+                    emptyState="No users found."
+                  />
+                </div>
+              ) : (
+                <div className="w-full">
+                  <KanbanView
+                    currentFilteredRows={currentFilteredRows}
+                    loading={usersLoading}
+                    setActionViewMore={() => { }} // Placeholder; adjust if needed
+                    userData={usersRes}
+                    toggleSidebar={() => navigate('new')}
+                  />
+                </div>
+              )}
+              <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={handleApplyFilters}
+                onClearAll={handleClearAll}
+                filterIconRef={filterIconRef}
+              >
+                <div className="space-y-3">
+                  {/* Roles Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsRolesOpen(!isRolesOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Roles</span>
+                      {isRolesOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isRolesOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {uniqueRoles.length > 0 ? (
+                          uniqueRoles.map((role) => (
+                            <label key={role} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedRoles.includes(role)}
+                                onChange={() => handleRoleToggle(role)}
+                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{role}</span>
+                            </label>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">No roles available</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </FilterPopup>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+      {showUserManagementPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 25 }}
+            className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-100"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">User Management Guide</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Manage your team's interviewers efficiently
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowUserManagementPopup(false)}
+                  className="text-gray-400 hover:text-gray-500 transition-colors"
+                  aria-label="Close"
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
+
+              <div className="mt-6 space-y-4 text-sm text-gray-700">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 h-5 w-5 text-blue-500 mt-0.5">
+                    <Info size={20} />
+                  </div>
+                  <p className="ml-3">
+                    Manage all users who can conduct interviews, including:
+                  </p>
+                </div>
+
+                <ul className="space-y-3 pl-8">
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="ml-2">Create and manage interviewer accounts</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="ml-2">Set user roles and permissions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="ml-2">Configure interview availability and expertise</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="ml-2">Track interviewer performance and ratings</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setShowUserManagementPopup(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      <ConfirmationModal
+        show={showConfirmation}
+        userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
+        newStatus={newStatus}
+        onCancel={cancelStatusChange}
+        onConfirm={confirmStatusChange}
+      />
     </div>
   );
 };

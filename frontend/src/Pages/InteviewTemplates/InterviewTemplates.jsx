@@ -138,7 +138,7 @@ const InterviewTemplates = () => {
           className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
             value === 'active'
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-              : value === 'draft'
+              : value === 'inactive'
               ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
               : 'bg-slate-50 text-slate-700 border border-slate-200/60'
           }`}

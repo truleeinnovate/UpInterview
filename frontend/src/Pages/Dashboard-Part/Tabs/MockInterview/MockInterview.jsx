@@ -171,11 +171,23 @@ const MockInterview = () => {
       header: 'Interviewer',
       render: () => 'N/A', // Placeholder, update if interviewer data is available
     },
-    {
-      key: 'createdDate',
-      header: 'Created On',
-      render: (value) => value || 'N/A',
-    },
+ {
+  key: 'createdAt',
+  header: 'Created On',
+  render: (value) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    return date.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  },
+}
+
   ];
 
   const tableActions = [
