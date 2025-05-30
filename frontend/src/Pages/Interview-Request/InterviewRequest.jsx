@@ -15,6 +15,7 @@ import { ReactComponent as FiFilter } from '../../icons/FiFilter.svg';
 import { ReactComponent as FiMoreHorizontal } from '../../icons/FiMoreHorizontal.svg';
 import { ReactComponent as LuFilterX } from '../../icons/LuFilterX.svg';
 import axios from 'axios';
+import { config } from '../../config.js';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
     const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -236,7 +237,7 @@ const InternalRequest = () => {
         const OrgId = Cookies.get("organization");
 
         try {
-            const response = await axios.get(`${process.env.REACT_APP_API_URL}/interviewrequest`);
+            const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest`);
             let filteredRequests = [];
 
             if (OrgId === "true") {
@@ -367,7 +368,7 @@ const InternalRequest = () => {
         }
 
         try {
-            await axios.patch(`${process.env.REACT_APP_API_URL}/interviewrequest/${id}`, { status: newStatus });
+            await axios.patch(`${config.REACT_APP_API_URL}/interviewrequest/${id}`, { status: newStatus });
             console.log(`Request ${newStatus} successfully!`);
             window.location.reload();
         } catch (error) {

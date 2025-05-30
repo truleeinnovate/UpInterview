@@ -2,6 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useEffect } from 'react';
 import { decodeJwt } from './AuthCookieManager/jwtDecode';
+import { config } from '../config';
 
 const getObjectPermissions = (userProfile, objName) => {
   if (!userProfile || !userProfile.Objects) {
@@ -43,7 +44,7 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
   const userId = tokenPayload?.userId;
 
   try {
-    const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${userId}`);
+    const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
     setUserProfile(matchedUser.data);
     if (matchedUser.data && matchedUser.data.Name) {
       Cookies.set("userName", matchedUser.data.Name);
@@ -62,15 +63,15 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
       setFreelancer(false);
     }
     if (matchedUser.data) {
-      const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/${matchedUser.data.ProfileId}`);
+      const profileResponse = await axios.get(`${config.REACT_APP_API_URL}/api/profiles/${matchedUser.data.ProfileId}`);
       setUserProfile(profileResponse.data);
       // console.log("profileResponse.data",profileResponse.data);
 
-      // const roleResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/roles/${matchedUser.data.RoleId}`);
+      // const roleResponse = await axios.get(`${config.REACT_APP_API_URL}/api/roles/${matchedUser.data.RoleId}`);
       // setUserRole(roleResponse.data);
 
       const organizationId = Cookies.get('organizationId');
-      const sharingResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/sharing-settings`);
+      const sharingResponse = await axios.get(`${config.REACT_APP_API_URL}/api/sharing-settings`);
       const sharesetting = sharingResponse.data.filter(profile => profile.organizationId === organizationId);
       setSharingSettings(sharesetting);
 

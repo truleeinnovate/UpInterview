@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { config } from "../../config";
 
 const ResetPassword = () => {
   console.log("ResetPassword");
@@ -40,7 +41,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/Organization/reset-password`, {
+      const response = await fetch(`${config.REACT_APP_API_URL}/Organization/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: userId, newPassword, type }), // Pass type to backend

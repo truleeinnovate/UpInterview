@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useState } from 'react'
 import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { config } from '../../../../../config';
 
 const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
 
@@ -62,7 +63,7 @@ const CreateEmailTemplate = ({ show, onClose, refreshData }) => {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/emailTemplate/templates`, formData);
+      await axios.post(`${config.REACT_APP_API_URL}/emailTemplate/templates`, formData);
       alert('Template saved successfully!');
       setFormData({});
       refreshData();

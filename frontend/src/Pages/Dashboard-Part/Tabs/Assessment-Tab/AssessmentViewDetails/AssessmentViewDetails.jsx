@@ -10,6 +10,7 @@ import DetailsTab from './AssessmentDetailTab.jsx';
 import QuestionsTab from './AsseessmentQuestionsTab.jsx';
 import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
+import { config } from '../../../../../config.js';
 
 function AssessmentView() {
   const { assessmentData } = useCustomContext();
@@ -46,7 +47,7 @@ function AssessmentView() {
   useEffect(() => {
     if (assessment) {
       axios
-        .get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`)
+        .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`)
         .then((response) => {
           if (response.data.success) {
             const data = response.data.data;

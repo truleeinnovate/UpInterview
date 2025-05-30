@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerOrganization, loginOrganization,resetPassword,organizationUserCreation,getUsersByTenant,getRolesByTenant,getBasedIdOrganizations,  checkSubdomainAvailability,
+const { registerOrganization, loginOrganization,resetPassword,organizationUserCreation,getRolesByTenant,getBasedIdOrganizations,  checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
@@ -12,7 +12,6 @@ router.post('/Login', loginOrganization);
 router.post('/reset-password', resetPassword);
 router.post('/new-user-Creation', organizationUserCreation);
 //users in user creation in users tab
-router.get('/:tenantId', getUsersByTenant);
 router.get('/roles/:tenantId', getRolesByTenant);
 
 router.get('/organization-details/:id', getBasedIdOrganizations);

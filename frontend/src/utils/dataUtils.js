@@ -108,7 +108,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
         }
         // if (organizationId) {
         //     const queryParam = organization === 'true' ? `tenantId=${organizationId}` : `ownerId=${userId}`;
-        //     const url = `${process.env.REACT_APP_API_URL}/api/${endpoint}?${queryParam}`;
+        //     const url = `${config.REACT_APP_API_URL}/api/${endpoint}?${queryParam}`;
         // }
 
         // const response = await axios.get(url);

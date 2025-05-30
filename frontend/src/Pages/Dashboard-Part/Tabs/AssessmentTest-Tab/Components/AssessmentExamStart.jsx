@@ -5,6 +5,7 @@ import QuestionDisplay from './AssessmentExamComponents/AssessmentExamQuestionDi
 import SubmitConfirmation from './AssessmentExamComponents/AssessmentExamSubmitConfirmation.jsx';
 import CompletionScreen from './AssessmentExamComponents/AssessmentExamCompletionScreen.jsx';
 import QuestionNavigation from './AssessmentExamComponents/AssessmentExamQuestionNavigation.jsx';
+import { config } from '../../../../../config.js';
 
 function AssessmentTest({ assessment, candidate, questions, duration,candidateAssessmentId }) {
     const [currentSection, setCurrentSection] = useState(0);
@@ -109,7 +110,7 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
         };
         console.log("candidateAssessmentData", candidateAssessmentData);
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/candidate-assessment/submit`, {
+        const response = await fetch(`${config.REACT_APP_API_URL}/candidate-assessment/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -4,7 +4,6 @@ import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
 import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
@@ -15,6 +14,8 @@ import PageSetter from './Components/PageSetter';
 import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx';
 import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
 import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
+import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
+
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -52,7 +53,6 @@ const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab
 const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
 const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
 const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const AccountSettingsSidebar = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
 const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
 const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
 const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));
@@ -170,7 +170,6 @@ const App = () => {
   const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
   const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
-  const showAppSettings = appSettingsPaths.includes(location.pathname);
 
   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
 
@@ -182,9 +181,8 @@ const App = () => {
       >
         {shouldRenderNavbar && <Navbar />}
         {showSettingsSidebar && <Settingssidebar />}
-        {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
-        <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
+        <div>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -212,7 +210,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              {/* Protected Routes */}
+              {/* Protected Routes */} 
               <Route path="/home" element={<Home />} />
               <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
               <Route path="/outsource-interview-request" element={<InterviewRequest />} />
@@ -249,7 +247,7 @@ const App = () => {
               <Route path="/interviews/new" element={<InterviewForm />} />
               <Route path="/interviews/:id" element={<InterviewDetail />} />
               <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:id/rounds/:roundId" element={<RoundForm />} />
+              <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
 
               {/* Question Bank */}
               <Route path="/questionBank" element={<QuestionBank />} />

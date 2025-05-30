@@ -7,6 +7,8 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
+import { useCandidates } from '../../../../../apiHooks/useCandidates';
+import { config } from "../../../../../config.js";
 
 // Reusable Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onProceed, message }) => {
@@ -44,7 +46,8 @@ const InterviewForm = () => {
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { interviewData, candidateData, positions, templates } = useCustomContext();
+  const { interviewData, positions, templates } = useCustomContext();
+  const {  candidateData } = useCandidates();
 
   const [candidateId, setCandidateId] = useState('');
   const [positionId, setPositionId] = useState('');
@@ -153,12 +156,12 @@ const InterviewForm = () => {
       };
 
       let response;
-      response = await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+      response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
         ...interviewData,
         interviewId: id
       });
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/candidateposition`, {
+      await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
         candidateId,
         positionId,
         interviewId: response.data._id,

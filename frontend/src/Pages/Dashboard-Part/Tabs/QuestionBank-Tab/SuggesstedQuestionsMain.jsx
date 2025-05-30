@@ -11,6 +11,7 @@ import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArro
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { config } from "../../../../config.js";
 
 // const SuggestedQuestionsComponent = ({interviewQuestionsList,setInterviewQuestionsList,questionBankPopupVisibility,section}) => {
 //change done by Shashank on -[08/01/2025]
@@ -154,7 +155,7 @@ const SuggestedQuestionsComponent = ({
 
             setInterviewQuestionsList((prev) => [...prev, item]);
             // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
-            // const url = `${process.env.REACT_APP_API_URL}/interview-questions/add-question`;
+            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
 
             const questionToAdd = {
                 tenantId: "ten1",
@@ -173,7 +174,7 @@ const SuggestedQuestionsComponent = ({
             // const response = await axios.post(url, questionToAdd);
             // if (response.data.success) {
             // getInterviewerQuestions()
-            // const addedQuestionUrl = `${process.env.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
+            // const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
             // const response2 = await axios.get(addedQuestionUrl);
             // const newQuestion = response2.data.question;
             // const formattedQuestion = {
@@ -407,7 +408,7 @@ const SuggestedQuestionsComponent = ({
     const onClickRemoveQuestion = async (id) => {
         // alert(${id})
         try {
-            const url = `${process.env.REACT_APP_API_URL}/interview-questions/question/${id}`;
+            const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
             const response = await axios.delete(url);
             // alert(response.data.message)
             getInterviewerQuestions();
@@ -709,7 +710,7 @@ const SuggestedQuestionsComponent = ({
                 };
 
                 //   const response = await axios.post(
-                //     `${process.env.REACT_APP_API_URL}/interview-questions/add-question`,
+                //     `${config.REACT_APP_API_URL}/interview-questions/add-question`,
                 //     questionToAdd,
                 //     { headers: { 'Content-Type': 'application/json' } }
                 //   );

@@ -16,12 +16,12 @@ import { useParams } from "react-router-dom";
 
 
 
-const Mockprofiledetails = ({  onCloseprofile}) => {
+const Mockprofiledetails = ({ onCloseprofile }) => {
     const {
         mockinterviewData,
-      } = useCustomContext();
+    } = useCustomContext();
 
-       const { id } = useParams();
+    const { id } = useParams();
 
     const mockinterview = mockinterviewData.find((data) => data._id === id);
 
@@ -41,15 +41,15 @@ const Mockprofiledetails = ({  onCloseprofile}) => {
 
     const [editform, setEditform] = useState(false);
     const [cancelSchedule, setcancelSchedule] = useState(false);
-  const [reschedule, setReschedule] = useState(false);
+    const [reschedule, setReschedule] = useState(false);
 
-  const onRescheduleClick = (mockinterview) => {
-    setReschedule(mockinterview);
-  }
-  
-  const closeschedulepopup = () => {
-    setReschedule(false);
-  };
+    const onRescheduleClick = (mockinterview) => {
+        setReschedule(mockinterview);
+    }
+
+    const closeschedulepopup = () => {
+        setReschedule(false);
+    };
 
 
     const onEditClick = (mockinterview) => {
@@ -76,18 +76,14 @@ const Mockprofiledetails = ({  onCloseprofile}) => {
         // Split the date and time
         const [date, timeRange] = dateTimeStr.split(' ');
         const [startTime] = timeRange.split(' - ');
-
         // Parse the date
         const parsedDate = parse(date, 'dd-MM-yyyy', new Date());
         const formattedDate = isValid(parsedDate) ? format(parsedDate, 'dd MMM, yyyy') : 'Invalid Date';
-
         // Parse the time
         const parsedTime = parse(startTime, 'HH:mm', new Date());
         const formattedTime = isValid(parsedTime) ? format(parsedTime, 'hh:mm a') : 'Invalid Time';
-
         return `${formattedDate} · ${formattedTime}`;
     }
-
     let statusTextColor;
     switch (mockinterview.status) {
         case 'Reschedule':
@@ -173,7 +169,7 @@ const Mockprofiledetails = ({  onCloseprofile}) => {
                                                 className="border border-[#217989] bg-[#217989] shadow rounded-md bg-opacity-5 mb-2 text-xs">
                                                 <div className="border-b border-gray-400 p-1 flex justify-between items-center">
                                                     <p>
-                                                        {displayDateTime(mockinterview.dateTime)}
+                                                        {displayDateTime(mockinterview?.dateTime)}
                                                     </p>
                                                     <p
                                                         className={statusTextColor}
@@ -278,7 +274,7 @@ const Mockprofiledetails = ({  onCloseprofile}) => {
                                                         </div>
                                                         <div
                                                             className="bg-custom-blue text-white px-3 py-1 rounded cursor-pointer"
-                                                        onClick={() => onRescheduleClick(mockinterview)}
+                                                            onClick={() => onRescheduleClick(mockinterview)}
                                                         >
                                                             Reschedule
                                                         </div>
@@ -459,13 +455,13 @@ const Mockprofiledetails = ({  onCloseprofile}) => {
                     onClose={closepopup}
                 />
             )}
-                  {reschedule && (
-        <ReschedulePopup
-          onClose={closeschedulepopup}
-          MockEditData={reschedule}
+            {reschedule && (
+                <ReschedulePopup
+                    onClose={closeschedulepopup}
+                    MockEditData={reschedule}
 
-        />
-      )}
+                />
+            )}
         </>
     );
 };

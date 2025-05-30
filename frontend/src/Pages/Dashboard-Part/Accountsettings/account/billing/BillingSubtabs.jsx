@@ -10,6 +10,7 @@ import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 import { EditButton } from '../../common/Buttons';
 import InvoiceTab from '../../../Tabs/Invoice-Tab/Invoice';
+import { config } from '../../../../../config';
 
  
 
@@ -45,7 +46,7 @@ const BillingSubtabs = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const Invoice_res = await axios.get(`${process.env.REACT_APP_API_URL}/get-invoice-id/${ownerId}`);
+        const Invoice_res = await axios.get(`${config.REACT_APP_API_URL}/get-invoice-id/${ownerId}`);
         const Sub_Invoice_data = Invoice_res.data.invoiceData?.reverse() || [];
         setBillingHistory(Sub_Invoice_data);
       } catch (error) {

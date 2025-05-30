@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Tooltip } from '@mantine/core';
-import { FaList } from 'react-icons/fa';
-import { TbLayoutGridRemove } from 'react-icons/tb';
-import { IoMdSearch } from 'react-icons/io';
-import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { LuFilter, LuFilterX } from 'react-icons/lu';
+import { ReactComponent as IoIosArrowBack } from '../../../icons/IoIosArrowBack.svg';
+import { ReactComponent as IoIosArrowForward } from '../../../icons/IoIosArrowForward.svg';
+import { ReactComponent as TbLayoutGridRemove } from '../../../icons/TbLayoutGridRemove.svg';
+import { ReactComponent as IoMdSearch } from '../../../icons/IoMdSearch.svg';
+import { ReactComponent as LuFilter } from '../../../icons/LuFilter.svg';
+import { ReactComponent as LuFilterX } from '../../../icons/LuFilterX.svg';
+import { ReactComponent as FaList } from '../../../icons/FaList.svg';
 
 const Toolbar = ({
   view,

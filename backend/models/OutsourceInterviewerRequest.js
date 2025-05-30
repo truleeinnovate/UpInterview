@@ -57,4 +57,4 @@ const CounterSchema = new mongoose.Schema({
 });
 mongoose.model('Counter', CounterSchema);
 
-module.exports = mongoose.model('OutsourceInterviewer', OutsourceInterviewerSchema);
+module.exports = mongoose.model('OutsourceInterviewerRequest', OutsourceInterviewerSchema);

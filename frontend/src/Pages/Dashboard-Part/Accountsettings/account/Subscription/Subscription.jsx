@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 // import toast from "react-hot-toast";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { config } from '../../../../../config';
 
 function Subscription() {
   // const currentPlan = subscriptionPlans.find(plan => plan.id === currentSubscription.planId);
@@ -43,7 +44,7 @@ const {currentPlan} = useCustomContext();
     // useEffect(() => {
     //   const fetchData = async () => {
     //     try {
-    //       const Sub_res = await axios.get(`${process.env.REACT_APP_API_URL}/subscriptions/${user.ownerId}`);
+    //       const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${user.ownerId}`);
     //       const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
     //       // If subscription exists, set it; otherwise, keep it empty
     //    console.log("Sub_res Sub_res",Subscription_data);
@@ -69,9 +70,9 @@ const {currentPlan} = useCustomContext();
     useEffect(() => {
       const fetchPlans = async () => {
         try {
-          // const response = await axios.get(`${process.env.REACT_APP_API_URL}/all-subscription-plans`);
+          // const response = await axios.get(`${config.REACT_APP_API_URL}/all-subscription-plans`);
           const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`
+            `${config.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`
           );
           const data = response.data;
 
@@ -169,7 +170,7 @@ const {currentPlan} = useCustomContext();
   
     //   try {
     //     const subscriptionResponse = await axios.post(
-    //       `${process.env.REACT_APP_API_URL}/create-customer-subscription`,
+    //       `${config.REACT_APP_API_URL}/create-customer-subscription`,
     //       payload
     //     );
   
@@ -179,7 +180,7 @@ const {currentPlan} = useCustomContext();
     //     );
     //     console.log(organization, plan.name, "organization");
     //     if ((organization === "false" || !organization) && plan.name === "Base") {
-    //       await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/free`, {
+    //       await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
     //         ownerId: user.ownerId,
     //         tenantId: user.tenantId,
     //       });

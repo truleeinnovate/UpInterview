@@ -3,7 +3,7 @@ const router = express.Router();
 const {
     createInterviewTemplate,
     getAllTemplates,
-    getTemplateById,
+    // getTemplateById,
     updateTemplate,
     deleteTemplate
 } = require('../controllers/interviewTemplateController');
@@ -16,7 +16,7 @@ router.route('/')
 
 // Get, update and delete template by ID
 router.route('/:id')
-    .get(getTemplateById)
+    // .get(getTemplateById)
     .patch(updateTemplate)
     .delete(deleteTemplate);
 

@@ -2,6 +2,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTrash, FaSearch, FaRegUser } from 'react-icons/fa';
+import { config } from '../../config';
 
 
 const AssessmentType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndAddRound, onUpdate, onValidityChange, isEditMode, isViewMode, rounds }) => {
@@ -422,7 +423,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`)
+        const response = await axios.get(`${config.REACT_APP_API_URL}/users`)
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error)
@@ -436,7 +437,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
     const fetchGroups = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/groups`);
         console.log('Fetched groups:', response.data); // Debug log
         setGroups(response.data);
       } catch (error) {
@@ -1296,8 +1297,8 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
 
     try {
       const url = isEditMode 
-        ? `${process.env.REACT_APP_API_URL}/interviewTemplates/${initialData._id}`
-        : `${process.env.REACT_APP_API_URL}/interviewTemplates`;
+        ? `${config.REACT_APP_API_URL}/interviewTemplates/${initialData._id}`
+        : `${config.REACT_APP_API_URL}/interviewTemplates`;
       
       const response = await axios[isEditMode ? 'patch' : 'post'](url, templateData, {
         headers: {

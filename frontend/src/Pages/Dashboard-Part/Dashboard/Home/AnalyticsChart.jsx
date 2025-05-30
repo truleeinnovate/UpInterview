@@ -1,7 +1,7 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const AnalyticsChart = ({ data }) => {
+const AnalyticsChart = ({ data, setPeriod, period }) => {
   return (
     <div className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-sm border border-gray-200 col-span-2 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-8">
@@ -10,9 +10,24 @@ const AnalyticsChart = ({ data }) => {
           <p className="text-gray-500 text-sm mt-1">Number of interviews conducted</p>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="text-sm text-gray-600 hover:text-gray-900">Weekly</button>
-          <button className="text-sm text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">Monthly</button>
-          <button className="text-sm text-gray-600 hover:text-gray-900">Yearly</button>
+          <button
+            className={`text-sm ${period === 'weekly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            onClick={() => setPeriod('weekly')}
+          >
+            Weekly
+          </button>
+          <button
+            className={`text-sm ${period === 'monthly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            onClick={() => setPeriod('monthly')}
+          >
+            Monthly
+          </button>
+          <button
+            className={`text-sm ${period === 'yearly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            onClick={() => setPeriod('yearly')}
+          >
+            Yearly
+          </button>
         </div>
       </div>
       <div className="h-80">
@@ -20,8 +35,8 @@ const AnalyticsChart = ({ data }) => {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorInterviews" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1}/>
-                <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />

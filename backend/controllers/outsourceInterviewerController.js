@@ -1,6 +1,6 @@
 // controllers/outsourceInterviewerController.js
 
-const OutsourceInterviewer = require('../models/OutsourceInterviewersSchema.js');
+const OutsourceInterviewer = require('../models/OutsourceInterviewerRequest.js');
 
 exports.getAllInterviewers = async (req, res) => {
     try {

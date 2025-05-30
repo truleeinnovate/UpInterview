@@ -4,6 +4,7 @@ import { Calendar, Clock, CheckCircle, AlertCircle, ChevronRight, Filter } from 
 import { format, isToday, isTomorrow, isThisWeek, parseISO, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { config } from '../../../../config';
 
 const TaskList = () => {
   const [taskData, setTaskData] = useState([]);
@@ -25,7 +26,7 @@ const TaskList = () => {
     const fetchTasks = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/tasks`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
         setTaskData(response.data);
       } catch (error) {
         console.error('Error fetching tasks:', error);
@@ -64,10 +65,10 @@ const TaskList = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/task')}
-          className="flex items-center space-x-2 bg-indigo-600 text-white px-3 py-1.5 rounded-xl hover:bg-indigo-700 transition-all duration-300"
+          className="flex items-center space-x-2 bg-custom-blue text-white px-3 py-1.5 rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
         >
+          <span className="text-sm">View All</span>
           <ChevronRight size={18} />
-          <span className="text-sm">View More</span>
         </motion.button>
       </div>
 

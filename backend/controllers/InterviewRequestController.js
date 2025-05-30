@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
-const OutsourceInterviewRequest = require('../models/OutsourceInterviewRequest.js');
 const Interview = require('../models/Interview.js')
+const InterviewRequest = require('../models/InterviewRequest');
+const Contacts = require('../models/Contacts');
+const InterviewRounds = require('../models/InterviewRounds');
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -63,7 +65,7 @@ exports.createRequest = async (req, res) => {
       } = req.body;
       const isInternal = interviewerType === "internal";
   
-      const newRequest = new OutsourceInterviewRequest({
+      const newRequest = new InterviewRequest({
         tenantId: new mongoose.Types.ObjectId(tenantId),
         ownerId,
         scheduledInterviewId: new mongoose.Types.ObjectId(scheduledInterviewId),
@@ -89,7 +91,7 @@ exports.createRequest = async (req, res) => {
 
 exports.getAllRequests = async (req, res) => {
     try {
-        const requests = await OutsourceInterviewRequest.find()
+        const requests = await InterviewRequest.find()
             .populate({
                 path: 'positionId',
                 model: 'Position',
@@ -135,7 +137,7 @@ exports.updateRequestStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { interviewerIds } = req.body;
-        const request = await OutsourceInterviewRequest.findById(id);
+        const request = await InterviewRequest.findById(id);
         if (!request) {
             return res.status(404).json({ message: 'Interview request not found' });
         }
@@ -173,4 +175,99 @@ exports.updateRequestStatus = async (req, res) => {
         console.error('Error updating request:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
+};
+
+
+exports.getInterviewRequests = async (req, res) => {
+  try {
+    const { ownerId } = req.query;
+
+    if (!ownerId) {
+      return res.status(400).json({ message: 'ownerId is required' });
+    }
+
+    // Find the contact where ownerId matches
+    const contact = await Contacts.findOne({ ownerId });
+    if (!contact) {
+      return res.status(404).json({ message: 'Contact not found for this ownerId' });
+    }
+
+    const contactId = contact._id;
+
+    // Find interview requests where interviewerId matches the contactId
+    const requests = await InterviewRequest.find({ interviewerId: contactId })
+      .populate('candidateId', 'firstName lastName') // Assuming Candidate has these fields
+      .populate('positionId', 'title') // Assuming Position has a title field
+      .populate('tenantId', 'name') // Assuming Organization has a name field
+      .populate('roundId', 'roundTitle interviewType duration dateTime'); // Populate round details
+
+    const formattedRequests = requests.map((request) => ({
+      id: request._id,
+      candidate: request.candidateId
+        ? `${request.candidateId.firstName} ${request.candidateId.lastName}`
+        : 'Unknown Candidate',
+      position: request.positionId ? request.positionId.title : 'Unknown Position',
+      company: request.tenantId ? request.tenantId.name : 'Unknown Company',
+      type: request.roundId ? request.roundId.interviewType : 'Unknown Type',
+      status: request.status,
+      requestedDate: request.requestedAt.toISOString().split('T')[0],
+      urgency: request.expiryDateTime
+        ? new Date(request.expiryDateTime) < new Date()
+          ? 'High'
+          : 'Medium'
+        : 'Low',
+      roundId: request.roundId ? request.roundId._id : null,
+      roundDetails: request.roundId
+        ? {
+            roundTitle: request.roundId.roundTitle,
+            interviewType: request.roundId.interviewType,
+            duration: request.roundId.duration,
+            dateTime: request.roundId.dateTime,
+          }
+        : {},
+    }));
+
+    res.status(200).json(formattedRequests);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.acceptInterviewRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { requestId, contactId, roundId } = req.body;
+
+    if (!requestId || !contactId || !roundId) {
+      return res.status(400).json({ message: 'requestId, contactId, and roundId are required' });
+    }
+
+    // Update InterviewRounds: Add contactId to interviewers array
+    const round = await InterviewRounds.findById(roundId).session(session);
+    if (!round) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: 'Interview round not found' });
+    }
+
+    if (!round.interviewers.includes(contactId)) {
+      round.interviewers.push(contactId);
+      round.status = 'scheduled'; // Update status to scheduled
+      await round.save({ session });
+    }
+
+    // Delete the interview request for this round
+    await InterviewRequest.deleteOne({ _id: requestId, roundId }).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+    res.status(200).json({ message: 'Interview request accepted and deleted successfully' });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };

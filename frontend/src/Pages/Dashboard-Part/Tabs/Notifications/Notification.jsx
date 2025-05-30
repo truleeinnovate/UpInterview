@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
-import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
 import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
 import { ReactComponent as FaArrowRight } from '../../../../icons/FaArrowRight.svg';
-import { ReactComponent as AiTwotoneSchedule } from '../../../../icons/AiTwotoneSchedule.svg';
-import { ReactComponent as PiNotificationBold } from '../../../../icons/PiNotificationBold.svg';
+// import { ReactComponent as AiTwotoneSchedule } from '../../../../icons/AiTwotoneSchedule.svg';
+// import { ReactComponent as PiNotificationBold } from '../../../../icons/PiNotificationBold.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
 import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
 import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
 import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
+import { config } from '../../../../config';
 
 const Notification = ({ isassesmentProfileDetails, objectId, candidateId, category }) => {
   console.log("ObjectId", objectId);
@@ -24,7 +23,7 @@ const Notification = ({ isassesmentProfileDetails, objectId, candidateId, catego
   useEffect(() => {
     const fetchNotificationData = async () => {
       try {
-        let url = `${process.env.REACT_APP_API_URL}/notification?category=${category}`;
+        let url = `${config.REACT_APP_API_URL}/notification?category=${category}`;
 
         if (category === "assessment" || category === "interview") {
           url += `&objectId=${objectId}`;

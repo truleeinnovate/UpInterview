@@ -16,6 +16,7 @@ import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 // import OutsourceOption from "../Interviews/OutsourceOption.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -51,8 +52,10 @@ const MockSchedulelater = () => {
     technologies,
     skills,
     currentRole,
-    mockinterviewData
+    mockinterviewData,
+    singlecontact
   } = useCustomContext();
+  console.log('singlecontact:', singlecontact);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -77,12 +80,13 @@ const MockSchedulelater = () => {
     },
     // status: 'Pending',
   });
+  console.log("formData", formData);
 
-  const [candidate, setCandidate] = useState(null);
+
   const [interviewType, setInterviewType] = useState("scheduled");
   const [combinedDateTime, setCombinedDateTime] = useState("")
   const [scheduledDate, setScheduledDate] = useState("");
-  const [userProfile, setUserProfile] = useState(null);
+
   const [mockEdit, setmockEdit] = useState(false);
 
 
@@ -102,7 +106,7 @@ const MockSchedulelater = () => {
   const [teamData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [externalInterviewers, setExternalInterviewers] = useState([]);
-  const [roles, setRoles] = useState([])
+
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -139,30 +143,6 @@ const MockSchedulelater = () => {
 
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/auth/users/${userId}`
-        );
-
-        // const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
-        // const allRoles = allRolesResponse.data;
-
-        // console.log("allRoles", currentRole);
-        setUserProfile(response.data);
-
-        // console.log("response.data", response.data);
-        // setRoles(allRoles)
-        setRoles(currentRole)
-
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-
-    fetchData();
-  }, [userId, currentRole]);
 
 
 
@@ -188,16 +168,22 @@ const MockSchedulelater = () => {
 
 
   useEffect(() => {
-    if (!id && userProfile) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        candidateName: userProfile.Name || "",
-        higherQualification: userProfile.HigherQualification || "",
-        currentExperience: userProfile.Experience || "",
-        technology: userProfile.technology || "",
+    if (!id && singlecontact?.length > 0) {
+      const contact = singlecontact[0]; // Use first contact
+      setFormData((prev) => ({
+        ...prev,
+        candidateName: `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
+        higherQualification: contact.HigherQualification || "",
+        currentExperience: contact.Experience || "",
+        technology: contact.technologies?.[0] || "",
+        skills: contact.skills || [],
       }));
+      setEntries(contact.skills || []);
+      setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
-  }, [userProfile]);
+  }, [singlecontact, id]);
+
+
 
 
   useEffect(() => {
@@ -291,17 +277,17 @@ const MockSchedulelater = () => {
 
 
     let errorMessage = getErrorMessage(name, value);
-  if (name === 'currentExperience') {
-    const numValue = parseInt(value, 10);
-    if (isNaN(numValue) || numValue < 1 || numValue > 15) {
-      errorMessage = 'Experience must be between 1 and 15';
+    if (name === 'currentExperience') {
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+        errorMessage = 'Experience must be between 1 and 15';
+      }
+    } else {
+      errorMessage = getErrorMessage(name, value);
     }
-  } else {
-    errorMessage = getErrorMessage(name, value);
-  }
 
 
- 
+
     if (name.startsWith("rounds.")) {
       const roundField = name.split(".")[1];
       setFormData((prev) => ({
@@ -316,23 +302,23 @@ const MockSchedulelater = () => {
 
 
   const handleExperienceKeyDown = (e) => {
-  // Allow: backspace, delete, tab, escape, enter
-  if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
-    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-    (e.keyCode === 65 && e.ctrlKey === true) ||
-    (e.keyCode === 67 && e.ctrlKey === true) ||
-    (e.keyCode === 86 && e.ctrlKey === true) ||
-    (e.keyCode === 88 && e.ctrlKey === true) ||
-    // Allow: home, end, left, right
-    (e.keyCode >= 35 && e.keyCode <= 39)) {
-    return;
-  }
-  
-  // Block everything except numbers (0-9)
-  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
-    e.preventDefault();
-  }
-};
+    // Allow: backspace, delete, tab, escape, enter
+    if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
+      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+      (e.keyCode === 65 && e.ctrlKey === true) ||
+      (e.keyCode === 67 && e.ctrlKey === true) ||
+      (e.keyCode === 86 && e.ctrlKey === true) ||
+      (e.keyCode === 88 && e.ctrlKey === true) ||
+      // Allow: home, end, left, right
+      (e.keyCode >= 35 && e.keyCode <= 39)) {
+      return;
+    }
+
+    // Block everything except numbers (0-9)
+    if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+      e.preventDefault();
+    }
+  };
 
 
 
@@ -354,7 +340,6 @@ const MockSchedulelater = () => {
         ...formData,
         entries,
         combinedDateTime, // Make sure this is included
-        candidate // Include if needed
       },
       id: mockEdit ? id : undefined,
       isEdit: mockEdit,
@@ -433,13 +418,13 @@ const MockSchedulelater = () => {
 
     //   if (mockEdit) {
     //     response = await axios.patch(
-    //       `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`,
+    //       `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
     //       payload
     //     );
     //   } else {
     //     // Create a new mock interview
     //     response = await axios.post(
-    //       `${process.env.REACT_APP_API_URL}/mockinterview`,
+    //       `${config.REACT_APP_API_URL}/mockinterview`,
     //       payload
     //     );
     //   }
@@ -472,7 +457,7 @@ const MockSchedulelater = () => {
     //         console.log("Sending outsource request:", outsourceRequestData);
 
     //         await axios.post(
-    //           `${process.env.REACT_APP_API_URL}/interviewrequest`,
+    //           `${config.REACT_APP_API_URL}/interviewrequest`,
     //           outsourceRequestData
     //         );
     //       }
@@ -796,11 +781,6 @@ const MockSchedulelater = () => {
   };
 
 
-  const handleCancel = () => {
-    setUserProfile(false);
-    navigate?.('/mockinterview')
-  };
-
   // const [selectedTechnology, setSelectedTechnology] = useState("");
   const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -1092,7 +1072,7 @@ const MockSchedulelater = () => {
                             min="1"
                             max="15"
                             autoComplete="off"
-                             onKeyDown={handleExperienceKeyDown}
+                            onKeyDown={handleExperienceKeyDown}
                             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
                               }`}
                           />
@@ -1132,7 +1112,7 @@ const MockSchedulelater = () => {
                           )}
                           {showDropdownRole && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {roles.map((role, index) => (
+                              {currentRole.map((role, index) => (
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
@@ -1842,7 +1822,7 @@ const MockSchedulelater = () => {
                   className="bg-custom-blue text-white p-3 rounded py-1"
                   onClick={handleNext}
                 >
-                 {mockEdit ? "Update" :"Save"} & Next
+                  {mockEdit ? "Update" : "Save"} & Next
                 </button>
               </div>
 

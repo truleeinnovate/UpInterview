@@ -194,7 +194,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 
 const OutsourceInterviewers = () => {
   const {
-    interviewers,
+    Outsourceinterviewers,
     loading,
   } = useCustomContext();
 
@@ -216,7 +216,7 @@ const OutsourceInterviewers = () => {
     setSelectedInterviewer(interviewer);
   };
 
-  const filteredInterviewers = interviewers.filter(interviewer => {
+  const filteredInterviewers = Outsourceinterviewers.filter(interviewer => {
     const matchesSearch = (interviewer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     // Apply filters
@@ -258,11 +258,11 @@ const OutsourceInterviewers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("list");
   const FilteredData = () => {
-    if (!Array.isArray(interviewers)) {
-      console.log("Interviewers is not an array", interviewers);
+    if (!Array.isArray(Outsourceinterviewers)) {
+      console.log("Interviewers is not an array", Outsourceinterviewers);
       return [];
     }
-    return interviewers.filter((user) => {
+    return Outsourceinterviewers.filter((user) => {
       const contact = user.contactId || {};
       const fieldsToSearch = [
         contact.Name,
@@ -303,7 +303,7 @@ const OutsourceInterviewers = () => {
     setMenuOpen(!isMenuOpen);
   };
   const handleFilterIconClick = () => {
-    if (interviewers.length !== 0) {
+    if (Outsourceinterviewers.length !== 0) {
       setIsFilterActive((prev) => !prev);
       toggleMenu();
     }
@@ -389,8 +389,8 @@ const OutsourceInterviewers = () => {
                     <span
                       onClick={handleFilterIconClick}
                       style={{
-                        opacity: interviewers.length === 0 ? 0.2 : 1,
-                        pointerEvents: interviewers.length === 0 ? "none" : "auto",
+                        opacity: Outsourceinterviewers.length === 0 ? 0.2 : 1,
+                        pointerEvents: Outsourceinterviewers.length === 0 ? "none" : "auto",
                       }}
                     >
                       {isFilterActive ? (
@@ -456,7 +456,7 @@ const OutsourceInterviewers = () => {
                                     </div>
                                   </td>
                                 </tr>
-                              ) : interviewers.length === 0 ? (
+                              ) : Outsourceinterviewers.length === 0 ? (
                                 <tr>
                                   <td colSpan="8" className="py-10 text-center">
                                     <div className="flex flex-col items-center justify-center p-5">
