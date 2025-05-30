@@ -6,9 +6,111 @@ import InterviewerAvatar from '../../../CommonCode-AllTabs/InterviewerAvatar.jsx
 import InterviewerDetailsModal from '../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx';
 import axios from 'axios';
 import { config } from '../../../../../../config.js';
+import { useCustomContext } from '../../../../../../Context/Contextfetch.js';
+
+// const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails }) => {
+//   const [isExpanded, setIsExpanded] = useState(false);
+
+//   return (
+//     <div className={`bg-white rounded-lg border ${isSelected ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200'
+//       } p-4 shadow-sm hover:shadow-md transition-all`}>
+//       <div className="flex items-start justify-between">
+//         <div className="flex items-center">
+//           <InterviewerAvatar interviewer={interviewer} size="lg" />
+//           <div className="ml-3">
+//             <h3 className="text-base font-medium text-gray-900">{interviewer.name}</h3>
+//             <p className="text-sm text-gray-500">{interviewer.role}</p>
+//             <p className="text-xs text-orange-600">{interviewer.company}</p>
+//           </div>
+//         </div>
+//         <div className="flex items-center space-x-2">
+//           <div className="flex items-center">
+//             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+//             <span className="ml-1 text-sm font-medium text-gray-700">{interviewer.rating}</span>
+//           </div>
+//           <span className="text-sm font-medium text-gray-700">${interviewer.hourlyRate}/hr</span>
+//         </div>
+//       </div>
+
+//       <div className="mt-3">
+//         <div className={`text-sm text-gray-600 ${!isExpanded && 'line-clamp-2'}`}>
+//           {interviewer.introduction}
+//         </div>
+//         <button
+//           onClick={() => setIsExpanded(!isExpanded)}
+//           className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center"
+//         >
+//           {isExpanded ? (
+//             <>
+//               Show less
+//               <ChevronUp className="h-3 w-3 ml-1" />
+//             </>
+//           ) : (
+//             <>
+//               Show more
+//               <ChevronDown className="h-3 w-3 ml-1" />
+//             </>
+//           )}
+//         </button>
+//       </div>
+
+//       <div className="mt-3">
+//         <div className="flex flex-wrap gap-1">
+//         {(interviewer.skills ?? []).slice(0, 3).map((skillObj, index) => (
+//             <span
+//               key={index}
+//               className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+//             >
+//               {skillObj.skill} {/* Access the `skill` property */}
+//             </span>
+//           ))}
+//           {(interviewer.skills?.length ?? 0) > 3 && (
+//   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+//     +{interviewer.skills.length - 3} more
+//   </span>
+// )}
+//         </div>
+//       </div>
+
+//       <div className="mt-4 flex justify-between items-center">
+//         <div className="flex items-center text-sm text-gray-600">
+//           <Clock className="h-4 w-4 mr-1 text-gray-400" />
+//           Avg. response: 2-4 hours
+//         </div>
+//         <div className="flex items-center space-x-2">
+//           <Button
+//             variant="outline"
+//             size="sm"
+//             onClick={onViewDetails}
+//             className="text-blue-600 hover:text-blue-700"
+//           >
+//             <ExternalLink className="h-3 w-3 mr-1" />
+//             View Details
+//           </Button>
+//           <Button
+//             variant={isSelected ? "destructive" : "default"}
+//             size="sm"
+//             onClick={onSelect}
+//           >
+//             {isSelected ? 'Remove' : 'Select'}
+//           </Button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails }) => {
+  console.log('interviewer in the outsource yyyyyy:', interviewer);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const fullName = interviewer?.contact?.firstName || interviewer?.contact?.Name || "Unnamed";
+  const professionalTitle = interviewer?.contact?.professionalTitle || interviewer?.contact?.CurrentRole || "Interviewer";
+  const company = interviewer?.contact?.industry || "Freelancer";
+  const hourlyRate = interviewer?.contact?.hourlyRate || "N/A";
+  const rating = interviewer?.contact?.rating || "4.5";
+  const introduction = interviewer?.contact?.introduction || "No introduction provided.";
+  const skillsArray = interviewer?.contact?.skills ?? [];
 
   return (
     <div className={`bg-white rounded-lg border ${isSelected ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200'
@@ -17,23 +119,23 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
         <div className="flex items-center">
           <InterviewerAvatar interviewer={interviewer} size="lg" />
           <div className="ml-3">
-            <h3 className="text-base font-medium text-gray-900">{interviewer.name}</h3>
-            <p className="text-sm text-gray-500">{interviewer.role}</p>
-            <p className="text-xs text-orange-600">{interviewer.company}</p>
+            <h3 className="text-base font-medium text-gray-900">{fullName}</h3>
+            <p className="text-sm text-gray-500">{professionalTitle}</p>
+            <p className="text-xs text-orange-600">{company}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            <span className="ml-1 text-sm font-medium text-gray-700">{interviewer.rating}</span>
+            <span className="ml-1 text-sm font-medium text-gray-700">{rating}</span>
           </div>
-          <span className="text-sm font-medium text-gray-700">${interviewer.hourlyRate}/hr</span>
+          <span className="text-sm font-medium text-gray-700">${hourlyRate}/hr</span>
         </div>
       </div>
 
       <div className="mt-3">
         <div className={`text-sm text-gray-600 ${!isExpanded && 'line-clamp-2'}`}>
-          {interviewer.introduction}
+          {introduction}
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -55,17 +157,17 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
 
       <div className="mt-3">
         <div className="flex flex-wrap gap-1">
-          {interviewer.skills.slice(0, 3).map((skillObj, index) => (
+          {skillsArray.slice(0, 3).map((skill, index) => (
             <span
               key={index}
               className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
             >
-              {skillObj.skill} {/* Access the `skill` property */}
+              {typeof skill === "string" ? skill : skill?.skill || "Skill"}
             </span>
           ))}
-          {interviewer.skills.length > 3 && (
+          {skillsArray.length > 3 && (
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-              +{interviewer.skills.length - 3} more
+              +{skillsArray.length - 3} more
             </span>
           )}
         </div>
@@ -74,7 +176,7 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
       <div className="mt-4 flex justify-between items-center">
         <div className="flex items-center text-sm text-gray-600">
           <Clock className="h-4 w-4 mr-1 text-gray-400" />
-          Avg. response: 2-4 hours
+          Avg. response: 2–4 hours
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -105,14 +207,16 @@ function OutsourcedInterviewerModal({
   candidateData1,
   onProceed,
 }) {
+
+  const { interviewers } = useCustomContext();
+  console.log('interviewers in the outsource:', interviewers);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [rateRange, setRateRange] = useState([0, 250]); // Default rate range
 
-
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
-  const [interviewers, setInterviewers] = useState([]);
-  console.log('interviewers:', interviewers);
+  // const [interviewers, setInterviewers] = useState([]);
   const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState([]);
   const requestSentRef = useRef(false);
 
@@ -126,15 +230,176 @@ function OutsourcedInterviewerModal({
     return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
+  // useEffect(() => {
+  //   if (!candidateData1 || requestSentRef.current) return;
+
+  //   const fetchInterviewers = async (candidateSkills, candidateExperience) => {
+  //     console.log('candidateSkills, candidateExperience:', candidateSkills, candidateExperience);
+  //     try {
+  //       console.log("Fetching interviewers from API...");
+  //       const response = await axios.get(`${config.REACT_APP_API_URL}/api/contacts/outsource`);
+  //       console.log("API Response Outsource Interviewer:", response.data);
+
+  //       const timeToMinutes = (timeStr) => {
+  //         const [time, period] = timeStr.split(' ');
+  //         const [hours, minutes] = time.split(':').map(Number);
+  //         let totalMinutes = (hours % 12) * 60 + minutes;
+  //         if (period === 'PM') totalMinutes += 720;
+  //         return totalMinutes;
+  //       };
+
+  //       console.log("selected from interview dateTime value:", dateTime);
+
+  //       // Split dateTime into date and time
+  //       const [datePart, ...timeParts] = dateTime.split(' ');
+  //       const timeRange = timeParts.join(' ');
+  //       console.log("Date Part:", datePart);
+  //       console.log("Time Range:", timeRange);
+
+  //       const [startTimeStr, endTimeStr] = timeRange.split('-').map(t => t.trim());
+  //       console.log("Start Time String:", startTimeStr);
+  //       console.log("End Time String:", endTimeStr);
+
+  //       const startTimeMinutes = timeToMinutes(startTimeStr);
+  //       const endTimeMinutes = timeToMinutes(endTimeStr);
+  //       console.log("Start Time in Minutes:", startTimeMinutes);
+  //       console.log("End Time in Minutes:", endTimeMinutes);
+
+  //       const [day, month, year] = datePart.split('-');
+  //       const interviewDate = new Date(`${year}-${month}-${day}`);
+  //       const interviewDay = interviewDate.toLocaleDateString('en-US', { weekday: 'long' });
+  //       console.log("Interview Date:", interviewDate);
+  //       console.log("Interview Day:", interviewDay);
+
+  //       const availableInterviewers = response.data.filter(interviewer => {
+  //         console.log("Checking interviewer:", interviewer.name);
+
+  //         return interviewer.availability?.some(availability => {
+  //           console.log("Availability:", availability);
+
+  //           return availability.days?.some(day => {
+  //             console.log("Checking day:", day.day, "against", interviewDay);
+  //             if (day.day !== interviewDay) {
+  //               console.log("Day does not match.");
+  //               return false;
+  //             }
+
+  //             return day.timeSlots?.some(timeSlot => {
+  //               console.log("Checking timeSlot:", timeSlot);
+
+  //               const formattedStartTime = formatTo12Hour(timeSlot.startTime);
+  //               const formattedEndTime = formatTo12Hour(timeSlot.endTime);
+
+  //               const availabilityStartMinutes = timeToMinutes(formattedStartTime);
+  //               const availabilityEndMinutes = timeToMinutes(formattedEndTime);
+
+  //               console.log("Formatted Start Time:", formattedStartTime);
+  //               console.log("Formatted End Time:", formattedEndTime);
+
+  //               console.log("Availability Start Minutes:", availabilityStartMinutes);
+  //               console.log("Availability End Minutes:", availabilityEndMinutes);
+
+  //               const isWithinAvailability = (
+  //                 startTimeMinutes >= availabilityStartMinutes &&
+  //                 endTimeMinutes <= availabilityEndMinutes
+  //               );
+
+  //               console.log("Start Time Minutes:", startTimeMinutes);
+  //               console.log("End Time Minutes:", endTimeMinutes);
+  //               console.log("Is Within Availability:", isWithinAvailability);
+
+  //               return isWithinAvailability;
+  //             });
+  //           });
+  //         });
+  //       });
+
+  //       console.log("Available Interviewers after time check:", availableInterviewers);
+
+  //       // Filter based on skills
+  //       const skillFilteredInterviewers = availableInterviewers.filter((interviewer, index) => {
+  //         console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.name);
+  //         console.log("👉 Interviewer's Skills:", interviewer.skills);
+
+  //         if (!candidateSkills || !Array.isArray(candidateSkills)) {
+  //           console.log("⚠️ candidateSkills is invalid or not an array:", candidateSkills);
+  //           return false;
+  //         }
+
+  //         const matchingSkills = interviewer.skills.filter(interviewerSkill => {
+  //           return candidateSkills.some(candidateSkill => {
+  //             const isMatch = interviewerSkill.skill === candidateSkill.skill;
+  //             console.log(`   🔗 Comparing Skills:`);
+  //             console.log(`      - Interviewer Skill: ${interviewerSkill.skill}`);
+  //             console.log(`      - Candidate Skill: ${candidateSkill.skill}`);
+  //             console.log(`      ✅ Match Status: ${isMatch}`);
+  //             return isMatch;
+  //           });
+  //         });
+
+  //         console.log("🎯 Matching Skills Found:", matchingSkills);
+  //         const hasMatchingSkills = matchingSkills.length > 0;
+  //         console.log(`✅ ${interviewer.name} Skill Match Status: ${hasMatchingSkills}`);
+  //         return hasMatchingSkills;
+  //       });
+
+  //       console.log("Skill Filtered Interviewers:", skillFilteredInterviewers);
+
+  //       // Filter based on experience
+  //       const experienceFilteredInterviewers = skillFilteredInterviewers.filter(interviewer => {
+  //         console.log('interviewer.minexperience, interviewer.maxexperience:', interviewer.minexperience, interviewer.maxexperience);
+  //         if (!interviewer.minexperience || !interviewer.maxexperience) {
+  //           console.log("Skipping due to missing experience range:", interviewer);
+  //           return false;
+  //         }
+
+  //         const isMatch = (
+  //           candidateExperience >= parseInt(interviewer.minexperience) &&
+  //           candidateExperience <= parseInt(interviewer.maxexperience)
+  //         );
+
+  //         console.log("Checking experience for interviewer:", interviewer);
+  //         console.log("Candidate Experience:", candidateExperience);
+  //         console.log("Interviewer Experience Range:", interviewer.minexperience, interviewer.maxexperience);
+  //         console.log("Experience Match:", isMatch);
+
+  //         return isMatch;
+  //       });
+
+  //       console.log("Experience Filtered Interviewers:", experienceFilteredInterviewers);
+
+  //       // Set interviewers with safeguard to avoid overwrite
+  //       // setInterviewers(prevInterviewers => {
+  //       //   if (experienceFilteredInterviewers.length > 0 || prevInterviewers.length === 0) {
+  //       //     return experienceFilteredInterviewers;
+  //       //   }
+  //       //   return prevInterviewers;
+  //       // });
+  //     } catch (error) {
+  //       console.error("Error fetching interviewers:", error);
+  //     }
+  //   };
+
+  //   console.log('Fetching interviewers with:', candidateData1.skills, candidateData1.CurrentExperience);
+  //   fetchInterviewers(candidateData1.skills, candidateData1.CurrentExperience);
+  //   requestSentRef.current = true; // Prevent refetching
+  // }, [candidateData1, dateTime]);
+
+  const [filteredInterviewers, setFilteredInterviewers] = useState([]);
+
   useEffect(() => {
     if (!candidateData1 || requestSentRef.current) return;
-
+    console.log('candidateData1, dateTime:', candidateData1, dateTime);
     const fetchInterviewers = async (candidateSkills, candidateExperience) => {
       console.log('candidateSkills, candidateExperience:', candidateSkills, candidateExperience);
       try {
-        console.log("Fetching interviewers from API...");
-        const response = await axios.get(`${config.REACT_APP_API_URL}/api/contacts/outsource`);
-        console.log("API Response:", response.data);
+        console.log("Fetching interviewers from context...");
+        const response = interviewers; // Use interviewers from context instead of API call
+        console.log("Interviewers from context:", response);
+
+        // Filter for external interviewers only
+        const externalInterviewers = response.data.filter(interviewer => interviewer.type === 'external');
+        console.log("External Interviewers:", externalInterviewers);
 
         const timeToMinutes = (timeStr) => {
           const [time, period] = timeStr.split(' ');
@@ -167,112 +432,132 @@ function OutsourcedInterviewerModal({
         console.log("Interview Date:", interviewDate);
         console.log("Interview Day:", interviewDay);
 
-        const availableInterviewers = response.data.filter(interviewer => {
-          console.log("Checking interviewer:", interviewer.name);
+        const availableInterviewers = externalInterviewers.filter(interviewer => {
+          console.log("Checking interviewer:", interviewer.contact?.UserName || 'Unknown');
 
-          return interviewer.availability?.some(availability => {
-            console.log("Availability:", availability);
+          return interviewer.days?.some(day => {
+            console.log("Checking day:", day.day, "against", interviewDay);
+            if (day.day !== interviewDay) {
+              console.log("Day does not match.");
+              return false;
+            }
 
-            return availability.days?.some(day => {
-              console.log("Checking day:", day.day, "against", interviewDay);
-              if (day.day !== interviewDay) {
-                console.log("Day does not match.");
-                return false;
-              }
+            return day.timeSlots?.some(timeSlot => {
+              console.log("Checking timeSlot:", timeSlot);
 
-              return day.timeSlots?.some(timeSlot => {
-                console.log("Checking timeSlot:", timeSlot);
+              const formattedStartTime = timeSlot.startTime; // Already in 12-hour format from backend
+              const formattedEndTime = timeSlot.endTime; // Already in 12-hour format from backend
 
-                const formattedStartTime = formatTo12Hour(timeSlot.startTime);
-                const formattedEndTime = formatTo12Hour(timeSlot.endTime);
+              const availabilityStartMinutes = timeToMinutes(formattedStartTime);
+              const availabilityEndMinutes = timeToMinutes(formattedEndTime);
 
-                const availabilityStartMinutes = timeToMinutes(formattedStartTime);
-                const availabilityEndMinutes = timeToMinutes(formattedEndTime);
+              console.log("Formatted Start Time:", formattedStartTime);
+              console.log("Formatted End Time:", formattedEndTime);
+              console.log("Availability Start Minutes:", availabilityStartMinutes);
+              console.log("Availability End Minutes:", availabilityEndMinutes);
 
-                console.log("Formatted Start Time:", formattedStartTime);
-                console.log("Formatted End Time:", formattedEndTime);
+              const isWithinAvailability = (
+                startTimeMinutes >= availabilityStartMinutes &&
+                endTimeMinutes <= availabilityEndMinutes
+              );
 
-                console.log("Availability Start Minutes:", availabilityStartMinutes);
-                console.log("Availability End Minutes:", availabilityEndMinutes);
+              console.log("Start Time Minutes:", startTimeMinutes);
+              console.log("End Time Minutes:", endTimeMinutes);
+              console.log("Is Within Availability:", isWithinAvailability);
 
-                const isWithinAvailability = (
-                  startTimeMinutes >= availabilityStartMinutes &&
-                  endTimeMinutes <= availabilityEndMinutes
-                );
-
-                console.log("Start Time Minutes:", startTimeMinutes);
-                console.log("End Time Minutes:", endTimeMinutes);
-                console.log("Is Within Availability:", isWithinAvailability);
-
-                return isWithinAvailability;
-              });
+              return isWithinAvailability;
             });
           });
         });
 
-        console.log("Available Interviewers after time check:", availableInterviewers);
+        console.log("Available External Interviewers after time check:", availableInterviewers);
 
         // Filter based on skills
         const skillFilteredInterviewers = availableInterviewers.filter((interviewer, index) => {
-          console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.name);
-          console.log("👉 Interviewer's Skills:", interviewer.skills);
+          console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.contact?.UserName || 'Unknown');
+          console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
 
           if (!candidateSkills || !Array.isArray(candidateSkills)) {
             console.log("⚠️ candidateSkills is invalid or not an array:", candidateSkills);
             return false;
           }
 
-          const matchingSkills = interviewer.skills.filter(interviewerSkill => {
-            return candidateSkills.some(candidateSkill => {
-              const isMatch = interviewerSkill.skill === candidateSkill.skill;
-              console.log(`   🔗 Comparing Skills:`);
-              console.log(`      - Interviewer Skill: ${interviewerSkill.skill}`);
-              console.log(`      - Candidate Skill: ${candidateSkill.skill}`);
-              console.log(`      ✅ Match Status: ${isMatch}`);
-              return isMatch;
-            });
-          });
+          const interviewerSkills = interviewer.contact?.skills || [];
+          console.log("Interviewer's Skills 1:", interviewerSkills);
+          console.log("Candidate Skills 1:", candidateSkills);
+
+          // Normalize and match
+          const matchingSkills = interviewerSkills.filter(interviewerSkill =>
+            candidateSkills.some(candidateSkill =>
+              candidateSkill.skill.toLowerCase() === interviewerSkill.toLowerCase()
+            )
+          );
 
           console.log("🎯 Matching Skills Found:", matchingSkills);
           const hasMatchingSkills = matchingSkills.length > 0;
-          console.log(`✅ ${interviewer.name} Skill Match Status: ${hasMatchingSkills}`);
+          console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkills}`);
           return hasMatchingSkills;
         });
 
-        console.log("Skill Filtered Interviewers:", skillFilteredInterviewers);
+        console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
 
         // Filter based on experience
-        const experienceFilteredInterviewers = skillFilteredInterviewers.filter(interviewer => {
-          console.log('interviewer.minexperience, interviewer.maxexperience:', interviewer.minexperience, interviewer.maxexperience);
-          if (!interviewer.minexperience || !interviewer.maxexperience) {
-            console.log("Skipping due to missing experience range:", interviewer);
-            return false;
-          }
+        // const experienceFilteredInterviewers = skillFilteredInterviewers.filter(interviewer => {
+        //   console.log('interviewer.contact.minexperience, interviewer.contact.maxexperience:', 
+        //     interviewer.contact?.minexperience, 
+        //     interviewer.contact?.maxexperience
+        //   );
 
-          const isMatch = (
-            candidateExperience >= parseInt(interviewer.minexperience) &&
-            candidateExperience <= parseInt(interviewer.maxexperience)
-          );
+        //   if (!interviewer.contact?.minexperience || !interviewer.contact?.maxexperience) {
+        //     console.log("Skipping due to missing experience range:", interviewer);
+        //     return false;
+        //   }
 
-          console.log("Checking experience for interviewer:", interviewer);
-          console.log("Candidate Experience:", candidateExperience);
-          console.log("Interviewer Experience Range:", interviewer.minexperience, interviewer.maxexperience);
-          console.log("Experience Match:", isMatch);
+        //   const isMatch = (
+        //     candidateExperience >= parseInt(interviewer.contact.minexperience) &&
+        //     candidateExperience <= parseInt(interviewer.contact.maxexperience)
+        //   );
 
-          return isMatch;
-        });
+        //   console.log("Checking experience for interviewer:", interviewer.contact?.UserName || 'Unknown');
+        //   console.log("Candidate Experience:", candidateExperience);
+        //   console.log("Interviewer Experience Range:", 
+        //     interviewer.contact?.minexperience, 
+        //     interviewer.contact?.maxexperience
+        //   );
+        //   console.log("Experience Match:", isMatch);
 
-        console.log("Experience Filtered Interviewers:", experienceFilteredInterviewers);
+        //   return isMatch;
+        // });
 
-        // Set interviewers with safeguard to avoid overwrite
-        setInterviewers(prevInterviewers => {
-          if (experienceFilteredInterviewers.length > 0 || prevInterviewers.length === 0) {
-            return experienceFilteredInterviewers;
-          }
-          return prevInterviewers;
-        });
+        // console.log("Experience Filtered External Interviewers:", experienceFilteredInterviewers);
+
+        // // Map to format for rendering
+        // const formattedInterviewers = skillFilteredInterviewers.map(interviewer => ({
+        //   _id: interviewer._id,
+        //   name: interviewer.contact?.UserName || 'Unknown',
+        //   role: interviewer.contact?.currentRole || 'N/A',
+        //   company: interviewer.contact?.CompanyName || 'N/A',
+        //   skills: interviewer.contact?.skills || [],
+        //   hourlyRate: interviewer.contact?.hourlyRate || 0,
+        //   rating: interviewer.contact?.rating || 0,
+        //   introduction: interviewer.contact?.introduction || 'No introduction available',
+        //   minexperience: interviewer.contact?.minexperience,
+        //   maxexperience: interviewer.contact?.maxexperience,
+        //   availability: interviewer.days || []
+        // }));
+
+        // console.log("Formatted Interviewers for rendering:", skillFilteredInterviewers);
+
+        // Update context or state if needed (commented out as per your code)
+        // setInterviewers(prevInterviewers => {
+        //   if (experienceFilteredInterviewers.length > 0 || prevInterviewers.length === 0) {
+        //     return formattedInterviewers;
+        //   }
+        //   return prevInterviewers;
+        // });
+        setFilteredInterviewers(skillFilteredInterviewers);
       } catch (error) {
-        console.error("Error fetching interviewers:", error);
+        console.error("Error processing interviewers:", error);
       }
     };
 
@@ -301,30 +586,28 @@ function OutsourcedInterviewerModal({
     onClose();
   };
 
-  const filteredInterviewers = interviewers
-    .filter(interviewer => {
-      // Ensure interviewer is defined and has an _id
-      if (!interviewer || !interviewer._id) {
-        console.warn("Invalid interviewer object:", interviewer);
-        return false;
-      }
+  // const filteredInterviewers = interviewers?.filter(interviewer => {
+  //     // Ensure interviewer is defined and has an _id
+  //     if (!interviewer || !interviewer._id) {
+  //       console.warn("Invalid interviewer object:", interviewer);
+  //       return false;
+  //     }
 
-      const searchTermLower = searchTerm.toLowerCase();
-      return (
-        interviewer.name?.toLowerCase().includes(searchTermLower) ||
-        interviewer.currentRole?.toLowerCase().includes(searchTermLower) ||
-        interviewer.CompanyName?.toLowerCase().includes(searchTermLower) ||
-        interviewer.skills?.some(skill => skill.skill?.toLowerCase().includes(searchTermLower))
-      );
-    })
-    .filter(interviewer => {
-      const isDefaultRateRange = rateRange[0] === 0 && rateRange[1] === 250;
-      if (isDefaultRateRange) {
-        return true;
-      }
-      return interviewer.hourlyRate >= rateRange[0] && interviewer.hourlyRate <= rateRange[1];
-    });
-
+  //     const searchTermLower = searchTerm.toLowerCase();
+  //     return (
+  //       interviewer.name?.toLowerCase().includes(searchTermLower) ||
+  //       interviewer.currentRole?.toLowerCase().includes(searchTermLower) ||
+  //       interviewer.CompanyName?.toLowerCase().includes(searchTermLower) ||
+  //       interviewer.skills?.some(skill => skill.skill?.toLowerCase().includes(searchTermLower))
+  //     );
+  //   })
+  //   .filter(interviewer => {
+  //     const isDefaultRateRange = rateRange[0] === 0 && rateRange[1] === 250;
+  //     if (isDefaultRateRange) {
+  //       return true;
+  //     }
+  //     return interviewer.hourlyRate >= rateRange[0] && interviewer.hourlyRate <= rateRange[1];
+  //   });
 
   return (
     <>
@@ -436,23 +719,22 @@ function OutsourcedInterviewerModal({
               ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
               : 'grid-cols-1'
               }`}>
-              {filteredInterviewers.map(interviewer => {
-                // Ensure interviewer is defined before rendering
-                if (!interviewer || !interviewer._id) {
-                  console.warn("Skipping invalid interviewer:", interviewer);
-                  return null;
-                }
+              {filteredInterviewers.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-4">No available interviewers found for the selected time and skills.</p>
+              ) : (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  {filteredInterviewers.map((interviewer) => (
+                    <OutsourcedInterviewerCard
+                      key={interviewer._id}
+                      interviewer={interviewer}
+                      isSelected={selectedInterviewersLocal.some(sel => sel._id === interviewer._id)}
+                      onSelect={() => handleSelectClick(interviewer)}
+                      onViewDetails={() => setSelectedInterviewer(interviewer)}
+                    />
+                  ))}
+                </div>
+              )}
 
-                return (
-                  <OutsourcedInterviewerCard
-                    key={interviewer._id} // Use _id as the key
-                    interviewer={interviewer}
-                    isSelected={selectedInterviewersLocal.some(selected => selected._id === interviewer._id)} // Correctly check if selected
-                    onSelect={() => handleSelectClick(interviewer)}
-                    onViewDetails={() => setSelectedInterviewer(interviewer)}
-                  />
-                );
-              })}
             </div>
 
 
