@@ -1,92 +1,31 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Tab } from "../components/common/Tab";
+import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
 import {
   AiOutlineLeft,
   AiOutlineTeam,
   AiOutlineFile,
-  AiOutlineUser,
-  AiOutlineCalendar,
-  AiOutlineDollar,
-  AiOutlineUserSwitch,
-  AiOutlineQuestionCircle,
-  AiOutlineBarChart,
   AiOutlineApi,
-  AiOutlineAudit,
-  AiOutlineFileText,
   AiOutlineFolder,
 } from "react-icons/ai";
 
-import OverviewTab from "../components/TenantDetails/OverviewTab";
-import CandidatesTab from "../components/TenantDetails/CandidatesTab";
-import PositionsTab from "../components/TenantDetails/PositionsTab";
-import InterviewsTab from "../components/TenantDetails/InterviewsTab";
-import UsersTab from "../components/TenantDetails/UsersTab";
-import IntegrationsTab from "../components/TenantDetails/IntegrationsTab";
-import WebhooksTab from "../components/TenantDetails/WebhooksTab";
-import AuditLogsTab from "../components/TenantDetails/AuditLogsTab";
-import ReportsTab from "../components/TenantDetails/ReportsTab";
-import DocumentsTab from "../components/TenantDetails/DocumentsTab";
+import OverviewTab from "../../Components/SuperAdminComponents/TenantDetails/OverviewTab";
+import CandidatesTab from "../../Components/SuperAdminComponents/TenantDetails/CandidatesTab";
+import PositionsTab from "../../Components/SuperAdminComponents/TenantDetails/PositionsTab";
+import InterviewsTab from "../../Components/SuperAdminComponents/TenantDetails/InterviewsTab";
+import UsersTab from "../../Components/SuperAdminComponents/TenantDetails/UsersTab";
+import IntegrationsTab from "../../Components/SuperAdminComponents/TenantDetails/IntegrationsTab";
+import WebhooksTab from "../../Components/SuperAdminComponents/TenantDetails/WebhooksTab";
+import AuditLogsTab from "../../Components/SuperAdminComponents/TenantDetails/AuditLogsTab";
+import ReportsTab from "../../Components/SuperAdminComponents/TenantDetails/ReportsTab";
+import DocumentsTab from "../../Components/SuperAdminComponents/TenantDetails/DocumentsTab";
+import BillingPage from "../SuperAdmin-Part/BillingPage";
 
 function TenantDetailsPage() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   setLoading(true);
-
-  //   setTimeout(() => {
-  //     const mockTenant = {
-  //       id: Number(id),
-  //       name: "Acme Corp",
-  //       industry: "Technology",
-  //       plan: "Enterprise",
-  //       status: "active",
-  //       userCount: 25,
-  //       activeJobs: 12,
-  //       activeCandidates: 78,
-  //       createdAt: "2024-05-15T10:00:00Z",
-  //       lastActivity: "2025-06-01T14:30:00Z",
-  //       contactName: "John Smith",
-  //       contactEmail: "john.smith@acmecorp.com",
-  //       contactPhone: "+1 (555) 123-4567",
-  //       address: "123 Tech Lane, San Francisco, CA 94107",
-  //       billingEmail: "billing@acmecorp.com",
-  //       subscriptionRenews: "2026-05-15T00:00:00Z",
-  //       users: [
-  //         {
-  //           id: 1,
-  //           name: "John Smith",
-  //           email: "john.smith@acmecorp.com",
-  //           role: "Admin",
-  //           status: "Active",
-  //           lastLogin: "2025-06-01T14:30:00Z",
-  //         },
-  //         {
-  //           id: 2,
-  //           name: "Jane Doe",
-  //           email: "jane.doe@acmecorp.com",
-  //           role: "Manager",
-  //           status: "Active",
-  //           lastLogin: "2025-05-30T09:15:00Z",
-  //         },
-  //       ],
-  //       features: {
-  //         customAssessments: true,
-  //         aiScoring: true,
-  //         apiAccess: true,
-  //         videoInterviews: true,
-  //         multipleInterviewers: true,
-  //       },
-  //     };
-
-  //     setTenant(mockTenant);
-  //     setLoading(false);
-  //     document.title = `${mockTenant.name} | Admin Portal`;
-  //   }, 800);
-  // }, [id]);
 
   useEffect(() => {
     const getTenant = async () => {
@@ -188,33 +127,40 @@ function TenantDetailsPage() {
               icon={<AiOutlineApi />}
               label="Webhooks"
             /> */}
-            <Tab
+            {/* <Tab
               active={activeTab === "audit"}
               onClick={() => setActiveTab("audit")}
               icon={<AiOutlineAudit />}
               label="Audit Logs"
-            />
-            <Tab
+            /> */}
+            {/* <Tab
               active={activeTab === "reports"}
               onClick={() => setActiveTab("reports")}
               icon={<AiOutlineFileText />}
               label="Reports"
-            />
-            <Tab
+            /> */}
+            {/* <Tab
               active={activeTab === "documents"}
               onClick={() => setActiveTab("documents")}
               icon={<AiOutlineFolder />}
               label="Documents"
+            /> */}
+            <Tab
+              active={activeTab === "billing"}
+              onClick={() => setActiveTab("billing")}
+              icon={<AiOutlineFolder />}
+              label="Billing"
             />
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="relative min-h-screen w-full pt-4">
           {activeTab === "overview" && <OverviewTab tenant={tenant?.tenant} />}
           {activeTab === "candidates" && <CandidatesTab />}
           {activeTab === "positions" && <PositionsTab />}
           {activeTab === "interviews" && <InterviewsTab />}
           {activeTab === "users" && <UsersTab users={tenant?.users || []} />}
+          {activeTab === "billing" && <BillingPage />}
           {activeTab === "integrations" && <IntegrationsTab />}
           {activeTab === "webhooks" && <WebhooksTab />}
           {activeTab === "audit" && <AuditLogsTab />}
