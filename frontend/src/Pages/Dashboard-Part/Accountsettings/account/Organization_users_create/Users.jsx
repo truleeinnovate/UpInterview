@@ -451,7 +451,7 @@ const Users = () => {
               <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
                 <button
                   onClick={() => setShowUserManagementPopup(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   Got it
                 </button>

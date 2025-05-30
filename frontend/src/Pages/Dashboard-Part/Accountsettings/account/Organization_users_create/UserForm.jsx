@@ -45,7 +45,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     tenantId: tenantId,
     imageData: "",
     countryCode: "+91",
-    status: "inactive" // Default status
+    status: "active" // Default status
   });
 
   // Role dropdown state
@@ -322,30 +322,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-x-6 gap-y-4">
                   <div className="col-span-2 flex justify-between items-center">
                     <h1 className="font-medium text-lg">Personal Details:</h1>
-                    <div className="flex items-center gap-3">
 
-                      <Switch
-                        checked={userData.status === 'active'}
-                        onChange={(checked) => {
-                          setUserData(prev => ({
-                            ...prev,
-                            status: checked ? 'active' : 'inactive'
-                          }));
-                        }}
-                        onColor="#98e6e6"
-                        offColor="#ccc"
-                        handleDiameter={20}
-                        height={20}
-                        width={45}
-                        onHandleColor="#227a8a"
-                        offHandleColor="#9CA3AF"
-                        checkedIcon={false}
-                        uncheckedIcon={false}
-                      />
-                      <span className={`text-sm font-medium ${userData.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
-                        {userData.status === 'active' ? 'Active' : 'In Active'}
-                      </span>
-                    </div>
                   </div>
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -473,6 +450,36 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       )}
                     </div>
                     {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      UserStatus
+                    </label>
+                    <div className="flex items-center mt-2">
+                      <Switch
+                        checked={userData.status === 'active'}
+                        onChange={(checked) => {
+                          setUserData(prev => ({
+                            ...prev,
+                            status: checked ? 'active' : 'inactive'
+                          }));
+                        }}
+                        onColor="#98e6e6"
+                        offColor="#ccc"
+                        handleDiameter={20}
+                        height={20}
+                        width={45}
+                        onHandleColor="#227a8a"
+                        offHandleColor="#9CA3AF"
+                        checkedIcon={false}
+                        uncheckedIcon={false}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        {userData.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+
                   </div>
                 </div>
               </form>
