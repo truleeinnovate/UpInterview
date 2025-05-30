@@ -862,20 +862,19 @@ const CustomProvider = ({ children }) => {
     fetchContacts();
   }, [userId]);
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
-  const [interviewers, setInterviewers] = useState([]);
-  useEffect(() => {
-    const fetchInterviewers = async () => {
-      try {
-        const response = await fetch(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch interviewers');
+    const [interviewers, setInterviewers] = useState([]);
+    useEffect(() => {
+      const fetchInterviewers = async () => {
+        try {
+          const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
+          console.log('response', response)
+          console.log('data', response.data)
+          setInterviewers(response.data);
+        } catch (err) {
+          console.error(err.message);
+        } finally {
+          setLoading(false);
         }
-        const data = await response.json();
-        setInterviewers(data);
-      } catch (err) {
-        console.error(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 

@@ -838,19 +838,19 @@ const taskRoutes = require('./routes/taskRoutes');
 app.use('/tasks', taskRoutes);
 
 //i am using this code for outsource interviewers we need to change his into contact controller
-app.get('/api/contacts/outsource', async (req, res) => {
-  try {
-    const contacts = await Contacts.find({ interviewerType: "Outsource" })
-      .populate({
-        path: 'availability',
-        model: 'Interviewavailability'
-      });
+// app.get('/api/contacts/outsource', async (req, res) => {
+//   try {
+//     const contacts = await Contacts.find({ interviewerType: "Outsource" })
+//       .populate({
+//         path: 'availability',
+//         model: 'Interviewavailability'
+//       });
 
-    res.json(contacts);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching contacts', error });
-  }
-});
+//     res.json(contacts);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching contacts', error });
+//   }
+// });
 
 const outsourceInterviewRequestRoutes = require('./routes/InterviewRequestRoute.js');
 app.use('/interviewrequest', outsourceInterviewRequestRoutes);

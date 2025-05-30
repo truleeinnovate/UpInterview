@@ -13,7 +13,6 @@ router.get('/:tenantId', getUsersByTenant);
 // Route to fetch interviewers
 router.get('/interviewers/:tenantId', getInterviewers);
 
-
 // UpdateUser
 router.patch("/:id/status",UpdateUser)
 
