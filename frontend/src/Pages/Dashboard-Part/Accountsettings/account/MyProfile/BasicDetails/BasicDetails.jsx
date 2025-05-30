@@ -10,7 +10,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
 const BasicDetails = () => {
-  const { contacts } = useCustomContext();
+  const { contacts,singlecontact } = useCustomContext();
 
 
   const [userData, setUserData] = useState({})
@@ -32,8 +32,9 @@ const BasicDetails = () => {
     const fetchData = () => {
       try {
 
-        console.log('contacts in basic details', contacts);
-        const user = contacts.find(user => user.ownerId === userId);
+        // console.log('contacts in basic details', contacts);
+        // const user = contacts.find(user => user.ownerId === userId);
+          const user = singlecontact[0]; 
 
         console.log("user", user);
 
@@ -53,7 +54,7 @@ const BasicDetails = () => {
 
       fetchData();
  
-  }, [contacts, userId]);
+  }, [singlecontact, userId]);
 
 
 

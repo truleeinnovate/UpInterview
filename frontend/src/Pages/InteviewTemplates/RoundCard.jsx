@@ -46,8 +46,11 @@ const RoundCard = ({
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
-  // console.log("sectionQuestions", sectionQuestions);
+  // console.log("resolveInterviewerDetails", resolveInterviewerDetails);
 
+
+  // console.log("round", round);
+  
 
   useEffect(() => {
     setShowQuestions(false);
@@ -244,13 +247,13 @@ const RoundCard = ({
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <Users className="h-4 w-4 mr-1" />
                   <span>
-                    {round?.interviewers.length} interviewer{resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                    {round?.internalInterviewers.length} interviewer{resolveInterviewerDetails(round?.internalInterviewers || []).length !== 1 ? 's' : ''}
                   </span>
                 </div>
 
-                {showInterviewers && round.interviewers && (
+                {showInterviewers && round?.internalInterviewers && (
                   <div className="flex flex-wrap gap-2">
-                    {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                    {resolveInterviewerDetails(round?.internalInterviewers || []).map((interviewer, index) => (
 
                       <div key={index} className="flex items-center">
                         <InterviewerAvatar interviewer={interviewer} size="sm" />
@@ -281,11 +284,11 @@ const RoundCard = ({
               </button>
             </div>
 
-            {showQuestions && round.interviewQuestionsList && (
+            {showQuestions && round?.questions && (
               <div className="space-y-2">
-                {round?.interviewQuestionsList.length > 0 ? (
+                {round?.questions.length > 0 ? (
                   <ul className="mt-2 space-y-2">
-                    {round.interviewQuestionsList.map((question, qIndex) => {
+                    {round.questions.map((question, qIndex) => {
                       const isMandatory = question?.mandatory === "true";
                       const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                       return (

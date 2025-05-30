@@ -113,6 +113,9 @@ exports.updateTemplate = async (req, res) => {
             });
         }
 
+        // console.log("req.body", req.body);
+        
+
       
         // Prepare update data
         const updateData = {
@@ -141,6 +144,9 @@ exports.updateTemplate = async (req, res) => {
                     ? round.sequence 
                     : index + 1;
 
+                    console.log("req.body.rounds", req.body.rounds);
+                    
+
                 // Return the processed round with required fields
                 return {
                     roundTitle: round.roundTitle || `Round ${index + 1}`,
@@ -154,7 +160,7 @@ exports.updateTemplate = async (req, res) => {
                     interviewQuestionsList: round.interviewQuestionsList || [],
                     assessmentId: round.assessmentId || null,
                     interviewerGroupId: round.interviewerGroupId || null,
-                    interviewers: round.interviewers || [],
+                    internalInterviewers: round.internalInterviewers || [],
                     minimumInterviewers: round.minimumInterviewers || '1',
                     // Include any other fields from the original round
                     ...round

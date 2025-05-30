@@ -614,6 +614,9 @@ const CustomProvider = ({ children }) => {
         },
       });
 
+      // console.log("response data Groups", response.data);
+      
+
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
       } else {
@@ -832,6 +835,9 @@ const CustomProvider = ({ children }) => {
     try {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
+
+      console.log("allUsers_data", allUsers_data);
+      
 
       setContacts(allUsers_data);
     } catch (error) {

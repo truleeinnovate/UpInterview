@@ -15,7 +15,7 @@ import { config } from '../../../../../../config';
 Modal.setAppElement('#root');
 
 const BasicDetailsEditPage = () => {
-   const {contacts,setContacts} = useCustomContext();
+   const {contacts,setContacts, singlecontact} = useCustomContext();
     const { id } = useParams();
      const navigate = useNavigate();
   const [formData, setFormData] = useState({});
@@ -31,7 +31,8 @@ const BasicDetailsEditPage = () => {
                     // console.log("userId", userId);
                     // console.log("user", allUsers_data);
               // "67d77741a9e3fc000cbf61fd"
-              const user = contacts.find(user => user.ownerId === id);
+                const user = singlecontact[0]; 
+              // const user = contacts.find(user => user.ownerId === id);
               // console.log("user", user);
             
               if (user) {
@@ -70,7 +71,7 @@ const BasicDetailsEditPage = () => {
                 }
               };
                 fetchData();
-            }, [id, contacts, navigate]);
+            }, [id, singlecontact, navigate]);
   
 
   

@@ -9,15 +9,16 @@ const InterviewTemplateSchema = new mongoose.Schema({
     rounds: [{
         roundTitle: { type: String, required: true }, // e.g., "Technical Round"
         // interviewType: { type: String, required: true }, // Interview type
-        assessmentTemplate: [{
-            assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment' },
-            assessmentName: { type: String, required: true }
-        }], // Changed to String and made optional
-        assessmentQuestions: [{
-            sectionName: { type: String },
-            questionId: { type: String },
-            snapshot: [{ type: mongoose.Schema.Types.Mixed, required: true }]
-        }],
+        // assessmentTemplate: [{
+        //     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment' },
+        //     assessmentName: { type: String, required: true }
+        // }], 
+        assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" }, // Changed to String and made optional
+        // assessmentQuestions: [{
+        //     sectionName: { type: String },
+        //     questionId: { type: String },
+        //     snapshot: [{ type: mongoose.Schema.Types.Mixed, required: true }]
+        // }],
         interviewDuration: { type: String }, // Changed to String and made optional
         instructions: { type: String }, // Special notes for the round
         interviewMode: { type: String }, // Made optional
@@ -26,10 +27,24 @@ const InterviewTemplateSchema = new mongoose.Schema({
         interviewerType: { type: String }, // Made optional
         selectedInterviewersType: { type: String }, // user or group
         interviewerGroupId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewerGroup' },
-        interviewers: [{
-            interviewerId: { type: mongoose.Schema.Types.Mixed, required: true },
-            interviewerName: { type: String, required: true }
-        }],
+    //   internalInterviewers: [
+    //         mongoose.Schema.Types.ObjectId,
+    //       ],
+           internalInterviewers: [
+        mongoose.Schema.Types.ObjectId,
+            //    type: mongoose.Schema.Types.Mixed, required: true ,
+            // interviewerName: { type: String, required: true }
+        ],
+        // interviewers: [{
+        //     interviewerId: { type: mongoose.Schema.Types.Mixed, required: true },
+        //     interviewerName: { type: String, required: true }
+        // }],
+        sequence: Number,
+        //   interviewers: [
+        // mongoose.Schema.Types.ObjectId,
+        //     //    type: mongoose.Schema.Types.Mixed, required: true ,
+        //     // interviewerName: { type: String, required: true }
+        // ],
         questions: [{
             questionId: { type: mongoose.Schema.Types.Mixed, required: true },
             snapshot: { type: mongoose.Schema.Types.Mixed, required: true }

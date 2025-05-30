@@ -17,7 +17,7 @@ const InterviewSlideover = ({ mode }) => {
         templateTitle: '',
         label: '',
         description: '',
-        status: 'inactive',
+        status: 'active',
         rounds: []
     });
 
@@ -30,7 +30,7 @@ const InterviewSlideover = ({ mode }) => {
                     templateTitle: foundTemplate.templateName || '',
                     label: foundTemplate.label || '',
                     description: foundTemplate.description || '',
-                    status: foundTemplate.status || 'inactive',
+                    status: foundTemplate.status || 'active',
                     rounds: foundTemplate.rounds || []
                 });
             }
@@ -40,7 +40,7 @@ const InterviewSlideover = ({ mode }) => {
                 templateTitle: '',
                 label: '',
                 description: '',
-                status: 'inactive',
+                status: 'active',
                 rounds: []
             });
         }
@@ -144,34 +144,7 @@ const InterviewSlideover = ({ mode }) => {
                     <form id="new-template-form" onSubmit={handleSave} className="flex-1 flex flex-col overflow-y-auto">
                         <div className="px-2 sm:px-6 flex-1">
                             <div className="space-y-6 pt-6 pb-5">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Template Status
-                                    </label>
-                                    <div className="flex items-center mt-1">
-                                        <Switch
-                                            checked={newTemplate.status === 'active'}
-                                            onChange={(checked) => {
-                                                setNewTemplate(prev => ({
-                                                    ...prev,
-                                                    status: checked ? 'active' : 'inactive'
-                                                }));
-                                            }}
-                                            onColor="#98e6e6"
-                                            offColor="#ccc"
-                                            handleDiameter={20}
-                                            height={20}
-                                            width={45}
-                                            onHandleColor="#227a8a"
-                                            offHandleColor="#9CA3AF"
-                                            checkedIcon={false}
-                                            uncheckedIcon={false}
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">
-                                            {newTemplate.status}
-                                        </span>
-                                    </div>
-                                </div>
+                               
 
                                 <div>
                                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -231,6 +204,37 @@ const InterviewSlideover = ({ mode }) => {
                                         <span className="text-sm text-gray-500">{newTemplate.description.length}/300</span>
                                     </div>
                                 </div>
+
+
+                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Template Status
+                                    </label>
+                                    <div className="flex items-center mt-1">
+                                        <Switch
+                                            checked={newTemplate.status === 'active'}
+                                            onChange={(checked) => {
+                                                setNewTemplate(prev => ({
+                                                    ...prev,
+                                                    status: checked ? 'active' : 'inactive'
+                                                }));
+                                            }}
+                                            onColor="#98e6e6"
+                                            offColor="#ccc"
+                                            handleDiameter={20}
+                                            height={20}
+                                            width={45}
+                                            onHandleColor="#227a8a"
+                                            offHandleColor="#9CA3AF"
+                                            checkedIcon={false}
+                                            uncheckedIcon={false}
+                                        />
+                                        <span className="ml-2 text-sm text-gray-700">
+                                            {newTemplate.status}
+                                        </span>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
