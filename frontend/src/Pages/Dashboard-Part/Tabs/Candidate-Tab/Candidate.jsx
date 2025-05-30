@@ -166,8 +166,8 @@
 //               <label className="inline-flex items-center">
 //                 <input
 //                   type="checkbox"
-//                   className="form-checkbox h-4 w-4 rounded 
-//             focus:ring-0 
+//                   className="form-checkbox h-4 w-4 rounded
+//             focus:ring-0
 //             checked:bg-custom-blue checked:border-custom-blue"
 //                   checked={isStatusMainChecked}
 //                   onChange={handleStatusMainToggle}
@@ -192,8 +192,8 @@
 //                 <label key={index} className="inline-flex items-center">
 //                   <input
 //                     type="checkbox"
-//                     className="form-checkbox h-4 w-4 rounded 
-//             focus:ring-0 
+//                     className="form-checkbox h-4 w-4 rounded
+//             focus:ring-0
 //             checked:bg-custom-blue checked:border-custom-blue"
 //                     checked={selectedStatusOptions.includes(option.QualificationName)}
 //                     onChange={() => handleStatusOptionToggle(option.QualificationName)}
@@ -325,7 +325,6 @@
 
 //   const { candidateData, candidatesLoading } = useCandidates();
 
-
 //   console.log('Mansoor [Candidate] candidateData from the candidate tab:', candidateData);
 
 //   if (candidatesLoading) {
@@ -338,11 +337,6 @@
 
 //   // Determine which data to use based on isAssessmentView
 //   const dataToUse = isAssessmentView ? candidates : candidateData;
-
-
-
-
-
 
 //   // useEffect(() => {
 //   //   const handleResize = () => {
@@ -364,7 +358,6 @@
 //   //     window.removeEventListener("resize", handleResize);
 //   //   };
 //   // }, []);
-
 
 //   const handleFilterChange = (filters) => {
 //     setSelectedFilters(filters);
@@ -518,7 +511,6 @@
 //                       </div>
 //                     </div>
 
-
 //                     <div>
 
 //                       <span className="p-2 text-xl sm:text-sm md:text-sm">
@@ -550,7 +542,6 @@
 //                       </Tooltip>
 //                     </div>
 
-
 //                     <div className="ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
 //                       <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
 //                         <span
@@ -577,10 +568,9 @@
 
 //         )}
 
-
 //         {/* Main Content */}
 //         <main className={isAssessmentView ? '' : 'fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background '}
-//         // w-full px-4 py-2 
+//         // w-full px-4 py-2
 //         // className="fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background"
 //         >
 //           <div className="sm:px-0">
@@ -682,30 +672,28 @@
 
 // export default Candidate;
 
-
-
 // Candidate.jsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
-import { useCandidates } from '../../../../apiHooks/useCandidates';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Header from '../../../../Components/Shared/Header/Header.jsx';
-import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar.jsx';
-import TableView from '../../../../Components/Shared/Table/TableView.jsx';
-import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
-import AddCandidateForm from './AddCandidateForm';
-import CandidateDetails from './CandidateViewDetails/CandidateDetails';
-import { useMediaQuery } from 'react-responsive';
-import Loading from '../../../../Components/Loading';
-import { Outlet } from 'react-router-dom';
-import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
+import { useCandidates } from "../../../../apiHooks/useCandidates";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import Header from "../../../../Components/Shared/Header/Header.jsx";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
+import TableView from "../../../../Components/Shared/Table/TableView.jsx";
+import KanbanView from "../../../../Components/Shared/Kanban/KanbanView";
+import AddCandidateForm from "./AddCandidateForm";
+import CandidateDetails from "./CandidateViewDetails/CandidateDetails";
+import { useMediaQuery } from "react-responsive";
+import Loading from "../../../../Components/Loading";
+import { Outlet } from "react-router-dom";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
-  const [view, setView] = useState('table');
+  const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -714,7 +702,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
-    experience: { min: '', max: '' },
+    experience: { min: "", max: "" },
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -723,9 +711,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   useEffect(() => {
     if (isTablet) {
-      setView('kanban');
+      setView("kanban");
     } else {
-      setView('table');
+      setView("table");
     }
   }, [isTablet]);
 
@@ -742,7 +730,12 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
     setCurrentPage(0);
-    setIsFilterActive(filters.status.length > 0 || filters.tech.length > 0 || filters.experience.min || filters.experience.max);
+    setIsFilterActive(
+      filters.status.length > 0 ||
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
+    );
   };
 
   const handleFilterIconClick = () => {
@@ -754,18 +747,18 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((user) => {
-      const fieldsToSearch = [
-        user.LastName,
-        user.Email,
-        user.Phone,
-      ].filter((field) => field !== null && field !== undefined);
+      const fieldsToSearch = [user.LastName, user.Email, user.Phone].filter(
+        (field) => field !== null && field !== undefined
+      );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
         selectedFilters.status.includes(user.HigherQualification);
       const matchesTech =
         selectedFilters.tech.length === 0 ||
-        user.skills?.some((skill) => selectedFilters.tech.includes(skill.skill));
+        user.skills?.some((skill) =>
+          selectedFilters.tech.includes(skill.skill)
+        );
       const matchesExperience =
         (!selectedFilters.experience.min ||
           user.CurrentExperience >= selectedFilters.experience.min) &&
@@ -776,7 +769,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus && matchesTech && matchesExperience;
+      return (
+        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
+      );
     });
   };
 
@@ -805,8 +800,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Table Columns Configuration
   const tableColumns = [
     {
-      key: 'name',
-      header: 'Candidate Name',
+      key: "name",
+      header: "Candidate Name",
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
@@ -814,12 +809,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               <img
                 className="h-8 w-8 rounded-full object-cover"
                 src={`http://localhost:5000/${row?.ImageData?.path}`}
-                alt={row?.FirstName || 'Candidate'}
-                onError={(e) => { e.target.src = '/default-profile.png'; }}
+                alt={row?.FirstName || "Candidate"}
+                onError={(e) => {
+                  e.target.src = "/default-profile.png";
+                }}
               />
             ) : (
               <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.FirstName ? row.FirstName.charAt(0) : '?'}
+                {row.FirstName ? row.FirstName.charAt(0) : "?"}
               </div>
             )}
           </div>
@@ -828,28 +825,36 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => navigate(`view-details/${row._id}`)}
             >
-              {(row?.FirstName || '') + ' ' + (row.LastName || '')}
+              {(row?.FirstName || "") + " " + (row.LastName || "")}
             </div>
           </div>
         </div>
       ),
     },
     {
-      key: 'Email',
-      header: 'Email',
+      key: "Email",
+      header: "Email",
       render: (value) => (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
-          <span>{value || 'N/A'}</span>
+          <span>{value || "N/A"}</span>
         </div>
       ),
     },
-    { key: 'Phone', header: 'Contact', render: (value) => value || 'N/A' },
-    { key: 'HigherQualification', header: 'Higher Qualification', render: (value) => value || 'N/A' },
-    { key: 'CurrentExperience', header: 'Current Experience', render: (value) => value || 'N/A' },
+    { key: "Phone", header: "Contact", render: (value) => value || "N/A" },
     {
-      key: 'skills',
-      header: 'Skills/Technology',
+      key: "HigherQualification",
+      header: "Higher Qualification",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "CurrentExperience",
+      header: "Current Experience",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "skills",
+      header: "Skills/Technology",
       render: (value) => (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 2).map((skill, idx) => (
@@ -857,7 +862,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
             >
-              {skill.skill || 'N/A'}
+              {skill.skill || "N/A"}
             </span>
           ))}
           {value.length > 2 && (
@@ -873,43 +878,51 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Table Actions Configuration
   const tableActions = [
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => navigate(
-        isAssessmentView
-          ? `candidate-details/${row._id}`
-          : `view-details/${row._id}`,
-        {
-          state: isAssessmentView
-            ? { from: `/assessment-details/${row?.assessmentId}`, assessmentId: row?.assessmentId }
-            : { from: '/candidate' }
-        }
-      ),
+      onClick: (row) =>
+        navigate(
+          isAssessmentView
+            ? `candidate-details/${row._id}`
+            : `view-details/${row._id}`,
+          {
+            state: isAssessmentView
+              ? {
+                  from: `/assessment-details/${row?.assessmentId}`,
+                  assessmentId: row?.assessmentId,
+                }
+              : { from: "/candidate" },
+          }
+        ),
     },
-    ...(!isAssessmentView ? [
-      {
-        key: '360-view',
-        label: '360° View',
-        icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-        onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-      },
-      {
-        key: 'edit',
-        label: 'Edit',
-        icon: <Pencil className="w-4 h-4 text-green-600" />,
-        onClick: (row) => navigate(`edit/${row._id}`),
-      },
-    ] : []),
-    ...(isAssessmentView ? [
-      {
-        key: 'resend-link',
-        label: 'Resend Link',
-        icon: <Mail className="w-4 h-4 text-blue-600" />,
-        onClick: (row) => onResendLink(row.id),
-        disabled: (row) => row.status === 'completed',
-      },
-    ] : []),
+    ...(!isAssessmentView
+      ? [
+          {
+            key: "360-view",
+            label: "360° View",
+            icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+            onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+          },
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
+    ...(isAssessmentView
+      ? [
+          {
+            key: "resend-link",
+            label: "Resend Link",
+            icon: <Mail className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => onResendLink(row.id),
+            disabled: (row) => row.status === "completed",
+          },
+        ]
+      : []),
   ];
 
   // Kanban Columns Configuration
@@ -957,7 +970,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             e.stopPropagation();
             onResendLink(item.id);
           }}
-          disabled={item.status === 'completed'}
+          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           title="Resend Link"
         >
@@ -969,14 +982,20 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   return (
     <div className={isAssessmentView ? "" : "bg-background min-h-screen"}>
-      <main className={isAssessmentView ? "" : "w-full px-9 py-2 sm:mt-20 md:mt-24 sm:px-2 lg:px-8 xl:px-8 2xl:px-8"}>
+      <main
+        className={
+          isAssessmentView
+            ? ""
+            : "w-full px-9 py-2 sm:mt-20 md:mt-24 sm:px-2 lg:px-8 xl:px-8 2xl:px-8"
+        }
+      >
         {!isAssessmentView && (
           <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
             <main className="px-6">
               <div className="sm:px-0">
                 <Header
                   title="Candidates"
-                  onAddClick={() => navigate('new')}
+                  onAddClick={() => navigate("new")}
                   addButtonText="Add Candidate"
                 />
                 <Toolbar
@@ -999,14 +1018,20 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             </main>
           </div>
         )}
-        <main className={isAssessmentView ? '' : 'fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background'}>
+        <main
+          className={
+            isAssessmentView
+              ? ""
+              : "fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
+          }
+        >
           <div className="sm:px-0">
             {candidatesLoading && !isAssessmentView ? (
               <Loading />
             ) : (
               <motion.div className="bg-white">
                 <div className="relative w-full">
-                  {view === 'table' ? (
+                  {view === "table" ? (
                     <div className="w-full">
                       <TableView
                         data={currentFilteredRows}
@@ -1019,14 +1044,21 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map(candidate => ({
+                        data={currentFilteredRows.map((candidate) => ({
                           ...candidate,
                           id: candidate._id,
-                          title: `${candidate.FirstName || ''} ${candidate.LastName || ''}`,
-                          subtitle: candidate.CurrentRole || candidate.CurrentExperience || 'N/A',
-                          avatar: candidate.ImageData ? `http://localhost:5000/${candidate.ImageData.path}` : null,
-                          status: candidate.HigherQualification || 'N/A',
-                          isAssessmentView: isAssessmentView
+                          title: `${candidate.FirstName || ""} ${
+                            candidate.LastName || ""
+                          }`,
+                          subtitle:
+                            candidate.CurrentRole ||
+                            candidate.CurrentExperience ||
+                            "N/A",
+                          avatar: candidate.ImageData
+                            ? `http://localhost:5000/${candidate.ImageData.path}`
+                            : null,
+                          status: candidate.HigherQualification || "N/A",
+                          isAssessmentView: isAssessmentView,
                         }))}
                         columns={kanbanColumns}
                         loading={candidatesLoading}

@@ -1,13 +1,37 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import DataTable from "../components/common/DataTable";
-import StatusBadge from "../components/common/StatusBadge";
-import { AiOutlinePlus, AiOutlineEdit, AiOutlineEye } from "react-icons/ai";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
+
+import Header from "../../Components/Shared/Header/Header.jsx";
+import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
+import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
+import { useMediaQuery } from "react-responsive";
+import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
+import { motion } from "framer-motion";
+import TableView from "../../Components/Shared/Table/TableView.jsx";
+import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
+import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 function TenantsPage() {
-  useEffect(() => {
-    document.title = "Tenants | Admin Portal";
-  }, []);
+  const [view, setView] = useState("table");
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editModeOn, setEditModeOn] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    tech: [],
+    currentStatus: [],
+  });
+  const navigate = useNavigate();
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  const filterIconRef = useRef(null); // Ref for filter icon
+  const [isLoading, setIsLoading] = useState(false);
 
   const [tenants, setTenants] = useState([
     {
@@ -72,8 +96,75 @@ function TenantsPage() {
     },
   ]);
 
+  const [selectedType, setSelectedType] = useState("all");
+
+  const statusOptions = ["active", "inactive", "pending", "inProgress"];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedTech, setSelectedTech] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setSelectedTech(selectedFilters.tech);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      tech: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setSelectedTech([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      tech: selectedTech,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(filters.status.length > 0 || filters.tech.length > 0);
+    setFilterPopupOpen(false);
+  };
+
+  useEffect(() => {
+    document.title = "Tenants | Admin Portal";
+  }, []);
+
+  useEffect(() => {
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
+
   useEffect(() => {
     const getTenants = async () => {
+      setIsLoading(true);
       const apiUrl = "http://localhost:3000/admin/organizations";
       const options = {
         method: "GET",
@@ -83,22 +174,161 @@ function TenantsPage() {
       const data = await response.json();
       if (response.ok) {
         setTenants(data.organizations);
-        console.log(data);
+        setIsLoading(false);
       }
     };
     getTenants();
-  });
+  }, []);
+
+  const dataToUse = tenants;
+
+  const handleFilterIconClick = () => {
+    if (dataToUse?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
+  };
+
+  const FilteredData = () => {
+    if (!Array.isArray(dataToUse)) return [];
+    return dataToUse.filter((organization) => {
+      const fieldsToSearch = [
+        organization.firstName,
+        organization.lastName,
+        organization.Email,
+        organization.Phone,
+        organization.company,
+        organization.status,
+      ].filter((field) => field !== null && field !== undefined);
+
+      const matchesStatus =
+        selectedFilters?.status.length === 0 ||
+        selectedFilters.status.includes(organization.status);
+
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return matchesSearchQuery && matchesStatus;
+    });
+  };
+
+  // Pagination
+  const rowsPerPage = 10;
+  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const nextPage = () => {
+    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  const startIndex = currentPage * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
+
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(0); // Reset to first page on search
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (!tenants || tenants.length === 0) {
+    return <div>No tenants found.</div>;
+  }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const columns = [
+  const filteredTenants =
+    selectedType === "all"
+      ? tenants
+      : tenants.filter((tenant) => tenant.type === selectedType);
+
+  // const columns = [
+  //   {
+  //     field: "name",
+  //     header: "Tenant Name",
+  //     render: (row) => (
+  //       <div className="flex items-center">
+  //         <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
+  //           {row?.firstName?.charAt(0) + row?.lastName?.charAt(0)}
+  //         </div>
+  //         <div className="ml-4">
+  //           <div className="font-medium text-gray-900">
+  //             {row.company || "abc company"}
+  //           </div>
+  //           <div className="text-gray-500">{row.industry || "Technology"}</div>
+  //         </div>
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     field: "status",
+  //     header: "Status",
+  //     render: (row) => <StatusBadge status={row.status} />,
+  //   },
+  //   {
+  //     field: "plan",
+  //     header: "Plan",
+  //     render: (row) => (
+  //       <span className="font-medium text-gray-900">{row.plan || "basic"}</span>
+  //     ),
+  //   },
+  //   {
+  //     field: "organizations",
+  //     header: "Users",
+  //     render: (row) => row.usersCount,
+  //   },
+  //   {
+  //     field: "activeJobs",
+  //     header: "Active Jobs",
+  //     render: (row) => row.activeJobs,
+  //   },
+  //   {
+  //     field: "activeCandidates",
+  //     header: "Active Candidates",
+  //     render: (row) => <span>{row.activeCandidates || 2}</span>,
+  //   },
+  //   {
+  //     field: "lastActivity",
+  //     header: "Last Activity",
+  //     render: (row) => formatDate(row.CreatedDate),
+  //   },
+  //   // {
+  //   //   field: "actions",
+  //   //   header: "Actions",
+  //   //   sortable: false,
+  //   //   render: (row) => (
+  //   //     <div className="flex space-x-2">
+  //   //       <Link
+  //   //         to={`/tenants/${row._id}`}
+  //   //         className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
+  //   //       >
+  //   //         <AiOutlineEye size={20} />
+  //   //       </Link>
+  //   //       <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
+  //   //         <AiOutlineEdit size={20} />
+  //   //       </button>
+  //   //     </div>
+  //   //   ),
+  //   // },
+  // ];
+
+  const tableColumns = [
     {
-      field: "name",
+      key: "name",
       header: "Tenant Name",
-      render: (row) => (
+      render: (value, row) => (
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
             {row?.firstName?.charAt(0) + row?.lastName?.charAt(0)}
@@ -113,99 +343,348 @@ function TenantsPage() {
       ),
     },
     {
-      field: "status",
+      key: "status",
       header: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (value, row) => <StatusBadge status={row.status} />,
     },
     {
-      field: "plan",
+      key: "plan",
       header: "Plan",
-      render: (row) => (
-        <span className="font-medium text-gray-900">{row.plan || "basic"}</span>
+      render: (value, row) => <span>{row.plan || "N/A"}</span>,
+    },
+    {
+      key: "organizations",
+      header: "Users",
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          <span>{row.usersCount || "0"}</span>
+        </div>
       ),
     },
     {
-      field: "users",
-      header: "Users",
-      render: (row) => row.usersCount,
-    },
-    {
-      field: "activeJobs",
+      key: "activeJobs",
       header: "Active Jobs",
-      render: (row) => row.activeJobs,
+      render: (value) => value || "0",
     },
     {
-      field: "activeCandidates",
+      key: "activeCandidates",
       header: "Active Candidates",
-      render: (row) => <span>{row.activeCandidates || 2}</span>,
+      render: (value, row) => row.activeCandidates || "0",
     },
     {
-      field: "lastActivity",
+      key: "lastActivity",
       header: "Last Activity",
-      render: (row) => formatDate(row.CreatedDate),
-    },
-    {
-      field: "actions",
-      header: "Actions",
-      sortable: false,
-      render: (row) => (
-        <div className="flex space-x-2">
-          <Link
-            to={`/tenants/${row._id}`}
-            className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-          >
-            <AiOutlineEye size={20} />
-          </Link>
-          <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-            <AiOutlineEdit size={20} />
-          </button>
-        </div>
+      render: (value, row) => (
+        <span>{row ? formatDate(row?.updatedAt) : "N/A"}</span>
       ),
     },
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
-        <button className="btn-primary">
-          <AiOutlinePlus className="mr-2" />
-          Add Tenant
+  // Table Actions Configuration
+  const tableActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+    },
+    {
+      key: "360-view",
+      label: "360° View",
+      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`/edit/${row._id}`),
+    },
+    {
+      key: "resend-link",
+      label: "Resend Link",
+      icon: <Mail className="w-4 h-4 text-blue-600" />,
+      disabled: (row) => row.status === "completed",
+    },
+  ];
+
+  // Kanban Columns Configuration
+  const kanbanColumns = [];
+
+  // Render Actions for Kanban
+  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/tenants/${item._id}`);
+        }}
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        title="View Details"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      {!isLoading ? (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              item?._id && navigate(`/tenants/${item._id}`);
+            }}
+            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            title="360° View"
+          >
+            <UserCircle className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/edit/${item._id}`);
+            }}
+            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onResendLink(item.id);
+          }}
+          disabled={item.status === "completed"}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Resend Link"
+        >
+          <Mail className="w-4 h-4" />
         </button>
-      </div>
+      )}
+    </div>
+  );
 
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Total Tenants</div>
-          <div className="text-xl font-semibold">{tenants.length}</div>
-        </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Active</div>
-          <div className="text-xl font-semibold">
-            {tenants.filter((t) => t.status === "active").length}
-          </div>
-        </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Inactive</div>
-          <div className="text-xl font-semibold">
-            {tenants.filter((t) => t.status === "inactive").length}
-          </div>
-        </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Pending</div>
-          <div className="text-xl font-semibold">
-            {tenants.filter((t) => t.status === "pending").length}
-          </div>
-        </div>
-      </div>
+  return (
+    <div className="bg-background min-h-screen">
+      <div className="absolute top-8 md:mt-12 sm:mt-12 left-0 right-0 bg-background">
+        <main className="flex justify-between items-center mb-4 px-4">
+          <div className="flex flex-col items-center space-x-2 w-full">
+            <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4">
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "all"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("all")}
+              >
+                All
+              </button>
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "organization"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("organization")}
+              >
+                Organizations
+              </button>
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "individual"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("individual")}
+              >
+                Individuals
+              </button>
+            </div>
 
-      <div className="bg-white rounded-lg shadow-card overflow-hidden">
-        <DataTable
-          columns={columns}
-          data={tenants}
-          searchable={true}
-          pagination={true}
-        />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 px-1.5 w-full">
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                <div className="text-xs text-gray-500">Total Tenants</div>
+                <div className="text-xl font-semibold">
+                  {filteredTenants.length}
+                </div>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                <div className="text-xs text-gray-500">Active</div>
+                <div className="text-xl font-semibold">
+                  {filteredTenants.filter((t) => t.status === "active").length}
+                </div>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                <div className="text-xs text-gray-500">Inactive</div>
+                <div className="text-xl font-semibold">
+                  {
+                    filteredTenants.filter((t) => t.status === "inactive")
+                      .length
+                  }
+                </div>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                <div className="text-xs text-gray-500">Pending</div>
+                <div className="text-xl font-semibold">
+                  {filteredTenants.filter((t) => t.status === "pending").length}
+                </div>
+              </div>
+              {selectedType === "all" && (
+                <>
+                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                    <div className="text-xs text-gray-500">Organizations</div>
+                    <div className="text-xl font-semibold">
+                      {tenants.filter((t) => t.type === "organization").length}
+                    </div>
+                  </div>
+                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                    <div className="text-xs text-gray-500">Individuals</div>
+                    <div className="text-xl font-semibold">
+                      {tenants.filter((t) => t.type === "individual").length}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </main>
+        <main className="px-6">
+          <div className="sm:px-0">
+            {/* Header */}
+            <Header
+              title="Tenants"
+              onAddClick={() => navigate("new")}
+              addButtonText="Add Tenant"
+            />
+
+            {/* Toolbar */}
+            <Toolbar
+              view={view}
+              setView={setView}
+              searchQuery={searchQuery}
+              onSearch={handleSearch}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterPopupOpen={isFilterPopupOpen}
+              isFilterActive={isFilterActive}
+              dataLength={dataToUse?.length}
+              searchPlaceholder="Search tenants..."
+              filterIconRef={filterIconRef} // Pass ref to Toolbar
+            />
+          </div>
+        </main>
+        <div>
+          {/* absolute top-0 2xl:top-0 xl:top-0 lg:top-0 left-0 right-0  */}
+          <main className="bg-background">
+            <div className="sm:px-0">
+              {isLoading ? (
+                <Loading />
+              ) : (
+                <motion.div className="bg-white">
+                  <div className="relative w-full">
+                    {view === "table" ? (
+                      <div className="w-full mb-8 bg-red">
+                        <TableView
+                          data={currentFilteredRows}
+                          columns={tableColumns}
+                          loading={isLoading}
+                          actions={tableActions}
+                          emptyState="No Tenants found."
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full">
+                        <KanbanView
+                          data={currentFilteredRows.map((tenant) => ({
+                            ...tenant,
+                            id: tenant._id,
+                            title: `${tenant.firstName || ""} ${
+                              tenant.lastName || ""
+                            }`,
+                            subtitle:
+                              tenant.CurrentRole ||
+                              tenant.CurrentExperience ||
+                              "N/A",
+                            avatar: tenant.ImageData
+                              ? `src="https://ui-avatars.com/api/?name=${tenant?.firstName[0]}&background=4f46e5&color=ffffff&size=40`
+                              : null,
+                            status: tenant.status || "N/A",
+                            isLoading: isLoading,
+                          }))}
+                          columns={kanbanColumns}
+                          loading={isLoading}
+                          renderActions={renderKanbanActions}
+                          emptyState="No tenants found."
+                        />
+                      </div>
+                    )}
+
+                    {/* Render FilterPopup */}
+                    <FilterPopup
+                      isOpen={isFilterPopupOpen}
+                      onClose={() => setFilterPopupOpen(false)}
+                      onApply={handleApplyFilters}
+                      onClearAll={handleClearAll}
+                      filterIconRef={filterIconRef}
+                    >
+                      <div className="space-y-3">
+                        {/* Current Status Section */}
+                        <div>
+                          <div
+                            className="flex justify-between items-center cursor-pointer"
+                            onClick={() =>
+                              setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                            }
+                          >
+                            <span className="font-medium text-gray-700">
+                              Current Status
+                            </span>
+                            {isCurrentStatusOpen ? (
+                              <ChevronUp className="text-xl text-gray-700" />
+                            ) : (
+                              <ChevronDown className="text-xl text-gray-700" />
+                            )}
+                          </div>
+                          {isCurrentStatusOpen && (
+                            <div className="mt-1 space-y-2 pl-2">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-1">
+                                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                    {statusOptions.map((status) => (
+                                      <label
+                                        key={status}
+                                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedStatus.includes(
+                                            status
+                                          )}
+                                          onChange={() =>
+                                            handleCurrentStatusToggle(status)
+                                          }
+                                          className="accent-custom-blue"
+                                        />
+                                        <span>{status}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </FilterPopup>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

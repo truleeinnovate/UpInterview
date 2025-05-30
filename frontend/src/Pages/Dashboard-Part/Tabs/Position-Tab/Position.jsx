@@ -553,7 +553,7 @@ const PositionTab = () => {
 
 
       {/* Main Content */}
-      <main className="fixed  top-52 2xl:top-48 xl:top-48 lg:top-48 left-0  right-0 bg-background">
+      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           {
             isPositionsLoading ? (

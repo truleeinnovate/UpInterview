@@ -1,104 +1,355 @@
-import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import ErrorBoundary from './Components/ErrorBoundary';
-import Navbar from './Components/Navbar/Navbar-Sidebar';
-import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
-import Logo from './Pages/Login-Part/Logo';
-import ProtectedRoute from './Components/ProtectedRoute';
-import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
-import Loading from './Components/Loading';
-import { PermissionsProvider } from './Context/PermissionsContext';
-import { CustomProvider } from './Context/Contextfetch';
-import PageSetter from './Components/PageSetter';
+import React, { lazy, Suspense, useMemo, useState, useEffect } from "react";
+import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
+import Cookies from "js-cookie";
+import ErrorBoundary from "./Components/ErrorBoundary";
+import Navbar from "./Components/Navbar/Navbar-Sidebar";
+import Settingssidebar from "./Pages/Dashboard-Part/Tabs/Settings-Tab/Settings";
+import AppSettings from "./Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings";
+import Logo from "./Pages/Login-Part/Logo";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
+import Loading from "./Components/Loading";
+import { PermissionsProvider } from "./Context/PermissionsContext";
+import { CustomProvider } from "./Context/Contextfetch";
+import PageSetter from "./Components/PageSetter";
+
+import { AuthProvider } from "./Context/AuthContext.js";
 
 // Lazy-loaded components
-const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
-const UserTypeSelection = lazy(() => import('./Pages/Login-Part/Individual-2'));
-const SelectProfession = lazy(() => import('./Pages/Login-Part/Individual-3'));
-const ProfileWizard = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4'));
-const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp'));
-const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogin'));
-const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan'));
-const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback'));
-const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails'));
-const ForgetPassword = lazy(() => import('./Pages/Login-Part/ForgetPassword'));
-const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
+const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
+const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
+const ProfileWizard = lazy(() =>
+  import("./Pages/Login-Part/Individual-4/Individual-4")
+);
+const OrganizationSignUp = lazy(() =>
+  import("./Pages/Login-Part/OrganizationSignUp")
+);
+const OrganizationLogin = lazy(() =>
+  import("./Pages/Login-Part/OrganizationLogin")
+);
+const SubscriptionPlan = lazy(() =>
+  import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
+);
+const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
+const CardDetails = lazy(() =>
+  import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
+);
+const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
+const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 
-const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home/Home.jsx'));
-const OutsourceInterviewerRequest = lazy(() => import('./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx'));
-const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
-const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
-const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
-const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails'));
-const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen'));
-const Position = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position'));
-const PositionForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form'));
-const PositionSlideDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails'));
-const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx'));
-const MockInterview = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview'));
-const MockInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails'));
-const MockSchedulelater = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm'));
-const InterviewList = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList'));
-const InterviewDetail = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail'));
-const InterviewForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm'));
-const RoundForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm'));
-const QuestionBank = lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank'));
-const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment'));
-const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
-const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
-const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const AccountSettingsSidebar = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
-const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
-const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
-const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));
-const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx'));
-const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx'));
-const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx'));
-const EditInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails'));
-const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser'));
-const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails'));
-const CompanyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile'));
-const CompanyEditProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit'));
-const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing'));
-const Subscription = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription'));
-const Wallet = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet'));
-const WalletBalancePopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup'));
-const WalletTransactionPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup'));
-const Security = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Security'));
-const NotificationsDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Notifications'));
-const Usage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Usage'));
-const InterviewerGroups = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups'));
-const InterviewerGroupFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup'));
-const InterviewGroupDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails'));
-const UsersLayout = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout'));
-const UserForm = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm'));
-const UserProfileDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails'));
-const EmailTemplate = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate'));
-const Role = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/Role'));
-const RoleFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup'));
-const Sharing = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Sharing'));
-const DomainManagement = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement'));
-const Webhooks = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks'));
-const HrmsAtsApi = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi'));
-const InterviewTemplates = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplates'));
-const TemplateDetail = lazy(() => import('../src/Pages/InteviewTemplates/TemplateDetail'));
-const RoundFormTemplate = lazy(() => import('../src/Pages/InteviewTemplates/RoundForm'));
-const InterviewTemplateForm = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplateForm'));
-const SupportDesk = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk'));
-const SupportDetails = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails'));
-const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm'));
-const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
-const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
-const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
+const Home = lazy(() =>
+  import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx")
+);
+const OutsourceInterviewerRequest = lazy(() =>
+  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+);
+const CandidateTab = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate")
+);
+const CandidateTabDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent"
+  )
+);
+const AddCandidateForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm")
+);
+const CandidateDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails"
+  )
+);
+const CandidateFullscreen = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen"
+  )
+);
+const Position = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position")
+);
+const PositionForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form")
+);
+const PositionSlideDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails")
+);
+const RoundFormPosition = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"
+  )
+);
+const MockInterview = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview")
+);
+const MockInterviewDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails")
+);
+const MockSchedulelater = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm")
+);
+const InterviewList = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList")
+);
+const InterviewDetail = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail")
+);
+const InterviewForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm")
+);
+const RoundForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm")
+);
+const QuestionBank = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank")
+);
+const Assessment = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment")
+);
+const AssessmentForm = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment"
+  )
+);
+const AssessmentDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails"
+  )
+);
+const AssessmentTest = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest")
+);
+const AccountSettingsSidebar = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx")
+);
+const MyProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
+  )
+);
+const BasicDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx"
+  )
+);
+const BasicDetailsEditPage = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx"
+  )
+);
+const AdvancedDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx"
+  )
+);
+const EditAdvacedDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx"
+  )
+);
+const InterviewUserDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx"
+  )
+);
+const EditInterviewDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails"
+  )
+);
+const AvailabilityUser = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser"
+  )
+);
+const EditAvailabilityDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails"
+  )
+);
+const CompanyProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile"
+  )
+);
+const CompanyEditProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit"
+  )
+);
+const BillingDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/billing/Billing")
+);
+const Subscription = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription"
+  )
+);
+const Wallet = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet")
+);
+const WalletBalancePopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup"
+  )
+);
+const WalletTransactionPopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup"
+  )
+);
+const Security = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Security")
+);
+const NotificationsDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Notifications")
+);
+const Usage = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Usage")
+);
+const InterviewerGroups = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups"
+  )
+);
+const InterviewerGroupFormPopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup"
+  )
+);
+const InterviewGroupDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails"
+  )
+);
+const UsersLayout = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout"
+  )
+);
+const UserForm = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm"
+  )
+);
+const UserProfileDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails"
+  )
+);
+const EmailTemplate = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate"
+  )
+);
+const Role = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/Role")
+);
+const RoleFormPopup = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup")
+);
+const Sharing = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Sharing")
+);
+const DomainManagement = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement"
+  )
+);
+const Webhooks = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks")
+);
+const HrmsAtsApi = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi")
+);
+const InterviewTemplates = lazy(() =>
+  import("../src/Pages/InteviewTemplates/InterviewTemplates")
+);
+const TemplateDetail = lazy(() =>
+  import("../src/Pages/InteviewTemplates/TemplateDetail")
+);
+const RoundFormTemplate = lazy(() =>
+  import("../src/Pages/InteviewTemplates/RoundForm")
+);
+const InterviewTemplateForm = lazy(() =>
+  import("../src/Pages/InteviewTemplates/InterviewTemplateForm")
+);
+const SupportDesk = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+);
+const SupportDetails = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails")
+);
+const SupportForm = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm")
+);
+const SupportViewPage = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage")
+);
+const InterviewRequest = lazy(() =>
+  import("./Pages/Interview-Request/InterviewRequest.jsx")
+);
+const Task = lazy(() =>
+  import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
+);
 
-
-
+// ------  SUPER ADMIN ---------
+const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
+const SuperAdminDashboard = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Dashboard.jsx")
+);
+const TenantsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/TenantsPage.jsx")
+);
+const TenantDetailsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
+);
+const CandidatesPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
+);
+const PositionsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
+);
+const InterviewsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
+);
+const AssessmentsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
+);
+const OutsourceRequestsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
+);
+const OutsourceInterviewersPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/OutsourceInterviewersPage.jsx")
+);
+const InterviewerRequestsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewerRequestsPage.jsx")
+);
+const BillingPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/BillingPage.jsx")
+);
+const SupportTicketsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/SupportTicketsPage.jsx")
+);
+const SettingsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+);
+const LoginPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+);
+const NotFoundPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/NotFoundPage.jsx")
+);
+const InternalLogsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx")
+);
+const IntegrationsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
+);
+// ---------------------------------------------------
 
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
-
   useEffect(() => {
     onLoadingChange(true);
     return () => onLoadingChange(false);
@@ -108,80 +359,110 @@ const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
 };
 
 const App = () => {
-
   const location = useLocation();
-  const authToken = Cookies.get('authToken');
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Define paths for conditional rendering
-  const noNavbarPaths = useMemo(() => [
-    '/',
-    '/select-user-type',
-    '/select-profession',
-    '/complete-profile',
-    '/organization-login',
-    '/organization-signup',
-    '/subscription-plans',
-    '/payment-details',
-    '/callback',
-  ], []);
+  const noNavbarPaths = useMemo(
+    () => [
+      "/",
+      "/select-user-type",
+      "/select-profession",
+      "/complete-profile",
+      "/organization-login",
+      "/organization-signup",
+      "/subscription-plans",
+      "/payment-details",
+      "/callback",
+    ],
+    []
+  );
 
-  const showLogoPaths = useMemo(() => [
-    '/organization-signup',
-    '/organization-login',
-    '/select-user-type',
-    '/select-profession',
-    '/complete-profile',
-    '/subscription-plans',
-    '/payment-details',
-  ], []);
+  const showLogoPaths = useMemo(
+    () => [
+      "/organization-signup",
+      "/organization-login",
+      "/select-user-type",
+      "/select-profession",
+      "/complete-profile",
+      "/subscription-plans",
+      "/payment-details",
+    ],
+    []
+  );
 
-  const settingsSidebarPaths = useMemo(() => [
-    '/account-settings/profile',
-    '/account-settings/my-profile',
-    '/account-settings/wallet',
-    '/account-settings/interviewer-groups',
-    '/account-settings/users',
-    '/account-settings/email-settings',
-    '/account-settings/billing',
-    '/account-settings/subscription',
-    '/account-settings/security',
-    '/account-settings/notifications',
-    '/account-settings/usage',
-    '/account-settings/roles',
-    '/account-settings/sharing',
-    '/account-settings/sub-domain',
-    '/account-settings/webhooks',
-    '/account-settings/hrms-ats',
-  ], []);
+  const settingsSidebarPaths = useMemo(
+    () => [
+      "/account-settings/profile",
+      "/account-settings/my-profile",
+      "/account-settings/wallet",
+      "/account-settings/interviewer-groups",
+      "/account-settings/users",
+      "/account-settings/email-settings",
+      "/account-settings/billing",
+      "/account-settings/subscription",
+      "/account-settings/security",
+      "/account-settings/notifications",
+      "/account-settings/usage",
+      "/account-settings/roles",
+      "/account-settings/sharing",
+      "/account-settings/sub-domain",
+      "/account-settings/webhooks",
+      "/account-settings/hrms-ats",
+    ],
+    []
+  );
 
-  const appSettingsPaths = useMemo(() => [
-    '/connected_apps',
-    '/access_token',
-    '/auth_token',
-    '/apis',
-  ], []);
+  const appSettingsPaths = useMemo(
+    () => ["/connected_apps", "/access_token", "/auth_token", "/apis"],
+    []
+  );
 
   const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
-  const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
+  const showSettingsSidebar = settingsSidebarPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
   const showAppSettings = appSettingsPaths.includes(location.pathname);
 
-  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  const shouldRenderNavbar = ![
+    "/",
+    "/select-user-type",
+    "/price",
+    "/select-profession",
+    "/complete-profile",
+    "/assessmenttest",
+    "/assessmenttext",
+    "/assessmentsubmit",
+    "/candidatevc",
+    "/organization-login",
+    "/organization-signup",
+    "/callback",
+    "/jitsimeetingstart",
+    "/organization",
+    "/payment-details",
+    "/subscription-plans",
+  ].includes(location.pathname);
 
   return (
     <ErrorBoundary>
       <SuspenseWithLoading
-        fallback={<div><Loading /></div>}
+        fallback={
+          <div>
+            <Loading />
+          </div>
+        }
         onLoadingChange={setIsLoading}
       >
         {shouldRenderNavbar && <Navbar />}
         {showSettingsSidebar && <Settingssidebar />}
         {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
-        <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
+        <div className={showNavbar && !isLoading ? "mt-16" : "mt-12"}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -189,7 +470,10 @@ const App = () => {
             <Route path="/select-profession" element={<SelectProfession />} />
             <Route path="/complete-profile" element={<ProfileWizard />} />
             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-            <Route path="/organization-signup" element={<OrganizationSignUp />} />
+            <Route
+              path="/organization-signup"
+              element={<OrganizationSignUp />}
+            />
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<CardDetails />} />
@@ -211,42 +495,84 @@ const App = () => {
             >
               {/* Protected Routes */}
               <Route path="/home" element={<Home />} />
-              <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
-              <Route path="/outsource-interview-request" element={<InterviewRequest />} />
+              <Route
+                path="/outsource-interviewers-request"
+                element={<OutsourceInterviewerRequest />}
+              />
+              <Route
+                path="/outsource-interview-request"
+                element={<InterviewRequest />}
+              />
 
               {/* Candidate Routes */}
               <Route path="/candidate" element={<CandidateTab />}>
                 <Route index element={null} />
-                <Route path="new" element={<AddCandidateForm mode="Create" />} />
+                <Route
+                  path="new"
+                  element={<AddCandidateForm mode="Create" />}
+                />
                 <Route path="view-details/:id" element={<CandidateDetails />} />
-                <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddCandidateForm mode="Edit" />}
+                />
               </Route>
               <Route path="/candidate/:id" element={<CandidateTabDetails />}>
                 <Route index element={null} />
-                <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
+                <Route
+                  path="edit"
+                  element={<AddCandidateForm mode="Candidate Edit" />}
+                />
               </Route>
-              <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
+              <Route
+                path="/candidate/full-screen/:id"
+                element={<CandidateFullscreen />}
+              />
 
               {/* Position Routes */}
               <Route path="/position" element={<Position />} />
               <Route path="/position/new-position" element={<PositionForm />} />
-              <Route path="/position/edit-position/:id" element={<PositionForm />} />
-              <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
-              <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
-              <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+              <Route
+                path="/position/edit-position/:id"
+                element={<PositionForm />}
+              />
+              <Route
+                path="/position/view-details/:id"
+                element={<PositionSlideDetails />}
+              />
+              <Route
+                path="/position/view-details/:id/rounds/new"
+                element={<RoundFormPosition />}
+              />
+              <Route
+                path="/position/view-details/:id/rounds/:roundId"
+                element={<RoundFormPosition />}
+              />
 
               {/* Mock Interview Routes */}
               <Route path="/mockinterview" element={<MockInterview />} />
-              <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-              <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-              <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+              <Route
+                path="/mockinterview-create"
+                element={<MockSchedulelater />}
+              />
+              <Route
+                path="/mock-interview/:id/edit"
+                element={<MockSchedulelater />}
+              />
+              <Route
+                path="/mockinterview-details/:id"
+                element={<MockInterviewDetails />}
+              />
 
               {/* Interview Routes */}
               <Route path="/interviewList" element={<InterviewList />} />
               <Route path="/interviews/new" element={<InterviewForm />} />
               <Route path="/interviews/:id" element={<InterviewDetail />} />
               <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:id/rounds/:roundId" element={<RoundForm />} />
+              <Route
+                path="/interviews/:id/rounds/:roundId"
+                element={<RoundForm />}
+              />
 
               {/* Question Bank */}
               <Route path="/questionBank" element={<QuestionBank />} />
@@ -254,30 +580,53 @@ const App = () => {
               {/* Assessment */}
               <Route path="/assessments" element={<Assessment />} />
               <Route path="/assessment/new" element={<AssessmentForm />} />
-              <Route path="/assessment-details" element={<AssessmentDetails />} />
+              <Route
+                path="/assessment-details"
+                element={<AssessmentDetails />}
+              />
               <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
-              <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} >
+              <Route
+                path="/assessment-details/:id"
+                element={
+                  <>
+                    <Assessment />
+                    <AssessmentDetails />
+                  </>
+                }
+              >
                 <Route index element={null} />
-                <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
+                <Route
+                  path="candidate-details/:id"
+                  element={<CandidateDetails mode="Assessment" />}
+                />
               </Route>
 
               <Route path="/assessmenttest" element={<AssessmentTest />} />
 
               {/* Account Settings Routes */}
-              <Route path="/account-settings" element={<AccountSettingsSidebar />}>
-                <Route index element={
-                  organization ? (
-                    <>
-                      <Navigate to="profile" replace />
+              <Route
+                path="/account-settings"
+                element={<AccountSettingsSidebar />}
+              >
+                <Route
+                  index
+                  element={
+                    organization ? (
+                      <>
+                        <Navigate to="profile" replace />
+                        <Navigate to="my-profile/basic" replace />
+                      </>
+                    ) : (
                       <Navigate to="my-profile/basic" replace />
-                    </>
-                  ) : (
-                    <Navigate to="my-profile/basic" replace />
-                  )
-                } />
+                    )
+                  }
+                />
                 {organization && (
                   <Route path="profile" element={<CompanyProfile />}>
-                    <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
+                    <Route
+                      path="company-profile-edit/:id"
+                      element={<CompanyEditProfile />}
+                    />
                   </Route>
                 )}
                 <Route path="my-profile" element={<MyProfile />}>
@@ -286,20 +635,50 @@ const App = () => {
                   <Route path="advanced" element={<AdvancedDetails />} />
                   <Route path="interview" element={<InterviewUserDetails />} />
                   <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-                  <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
-                  <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+                  <Route
+                    path="basic-edit/:id"
+                    element={<BasicDetailsEditPage />}
+                  />
+                  <Route
+                    path="advanced-edit/:id"
+                    element={<EditAdvacedDetails />}
+                  />
+                  <Route
+                    path="interview-edit/:id"
+                    element={<EditInterviewDetails />}
+                  />
+                  <Route
+                    path="availability-edit/:id"
+                    element={<EditAvailabilityDetails />}
+                  />
                 </Route>
                 <Route path="wallet" element={<Wallet />}>
-                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+                  <Route
+                    path="wallet-details/:id"
+                    element={<WalletBalancePopup />}
+                  />
+                  <Route
+                    path="wallet-transaction/:id"
+                    element={<WalletTransactionPopup />}
+                  />
                 </Route>
                 {organization && (
-                  <Route path="interviewer-groups" element={<InterviewerGroups />}>
-                    <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
-                    <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
-                    <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
+                  <Route
+                    path="interviewer-groups"
+                    element={<InterviewerGroups />}
+                  >
+                    <Route
+                      path="interviewer-group-form"
+                      element={<InterviewerGroupFormPopup />}
+                    />
+                    <Route
+                      path="interviewer-group-edit-form/:id"
+                      element={<InterviewerGroupFormPopup />}
+                    />
+                    <Route
+                      path="interviewer-group-details/:id"
+                      element={<InterviewGroupDetails />}
+                    />
                   </Route>
                 )}
                 {organization && (
@@ -307,20 +686,29 @@ const App = () => {
                     <Route index element={null} />
                     <Route path="new" element={<UserForm mode="create" />} />
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
-                    <Route path="details/:id" element={<UserProfileDetails />} />
+                    <Route
+                      path="details/:id"
+                      element={<UserProfileDetails />}
+                    />
                   </Route>
                 )}
                 <Route path="email-settings" element={<EmailTemplate />} />
                 <Route path="billing" element={<BillingDetails />} />
                 <Route path="subscription" element={<Subscription />} />
                 <Route path="security" element={<Security />} />
-                <Route path="notifications" element={<NotificationsDetails />} />
+                <Route
+                  path="notifications"
+                  element={<NotificationsDetails />}
+                />
                 <Route path="usage" element={<Usage />} />
                 {organization && (
                   <>
                     <Route path="roles" element={<Role />}>
                       <Route index element={null} />
-                      <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                      <Route
+                        path="role-edit/:id"
+                        element={<RoleFormPopup mode="role-edit" />}
+                      />
                     </Route>
                     <Route path="sharing" element={<Sharing />} />
                     <Route path="sub-domain" element={<DomainManagement />} />
@@ -331,26 +719,129 @@ const App = () => {
               </Route>
 
               {/* Interview Templates */}
-              <Route path="/interview-templates" element={<InterviewTemplates />}>
+              <Route
+                path="/interview-templates"
+                element={<InterviewTemplates />}
+              >
                 <Route index element={null} />
-                <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
-                <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
+                <Route
+                  path="new"
+                  element={<InterviewTemplateForm mode="Create" />}
+                />
+                <Route
+                  path="edit/:id"
+                  element={<InterviewTemplateForm mode="Edit" />}
+                />
               </Route>
-              <Route path="/interview-templates/:id" element={<TemplateDetail />}>
+              <Route
+                path="/interview-templates/:id"
+                element={<TemplateDetail />}
+              >
                 <Route index element={null} />
-                <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
+                <Route
+                  path="edit"
+                  element={<InterviewTemplateForm mode="Template Edit" />}
+                />
               </Route>
-              <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
-              <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+              <Route
+                path="/interview-templates/:id/round/new"
+                element={<RoundFormTemplate />}
+              />
+              <Route
+                path="/interview-templates/:id/round"
+                element={<RoundFormTemplate />}
+              />
 
               {/* Support Desk */}
               <Route path="/support-desk" element={<SupportDesk />} />
-              <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
-              <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+              <Route
+                path="/support-desk/view/:id"
+                element={
+                  <>
+                    <SupportDetails />
+                    <SupportDesk />
+                  </>
+                }
+              />
+              <Route
+                path="/support-desk/new-ticket"
+                element={
+                  <>
+                    <SupportForm />
+                    <SupportDesk />
+                  </>
+                }
+              />
+              <Route
+                path="/support-desk/edit-ticket/:id"
+                element={
+                  <>
+                    <SupportForm />
+                    <SupportDesk />
+                  </>
+                }
+              />
+              <Route
+                path="/support-desk/:id"
+                element={
+                  <>
+                    <SupportViewPage />
+                    <SupportDesk />
+                  </>
+                }
+              />
               {/* task */}
               <Route path="/task" element={<Task />} />
+
+              {/* ----------------- SUPER ADMIN --------------- */}
+
+              <Route
+                path="/login"
+                element={
+                  !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
+                }
+              />
+
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    <DashboardLayout />
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              >
+                <Route index element={<SuperAdminDashboard />} />
+                <Route path="tenants" element={<TenantsPage />} />
+                <Route path="tenants/:id" element={<TenantDetailsPage />} />
+                <Route path="candidates" element={<CandidatesPage />} />
+                <Route path="positions" element={<PositionsPage />} />
+                <Route path="interviews" element={<InterviewsPage />} />
+                <Route path="assessments" element={<AssessmentsPage />} />
+                <Route
+                  path="outsource-requests"
+                  element={<OutsourceRequestsPage />}
+                />
+                <Route
+                  path="outsource-interviewers"
+                  element={<OutsourceInterviewersPage />}
+                />
+                <Route
+                  path="interviewer-requests"
+                  element={<InterviewerRequestsPage />}
+                />
+                <Route path="billing" element={<BillingPage />} />
+                <Route
+                  path="support-tickets"
+                  element={<SupportTicketsPage />}
+                />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="internal-logs" element={<InternalLogsPage />} />
+                <Route path="integrations" element={<IntegrationsPage />} />
+              </Route>
+
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </div>
