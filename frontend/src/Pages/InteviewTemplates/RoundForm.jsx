@@ -25,6 +25,7 @@ function RoundForm() {
     questionsError,
     fetchQuestionsForAssessment,
     setSectionQuestions,
+    templates
   } = useCustomContext();
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
@@ -142,19 +143,27 @@ function RoundForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
-          {
-            params: {
-              tenantId: tenantId
-            }
-          }
-        );
-        if (response.data && response.data.success) {
+
+        // templates
+        const response = templates.find(
+        (template) => template._id === id
+      );
+        // const response = await axios.get(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
+        //   {
+        //     params: {
+        //       tenantId: tenantId
+        //     }
+        //   }
+        // );
+
+        // console.log("template response", response);
+        
+        if (response && response) {
 
 
-          const rounds_res = response.data.data
+          const rounds_res = response
 
-          setTemplate(response.data.data);
+          setTemplate(response);
           // console.log("rounds", rounds_res);
 
           if (roundId) {
@@ -165,9 +174,9 @@ function RoundForm() {
            
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
-              const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
+              const internalInterviewers = resolveInterviewerDetails(round?.internalInterviewers || []);
               
-              console.log("internal Interviewers", internalInterviewers);
+              // console.log("internal Interviewers", internalInterviewers);
              
 
               setFormData({
@@ -189,7 +198,7 @@ function RoundForm() {
                   : {},
 
 
-                interviewQuestionsList: round.interviewQuestionsList || [],
+                interviewQuestionsList: round?.questions || [],
                 externalInterviewers: 'Outsourced will be selected at interview schdedule time.',
               });
               await fetchQuestionsForAssessment(round?.assessmentId)
@@ -211,6 +220,7 @@ function RoundForm() {
     fetchData();
   }, [id, roundId]);
 
+// console.log("template response", template);
 
 
   // const fetchQuestionsForAssessment = async (assessmentId) => {
@@ -660,7 +670,7 @@ function RoundForm() {
 
         // Ensure interviewers array is properly populated
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
-          roundData.interviewers = formData.internalInterviewers.map(interviewer =>
+          roundData.internalInterviewers = formData.internalInterviewers.map(interviewer =>
             interviewer._id
             // name: interviewer.name
           );
@@ -672,7 +682,7 @@ function RoundForm() {
         // roundData.interviewerGroupId = formData.interviewerGroupId || null;
         // roundData.minimumInterviewers = formData.selectedInterviewerIds.length|| '1';
         // roundData.questions = formData.questions || [];
-        roundData.interviewQuestionsList = formData.interviewQuestionsList || [];
+        roundData.questions = formData.interviewQuestionsList || [];
 
       } else {
         // Default case for other interview types (hr, culture-fit, system-design)
@@ -686,7 +696,7 @@ function RoundForm() {
         roundData.interviewDuration = formData.duration;
         roundData.selectedInterviewersType = formData.selectedInterviewersType || 'Individual';
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
-          roundData.interviewers = formData.internalInterviewers.map(interviewer =>
+          roundData.internalInterviewers = formData.internalInterviewers.map(interviewer =>
             interviewer._id
             // name: interviewer.name
           );
@@ -696,6 +706,7 @@ function RoundForm() {
 
       }
       console.log("roundData", roundData);
+        console.log(" id", roundId);
       
 
       if (roundId) {
@@ -722,7 +733,9 @@ function RoundForm() {
 
       navigate(`/interview-templates/${id}`);
     } catch (error) {
-      console.error('Error saving round:', error);
+      console.log(error);
+      
+      // console.error('Error saving round:', error);
       alert('Failed to save round. Please try again.');
     }
   };
@@ -817,7 +830,7 @@ function RoundForm() {
 
               <div>
                 <label htmlFor="mode" className="block text-sm font-medium text-gray-700">
-                  Interview Mode *
+                  Interview Mode <span className='text-red-400'>*</span>
                 </label>
                 <select
                   id="interviewMode"
@@ -1356,13 +1369,15 @@ function RoundForm() {
 
 
             <div>
-              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
+              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions <span className='text-red-400'>*</span> </label>
               <textarea
                 value={formData.instructions}
                 id="instructions"
                 name="instructions"
                 onChange={(e) => handleInputChange('instructions', e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64"
+                className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
+                  ${errors.instructions  ? "border-red-400": ""}
+                  `}
                 placeholder="Enter round instructions..."
                 rows="10"
                 minLength={250}

@@ -15,7 +15,7 @@ const MyProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const {contacts} = useCustomContext();
+  const {contacts,singlecontact} = useCustomContext();
   // const subtab = location.pathname.split('/').pop();
 
   const authToken = Cookies.get("authToken");
@@ -47,9 +47,10 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchData = () => {
       try {
-        const user = contacts.find(user => user.ownerId === userId);
+        // const user = contacts.find(user => user.ownerId === userId);
+        const user = singlecontact[0]; 
 
-        // console.log("user subtab ",user);
+        console.log("user subtab ",user);
 
         if (user) {
           const role = user?.ownerId?.roleId?.roleName || "";

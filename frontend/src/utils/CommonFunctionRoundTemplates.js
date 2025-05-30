@@ -7,13 +7,16 @@ export const useInterviewerDetails = () => {
   const resolveInterviewerDetails = (interviewers) => {
     if (!interviewers || !Array.isArray(interviewers)) return [];
 
-    return interviewers.map(interviewer => {
+    // console.log("interviewers", interviewers);
+    
+
+    return interviewers?.map(interviewer => {
       // If interviewer is already a full object (from API response)
-      if (interviewer && typeof interviewer === 'object' && interviewer.name) {
+      if (interviewer && typeof interviewer === 'object' && interviewer?.name) {
         return {
-          _id: interviewer._id || interviewer.$oid,
-          name: interviewer.name || 'Unknown Interviewer',
-          email: interviewer.email || '',
+          _id: interviewer?._id || interviewer?.$oid,
+          name: interviewer?.name || 'Unknown Interviewer',
+          email: interviewer?.email || '',
           type: 'individual'
         };
       }
@@ -28,7 +31,7 @@ export const useInterviewerDetails = () => {
       };
 
       // Check teamsData first (individual interviewers)
-      const teamMember = teamsData.find(t => t?.contactId?._id === id);
+      const teamMember = teamsData?.find(t => t?.contactId?._id === id);
       if (teamMember) {
         return {
           _id: teamMember.contactId._id,
@@ -39,7 +42,7 @@ export const useInterviewerDetails = () => {
       }
 
       // Check groups (interviewer groups)
-      const group = groups.find(g => g._id === id);
+      const group = groups?.find(g => g._id === id);
       if (group) {
         return {
           _id: group._id,

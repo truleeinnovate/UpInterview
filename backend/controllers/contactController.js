@@ -14,6 +14,8 @@ const fetchContacts = async (req, res) => {
                 select: 'roleName'
             }
         }).lean();
+        //   const contacts = await Contacts.find().populate('availability');
+    res.status(200).json(contacts);
 
       
         // console.log("Debugging populated contacts:");
@@ -46,7 +48,7 @@ const fetchContacts = async (req, res) => {
 
 
         // .populate('ownerId');
-        res.status(200).json(contacts);
+        // res.status(200).json(contacts);
     } catch (error) {
         console.error('Error fetching contacts:', error);
         res.status(500).json({ message: 'Error fetching contacts', error: error.message });
@@ -87,7 +89,16 @@ const getContactsByOwnerId = async (req, res) => {
       return res.status(400).json({ message: 'Owner ID is required' });
     }
 
-    const contacts = await Contacts.find({ ownerId });
+    const contacts = await Contacts.find({ ownerId }).populate('availability').populate({
+            path: 'ownerId',
+            select: 'firstName lastName email roleId isFreelancer',
+            model: 'Users', // Explicitly specify model
+            populate: {
+                path: 'roleId',
+                model: 'Role', // Explicitly specify model
+                select: 'roleName'
+            }
+        })
 
     res.status(200).json(contacts);
   } catch (error) {
