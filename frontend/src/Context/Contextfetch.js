@@ -652,37 +652,37 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
-
+ 
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
-
+ 
     setQuestionsLoading(true);
     setQuestionsError(null);
-
+ 
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
-
+ 
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
-
+ 
       // Create section questions mapping
       const newSectionQuestions = {};
-
+ 
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
-
+ 
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
@@ -710,17 +710,17 @@ const CustomProvider = ({ children }) => {
           }))
         };
       });
-
+ 
       // Verify questions exist
       const hasQuestions = Object.values(newSectionQuestions).some(
         section => section.questions.length > 0
       );
-
+ 
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
-
+ 
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
@@ -736,21 +736,25 @@ const CustomProvider = ({ children }) => {
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ['interviewTemplates', tenantId, userId],
     queryFn: async () => {
-      const params = new URLSearchParams();
+      let queryString = '';
+
       if (organization) {
-        params.append('tenantId', tenantId);
-        params.append('organization', 'true');
+        queryString = `tenantId=${tenantId}&organization=true`;
       } else {
-        params.append('ownerId', userId);
-        params.append('organization', 'false');
+        queryString = `ownerId=${userId}&organization=false`;
       }
 
-      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${params.toString()}`;
-      const response = await axios.get(apiUrl);
+      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
+
+      const response = await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
       return response.data.data;
     },
     enabled: !!authToken,
   });
+
 
   // Mutation for creating/updating templates
   const saveTemplateMutation = useMutation({
@@ -1138,6 +1142,7 @@ const CustomProvider = ({ children }) => {
         // assessment
         assessmentData,
         useAddOrUpdateAssessment,
+        useUpsertAssessmentQuestions,
 
 
         // master data

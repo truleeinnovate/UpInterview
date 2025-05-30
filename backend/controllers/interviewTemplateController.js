@@ -27,67 +27,73 @@ exports.createInterviewTemplate = async (req, res) => {
 // Get all interview templates for a tenant
 // Get all interview templates based on organization or owner
 exports.getAllTemplates = async (req, res) => {
-    try {
-        const { tenantId, ownerId, organization } = req.query;
+  try {
+    const { tenantId, ownerId, organization } = req.query;
 
-        let filter = {};
+    let filter = {};
 
-        if (organization === 'true') {
-            if (!tenantId) {
-                return res.status(400).json({ success: false, message: 'tenantId is required for organization' });
-            }
-            filter.tenantId = tenantId;
-        } else {
-            if (!ownerId) {
-                return res.status(400).json({ success: false, message: 'ownerId is required for individual user' });
-            }
-            filter.ownerId = ownerId;
-        }
-
-        const templates = await InterviewTemplate.find(filter).sort({ createdAt: -1 });
-
-        res.status(200).json({
-            success: true,
-            data: templates
+    if (organization === 'true') {
+      if (!tenantId) {
+        return res.status(400).json({
+          success: false,
+          message: 'tenantId is required for organization',
         });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
+      }
+      filter.tenantId = tenantId;
+    } else {
+      if (!ownerId) {
+        return res.status(400).json({
+          success: false,
+          message: 'ownerId is required for individual user',
         });
+      }
+      filter.ownerId = ownerId;
     }
+
+    const templates = await InterviewTemplate.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: templates,
+    });
+  } catch (error) {
+    console.error('Error fetching interview templates:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.',
+    });
+  }
 };
+
 
 
 // Get template by ID
-exports.getTemplateById = async (req, res) => {
-    try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        // const tenantId = "670286b86ebcb318dab2f676";
-        const tenantId = req.query.tenantId;
-        const template = await InterviewTemplate.findOne({
-            _id: req.params.id,
-            tenantId
-        });
+// exports.getTemplateById = async (req, res) => {
+//     try {
+//         const tenantId = req.query.tenantId;
+//         const template = await InterviewTemplate.findOne({
+//             _id: req.params.id,
+//             tenantId
+//         });
 
-        if (!template) {
-            return res.status(404).json({
-                success: false,
-                message: 'Template not found'
-            });
-        }
+//         if (!template) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Template not found'
+//             });
+//         }
 
-        res.status(200).json({
-            success: true,
-            data: template
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
+//         res.status(200).json({
+//             success: true,
+//             data: template
+//         });
+//     } catch (error) {
+//         res.status(400).json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
+// };
 
 
 exports.updateTemplate = async (req, res) => {

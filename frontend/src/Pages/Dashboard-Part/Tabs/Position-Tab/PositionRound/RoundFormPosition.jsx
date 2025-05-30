@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
-// import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
+import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
 
 import { ChevronDown, X, User, Users, Trash2, ChevronUp } from 'lucide-react';
@@ -18,7 +18,6 @@ import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
-import { config } from '../../../../../config.js';
 
 
 function RoundFormPosition() {
@@ -39,8 +38,8 @@ function RoundFormPosition() {
 
   // Get user token information
     const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    // const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
+    const userId = tokenPayload?.userId;
+    const userName = tokenPayload?.userName;
     const tenantId = tokenPayload?.tenantId;
 
 
@@ -173,7 +172,7 @@ function RoundFormPosition() {
         if (isPositionContext && positionId) {
           // Fetch position details from API
           const response = await axios.get(
-            `${config.REACT_APP_API_URL}/position/details/${positionId}`,
+            `${process.env.REACT_APP_API_URL}/position/details/${positionId}`,
             {
               params: {
                 tenantId: tenantId
@@ -267,7 +266,7 @@ function RoundFormPosition() {
   //   }
 
   //   try {
-  //     const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
   //     const assessmentQuestions = response.data;
 
   //     const sections = assessmentQuestions.sections || [];
@@ -562,7 +561,7 @@ function RoundFormPosition() {
       // console.log("payload roundData1", payload);
 
       const response = await axios.post(
-        `${config.REACT_APP_API_URL}/position/add-rounds`,
+        `${process.env.REACT_APP_API_URL}/position/add-rounds`,
         payload
       );
       // console.log("response", response.data);
@@ -579,7 +578,7 @@ function RoundFormPosition() {
       //   createdBy: userId,
       // };
 
-      // const teamResponse = await axios.post(`${config.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
+      // const teamResponse = await axios.post(`${process.env.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
 
       // if (selectedInterviewers && selectedInterviewers.length > 0) {
       //   const interviewerObjects = selectedInterviewers.map(id => ({
@@ -603,7 +602,7 @@ function RoundFormPosition() {
       //   };
 
       //   await axios.post(
-      //     `${config.REACT_APP_API_URL}/interviewrequest`,
+      //     `${process.env.REACT_APP_API_URL}/interviewrequest`,
       //     outsourceRequestData
       //   );
       // }
