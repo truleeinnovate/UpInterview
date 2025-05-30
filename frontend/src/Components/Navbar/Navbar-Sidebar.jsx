@@ -22,6 +22,7 @@ const Navbar = () => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const userName = tokenPayload?.userName;
+  const organization = tokenPayload?.organization;
   const { logout } = useAuth0();
   const navigate = useNavigate();
 
@@ -353,28 +354,28 @@ const Navbar = () => {
                       <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                     )}
                   </button>
-                  {dropdownState.interviewDropdown && (
-                    <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                      <div className="space-y-1">
-                        {[
-                          { to: "/interview-templates", label: "Interview Templates" },
-                          { to: "/interviewList", label: "Interviews" },
-                          { to: "/mockinterview", label: "Mock Interviews" },
-                        ].map(({ to, label }) => (
-                          <NavLink
-                            key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                            }`}
-                            to={to}
-                            onClick={() => closeAllDropdowns()}
-                          >
-                            {label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                {dropdownState.interviewDropdown && (
+  <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+    <div className="space-y-1">
+      {[
+        { to: "/interview-templates", label: "Interview Templates" },
+        { to: "/interviewList", label: "Interviews" },
+        ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+      ].map(({ to, label }) => (
+        <NavLink
+          key={to}
+          className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+            isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+          }`}
+          to={to}
+          onClick={() => closeAllDropdowns()}
+        >
+          {label}
+        </NavLink>
+      ))}
+    </div>
+  </div>
+)}
                 </div>
 
                 <div className="relative h-full flex items-center" ref={assessmentRef}>
@@ -513,29 +514,29 @@ const Navbar = () => {
                     <span>Interviews</span>
                     {dropdownState.interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                   </button>
-                  {dropdownState.interviewDropdown && (
-                    <div className="mt-1 ml-4 space-y-1">
-                      {[
-                        { to: "/interview-templates", label: "Interview Templates" },
-                        { to: "/interviewList", label: "Interviews" },
-                        { to: "/mockinterview", label: "Mock Interviews" },
-                      ].map(({ to, label }) => (
-                        <NavLink
-                          key={to}
-                          className={`block px-4 py-2 rounded-md ${
-                            isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                          }`}
-                          to={to}
-                          onClick={() => {
-                            closeAllDropdowns();
-                            toggleSidebar();
-                          }}
-                        >
-                          {label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
+               {dropdownState.interviewDropdown && (
+  <div className="mt-1 ml-4 space-y-1">
+    {[
+      { to: "/interview-templates", label: "Interview Templates" },
+      { to: "/interviewList", label: "Interviews" },
+      ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+    ].map(({ to, label }) => (
+      <NavLink
+        key={to}
+        className={`block px-4 py-2 rounded-md ${
+          isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
+        }`}
+        to={to}
+        onClick={() => {
+          closeAllDropdowns();
+          toggleSidebar();
+        }}
+      >
+        {label}
+      </NavLink>
+    ))}
+  </div>
+)}
                 </div>
 
                 <div className="relative" ref={assessmentRef}>

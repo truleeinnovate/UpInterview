@@ -119,11 +119,8 @@ const UserProfileDetails = () => {
 
   const renderBasicDetails = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mt-4">
-        <h3 className="text-lg font-medium">Basic Details</h3>
-      </div>
       <div className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Email</p>
             <p className="font-medium">{userData.email || "N/A"}</p>
@@ -169,11 +166,8 @@ const UserProfileDetails = () => {
 
   const renderAdvancedDetails = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mt-4">
-        <h3 className="text-lg font-medium">Advanced Details</h3>
-      </div>
       <div className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
             <p className="font-medium">{userData.currentRole || userData.label || "N/A"}</p>
@@ -211,11 +205,8 @@ const UserProfileDetails = () => {
 
   const renderInterviewDetails = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mt-4">
-        <h3 className="text-lg font-medium">Interview Details</h3>
-      </div>
       <div className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div className="mt-2">
             <p className="text-sm text-gray-500">Technologies</p>
             <div className="flex flex-wrap gap-2 mt-1">
@@ -245,7 +236,7 @@ const UserProfileDetails = () => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Previous Experience Conducting Interviews</p>
             <p className="font-medium">{userData?.previousExperienceConductingInterviews || "N/A"}</p>
@@ -325,12 +316,11 @@ const UserProfileDetails = () => {
 
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center mt-4">
-          <h3 className="text-lg font-medium">Availability</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6 
+    sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8  bg-white p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg shadow">
           <div className="text-sm flex flex-col">
-            <div className="border border-gray-300 rounded-lg w-full max-w-md p-4">
+            <div className="border border-gray-300 rounded-lg w-full max-w-md  p-4 
+        sm:p-3 md:p-3 lg:p-4 xl:p-4 2xl:p-4">
               {Object.entries(times).map(([day, slots]) => (
                 <div key={day} className="mb-3 last:mb-0">
                   <div className="flex items-start gap-3">
@@ -402,7 +392,7 @@ const UserProfileDetails = () => {
       >
         <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
           <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-3">
               <div className="flex items-center space-x-4">
                 <button
                   className="text-gray-500 hover:bg-gray-200 rounded-full p-2"
@@ -432,7 +422,7 @@ const UserProfileDetails = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
@@ -487,7 +477,7 @@ const UserProfileDetails = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 230px)' }}>
               <>
                 {activeTab === 'basic' && renderBasicDetails()}
                 {activeTab === 'advanced' && renderAdvancedDetails()}

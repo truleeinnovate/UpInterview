@@ -16,9 +16,9 @@ const AvailabilityUser = (
 
   // }
 ) => {
-   const {contacts,setContacts} = useCustomContext();
-   const navigate = useNavigate();
- const [userData, setUserData] = useState({})
+  const { contacts, setContacts } = useCustomContext();
+  const navigate = useNavigate();
+  const [userData, setUserData] = useState({})
   const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState('');
   const [selectedOption, setSelectedOption] = useState(null);
@@ -40,19 +40,19 @@ const AvailabilityUser = (
   console.log("userId AvailabilityUser", userId);
 
   useEffect(() => {
-    const fetchData =  () => {
+    const fetchData = () => {
       try {
-  
-  
-    // "67d77741a9e3fc000cbf61fd"
-    const user = contacts.find(user => user.ownerId === userId);
-    // console.log("user", user);
-  
-    if (user) {
-      setUserData(user);
-   
-    }
-        
+
+
+        // "67d77741a9e3fc000cbf61fd"
+        const user = contacts.find(user => user.ownerId === userId);
+        // console.log("user", user);
+
+        if (user) {
+          setUserData(user);
+
+        }
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -61,9 +61,9 @@ const AvailabilityUser = (
     };
 
 
-      fetchData();
+    fetchData();
 
-  }, [userId,contacts]);
+  }, [userId, contacts]);
 
 
   const fetchData = () => {
@@ -73,7 +73,7 @@ const AvailabilityUser = (
     // typeof userData.timeZone === 'object' ? userData.timeZone.label : userData.timeZone
     // setSelectedTimezone(userData.timeZone || '');
     setSelectedTimezone(typeof userData.timeZone === 'object' ? userData.timeZone.label : userData.timeZone)
-    
+
     setSelectedOption(userData.preferredDuration || null);
 
     // Only process availability if it exists and has data
