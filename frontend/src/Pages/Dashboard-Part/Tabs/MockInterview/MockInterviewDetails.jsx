@@ -264,7 +264,7 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                    Mock Interview Details <span> <StatusBadge status={mockinterview?.status} size="md" /></span>
                   </h3>
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    Created on {mockinterview?.createdDate.split(" ")[0] || "N/A"}
+                   Created on {mockinterview?.createdDate ? new Date(mockinterview.createdDate).toLocaleDateString() : "N/A"}
                   </p>
                 </div>
 

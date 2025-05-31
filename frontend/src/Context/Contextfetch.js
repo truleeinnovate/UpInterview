@@ -748,10 +748,13 @@ const CustomProvider = ({ children }) => {
       }
 
       const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
+      console.log('Fetching templates from:', apiUrl);
 
       const response = await axios.get(apiUrl, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
+      console.log('Templates:', response.data.data);
+      
 
       return response.data.data;
     },

@@ -1,20 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Pencil } from 'lucide-react';
+import {Eye, Pencil } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Tooltip from '@mui/material/Tooltip';
 import KanbanView from './KanbanView';
 import Loading from '../../Components/Loading';
 import { useCustomContext } from '../../Context/Contextfetch';
-import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
 import { FilterPopup } from '../../Components/Shared/FilterPopup/FilterPopup.jsx';
 import Header from '../../Components/Shared/Header/Header.jsx';
 import Toolbar from '../../Components/Shared/Toolbar/Toolbar.jsx';
 import TableView from '../../Components/Shared/Table/TableView.jsx';
-import { ReactComponent as IoIosArrowBack } from '../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../icons/IoIosArrowForward.svg';
-import { ReactComponent as FaList } from '../../icons/FaList.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../icons/TbLayoutGridRemove.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
 
