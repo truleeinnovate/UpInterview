@@ -2273,8 +2273,8 @@ import WelcomeSection from './WelcomeSection';
 import StatsCard from './StatsCard';
 import AnalyticsChart from './AnalyticsChart';
 import InterviewRequests from './InterviewRequests';
-import OutsourceInterviewers from './DashboardOutsourceInterviewers.jsx';
-import InternalInterviewers from './DashboardInternalInterviewers.jsx';
+import DashboardOutsourceInterviewers from './DashboardOutsourceInterviewers.jsx';
+import DashboardInternalInterviewers from './DashboardInternalInterviewers.jsx';
 import FeedbackList from './FeedbackList';
 import NotificationSection from '../NotificationTab/NotificationsSection';
 import TaskList from './TaskList';
@@ -2399,8 +2399,8 @@ const Home = () => {
           >
             <TaskList />
             <InterviewerSchedule />
-            <OutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />
-            <InternalInterviewers setInternalInterviews={setInternalInterviews} />
+            <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />
+            <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />
           </motion.div>
         </div>
       </main>

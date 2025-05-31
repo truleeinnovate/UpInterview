@@ -1075,21 +1075,27 @@ const AddCandidateForm = ({ mode }) => {
                 <div>
                   <div className="space-y-2 mb-4 mt-5">
                     {entries.map((entry, index) => (
-                      <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
-                        <div className="flex justify-between border bg-white rounded w-full mr-3">
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
-                            <FaEdit />
-                          </button>
-                          <button type="button" onClick={() => handleDelete(index)} className="text-md">
-                            <FaTrash fill='red' />
-                          </button>
-                        </div>
-                      </div>
+                     <div className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
+                     <div className="flex justify-between border bg-white rounded w-full mr-3">
+                       <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                         {entry.skill}
+                       </div>
+                       <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                         {entry.experience}
+                       </div>
+                       <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                         {entry.expertise}
+                       </div>
+                     </div>
+                     <div className="flex space-x-2">
+                       <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
+                         <FaEdit />
+                       </button>
+                       <button type="button" onClick={() => handleDelete(index)} className="text-md">
+                         <FaTrash fill="red" />
+                       </button>
+                     </div>
+                   </div>                   
                     ))}
                   </div>
 

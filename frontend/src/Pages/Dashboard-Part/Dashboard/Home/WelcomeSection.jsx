@@ -8,7 +8,6 @@ import { useCustomContext } from "../../../../Context/Contextfetch";
 
 const WelcomeSection = () => {
   const { userProfile } = useCustomContext();
-  console.log('userProfile from welcome section', userProfile);
   
 
       const tokenPayload = decodeJwt(Cookies.get('authToken'));

@@ -11,7 +11,7 @@ import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateViewDetails/CandidateDetails';
 import { useMediaQuery } from 'react-responsive';
-import Loading from '../../../../Components/Loading';
+// import Loading from '../../../../Components/Loading';
 import { Outlet } from 'react-router-dom';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { ChevronUp, ChevronDown } from 'lucide-react';

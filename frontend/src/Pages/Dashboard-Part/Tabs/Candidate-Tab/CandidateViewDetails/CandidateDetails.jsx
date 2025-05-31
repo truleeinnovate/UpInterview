@@ -1,18 +1,20 @@
 
 import Modal from 'react-modal';
 import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+// import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Loading from '../../../../../Components/Loading';
+import { useCandidates } from '../../../../../apiHooks/useCandidates';
 Modal.setAppElement('#root');
 
 const CandidateDetails = ({mode}) => {
-  const {
-    candidateData,
-    loading,
-    // fetchCandidates
-  } = useCustomContext();
+  // const {
+  //   candidateData,
+  //   loading,
+  //   // fetchCandidates
+  // } = useCustomContext();
+    const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const { id } = useParams();
@@ -56,7 +58,7 @@ const getFromPath = () => {
 const fromPath = getFromPath();
 
 
-  if (!candidate || loading) return <Loading />
+  // if (!candidate || loading) return <Loading />
 
   const content = (
     <div className="h-full flex flex-col">

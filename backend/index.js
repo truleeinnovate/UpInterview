@@ -68,19 +68,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const port = process.env.PORT || 5000;
- 
-  // useNewUrlParser: true, useUnifiedTopology: true
 
-
-//   mongoose.connection.on('connecting', () => {
-//   console.log('🔄 Attempting to connect to MongoDB...');
-// });
-// mongoose.connection.on('error', (err) => {
-//   console.error('❌ MongoDB connection error (event):', err);
-// });
-
-
-console.log("connected", process.env.MONGODB_URI); 
 mongoose.connect(process.env.MONGODB_URI, {
 
 }).then(() => console.log('✅ MongoDB connected'))

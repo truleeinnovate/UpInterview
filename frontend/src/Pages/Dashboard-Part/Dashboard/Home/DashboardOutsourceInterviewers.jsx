@@ -99,7 +99,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                       </span>
                     </div>
                   )}
-                  <span
+                  {/* <span
                     className={`px-2 py-0.5 text-xs font-medium rounded-lg ${
                       interviewer.type === 'Internal'
                         ? 'bg-blue-100 text-blue-600'
@@ -107,7 +107,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                     }`}
                   >
                     {interviewer.type}
-                  </span>
+                  </span> */}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -159,14 +159,14 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                       <CheckCircle size={14} className="mr-1" />
                       {interviewer.availability}
                     </span>
-                    <div className="flex items-center space-x-2">
+                    {/* <div className="flex items-center space-x-2">
                       <button className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300">
                         Profile
                       </button>
                       <button className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                         Schedule
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

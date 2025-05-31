@@ -33,7 +33,7 @@ const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
 const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home/Home.jsx'));
 const OutsourceInterviewerRequest = lazy(() => import('./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx'));
 const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
-const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
+const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx'));
 const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
 const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails'));
 const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen'));
