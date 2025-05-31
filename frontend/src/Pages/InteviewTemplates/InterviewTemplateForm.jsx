@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { Minimize, Expand, X } from 'lucide-react';
 import Switch from "react-switch";
 import { useCustomContext } from '../../Context/Contextfetch';
+import { validateInterviewTemplate } from '../../utils/InterviewTemplateValidation';
 
 const InterviewSlideover = ({ mode }) => {
     const { templates, saveTemplateMutation } = useCustomContext();
@@ -20,6 +21,9 @@ const InterviewSlideover = ({ mode }) => {
         status: 'active',
         rounds: []
     });
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -46,28 +50,93 @@ const InterviewSlideover = ({ mode }) => {
         }
     }, [id, templates]);
 
+    const validateForm = () => {
+        const templateForValidation = {
+            name: newTemplate.templateTitle,
+            label: newTemplate.label,
+            description: newTemplate.description,
+            rounds: newTemplate.rounds
+        };
+        
+        const { errors: validationErrors } = validateInterviewTemplate(templateForValidation);
+        setErrors(validationErrors);
+        return Object.keys(validationErrors).length === 0;
+    };
+
     const handleTitleChange = (e) => {
         const value = e.target.value;
         const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, '');
         const label = sanitizedValue.trim().replace(/\s+/g, '_');
+        
         setNewTemplate(prev => ({
             ...prev,
             templateTitle: sanitizedValue,
             label,
         }));
+        
+        // Clear errors when user starts typing
+        if (isSubmitted) {
+            setErrors(prev => ({
+                ...prev,
+                name: '',
+                label: ''
+            }));
+        }
     };
 
     const handleDescriptionChange = (e) => {
+        const value = e.target.value;
         setNewTemplate(prev => ({
             ...prev,
-            description: e.target.value,
+            description: value,
         }));
+        
+        // Clear error when user starts typing
+        if (isSubmitted && errors.description) {
+            setErrors(prev => ({
+                ...prev,
+                description: ''
+            }));
+        }
     };
 
-    const handleSave = async (e) => {
+    const handleBlur = (field) => {
+        setTouched(prev => ({
+            ...prev,
+            [field]: true
+        }));
+        
+        // Only validate if the form has been submitted
+        if (isSubmitted) {
+            validateForm();
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!newTemplate.templateTitle || newTemplate.description.length < 20) {
-            alert('Please fill in all required fields. Description must be at least 20 characters.');
+        setIsSubmitted(true);
+        
+        // Mark all fields as touched
+        const allFieldsTouched = {
+            name: true,
+            label: true,
+            description: true,
+            rounds: true
+        };
+        setTouched(allFieldsTouched);
+        
+        // Validate the form
+        const isValid = validateForm();
+        
+        if (!isValid) {
+            // Find the first field with an error and scroll to it
+            const errorField = Object.keys(errors)[0];
+            const firstErrorElement = document.querySelector(`[name="${errorField}"], [data-field="${errorField}"]`);
+            
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstErrorElement.focus({ preventScroll: true });
+            }
             return;
         }
 
@@ -78,16 +147,19 @@ const InterviewSlideover = ({ mode }) => {
                 description: newTemplate.description,
                 status: newTemplate.status,
             };
+            console.log('Template Data:', templateData);
 
             const response = await saveTemplateMutation.mutateAsync({
                 id,
                 templateData,
                 isEditMode
             });
-
-            if (response.status === 'success') {
-                onClose();
-            }
+            
+            console.log('--- Template Saved Successfully ---');
+            console.log('Saved Template Data:', response.data);
+            console.log('Status:', response.status);
+            
+            onClose();
         } catch (error) {
             console.error('Error saving template:', error);
             alert(error.response?.data?.message || 'Failed to save template. Please try again.');
@@ -122,7 +194,7 @@ const InterviewSlideover = ({ mode }) => {
             <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-semibold">
+                        <h2 className="text-2xl font-semibold text-custom-blue">
                             {isEditMode ? 'Edit Template' : 'New Template'}
                         </h2>
                         <div className="flex items-center gap-2">
@@ -141,11 +213,9 @@ const InterviewSlideover = ({ mode }) => {
                         </div>
                     </div>
 
-                    <form id="new-template-form" onSubmit={handleSave} className="flex-1 flex flex-col overflow-y-auto">
+                    <form id="new-template-form" onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-y-auto">
                         <div className="px-2 sm:px-6 flex-1">
                             <div className="space-y-6 pt-6 pb-5">
-                               
-
                                 <div>
                                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                                         Title <span className="text-red-500">*</span>
@@ -153,13 +223,18 @@ const InterviewSlideover = ({ mode }) => {
                                     <input
                                         type="text"
                                         id="title"
-                                        name="templateTitle"
+                                        name="name"
                                         placeholder="e.g., Senior Frontend Developer"
                                         value={newTemplate.templateTitle}
                                         onChange={handleTitleChange}
-                                        required
-                                        className="w-full mt-1 border border-gray-300 rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                        onBlur={() => handleBlur('name')}
+                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
+                                            touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                        } focus:outline-none focus:ring-1`}
                                     />
+                                    {touched.name && errors.name && (
+                                        <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -172,13 +247,19 @@ const InterviewSlideover = ({ mode }) => {
                                         name="label"
                                         value={newTemplate.label}
                                         readOnly
-                                        className="w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                        onFocus={() => handleBlur('label')}
+                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
+                                            touched.label && errors.label ? 'border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                        } focus:outline-none focus:ring-1`}
                                     />
+                                    {touched.label && errors.label && (
+                                        <p className="mt-1 text-sm text-red-500">{errors.label}</p>
+                                    )}
                                 </div>
 
                                 <div>
                                     <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                        Description
+                                        Description <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
                                         id="description"
@@ -186,27 +267,19 @@ const InterviewSlideover = ({ mode }) => {
                                         placeholder="Describe the purpose and structure of this interview template. (Minimum 20 characters required)"
                                         value={newTemplate.description}
                                         onChange={handleDescriptionChange}
+                                        onBlur={() => handleBlur('description')}
                                         rows={4}
-                                        minLength={20}
                                         maxLength={300}
-                                        required
-                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none ${newTemplate.description.length < 20
-                                            ? 'focus:ring-red-500 focus:border-red-500'
-                                            : 'focus:ring-teal-500 focus:border-teal-500'
-                                            }`}
+                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none ${
+                                            touched.description && errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                        } focus:ring-1`}
                                     />
-                                    <div className="flex justify-between items-center w-full mt-1">
-                                        {newTemplate.description.length < 20 && newTemplate.description.length > 0 && (
-                                            <span className="text-red-500 text-sm">
-                                                {20 - newTemplate.description.length} more characters needed
-                                            </span>
-                                        )}
-                                        <span className="text-sm text-gray-500">{newTemplate.description.length}/300</span>
-                                    </div>
+                                    {touched.description && errors.description && (
+                                        <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                                    )}
                                 </div>
 
-
-                                 <div>
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700">
                                         Template Status
                                     </label>

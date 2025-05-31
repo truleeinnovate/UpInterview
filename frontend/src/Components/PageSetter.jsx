@@ -65,7 +65,7 @@ const PageSetter = () => {
       }
     });
 
-    console.log(`[PageSetter] Setting page to: ${page}`);
+    // console.log(`[PageSetter] Setting page to: ${page}`);
     setPage(page);
   }, [location.pathname, setPage]);
 

@@ -245,13 +245,13 @@ const convertTo12HourFormat = (time24) => {
 const getInterviewers = async (req, res) => {
   try {
     const { tenantId } = req.params;
-    console.log('✅ [getInterviewers] Called with tenantId:', tenantId);
 
     // Validate tenantId
     if (!tenantId || tenantId === 'undefined') {
       console.error('❌ [getInterviewers] Missing or invalid tenantId:', tenantId);
       return res.status(400).json({ error: 'Tenant ID is required' });
     }
+
     if (!mongoose.isValidObjectId(tenantId)) {
       console.error('❌ [getInterviewers] Invalid tenantId format:', tenantId);
       return res.status(400).json({ error: 'Invalid Tenant ID format' });
@@ -261,83 +261,168 @@ const getInterviewers = async (req, res) => {
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
     console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
-    // Fetch internal roles
     const internalRoles = await Role.find({
       roleName: 'Internal_Interviewer',
       tenantId,
     }).select('_id').lean();
-    console.log('✅ [getInterviewers] Internal roles fetched:', internalRoles.length);
 
     const internalRoleIds = internalRoles.map((role) => role._id.toString());
 
     // Fetch internal interviewers
     const internalUsers = await Users.find({
-      roleId: { $in: internalRoleIds },
-      tenantId,
+      roleId: internalRoleIds,
     }).lean();
-    console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length);
+    console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
-    // Combine all users
-    const allUsers = [...internalUsers, ...externalUsers];
-    console.log('✅ [getInterviewers] Total users:', allUsers.length);
+// Function to process users - modified to skip availability for internal users
+const processUsers = async (users, type) => {
+  if (!users.length) return [];
 
-    // Fetch contacts
-    const userIds = allUsers.map((user) => user._id);
-    const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
-    console.log('✅ [getInterviewers] Contacts fetched:', contacts.length);
+  const userIds = users.map(user => user._id);
+  
+  // Fetch contacts for all users
+  const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
+  console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
 
-    // Fetch availabilities and populate contact
-    const contactIds = contacts.map(contact => contact._id);
-    const availabilities = await InterviewAvailability.find({
-      contact: { $in: contactIds }
-    })
-      .populate('contact')
-      .lean();
-    console.log('✅ [getInterviewers] Availabilities fetched:', availabilities.length);
-
-    // Create sets of user IDs for quick lookup
-    const externalUserIds = new Set(externalUsers.map(user => user._id.toString()));
-    const internalUserIds = new Set(internalUsers.map(user => user._id.toString()));
-
-    // Format availabilities for response and console logging
-    const formattedAvailabilities = availabilities.map(availability => {
-      const contactOwnerId = availability.contact?.ownerId?.toString();
-      const type = externalUserIds.has(contactOwnerId)
-        ? 'external'
-        : internalUserIds.has(contactOwnerId)
-        ? 'internal'
-        : 'unknown'; // Fallback in case ownerId doesn't match
-
-      const formatted = {
-        _id: availability._id,
-        contact: availability.contact,
-        type, // Add type field
-        days: availability.days && Array.isArray(availability.days)
-          ? availability.days.map(day => ({
-              day: day.day || 'Unknown',
-              timeSlots: day.timeSlots && Array.isArray(day.timeSlots)
-                ? day.timeSlots.map(slot => ({
-                    startTime: slot.startTime ? convertTo12HourFormat(slot.startTime) : '',
-                    endTime: slot.endTime ? convertTo12HourFormat(slot.endTime) : ''
-                  }))
-                : []
-            }))
-          : [],
-        __v: availability.__v
+  if (type === 'internal') {
+    // For internal users, just return the contact info without availability
+    return contacts.map(contact => {
+      const user = users.find(u => u._id.toString() === contact.ownerId?.toString()) || {};
+      return {
+        _id: contact._id,
+        contact: {
+          ...contact,
+          ownerId: user._id,
+          email: user.email,
+          isFreelancer: 'false'
+        },
+        type: 'internal',
+        days: [],
+        nextAvailable: null,
+        __v: 0
       };
-      return formatted;
     });
+  }
 
-    // Log formatted availabilities
-    console.log('✅ [getInterviewers] Formatted availabilities:');
-    formattedAvailabilities.forEach((availability, index) => {
-      // console.log(`Availability ${index + 1}:`, JSON.stringify(availability, null, 2));
-    });
+  // For external users, include availability
+  const contactIds = contacts.map(contact => contact._id);
+  const availabilities = await InterviewAvailability.find({
+    contact: { $in: contactIds }
+  }).populate('contact').lean();
+  
+  console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
 
-    return res.json({
-      success: true,
-      data: formattedAvailabilities
-    });
+  return availabilities.map(availability => {
+    const contact = availability.contact || {};
+    const ownerId = contact.ownerId?.toString();
+    const user = users.find(u => u._id.toString() === ownerId) || {};
+    
+    const nextSlot = availability.days?.find(day => 
+      day.timeSlots?.length > 0
+    )?.timeSlots[0];
+
+    return {
+      _id: availability._id,
+      contact: {
+        ...contact,
+        ownerId: user._id,
+        email: user.email,
+        isFreelancer: 'true'
+      },
+      type: 'external',
+      days: availability.days?.map(day => ({
+        day: day.day,
+        timeSlots: day.timeSlots?.map(slot => ({
+          startTime: convertTo12HourFormat(slot.startTime),
+          endTime: convertTo12HourFormat(slot.endTime)
+        })) || []
+      })) || [],
+      nextAvailable: nextSlot ? {
+        day: nextSlot.day,
+        startTime: convertTo12HourFormat(nextSlot.startTime),
+        endTime: convertTo12HourFormat(nextSlot.endTime)
+      } : null,
+      __v: availability.__v
+    };
+  });
+};
+
+// Process both internal and external users in parallel
+const [internalResults, externalResults] = await Promise.all([
+  processUsers(internalUsers, 'internal'),
+  processUsers(externalUsers, 'external')
+]);
+
+// Combine results
+const allResults = [...internalResults, ...externalResults];
+console.log('✅ [getInterviewers] Total records:', allResults.length);
+
+return res.json({
+  success: true,
+  data: allResults
+});
+
+    // // Combine all users
+    // const allUsers = [...internalUsers, ...externalUsers];
+    // console.log('✅ [getInterviewers] Total users:', allUsers.length);
+
+    // // Fetch contacts
+    // const userIds = allUsers.map((user) => user._id);
+    // const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
+    // console.log('✅ [getInterviewers] Contacts fetched:', contacts.length);
+
+    // // Fetch availabilities and populate contact
+    // const contactIds = contacts.map(contact => contact._id);
+    // const availabilities = await InterviewAvailability.find({
+    //   contact: { $in: contactIds }
+    // })
+    //   .populate('contact')
+    //   .lean();
+    // console.log('✅ [getInterviewers] Availabilities fetched:', availabilities.length);
+
+    // // Create sets of user IDs for quick lookup
+    // const externalUserIds = new Set(externalUsers.map(user => user._id.toString()));
+    // const internalUserIds = new Set(internalUsers.map(user => user._id.toString()));
+
+    // // Format availabilities for response and console logging
+    // const formattedAvailabilities = availabilities.map(availability => {
+    //   const contactOwnerId = availability.contact?.ownerId?.toString();
+    //   const type = externalUserIds.has(contactOwnerId)
+    //     ? 'external'
+    //     : internalUserIds.has(contactOwnerId)
+    //       ? 'internal'
+    //       : 'unknown'; // Fallback in case ownerId doesn't match
+
+    //   const formatted = {
+    //     _id: availability._id,
+    //     contact: availability.contact,
+    //     type, // Add type field
+    //     days: availability.days && Array.isArray(availability.days)
+    //       ? availability.days.map(day => ({
+    //         day: day.day || 'Unknown',
+    //         timeSlots: day.timeSlots && Array.isArray(day.timeSlots)
+    //           ? day.timeSlots.map(slot => ({
+    //             startTime: slot.startTime ? convertTo12HourFormat(slot.startTime) : '',
+    //             endTime: slot.endTime ? convertTo12HourFormat(slot.endTime) : ''
+    //           }))
+    //           : []
+    //       }))
+    //       : [],
+    //     __v: availability.__v
+    //   };
+    //   return formatted;
+    // });
+
+    // // Log formatted availabilities
+    // console.log('✅ [getInterviewers] Formatted availabilities:');
+    // formattedAvailabilities.forEach((availability, index) => {
+    //   // console.log(`Availability ${index + 1}:`, JSON.stringify(availability, null, 2));
+    // });
+
+    // return res.json({
+    //   success: true,
+    //   data: formattedAvailabilities
+    // });
   } catch (error) {
     console.error('❌ [getInterviewers] Error fetching interviewers:', error.message, error.stack);
     res.status(500).json({ error: 'Internal server error' });

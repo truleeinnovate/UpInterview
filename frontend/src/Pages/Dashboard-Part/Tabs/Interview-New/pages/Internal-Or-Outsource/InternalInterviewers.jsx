@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, ChevronDown, ChevronUp, Minimize, Expand } from 'lucide-react';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import femaleImage from '../../../../../Dashboard-Part/Images/woman.png';
-import maleImage from '../../../../../Dashboard-Part/Images/man.png';
-import genderlessImage from '../../../../../Dashboard-Part/Images/transgender.png';
-import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx'; // Assuming Button component is available
+import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
 const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
   const { interviewers, groups } = useCustomContext();
@@ -37,28 +34,35 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
     if (viewType === 'individuals') {
       const interviewersArray = interviewers?.data && Array.isArray(interviewers.data) ? interviewers.data : [];
       return interviewersArray
-        .filter((availability) => {
-          const contact = availability.contact || {};
-          return [contact.Name, contact.Email, contact.Phone, contact.UserName].some(
-            (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+        .filter((interviewer) => {
+          const contact = interviewer.contact || {};
+          const isInternal = interviewer.type === 'internal';
+          const matchesSearch = [contact.firstName, contact.lastName, contact.email, contact.phone].some(
+            (field) => field && field.toString().toLowerCase().includes(searchQuery.toLowerCase())
           );
+          return isInternal && matchesSearch;
         })
-        .map((availability) => ({
-          _id: availability._id,
-          contactId: {
-            name: availability.contact?.Name || 'N/A',
-            email: availability.contact?.Email || 'N/A',
-            phone: availability.contact?.Phone || 'N/A',
-            technology:
-              availability.contact?.Technologys?.join(', ') ||
-              availability.contact?.Skills?.join(', ') ||
-              'N/A'
-          },
-          imageUrl: availability.contact?.ImageData?.path
-            ? `${process.env.REACT_APP_API_URL}/${availability.contact.ImageData.path.replace(/\\/g, '/')}`
-            : null,
-          Gender: availability.contact?.Gender || 'Unknown'
-        }));
+        .map((availability) => {
+          const contact = availability.contact || {};
+          const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'no name available';
+          const technology = contact.technologies?.join(', ') || contact.skills?.join(', ') || 'no technology available';
+          
+          return {
+            _id: availability._id,
+            contactId: {
+              name: fullName,
+              email: contact.email || 'no email available',
+              phone: contact.phone || 'no phone number available',
+              technology: technology || 'no technology available'
+            },
+            imageUrl: contact.ImageData?.path
+              ? `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`
+              : null,
+            Gender: contact.Gender || 'Unknown',
+            name: fullName,
+            technology: technology
+          };
+        });
     } else {
       return Array.isArray(groups)
         ? groups.filter((group) =>
@@ -193,30 +197,32 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
             {filteredData.map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between p-3 rounded-md cursor-pointer ${isInterviewerSelected(item)
-                  ? 'bg-blue-100 border border-blue-300'
-                  : 'hover:bg-gray-50 border border-gray-200'
+                className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== 'dashboard' ? 'cursor-pointer' : 'cursor-default'} ${
+                  navigatedfrom !== 'dashboard' && isInterviewerSelected(item)
+                    ? 'bg-blue-100 border border-blue-300'
+                    : 'hover:bg-gray-50 border border-gray-200'
                   }`}
-                onClick={() => handleSelectClick(item)}
+                onClick={() => navigatedfrom !== 'dashboard' && handleSelectClick(item)}
               >
                 <div className="flex items-center">
                   {viewType === 'individuals' ? (
                     <>
-                      <img
-                        src={
-                          item.imageUrl ||
-                          (item.Gender === 'Male'
-                            ? maleImage
-                            : item.Gender === 'Female'
-                              ? femaleImage
-                              : genderlessImage)
-                        }
-                        alt="interviewerImage"
-                        className="w-10 h-10 rounded-full"
-                      />
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
+                          <span className="text-white font-semibold text-md -mt-[4px]">
+                            {item.name ? item.name.substring(0, 1).toUpperCase() : '?'}
+                          </span>
+                        </div>
+                      )}
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{item.contactId?.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{item.contactId?.technology || 'N/A'}</p>
+                        <p className="text-sm font-medium text-gray-900">{item.name || 'no name available'}</p>
+                        <p className="text-xs text-gray-500">{item.technology || 'no technology available'}</p>
                       </div>
                     </>
                   ) : (
@@ -232,8 +238,8 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
                         </svg>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{item.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{item.description || 'No description'}</p>
+                        <p className="text-sm font-medium text-gray-900">{item.name || 'no name available'}</p>
+                        <p className="text-xs text-gray-500">{item.description || 'No description available'}</p>
                       </div>
                     </>
                   )}

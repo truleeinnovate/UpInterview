@@ -15,7 +15,7 @@ const CustomProvider = ({ children }) => {
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  console.log('tokenPayload:', tokenPayload);
+  // console.log('tokenPayload:', tokenPayload);
 
 
 
@@ -753,6 +753,8 @@ const CustomProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 
+      console.log('[usetemplates fetch] Fetched interview templates:', response.data.data);
+
       return response.data.data;
     },
     enabled: !!authToken,
@@ -836,7 +838,7 @@ const CustomProvider = ({ children }) => {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
-      console.log("allUsers_data", allUsers_data);
+      // console.log("allUsers_data", allUsers_data);
       
 
       setContacts(allUsers_data);
@@ -863,7 +865,7 @@ const CustomProvider = ({ children }) => {
       try {
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
-        console.log('Contacts for this user:', res.data);
+        // console.log('Contacts for this user:', res.data);
       } catch (err) {
         console.error('Error fetching user contacts:', err);
       }
@@ -877,8 +879,8 @@ const CustomProvider = ({ children }) => {
     const fetchInterviewers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-        console.log('response', response)
-        console.log('data', response.data)
+        // console.log('response', response)
+        // console.log('data', response.data)
         setInterviewers(response.data);
       } catch (err) {
         console.error(err.message);
