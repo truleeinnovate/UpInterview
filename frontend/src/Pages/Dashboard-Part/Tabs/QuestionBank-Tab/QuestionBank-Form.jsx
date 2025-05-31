@@ -32,7 +32,7 @@ const Interviewcq = ({
   assessmentId,
   onClose,
   questionBankPopupVisibility,
-  section,
+type,
   onOutsideClick,
   onDataAdded,
   isEdit = false,
@@ -185,7 +185,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
   const handleSubmit = async (e, isSaveAndNext) => {
     e.preventDefault();
     const updatedFormData = { ...formData, tenantListId: selectedListId };
-    const newErrors = validateQuestionBankData(updatedFormData, mcqOptions,section);
+    const newErrors = validateQuestionBankData(updatedFormData, mcqOptions,type);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -271,7 +271,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
         //shashank-[13/01/2025]
         //saving the question to the assessment child (questions) schema when added from assessement
 
-        if (section==="assessment"){
+        if (type==="assessment"){
           // const questionExistResponse = await axios.get(`${config.REACT_APP_API_URL}/assessment-question/${assessmentId}`)
           const reqBody ={
             // assessmentId:assessmentId,
@@ -1245,7 +1245,7 @@ style={{
 
                 {/* Score */}
                 {/* //shashank - [13/01/2025] */}
-                { section==='assessment' && <div className="flex gap-5 mb-4">
+                { type==='assessment' && <div className="flex gap-5 mb-4">
                   <div className="flex flex-col w-full">
                   <div>
                     <label
