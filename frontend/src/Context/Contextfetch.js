@@ -1087,6 +1087,9 @@ const CustomProvider = ({ children }) => {
   }, [userId]);
 
   const [tickets, setTickets] = useState([]);
+  const [userRole, setUserRole] = useState("Admin");
+  const currentUserId = tokenPayload?.userId;
+  const currentOrganizationId = tokenPayload?.tenantId;
 
   const getTickets = useCallback(async () => {
     setLoading(true);
