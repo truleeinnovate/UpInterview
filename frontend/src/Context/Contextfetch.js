@@ -615,7 +615,7 @@ const CustomProvider = ({ children }) => {
       });
 
       // console.log("response data Groups", response.data);
-      
+
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
@@ -655,37 +655,37 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
- 
+
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
- 
+
     setQuestionsLoading(true);
     setQuestionsError(null);
- 
+
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
- 
+
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       // Create section questions mapping
       const newSectionQuestions = {};
- 
+
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
- 
+
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
@@ -713,17 +713,17 @@ const CustomProvider = ({ children }) => {
           }))
         };
       });
- 
+
       // Verify questions exist
       const hasQuestions = Object.values(newSectionQuestions).some(
         section => section.questions.length > 0
       );
- 
+
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
@@ -736,32 +736,40 @@ const CustomProvider = ({ children }) => {
   }, []);
 
   // interview template
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading, error } = useQuery({
     queryKey: ['interviewTemplates', tenantId, userId],
     queryFn: async () => {
-      let queryString = '';
+      try {
+        let queryString = '';
+        if (organization) {
+          queryString = `tenantId=${tenantId}&organization=true`;
+        } else {
+          queryString = `ownerId=${userId}&organization=false`;
+        }
 
-      if (organization) {
-        queryString = `tenantId=${tenantId}&organization=true`;
-      } else {
-        queryString = `ownerId=${userId}&organization=false`;
+        const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
+
+        const headers = { Authorization: `Bearer ${authToken}` };
+
+        const response = await axios.get(apiUrl, { headers });
+
+        const templatesData = response.data.data;
+
+        return templatesData;
+      } catch (err) {
+        console.error('Error fetching templates:', err);
+        throw err; // Let react-query handle the error
       }
-
-      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-      console.log('Fetching templates from:', apiUrl);
-
-      const response = await axios.get(apiUrl, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      console.log('Templates:', response.data.data);
-      
-
-      console.log('[usetemplates fetch] Fetched interview templates:', response.data.data);
-
-      return response.data.data;
     },
     enabled: !!authToken,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
+
+  // Log error if it occurs
+  if (error) {
+    console.error('useQuery error:', error.message);
+  }
 
 
   // Mutation for creating/updating templates
@@ -835,14 +843,13 @@ const CustomProvider = ({ children }) => {
 
   const [contacts, setContacts] = useState([]);
 
-
   const fetchContactsData = async () => {
     try {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
       // console.log("allUsers_data", allUsers_data);
-      
+
 
       setContacts(allUsers_data);
     } catch (error) {
@@ -1079,6 +1086,51 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
+  const [tickets, setTickets] = useState([]);
+
+  const getTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+      let filteredTickets = response.data.tickets || [];
+      console.log("Fetched tickets:", filteredTickets);
+
+      if (userRole === "SuperAdmin" || userRole === "Support Team") {
+        console.log("Role: SuperAdmin or Support Team - showing all tickets");
+        setTickets(filteredTickets);
+      } else if (userRole === "Admin" && currentOrganizationId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.tenantId === currentOrganizationId
+        );
+        console.log("Role: Admin - filtered by tenantId", currentOrganizationId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (userRole === "Individual" && currentUserId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.ownerId === currentUserId
+        );
+        console.log("Role: Individual - filtered by ownerId", currentUserId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (currentUserId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.assignedToId === currentUserId
+        );
+        console.log("Other role - filtered by assignedToId", currentUserId, filteredTickets);
+        setTickets(filteredTickets);
+      } else {
+        console.log("No matching role or userId - setting tickets to empty");
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userRole, currentOrganizationId, currentUserId]);
+
+  useEffect(() => {
+    getTickets();
+  }, [getTickets]);
 
   return (
     <CustomContext.Provider
@@ -1204,7 +1256,9 @@ const CustomProvider = ({ children }) => {
         setContacts,
         singlecontact,
 
-        interviewers
+        interviewers,
+
+        tickets
       }}
     >
       {children}
