@@ -248,7 +248,7 @@ export const validateInterviewForm = (formData, isReady) => {
   };
 
   // validations.js
-export const validateAvailabilityForm = (formData) => {
+export const validateAvailabilityForm = (formData,times) => {
     const errors = {};
   
     // Time Zone validation
@@ -259,7 +259,7 @@ export const validateAvailabilityForm = (formData) => {
     }
   
     // Availability Times validation
-    const hasValidTimeSlot = Object.values(formData.times).some(daySlots =>
+    const hasValidTimeSlot = Object.values(times).some(daySlots =>
       daySlots.some(slot => slot.startTime && slot.endTime && slot.startTime < slot.endTime)
     );
     if (!hasValidTimeSlot) {

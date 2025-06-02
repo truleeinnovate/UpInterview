@@ -278,6 +278,7 @@ const App = () => {
                 } />
                 {organization && (
                   <Route path="profile" element={<CompanyProfile />}>
+                    <Route index element={null} />
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
@@ -289,9 +290,9 @@ const App = () => {
                   <Route path="advanced" element={<AdvancedDetails />} />
                   <Route path="interview" element={<InterviewUserDetails />} />
                   <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-                  <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
+                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage  from="my-profile"/>} />
+                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails   from="my-profile"/>} />
+                  <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
                   <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
                 </Route>
 
@@ -302,19 +303,30 @@ const App = () => {
                 
                 {organization && (
                   <Route path="interviewer-groups" element={<InterviewerGroups />}>
+                      <Route index element={null} />
                     <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
                   </Route>
                 )}
                 {organization && (
+
                   <Route path="users" element={<UsersLayout />}>
-                    <Route index element={null} />
+                     {/* <Route index element={null } /> */}
+                   
                     <Route path="new" element={<UserForm mode="create" />} />
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
                     <Route path="details/:id" element={<UserProfileDetails />} />
+                     {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
+                    <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} />
+                     
+                     <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} />
+                      <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} />
+                    <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} />
+                      {/* <Route path="basic" element={<BasicDetails />} /> */} 
                   </Route>
                 )}
+
                 <Route path="email-settings" element={<EmailTemplate />} />
                 
                 
@@ -352,6 +364,13 @@ const App = () => {
                   </>
                 )}
               </Route>
+
+                            {/* {organization && (
+
+                  <Route path="/account-settings/users/details/:id" element={<UsersLayout ><UserProfileDetails /></UsersLayout>} />
+                  
+                    
+                )} */}
 
               {/* Billing invoice  */}
                <Route path="/billing" element={<InvoiceTab />} >

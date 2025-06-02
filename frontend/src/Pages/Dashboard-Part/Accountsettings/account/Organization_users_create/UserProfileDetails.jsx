@@ -8,6 +8,10 @@ import maleImage from '../../../Images/man.png';
 import femaleImage from '../../../Images/woman.png';
 import genderlessImage from '../../../Images/transgender.png';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
+import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
+import InterviewUserDetails from "../MyProfile/InterviewDetails/InterviewDetails";
+import AvailabilityUser from "../MyProfile/AvailabilityDetailsUser/AvailabilityUser";
 // import ConfirmationModal from './ConfirmModel';
 
 //this is already have common code but due to z index i have added here
@@ -120,8 +124,10 @@ const UserProfileDetails = () => {
   const renderBasicDetails = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
+          
+          <BasicDetails mode='users' usersId={userData.contactId}/>
+          {/* <div>
             <p className="text-sm text-gray-500">Email</p>
             <p className="font-medium">{userData.email || "N/A"}</p>
           </div>
@@ -152,14 +158,14 @@ const UserProfileDetails = () => {
           <div>
             <p className="text-sm text-gray-500">LinkedIn</p>
             <p className="font-medium">{userData.linkedinUrl || "N/A"}</p>
-          </div>
-          {userData.portfolioUrl && (
+          </div> */}
+          {/* {userData.portfolioUrl && (
             <div>
               <p className="text-sm text-gray-500">Portfolio URL</p>
               <p className="font-medium">{userData.portfolioUrl || "N/A"}</p>
             </div>
-          )}
-        </div>
+          )} */}
+        {/* </div> */}
       </div>
     </div>
   );
@@ -167,7 +173,8 @@ const UserProfileDetails = () => {
   const renderAdvancedDetails = () => (
     <div className="space-y-6">
       <div className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+        <AdvancedDetails  mode='users' usersId={userData.contactId}/>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
             <p className="font-medium">{userData.currentRole || userData.label || "N/A"}</p>
@@ -198,7 +205,7 @@ const UserProfileDetails = () => {
             <span className="text-sm text-gray-500">Cover Letter Description</span>
             <p className="text-gray-800 text-sm mt-1 font-medium">{userData.coverLetterDescription || "N/A"}</p>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
@@ -206,7 +213,8 @@ const UserProfileDetails = () => {
   const renderInterviewDetails = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+        <InterviewUserDetails mode='users' usersId={userData.contactId}/>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div className="mt-2">
             <p className="text-sm text-gray-500">Technologies</p>
             <div className="flex flex-wrap gap-2 mt-1">
@@ -281,44 +289,45 @@ const UserProfileDetails = () => {
         <div className="flex flex-col mt-2">
           <span className="text-sm text-gray-500">Professional Bio</span>
           <p className="text-gray-800 text-sm mt-3 font-medium">{userData.bio || "N/A"}</p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
 
   const renderAvailability = () => {
-    const times = userData.availability?.[0]?.days?.reduce(
-      (acc, day) => ({
-        ...acc,
-        [day.day]: day.timeSlots.map(slot => ({
-          startTime: slot.startTime ? new Date(slot.startTime) : 'unavailable',
-          endTime: slot.endTime ? new Date(slot.endTime) : 'unavailable',
-        })),
-      }),
-      {
-        Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      }
-    ) || {
-      Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    };
+    // const times = userData.availability?.[0]?.days?.reduce(
+    //   (acc, day) => ({
+    //     ...acc,
+    //     [day.day]: day.timeSlots.map(slot => ({
+    //       startTime: slot.startTime ? new Date(slot.startTime) : 'unavailable',
+    //       endTime: slot.endTime ? new Date(slot.endTime) : 'unavailable',
+    //     })),
+    //   }),
+    //   {
+    //     Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //     Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   }
+    // ) || {
+    //   Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    //   Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    // };
 
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6 
-    sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8  bg-white p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg shadow">
-          <div className="text-sm flex flex-col">
+     
+        <div className="grid grid-cols-1 gap-2 
+     bg-white p-2  rounded-lg shadow">
+          <AvailabilityUser mode='users' usersId={userData.contactId}/>
+          {/* <div className="text-sm flex flex-col">
             <div className="border border-gray-300 rounded-lg w-full max-w-md  p-4 
         sm:p-3 md:p-3 lg:p-4 xl:p-4 2xl:p-4">
               {Object.entries(times).map(([day, slots]) => (
@@ -366,9 +375,10 @@ const UserProfileDetails = () => {
                 {userData.preferredDuration || "N/A"} minutes
               </p>
             </div>
-          </div>
+          </div> */}
+
         </div>
-      </div>
+      
     );
   };
 

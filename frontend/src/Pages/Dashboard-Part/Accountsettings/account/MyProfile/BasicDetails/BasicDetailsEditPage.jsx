@@ -5,135 +5,145 @@ import classNames from 'classnames';
 import Modal from 'react-modal';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format,parse } from "date-fns";
+import { format, parse } from "date-fns";
 import axios from 'axios';
 import { isEmptyObject, validateFormMyProfile } from '../../../../../../utils/MyProfileValidations';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 
 Modal.setAppElement('#root');
 
-const BasicDetailsEditPage = () => {
-   const {contacts,setContacts, singlecontact} = useCustomContext();
-    const { id } = useParams();
-     const navigate = useNavigate();
+const BasicDetailsEditPage = ({ from }) => {
+  const {  usersRes } = useCustomContext();
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+ const location = useLocation();
+
+  // Store the previous path in state
+  const [previousPath, setPreviousPath] = useState(null);
+
+
   const [formData, setFormData] = useState({});
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [errors, setErrors] = useState({});
   // const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
-  
-          useEffect(() => {
-              const fetchData = () => {
-                try {
-                 
-                    // console.log("userId", userId);
-                    // console.log("user", allUsers_data);
-              // "67d77741a9e3fc000cbf61fd"
-                const user = singlecontact[0]; 
-              // const user = contacts.find(user => user.ownerId === id);
-              // console.log("user", user);
-            
-              if (user) {
-                // const { countryCode, phoneNumber } = extractPhoneParts(formData.Phone);
-                    setFormData({
-                      email: user.email || '',
-                      firstName: user.firstName || '',
-                      lastName: user.lastName || '',
-                      countryCode: user.countryCode || '+91',
-                      phone: user.phone || '',
-                      profileId: user.profileId || '',
-                      dateOfBirth: user.dateOfBirth || '',
-                      gender: user.gender || '',
-                      linkedinUrl: user.linkedinUrl || '',
-                      portfolioUrl:user.portfolioUrl || '',
-                    
-                      id:user._id
-                    });
-                    // Set initial date for DatePicker
-                    if (user.dateOfBirth) {
-                        try {
-                            const parsedDate = parse(user.dateOfBirth, 'dd-MM-yyyy', new Date());
-                            setStartDate(parsedDate);
-                        } catch (error) {
-                            setStartDate(null);
-                        }
-                    }
-                    setErrors({});
-              }        else {
-                // ADDED: Handle case where user is not found
-                console.error('User not found for ID:', id);
-                // navigate('/account-settings/my-profile/basic');
-              } 
-                } catch (error) {
-                  console.error('Error fetching data:', error);
-                }
-              };
-                fetchData();
-            }, [id, singlecontact, navigate]);
-  
+
+  console.log("userId BasicDetails", from);
+
 
   
-
-  // Function to separate country code and phone number
-const extractPhoneParts = (fullPhone) => {
-  if (!fullPhone) return { countryCode: '+91', phoneNumber: '' };
-  
-  const phoneRegex = /^(\+\d{1,3})\s?[\(\s-]?(\d{3})[\)\s-]?\s?(\d{3})[\s-]?\d{4}$/;
-  const match = fullPhone.match(phoneRegex);
-  
-  if (match) {
-    return {
-      countryCode: match[1],
-      phoneNumber: match[2] + match[3] + match[4]
-    };
-  }
-  
-  const firstSpace = fullPhone.indexOf(' ');
-  if (firstSpace !== -1) {
-    return {
-      countryCode: fullPhone.substring(0, firstSpace),
-      phoneNumber: fullPhone.substring(firstSpace + 1).replace(/[\s()-]/g, '')
-    };
-  }
-  
-  return {
-    countryCode: '+91',
-    phoneNumber: fullPhone.replace(/[\s()-]/g, '')
+  // Calculate back path based on where we came from
+  const getBackPath = () => {
+    if (from === 'users') {
+      return `/account-settings/users/details/${id}`;
+    }
+    return '/account-settings/my-profile/basic';
   };
-};
 
-  // Initialize formData when userData changes
+
   // useEffect(() => {
-  //   if (formData) {
+  //   const fetchData = () => {
+  //     try {
 
-  //     const { countryCode, phoneNumber } = extractPhoneParts(formData.Phone);
+  //       // console.log("userId", userId);
+  //       // console.log("user", allUsers_data);
+  //       // "67d77741a9e3fc000cbf61fd"
+  //       // let contact
+
+  //       // if (from === "users" ) {
+  //         const contact = usersRes.find(user => user.contactId === id);
+  //         // contact = selectedContact
+  //       // }
+  //       // singlecontact[0];
+  //       // const user = contacts.find(user => user.ownerId === id);
+  //       console.log("contact", contact);
 
 
-  //     setFormData({
-  //       firstname: formData.firstname || '',
-  //       name: formData.Name || '',
-  //       email: formData.Email || '',
-  //       CountryCode: formData.CountryCode || '+91',
-  //       phone: formData.Phone || '',
-  //       dateOfBirth: formData.dateOfBirth || '',
-  //       UserName: formData.UserName || '',
-  //       gender: formData.gender || '',
-  //       linkedinUrl: formData.linkedinUrl || ''
-  //     });
-  //     // Set initial date for DatePicker
-  //     if (formData.dateOfBirth) {
-  //         try {
-  //             const parsedDate = parse(formData.dateOfBirth, 'dd-MM-yyyy', new Date());
-  //             setStartDate(parsedDate);
-  //         } catch (error) {
+  //       if (contact) {
+  //         // const { countryCode, phoneNumber } = extractPhoneParts(formData.Phone);
+  //         setFormData({
+  //           email: contact?.email || '',
+  //           firstName: contact?.firstName || '',
+  //           lastName: contact?.lastName || '',
+  //           countryCode: contact?.countryCode || '+91',
+  //           phone: contact?.phone || '',
+  //           profileId: contact?.profileId || '',
+  //           dateOfBirth: contact?.dateOfBirth || '',
+  //           gender: contact?.gender || '',
+  //           linkedinUrl: contact?.linkedinUrl || '',
+  //           portfolioUrl: contact?.portfolioUrl || '',
+  //           id: contact?._id
+  //         });
+  //         // Set initial date for DatePicker
+  //         // In your useEffect where you set the initial date:
+  //         if (contact?.dateOfBirth) {
+  //           try {
+  //             // Make sure the date string is valid before parsing
+  //             if (contact?.dateOfBirth.match(/^\d{2}-\d{2}-\d{4}$/)) {
+  //               const parsedDate = parse(contact?.dateOfBirth, 'dd-MM-yyyy', new Date());
+  //               // Validate the parsed date is actually a valid date
+  //               if (!isNaN(parsedDate.getTime())) {
+  //                 setStartDate(parsedDate);
+  //               } else {
+  //                 setStartDate(null);
+  //               }
+  //             } else {
+  //               setStartDate(null);
+  //             }
+  //           } catch (error) {
   //             setStartDate(null);
+  //           }
+  //         } else {
+  //           setStartDate(null); // Explicitly set to null when no date
   //         }
+  //         setErrors({});
+  //       } 
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
   //     }
-  //     setErrors({});
-  //   }
-  // }, [formData]);
+  //   };
+  //   fetchData();
+  // }, [id,  usersRes, from]);
+
+
+  useEffect(() => {
+  const contact = usersRes.find(user => user.contactId === id);
+
+  if (!contact) return;
+
+  
+  console.log("userId BasicDetails", contact);
+
+
+  setFormData({
+    email: contact.email || '',
+    firstName: contact.firstName || '',
+    lastName: contact.lastName || '',
+    countryCode: contact.countryCode || '+91',
+    phone: contact.phone || '',
+    profileId: contact.profileId || '',
+    dateOfBirth: contact.dateOfBirth || '',
+    gender: contact.gender || '',
+    linkedinUrl: contact.linkedinUrl || '',
+    portfolioUrl: contact.portfolioUrl || '',
+    id: contact._id
+  });
+
+  if (contact.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
+    const parsedDate = parse(contact.dateOfBirth, 'dd-MM-yyyy', new Date());
+    setStartDate(!isNaN(parsedDate.getTime()) ? parsedDate : null);
+  } else {
+    setStartDate(null);
+  }
+
+  setErrors({});
+}, [id, usersRes]);
+
+
+
 
   const handleDateChange = (date) => {
     if (!date) {
@@ -147,6 +157,18 @@ const extractPhoneParts = (fullPhone) => {
     setStartDate(date);
   };
 
+  console.log("formData.id", );
+  
+
+  const handleCloseModal = () => {
+    if (from === 'users') {
+      navigate(location.state?.backgroundLocation?.pathname || '/fallback', { replace: true });
+    } else {
+      navigate('/account-settings/my-profile/basic', { replace: true });
+    }
+  };
+  
+
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
     {
@@ -159,13 +181,13 @@ const extractPhoneParts = (fullPhone) => {
   const handleSaveChanges = async (e) => {
     e.preventDefault(); // Added to prevent default form submission
 
-    
-        const validationErrors = validateFormMyProfile(formData);
-        setErrors(validationErrors);
-    
-        if (!isEmptyObject(validationErrors)) {
-          return; // Prevent submission if there are errors
-        }
+
+    const validationErrors = validateFormMyProfile(formData);
+    setErrors(validationErrors);
+
+    if (!isEmptyObject(validationErrors)) {
+      return; // Prevent submission if there are errors
+    }
 
     const cleanFormData = {
       // firstname: formData.firstname?.trim() || '',
@@ -178,28 +200,29 @@ const extractPhoneParts = (fullPhone) => {
       dateOfBirth: formData.dateOfBirth || '',
       gender: formData.gender || '',
       linkedinUrl: formData.linkedinUrl?.trim() || '',
-      portfolioUrl:formData.portfolioUrl?.trim() || '',
-       id:formData.id
+      portfolioUrl: formData.portfolioUrl?.trim() || '',
+      id: formData.id
     };
 
 
-    console.log("cleanFormData", cleanFormData);
-    
+    // console.log("cleanFormData", cleanFormData);
+
     try {
-  
+
 
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
         cleanFormData, // Removed extra nesting
-       
+
       );
 
-      console.log("response",response);
+      // console.log("response", response);
 
       if (response.status === 200) { // Changed from response.ok to status check
+        handleCloseModal()
         // setFormData(prev => ({ ...prev, ...cleanFormData }));
         // navigate(`/account-settings/my-profile/basic`);
-        navigate('/account-settings/my-profile/basic');
+        // navigate('/account-settings/my-profile/basic');
         // setIsBasicModalOpen(false);
       } else {
         console.error('Failed to update data:', response.status);
@@ -226,24 +249,24 @@ const extractPhoneParts = (fullPhone) => {
 
   };
 
-   // Real-time profileId validation
-    // const handleProfileIdValidation = async (profileId) => {
-    //   clearTimeout(profileIdTimeoutRef.current);
-    //   setIsCheckingProfileId(true);
-  
-    //   profileIdTimeoutRef.current = setTimeout(async () => {
-    //     const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
-    //     setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-    //     setSuggestedProfileId(suggestedProfileId || '');
-    //     setIsCheckingProfileId(false);
-    //   }, 500);
-    // };
+  // Real-time profileId validation
+  // const handleProfileIdValidation = async (profileId) => {
+  //   clearTimeout(profileIdTimeoutRef.current);
+  //   setIsCheckingProfileId(true);
+
+  //   profileIdTimeoutRef.current = setTimeout(async () => {
+  //     const { errorMessage, suggestedProfileId } = await validateProfileId(profileId, checkProfileIdExists);
+  //     setErrors((prev) => ({ ...prev, profileId: errorMessage }));
+  //     setSuggestedProfileId(suggestedProfileId || '');
+  //     setIsCheckingProfileId(false);
+  //   }, 500);
+  // };
 
 
   return (
     <Modal
-    isOpen={true}
-    onRequestClose={() => navigate('/account-settings/my-profile/basic')}
+      isOpen={true}
+      onRequestClose={handleCloseModal}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     // className={modalClass}
@@ -266,11 +289,7 @@ const extractPhoneParts = (fullPhone) => {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigate('/account-settings/my-profile/basic')
-                  // setUserData(formData)
-                  // setIsBasicModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -279,12 +298,12 @@ const extractPhoneParts = (fullPhone) => {
           </div>
 
           <div
-          //  onSubmit={handleSaveChanges} 
-          className="space-y-6">
+            //  onSubmit={handleSaveChanges} 
+            className="space-y-6">
             <div className="space-y-6">
               {/* Same input fields as before */}
               <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-              <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                   <input
                     type="email"
@@ -305,16 +324,16 @@ const extractPhoneParts = (fullPhone) => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   />
-                  {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}        
+                  {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                 </div>
 
-             
 
-             
 
-              {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
-                
-              <div>
+
+
+                {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
@@ -325,7 +344,7 @@ const extractPhoneParts = (fullPhone) => {
                   />
                   {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date Of Birth</label>
                   <DatePicker
@@ -350,13 +369,13 @@ const extractPhoneParts = (fullPhone) => {
                     onChangeRaw={(e) => e.preventDefault()}
                   />
                 </div>
-               
-              {/* </div> */}
 
-              {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
-               
+                {/* </div> */}
 
-              <div>
+                {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
+
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1"> Profile ID <span className="text-red-500">*</span></label>
                   <input
                     type="text"
@@ -366,10 +385,10 @@ const extractPhoneParts = (fullPhone) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   />
                   {errors.profileId && <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>}
-             
+
                 </div>
-               
-              <div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                   <select
                     name="gender"
@@ -413,9 +432,9 @@ const extractPhoneParts = (fullPhone) => {
                   </div>
                   {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
-              {/* </div> */}
+                {/* </div> */}
 
-              {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
+                {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn <span className="text-red-500">*</span></label>
@@ -442,7 +461,7 @@ const extractPhoneParts = (fullPhone) => {
                 </div>
 
 
-                </div>
+              </div>
 
               {/* </div> */}
 
@@ -451,18 +470,14 @@ const extractPhoneParts = (fullPhone) => {
 
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => {
-                  navigate('/account-settings/my-profile/basic')
-                  // setFormData(userData); // Reset to original data
-                  // setIsBasicModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
               >
                 Cancel
               </button>
               <button
-            //  type="submit"
-              // type="submit"
+                //  type="submit"
+                // type="submit"
                 onClick={handleSaveChanges}
                 className="px-4 py-2 bg-custom-blue text-white rounded-lg "
               >

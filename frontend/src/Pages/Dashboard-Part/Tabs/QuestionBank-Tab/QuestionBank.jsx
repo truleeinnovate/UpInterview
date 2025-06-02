@@ -15,8 +15,9 @@ const QuestionBank = ({ assessmentId,
 
     console.log("type:", type);
 
+
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
-  const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
+  // const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
 
 
   const handleSuggestedTabClick = (questionType) => {
@@ -27,11 +28,13 @@ const QuestionBank = ({ assessmentId,
     setActiveTab("MyQuestionsList");
   };
   return (
+
     <div className={`sm:pt-10 md:pt-10${type === "interviewerSection" || type === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
             {/* Header Section */}
       <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}`}>
         {(type === "interviewerSection" || type === "assessment") && (
           <div className={`flex justify-between items-center p-4 ${type === "interviewerSection" || type === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
+
             <div>
               <span className="text-xl font-semibold">Question Bank</span>
             </div>
@@ -79,6 +82,10 @@ const QuestionBank = ({ assessmentId,
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            fromScheduleLater={fromScheduleLater}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -93,6 +100,11 @@ const QuestionBank = ({ assessmentId,
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            fromScheduleLater={fromScheduleLater}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandator={handleToggleMandatory}
+            
           />
         )}
       </div>

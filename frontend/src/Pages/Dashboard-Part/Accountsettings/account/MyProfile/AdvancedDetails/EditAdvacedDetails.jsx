@@ -13,21 +13,22 @@ import { config } from '../../../../../../config';
 
 Modal.setAppElement('#root');
 
-const EditAdvacedDetails = () => {
+const EditAdvacedDetails = ({ from }) => {
   // onSave
   const {
     skills,
     locations,
     industries,
     currentRole,
-    contacts,setContacts
+    singlecontact,
+    usersRes
   } = useCustomContext();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
- const { id } = useParams();
-     const navigate = useNavigate();
-  
+  const { id } = useParams();
+  const navigate = useNavigate();
+
 
 
   // Dropdown states
@@ -47,81 +48,72 @@ const EditAdvacedDetails = () => {
   });
 
 
-   const [resumeName, setResumeName] = useState('');
-      const [coverLetterName, setCoverLetterName] = useState('');
+  const [resumeName, setResumeName] = useState('');
+  const [coverLetterName, setCoverLetterName] = useState('');
 
 
-      useEffect(() => {
-        const fetchUserData =  () => {
-          try {
+  // console.log("userId AdvacedDetails", from);
 
-             const user = contacts.find(user => user.ownerId === id);
-            
-      console.log("user user", user);
-      
-      if (user) {
-             setFormData({
-              currentRole: user.currentRole || '',
-              industry: user.industry || '',
-              experience: user.experienceYears || '',
-              location: user.location || '',
-              coverLetterdescription: user.coverLetterdescription || '',
-              id:user._id
-            });
-          
-            // setFormData(user); // Update parent state
-            setErrors({});
 
-          }
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-          }
-        };
-    
-        // if (id) {
-          fetchUserData();
-        // }
-      }, [id]);
-    
-  
-  
-       // Handle file upload
-        const handleFileUpload = (e, type) => {
-          const file = e.target.files[0];
-      
-          if (file) {
-            // Only allow PDF files
-            if (file.type !== 'application/pdf') {
-              alert('Please upload a PDF file.');
-              return;
-            }
-      
-            // Limit file size to 4MB
-            if (file.size > 4 * 1024 * 1024) {
-              alert('File size should be less than 4MB.');
-              return;
-            }
-      
-            // Set the file name based on the type (Resume or CoverLetter)
-            if (type === 'Resume') {
-              setResumeName(file.name);
-            } else if (type === 'CoverLetter') {
-              setCoverLetterName(file.name);
-            }
-          }
-        };
-      
-        // Handle file removal
-        const handleRemoveFile = (type) => {
-          if (type === 'Resume') {
-            setResumeName('');
-          } else if (type === 'CoverLetter') {
-            setCoverLetterName('');
-          }
-        };
-      
-        const resumeInputRef = useRef(null);
-        const coverLetterInputRef = useRef(null);
+  useEffect(() => {
+
+
+    const contact = usersRes.find(user => user.contactId === id);
+
+    if (contact) {
+      setFormData({
+        currentRole: contact.currentRole || '',
+        industry: contact.industry || '',
+        experience: contact.experienceYears || '',
+        location: contact.location || '',
+        coverLetterdescription: contact.coverLetterdescription || '',
+        id: contact._id
+      });
+      setErrors({});
+    }
+
+
+  }, [id, usersRes]);
+
+
+
+  // Handle file upload
+  const handleFileUpload = (e, type) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      // Only allow PDF files
+      if (file.type !== 'application/pdf') {
+        alert('Please upload a PDF file.');
+        return;
+      }
+
+      // Limit file size to 4MB
+      if (file.size > 4 * 1024 * 1024) {
+        alert('File size should be less than 4MB.');
+        return;
+      }
+
+      // Set the file name based on the type (Resume or CoverLetter)
+      if (type === 'Resume') {
+        setResumeName(file.name);
+      } else if (type === 'CoverLetter') {
+        setCoverLetterName(file.name);
+      }
+    }
+  };
+
+  // Handle file removal
+  const handleRemoveFile = (type) => {
+    if (type === 'Resume') {
+      setResumeName('');
+    } else if (type === 'CoverLetter') {
+      setCoverLetterName('');
+    }
+  };
+
+  const resumeInputRef = useRef(null);
+  const coverLetterInputRef = useRef(null);
 
 
 
@@ -135,12 +127,25 @@ const EditAdvacedDetails = () => {
 
     if (errors[name]) {
       setErrors(prev => ({
-          ...prev,
-          [name]: ''
+        ...prev,
+        [name]: ''
       }));
+    }
+  };
+
+  // Calculate back path based on where we came from
+  const getBackPath = () => {
+    if (from === 'users') {
+      return `/account-settings/users/details/${id}`;
+    }
+    return '/account-settings/my-profile/advanced';
+  };
+
+  const handleCloseModal = () => {
+    navigate(getBackPath());
+    //  navigate(previousPath || '/account-settings/my-profile/basic');
   }
 
-  };
 
   // API call to save all changes
   const handleSave = async (e) => {
@@ -159,25 +164,27 @@ const EditAdvacedDetails = () => {
       location: formData.location?.trim() || '',
       coverLetterdescription: formData.coverLetterdescription?.trim() || '',
       // skills: formData.skills
-      id:formData._id
+      id: formData._id
     };
+
+    console.log("cleanFormData", cleanFormData);
 
     // validateAdvancedForm
     try {
-    
+
 
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
         cleanFormData
       );
 
-      console.log("response cleanFormData",response);
-      
+      console.log("response cleanFormData", response);
+
 
       if (response.status === 200) {
         // setUserData(prev => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
-        navigate('/account-settings/my-profile/advanced')
+        handleCloseModal()
       } else {
         console.error('Failed to update advanced details:', response.status);
       }
@@ -236,18 +243,21 @@ const EditAdvacedDetails = () => {
 
 
   // Handle input changes for text fields
-  const handleInputChangesSearch = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // setErrors((prev) => ({ ...prev, [name]: '' }));
-  };
+  // const handleInputChangesSearch = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  //   // setErrors((prev) => ({ ...prev, [name]: '' }));
+  // };
+
+
 
 
 
   return (
     <Modal
-    isOpen={true}
-    onRequestClose={() => navigate('/account-settings/my-profile/advanced')}
+      isOpen={true}
+      onRequestClose={handleCloseModal}
+      // onRequestClose={() => navigate('/account-settings/my-profile/advanced')}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
@@ -255,42 +265,36 @@ const EditAdvacedDetails = () => {
       <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
 
 
-      <div className="p-6  ">
+        <div className="p-6  ">
 
-<div className="flex justify-between items-center mb-6 ">
-  <h2 className="text-2xl font-bold text-custom-blue">Edit Advaced Details</h2>
-  <div className="flex items-center gap-2">
-    <button
-      onClick={() => setIsFullScreen(!isFullScreen)}
-      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-    >
-      {isFullScreen ? (
-        <Minimize className="w-5 h-5 text-gray-500" />
-      ) : (
-        <Maximize className="w-5 h-5 text-gray-500" />
-      )}
-    </button>
-    <button
-      onClick={() => {
-        navigate('/account-settings/my-profile/advanced')
-        // setFormData(userData); // Reset to original data
-        // setIsBasicModalOpen(false);
-      }}
-      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-    >
-      <X className="w-5 h-5 text-gray-500" />
-    </button>
-  </div>
-</div>
+          <div className="flex justify-between items-center mb-6 ">
+            <h2 className="text-2xl font-bold text-custom-blue">Edit Advaced Details</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Maximize className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+          </div>
 
 
-        <form className="space-y-6">
-     
-
+          <form className="space-y-6">
 
             <div className=" grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
-              
-              
+
+
               <div className="flex flex-col">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Current Role <span className="text-red-500">*</span></label>
 
@@ -340,7 +344,7 @@ const EditAdvacedDetails = () => {
                     </div>
                   )}
                 </div>
-{errors.currentRole && <p className="text-red-500 text-sm mt-1">{errors.currentRole}</p>}
+                {errors.currentRole && <p className="text-red-500 text-sm mt-1">{errors.currentRole}</p>}
 
               </div>
 
@@ -397,7 +401,7 @@ const EditAdvacedDetails = () => {
                   )}
                 </div>
                 {errors.industry && <p className="text-red-500 text-sm mt-1">{errors.industry}</p>}
-           
+
               </div>
 
 
@@ -469,9 +473,9 @@ const EditAdvacedDetails = () => {
               </div>
 
 
-             
-{/* Resume Upload */}
-<div className="flex flex-col">
+
+              {/* Resume Upload */}
+              <div className="flex flex-col">
                 <label htmlFor="Resume" className="block text-sm font-medium text-gray-900 mb-1">
                   Resume
                 </label>
@@ -504,7 +508,7 @@ const EditAdvacedDetails = () => {
                       onClick={() => handleRemoveFile('Resume')}
                       className="text-red-500 hover:text-red-700"
                     >
-                     <span className="text-xl">×</span>
+                      <span className="text-xl">×</span>
                     </button>
                   </div>
                 )}
@@ -529,7 +533,7 @@ const EditAdvacedDetails = () => {
                     <button
                       type="button"
                       className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
-                           onClick={() => coverLetterInputRef.current.click()}
+                      onClick={() => coverLetterInputRef.current.click()}
                     >
                       {coverLetterName ? 'Uploaded' : 'Upload Cover Letter'}
                     </button>
@@ -544,7 +548,7 @@ const EditAdvacedDetails = () => {
                       onClick={() => handleRemoveFile('CoverLetter')}
                       className="text-red-500 hover:text-red-700"
                     >
-                     <span className="text-xl">×</span>
+                      <span className="text-xl">×</span>
                     </button>
                   </div>
                 )}
@@ -559,38 +563,41 @@ const EditAdvacedDetails = () => {
                 name="coverLetterdescription"
                 value={formData.coverLetterdescription}
                 onChange={handleInputChange}
-                  autoComplete="off"
-                  rows={5}
+                autoComplete="off"
+                rows={5}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
-             
+
               />
               {errors.coverLetterdescription && <p className="text-red-500 text-sm mt-1">{errors.coverLetterdescription}</p>}
               <p className="text-gray-600 text-sm sm:text-xs float-right mt-0.5">
-                          {formData.coverLetterdescription.length}/500
-                        </p>
+                {formData.coverLetterdescription.length}/500
+              </p>
             </div>
 
 
-         
 
-          <div className="flex justify-end space-x-3 mr-2 ">
-            <button
-              type="button"
-              onClick={() => navigate('/account-settings/my-profile/advanced')}
 
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              onClick={handleSave}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg "
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end space-x-3 mr-2 ">
+              <button
+                type="button"
+                onClick={
+                  handleCloseModal
+                  // () => navigate('/account-settings/my-profile/advanced')
+                }
+
+                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                onClick={handleSave}
+                className="px-4 py-2 bg-custom-blue text-white rounded-lg "
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
 
         </div>
       </div>

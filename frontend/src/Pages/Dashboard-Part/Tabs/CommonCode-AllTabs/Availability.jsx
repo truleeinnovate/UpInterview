@@ -163,13 +163,17 @@ const Availability = ({
 
   return (
     <div>
-      <h2 className="block text-sm font-medium text-gray-900 mb-2">
+      <h2 className={`block text-sm font-medium text-gray-900 mb-2 ${from === "myprofileReadOnly" || from === "myProfileEditPage" ? 'hidden' : ''}`}>
+
         Availability <span className="text-red-500">*</span>
+
+
+        {/* {from === "myprofileReadOnly" || from === "myProfileEditPage"  ? "" :  {`${Availability <span className="text-red-500">*</span>}`}} */}
       </h2>
       {availabilityError?.TimeSlot && (
         <p className="text-red-500 text-sm mb-2">{availabilityError.TimeSlot}</p>
       )}
-      <div className="border border-gray-300 p-4 rounded-lg w-full">
+      <div className={`border border-gray-300 p-4 rounded-lg w-full ${from === "myProfileEditPage" ? 'flex flex-col' : ''}`}>
         {allDays.map((day) => {
           const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
           return (
@@ -194,22 +198,31 @@ const Availability = ({
                             value={getDisplayTime(timeSlot.startTime) || 'Start Time'}
                             onClick={() => setOpenDropdown(`${shortDay}-${index}-startTime`)}
                             readOnly
-                            className="time-input p-2 border border-gray-300 rounded text-sm w-[100px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                            className={`time-input p-2  rounded text-sm w-[100px] 
+                               
+                  ${from === "myprofileReadOnly"
+                                ? ' bg-gray-100 border-none outline-none ring-0 focus:ring-0 focus:outline-none cursor-default text-black'
+                                : 'p-2 border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer'
+                              }`
+                            }
+
                             style={{ color: timeSlot.startTime ? 'black' : '#9CA3AF' }}
                           />
-                          {openDropdown === `${shortDay}-${index}-startTime` && (
-                            <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
-                              {generateTimeOptions.map((option) => (
-                                <div
-                                  key={`start-${option.value}`}
-                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                  onClick={() => updateTimeSlot(day, index, 'startTime', option.value)}
-                                >
-                                  {option.label}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          {from === "myprofileReadOnly" ? " " :
+                            openDropdown === `${shortDay}-${index}-startTime` && (
+                              <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
+                                {generateTimeOptions.map((option) => (
+                                  <div
+                                    key={`start-${option.value}`}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => updateTimeSlot(day, index, 'startTime', option.value)}
+                                  >
+                                    {option.label}
+                                  </div>
+                                ))
+                                }
+                              </div>
+                            )}
                         </div>
                         <span className="text-gray-500">
                           <Minus className="w-4" />
@@ -221,25 +234,34 @@ const Availability = ({
                             value={getDisplayTime(timeSlot.endTime) || 'End Time'}
                             onClick={() => setOpenDropdown(`${shortDay}-${index}-endTime`)}
                             readOnly
-                            className="time-input p-2 border border-gray-300 rounded text-sm w-[100px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                            className={`time-input p-2  rounded text-sm w-[100px]  
+                               ${from === "myprofileReadOnly"
+                                ? ' bg-gray-100 border-none outline-none ring-0 focus:ring-0 focus:outline-none cursor-default text-black'
+                                : 'p-2 border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer'
+                              }`}
                             style={{ color: timeSlot.endTime ? 'black' : '#9CA3AF' }}
                           />
-                          {openDropdown === `${shortDay}-${index}-endTime` && (
-                            <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
-                              {generateTimeOptions.map((option) => (
-                                <div
-                                  key={`end-${option.value}`}
-                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                  onClick={() => updateTimeSlot(day, index, 'endTime', option.value)}
-                                >
-                                  {option.label}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          {from === "myprofileReadOnly" ? " " :
+                            openDropdown === `${shortDay}-${index}-endTime` && (
+                              <div className="time-dropdown absolute top-10 left-0 z-10 bg-white border border-gray-300 rounded shadow-lg w-[100px] max-h-40 overflow-y-auto">
+                                {generateTimeOptions.map((option) => (
+                                  <div
+                                    key={`end-${option.value}`}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => updateTimeSlot(day, index, 'endTime', option.value)}
+                                  >
+                                    {option.label}
+                                  </div>
+                                ))}
+                              </div>
+                            )
+
+                          }
                         </div>
                         {/* Action Buttons - Always reserve space */}
-                        <div className="flex items-center gap-2 w-24">
+                        <div className={`flex items-center gap-2 w-24
+                          ${from === "myprofileReadOnly" ? 'hidden' : ''}`}
+                        >
                           {/* Always reserve space for XCircle button */}
                           <div className="w-6 h-6 flex items-center justify-center">
                             {showXCircle ? (
