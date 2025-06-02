@@ -198,7 +198,6 @@ const RoundCard = ({
 
   // Get questions
   const questions = round?.questions || [];
-  console.log("questions", questions);
 
 
   // Check if round is active (can be modified)

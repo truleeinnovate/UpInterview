@@ -246,7 +246,7 @@ export const Organization = () => {
 
       navigate('/subscription-plans');
 
-      toast.success('Organization created successfully!');
+      // toast.success('Organization created successfully!');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong');
     } finally {

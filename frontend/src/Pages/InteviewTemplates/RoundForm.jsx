@@ -296,57 +296,67 @@ function RoundForm() {
   //     console.log('Updated sectionQuestions:', newSectionQuestions);
   //   } catch (error) {
   //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   }
-  // };
 
 
-  const handleInternalInterviewerSelect = (interviewers) => {
-    // console.log("Interviewers passed to parent:", interviewers); // Debugging
-
+const handleInternalInterviewerSelect = async (selectedInterviewerIds) => {
+  try {
     if (formData.interviewerType === "External") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
 
-    const existingInterviewerIds = new Set(
-      formData.internalInterviewers.map(i => i._id)
-    );
-
+    // Fetch the full interviewer details using the selected IDs
+    const response = await axios.get(`${config.REACT_APP_API_URL}/api/interviewers`, {
+      params: { ids: selectedInterviewerIds.join(',') }
+    });
+    
+    const selectedInterviewers = response.data || [];
+    
     // Filter out any interviewers that are already selected
-    const uniqueInterviewers = interviewers
-      .filter(interviewer => {
-        const interviewerId = interviewer.contactId?._id || interviewer._id;
-        return !existingInterviewerIds.has(interviewerId);
-      })
-      .map(interviewer => ({
-        _id: interviewer.contactId?._id || interviewer._id || '',
-        name: interviewer.contactId?.name || interviewer.name || 'Unknown',
-        email: interviewer.contactId?.email || interviewer.email || ''
-      }));
+    const existingInterviewerIds = new Set(formData.internalInterviewers.map(i => i._id));
+    const uniqueInterviewers = selectedInterviewers.filter(interviewer => 
+      !existingInterviewerIds.has(interviewer._id)
+    );
 
     if (uniqueInterviewers.length === 0) {
       alert("All selected interviewers are already added.");
       return;
     }
 
-
+    // Map to the required format
+    const formattedInterviewers = uniqueInterviewers.map(interviewer => ({
+      _id: interviewer._id,
+      name: interviewer.name || 'Unknown',
+      email: interviewer.email || ''
+    }));
 
     setFormData(prev => ({
       ...prev,
       interviewerType: "Internal",
-      internalInterviewers: [...prev.internalInterviewers, ...uniqueInterviewers],
+      internalInterviewers: [...prev.internalInterviewers, ...formattedInterviewers],
     }));
+  } catch (error) {
+    console.error('Error fetching interviewer details:', error);
+    // Fallback to just using the IDs if the API call fails
+    const newInterviewers = selectedInterviewerIds
+      .filter(id => !formData.internalInterviewers.some(i => i._id === id))
+      .map(id => ({
+        _id: id,
+        name: 'Unknown',
+        email: ''
+      }));
 
-    setErrors(prev => ({
-      ...prev,
-      interviewers: undefined,
-      interviewerType: undefined
-    }));
+    if (newInterviewers.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        interviewerType: "Internal",
+        internalInterviewers: [...prev.internalInterviewers, ...newInterviewers],
+      }));
+    }
+  }
+};
 
-  };
-
-  const handleRemoveInternalInterviewer = (interviewerId) => {
+const handleRemoveInternalInterviewer = (interviewerId) => {
     setFormData(prev => ({
       ...prev,
       internalInterviewers: prev.internalInterviewers.filter(
@@ -695,12 +705,15 @@ function RoundForm() {
 
         // roundData.selectedInterviewers = formData.selectedInterviewers || [];
 
-        // Ensure interviewers array is properly populated
+        // Format interviewers data for the backend
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
-          roundData.internalInterviewers = formData.internalInterviewers.map(interviewer =>
-            interviewer._id
-            // name: interviewer.name
-          );
+          // For internal interviewers, extract just the _id
+          roundData.interviewers = formData.internalInterviewers.map(interviewer => 
+            interviewer._id || interviewer.id
+          ).filter(Boolean);
+        } else if (formData.externalInterviewers) {
+          // For external interviewers, ensure we have the correct format
+          roundData.interviewers = [];
         } else {
           roundData.interviewers = [];
         }
@@ -722,11 +735,13 @@ function RoundForm() {
         roundData.interviewerType = formData.interviewerType || '';
         roundData.interviewDuration = formData.duration;
         roundData.selectedInterviewersType = formData.selectedInterviewersType || 'Individual';
+        
+        // Format interviewers data for the backend
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
-          roundData.internalInterviewers = formData.internalInterviewers.map(interviewer =>
-            interviewer._id
-            // name: interviewer.name
-          );
+          // For internal interviewers, extract just the _id or id
+          roundData.interviewers = formData.internalInterviewers.map(interviewer => 
+            interviewer._id || interviewer.id
+          ).filter(Boolean);
         } else {
           roundData.interviewers = [];
         }

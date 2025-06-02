@@ -8,9 +8,9 @@ exports.createInterviewTemplate = async (req, res) => {
             ...req.body,
             // For now, we'll use a default user ID since auth is not implemented
             createdBy: req.body.tenantId,
-            tenantId: req.body.tenantId 
+            tenantId: req.body.tenantId
         });
-        
+
         const savedTemplate = await template.save();
         res.status(201).json({
             status: 'success',
@@ -34,38 +34,41 @@ exports.getAllTemplates = async (req, res) => {
 
     if (organization === 'true') {
       if (!tenantId) {
+        console.error('Missing tenantId for organization');
         return res.status(400).json({
           success: false,
           message: 'tenantId is required for organization',
         });
       }
       filter.tenantId = tenantId;
+      console.log('Filtering by tenantId:', tenantId);
     } else {
       if (!ownerId) {
+        console.error('Missing ownerId for individual user');
         return res.status(400).json({
           success: false,
           message: 'ownerId is required for individual user',
         });
       }
       filter.ownerId = ownerId;
+      console.log('Filtering by ownerId:', ownerId);
     }
 
-    const templates = await InterviewTemplate.find(filter).sort({ createdAt: -1 });
+    const templates = await InterviewTemplate.find(filter);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: templates,
     });
   } catch (error) {
-    console.error('Error fetching interview templates:', error);
-    res.status(500).json({
+    console.error('Error fetching interview templates:', error.message, error.stack);
+    return res.status(500).json({
       success: false,
       message: 'Server error. Please try again later.',
+      error: error.message,
     });
   }
 };
-
-
 
 // Get template by ID
 // exports.getTemplateById = async (req, res) => {
@@ -99,7 +102,7 @@ exports.getAllTemplates = async (req, res) => {
 exports.updateTemplate = async (req, res) => {
     try {
         // Validate required fields
-        if (!req.body.tenantId ) {
+        if (!req.body.tenantId) {
             return res.status(400).json({
                 status: false,
                 message: 'Tenant ID is required'
@@ -114,9 +117,9 @@ exports.updateTemplate = async (req, res) => {
         }
 
         // console.log("req.body", req.body);
-        
 
-      
+
+
         // Prepare update data
         const updateData = {
             updatedAt: Date.now()
@@ -140,12 +143,12 @@ exports.updateTemplate = async (req, res) => {
             // Process each round
             const processedRounds = req.body.rounds.map((round, index) => {
                 // Ensure sequence is set - use provided or default to position
-                const sequence = typeof round.sequence === 'number' 
-                    ? round.sequence 
+                const sequence = typeof round.sequence === 'number'
+                    ? round.sequence
                     : index + 1;
 
-                    console.log("req.body.rounds", req.body.rounds);
-                    
+                console.log("req.body.rounds", req.body.rounds);
+
 
                 // Return the processed round with required fields
                 return {
@@ -172,7 +175,7 @@ exports.updateTemplate = async (req, res) => {
         }
 
         // console.log("req", req.body);
-        
+
 
         // Update the template
         const template = await InterviewTemplate.findOneAndUpdate(
@@ -180,12 +183,12 @@ exports.updateTemplate = async (req, res) => {
                 _id: req.params.id,
                 tenantId: req.body.tenantId
             },
-            
-                updateData,
-            
-            { 
-                new: true, 
-                runValidators: true 
+
+            updateData,
+
+            {
+                new: true,
+                runValidators: true
             }
         );
 
@@ -195,7 +198,7 @@ exports.updateTemplate = async (req, res) => {
                 message: 'Template not found'
             });
         }
-// console.log("template", template);
+        // console.log("template", template);
 
         res.status(200).json({
             status: 'success',

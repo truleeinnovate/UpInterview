@@ -11,9 +11,10 @@ const roundSchema = new mongoose.Schema(
     duration: String,
     instructions: String,
     selectedInterviewersType: { type: String },
-    interviewers: [
-      mongoose.Schema.Types.ObjectId,
-    ],
+    // interviewers: [
+    //   mongoose.Schema.Types.ObjectId,
+    // ],
+    interviewers: [mongoose.Schema.Types.Mixed], // mansoor : added this for accepting the numbers and texts.
     //  status: String, // draft - if accept - scheduled, if request sent then (request sent)
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
     questions: [{

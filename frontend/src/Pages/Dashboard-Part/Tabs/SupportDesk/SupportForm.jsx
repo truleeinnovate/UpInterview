@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
-import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
+import { Minimize, Expand, X } from 'lucide-react';
 import { toast } from "react-toastify";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
@@ -12,14 +12,15 @@ import { config } from "../../../../config";
 const maxDescriptionLen = 500;
 
 const SupportForm = () => {
-      const tokenPayload = decodeJwt(Cookies.get('authToken'));
-      const ownerId = tokenPayload?.userId;
-      const tenantId = tokenPayload?.tenantId;
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
   const navigate = useNavigate();
   const location = useLocation();
   const initialTicketData = location.state?.ticketData;
   const editMode = location.pathname.includes('/edit-ticket');
   const [isFullWidth, setIsFullWidth] = useState(false);
+  const [errors, setErrors] = useState({ issueType: '', description: '' });
 
   const issuesData = useMemo(() => [
     { id: 0, issue: "Payment" },
@@ -38,14 +39,9 @@ const SupportForm = () => {
   const [formState, setFormState] = useState(initialFormState);
   const { otherIssueFlag, otherIssue, selectedIssue, file, description } = formState;
   const fileRef = useRef(null);
-  
-  // eslint-disable-next-line no-unused-vars
   const [contact, setContact] = useState('');
-  // eslint-disable-next-line no-unused-vars
   const [organization, setOrganization] = useState('');
-  
-  // this useEffect is used to fetch the contact and organization details
-  // while getting users we will get roleid from roleid we will get rolename
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -54,15 +50,13 @@ const SupportForm = () => {
 
         const response2 = await axios.get(`${config.REACT_APP_API_URL}/organization/${response.data.tenantId}`);
         setOrganization(response2.data.Organization);
-        
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     };
-    
+
     fetchUsers();
   }, []);
-
 
   useEffect(() => {
     if (editMode && initialTicketData) {
@@ -77,6 +71,24 @@ const SupportForm = () => {
     }
   }, [editMode, initialTicketData, issuesData]);
 
+  const validateForm = useCallback(() => {
+    const newErrors = { issueType: '', description: '' };
+    let isValid = true;
+
+    if (!selectedIssue && !otherIssue) {
+      newErrors.issueType = 'Issue type is required';
+      isValid = false;
+    }
+
+    if (!description.trim()) {
+      newErrors.description = 'Description is required';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }, [selectedIssue, otherIssue, description]);
+
   const toggleFullWidth = () => {
     setIsFullWidth(!isFullWidth);
   };
@@ -89,6 +101,7 @@ const SupportForm = () => {
       selectedIssue: value === "Other" ? "Other" : value,
       otherIssue: value === "Other" ? "" : prev.otherIssue
     }));
+    setErrors(prev => ({ ...prev, issueType: '' }));
   }, []);
 
   const onChangeFileInput = useCallback((e) => {
@@ -105,6 +118,7 @@ const SupportForm = () => {
       ...prev,
       otherIssue: value
     }));
+    setErrors(prev => ({ ...prev, issueType: '' }));
   }, []);
 
   const handleDescriptionChange = useCallback((e) => {
@@ -113,6 +127,7 @@ const SupportForm = () => {
       ...prev,
       description: value
     }));
+    setErrors(prev => ({ ...prev, description: '' }));
   }, []);
 
   const createFormData = useCallback(() => ({
@@ -120,37 +135,43 @@ const SupportForm = () => {
     description,
     file: file !== "No file selected" ? file : null,
     ...(editMode ? {} : {
-      contact: "Anu",//this is the contact of the current user
-      tenantId,//this is the organization of the current user
+      contact: "Anu",
+      tenantId,
       ownerId,
     })
   }), [selectedIssue, otherIssue, description, file, editMode]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    setErrors({ issueType: '', description: '' }); // Clear errors on submit
+
+    if (!validateForm()) {
+      return;
+    }
+
     const formData = createFormData();
-    
+
     try {
-      const url = editMode 
+      const url = editMode
         ? `${config.REACT_APP_API_URL}/update-ticket/${initialTicketData._id}`
         : `${config.REACT_APP_API_URL}/create-ticket`;
-      
+
       const response = await axios[editMode ? 'patch' : 'post'](url, formData);
-      
+
       toast.success(response.data.message);
-      
+
       if (response.data.success) {
         setFormState(initialFormState);
         navigate('/support-desk');
       }
     } catch (error) {
       console.error(error);
-      toast.error(editMode 
+      toast.error(editMode
         ? "Failed to update ticket. Please try again."
         : "Something went wrong while sending the ticket."
       );
     }
-  }, [editMode, initialTicketData, createFormData, navigate, initialFormState]);
+  }, [editMode, initialTicketData, createFormData, navigate, initialFormState, validateForm]);
 
   const renderIssueOptions = useCallback(() => (
     issuesData.map(each => (
@@ -162,32 +183,33 @@ const SupportForm = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
-      <div 
+      <div
         className={`fixed inset-y-0 right-0 z-50 bg-white shadow-lg transform transition-all duration-500 ease-in-out ${isFullWidth ? 'w-full' : 'w-1/2'}`}
       >
         {/* Header */}
-        <div className=" border-b">
+        <div>
           <div className="flex justify-between items-center p-4">
             <button onClick={() => navigate('/support-desk')} className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8">
               <IoArrowBack className="text-2xl" />
             </button>
             <h2 className="text-lg font-medium">{editMode ? "Edit Support Ticket" : "New Support Ticket"}</h2>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={toggleFullWidth} 
+              <button
+                onClick={toggleFullWidth}
                 className="focus:outline-none hover:bg-opacity-10 hover:bg-white rounded-full p-1 transition-all duration-200"
                 title={isFullWidth ? "Exit Full Screen" : "Full Screen"}
               >
                 {isFullWidth ? (
-                  <MdOutlineFullscreenExit className="text-2xl" />
+                  <Minimize className="text-2xl" />
                 ) : (
-                  <MdOutlineFullscreen className="text-2xl" />
+                  <Expand className="text-2xl" />
                 )}
               </button>
-              <button onClick={() => navigate('/support-desk')} className="focus:outline-none sm:hidden">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button
+                onClick={() => navigate('/support-desk')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -205,30 +227,36 @@ const SupportForm = () => {
                     Issue Type <span className="text-red-500">*</span>
                   </label>
                   {!otherIssueFlag ? (
-                    <select
-                      id="issueType"
-                      required
-                      value={selectedIssue || otherIssue}
-                      onChange={onChangeIssue}
-                      className="w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                    >
-                      <option value="" className="text-gray-500" hidden>Select issue</option>
-                      {renderIssueOptions()}
-                      <option className="text-gray-700" value="Other">Other</option>
-                    </select>
+                    <div>
+                      <select
+                        id="issueType"
+                        value={selectedIssue || otherIssue}
+                        onChange={onChangeIssue}
+                        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${errors.issueType ? 'border-red-500' : ''}`}
+                      >
+                        <option value="" className="text-gray-500" hidden>Select issue</option>
+                        {renderIssueOptions()}
+                        <option className="text-gray-700" value="Other">Other</option>
+                      </select>
+                      {errors.issueType && (
+                        <p className="text-red-500 text-xs mt-1">{errors.issueType}</p>
+                      )}
+                    </div>
                   ) : (
-                    <div className="relative">
+                    <div>
                       <input
                         id="otherIssue"
-                        required
                         placeholder="Enter issue"
                         value={otherIssue}
                         onChange={onChangeOtherIssue}
-                        className="w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${errors.issueType ? 'border-red-500' : ''}`}
                       />
                       <p className="text-right text-gray-500 text-xs mt-1">
                         {otherIssue.length}/100
                       </p>
+                      {errors.issueType && (
+                        <p className="text-red-500 text-xs mt-1">{errors.issueType}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -242,14 +270,16 @@ const SupportForm = () => {
                     <textarea
                       id="description"
                       rows={8}
-                      required
                       value={description}
                       onChange={handleDescriptionChange}
-                      className="w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${errors.description ? 'border-red-500' : ''}`}
                     />
                     <p className="text-right text-gray-500 text-xs mt-1">
                       {description.length}/{maxDescriptionLen}
                     </p>
+                    {errors.description && (
+                      <p className="text-red-500 text-xs -mt-4">{errors.description}</p>
+                    )}
                   </div>
                 </div>
 

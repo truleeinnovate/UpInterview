@@ -4,37 +4,41 @@ import { useCustomContext } from '../../../../Context/Contextfetch.js';
 
 const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
     const { interviewers } = useCustomContext();
+    console.log("interviewers", interviewers);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [slideDirection, setSlideDirection] = useState('right');
 
     // Extract the data array from interviewers, default to empty array
     const interviewersList = interviewers?.data || [];
 
-    // Map backend data to frontend expected fields
-    const formattedInterviewers = interviewersList
-        .map((availability) => {
-            const contact = availability.contact || {};
-            const nextSlot = availability.days?.[0]?.timeSlots?.[0];
-            return {
-                id: availability._id,
-                name: contact.Name || 'Unknown',
-                role: contact.CurrentRole || 'N/A',
-                image: contact.ImageData?.path
-                    ? `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`
-                    : 'https://via.placeholder.com/50',
-                rating: 4.5,
-                department: contact.industry || 'N/A',
-                company: contact.industry || 'N/A',
-                location: contact.location || 'N/A',
-                completedInterviews: 0,
-                nextAvailable: nextSlot
-                    ? `${availability.days[0].day}, ${nextSlot.startTime} - ${nextSlot.endTime}`
-                    : 'N/A',
-                type: contact.isFreelancer === 'true' ? 'External' : 'Internal',
-                availability: nextSlot ? 'Available' : 'Unavailable'
-            };
-        })
-        .filter((interviewer) => interviewer.type === 'Internal');
+    const formattedInterviewers = React.useMemo(() => {
+        if (!interviewers?.data) return [];
+
+        return interviewers.data
+            .filter(interviewer => interviewer.type === 'internal')
+            .map(interviewer => {
+                const contact = interviewer.contact || {};
+                const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
+                return {
+                    id: interviewer._id,
+                    name: fullName || 'Unnamed Interviewer',
+                    role: contact.currentRole || 'Interviewer',
+                    image: contact.ImageData?.path
+                        ? `${process.env.REACT_APP_API_URL}${contact.ImageData.path.replace(/\\/g, '/')}`
+                        : null, // Changed to null to handle with nullish coalescing
+                    rating: 4.5, // Consider making this dynamic if available
+                    department: contact.department || contact.industry || 'Not specified',
+                    company: contact.company || contact.organization || 'Internal',
+                    location: contact.location || 'Location not specified',
+                    completedInterviews: contact.completedInterviews || 0,
+                    nextAvailable: 'Available now', // More user-friendly than 'N/A'
+                    type: 'internal',
+                    availability: 'Available',
+                    email: contact.email || 'No email provided',
+                    phone: contact.phoneNumber || contact.phone || 'Not provided'
+                };
+            });
+    }, [interviewers]);
 
     // Get first 3 interviewers only
     const displayInterviewers = formattedInterviewers.slice(0, 3);
@@ -45,7 +49,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
             const interval = setInterval(() => {
                 setSlideDirection('right');
                 setCurrentIndex((prev) => (prev + 1) % displayInterviewers.length);
-            }, 3000); // Change every 3 seconds
+            }, 3000);
             return () => clearInterval(interval);
         }
     }, [displayInterviewers.length]);
@@ -92,18 +96,13 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                         />
                                     ) : (
                                         <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
-                                            <span className="text-white font-semibold text-lg">
-                                                {interviewer.name.split(' ')[1]?.[0]?.toUpperCase() ||
-                                                    interviewer.name.split(' ')[0]?.[0]?.toUpperCase()}
+                                            <span className="text-white font-semibold text-2xl -mt-[4px]">
+                                                {/* {interviewer.name.split(' ')[1]?.[0]?.toUpperCase() ||
+                                                    interviewer.name.split(' ')[0]?.[0]?.toUpperCase()} */}
+                                                {interviewer.name.substring(0, 1)}
                                             </span>
                                         </div>
                                     )}
-                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-lg ${interviewer.type === 'Internal'
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'bg-purple-100 text-purple-600'
-                                        }`}>
-                                        {interviewer.type}
-                                    </span>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
@@ -131,17 +130,6 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                             <Briefcase size={14} />
                                             <span>{interviewer.completedInterviews} interviews</span>
                                         </div>
-                                        <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
-                                            <Calendar size={14} />
-                                            <span>
-                                                {interviewer.nextAvailable === 'N/A' ? 'N/A' : (
-                                                    <>
-                                                        {interviewer.nextAvailable.split(',')[0].trim().substring(0, 3)},&nbsp;
-                                                        {interviewer.nextAvailable.split(',')[1].split('-')[0].trim()}-{interviewer.nextAvailable.split('-')[1].trim()}
-                                                    </>
-                                                )}
-                                            </span>
-                                        </div>
                                     </div>
 
                                     <div className="flex items-center justify-between">
@@ -154,14 +142,14 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                             <CheckCircle size={14} className="mr-1" />
                                             {interviewer.availability}
                                         </span>
-                                        <div className="flex items-center space-x-2">
+                                        {/* <div className="flex items-center space-x-2">
                                             <button className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300">
                                                 Profile
                                             </button>
                                             <button className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                                                 Schedule
                                             </button>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             </div>

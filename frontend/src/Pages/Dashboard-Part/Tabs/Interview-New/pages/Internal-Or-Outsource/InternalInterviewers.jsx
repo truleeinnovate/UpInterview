@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, ChevronDown, ChevronUp, Minimize, Expand } from 'lucide-react';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import femaleImage from '../../../../../Dashboard-Part/Images/woman.png';
-import maleImage from '../../../../../Dashboard-Part/Images/man.png';
-import genderlessImage from '../../../../../Dashboard-Part/Images/transgender.png';
-import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx'; // Assuming Button component is available
+import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
 const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
   const { interviewers, groups } = useCustomContext();
-  const [selectedInterviewerIds, setSelectedInterviewerIds] = useState([]);
+  console.log("interviewers", interviewers);
+  const [selectedInterviewers, setSelectedInterviewers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -37,27 +35,21 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
     if (viewType === 'individuals') {
       const interviewersArray = interviewers?.data && Array.isArray(interviewers.data) ? interviewers.data : [];
       return interviewersArray
-        .filter((availability) => {
-          const contact = availability.contact || {};
-          return [contact.Name, contact.Email, contact.Phone, contact.UserName].some(
-            (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+        .filter((interviewer) => {
+          const contact = interviewer.contact || {};
+          const isInternal = interviewer.type === 'internal';
+          const matchesSearch = [contact.firstName, contact.lastName, contact.email, contact.phone].some(
+            (field) => field && field.toString().toLowerCase().includes(searchQuery.toLowerCase())
           );
+          return isInternal && matchesSearch;
         })
-        .map((availability) => ({
-          _id: availability._id,
-          contactId: {
-            name: availability.contact?.Name || 'N/A',
-            email: availability.contact?.Email || 'N/A',
-            phone: availability.contact?.Phone || 'N/A',
-            technology:
-              availability.contact?.Technologys?.join(', ') ||
-              availability.contact?.Skills?.join(', ') ||
-              'N/A'
-          },
-          imageUrl: availability.contact?.ImageData?.path
-            ? `${process.env.REACT_APP_API_URL}/${availability.contact.ImageData.path.replace(/\\/g, '/')}`
-            : null,
-          Gender: availability.contact?.Gender || 'Unknown'
+        .map((interviewer) => ({
+          _id: interviewer._id,
+          ...interviewer.contact, // Spread the contact details
+          contactId: interviewer.contact?._id || null,
+          type: interviewer.type,
+          availability: interviewer.availability,
+          // Include any other fields you need
         }));
     } else {
       return Array.isArray(groups)
@@ -71,7 +63,9 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
   }, [interviewers, groups, searchQuery, viewType]);
 
   useEffect(() => {
+    // No need to transform the data as we're already including all necessary fields in the FilteredData
     setFilteredData(FilteredData);
+    console.log("Filtered Interviewers:", FilteredData);
   }, [FilteredData]);
 
   const handleSearchInputChange = (event) => {
@@ -79,26 +73,31 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
   };
 
   const handleSelectClick = (item) => {
-    setSelectedInterviewerIds((prev) =>
-      prev.includes(item._id) ? prev.filter((id) => id !== item._id) : [...prev, item._id]
-    );
+    console.log("Selected interviewer:", item);
+    setSelectedInterviewers((prev) => {
+      const isAlreadySelected = prev.some(interviewer => interviewer._id === item._id);
+      if (isAlreadySelected) {
+        return prev.filter(interviewer => interviewer._id !== item._id);
+      } else {
+        return [...prev, item];
+      }
+    });
   };
 
   const handleScheduleClick = () => {
-    const selectedInterviewers = filteredData.filter((item) =>
-      selectedInterviewerIds.includes(item._id)
-    );
+    console.log("Selected interviewers:", selectedInterviewers);
+    // Pass the complete interviewer data to the parent
     onSelectCandidates(selectedInterviewers);
     onClose();
   };
 
-  const isInterviewerSelected = (item) => selectedInterviewerIds.includes(item._id);
+  const isInterviewerSelected = (item) => selectedInterviewers.some(interviewer => interviewer._id === item._id);
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
 
   const selectViewType = (type) => {
     setViewType(type);
-    setSelectedInterviewerIds([]);
+    setSelectedInterviewers([]);
     setShowDropdown(false);
   };
 
@@ -115,8 +114,8 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
               Select Internal {viewType === 'individuals' ? 'Interviewers' : 'Groups'}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              {selectedInterviewerIds.length} {viewType === 'individuals' ? 'interviewer' : 'group'}
-              {selectedInterviewerIds.length !== 1 ? 's' : ''} selected
+              {selectedInterviewers.length} {viewType === 'individuals' ? 'interviewer' : 'group'}
+              {selectedInterviewers.length !== 1 ? 's' : ''} selected
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -190,33 +189,41 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
         {/* Scrollable Data Section */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className={`grid gap-4 ${isFullscreen ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'grid-cols-2'}`}>
-            {filteredData.map((item) => (
+            {console.log("filteredData", filteredData)}
+            {filteredData?.map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between p-3 rounded-md cursor-pointer ${isInterviewerSelected(item)
-                  ? 'bg-blue-100 border border-blue-300'
-                  : 'hover:bg-gray-50 border border-gray-200'
+                className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== 'dashboard' ? 'cursor-pointer' : 'cursor-default'} ${navigatedfrom !== 'dashboard' && isInterviewerSelected(item)
+                    ? 'bg-blue-100 border border-blue-300'
+                    : 'hover:bg-gray-50 border border-gray-200'
                   }`}
-                onClick={() => handleSelectClick(item)}
+                onClick={() => navigatedfrom !== 'dashboard' && handleSelectClick(item)}
               >
                 <div className="flex items-center">
                   {viewType === 'individuals' ? (
                     <>
-                      <img
-                        src={
-                          item.imageUrl ||
-                          (item.Gender === 'Male'
-                            ? maleImage
-                            : item.Gender === 'Female'
-                              ? femaleImage
-                              : genderlessImage)
-                        }
-                        alt="interviewerImage"
-                        className="w-10 h-10 rounded-full"
-                      />
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={`${item.firstName} ${item.lastName}`}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
+                          <span className="text-white font-semibold text-md -mt-[4px]">
+                            {(item.firstName || '?')[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{item.contactId?.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{item.contactId?.technology || 'N/A'}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {item.firstName || item.lastName ? `${item.firstName || ''} ${item.lastName || ''}` : 'no name available'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {Array.isArray(item.technologies) && item.technologies.length > 0
+                            ? item.technologies.join(', ')
+                            : 'no technology available'}
+                        </p>
                       </div>
                     </>
                   ) : (
@@ -232,12 +239,13 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
                         </svg>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{item.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{item.description || 'No description'}</p>
+                        <p className="text-sm font-medium text-gray-900">{item.name || 'no name available'}</p>
+                        <p className="text-xs text-gray-500">{item.description || 'No description available'}</p>
                       </div>
                     </>
                   )}
                 </div>
+
                 {isInterviewerSelected(item) && (
                   <div className="h-5 w-5 rounded-full flex items-center justify-center bg-blue-500 text-white">
                     <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -264,10 +272,10 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
           <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end">
             <button
               onClick={handleScheduleClick}
-              disabled={selectedInterviewerIds.length === 0}
+              disabled={selectedInterviewers.length === 0}
               className="bg-custom-blue px-4 py-2 rounded-md text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Schedule ({selectedInterviewerIds.length})
+              Schedule ({selectedInterviewers.length})
             </button>
           </div>
         )}

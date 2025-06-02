@@ -112,7 +112,7 @@ const PositionSlideDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
-        <div className="top-0 bg-white mt-1 flex justify-between items-center z-10">
+        <div className="top-0 bg-white mt-5 flex justify-between items-center z-10">
           <h2 className="text-xl font-bold text-gray-800">Position Details</h2>
           <div className="flex items-center gap-2">
             <button

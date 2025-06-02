@@ -1,17 +1,20 @@
 
 import Modal from 'react-modal';
-import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { Phone, GraduationCap, School, Mail, X } from 'lucide-react';
+// import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useCandidates } from '../../../../../apiHooks/useCandidates';
 Modal.setAppElement('#root');
 
 const CandidateFullscreen = () => {
-  const {
-    candidateData,
-    loading,
-    // fetchCandidates
-  } = useCustomContext();
+  // const {
+  //   candidateData,
+  //   loading,
+  //   // fetchCandidates
+  // } = useCustomContext();
+
+  const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const { id } = useParams();

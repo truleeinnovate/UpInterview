@@ -18,21 +18,15 @@ import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
-// import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { config } from "../../../../config.js";
-
-// const MyQuestionsList = ({ interviewQuestionsList, setInterviewQuestionsList, section, questionBankPopupVisibility }) => {
-// changes made by shashank
 
 const MyQuestionsList = ({
   assessmentId,
   sectionName,
   updateQuestionsInAddedSectionFromQuestionBank,
-  interviewQuestionsList,
-  setInterviewQuestionsList,
-  section,
+type,
   questionBankPopupVisibility,
   addedSections,
   questionsLimit,
@@ -56,12 +50,9 @@ const MyQuestionsList = ({
   const [isFilterByDifficultyOpen, setIsFilterByDifficultyOpen] =
     useState(false);
   const {
-    // interviewerSectionData,
     setInterviewerSectionData,
     myQuestionsList,
     setMyQuestionsList,
-    // fetchMyQuestionsData,
-    // getInterviewerQuestions,
   } = useCustomContext();
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
@@ -155,24 +146,15 @@ const MyQuestionsList = ({
     useState([]);
   const [filteredMyQuestionsList, setFilteredMyQuestionsList] = useState({});
 
-  //changes made by shashank - [09/01/2025]
-  // const [questionScore, setQuestionScore] = useState("");
-  // const [questionScoreError, setQuestionScoreError] = useState("");
 
   useEffect(() => {
     if (myQuestionsList && Object.keys(myQuestionsList).length > 0) {
-      // const newMyQuestionsObj = {
-      //   ...myQuestionsList,
-      //   interviewQuestions: interviewQuestionsList,
-      // };
-      // console.log("new my questions ojb", newMyQuestionsObj);
       setMyQuestionsList(myQuestionsList);
       setFilteredMyQuestionsList(myQuestionsList);
       setLoading(false);
     }
   }, []);
   useEffect(() => {
-    // setIsOpen({ ...myQuestionsList });
     setIsOpen({ ...myQuestionsList });
     setLoading(false);
   }, []);
@@ -267,7 +249,7 @@ const MyQuestionsList = ({
   const onClickAddButton = async (question) => {
     console.log("question", question);
     // console.log(question)
-    if (section === "assessment") {
+    if (type === "assessment") {
       const isDuplicate = addedSections.some(section =>
         section.Questions.some(q => q.questionId === question._id)
       );
@@ -537,7 +519,7 @@ return (
     </div>
 
     <div
-      className={`${section === "interviewerSection" || section === "Popup" ? "" : "mt-2"
+      className={`${type === "interviewerSection mt-2"
         }`}
     >
       {/* List Selection and Filter Section (UI improvement) */}
@@ -692,7 +674,7 @@ return (
                 {/* Questions List (UI improvement) */}
                 {isOpen[listName] && (
                   <div
-                    className={`p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-300 ${section === "interviewerSection"
+                    className={`p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection"
                         ? "h-[62vh]"
                         : "h-[calc(100vh-310px)]"
                       } overflow-y-auto`}
@@ -729,8 +711,7 @@ return (
                             </span>
 
                             {/* Add/Remove buttons for different sections (UI improvement) */}
-                            {(section === "Popup" ||
-                              section === "interviewerSection") && (
+                            {(type === "interviewerSection") && (
                                 <div>
                                   {question.isAdded ? (
                                     <button
@@ -762,8 +743,11 @@ return (
                                 </div>
                               )}
 
-                            {section === "assessment" && (
-                              <div className=" flex justify-center w-16">
+                     
+
+                            {type === "assessment" && (
+                              <div className="w-[8%] flex justify-center">
+
                                 {addedSections.some(s => s.Questions.some(q => q.questionId === question._id)) ? (
                                   <span className="text-green-600 text-sm font-base py-1 px-1">
                                     ✓ Added
@@ -893,7 +877,7 @@ return (
     {/* Modals */}
     {showNewCandidateContent && (
       <Editassesmentquestion
-        section={section}
+        type={type}
         questionBankPopupVisibility={questionBankPopupVisibility}
         onClose={handleclose}
         question={showNewCandidateContent}
@@ -908,7 +892,7 @@ return (
         updateQuestionsInAddedSectionFromQuestionBank={
           updateQuestionsInAddedSectionFromQuestionBank
         }
-        section={section}
+        type={type}
         questionBankPopupVisibility={questionBankPopupVisibility}
         onClose={closeSidebar}
         onOutsideClick={handleOutsideClick}

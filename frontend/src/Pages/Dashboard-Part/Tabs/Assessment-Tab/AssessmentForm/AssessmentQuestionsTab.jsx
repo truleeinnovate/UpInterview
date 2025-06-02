@@ -240,7 +240,7 @@ const AssessmentQuestionsTab = ({
                             addedSections={addedSections}
                             questionsLimit={questionsLimit}
                             checkedCount={checkedCount}
-                            section="assessment"
+                            type="assessment"
                           />
                         </div>
                       )}

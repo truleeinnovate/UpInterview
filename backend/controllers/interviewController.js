@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
 const { Interview } = require('../models/Interview');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const InterviewTemplate = require('../models/InterviewTemplate.js');
+const { Contacts } = require('../models/Contacts');
 
 
 const { Users } = require('../models/Users');
@@ -713,16 +715,66 @@ async function handleInterviewQuestions(interviewId, roundId, questions) {
     }
 }
 
+// Helper function to process interviewers array
+async function processInterviewers(interviewers) {
+    if (!Array.isArray(interviewers)) {
+        return [];
+    }
+
+    const processedInterviewers = [];
+    
+    for (const interviewer of interviewers) {
+        try {
+            // If it's already an ObjectId, add it directly
+            if (mongoose.Types.ObjectId.isValid(interviewer) && !Array.isArray(interviewer)) {
+                processedInterviewers.push(interviewer);
+                continue;
+            }
+
+            // If it's an object with email, try to find or create a contact
+            if (interviewer.email) {
+                let contact = await Contacts.findOne({ email: interviewer.email });
+                
+                if (!contact) {
+                    // Create new contact if not found
+                    contact = new Contacts({
+                        firstName: interviewer.name?.split(' ')[0] || 'Unknown',
+                        lastName: interviewer.name?.split(' ').slice(1).join(' ') || 'User',
+                        email: interviewer.email,
+                        phone: interviewer.phone || '',
+                        technology: interviewer.technology ? [interviewer.technology] : [],
+                        contactType: 'Interviewer',
+                        createdDate: new Date()
+                    });
+                    await contact.save();
+                }
+                
+                if (contact._id) {
+                    processedInterviewers.push(contact._id);
+                }
+            }
+        } catch (error) {
+            console.error('Error processing interviewer:', error);
+            // Skip this interviewer if there's an error
+        }
+    }
+    
+    return processedInterviewers;
+}
+
 const saveInterviewRound = async (req, res) => {
     try {
-
         const { interviewId, round, roundId, questions } = req.body;
         console.log("saveInterviewRound called with body:", req.body);
         console.log("interviewId", interviewId);
         
-
         if (!interviewId || !round) {
             return res.status(400).json({ message: "Interview ID and round data are required." });
+        }
+        
+        // Process interviewers array to ensure it contains valid ObjectIds
+        if (round.interviewers) {
+            round.interviewers = await processInterviewers(round.interviewers);
         }
 
         // let savedRound;
@@ -1059,9 +1111,9 @@ const saveInterviewRound = async (req, res) => {
 //     }
 // }
 
-const mongoose = require('mongoose'); // Import mongoose for ObjectId conversion
-const { data } = require('autoprefixer');
-const { log } = require('util');
+// const mongoose = require('mongoose'); // Import mongoose for ObjectId conversion
+// const { data } = require('autoprefixer');
+// const { log } = require('util');
 
 // const getInterviewBasedOnInterviewId = async (req, res) => {
 //     try {

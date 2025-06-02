@@ -60,19 +60,13 @@ function RoundFormPosition() {
     assessmentTemplate: { assessmentId: '', assessmentName: '' },
     roundTitle: '',
     customRoundTitle: '',
-    // interviewerType: '',
-    // externalInterviewers: '',
-    // selectedInterviewersType: 'Individual',
     interviewMode: '',
     selectedQuestions: [],
-    // status: 'Pending',
     instructions: '',
     sequence: 1,
-    // isInstantInterview: false,
     interviewQuestionsList: [],
     selectedInterviewType: null,
-    internalInterviewers: [],
-    externalInterviewers: '',
+    interviewers: [],
     interviewType: 'instant',
     scheduledDate: '',
     duration: 30
@@ -126,9 +120,8 @@ function RoundFormPosition() {
       interviewMode: selectedTitle === "Assessment" ? "Virtual" : selectedTitle === "Other" ? "" : prev.interviewMode,
       duration: 30,
       interviewerType: "",
-      externalInterviewers: "",
       instructions: "",
-      internalInterviewers: [],
+      interviewers: [],
       interviewQuestionsList: [],
       assessmentTemplate: [{ assessmentId: '', assessmentName: '' }]
     }));
@@ -221,10 +214,7 @@ function RoundFormPosition() {
               sequence: roundEditData.sequence || 1,
               interviewQuestionsList: roundEditData.questions || [],
               selectedInterviewType: roundEditData.interviewerType || null,
-              internalInterviewers: internalInterviewers || [],
-              externalInterviewers: roundEditData.interviewerType === "External"
-                ? "Outsourced will be selected at interview schdedule time."
-                : '',
+              interviewers: internalInterviewers || [],
               interviewType: roundEditData.interviewType || 'instant',
               scheduledDate: '',
               duration: roundEditData.duration || 30
@@ -351,6 +341,8 @@ function RoundFormPosition() {
 
 
   const handleInternalInterviewerSelect = (interviewers) => {
+    console.log("handleInternalInterviewerSelect interviewers", interviewers);
+    
     if (formData.selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
@@ -397,7 +389,6 @@ function RoundFormPosition() {
     setFormData(prev => ({
       ...prev,
       selectedInterviewType: "external",
-      externalInterviewers: "Outsourced will be selected at interview schdedule time."
     }));
 
   };
@@ -417,8 +408,7 @@ function RoundFormPosition() {
   const handleClearAllInterviewers = () => {
     setFormData(prev => ({
       ...prev,
-      internalInterviewers: [],
-      externalInterviewers: '',
+      interviewers: [],
       selectedInterviewType: null
     }));
 
@@ -426,7 +416,7 @@ function RoundFormPosition() {
 
   const selectedInterviewers = formData.selectedInterviewType === "internal"
     ? formData.internalInterviewers
-    : (formData.selectedInterviewType === "external" ? formData.externalInterviewers : []);
+    : (formData.selectedInterviewType === "external" && []);
   const isInternalSelected = formData.selectedInterviewType === "internal";
   const isExternalSelected = formData.selectedInterviewType === "external";
   const selectedInterviewersData = isInternalSelected && Array.isArray(selectedInterviewers)
@@ -539,8 +529,7 @@ function RoundFormPosition() {
       interviewers: formData.selectedInterviewType === "internal"
         ? formData.internalInterviewers.map(interviewer => interviewer._id)
         : formData.selectedInterviewType === "external"
-          ? ["Outsourced will be selected at interview schedule time"]
-          : [],
+          && [],
       ...(formData.roundTitle === "Assessment" && formData.assessmentTemplate.assessmentId
         ? {
           assessmentId: formData.assessmentTemplate.assessmentId,
@@ -1196,7 +1185,6 @@ function RoundFormPosition() {
                                 )}
                               </div>
 
-
                               {/* Internal Interviewers */}
                               {isInternalSelected && (
                                 <div className="mb-1">
@@ -1229,7 +1217,7 @@ function RoundFormPosition() {
                                     {/* {externalInterviewers.map((interviewer) => ( */}
                                     <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-orange-800 truncate">{formData.externalInterviewers} (Outsourced)</span>
+                                        <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
                                       </div>
                                       <button
                                         type="button"
@@ -1250,7 +1238,6 @@ function RoundFormPosition() {
                         {errors.interviewerType && (
                           <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
                         )}
-
 
                       </div>
 

@@ -15,7 +15,7 @@ const CustomProvider = ({ children }) => {
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  // console.log('tokenPayload:', tokenPayload);
+
 
 
 
@@ -64,9 +64,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // console.log('Fetching user profile...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
-        // console.log('User profile fetched successfully:', response.data);
         setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -81,7 +79,6 @@ const CustomProvider = ({ children }) => {
   // Fetch master data
   useEffect(() => {
     const fetchMasterData = async () => {
-      // console.log('Fetching master data...');
       try {
         const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
@@ -93,16 +90,6 @@ const CustomProvider = ({ children }) => {
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
-
-        // console.log('Master data fetched successfully');
-        // console.log('Locations:', locationsRes.data.length);
-        // console.log('Industries:', industriesRes.data.length);
-        // console.log('Roles:', rolesRes.data.length);
-        // console.log('Skills:', skillsRes.data.length);
-        // console.log('Technologies:', TechnologyRes.data.length);
-        // console.log('Qualifications:', QualificationRes.data.length);
-        // console.log('Colleges:', CollegeRes.data.length);
-        // console.log('Companies:', CompanyRes.data.length);
 
         setLocations(locationsRes.data);
         setIndustries(industriesRes.data);
@@ -125,10 +112,8 @@ const CustomProvider = ({ children }) => {
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
     try {
-      // console.log('Fetching interviewer questions...');
       const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
       const response = await axios.get(url);
-      // console.log('Interviewer questions fetched successfully:', response.data.questions.length);
 
       const formattedList = response.data.questions.map((question) => ({
         id: question._id,
@@ -152,9 +137,7 @@ const CustomProvider = ({ children }) => {
   // Fetch My Questions Data
   const fetchMyQuestionsData = useCallback(async () => {
     try {
-      // console.log('Fetching my questions data...');
       const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
-      // console.log('My questions data filtered:', filteredPositions);
 
       const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
         acc[key] = Array.isArray(filteredPositions[key])
@@ -163,7 +146,6 @@ const CustomProvider = ({ children }) => {
         return acc;
       }, {});
 
-      // console.log('Processed my questions data:', newObject);
       setMyQuestionsList(newObject);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -175,9 +157,7 @@ const CustomProvider = ({ children }) => {
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
-      // console.log(`Fetching lists for user ${userId}...`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
-      // console.log('User lists fetched successfully:', response.data);
       setCreatedLists(response.data.reverse());
     } catch (error) {
       // console.error('Error fetching lists:', error);
@@ -193,13 +173,10 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const getQuestions = async () => {
       try {
-        // console.log('Fetching suggested questions...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
-        // console.log('Suggested questions response:', response.data);
 
         if (response.data.success) {
           const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
-          // console.log('Processed suggested questions:', newList);
           setSuggestedQuestions(newList);
           setSuggestedQuestionsFilteredData(newList);
         }
@@ -614,8 +591,6 @@ const CustomProvider = ({ children }) => {
         },
       });
 
-      // console.log("response data Groups", response.data);
-      
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
@@ -655,37 +630,37 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
- 
+
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
- 
+
     setQuestionsLoading(true);
     setQuestionsError(null);
- 
+
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
- 
+
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       // Create section questions mapping
       const newSectionQuestions = {};
- 
+
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
- 
+
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
@@ -713,17 +688,17 @@ const CustomProvider = ({ children }) => {
           }))
         };
       });
- 
+
       // Verify questions exist
       const hasQuestions = Object.values(newSectionQuestions).some(
         section => section.questions.length > 0
       );
- 
+
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
@@ -736,27 +711,36 @@ const CustomProvider = ({ children }) => {
   }, []);
 
   // interview template
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading, error } = useQuery({
     queryKey: ['interviewTemplates', tenantId, userId],
     queryFn: async () => {
-      let queryString = '';
+      try {
+        let queryString = '';
+        if (organization) {
+          queryString = `tenantId=${tenantId}&organization=true`;
+        } else {
+          queryString = `ownerId=${userId}&organization=false`;
+        }
+        const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
+        const headers = { Authorization: `Bearer ${authToken}` };
+        const response = await axios.get(apiUrl, { headers });
+        const templatesData = response.data.data;
 
-      if (organization) {
-        queryString = `tenantId=${tenantId}&organization=true`;
-      } else {
-        queryString = `ownerId=${userId}&organization=false`;
+        return templatesData;
+      } catch (err) {
+        console.error('Error fetching templates:', err);
+        throw err; // Let react-query handle the error
       }
-
-      const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-
-      const response = await axios.get(apiUrl, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-
-      return response.data.data;
     },
     enabled: !!authToken,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
+
+  // Log error if it occurs
+  if (error) {
+    console.error('useQuery error:', error.message);
+  }
 
 
   // Mutation for creating/updating templates
@@ -830,14 +814,12 @@ const CustomProvider = ({ children }) => {
 
   const [contacts, setContacts] = useState([]);
 
-
   const fetchContactsData = async () => {
     try {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
-      // console.log("allUsers_data", allUsers_data);
-      
+
 
       setContacts(allUsers_data);
     } catch (error) {
@@ -867,7 +849,6 @@ const CustomProvider = ({ children }) => {
 
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
-        console.log('Contacts for this user:', res.data);
       } catch (err) {
         console.error('Error fetching user contacts:', err);
       }
@@ -885,8 +866,7 @@ const CustomProvider = ({ children }) => {
     const fetchInterviewers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-        // console.log('response', response)
-        // console.log('data', response.data)
+
         setInterviewers(response.data);
       } catch (err) {
         console.error(err.message);
@@ -1043,8 +1023,6 @@ const CustomProvider = ({ children }) => {
         const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
         // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("Sub_res Sub_res",Subscription_data);
-
 
         if (Subscription_data.subscriptionPlanId) {
           setcurrentPlan(Subscription_data);
@@ -1068,8 +1046,6 @@ const CustomProvider = ({ children }) => {
       try {
         const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
         const WalletBalance_data = WalletBalance_res.data || {};
-        // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("WalletBalance_res ",WalletBalance_res);
 
 
         if (WalletBalance_data) {
@@ -1085,6 +1061,53 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
+  const [tickets, setTickets] = useState([]);
+
+  const [userRole, setuserRole] = useState("Admin");
+
+  const getTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+      let filteredTickets = response.data.tickets || [];
+      console.log("Fetched tickets:", filteredTickets);
+
+      if (userRole === "SuperAdmin" || userRole === "Support Team") {
+        console.log("Role: SuperAdmin or Support Team - showing all tickets");
+        setTickets(filteredTickets);
+      } else if (userRole === "Admin" && tenantId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.tenantId === tenantId
+        );
+        console.log("Role: Admin - filtered by tenantId", tenantId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (userRole === "Individual" && userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.ownerId === userId
+        );
+        console.log("Role: Individual - filtered by ownerId", userId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.assignedToId === userId
+        );
+        console.log("Other role - filtered by assignedToId", userId, filteredTickets);
+        setTickets(filteredTickets);
+      } else {
+        console.log("No matching role or userId - setting tickets to empty");
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userRole, tenantId, userId]);
+
+  useEffect(() => {
+    getTickets();
+  }, [getTickets]);
 
   return (
     <CustomContext.Provider
@@ -1211,7 +1234,10 @@ const CustomProvider = ({ children }) => {
         singlecontact,
         // fetchContacts,
 
-        interviewers
+        interviewers,
+
+        tickets,
+        userRole
       }}
     >
       {children}

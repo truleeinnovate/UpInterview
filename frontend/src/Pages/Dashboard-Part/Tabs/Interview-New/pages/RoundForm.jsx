@@ -224,25 +224,29 @@ const RoundForm = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
+  console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    console.log("Interviewers passed to parent:", interviewers[0].contactId); // Debugging
+    console.log("Interviewers passed to parent:", interviewers); // Debugging
 
     if (selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
-
+//this will check already selcetd not to repeat
     const uniqueInterviewers = interviewers?.filter((newInterviewer) =>
       !internalInterviewers.some((i) => i?._id === newInterviewer?._id)
     );
+    console.log("uniqueInterviewers", uniqueInterviewers);
 
     // Extract only contactId values
-    const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
+    // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
+    // console.log("contactIds", contactIds);
 
     setSelectedInterviewType("internal");
-    setInternalInterviewers([...internalInterviewers, ...contactIds]); // Append new interviewers
+    console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
+    setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]); // Append new interviewers
   };
 
   const handleExternalInterviewerSelect = (interviewers) => {
@@ -292,8 +296,8 @@ const RoundForm = () => {
     setSelectedInterviewType(null);
   };
 
-
   const selectedInterviewers = selectedInterviewType === "internal" ? internalInterviewers : externalInterviewers;
+  console.log("selectedInterviewers", selectedInterviewers);
   const isInternalSelected = selectedInterviewType === "internal";
   const isExternalSelected = selectedInterviewType === "external";
 
@@ -496,6 +500,7 @@ const RoundForm = () => {
 
     try {
       // Prepare round data for validation
+      console.log('selectedInterviewType;;;;selectedInterviewersData', selectedInterviewType, selectedInterviewersData);
       const roundData = {
         roundTitle,
         interviewMode,
@@ -554,6 +559,7 @@ const RoundForm = () => {
         const isInternal = selectedInterviewType === "internal";
 
         for (const interviewer of selectedInterviewers) {
+          console.log("selecteinterviewer._id from the submit ", interviewer._id);
           const outsourceRequestData = {
             tenantId: orgId,
             ownerId: userId,
@@ -1209,10 +1215,11 @@ const RoundForm = () => {
                               <div className="mb-3">
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                 <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                  {internalInterviewers.map((interviewer) => (
+                                  {console.log("internalInterviewers near shoing place :", internalInterviewers)}
+                                  {internalInterviewers?.map((interviewer) => (
                                     <div key={interviewer._id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer.name}</span>
+                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
                                       </div>
                                       <button
                                         type="button"
@@ -1233,10 +1240,11 @@ const RoundForm = () => {
                               <div>
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {externalInterviewers.map((interviewer) => (
+                                  {console.log("externalInterviewers near shoing place :", externalInterviewers)}
+                                  {externalInterviewers?.map((interviewer) => (
                                     <div key={interviewer.id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.name} (Outsourced)</span>
+                                        <span className="ml-2 text-sm text-orange-800 truncate">{interviewer?.contact?.firstName} {interviewer?.contact?.lastName} (Outsourced)</span>
                                       </div>
                                       <button
                                         type="button"

@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { format } from "date-fns";
-import axios from 'axios';
 import { Search } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
@@ -135,6 +134,11 @@ const AddCandidateForm = ({ mode }) => {
     // addOrUpdateCandidate
   } = useCustomContext();
 
+  // Get user token information
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const userId = tokenPayload?.userId;
+  const orgId = tokenPayload?.tenantId;
+
   const { addOrUpdateCandidate, candidateData } = useCandidates();
 
   console.log("currentRole", currentRole);
@@ -251,9 +255,18 @@ const AddCandidateForm = ({ mode }) => {
   };
 
   const handleRoleSelect = (role) => {
-    setFormData((prev) => ({ ...prev, CurrentRole: role }));
-    setShowDropdownCurrentRole(false);
+    // setFormData((prev) => ({ ...prev, CurrentRole: role }));
+    // setShowDropdownCurrentRole(false);
     setSearchTermCurrentRole(''); // Clear the search term
+    // setErrors((prev) => ({ ...prev, currentRole: '' }));
+
+    setFormData(prev => ({ ...prev, CurrentRole: role }));
+
+    // Clear error if any
+    setErrors(prev => ({ ...prev, CurrentRole: "" }));
+
+    // Optionally close the dropdown
+    setShowDropdownCurrentRole(false);
   };
 
 
@@ -463,95 +476,9 @@ const AddCandidateForm = ({ mode }) => {
 
   };
 
-  // const userName = tokenPayload?.userName;
-
-  const handleAddCandidate = async (e) => {
-    e.preventDefault();
-    console.log('Starting add candidate process...');
-
-    // Get user token information
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.orgId;
-
-    // const userId = Cookies.get('userId');
-    // const userName = Cookies.get('userName')
-    // const orgId = Cookies.get('organizationId')
-
-    console.log('User info:', { userId, userName, orgId });
-
-    // Validate form data
-    const { formIsValid, newErrors } = validateCandidateForm(
-      formData,
-      entries || [],
-      errors || {}
-    );
-
-    if (!formIsValid) {
-      console.log('Form validation failed:', newErrors);
-      setErrors(newErrors);
-      return;
-    }
-
-    // Prepare candidate data
-    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log('Current date and time:', currentDateTime);
-
-    const data = {
-      FirstName: formData.FirstName,
-      LastName: formData.LastName,
-      Email: formData.Email,
-      Phone: formData.Phone,
-      CountryCode: formData.CountryCode,
-      CurrentExperience: formData.CurrentExperience,
-      RelevantExperience: formData.RelevantExperience,
-      HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      resume: null,
-      CurrentRole: formData.CurrentRole,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: `${userName} at ${currentDateTime}`,
-      ownerId: userId,
-      tenantId: orgId
-    };
-
-    console.log('Submitting candidate data:', data);
-
-    try {
-      // getting the API from the apihooks for add or update candidate (post or patch)
-      await addOrUpdateCandidate.mutateAsync({ id, data, file });
-      // Reset form and close
-      resetFormData();
-      console.log('Form reset completed');
-
-      console.log('Navigation to candidate list completed');
-    } catch (error) {
-      console.error('Failed to add candidate:', error);
-      if (error.response) {
-        console.error('Server response:', error.response.data);
-      }
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
     console.log('Starting submit process...');
-
-    // Get user token information
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    const userName = tokenPayload?.userName;
-    const orgId = tokenPayload?.tenantId;
-
-
     // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
@@ -599,22 +526,20 @@ const AddCandidateForm = ({ mode }) => {
       // getting the API from the apihooks for add or update candidate (post or patch)
 
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
-
-      // Handle navigation based on mode
-      switch (mode) {
-        case 'Edit':
-          navigate(`/candidate`);
-          break;
-        case 'Candidate Edit':
-          navigate(`/candidate/${id || candidateId}`);
-
-
-          break;
-        default: // Create mode
-          navigate('/candidate');
-      }
-
       resetFormData();
+
+      if (!isAddCandidate) {
+        switch (mode) {
+          case 'Edit':
+            navigate(`/candidate`);
+            break;
+          case 'Candidate Edit':
+            navigate(`/candidate/${id}`);
+            break;
+          default: // Create mode
+            navigate('/candidate');
+        }
+      }
     } catch (error) {
       console.error("Error adding candidate:", error);
     }
@@ -690,7 +615,6 @@ const AddCandidateForm = ({ mode }) => {
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {/* <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" /> */}
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -995,6 +919,7 @@ const AddCandidateForm = ({ mode }) => {
                       id="CurrentRole"
                       value={formData.CurrentRole}
                       onClick={toggleCurrentRole}
+                      onChange={handleChange}
                       placeholder="Select Current Role"
                       autoComplete="off"
                       className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
@@ -1036,12 +961,6 @@ const AddCandidateForm = ({ mode }) => {
                   {errors.CurrentRole && <p className="text-red-500 text-xs pt-1">{errors.CurrentRole}</p>}
                 </div>
 
-
-
-
-
-
-
               </div>
               <p className='text-lg font-semibold col-span-2'>Skills Details</p>
 
@@ -1075,18 +994,24 @@ const AddCandidateForm = ({ mode }) => {
                 <div>
                   <div className="space-y-2 mb-4 mt-5">
                     {entries.map((entry, index) => (
-                      <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
+                      <div className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
                         <div className="flex justify-between border bg-white rounded w-full mr-3">
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.skill}</div>
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.experience}</div>
-                          <div className="w-1/3 px-2 py-1 text-center">{entry.expertise}</div>
+                          <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                            {entry.skill}
+                          </div>
+                          <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                            {entry.experience}
+                          </div>
+                          <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                            {entry.expertise}
+                          </div>
                         </div>
                         <div className="flex space-x-2">
                           <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
                             <FaEdit />
                           </button>
                           <button type="button" onClick={() => handleDelete(index)} className="text-md">
-                            <FaTrash fill='red' />
+                            <FaTrash fill="red" />
                           </button>
                         </div>
                       </div>
@@ -1135,7 +1060,7 @@ const AddCandidateForm = ({ mode }) => {
                 {!id && (
                   <button
                     type="button"
-                    onClick={handleAddCandidate}
+                    onClick={(e) => handleSubmit(e, true)}
                     className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
                   >
                     <FaPlus className="w-5 h-5" /> Add Candidate

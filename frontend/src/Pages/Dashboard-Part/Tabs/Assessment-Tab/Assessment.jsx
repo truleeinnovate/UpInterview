@@ -178,7 +178,7 @@ const Assessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "N/A"}
+          {value || "Not Provided"}
         </div>
       ),
     },
@@ -190,28 +190,29 @@ const Assessment = () => {
     {
       key: "NumberOfQuestions",
       header: "No.of Questions",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "DifficultyLevel",
       header: "Difficulty Level",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "totalScore",
       header: "Total Score",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "passScore",
       header: "Pass Score (Number / %)",
       render: (value, row) =>
-        `${row.passScore || "N/A"} ${row.passScoreType === "Percentage" ? "%" : "Number"}`,
+row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided"
+
     },
     {
       key: "Duration",
       header: "Duration",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
   ];
 
