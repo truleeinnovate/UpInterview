@@ -3,10 +3,9 @@ import { Search, X, ChevronDown, ChevronUp, Minimize, Expand } from 'lucide-reac
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
-const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
+const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, selectedInterviewers: selectedInterviewersProp = [], }) => {
   const { interviewers, groups } = useCustomContext();
   console.log("interviewers", interviewers);
-  const [selectedInterviewers, setSelectedInterviewers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -14,6 +13,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
   const [viewType, setViewType] = useState('individuals');
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -30,6 +30,10 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onClose]);
+
+  // useEffect(() => {
+  //   setSelectedInterviewers(selectedInterviewersProp);
+  // }, [selectedInterviewersProp]);
 
   const FilteredData = useMemo(() => {
     if (viewType === 'individuals') {
@@ -194,8 +198,8 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom }) => {
               <div
                 key={item._id}
                 className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== 'dashboard' ? 'cursor-pointer' : 'cursor-default'} ${navigatedfrom !== 'dashboard' && isInterviewerSelected(item)
-                    ? 'bg-blue-100 border border-blue-300'
-                    : 'hover:bg-gray-50 border border-gray-200'
+                  ? 'bg-blue-100 border border-blue-300'
+                  : 'hover:bg-gray-50 border border-gray-200'
                   }`}
                 onClick={() => navigatedfrom !== 'dashboard' && handleSelectClick(item)}
               >

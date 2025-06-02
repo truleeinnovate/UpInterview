@@ -247,10 +247,6 @@ const updateContactsDetails =   async (req, res) => {
     try {
         const contactId = req.params.id;
         const updateData = req.body;
- 
-        console.log("contactId", contactId,updateData);
-       
- 
         // Separate availability data if present
         const { availability, ...contactData } = updateData;
  

@@ -41,7 +41,6 @@ exports.getAllTemplates = async (req, res) => {
         });
       }
       filter.tenantId = tenantId;
-      console.log('Filtering by tenantId:', tenantId);
     } else {
       if (!ownerId) {
         console.error('Missing ownerId for individual user');

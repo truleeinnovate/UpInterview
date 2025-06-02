@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTrash, FaSearch, FaRegUser } from 'react-icons/fa';
 import { config } from '../../config';
+import Loading from '../../Components/Loading';
 
 
 const AssessmentType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndAddRound, onUpdate, onValidityChange, isEditMode, isViewMode, rounds }) => {
@@ -943,7 +944,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
                 {showDropdown && formData.selectedInterviewersType && formData.interviewerType !== 'Outsourced Interviewer' && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                     {loading ? (
-                      <div className="px-3 py-2 text-gray-500">Loading...</div>
+                      <div className="px-3 py-2 text-gray-500"><Loading /></div>
                     ) : formData.selectedInterviewersType === 'Individual' ? (
                       users.length > 0 ? (
                         users.map((user, index) => (

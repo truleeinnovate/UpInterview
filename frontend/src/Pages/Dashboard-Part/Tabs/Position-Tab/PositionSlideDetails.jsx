@@ -22,6 +22,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
 import { config } from '../../../../config';
+import Loading from '../../../../Components/Loading';
 
 
 Modal.setAppElement('#root');
@@ -107,7 +108,7 @@ const PositionSlideDetails = () => {
     { id: 'Activity', name: 'Activity', icon: '📊' }
   ];
 
-  if (!position) return <div className='flex justify-center items-center h-full w-full'>Loading...</div>;
+  if (!position) return <div className='flex justify-center items-center h-full w-full'><Loading /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

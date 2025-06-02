@@ -182,7 +182,6 @@ exports.assessmentSendEmail = async (req, res) => {
 
   try {
     if (category === "assessment") {
-      console.log("req.body", req.body);
       
       const { scheduledAssessmentId, candidates, ownerId, tenantId, assessmentId, ccEmail } = req.body;
 
@@ -190,7 +189,6 @@ exports.assessmentSendEmail = async (req, res) => {
         return res.status(400).json({ success: false, message: "Missing assessment details" });
       }
       for (const candidate of candidates) {
-        console.log("candidate.candidateId", candidate.candidateId)
         const candidateData = await Candidate.findOne({ _id: candidate.candidateId });
 
         if (!candidateData) {
@@ -220,12 +218,9 @@ exports.assessmentSendEmail = async (req, res) => {
         // }
 
         const encryptedId = encrypt(candidateAssessmentDetails._id.toString(), 'test')
-        console.log("encryptedId", encryptedId)
         const link = `http://localhost:3000/assessmenttest?candidateAssessmentId=${encryptedId}`;
-        console.log("link", link)
 
         const updateCandidateAssessments = await CandidateAssessment.findByIdAndUpdate(candidateAssessmentDetails._id, { assessmentLink: link }, { new: true })
-        console.log("updateCandidateAssessments", updateCandidateAssessments)
         // Prepare personalized email body from the template
         // const emailBody = emailTemplate.body
         //   .replace("{{candidateName}}", candidateData.LastName)

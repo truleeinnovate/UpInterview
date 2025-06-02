@@ -5,7 +5,6 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 
 // patch call 
 const updateCandidatePatchCall = async (req, res) => {
-  console.log('getting 4')
 
   res.locals.loggedByController = true;
   res.locals.processName = 'Update Candidate';
@@ -255,7 +254,6 @@ const addCandidatePostCall = async (req, res) => {
 
 
 const getCandidates = async (req, res) => {
-  console.log('[getCandidates] Starting fetch');
   try {
     const { tenantId, ownerId } = req.query;
     // console.log('[getCandidates] Query params:', { tenantId, ownerId });
@@ -276,10 +274,8 @@ const getCandidates = async (req, res) => {
 
 
 const getCandidateById = async (req, res) => {
-  console.log('getting 1')
   try {
     const { id } = req.params;
-    console.log("👉 [getCandidateById] Received ID:", id);
 
     if (!id) {
       // console.log("❌ [getCandidateById] No ID provided");

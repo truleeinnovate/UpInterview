@@ -21,6 +21,7 @@ import Popup from "reactjs-popup";
 import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { config } from "../../../../config.js";
+import Loading from "../../../../Components/Loading.js";
 
 const MyQuestionsList = ({
   assessmentId,
@@ -198,7 +199,7 @@ type,
 
   if (loading) {
     return (
-      <div className=" fixed text-center top-60 right-0 left-0">Loading...</div>
+      <div className=" fixed text-center top-60 right-0 left-0"><Loading /></div>
     );
   }
 
