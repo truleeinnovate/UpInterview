@@ -471,7 +471,6 @@ const saveInterviewRoundPosition = async (req, res) => {
 
     const { positionId, round, roundId } = req.body;
 
-
     if (!positionId || !round) {
       return res.status(400).json({ message: "Interview ID and round data are required." });
     }
@@ -482,20 +481,19 @@ const saveInterviewRoundPosition = async (req, res) => {
       return res.status(404).json({ message: "Position not found." });
     }
 
-
     if (roundId) {
       // **Edit an existing round**
       const roundIndex = position.rounds.findIndex(r => r._id.toString() === roundId);
       if (roundIndex === -1) {
         return res.status(404).json({ message: "Round not found." });
       }
+
       // Update the existing round with new data
       position.rounds[roundIndex] = { ...position.rounds[roundIndex], ...round };
       await position.save();
 
       // **Reorder all rounds based on sequence**
       await reorderInterviewRounds(position);
-
 
       console.log("Position rounds", position.rounds[roundIndex]);
 

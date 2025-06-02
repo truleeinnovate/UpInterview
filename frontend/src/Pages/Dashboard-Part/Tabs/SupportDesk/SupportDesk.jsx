@@ -23,7 +23,6 @@ function SupportDesk() {
 
    const { tickets,userRole } = useCustomContext();
   console.log('userRole from main', userRole)
-   console.log('tickets from main', tickets)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);

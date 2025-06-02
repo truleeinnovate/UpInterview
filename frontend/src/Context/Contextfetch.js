@@ -15,7 +15,6 @@ const CustomProvider = ({ children }) => {
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  // console.log('tokenPayload:', tokenPayload);
 
 
 
@@ -64,9 +63,7 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // console.log('Fetching user profile...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
-        // console.log('User profile fetched successfully:', response.data);
         setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -81,7 +78,6 @@ const CustomProvider = ({ children }) => {
   // Fetch master data
   useEffect(() => {
     const fetchMasterData = async () => {
-      // console.log('Fetching master data...');
       try {
         const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
@@ -93,16 +89,6 @@ const CustomProvider = ({ children }) => {
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
-
-        // console.log('Master data fetched successfully');
-        // console.log('Locations:', locationsRes.data.length);
-        // console.log('Industries:', industriesRes.data.length);
-        // console.log('Roles:', rolesRes.data.length);
-        // console.log('Skills:', skillsRes.data.length);
-        // console.log('Technologies:', TechnologyRes.data.length);
-        // console.log('Qualifications:', QualificationRes.data.length);
-        // console.log('Colleges:', CollegeRes.data.length);
-        // console.log('Companies:', CompanyRes.data.length);
 
         setLocations(locationsRes.data);
         setIndustries(industriesRes.data);
@@ -125,10 +111,8 @@ const CustomProvider = ({ children }) => {
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
     try {
-      // console.log('Fetching interviewer questions...');
       const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
       const response = await axios.get(url);
-      // console.log('Interviewer questions fetched successfully:', response.data.questions.length);
 
       const formattedList = response.data.questions.map((question) => ({
         id: question._id,
@@ -152,9 +136,7 @@ const CustomProvider = ({ children }) => {
   // Fetch My Questions Data
   const fetchMyQuestionsData = useCallback(async () => {
     try {
-      // console.log('Fetching my questions data...');
       const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
-      // console.log('My questions data filtered:', filteredPositions);
 
       const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
         acc[key] = Array.isArray(filteredPositions[key])
@@ -163,7 +145,6 @@ const CustomProvider = ({ children }) => {
         return acc;
       }, {});
 
-      // console.log('Processed my questions data:', newObject);
       setMyQuestionsList(newObject);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -175,9 +156,7 @@ const CustomProvider = ({ children }) => {
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
-      // console.log(`Fetching lists for user ${userId}...`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
-      // console.log('User lists fetched successfully:', response.data);
       setCreatedLists(response.data.reverse());
     } catch (error) {
       // console.error('Error fetching lists:', error);
@@ -193,13 +172,10 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const getQuestions = async () => {
       try {
-        // console.log('Fetching suggested questions...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
-        // console.log('Suggested questions response:', response.data);
 
         if (response.data.success) {
           const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
-          // console.log('Processed suggested questions:', newList);
           setSuggestedQuestions(newList);
           setSuggestedQuestionsFilteredData(newList);
         }
@@ -614,8 +590,6 @@ const CustomProvider = ({ children }) => {
         },
       });
 
-      // console.log("response data Groups", response.data);
-
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
@@ -746,13 +720,9 @@ const CustomProvider = ({ children }) => {
         } else {
           queryString = `ownerId=${userId}&organization=false`;
         }
-
         const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-
         const headers = { Authorization: `Bearer ${authToken}` };
-
         const response = await axios.get(apiUrl, { headers });
-
         const templatesData = response.data.data;
 
         return templatesData;
@@ -848,8 +818,6 @@ const CustomProvider = ({ children }) => {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
-      // console.log("allUsers_data", allUsers_data);
-
 
       setContacts(allUsers_data);
     } catch (error) {
@@ -875,7 +843,6 @@ const CustomProvider = ({ children }) => {
       try {
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
-        // console.log('Contacts for this user:', res.data);
       } catch (err) {
         console.error('Error fetching user contacts:', err);
       }
@@ -889,8 +856,6 @@ const CustomProvider = ({ children }) => {
     const fetchInterviewers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-        // console.log('response', response)
-        // console.log('data', response.data)
         setInterviewers(response.data);
       } catch (err) {
         console.error(err.message);
@@ -1044,8 +1009,6 @@ const CustomProvider = ({ children }) => {
         const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
         // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("Sub_res Sub_res",Subscription_data);
-
 
         if (Subscription_data.subscriptionPlanId) {
           setcurrentPlan(Subscription_data);
@@ -1069,8 +1032,6 @@ const CustomProvider = ({ children }) => {
       try {
         const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
         const WalletBalance_data = WalletBalance_res.data || {};
-        // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("WalletBalance_res ",WalletBalance_res);
 
 
         if (WalletBalance_data) {
@@ -1087,6 +1048,7 @@ const CustomProvider = ({ children }) => {
   }, [userId]);
 
   const [tickets, setTickets] = useState([]);
+
   const [userRole, setuserRole] = useState("Admin");
 
   const getTickets = useCallback(async () => {

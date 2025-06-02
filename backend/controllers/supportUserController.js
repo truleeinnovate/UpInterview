@@ -1,6 +1,5 @@
 const SupportUser = require("../models/SupportUser")
 
-
 exports.createTicket = async(req,res)=>{
     try {
         console.log(req.body)
@@ -44,9 +43,6 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
-
-
-
 exports.getTicketBasedonId  =async(req,res)=>{
     try {
         const {id}=req.params 

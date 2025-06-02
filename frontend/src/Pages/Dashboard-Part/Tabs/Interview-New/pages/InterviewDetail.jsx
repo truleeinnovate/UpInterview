@@ -45,7 +45,6 @@ const InterviewDetail = () => {
   }, [fetchInterviewData]);
 
   const interview = interviewData?.find(interview => interview._id === id);
-  console.log("interview", interview);
 
   const [loading, setLoading] = useState(true);
 
@@ -71,8 +70,6 @@ const InterviewDetail = () => {
   const [rounds, setRounds] = useState([]);
   const [template, setTemplate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  console.log("rounds", rounds)
 
   useEffect(() => {
     if (interview) {
