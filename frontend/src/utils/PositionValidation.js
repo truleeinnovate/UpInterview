@@ -97,8 +97,8 @@ export const validateForm = (formData, entries, rounds) => {
   if (!formData.jobDescription || !formData.jobDescription.trim()) {
     errors.jobdescription = "Job description is required";
     formIsValid = false;
-  } else if (formData.jobDescription.trim().length < 250) {
-    errors.jobdescription = `Job description must be at least 250 characters (currently ${formData.jobDescription.trim().length}/250)`;
+  } else if (formData.jobDescription.trim().length < 50) {
+    errors.jobdescription = `Job description must be at least 50 characters (currently ${formData.jobDescription.trim().length}/50)`;
     formIsValid = false;
   }
 

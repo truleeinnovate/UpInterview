@@ -236,9 +236,9 @@ console.log("organizationId in subdomainmanagement", organizationId);
             <div className="flex-shrink-0">
               <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
             </div>
-            <div className="ml-3">
+            {/* <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
