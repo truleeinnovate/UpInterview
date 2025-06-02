@@ -78,7 +78,6 @@ function RoundFormPosition() {
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
 
@@ -171,11 +170,6 @@ function RoundFormPosition() {
 
           const foundPosition = response.data;
 
-          if (!foundPosition) {
-            setError('Position not found');
-            return;
-          }
-
           // Only update rounds if they're different to prevent unnecessary re-renders
           setPosition(foundPosition || []);
           setRounds(foundPosition.rounds || [])
@@ -183,11 +177,6 @@ function RoundFormPosition() {
           if (isEditing && roundId) {
             // Add safety check for foundPosition.rounds
             const roundEditData = foundPosition.rounds?.find(r => r._id === roundId);
-
-            if (!roundEditData) {
-              setError('Round not found');
-              return;
-            }
 
             console.log("roundEditData", roundEditData);
             // Add fallback empty array for interviewers
@@ -234,7 +223,6 @@ function RoundFormPosition() {
         }
       } catch (error) {
         console.error('Error fetching position data:', error);
-        setError('Failed to load position data');
       }
     };
 
@@ -511,7 +499,6 @@ function RoundFormPosition() {
     console.log('click add button')
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     // Run validation first
     const isValid = validateForm();
@@ -611,7 +598,6 @@ function RoundFormPosition() {
       // navigate(`/interviews/${interviewId}`);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -706,11 +692,6 @@ function RoundFormPosition() {
 
             <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
               <div>
-                {error && (
-                  <div className="mb-4 p-4 bg-red-50 rounded-md">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                )}
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
@@ -1113,8 +1094,6 @@ function RoundFormPosition() {
 
 
 
-
-                  {formData.roundTitle === "Technical" && (
                     <>
 
                       {/* Select Interviewers */}
@@ -1359,7 +1338,6 @@ function RoundFormPosition() {
                         </div>
                       </div>
                     </>
-                  )}
 
 
                   <div>
@@ -1408,7 +1386,6 @@ function RoundFormPosition() {
                         <span className="text-sm text-gray-500"> {formData.instructions?.length || 0}/1000</span>
                       </span>
                     </div> */}
-
 
                   </div>
                   {/* footer */}

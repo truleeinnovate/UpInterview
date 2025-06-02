@@ -1241,7 +1241,7 @@ const PositionForm = ({ mode }) => {
                         className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                         rows={10}
-                        minLength={250}
+                        minLength={50}
                         maxLength={1000}
                       />
                       <div >
@@ -1249,9 +1249,9 @@ const PositionForm = ({ mode }) => {
                           <span className="text-sm text-gray-500">
                             {errors.jobdescription ? (
                               <p className="text-red-500 text-xs pt-1">{errors.jobdescription}</p>
-                            ) : formData.jobDescription.length > 0 && formData.jobDescription.length < 250 ? (
+                            ) : formData.jobDescription.length > 0 && formData.jobDescription.length < 50 ? (
                               <p className="text-gray-500 text-xs">
-                                Minimum {250 - formData.jobDescription.length} more characters needed
+                                Minimum {50 - formData.jobDescription.length} more characters needed
                               </p>
                             ) : null}
                           </span>

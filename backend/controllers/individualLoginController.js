@@ -58,7 +58,6 @@ exports.individualLogin = async (req, res) => {
     console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
     // <-----------------------OutsourceInterviewer------------------------------->
 
-
     // Generate JWT
     const payload = {
       userId: savedUser._id.toString(),

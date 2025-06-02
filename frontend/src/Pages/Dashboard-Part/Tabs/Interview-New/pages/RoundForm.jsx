@@ -728,11 +728,11 @@ const RoundForm = () => {
 
             <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
               <form>
-                {error && (
+                {/* {error && (
                   <div className="mb-4 p-4 bg-red-50 rounded-md">
                     <p className="text-sm text-red-700">{error}</p>
                   </div>
-                )}
+                )} */}
 
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
