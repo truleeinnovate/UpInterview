@@ -134,6 +134,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     return dataToUse.filter((user) => {
       const fieldsToSearch = [
         user.LastName,
+        user.FirstName,
         user.Email,
         user.Phone,
       ].filter((field) => field !== null && field !== undefined);
@@ -218,13 +219,13 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       render: (value) => (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
-          <span>{value || 'N/A'}</span>
+          <span>{value || 'Not Provided'}</span>
         </div>
       ),
     },
-    { key: 'Phone', header: 'Contact', render: (value) => value || 'N/A' },
-    { key: 'HigherQualification', header: 'Higher Qualification', render: (value) => value || 'N/A' },
-    { key: 'CurrentExperience', header: 'Current Experience', render: (value) => value || 'N/A' },
+    { key: 'Phone', header: 'Contact', render: (value) => value || 'Not Provided' },
+    { key: 'HigherQualification', header: 'Higher Qualification', render: (value) => value || 'Not Provided' },
+    { key: 'CurrentExperience', header: 'Current Experience', render: (value) => value || 'Not Provided' },
     {
       key: 'skills',
       header: 'Skills/Technology',
@@ -235,7 +236,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
             >
-              {skill.skill || 'N/A'}
+              {skill.skill || 'Not Provided'}
             </span>
           ))}
           {value.length > 2 && (
@@ -379,172 +380,172 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         )}
         <main className={isAssessmentView ? '' : 'fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background'}>
           <div className="sm:px-0">
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === 'table' ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={loading}
-                        actions={tableActions}
-                        emptyState="No candidates found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map(candidate => ({
-                          ...candidate,
-                          id: candidate._id,
-                          title: `${candidate.FirstName || ''} ${candidate.LastName || ''}`,
-                          subtitle: candidate.CurrentRole || candidate.CurrentExperience || 'N/A',
-                          avatar: candidate.ImageData ? `http://localhost:5000/${candidate.ImageData.path}` : null,
-                          status: candidate.HigherQualification || 'N/A',
-                          isAssessmentView: isAssessmentView
-                        }))}
-                        columns={kanbanColumns}
-                        loading={loading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No candidates found."
-                      />
-                    </div>
-                  )}
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    <div className="space-y-3">
-                      {/* Qualification Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() => setIsQualificationOpen(!isQualificationOpen)}
-                        >
-                          <span className="font-medium text-gray-700">Qualification</span>
-                          {isQualificationOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
-                          ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
-                          )}
-                        </div>
-                        {isQualificationOpen && (
-                          <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                            {qualification?.length > 0 ? (
-                              qualification.map((q) => (
-                                <label
-                                  key={q.QualificationName}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedStatus.includes(q.QualificationName)}
-                                    onChange={() => handleStatusToggle(q.QualificationName)}
-                                    className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                                  />
-                                  <span className="text-sm">{q.QualificationName}</span>
-                                </label>
-                              ))
-                            ) : (
-                              <span className="text-sm text-gray-500">
-                                No qualifications available
-                              </span>
-                            )}
-                          </div>
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === 'table' ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={loading}
+                      actions={tableActions}
+                      emptyState="No candidates found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map(candidate => ({
+                        ...candidate,
+                        id: candidate._id,
+                        title: `${candidate.FirstName || ''} ${candidate.LastName || ''}`,
+                        subtitle: candidate.CurrentRole || candidate.CurrentExperience || 'Not Provided',
+                        avatar: candidate.ImageData ? `http://localhost:5000/${candidate.ImageData.path}` : null,
+                        status: candidate.HigherQualification || 'Not Provided',
+                        isAssessmentView: isAssessmentView
+                      }))}
+                      columns={kanbanColumns}
+                      loading={loading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No candidates found."
+                    />
+                  </div>
+                )}
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  <div className="space-y-3">
+                    {/* Qualification Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsQualificationOpen(!isQualificationOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Qualification</span>
+                        {isQualificationOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
                         )}
                       </div>
-
-                      {/* Skills Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() => setIsSkillsOpen(!isSkillsOpen)}
-                        >
-                          <span className="font-medium text-gray-700">Skills</span>
-                          {isSkillsOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
+                      {isQualificationOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {qualification?.length > 0 ? (
+                            qualification.map((q) => (
+                              <label
+                                key={q.QualificationName}
+                                className="flex items-center space-x-2"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStatus.includes(q.QualificationName)}
+                                  onChange={() => handleStatusToggle(q.QualificationName)}
+                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm">{q.QualificationName}</span>
+                              </label>
+                            ))
                           ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
+                            <span className="text-sm text-gray-500">
+                              No qualifications available
+                            </span>
                           )}
                         </div>
-                        {isSkillsOpen && (
-                          <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                            {skills?.length > 0 ? (
-                              skills.map((skill) => (
-                                <label
-                                  key={skill.SkillName}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedTech.includes(skill.SkillName)}
-                                    onChange={() => handleTechToggle(skill.SkillName)}
-                                    className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                                  />
-                                  <span className="text-sm">{skill.SkillName}</span>
-                                </label>
-                              ))
-                            ) : (
-                              <span className="text-sm text-gray-500">No skills available</span>
-                            )}
-                          </div>
+                      )}
+                    </div>
+
+                    {/* Skills Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsSkillsOpen(!isSkillsOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Skills</span>
+                        {isSkillsOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
                         )}
                       </div>
-
-                      {/* Experience Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() => setIsExperienceOpen(!isExperienceOpen)}
-                        >
-                          <span className="font-medium text-gray-700">Experience</span>
-                          {isExperienceOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
+                      {isSkillsOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {skills?.length > 0 ? (
+                            skills.map((skill) => (
+                              <label
+                                key={skill.SkillName}
+                                className="flex items-center space-x-2"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTech.includes(skill.SkillName)}
+                                  onChange={() => handleTechToggle(skill.SkillName)}
+                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm">{skill.SkillName}</span>
+                              </label>
+                            ))
                           ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
+                            <span className="text-sm text-gray-500">No skills available</span>
                           )}
                         </div>
-                        {isExperienceOpen && (
-                          <div className="mt-1 space-y-2 pl-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-700">
-                                  Min (years)
-                                </label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="15"
-                                  value={experience.min}
-                                  onChange={(e) => handleExperienceChange(e, 'min')}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-700">
-                                  Max (years)
-                                </label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="15"
-                                  value={experience.max}
-                                  onChange={(e) => handleExperienceChange(e, 'max')}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
-                                />
-                              </div>
+                      )}
+                    </div>
+
+                    {/* Experience Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsExperienceOpen(!isExperienceOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Experience</span>
+                        {isExperienceOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isExperienceOpen && (
+                        <div className="mt-1 space-y-2 pl-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Min (years)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="15"
+                                value={experience.min}
+                                onChange={(e) => handleExperienceChange(e, 'min')}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Max (years)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="15"
+                                value={experience.max}
+                                onChange={(e) => handleExperienceChange(e, 'max')}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              />
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </FilterPopup>
-                </div>
-              </motion.div>
+                  </div>
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </main>

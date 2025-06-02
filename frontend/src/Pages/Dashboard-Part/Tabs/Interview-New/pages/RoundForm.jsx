@@ -234,7 +234,7 @@ const RoundForm = () => {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
-
+//this will check already selcetd not to repeat
     const uniqueInterviewers = interviewers?.filter((newInterviewer) =>
       !internalInterviewers.some((i) => i?._id === newInterviewer?._id)
     );
