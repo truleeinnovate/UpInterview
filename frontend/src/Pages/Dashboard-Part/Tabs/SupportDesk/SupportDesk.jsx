@@ -21,8 +21,8 @@ import { useCustomContext } from '../../../../Context/Contextfetch';
 
 function SupportDesk() {
 
-   const { tickets, userRole } = useCustomContext();
-   console.log('tickets from main', tickets)
+   const { tickets,userRole } = useCustomContext();
+  console.log('userRole from main', userRole)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -41,7 +41,7 @@ function SupportDesk() {
   });
   const [viewMode, setViewMode] = useState("table");
   // const [userRole, setUserRole] = useState("Admin"); // Adjust based on your auth logic
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
 // const getTickets = useCallback(async () => {

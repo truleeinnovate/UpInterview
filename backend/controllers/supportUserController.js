@@ -43,7 +43,6 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
-
 exports.getTicketBasedonId  =async(req,res)=>{
     try {
         const {id}=req.params 

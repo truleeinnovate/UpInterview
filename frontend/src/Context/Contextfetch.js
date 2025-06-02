@@ -1047,32 +1047,8 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
-// const [tickets, setTickets] = useState([]);
-// const currentOrganizationId = tokenPayload?.tenantId;
+  const [tickets, setTickets] = useState([]);
 
-// const getTickets = useCallback(async () => {
-//   setLoading(true);
-//   try {
-//     const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
-//     const fetchedTickets = response.data.tickets || [];
-//     // Filter tickets by tenantId from tokenPayload
-//     const filteredTickets = fetchedTickets.filter(
-//       (ticket) => ticket.tenantId === currentOrganizationId
-//     );
-//     setTickets(filteredTickets);
-//   } catch (error) {
-//     console.error('Error fetching tickets:', error.message, error.response?.data || error);
-//     setTickets([]);
-//   } finally {
-//     setLoading(false);
-//   }
-// }, [currentOrganizationId]);
-
-// useEffect(() => {
-//   getTickets();
-// }, [getTickets]);
-
-const [tickets, setTickets] = useState([]);
   const [userRole, setuserRole] = useState("Admin");
 
   const getTickets = useCallback(async () => {

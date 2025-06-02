@@ -388,32 +388,32 @@ const NewAssessment = () => {
       //   }
       // }
 
-    if (currentTab === "Questions") {
-  const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
+      if (currentTab === "Questions") {
+        const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
 
-  if (!assessmentId) {
-    console.error("❌ Missing assessmentId before saving questions.");
-    return;
-  }
+        if (!assessmentId) {
+          console.error("❌ Missing assessmentId before saving questions.");
+          return;
+        }
 
-  const assessmentQuestionsData = prepareAssessmentQuestionsData(
-    addedSections,
-    assessmentId
-  );
+        const assessmentQuestionsData = prepareAssessmentQuestionsData(
+          addedSections,
+          assessmentId
+        );
 
-  console.log("📦 Prepared questions data:", assessmentQuestionsData);
+        console.log("📦 Prepared questions data:", assessmentQuestionsData);
 
-  if (!assessmentQuestionsData.sections?.length) {
-    console.error("❌ Sections array is empty. Cannot proceed.");
-    return;
-  }
+        if (!assessmentQuestionsData.sections?.length) {
+          console.error("❌ Sections array is empty. Cannot proceed.");
+          return;
+        }
 
-  const questionsResponse = await useUpsertAssessmentQuestions.mutateAsync(
-    assessmentQuestionsData
-  );
+        const questionsResponse = await useUpsertAssessmentQuestions.mutateAsync(
+          assessmentQuestionsData
+        );
 
-  console.log("✅ Questions saved successfully:", questionsResponse.message);
-}
+        console.log("✅ Questions saved successfully:", questionsResponse.message);
+      }
 
 
       // 🧠 Action after save
@@ -1065,7 +1065,7 @@ const NewAssessment = () => {
                 <>
                   <button
                     type="button"
-                    onClick={(e) => handleSave(e, "Questions")}
+                    onClick={(e) => handleSave(e, "Questions", "close")}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                   >
                     {isEditing ? "Update" : "Save"}
