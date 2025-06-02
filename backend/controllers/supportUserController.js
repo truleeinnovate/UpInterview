@@ -28,22 +28,18 @@ exports.createTicket = async(req,res)=>{
 
 exports.getTicket = async (req, res) => {
   try {
-    console.log('Fetching tickets from SupportUser collection');
-    const tickets = await SupportUser.find(); // Removed .sort()
-    console.log('Retrieved tickets count:', tickets.length);
-    console.log('Sample ticket:', tickets[0] || 'No tickets found');
-
+    const tickets = await SupportUser.find(); // Fetch all tickets with no filter
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
       tickets,
     });
   } catch (error) {
-    console.error('Error fetching tickets:', error.message, error.stack);
+    console.log("Error retrieving tickets:", error);
     return res.status(500).send({
       success: false,
       message: "Failed to retrieve tickets",
-      error: error.message,
+      error,
     });
   }
 };

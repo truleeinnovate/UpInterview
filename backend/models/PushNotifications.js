@@ -4,7 +4,7 @@ const pushNotificationSchema = new mongoose.Schema({
   ownerId: {
     type: String,
     required: true,
-    index: true
+    // index: true
   },
   tenantId: {
     type: String,

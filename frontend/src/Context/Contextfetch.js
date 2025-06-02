@@ -720,13 +720,9 @@ const CustomProvider = ({ children }) => {
         } else {
           queryString = `ownerId=${userId}&organization=false`;
         }
-
         const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-
         const headers = { Authorization: `Bearer ${authToken}` };
-
         const response = await axios.get(apiUrl, { headers });
-
         const templatesData = response.data.data;
 
         return templatesData;
@@ -1051,30 +1047,77 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
+// const [tickets, setTickets] = useState([]);
+// const currentOrganizationId = tokenPayload?.tenantId;
+
+// const getTickets = useCallback(async () => {
+//   setLoading(true);
+//   try {
+//     const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+//     const fetchedTickets = response.data.tickets || [];
+//     // Filter tickets by tenantId from tokenPayload
+//     const filteredTickets = fetchedTickets.filter(
+//       (ticket) => ticket.tenantId === currentOrganizationId
+//     );
+//     setTickets(filteredTickets);
+//   } catch (error) {
+//     console.error('Error fetching tickets:', error.message, error.response?.data || error);
+//     setTickets([]);
+//   } finally {
+//     setLoading(false);
+//   }
+// }, [currentOrganizationId]);
+
+// useEffect(() => {
+//   getTickets();
+// }, [getTickets]);
+
 const [tickets, setTickets] = useState([]);
-const currentOrganizationId = tokenPayload?.tenantId;
+  const [userRole, setuserRole] = useState("Admin");
 
-const getTickets = useCallback(async () => {
-  setLoading(true);
-  try {
-    const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
-    const fetchedTickets = response.data.tickets || [];
-    // Filter tickets by tenantId from tokenPayload
-    const filteredTickets = fetchedTickets.filter(
-      (ticket) => ticket.tenantId === currentOrganizationId
-    );
-    setTickets(filteredTickets);
-  } catch (error) {
-    console.error('Error fetching tickets:', error.message, error.response?.data || error);
-    setTickets([]);
-  } finally {
-    setLoading(false);
-  }
-}, [currentOrganizationId]);
+  const getTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+      let filteredTickets = response.data.tickets || [];
+      console.log("Fetched tickets:", filteredTickets);
 
-useEffect(() => {
-  getTickets();
-}, [getTickets]);
+      if (userRole === "SuperAdmin" || userRole === "Support Team") {
+        console.log("Role: SuperAdmin or Support Team - showing all tickets");
+        setTickets(filteredTickets);
+      } else if (userRole === "Admin" && tenantId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.tenantId === tenantId
+        );
+        console.log("Role: Admin - filtered by tenantId", tenantId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (userRole === "Individual" && userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.ownerId === userId
+        );
+        console.log("Role: Individual - filtered by ownerId", userId, filteredTickets);
+        setTickets(filteredTickets);
+      } else if (userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.assignedToId === userId
+        );
+        console.log("Other role - filtered by assignedToId", userId, filteredTickets);
+        setTickets(filteredTickets);
+      } else {
+        console.log("No matching role or userId - setting tickets to empty");
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userRole, tenantId, userId]);
+
+  useEffect(() => {
+    getTickets();
+  }, [getTickets]);
 
   return (
     <CustomContext.Provider
@@ -1202,7 +1245,8 @@ useEffect(() => {
 
         interviewers,
 
-        tickets
+        tickets,
+        userRole
       }}
     >
       {children}
