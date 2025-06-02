@@ -5,6 +5,7 @@ import { Phone, GraduationCap, School, Mail, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCandidates } from '../../../../../apiHooks/useCandidates';
+import Loading from '../../../../../Components/Loading';
 Modal.setAppElement('#root');
 
 const CandidateFullscreen = () => {
@@ -42,7 +43,7 @@ const CandidateFullscreen = () => {
   }, [id, candidateData]);
 
 
-  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'>Loading...</div>;
+  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'><Loading /></div>;
 
   const content = (
     <div className="h-full flex flex-col">

@@ -162,8 +162,6 @@ exports.getAssessmentById = async (req, res) => {
       // if (!assessmentQuestions) {
       //   return res.status(404).json({ success: false, message: 'Questions not found for assessment' });
       // }
- 
-      console.log("assessmentQuestions", assessmentQuestions);
      
       // Return combined data
       res.status(200).json({

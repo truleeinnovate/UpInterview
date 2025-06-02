@@ -602,7 +602,6 @@ app.get('/rolesdata/:id', async (req, res) => {
 // });
 
 app.get('/api/rolesdata/:organizationId', async (req, res) => {
-console.log('triggered');
   const { organizationId } = req.params;
   try {
     const roles = await Role.find({ organizationId }).populate('reportsToRoleId');

@@ -16,6 +16,7 @@ import { useCustomContext } from "../../Context/Contextfetch.js";
 import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
 import { ReactComponent as CgInfo } from '../../icons/CgInfo.svg';
+import Loading from '../../Components/Loading.js';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
@@ -531,7 +532,7 @@ const OutsourceInterviewers = () => {
                       <div className="h-[calc(100vh-200px)] overflow-y-auto pb-10">
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 px-4">
                           {loading ? (
-                            <div className="py-10 text-center">Loading...</div>
+                            <div className="py-10 text-center"><Loading /></div>
                           ) : currentFilteredRows.length === 0 ? (
                             <div className="col-span-3 py-10 text-center">No data found.</div>
                           ) : (

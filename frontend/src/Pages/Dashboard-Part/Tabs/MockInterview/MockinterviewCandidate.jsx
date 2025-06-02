@@ -1,5 +1,6 @@
 import Modal from 'react-modal';
 import { ExternalLink, X, GraduationCap } from 'lucide-react';
+import Loading from '../../../../Components/Loading';
 Modal.setAppElement('#root');
 
 const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
@@ -8,7 +9,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
     console.log("candidate ", candidate );
     
 
-  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'>Loading...</div>;
+  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'><Loading /></div>;
   // const [isEditing, setIsEditing] = useState(false);
   // const [editedCandidate, setEditedCandidate] = useState(candidate);
 

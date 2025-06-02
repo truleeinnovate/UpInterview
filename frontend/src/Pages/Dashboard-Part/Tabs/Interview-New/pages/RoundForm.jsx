@@ -16,8 +16,8 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import {config} from '../../../../../config';
-
+import { config } from '../../../../../config';
+import Loading from '../../../../../Components/Loading.js';
 
 const RoundForm = () => {
   const {
@@ -27,7 +27,7 @@ const RoundForm = () => {
   } = useCustomContext();
   const { interviewId, roundId } = useParams();
   console.log("interviewId", interviewId);
- console.log("roundId", roundId);
+  console.log("roundId", roundId);
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -37,8 +37,8 @@ const RoundForm = () => {
 
   const interview = interviewData?.find(interview => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
-  console.log("assessmentTemplate",assessmentTemplate);
-  
+  console.log("assessmentTemplate", assessmentTemplate);
+
 
 
   const [candidate, setCandidate] = useState(null);
@@ -227,26 +227,38 @@ const RoundForm = () => {
   console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
+  // const handleInternalInterviewerSelect = (interviewers) => {
+  //   console.log("Interviewers passed to parent:", interviewers); // Debugging
+
+  //   if (selectedInterviewType === "external") {
+  //     alert("You need to clear external interviewers before selecting internal interviewers.");
+  //     return;
+  //   }
+
+  //   const uniqueInterviewers = interviewers?.filter((newInterviewer) =>
+  //     !internalInterviewers.some((i) => i?._id === newInterviewer?._id)
+  //   );
+  //   console.log("uniqueInterviewers", uniqueInterviewers);
+
+  //   // Extract only contactId values
+  //   // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
+  //   // console.log("contactIds", contactIds);
+
+  //   setSelectedInterviewType("internal");
+  //   console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
+  //   setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+  // };
+
   const handleInternalInterviewerSelect = (interviewers) => {
-    console.log("Interviewers passed to parent:", interviewers); // Debugging
+    console.log("Interviewers passed to parent:", interviewers);
 
     if (selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
 
-    const uniqueInterviewers = interviewers?.filter((newInterviewer) =>
-      !internalInterviewers.some((i) => i?._id === newInterviewer?._id)
-    );
-    console.log("uniqueInterviewers", uniqueInterviewers);
-
-    // Extract only contactId values
-    // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
-    // console.log("contactIds", contactIds);
-
     setSelectedInterviewType("internal");
-    console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
-    setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+    setInternalInterviewers(interviewers);
   };
 
   const handleExternalInterviewerSelect = (interviewers) => {
@@ -264,6 +276,7 @@ const RoundForm = () => {
     setSelectedInterviewType("external");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
   };
+
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
@@ -508,7 +521,7 @@ const RoundForm = () => {
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
           ? { assessmentId: assessmentTemplate.assessmentId }
           : {}),
-        
+
         instructions,
         status,
         ...(roundTitle !== "Assessment" && {
@@ -609,7 +622,7 @@ const RoundForm = () => {
   }, []);
 
   if (!rounds) {
-    return <div>Loading...</div>;
+    return <div><Loading /></div>;
   }
 
 
@@ -863,9 +876,9 @@ const RoundForm = () => {
                                 }));
                                 setErrors(prev => ({ ...prev, assessmentTemplate: '' })); // Clear only this error
                               }}
-                              
-                              
-                              
+
+
+
                               onClick={() => setShowDropdown(!showDropdown)}
 
                             />
@@ -875,7 +888,7 @@ const RoundForm = () => {
                             {showDropdown && (
                               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                 {loading ? (
-                                  <div className="px-3 py-2 text-gray-500">Loading...</div>
+                                  <div className="px-3 py-2 text-gray-500"><Loading /></div>
                                 ) : (
                                   assessmentData.length > 0 ? (
                                     assessmentData.map((user, index) => (
@@ -895,8 +908,8 @@ const RoundForm = () => {
                             )}
                           </div>
                           {errors.assessmentTemplate && (
-                        <p className="mt-1 text-sm text-red-500">{errors.assessmentTemplate}</p>
-                      )}
+                            <p className="mt-1 text-sm text-red-500">{errors.assessmentTemplate}</p>
+                          )}
 
                         </div>
 
@@ -1425,6 +1438,7 @@ const RoundForm = () => {
           isOpen={isInternalInterviews}
           onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
+          selectedInterviewers={internalInterviewers}
         />
       )}
     </div>

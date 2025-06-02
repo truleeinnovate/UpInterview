@@ -15,7 +15,6 @@ const createSubscriptionControllers = async (req, res) => {
     }
 
     const { subscriptionPlanId } = planDetails;
-    console.log("total amount", totalAmount);
 
     const numericTotalAmount = Number(totalAmount);
     if (isNaN(numericTotalAmount)) {
@@ -41,7 +40,6 @@ const createSubscriptionControllers = async (req, res) => {
         });
     
         await wallet.save(); // Save the new wallet to the database
-        console.log("Wallet created:", wallet);
     } else {
         console.log("Wallet already exists:", wallet);
     }
@@ -83,13 +81,6 @@ const createSubscriptionControllers = async (req, res) => {
         await existingInvoice.save();
       }
 
-      console.log({
-        message: 'Subscription and invoice successfully updated.',
-        subscription: existingSubscription,
-        invoiceId: existingInvoice._id
-      }
-      );
-
       return res.status(200).json({
         message: 'Subscription and invoice successfully updated.',
         subscription: existingSubscription,
@@ -120,8 +111,6 @@ const createSubscriptionControllers = async (req, res) => {
 
       // console.log( { subscription,
       //   invoiceId: invoice._id});
-
-      console.log({ invoiceId: invoice._id });
 
       return res.status(200).json({
         message: 'Subscription successfully created and payment processed.',
@@ -172,15 +161,8 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
     const pricing = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyPrice : planDetails.annualPrice);
     const discount = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyDiscount || 0 : planDetails.annualDiscount || 0);
 
-
-    console.log("status", status);
-
-
     if (status === "paid") {
       const requiredPayment = pricing - discount;
-
-      console.log('Required Payment:', pricing, discount);
-
       if (totalPaid >= (pricing - discount)) {
 
         // console.log("status",status);

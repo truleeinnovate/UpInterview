@@ -15,6 +15,7 @@ import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 import { config } from '../../config.js';
+import Loading from '../../Components/Loading.js';
 
 function RoundForm() {
   const {
@@ -935,7 +936,7 @@ const handleRemoveInternalInterviewer = (interviewerId) => {
                       {showDropdown && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                           {loading ? (
-                            <div className="px-3 py-2 text-gray-500">Loading...</div>
+                            <div className="px-3 py-2 text-gray-500"><Loading /></div>
                           ) : (
                             assessmentData.length > 0 ? (
                               assessmentData.map((assessment, index) => (
