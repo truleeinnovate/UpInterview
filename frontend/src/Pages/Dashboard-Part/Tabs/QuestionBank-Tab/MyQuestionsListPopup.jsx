@@ -3,14 +3,14 @@ import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "re
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Search ,Trash2, X,User,BookOpen} from 'lucide-react';
+import { Search ,Trash2, X,BookOpen} from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config.js";
 
-const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew }, ref) => {
+const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew ,setActionViewMoreSection}, ref) => {
     const {
         fetchMyQuestionsData,
         createdLists,
@@ -415,7 +415,10 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                         <div className="flex justify-end border-t p-2 rounded-b-md text-sm">
                             <button
                                 className="border border-custom-blue px-4 py-2 rounded mr-2"
-                                onClick={() => setShowNewListPopup(false)}
+                                onClick={() =>{ 
+                                    setShowNewListPopup(false)
+                                setActionViewMoreSection(false)
+                                }}
                             >
                                 Cancel
                             </button>

@@ -18,9 +18,9 @@ const AccountSettingsSidebar = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload.organization;
+  const organization = tokenPayload?.organization;
 
-  console.log("organization in accountsettings", organization);
+  // console.log("organization in accountsettings", organization);
 
   // const isInMyProfile = location.pathname.includes('/my-profile');
 
@@ -58,9 +58,7 @@ const AccountSettingsSidebar = () => {
     if (location.pathname === '/account-settings/my-profile') {
       navigate('/account-settings/my-profile/basic', { replace: true });
     }
-    // if (location.pathname === '/account-settings/my-profile') {
-    //   navigate('/account-settings/my-profile/basic', { replace: true });
-    // }
+    
   }, [location.pathname, navigate, organization]);
 
   // Filter navigation to exclude "Company Profile" when organization is false
@@ -71,53 +69,14 @@ const AccountSettingsSidebar = () => {
   const filteredNavigation = navigation.map(section => ({
     ...section,
     items: section.items.filter(item => {
-      if (item.id === 'profile') return organization;
+      if (item.id === 'profile' || item.id === 'users' || item.id === 'sub-domain' || item.id === 'roles' || item.id === 'interviewer-groups' 
+        || item.id === 'sharing' || item.id === 'webhooks' || item.id === 'hrms-ats') return organization;
       // if (item.id === 'my-profile') return !organization;
       return true;
     })
   }));
 
-  // Main content renderer based on active tab
-  //  const renderContent = () => {
-  //   if (activeTab === 'my-profile') {
-  //     return <Outlet />;
-  //   }
-
-  //   const tabComponents = {
-  //     'profile': <CompanyProfile />,
-
-  //     'billing': <BillingDetails />,
-  //     'subscription': <Subscription />,
-  //     'wallet': <Wallet />,
-  //     'security': <Security />,
-  //     'notifications': <NotificationsDetails />,
-  //     'usage': <Usage />,
-  //     // 'users': navigate('users'),
-  //     'users':
-  //     // navigate('/account-settings/users'),
-  //      (
-  //       <>
-  //         <UsersLayout />
-  //         {/* <Outlet />  */}
-
-  //              </>
-  //     ),
-  //     'my-team': <MyTeam />,
-  //     'interviewer-groups': <InterviewerGroups />,
-  //     'roles': <Role />,
-  //     'sharing': <Sharing />,
-  //     'webhooks': <Webhooks />,
-  //     'hrms-ats': <HrmsAtsApi />
-  //   };
-
-  //   return tabComponents[activeTab] || (
-  //     <div className="text-center py-10">
-  //       <h2 className="text-2xl font-bold capitalize">{activeTab}</h2>
-  //       <p className="text-gray-500 mt-2">This section is under development</p>
-  //     </div>
-  //   );
-  // };
-
+  
   return (
     <div className="h-screen fixed w-full pb-14  bg-gray-50 flex mt-1"
     // " min-h-screen bg-gray-50 flex"
@@ -161,3 +120,47 @@ const AccountSettingsSidebar = () => {
 
 // Export as default to ensure compatibility with lazy loading
 export default AccountSettingsSidebar;
+
+
+
+
+// Main content renderer based on active tab
+  //  const renderContent = () => {
+  //   if (activeTab === 'my-profile') {
+  //     return <Outlet />;
+  //   }
+
+  //   const tabComponents = {
+  //     'profile': <CompanyProfile />,
+
+  //     'billing': <BillingDetails />,
+  //     'subscription': <Subscription />,
+  //     'wallet': <Wallet />,
+  //     'security': <Security />,
+  //     'notifications': <NotificationsDetails />,
+  //     'usage': <Usage />,
+  //     // 'users': navigate('users'),
+  //     'users':
+  //     // navigate('/account-settings/users'),
+  //      (
+  //       <>
+  //         <UsersLayout />
+  //         {/* <Outlet />  */}
+
+  //              </>
+  //     ),
+  //     'my-team': <MyTeam />,
+  //     'interviewer-groups': <InterviewerGroups />,
+  //     'roles': <Role />,
+  //     'sharing': <Sharing />,
+  //     'webhooks': <Webhooks />,
+  //     'hrms-ats': <HrmsAtsApi />
+  //   };
+
+  //   return tabComponents[activeTab] || (
+  //     <div className="text-center py-10">
+  //       <h2 className="text-2xl font-bold capitalize">{activeTab}</h2>
+  //       <p className="text-gray-500 mt-2">This section is under development</p>
+  //     </div>
+  //   );
+  // };

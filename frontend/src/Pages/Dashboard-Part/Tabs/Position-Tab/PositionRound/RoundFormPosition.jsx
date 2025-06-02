@@ -337,8 +337,6 @@ function RoundFormPosition() {
 
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    console.log('Interviewers passed to parent', interviewers)
-
     if (formData.selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;

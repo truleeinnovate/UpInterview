@@ -15,7 +15,7 @@ Modal.setAppElement('#root');
 export const companySizes = ['1-10', '11-50', '51-200', '201-500', '501+'];
 // export const industries = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing'];
 
-export function CompanyEditProfile() {
+const CompanyEditProfile = () => {
 
     const {
         locations,
@@ -904,3 +904,6 @@ console.log("validationErrors",validationErrors);
         </Modal>
     );
 }
+
+
+export default CompanyEditProfile

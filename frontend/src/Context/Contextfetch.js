@@ -20,6 +20,7 @@ const CustomProvider = ({ children }) => {
 
 
 
+
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const sharingPermissions = useMemo(
     () => sharingPermissionscontext.questionBank || {},
@@ -819,6 +820,7 @@ const CustomProvider = ({ children }) => {
       const allUsers_data = allUsers.data;
 
 
+
       setContacts(allUsers_data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -834,28 +836,37 @@ const CustomProvider = ({ children }) => {
 
   const [singlecontact, setsingleContact] = useState([]);
 
+// console.log("singlecontact", singlecontact);
 
+
+   
 
   useEffect(() => {
-    if (!userId) return;
-
-    const fetchContacts = async () => {
+    const fetchContacts = async (usersId = null) => {
       try {
+
+
+
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
       } catch (err) {
         console.error('Error fetching user contacts:', err);
       }
     };
-
+  
     fetchContacts();
   }, [userId]);
+
+
+
+
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
   const [interviewers, setInterviewers] = useState([]);
   useEffect(() => {
     const fetchInterviewers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
+
         setInterviewers(response.data);
       } catch (err) {
         console.error(err.message);
@@ -893,6 +904,9 @@ const CustomProvider = ({ children }) => {
     },
     enabled: !!tenantId,
   });
+
+  // console.log("usersRes", usersRes);
+  
 
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({
@@ -1218,6 +1232,7 @@ const CustomProvider = ({ children }) => {
         contacts,
         setContacts,
         singlecontact,
+        // fetchContacts,
 
         interviewers,
 

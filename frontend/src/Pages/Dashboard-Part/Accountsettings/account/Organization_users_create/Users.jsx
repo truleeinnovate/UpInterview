@@ -264,7 +264,7 @@ const Users = () => {
       <div className="flex-1 flex flex-col ml-0 h-full overflow-y-auto">
         <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
           {/* Info Icon for User Management Popup */}
-          <motion.div
+          {/* <motion.div
             className=""
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -277,7 +277,7 @@ const Users = () => {
             >
               <Info size={20} />
             </button>
-          </motion.div>
+          </motion.div> */}
           {/* Header and Toolbar */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -320,7 +320,7 @@ const Users = () => {
             filterIconRef={filterIconRef}
           />
         </div>
-        <div className="fixed top-52 2xl:top-56 xl:top-56 lg:top-56 left-64 right-0 bg-background px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+        <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
           <motion.div className="bg-white">
             <div className="relative w-full">
               {view === 'table' ? (

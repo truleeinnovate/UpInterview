@@ -25,6 +25,8 @@ const SuggestedQuestionsComponent = ({
     // <-- (mansoor) added fromScheduleLater
     fromScheduleLater,
     onAddQuestion,
+    handleRemoveQuestion,
+    handleToggleMandatory
     // -->
 }) => {
     console.log("type:", type);
@@ -91,108 +93,14 @@ const SuggestedQuestionsComponent = ({
 
     // Added by Shashank on [02/01/2025]: Feature to handle add question to interviewer section when clicked on add button
 
+
     const onClickAddButton = async (item) => {
         console.log("item", item);
 
         if (type === "assessment") {
 
-            const isDuplicate = addedSections.some(section =>
-                section.Questions.some(q => q.questionId === item._id)
-            );
-
-            if (isDuplicate) {
-                toast.error('This question has already been added to the assessment');
-                return;
-            }
 
 
-            if (checkedCount >= questionsLimit) {
-                toast.error(`You've reached the maximum limit of ${questionsLimit} questions`);
-                return;
-            }
-            if (item) {
-                // Prepare the question data according to your schema
-                const questionToAdd = {
-                    questionId: item._id,
-                    source: "system", // or "custom"
-                    snapshot: {
-                        autoAssessment: item.autoAssessment,
-                        correctAnswer: item.correctAnswer,
-                        difficultyLevel: item.difficultyLevel,
-                        hints: item.hints,
-                        isActive: item.isActive,
-                        isAdded: item.isAdded,
-                        isAutoAssessment: item.isAutoAssessment,
-                        isInterviewQuestionOnly: item.isInterviewQuestionOnly,
-                        options: item.options,
-                        programming: item.programming,
-                        questionNo: item.questionNo,
-                        questionText: item.questionText,
-                        questionType: item.questionType,
-                        skill: item.skill,
-                        tags: item.tags,
-                        technology: item.technology,
-                    },
-                    order: item.order || 0,
-                    customizations: null
-                };
-                updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
-                toast.success('Question added successfully!');
-
-                // 4. Show remaining questions count
-                const remaining = questionsLimit - (checkedCount + 1);
-                if (remaining > 0) {
-                    toast.info(`${remaining} questions remaining to reach the limit`);
-                } else {
-                    toast.success('You have reached the required number of questions!');
-                }
-
-            }
-        } else {
-
-            setInterviewQuestionsList((prev) => [...prev, item]);
-            // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
-            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
-
-            const questionToAdd = {
-                tenantId: "ten1",
-                ownerId: "own1",
-                questionId: item._id,
-                source: "system",
-                addedBy: "interviewer",
-                snapshot: {
-                    questionText: item.questionText,
-                    correctAnswer: item.correctAnswer,
-                    options: item.options,
-                    skillTags: item.skill,
-                },
-            };
-            //this is feedback interview questions passing logic we need to change this because we will follow same interview process here also
-            // const response = await axios.post(url, questionToAdd);
-            // if (response.data.success) {
-            // getInterviewerQuestions()
-            // const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
-            // const response2 = await axios.get(addedQuestionUrl);
-            // const newQuestion = response2.data.question;
-            // const formattedQuestion = {
-            //     id: newQuestion._id,
-            //     question: newQuestion.snapshot.questionText,
-            //     answer: newQuestion.snapshot.correctAnswer,
-            //     note: "",
-            //     notesBool: false,
-            //     isLiked: false,
-            // };
-            // setInterviewerSectionData((prev) => [...prev, formattedQuestion]);
-            // }
-
-            // Update suggestedQuestions with the "isAdded" flag set to true
-            const newList = suggestedQuestionsFilteredData.map((question) =>
-                question._id === item._id ? { ...question, isAdded: true } : question
-            );
-            setSuggestedQuestionsFilteredData(newList);
-            setSuggestedQuestions(newList);
-        }
-    };
 
     //changes made by shashank - [09/01/2025]F
 
@@ -402,23 +310,247 @@ const SuggestedQuestionsComponent = ({
         }
     };
 
-    const onClickRemoveQuestion = async (id) => {
-        // alert(${id})
-        try {
-            const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
-            const response = await axios.delete(url);
-            // alert(response.data.message)
-            getInterviewerQuestions();
+
+    // useEffect(() => {
+    //     if (!Array.isArray(interviewQuestionsList)) {
+    //         console.warn('interviewQuestionsList is not an array in SuggestedQuestionsComponent:', interviewQuestionsList);
+    //         setInterviewQuestionsList([]);
+    //     }
+
+
+    //     setSuggestedQuestions(prev =>
+    //         prev.map(q => ({
+    //             ...q,
+    //             isAdded: interviewQuestionsList.some(iq => iq.questionId === q._id),
+    //         }))
+    //     );
+    //     setSuggestedQuestionsFilteredData(prev =>
+    //         prev.map(q => ({
+    //             ...q,
+    //             isAdded: interviewQuestionsList.some(iq => iq.questionId === q._id),
+    //         }))
+    //     );
+    // }, [interviewQuestionsList]);
+
+    useEffect(() => {
+        setMandatoryStatus((prev) => {
+            const updatedStatus = { ...prev };
+            interviewQuestionsList.forEach((question) => {
+                updatedStatus[question.questionId] = question.mandatory === "true";
+            });
+            return updatedStatus;
+        });
+    }, [interviewQuestionsList]);
+
+
+    const [mandatoryStatus, setMandatoryStatus] = useState({});
+
+    // console.log("interviewQuestionsList", interviewQuestionsList);
+
+    const handleToggle = (questionId, item) => {
+        setMandatoryStatus((prev) => {
+            const newStatus = !prev[questionId];
+            const updatedStatus = {
+                ...prev,
+                [questionId]: newStatus,
+            };
+
+            // Update the parent component with the new mandatory status
+            if (handleToggleMandatory) {
+                handleToggleMandatory(questionId, newStatus);
+            }
+
+            // If the question is already added, update its mandatory status in the parent
+            if (interviewQuestionsList.some((q) => q.questionId === questionId)) {
+                onAddQuestion({
+                    questionId: item._id,
+                    source: "system",
+                    snapshot: item,
+                    order: "",
+                    customizations: "",
+                    mandatory: newStatus ? "true" : "false",
+                });
+            }
+
+            return updatedStatus;
+        });
+    };
+
+
+    const onClickAddButton = async (item) => {
+        // console.log("item", item);
+
+
+        if (section === "assessment") {
+
+            const isDuplicate = addedSections.some(section =>
+                section.Questions.some(q => q.questionId === item._id)
+            );
+
+            if (isDuplicate) {
+                toast.error('This question has already been added to the assessment');
+                return;
+            }
+
+
+            if (checkedCount >= questionsLimit) {
+                toast.error(`You've reached the maximum limit of ${questionsLimit} questions`);
+                return;
+            }
+            if (item) {
+                // Prepare the question data according to your schema
+                const questionToAdd = {
+                    questionId: item._id,
+                    source: "system", // or "custom"
+                    snapshot: {
+                        autoAssessment: item.autoAssessment,
+                        correctAnswer: item.correctAnswer,
+                        difficultyLevel: item.difficultyLevel,
+                        hints: item.hints,
+                        isActive: item.isActive,
+                        isAdded: item.isAdded,
+                        isAutoAssessment: item.isAutoAssessment,
+                        isInterviewQuestionOnly: item.isInterviewQuestionOnly,
+                        options: item.options,
+                        programming: item.programming,
+                        questionNo: item.questionNo,
+                        questionText: item.questionText,
+                        questionType: item.questionType,
+                        skill: item.skill,
+                        tags: item.tags,
+                        technology: item.technology,
+                    },
+                    order: item.order || 0,
+                    customizations: null
+                };
+                updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
+                toast.success('Question added successfully!');
+
+                // 4. Show remaining questions count
+                const remaining = questionsLimit - (checkedCount + 1);
+                if (remaining > 0) {
+                    toast.info(`${remaining} questions remaining to reach the limit`);
+                } else {
+                    toast.success('You have reached the required number of questions!');
+                }
+
+            }
+        } else {
+
+
+            const questionToAdd = {
+                questionId: item._id,
+                source: "system",
+                snapshot: item,
+                order: "",
+                customizations: "",
+                mandatory: mandatoryStatus[item._id] ? "true" : "false",
+            };
+
+            console.log("questionToAdd", questionToAdd);
+
+
+            if (onAddQuestion) {
+                //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+                onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+            }
+
+
+            // setInterviewQuestionsList((prev) => ...prev, questionToAdd)
+            toast.success("Question added successfully");
+
+            // setInterviewQuestionsList((prev) => [...prev, questionToAdd]);
+            // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
+            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
+
+            // const questionToAdd = {
+            //     tenantId: "ten1",
+            //     ownerId: "own1",
+            //     questionId: item._id,
+            //     source: "system",
+            //     addedBy: "interviewer",
+            //     snapshot: {
+            //         questionText: item.questionText,
+            //         correctAnswer: item.correctAnswer,
+            //         options: item.options,
+            //         skillTags: item.skill,
+            //     },
+            // };
+            //this is feedback interview questions passing logic we need to change this because we will follow same interview process here also
+            // const response = await axios.post(url, questionToAdd);
+            // if (response.data.success) {
+            // getInterviewerQuestions()
+            // const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
+            // const response2 = await axios.get(addedQuestionUrl);
+            // const newQuestion = response2.data.question;
+            // const formattedQuestion = {
+            //     id: newQuestion._id,
+            //     question: newQuestion.snapshot.questionText,
+            //     answer: newQuestion.snapshot.correctAnswer,
+            //     note: "",
+            //     notesBool: false,
+            //     isLiked: false,
+            // };
+            // setInterviewerSectionData((prev) => [...prev, formattedQuestion]);
+            // }
+
+            // Update suggestedQuestions with the "isAdded" flag set to true
             const newList = suggestedQuestionsFilteredData.map((question) =>
+                question._id === item._id ? { ...question, isAdded: true } : question,
+                //    mandatory = mandatoryStatus[question._id] ? "true" : "false",
+            );
+            setSuggestedQuestionsFilteredData(newList);
+            setSuggestedQuestions(newList);
+        }
+    };
+
+    const onClickRemoveQuestion = async (item, id) => {
+        // alert(${id})
+        if (section === 'interviewerSection') {
+            if (handleRemoveQuestion) {
+                handleRemoveQuestion(id)
+            }
+            //    const questionToAdd = {
+            //         questionId: item._id,
+            //         source: "system",
+            //         snapshot: item,
+            //         order: "",
+            //         customizations: "",
+            //         mandatory: mandatoryStatus[item._id] ? "true" : "false",
+            //     };
+
+            //    if (onAddQuestion) {
+            //         //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+            //         onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+
+            //     }
+
+
+            const newList = suggestedQuestionsFilteredData.map(question =>
                 question._id === id ? { ...question, isAdded: false } : question
             );
             setSuggestedQuestionsFilteredData(newList);
-            setInterviewQuestionsList((prev) =>
-                prev.filter((each) => each._id !== id)
-            );
             setSuggestedQuestions(newList);
-        } catch (error) {
-            console.error("error in deleting question", error);
+
+
+        } else {
+            try {
+
+                const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
+                const response = await axios.delete(url);
+                // alert(response.data.message)
+                getInterviewerQuestions();
+                const newList = suggestedQuestionsFilteredData.map((question) =>
+                    question._id === id ? { ...question, isAdded: false } : question
+                );
+                setSuggestedQuestionsFilteredData(newList);
+                setInterviewQuestionsList((prev) =>
+                    prev.filter((each) => each._id !== id)
+                );
+                setSuggestedQuestions(newList);
+            } catch (error) {
+                console.error("error in deleting question", error);
+            }
         }
     };
 
@@ -662,106 +794,33 @@ const getDifficultyStyles = (difficulty) => {
 const ReturnSuggestedQuestionsData = () => {
     // <-- (mansoor)
 
-    const [mandatoryStatus, setMandatoryStatus] = useState({});
 
-    const handleToggle = (questionId) => {
-        setMandatoryStatus((prev) => {
-            const updatedStatus = {
-                ...prev,
-                [questionId]: !prev[questionId],
-            };
-            return updatedStatus;
-        });
-    };
+    
+        return (
+            <div className={`p-4`}>
+                {/* Search and Filter Section */}
+                {ReturnSearchFilterSection()}
 
-    const onClickForSchedulelater = async (item) => {
-        try {
-            const questionToAdd = {
-                questionId: item._id,
-                source: "system",
-                snapshot: item,
-                order: "",
-                customizations: "",
-                mandatory: mandatoryStatus[item._id] ? "true" : "false",
-            };
-
-            //   const response = await axios.post(
-            //     `${config.REACT_APP_API_URL}/interview-questions/add-question`,
-            //     questionToAdd,
-            //     { headers: { 'Content-Type': 'application/json' } }
-            //   );
-
-            //   const simulatedResponse = {
-            //     data: {
-            //       success: true,
-            //       recordId: `record-${item._id}`,
-            //     },
-            //   };
-
-            //   if (simulatedResponse.data.success) {
-
-            if (onAddQuestion) {
-                //   onAddQuestion(response.data.question); // Pass the question and index to the parent
-                onAddQuestion(questionToAdd,); // Pass the question and index to the parent
-
-            }
-            toast.success("Question added successfully");
-            //   }
-        } catch (error) {
-            toast.error("Failed to add question");
-            console.error("Error adding question:", error);
-        }
-    };
-
-    // -->
-    return (
-        <div className={`p-4`}>
-            {/* Search and Filter Section */}
-            {ReturnSearchFilterSection()}
-
-            {/* Selected skills section (UI improvement) */}
-            {selectedSkills && (
-                <div className="my-4">
-                    <ul className="flex gap-2 flex-wrap">
-                        {selectedSkills.map((skill, index) => (
-                            <li
-                                key={index}
-                                className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                            >
-                                <span>{skill}</span>
-                                <button
-                                    className="cursor-pointer hover:text-red-500 transition-colors"
-                                    onClick={() => onClickCrossIcon(skill)}
-                                >
-                                    <X size={14} />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Applied filters section (UI improvement) */}
-            {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                <div className="flex items-center gap-3 my-4 flex-wrap">
-                    <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
-                    <ul className="flex gap-2 flex-wrap">
-                        {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
-                            (filterItem, index) => (
+                {/* Selected skills section (UI improvement) */}
+                {selectedSkills && (
+                    <div className="my-4">
+                        <ul className="flex gap-2 flex-wrap">
+                            {selectedSkills.map((skill, index) => (
                                 <li
                                     key={index}
-                                    className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
+                                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
                                 >
-                                    <span>{filterItem}</span>
+                                    <span>{skill}</span>
                                     <button
-                                        className="hover:text-red-500 transition-colors"
-                                        onClick={() =>
-                                            onClickRemoveSelectedFilterItem(index, filterItem)
-                                        }
+                                        className="cursor-pointer hover:text-red-500 transition-colors"
+                                        onClick={() => onClickCrossIcon(skill)}
+
                                     >
                                         <X size={14} />
                                     </button>
                                 </li>
+
+
                             )
                         )}
                     </ul>
@@ -931,6 +990,7 @@ const ReturnSuggestedQuestionsData = () => {
         </div>
     );
 };
+
 
 const ReturnMyQuestionsListData = () => {
     return <h1 className="p-8">My Questions list</h1>;

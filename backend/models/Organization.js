@@ -16,6 +16,7 @@ const OrganizationSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   CreatedDate: { type: Date, default: Date.now },
   profileId:{ type: String },
+  website:{type:String},
 
   // Company Details
   industry: { type: String },         // added

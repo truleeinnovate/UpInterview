@@ -15,18 +15,19 @@ const MyProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const {contacts,singlecontact} = useCustomContext();
+  const {singlecontact} = useCustomContext();
   // const subtab = location.pathname.split('/').pop();
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-
   const userId = tokenPayload.userId;
+  const organization = tokenPayload?.organization;
 
   // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isEditMode = location.pathname.includes('-edit');
   const [isFreelancer, setIsFreelancer] = useState(false);
   const [roleName, setRoleName] = useState("");
+
 
    // Extract path segments from URL
    const pathSegments = location.pathname.split('/');
@@ -48,18 +49,18 @@ const MyProfile = () => {
     const fetchData = () => {
       try {
         // const user = contacts.find(user => user.ownerId === userId);
-        const user = singlecontact[0]; 
+        const contact = singlecontact[0]; 
 
-        console.log("user subtab ",user);
+        // console.log("user contact ",contact);
 
-        if (user) {
-          const role = user?.ownerId?.roleId?.roleName || "";
+        if (contact) {
+          const role = contact?.ownerId?.roleId?.roleName || "";
           
           setRoleName(role);
-          const freelancerStatus = user.isFreelancer === "true";
+          const freelancerStatus = contact?.ownerId?.isFreelancer === "true";
           setIsFreelancer(freelancerStatus);
         } else {
-          // console.warn('User not found in contacts');
+          // console.warn('User not found in singlecontact');
           setIsFreelancer(false); // Default value if user not found
         }
       } catch (error) {
@@ -71,7 +72,7 @@ const MyProfile = () => {
     if (userId) {
       fetchData();
     }
-  }, [userId, contacts]); // Added contacts to dependencies
+  }, [userId, singlecontact]); // Added contacts to dependencies
 
   // console.log("location.pathname", location.pathname, "subtab",subtab)
 
@@ -91,9 +92,11 @@ const MyProfile = () => {
 
   // Redirect to basic if subtab is invalid
   useEffect(() => {
-    const validSubtabs = isFreelancer || roleName === "Internal_Interviewer"
-    ? ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced',];
+    const validSubtabs =
+    //  isFreelancer || roleName === "Internal_Interviewer"
+    // ? 
+    ['basic', 'advanced', 'interview', 'availability'] 
+    // : ['basic', 'advanced',];
     // const validSubtabs = ['basic', 'advanced', 'interview', 'availability'];
     if (!validSubtabs.includes(subtab)) {
       navigate('/account-settings/my-profile/basic', { replace: true });
@@ -124,11 +127,13 @@ const MyProfile = () => {
     return subTabComponents[activeTab] || subTabComponents['basic'];
   };
 
-  const tabsToShow = isFreelancer || roleName === "Internal_Interviewer"
-    ? ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced'];
+  const tabsToShow = 
+  // isFreelancer || roleName === "Internal_Interviewer"
+    // ? 
+     ['basic', 'advanced', 'interview', 'availability'] 
+    // : ['basic', 'advanced'];
 
-
+// Internal_Interviewer
 
   return (
     <div className="flex flex-col h-full  bg-gray-50 " >
