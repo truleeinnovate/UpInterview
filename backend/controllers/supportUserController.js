@@ -29,14 +29,14 @@ exports.createTicket = async(req,res)=>{
 
 exports.getTicket = async (req, res) => {
   try {
-    const tickets = await SupportUser.find(filter);
+    const tickets = await SupportUser.find(); // Fetch all tickets with no filter
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
       tickets,
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error retrieving tickets:", error);
     return res.status(500).send({
       success: false,
       message: "Failed to retrieve tickets",
@@ -44,6 +44,7 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
+
 
 
 exports.getTicketBasedonId  =async(req,res)=>{

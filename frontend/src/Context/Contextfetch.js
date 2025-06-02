@@ -1087,6 +1087,7 @@ const CustomProvider = ({ children }) => {
   }, [userId]);
 
   const [tickets, setTickets] = useState([]);
+  const [userRole, setuserRole] = useState("Admin");
 
   const getTickets = useCallback(async () => {
     setLoading(true);
@@ -1098,23 +1099,23 @@ const CustomProvider = ({ children }) => {
       if (userRole === "SuperAdmin" || userRole === "Support Team") {
         console.log("Role: SuperAdmin or Support Team - showing all tickets");
         setTickets(filteredTickets);
-      } else if (userRole === "Admin" && currentOrganizationId) {
+      } else if (userRole === "Admin" && tenantId) {
         filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.tenantId === currentOrganizationId
+          (ticket) => ticket.tenantId === tenantId
         );
-        console.log("Role: Admin - filtered by tenantId", currentOrganizationId, filteredTickets);
+        console.log("Role: Admin - filtered by tenantId", tenantId, filteredTickets);
         setTickets(filteredTickets);
-      } else if (userRole === "Individual" && currentUserId) {
+      } else if (userRole === "Individual" && userId) {
         filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.ownerId === currentUserId
+          (ticket) => ticket.ownerId === userId
         );
-        console.log("Role: Individual - filtered by ownerId", currentUserId, filteredTickets);
+        console.log("Role: Individual - filtered by ownerId", userId, filteredTickets);
         setTickets(filteredTickets);
-      } else if (currentUserId) {
+      } else if (userId) {
         filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.assignedToId === currentUserId
+          (ticket) => ticket.assignedToId === userId
         );
-        console.log("Other role - filtered by assignedToId", currentUserId, filteredTickets);
+        console.log("Other role - filtered by assignedToId", userId, filteredTickets);
         setTickets(filteredTickets);
       } else {
         console.log("No matching role or userId - setting tickets to empty");
@@ -1126,7 +1127,7 @@ const CustomProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [userRole, currentOrganizationId, currentUserId]);
+  }, [userRole, tenantId, userId]);
 
   useEffect(() => {
     getTickets();
@@ -1258,7 +1259,8 @@ const CustomProvider = ({ children }) => {
 
         interviewers,
 
-        tickets
+        tickets,
+        userRole
       }}
     >
       {children}
