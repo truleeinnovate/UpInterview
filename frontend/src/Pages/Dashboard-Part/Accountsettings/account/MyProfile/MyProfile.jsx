@@ -128,10 +128,10 @@ const MyProfile = () => {
   };
 
   const tabsToShow = 
-  // isFreelancer || roleName === "Internal_Interviewer"
-    // ? 
+  isFreelancer || roleName === "Internal_Interviewer"
+    ? 
      ['basic', 'advanced', 'interview', 'availability'] 
-    // : ['basic', 'advanced'];
+    : ['basic', 'advanced'];
 
 // Internal_Interviewer
 

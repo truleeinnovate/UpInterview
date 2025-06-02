@@ -24,16 +24,16 @@ export const PermissionsProvider = ({ children }) => {
       let profileResponse, sharesetting;
       try {
         const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${ownerId}`);
-        if (matchedUser.data && matchedUser.data.Name) {
-          Cookies.set("userName", matchedUser.data.Name);
-        }
-        if (matchedUser.data && matchedUser.data.tenantId) {
-          setOrganization(true);
-          Cookies.set("organization", "true");
-        } else {
-          setOrganization(false);
-          Cookies.set("organization", "false");
-        }
+        // if (matchedUser.data && matchedUser.data.Name) {
+        //   Cookies.set("userName", matchedUser.data.Name);
+        // }
+        // if (matchedUser.data && matchedUser.data.tenantId) {
+        //   setOrganization(true);
+        //   Cookies.set("organization", "true");
+        // } else {
+        //   setOrganization(false);
+        //   Cookies.set("organization", "false");
+        // }
         if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
           setFreelancer(true);
         } else {
