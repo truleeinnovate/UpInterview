@@ -259,7 +259,7 @@ const getInterviewers = async (req, res) => {
 
     // Fetch external interviewers
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
-    console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
+    // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
     const internalRoles = await Role.find({
       roleName: 'Internal_Interviewer',
@@ -272,7 +272,7 @@ const getInterviewers = async (req, res) => {
     const internalUsers = await Users.find({
       roleId: internalRoleIds,
     }).lean();
-    console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
+    // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
 // Function to process users - modified to skip availability for internal users
 const processUsers = async (users, type) => {
@@ -282,7 +282,7 @@ const processUsers = async (users, type) => {
   
   // Fetch contacts for all users
   const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
-  console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
+  // console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
 
   if (type === 'internal') {
     // For internal users, just return the contact info without availability
@@ -310,7 +310,7 @@ const processUsers = async (users, type) => {
     contact: { $in: contactIds }
   }).populate('contact').lean();
   
-  console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
+  // console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
 
   return availabilities.map(availability => {
     const contact = availability.contact || {};
@@ -355,7 +355,7 @@ const [internalResults, externalResults] = await Promise.all([
 
 // Combine results
 const allResults = [...internalResults, ...externalResults];
-console.log('✅ [getInterviewers] Total records:', allResults.length);
+// console.log('✅ [getInterviewers] Total records:', allResults.length);
 
 return res.json({
   success: true,

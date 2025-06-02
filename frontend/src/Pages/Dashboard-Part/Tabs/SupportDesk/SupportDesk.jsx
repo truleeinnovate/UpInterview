@@ -41,7 +41,7 @@ function SupportDesk() {
   });
   const [viewMode, setViewMode] = useState("table");
   const [userRole, setUserRole] = useState("Admin"); // Adjust based on your auth logic
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const filterIconRef = useRef(null);
 
 // const getTickets = useCallback(async () => {

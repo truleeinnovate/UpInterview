@@ -1,6 +1,5 @@
 const SupportUser = require("../models/SupportUser")
 
-
 exports.createTicket = async(req,res)=>{
     try {
         console.log(req.body)
@@ -29,22 +28,25 @@ exports.createTicket = async(req,res)=>{
 
 exports.getTicket = async (req, res) => {
   try {
-    const tickets = await SupportUser.find(filter);
+    console.log('Fetching tickets from SupportUser collection');
+    const tickets = await SupportUser.find(); // Removed .sort()
+    console.log('Retrieved tickets count:', tickets.length);
+    console.log('Sample ticket:', tickets[0] || 'No tickets found');
+
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
       tickets,
     });
   } catch (error) {
-    console.log(error);
+    console.error('Error fetching tickets:', error.message, error.stack);
     return res.status(500).send({
       success: false,
       message: "Failed to retrieve tickets",
-      error,
+      error: error.message,
     });
   }
 };
-
 
 exports.getTicketBasedonId  =async(req,res)=>{
     try {

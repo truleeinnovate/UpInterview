@@ -9,7 +9,6 @@ const InterviewProgress = ({
   viewMode = 'horizontal',
   onSelectRound
 }) => {
-  console.log("rounds",rounds);
   
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
