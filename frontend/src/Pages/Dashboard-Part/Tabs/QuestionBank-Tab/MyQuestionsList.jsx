@@ -228,6 +228,7 @@ const MyQuestionsList = ({
     setActionViewMoreSection((prev) =>
       prev === sectionIndex ? null : sectionIndex
     );
+    setDropdownOpen(null);
   };
   const toggleSection = (listName) => {
     setIsOpen((prev) => ({
@@ -249,11 +250,13 @@ const MyQuestionsList = ({
   };
   const toggleDropdown = (questionId) => {
     setDropdownOpen(dropdownOpen === questionId ? null : questionId);
+    setActionViewMoreSection(!actionViewMoreSection)
   };
 
   const handleEditClick = (question) => {
     setShowNewCandidateContent(question);
     setDropdownOpen(null);
+    
   };
   const handleclose = () => {
     setShowNewCandidateContent(false);
@@ -508,8 +511,9 @@ const MyQuestionsList = ({
 
       if (onAddQuestion) {
         onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+        toast.success("Question added successfully");
       }
-      toast.success("Question added successfully");
+      
       //   }
     } catch (error) {
       toast.error("Failed to add question");
@@ -633,26 +637,31 @@ return (
               <div key={listName} className="mt-4">
                 {/* List Header (UI improvement) */}
                 <div
-                  className={`flex justify-between items-center bg-custom-blue text-white p-4 rounded-lg ${isOpen[listName] ? "rounded-b-none" : ""
+                  className={`flex justify-between items-center bg-custom-blue text-white p-2 rounded-lg ${isOpen[listName] ? "rounded-b-none" : ""
                     }`}
                 >
                   <div className="flex items-center w-3/4">
                     <p className="font-semibold truncate">{listName}</p>
-                    <span className="ml-4 text-sm text-white border border-white  px-2 py-1 rounded-full">
+                    <span className="ml-4 text-sm text-white border border-white  px-2  rounded-full">
                       {items.length} questions
                     </span>
                   </div>
                   <div className="flex items-center">
                     <div className="relative">
                       <div className="flex items-center">
+                        { isOpen[listName] &&
                         <button
                           onClick={() => toggleActionSection(listName)}
                           className="p-1 rounded-full transition-colors"
                         >
                           <MdMoreVert className="text-xl" />
                         </button>
+        }
                         <button
-                          onClick={() => toggleSection(listName)}
+                          onClick={() => {
+                            toggleSection(listName)
+                          setActionViewMoreSection(!actionViewMoreSection)
+                          }}
                           className=" p-1 rounded-full ml-2 transition-colors"
                         >
                           {isOpen[listName] ? (
@@ -662,10 +671,10 @@ return (
                           )}
                         </button>
                       </div>
-                      {actionViewMoreSection === listName && (
-                        <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                      {actionViewMoreSection === listName  && (
+                        <div className="absolute right-0 text-center mr-8 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                           <p
-                            className="px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                            className="px-3 py-1 hover:bg-gray-100 text-base text-custom-blue cursor-pointer transition-colors"
                             onClick={() => {
                               items.forEach((item) => {
                                 handleEdit(item.listId, item.label);
@@ -754,14 +763,14 @@ return (
                               )}
 
                             {section === "assessment" && (
-                              <div className="w-[8%] flex justify-center">
+                              <div className=" flex justify-center w-16">
                                 {addedSections.some(s => s.Questions.some(q => q.questionId === question._id)) ? (
-                                  <span className="text-green-600 text-sm font-medium py-1 px-1">
+                                  <span className="text-green-600 text-sm font-base py-1 px-1">
                                     ✓ Added
                                   </span>
                                 ) : (
                                   <button
-                                    className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md hover:bg-blue-700 transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                    className={`bg-custom-blue w-[80%] py-1 px-3 text-white rounded-md hover:bg-blue-700 transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
                                       ? 'opacity-50 cursor-not-allowed'
                                       : ''
                                       }`}
@@ -799,10 +808,11 @@ return (
                                   <MdMoreVert className="text-gray-600" />
                                 </button>
                                 {dropdownOpen === question._id && (
-                                  <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                  <div className="absolute right-0  text-center w-12 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                                     <p
-                                      className="px-3 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                      onClick={() => handleEditClick(question)}
+                                      className="px-3 py-1  hover:bg-gray-100  text-base text-custom-blue cursor-pointer transition-colors"
+                                      onClick={() => 
+                                        handleEditClick(question)}
                                     >
                                       Edit
                                     </p>
@@ -875,6 +885,8 @@ return (
         ref={myQuestionsListRef}
         fromcreate={true}
         setSelectedLabelnew={setSelectedLabel}
+        setActionViewMoreSection={setActionViewMoreSection}
+
       />
     </div>
 

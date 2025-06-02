@@ -15,6 +15,7 @@ import Cookies from "js-cookie";
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 import { config } from '../../config.js';
+import QuestionBank from '../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
 
 function RoundForm() {
   const {
@@ -56,7 +57,7 @@ function RoundForm() {
     assessmentTemplate: { assessmentId: '', assessmentName: '' },
     interviewQuestionsList: [],
   });
-  
+
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
 
@@ -77,10 +78,10 @@ function RoundForm() {
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
-    const tenantId = tokenPayload?.tenantId;
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const userId = tokenPayload?.userId;
+  // const userName = tokenPayload?.userName;
+  const tenantId = tokenPayload?.tenantId;
 
   // const tenantId = Cookies.get("organizationId");
   // const ownerId = Cookies.get("userId");
@@ -92,7 +93,7 @@ function RoundForm() {
         setShowDropdown(false);
       }
     };
-  
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -138,16 +139,16 @@ function RoundForm() {
 
 
   // Fetch template and round data
- 
- 
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
 
         // templates
         const response = templates.find(
-        (template) => template._id === id
-      );
+          (template) => template._id === id
+        );
         // const response = await axios.get(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
         //   {
         //     params: {
@@ -157,7 +158,7 @@ function RoundForm() {
         // );
 
         // console.log("template response", response);
-        
+
         if (response && response) {
 
 
@@ -171,13 +172,13 @@ function RoundForm() {
             // console.log("round round", round);
 
             if (round) {
-           
+
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
               const internalInterviewers = resolveInterviewerDetails(round?.internalInterviewers || []);
-              
+
               // console.log("internal Interviewers", internalInterviewers);
-             
+
 
               setFormData({
                 roundTitle: round.roundTitle || '',
@@ -220,7 +221,7 @@ function RoundForm() {
     fetchData();
   }, [id, roundId]);
 
-// console.log("template response", template);
+  // console.log("template response", template);
 
 
   // const fetchQuestionsForAssessment = async (assessmentId) => {
@@ -372,15 +373,31 @@ function RoundForm() {
   };
 
   // question list functionality  
-  const handleRemoveQuestion = (index) => {
+  const handleRemoveQuestion = (questionId,) => {
+
+    // console.log("questionId", questionId);
+
+
     setFormData(prev => ({
       ...prev,
-      interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
+      interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
+    }));
+  };
+
+  // Change by Shashank on [02/06/2025]: Added handleToggleMandatory to update mandatory status of a question
+  const handleToggleMandatory = (questionId, mandatory) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
+        question.questionId === questionId
+          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          : question
+      )
     }));
   };
 
 
-  const handleAddQuestionToRound = async (question) => {
+  const handleAddQuestionToRound = (question) => {
     // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
 
@@ -392,6 +409,9 @@ function RoundForm() {
           : [...prev.interviewQuestionsList, question]
       }));
 
+      console.log("question", question);
+
+
       setErrors(prev => ({
         ...prev,
         questions: undefined
@@ -399,6 +419,13 @@ function RoundForm() {
 
     }
   }
+
+
+
+
+  const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
+    questions.forEach((question) => handleAddQuestionToRound(question));
+  };
 
 
 
@@ -532,7 +559,7 @@ function RoundForm() {
 
     if (errors.assessmentTemplate) {
       setErrors(prev => {
-        const newErrors = {...prev};
+        const newErrors = { ...prev };
         delete newErrors.assessmentTemplate;
         return newErrors;
       });
@@ -706,8 +733,8 @@ function RoundForm() {
 
       }
       console.log("roundData", roundData);
-        console.log(" id", roundId);
-      
+      console.log(" id", roundId);
+
 
       if (roundId) {
         // Update existing round
@@ -716,9 +743,9 @@ function RoundForm() {
         );
 
         await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-        tenantId,
+          tenantId,
           rounds: updatedRounds,
-        
+
         });
       } else {
         // Add new round
@@ -727,14 +754,14 @@ function RoundForm() {
         await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
           rounds: updatedRounds,
-          
+
         });
       }
 
       navigate(`/interview-templates/${id}`);
     } catch (error) {
       console.log(error);
-      
+
       // console.error('Error saving round:', error);
       alert('Failed to save round. Please try again.');
     }
@@ -911,7 +938,7 @@ function RoundForm() {
                           assessmentTemplate: { ...prev.assessmentTemplate, assessmentName: e.target.value }
                         }))}
                         onClick={() => setShowDropdown(!showDropdown)}
-                        readOnly 
+                        readOnly
 
                       />
                       <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
@@ -960,7 +987,7 @@ function RoundForm() {
                       Assessment
                     </label>
                     {errors.assessmentQuestions && <p className="text-red-500">{errors.assessmentQuestions}</p>}
-                    {questionsLoading  ? (
+                    {questionsLoading ? (
                       <p className="text-gray-500">Loading assessment data...</p>
                     ) : (
                       <div className="space-y-4">
@@ -1272,7 +1299,7 @@ function RoundForm() {
                       {/* Display Added Questions */}
                       {formData.interviewQuestionsList.length > 0 ? (
                         <ul className="mt-2 space-y-2">
-                          {formData.interviewQuestionsList.map((question, qIndex) => {
+                          {(formData.interviewQuestionsList ?? []).map((question, qIndex) => {
                             const isMandatory = question?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
@@ -1284,7 +1311,7 @@ function RoundForm() {
                                 <span className="text-gray-900 font-medium">
                                   {qIndex + 1}. {questionText}
                                 </span>
-                                <button onClick={() => handleRemoveQuestion(qIndex)}>
+                                <button onClick={() => handleRemoveQuestion(question.questionId)}>
                                   <span className="text-red-500 text-xl font-bold">&times;</span>
                                 </button>
                               </li>
@@ -1310,12 +1337,12 @@ function RoundForm() {
                             <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
                             <button>
                               <MdOutlineCancel
-                                className="text-2xl text-white"
+                                className="text-2xl fill-white"
                                 onClick={() => handlePopupToggle()}
                               />
                             </button>
                           </div>
-                          <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
+                          {/* <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
                             <div className="flex gap-10 p-4">
                               <div className="relative inline-block">
                                 <span className="flex items-center cursor-pointer">
@@ -1344,13 +1371,44 @@ function RoundForm() {
                                 </span>
                               </div>
                             </div>
-                          </div>
-                          {activeTab === "SuggesstedQuestions" && (
-                            <SuggesstedQuestions fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                          )}
-                          {activeTab === "MyQuestionsList" && (
-                            <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                          )}
+                          </div> */}
+                          {isInterviewQuestionPopup &&
+                            <QuestionBank
+                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                              // sectionName=""
+                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                              section="interviewerSection"
+                              // closeQuestionBank={handlePopupToggle}
+                              // questionBankPopupVisibility={isInterviewQuestionPopup}
+                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
+                              // addedSections={[]}
+                              // questionsLimit={0}
+                              // checkedCount={formData.interviewQuestionsList.length}
+                              // interviewQuestionsList={formData.interviewQuestionsList}
+                              // setInterviewQuestionsList={(questions) =>
+                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                              // }
+                              fromScheduleLater={true}
+                              interviewQuestionsList={formData.interviewQuestionsList}
+                              onAddQuestion={handleAddQuestionToRound}
+                              // setInterviewQuestionsList={(question) =>
+                              //   setFormData((prev) => ({
+                              //     ...prev,
+                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+                              //       ? prev.interviewQuestionsList
+                              //       : [...prev.interviewQuestionsList, question]
+                              //   }))
+                              // }
+
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
+
+                            />
+
+                          }
+
+
+
                         </div>
                       </div>
                     )}
@@ -1376,7 +1434,7 @@ function RoundForm() {
                 name="instructions"
                 onChange={(e) => handleInputChange('instructions', e.target.value)}
                 className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
-                  ${errors.instructions  ? "border-red-400": ""}
+                  ${errors.instructions ? "border-red-400" : ""}
                   `}
                 placeholder="Enter round instructions..."
                 rows="10"
@@ -1384,15 +1442,15 @@ function RoundForm() {
                 maxLength={1000}
                 readOnly={formData.roundTitle === 'Assessment'}
               />
-               {errors.instructions && (
-                    <p className="text-red-500 text-sm">{errors.instructions}</p>
-                  )}
+              {errors.instructions && (
+                <p className="text-red-500 text-sm">{errors.instructions}</p>
+              )}
               <div className="flex justify-end items-center mt-1">
-              <span className="text-sm text-gray-500">
-                      {formData.instructions.length < 250 && `Minimum ${250 - formData.instructions.length} more characters needed`}
-                    </span>
-              <span className="text-sm text-gray-500">{formData.instructions?.length || 0}/1000</span>
-                  </div>
+                <span className="text-sm text-gray-500">
+                  {formData.instructions.length < 250 && `Minimum ${250 - formData.instructions.length} more characters needed`}
+                </span>
+                <span className="text-sm text-gray-500">{formData.instructions?.length || 0}/1000</span>
+              </div>
             </div>
 
 

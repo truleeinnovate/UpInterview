@@ -9,9 +9,9 @@ import { Minimize, Maximize, XCircle, ChevronUp } from 'lucide-react';
 
 // const QuestionBank = ({section,closeQuestionBank,questionBankPopupVisibility,setQuestionBankPopupVisibility}) => {
 //change done by Shashank on -[08/01/2025]
-const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSectionFromQuestionBank, section: sectionProp, closeQuestionBank, questionBankPopupVisibility, setQuestionBankPopupVisibility,addedSections, questionsLimit,checkedCount}) => {
+const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSectionFromQuestionBank, section: sectionProp, closeQuestionBank, questionBankPopupVisibility, setQuestionBankPopupVisibility,addedSections, questionsLimit,checkedCount,fromScheduleLater,onAddQuestion,setInterviewQuestionsList,interviewQuestionsList,handleRemoveQuestion,handleToggleMandatory}) => {
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
-  const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
+  // const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
 
   const location = useLocation()
  const section = location.state?.section || sectionProp || ""
@@ -30,7 +30,8 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
   return (
     <div className={`sm:pt-10 md:pt-10${section === "interviewerSection" || section === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
       {/* Header Section */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}`}>
+      <div className={`${section === "interviewerSection" || section === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"} 
+      ${section ==="interviewerSection" ? 'hidden': ""}`}>
         {(section === "Popup" || section === "interviewerSection" || section === "assessment") && (
           <div className={`flex justify-between items-center p-4 ${section === "interviewerSection" || section === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
             <div>
@@ -149,6 +150,10 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            fromScheduleLater={fromScheduleLater}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -163,6 +168,11 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            fromScheduleLater={fromScheduleLater}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandator={handleToggleMandatory}
+            
           />
         )}
       </div>

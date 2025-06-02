@@ -15,7 +15,7 @@ const CustomProvider = ({ children }) => {
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  console.log('tokenPayload:', tokenPayload);
+  // console.log('tokenPayload:', tokenPayload);
 
 
 
@@ -836,7 +836,7 @@ const CustomProvider = ({ children }) => {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
-      console.log("allUsers_data", allUsers_data);
+      // console.log("allUsers_data", allUsers_data);
       
 
       setContacts(allUsers_data);
@@ -854,13 +854,17 @@ const CustomProvider = ({ children }) => {
 
   const [singlecontact, setsingleContact] = useState([]);
 
+// console.log("singlecontact", singlecontact);
 
+
+   
 
   useEffect(() => {
-    if (!userId) return;
-
-    const fetchContacts = async () => {
+    const fetchContacts = async (usersId = null) => {
       try {
+
+
+
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
         console.log('Contacts for this user:', res.data);
@@ -868,17 +872,21 @@ const CustomProvider = ({ children }) => {
         console.error('Error fetching user contacts:', err);
       }
     };
-
+  
     fetchContacts();
   }, [userId]);
+
+
+
+
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
   const [interviewers, setInterviewers] = useState([]);
   useEffect(() => {
     const fetchInterviewers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-        console.log('response', response)
-        console.log('data', response.data)
+        // console.log('response', response)
+        // console.log('data', response.data)
         setInterviewers(response.data);
       } catch (err) {
         console.error(err.message);
@@ -916,6 +924,9 @@ const CustomProvider = ({ children }) => {
     },
     enabled: !!tenantId,
   });
+
+  // console.log("usersRes", usersRes);
+  
 
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({
@@ -1198,6 +1209,7 @@ const CustomProvider = ({ children }) => {
         contacts,
         setContacts,
         singlecontact,
+        // fetchContacts,
 
         interviewers
       }}

@@ -28,6 +28,8 @@ const SuggestedQuestionsComponent = ({
     // <-- (mansoor) added fromScheduleLater
     fromScheduleLater,
     onAddQuestion,
+    handleRemoveQuestion,
+    handleToggleMandatory
     // -->
 }) => {
 
@@ -94,108 +96,8 @@ const SuggestedQuestionsComponent = ({
 
     // Added by Shashank on [02/01/2025]: Feature to handle add question to interviewer section when clicked on add button
 
-    const onClickAddButton = async (item) => {
-        console.log("item", item);
-
-        if (section === "assessment") {
-
-            const isDuplicate = addedSections.some(section =>
-                section.Questions.some(q => q.questionId === item._id)
-            );
-
-            if (isDuplicate) {
-                toast.error('This question has already been added to the assessment');
-                return;
-            }
 
 
-            if (checkedCount >= questionsLimit) {
-                toast.error(`You've reached the maximum limit of ${questionsLimit} questions`);
-                return;
-            }
-            if (item) {
-                // Prepare the question data according to your schema
-                const questionToAdd = {
-                    questionId: item._id,
-                    source: "system", // or "custom"
-                    snapshot: {
-                        autoAssessment: item.autoAssessment,
-                        correctAnswer: item.correctAnswer,
-                        difficultyLevel: item.difficultyLevel,
-                        hints: item.hints,
-                        isActive: item.isActive,
-                        isAdded: item.isAdded,
-                        isAutoAssessment: item.isAutoAssessment,
-                        isInterviewQuestionOnly: item.isInterviewQuestionOnly,
-                        options: item.options,
-                        programming: item.programming,
-                        questionNo: item.questionNo,
-                        questionText: item.questionText,
-                        questionType: item.questionType,
-                        skill: item.skill,
-                        tags: item.tags,
-                        technology: item.technology,
-                    },
-                    order: item.order || 0,
-                    customizations: null
-                };
-                updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
-                toast.success('Question added successfully!');
-
-                // 4. Show remaining questions count
-                const remaining = questionsLimit - (checkedCount + 1);
-                if (remaining > 0) {
-                    toast.info(`${remaining} questions remaining to reach the limit`);
-                } else {
-                    toast.success('You have reached the required number of questions!');
-                }
-
-            }
-        } else {
-
-            setInterviewQuestionsList((prev) => [...prev, item]);
-            // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
-            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
-
-            const questionToAdd = {
-                tenantId: "ten1",
-                ownerId: "own1",
-                questionId: item._id,
-                source: "system",
-                addedBy: "interviewer",
-                snapshot: {
-                    questionText: item.questionText,
-                    correctAnswer: item.correctAnswer,
-                    options: item.options,
-                    skillTags: item.skill,
-                },
-            };
-            //this is feedback interview questions passing logic we need to change this because we will follow same interview process here also
-            // const response = await axios.post(url, questionToAdd);
-            // if (response.data.success) {
-            // getInterviewerQuestions()
-            // const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
-            // const response2 = await axios.get(addedQuestionUrl);
-            // const newQuestion = response2.data.question;
-            // const formattedQuestion = {
-            //     id: newQuestion._id,
-            //     question: newQuestion.snapshot.questionText,
-            //     answer: newQuestion.snapshot.correctAnswer,
-            //     note: "",
-            //     notesBool: false,
-            //     isLiked: false,
-            // };
-            // setInterviewerSectionData((prev) => [...prev, formattedQuestion]);
-            // }
-
-            // Update suggestedQuestions with the "isAdded" flag set to true
-            const newList = suggestedQuestionsFilteredData.map((question) =>
-                question._id === item._id ? { ...question, isAdded: true } : question
-            );
-            setSuggestedQuestionsFilteredData(newList);
-            setSuggestedQuestions(newList);
-        }
-    };
 
     //changes made by shashank - [09/01/2025]F
 
@@ -405,23 +307,247 @@ const SuggestedQuestionsComponent = ({
         }
     };
 
-    const onClickRemoveQuestion = async (id) => {
-        // alert(${id})
-        try {
-            const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
-            const response = await axios.delete(url);
-            // alert(response.data.message)
-            getInterviewerQuestions();
+
+    // useEffect(() => {
+    //     if (!Array.isArray(interviewQuestionsList)) {
+    //         console.warn('interviewQuestionsList is not an array in SuggestedQuestionsComponent:', interviewQuestionsList);
+    //         setInterviewQuestionsList([]);
+    //     }
+
+
+    //     setSuggestedQuestions(prev =>
+    //         prev.map(q => ({
+    //             ...q,
+    //             isAdded: interviewQuestionsList.some(iq => iq.questionId === q._id),
+    //         }))
+    //     );
+    //     setSuggestedQuestionsFilteredData(prev =>
+    //         prev.map(q => ({
+    //             ...q,
+    //             isAdded: interviewQuestionsList.some(iq => iq.questionId === q._id),
+    //         }))
+    //     );
+    // }, [interviewQuestionsList]);
+
+    useEffect(() => {
+        setMandatoryStatus((prev) => {
+            const updatedStatus = { ...prev };
+            interviewQuestionsList.forEach((question) => {
+                updatedStatus[question.questionId] = question.mandatory === "true";
+            });
+            return updatedStatus;
+        });
+    }, [interviewQuestionsList]);
+
+
+    const [mandatoryStatus, setMandatoryStatus] = useState({});
+
+    // console.log("interviewQuestionsList", interviewQuestionsList);
+
+    const handleToggle = (questionId, item) => {
+        setMandatoryStatus((prev) => {
+            const newStatus = !prev[questionId];
+            const updatedStatus = {
+                ...prev,
+                [questionId]: newStatus,
+            };
+
+            // Update the parent component with the new mandatory status
+            if (handleToggleMandatory) {
+                handleToggleMandatory(questionId, newStatus);
+            }
+
+            // If the question is already added, update its mandatory status in the parent
+            if (interviewQuestionsList.some((q) => q.questionId === questionId)) {
+                onAddQuestion({
+                    questionId: item._id,
+                    source: "system",
+                    snapshot: item,
+                    order: "",
+                    customizations: "",
+                    mandatory: newStatus ? "true" : "false",
+                });
+            }
+
+            return updatedStatus;
+        });
+    };
+
+
+    const onClickAddButton = async (item) => {
+        // console.log("item", item);
+
+
+        if (section === "assessment") {
+
+            const isDuplicate = addedSections.some(section =>
+                section.Questions.some(q => q.questionId === item._id)
+            );
+
+            if (isDuplicate) {
+                toast.error('This question has already been added to the assessment');
+                return;
+            }
+
+
+            if (checkedCount >= questionsLimit) {
+                toast.error(`You've reached the maximum limit of ${questionsLimit} questions`);
+                return;
+            }
+            if (item) {
+                // Prepare the question data according to your schema
+                const questionToAdd = {
+                    questionId: item._id,
+                    source: "system", // or "custom"
+                    snapshot: {
+                        autoAssessment: item.autoAssessment,
+                        correctAnswer: item.correctAnswer,
+                        difficultyLevel: item.difficultyLevel,
+                        hints: item.hints,
+                        isActive: item.isActive,
+                        isAdded: item.isAdded,
+                        isAutoAssessment: item.isAutoAssessment,
+                        isInterviewQuestionOnly: item.isInterviewQuestionOnly,
+                        options: item.options,
+                        programming: item.programming,
+                        questionNo: item.questionNo,
+                        questionText: item.questionText,
+                        questionType: item.questionType,
+                        skill: item.skill,
+                        tags: item.tags,
+                        technology: item.technology,
+                    },
+                    order: item.order || 0,
+                    customizations: null
+                };
+                updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
+                toast.success('Question added successfully!');
+
+                // 4. Show remaining questions count
+                const remaining = questionsLimit - (checkedCount + 1);
+                if (remaining > 0) {
+                    toast.info(`${remaining} questions remaining to reach the limit`);
+                } else {
+                    toast.success('You have reached the required number of questions!');
+                }
+
+            }
+        } else {
+
+
+            const questionToAdd = {
+                questionId: item._id,
+                source: "system",
+                snapshot: item,
+                order: "",
+                customizations: "",
+                mandatory: mandatoryStatus[item._id] ? "true" : "false",
+            };
+
+            console.log("questionToAdd", questionToAdd);
+
+
+            if (onAddQuestion) {
+                //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+                onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+            }
+
+
+            // setInterviewQuestionsList((prev) => ...prev, questionToAdd)
+            toast.success("Question added successfully");
+
+            // setInterviewQuestionsList((prev) => [...prev, questionToAdd]);
+            // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
+            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
+
+            // const questionToAdd = {
+            //     tenantId: "ten1",
+            //     ownerId: "own1",
+            //     questionId: item._id,
+            //     source: "system",
+            //     addedBy: "interviewer",
+            //     snapshot: {
+            //         questionText: item.questionText,
+            //         correctAnswer: item.correctAnswer,
+            //         options: item.options,
+            //         skillTags: item.skill,
+            //     },
+            // };
+            //this is feedback interview questions passing logic we need to change this because we will follow same interview process here also
+            // const response = await axios.post(url, questionToAdd);
+            // if (response.data.success) {
+            // getInterviewerQuestions()
+            // const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${item._id}`;
+            // const response2 = await axios.get(addedQuestionUrl);
+            // const newQuestion = response2.data.question;
+            // const formattedQuestion = {
+            //     id: newQuestion._id,
+            //     question: newQuestion.snapshot.questionText,
+            //     answer: newQuestion.snapshot.correctAnswer,
+            //     note: "",
+            //     notesBool: false,
+            //     isLiked: false,
+            // };
+            // setInterviewerSectionData((prev) => [...prev, formattedQuestion]);
+            // }
+
+            // Update suggestedQuestions with the "isAdded" flag set to true
             const newList = suggestedQuestionsFilteredData.map((question) =>
+                question._id === item._id ? { ...question, isAdded: true } : question,
+                //    mandatory = mandatoryStatus[question._id] ? "true" : "false",
+            );
+            setSuggestedQuestionsFilteredData(newList);
+            setSuggestedQuestions(newList);
+        }
+    };
+
+    const onClickRemoveQuestion = async (item, id) => {
+        // alert(${id})
+        if (section === 'interviewerSection') {
+            if (handleRemoveQuestion) {
+                handleRemoveQuestion(id)
+            }
+            //    const questionToAdd = {
+            //         questionId: item._id,
+            //         source: "system",
+            //         snapshot: item,
+            //         order: "",
+            //         customizations: "",
+            //         mandatory: mandatoryStatus[item._id] ? "true" : "false",
+            //     };
+
+            //    if (onAddQuestion) {
+            //         //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+            //         onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+
+            //     }
+
+
+            const newList = suggestedQuestionsFilteredData.map(question =>
                 question._id === id ? { ...question, isAdded: false } : question
             );
             setSuggestedQuestionsFilteredData(newList);
-            setInterviewQuestionsList((prev) =>
-                prev.filter((each) => each._id !== id)
-            );
             setSuggestedQuestions(newList);
-        } catch (error) {
-            console.error("error in deleting question", error);
+
+
+        } else {
+            try {
+
+                const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
+                const response = await axios.delete(url);
+                // alert(response.data.message)
+                getInterviewerQuestions();
+                const newList = suggestedQuestionsFilteredData.map((question) =>
+                    question._id === id ? { ...question, isAdded: false } : question
+                );
+                setSuggestedQuestionsFilteredData(newList);
+                setInterviewQuestionsList((prev) =>
+                    prev.filter((each) => each._id !== id)
+                );
+                setSuggestedQuestions(newList);
+            } catch (error) {
+                console.error("error in deleting question", error);
+            }
         }
     };
 
@@ -686,219 +812,220 @@ const SuggestedQuestionsComponent = ({
     const ReturnSuggestedQuestionsData = () => {
         // <-- (mansoor)
 
-        const [mandatoryStatus, setMandatoryStatus] = useState({});
+        // const [mandatoryStatus, setMandatoryStatus] = useState({});
 
-        const handleToggle = (questionId) => {
-            setMandatoryStatus((prev) => {
-                const updatedStatus = {
-                    ...prev,
-                    [questionId]: !prev[questionId],
-                };
-                return updatedStatus;
-            });
-        };
+        // const handleToggle = (questionId) => {
+        //     setMandatoryStatus((prev) => {
+        //         const updatedStatus = {
+        //             ...prev,
+        //             [questionId]: !prev[questionId],
+        //         };
+        //         return updatedStatus;
+        //     });
+        // };
 
-        const onClickForSchedulelater = async (item) => {
-            try {
-                const questionToAdd = {
-                    questionId: item._id,
-                    source: "system",
-                    snapshot: item,
-                    order: "",
-                    customizations: "",
-                    mandatory: mandatoryStatus[item._id] ? "true" : "false",
-                };
+        // const onClickForSchedulelater = async (item) => {
+        //     try {
+        //         const questionToAdd = {
+        //             questionId: item._id,
+        //             source: "system",
+        //             snapshot: item,
+        //             order: "",
+        //             customizations: "",
+        //             mandatory: mandatoryStatus[item._id] ? "true" : "false",
+        //         };
 
-                //   const response = await axios.post(
-                //     `${config.REACT_APP_API_URL}/interview-questions/add-question`,
-                //     questionToAdd,
-                //     { headers: { 'Content-Type': 'application/json' } }
-                //   );
+        //         //   const response = await axios.post(
+        //         //     `${config.REACT_APP_API_URL}/interview-questions/add-question`,
+        //         //     questionToAdd,
+        //         //     { headers: { 'Content-Type': 'application/json' } }
+        //         //   );
 
-                //   const simulatedResponse = {
-                //     data: {
-                //       success: true,
-                //       recordId: `record-${item._id}`,
-                //     },
-                //   };
+        //         //   const simulatedResponse = {
+        //         //     data: {
+        //         //       success: true,
+        //         //       recordId: `record-${item._id}`,
+        //         //     },
+        //         //   };
 
-                //   if (simulatedResponse.data.success) {
+        //         //   if (simulatedResponse.data.success) {
 
-                if (onAddQuestion) {
-                    //   onAddQuestion(response.data.question); // Pass the question and index to the parent
-                    onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+        //         if (onAddQuestion) {
+        //             //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+        //             onAddQuestion(questionToAdd,); // Pass the question and index to the parent
 
-                }
-                toast.success("Question added successfully");
-                //   }
-            } catch (error) {
-                toast.error("Failed to add question");
-                console.error("Error adding question:", error);
-            }
-        };
+        //         }
+        //         toast.success("Question added successfully");
+        //         //   }
+        //     } catch (error) {
+        //         toast.error("Failed to add question");
+        //         console.error("Error adding question:", error);
+        //     }
+        // };
 
         // -->
         return (
             <div className={`p-4`}>
-              {/* Search and Filter Section */}
-              {ReturnSearchFilterSection()}
-          
-              {/* Selected skills section (UI improvement) */}
-              {selectedSkills && (
-                <div className="my-4">
-                  <ul className="flex gap-2 flex-wrap">
-                    {selectedSkills.map((skill, index) => (
-                      <li
-                        key={index}
-                        className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                      >
-                        <span>{skill}</span>
-                        <button
-                          className="cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => onClickCrossIcon(skill)}
-                        >
-                          <X size={14} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-          
-              {/* Applied filters section (UI improvement) */}
-              {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                <div className="flex items-center gap-3 my-4 flex-wrap">
-                  <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
-                  <ul className="flex gap-2 flex-wrap">
-                    {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
-                      (filterItem, index) => (
-                        <li
-                          key={index}
-                          className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
-                        >
-                          <span>{filterItem}</span>
-                          <button
-                            className="hover:text-red-500 transition-colors"
-                            onClick={() =>
-                              onClickRemoveSelectedFilterItem(index, filterItem)
-                            }
-                          >
-                            <X size={14} />
-                          </button>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
-          
-              {/* Questions list (UI improvement) */}
-              <ul
-                className={`${section === "interviewerSection" ||
-                  section === "assessment" ||
-                  section === "Popup"
-                  ? "h-[calc(100vh-280px)]"
-                  : fromScheduleLater
-                      ? "h-[calc(100vh-300px)]"
-                      : "h-[calc(100vh-250px)]"
-                  } flex flex-col gap-4 my-2 pr-2`}
-              >
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item, index) => (
-                    <li key={index} className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                        <h2 className="font-medium w-[85%] text-gray-800">
-                          {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
-                        </h2>
-          
-                        <div
-                          className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(section === "interviewerSection" || section === "assessment") ? "w-[15%]" : "w-[10%]"}`}
-                        >
-                          <p
-                            className={`w-20 text-center text-sm ${getDifficultyStyles(
-                              item.difficultyLevel
-                            )} rounded-full px-2 py-1`}
-                            title="Difficulty Level"
-                          >
-                            {item.difficultyLevel}
-                          </p>
-                        </div>
-          
-                        {/* Mandatory toggle for schedule later (UI improvement) */}
-                        {fromScheduleLater && (
-                          <div className="flex justify-center text-center h-12 border-r border-gray-200">
-                            <div className="flex items-center w-14 justify-center">
-                              <button
-                                onClick={() => {
-                                  handleToggle(item._id);
-                                }}
-                                className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                    ? "bg-blue-100 border-custom-blue justify-end"
-                                    : "bg-gray-200 border-gray-300 justify-start"
-                                  }`}
-                              >
-                                <span
-                                  className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                      ? "bg-custom-blue"
-                                      : "bg-gray-400"
-                                    }`}
-                                />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-          
-                        {/* Add/Remove buttons for different sections (UI improvement) */}
-                        {(section === "Popup" || section === "interviewerSection") && (
-                          <div
-                            className={`${section === "Popup" && !questionBankPopupVisibility
-                                ? "w-[15%]"
-                                : "w-[8%]"
-                              } p-1 flex justify-center`}
-                          >
-                            {item.isAdded ? (
-                              <button
-                                onClick={() => onClickRemoveQuestion(item._id)}
-                                className="rounded-md bg-gray-500 w-[80%] px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
-                              >
-                                Remove
-                              </button>
-                            ) : (
-                              <button
-                                className="bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm"
-                                onClick={() => onClickAddButton(item)}
-                              >
-                                Add
-                              </button>
+                {/* Search and Filter Section */}
+                {ReturnSearchFilterSection()}
+
+                {/* Selected skills section (UI improvement) */}
+                {selectedSkills && (
+                    <div className="my-4">
+                        <ul className="flex gap-2 flex-wrap">
+                            {selectedSkills.map((skill, index) => (
+                                <li
+                                    key={index}
+                                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
+                                >
+                                    <span>{skill}</span>
+                                    <button
+                                        className="cursor-pointer hover:text-red-500 transition-colors"
+                                        onClick={() => onClickCrossIcon(skill)}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Applied filters section (UI improvement) */}
+                {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
+                    <div className="flex items-center gap-3 my-4 flex-wrap">
+                        <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
+                        <ul className="flex gap-2 flex-wrap">
+                            {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
+                                (filterItem, index) => (
+                                    <li
+                                        key={index}
+                                        className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
+                                    >
+                                        <span>{filterItem}</span>
+                                        <button
+                                            className="hover:text-red-500 transition-colors"
+                                            onClick={() =>
+                                                onClickRemoveSelectedFilterItem(index, filterItem)
+                                            }
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </li>
+                                )
                             )}
-                          </div>
-                        )}
-          
-                        {section === "assessment" && (
-                          <div className="w-[8%] flex justify-center">
-                            {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
-                              <span className="text-green-600 text-sm font-medium py-1 px-1">
-                                ✓ Added
-                              </span>
-                            ) : (
-                              <button
-                                className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : ''
-                                  }`}
-                                onClick={() => onClickAddButton(item)}
-                                disabled={
-                                  addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                }
-                              >
-                                Add
-                              </button>
-                            )}
-                          </div>
-                        )}
-          
-                        {/* Add button for schedule later (UI improvement) */}
-                        {fromScheduleLater && (
+                        </ul>
+                    </div>
+                )}
+
+                {/* Questions list (UI improvement) */}
+                <ul
+                    className={`${section === "interviewerSection" ||
+                        section === "assessment" ||
+                        section === "Popup"
+                        ? "h-[calc(100vh-280px)]"
+                        : fromScheduleLater
+                            ? "h-[calc(100vh-300px)]"
+                            : "h-[calc(100vh-250px)]"
+                        } flex flex-col gap-4 my-2 pr-2`}
+                >
+                    {paginatedData.length > 0 ? (
+                        paginatedData.map((item, index) => (
+                            <li key={index} className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                                    <h2 className="font-medium w-[85%] text-gray-800">
+                                        {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
+                                    </h2>
+
+                                    <div
+                                        className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(section === "interviewerSection" || section === "assessment") ? "w-[15%]" : "w-[10%]"}`}
+                                    >
+                                        <p
+                                            className={`w-20 text-center text-sm ${getDifficultyStyles(
+                                                item.difficultyLevel
+                                            )} rounded-full px-2 py-1`}
+                                            title="Difficulty Level"
+                                        >
+                                            {item.difficultyLevel}
+                                        </p>
+                                    </div>
+
+                                    {/* Mandatory toggle for schedule later (UI improvement) */}
+                                    {fromScheduleLater && (
+                                        <div className="flex justify-center text-center h-12 border-r border-gray-200">
+                                            <div className="flex items-center w-14 justify-center">
+                                                <button
+                                                    onClick={() => {
+                                                        handleToggle(item._id, item);
+
+                                                    }}
+                                                    className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                                        ? "bg-blue-100 border-custom-blue justify-end"
+                                                        : "bg-gray-200 border-gray-300 justify-start"
+                                                        }`}
+                                                >
+                                                    <span
+                                                        className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                                            ? "bg-custom-blue"
+                                                            : "bg-gray-400"
+                                                            }`}
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Add/Remove buttons for different sections (UI improvement) */}
+                                    {(section === "Popup" || section === "interviewerSection") && (
+                                        <div
+                                            className={`${section === "Popup" && !questionBankPopupVisibility
+                                                ? "w-[15%]"
+                                                : "w-[8%]"
+                                                } p-1 flex justify-center`}
+                                        >
+                                            {item.isAdded ? (
+                                                <button
+                                                    onClick={() => onClickRemoveQuestion(item, item._id)}
+                                                    className="rounded-md bg-gray-500 w-[80%] px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
+                                                >
+                                                    Remove
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm"
+                                                    onClick={() => onClickAddButton(item, index)}
+                                                >
+                                                    Add
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {section === "assessment" && (
+                                        <div className="w-[8%] flex justify-center">
+                                            {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
+                                                <span className="text-green-600 text-sm font-medium py-1 px-1">
+                                                    ✓ Added
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                        ? 'opacity-50 cursor-not-allowed'
+                                                        : ''
+                                                        }`}
+                                                    onClick={() => onClickAddButton(item, index)}
+                                                    disabled={
+                                                        addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                    }
+                                                >
+                                                    Add
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Add button for schedule later (UI improvement) */}
+                                    {/* {fromScheduleLater  && (
                           <div className="flex justify-center mx-3">
                             <button
                               type="button"
@@ -908,56 +1035,56 @@ const SuggestedQuestionsComponent = ({
                               Add
                             </button>
                           </div>
-                        )}
-          
-                        {/* Default dropdown for other sections (UI improvement) */}
-                        {!section && !fromScheduleLater && (
-                          <div className="w-[5%] flex justify-center relative">
-                            <button
-                              className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
-                              onClick={() => toggleDropdown(item._id)}
-                            >
-                              <Plus />
-                            </button>
-                            {dropdownOpen === item._id && (
-                              <MyQuestionList
-                                question={item}
-                                closeDropdown={closeDropdown}
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-          
-                      <div className="px-4 py-2">
-                        <p className="text-gray-600 mb-2">
-                          <span className="font-medium">Answer: </span>
-                          {item.correctAnswer}
-                        </p>
-                        <p className="font-medium">
-                          Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
-                        </p>
-                      </div>
-                    </li>
-                  ))
-                ) : (
-                  <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
-                    <div className="text-gray-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-gray-700 font-semibold text-lg">
-                      No questions found
-                    </h2>
-                    <p className="text-gray-500">
-                      Try again with different filter options
-                    </p>
-                  </div>
-                )}
-              </ul>
+                        )} */}
+
+                                    {/* Default dropdown for other sections (UI improvement) */}
+                                    {!section && !fromScheduleLater && (
+                                        <div className="w-[5%] flex justify-center relative">
+                                            <button
+                                                className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
+                                                onClick={() => toggleDropdown(item._id)}
+                                            >
+                                                <Plus />
+                                            </button>
+                                            {dropdownOpen === item._id && (
+                                                <MyQuestionList
+                                                    question={item}
+                                                    closeDropdown={closeDropdown}
+                                                />
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="px-4 py-2">
+                                    <p className="text-gray-600 mb-2">
+                                        <span className="font-medium">Answer: </span>
+                                        {item.correctAnswer}
+                                    </p>
+                                    <p className="font-medium">
+                                        Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
+                                    </p>
+                                </div>
+                            </li>
+                        ))
+                    ) : (
+                        <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
+                            <div className="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-gray-700 font-semibold text-lg">
+                                No questions found
+                            </h2>
+                            <p className="text-gray-500">
+                                Try again with different filter options
+                            </p>
+                        </div>
+                    )}
+                </ul>
             </div>
-          );
+        );
     };
 
     const ReturnMyQuestionsListData = () => {

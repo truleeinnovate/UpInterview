@@ -6,7 +6,7 @@ const fetchContacts = async (req, res) => {
         const contacts = await Contacts.find().populate('availability')
         .populate({
             path: 'ownerId',
-            select: 'firstName lastName email roleId',
+            select: 'firstName lastName email roleId isFreelancer',
             model: 'Users', // Explicitly specify model
             populate: {
                 path: 'roleId',
@@ -14,6 +14,28 @@ const fetchContacts = async (req, res) => {
                 select: 'roleName'
             }
         }).lean();
+
+         console.log("contact",contacts);
+
+        //  const transformedContacts = contacts.map(contact => {
+
+           
+            
+        //     // If ownerId is populated, extract the roleName
+        //     if (contact.ownerId && contact.ownerId.roleId) {
+        //         return {
+        //             ...contact,
+        //             owner: {
+        //                 ...contact.ownerId,
+        //                 roleName: contact.ownerId.roleId?.roleName
+        //             }
+        //         };
+        //     }
+        //     return contact;
+        // });
+
+
+
         //   const contacts = await Contacts.find().populate('availability');
     res.status(200).json(contacts);
 
@@ -226,7 +248,7 @@ const updateContactsDetails =   async (req, res) => {
         const contactId = req.params.id;
         const updateData = req.body;
  
-        console.log("contactId", contactId);
+        console.log("contactId", contactId,updateData);
        
  
         // Separate availability data if present

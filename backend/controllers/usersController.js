@@ -380,14 +380,18 @@ const getUsersByTenant = async (req, res) => {
     }
 
     // Fetch users with minimal fields
-    const users = await Users.find({ tenantId }, '_id roleId status').lean();
+    const users = await Users.find({ tenantId }, '_id roleId label status').lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
 
     // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
-      Contacts.find({ tenantId }).lean(),
+      Contacts.find({ tenantId }).populate({
+          path: 'availability',
+          model: 'Interviewavailability',
+          select: 'days -_id' // Only fetch days field, exclude _id
+        }).lean(),
       Role.find({ tenantId }, 'label roleName').lean(),
     ]);
 
@@ -412,6 +416,7 @@ const getUsersByTenant = async (req, res) => {
 
       return {
         _id: user._id,
+        contactId: contact._id || 'N/A',
         firstName: contact.firstName || 'N/A',
         lastName: contact.lastName || 'N/A',
         email: contact.email || 'N/A',
