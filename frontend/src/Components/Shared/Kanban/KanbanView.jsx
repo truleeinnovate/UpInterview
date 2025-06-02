@@ -145,7 +145,7 @@ const KanbanView = ({
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Latest Interview:</span>
                         <span className="font-medium text-gray-800 truncate">
-                          {(item.interviews || 'N/A') + ' - ' + (item.round || 'N/A')}
+                          {(item.interviews || 'Not Provided') + ' - ' + (item.round || 'Not Scheduled')}
                         </span>
                       </div>
                     </div>

@@ -147,35 +147,35 @@ const MockInterview = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/mockinterview-details/${row._id}`)}
         >
-          {row?.rounds?.roundTitle || 'N/A'}
+          {row?.rounds?.roundTitle || 'Not Provided'}
         </div>
       ),
     },
     {
       key: 'technology',
       header: 'Technology',
-      render: (value) => value || 'N/A',
+      render: (value) => value || 'Not Provided',
     },
     {
       key: 'status',
       header: 'Status',
-      render: (value, row) => row?.rounds?.status || 'N/A',
+      render: (value, row) => row?.rounds?.status || 'Not Provided',
     },
     {
       key: 'duration',
       header: 'Duration',
-      render: (value, row) => row?.rounds?.duration || 'N/A',
+      render: (value, row) => row?.rounds?.duration || 'Not Provided',
     },
     {
       key: 'interviewer',
       header: 'Interviewer',
-      render: () => 'N/A', // Placeholder, update if interviewer data is available
+      render: () => 'Not Provided', // Placeholder, update if interviewer data is available
     },
  {
   key: 'createdAt',
   header: 'Created On',
   render: (value) => {
-    if (!value) return 'N/A';
+    if (!value) return 'Not Provided';
     const date = new Date(value);
     return date.toLocaleString('en-GB', {
       day: '2-digit',
