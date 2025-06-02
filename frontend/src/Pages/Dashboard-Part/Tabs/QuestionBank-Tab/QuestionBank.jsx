@@ -11,7 +11,9 @@ const QuestionBank = ({ assessmentId,
   addedSections,
   questionsLimit,
   closeQuestionBank,
-  checkedCount }) => {
+  checkedCount,
+fromScheduleLater,onAddQuestion,handleRemoveQuestion,handleToggleMandatory,interviewQuestionsLists,
+}) => {
 
     console.log("type:", type);
 
@@ -29,7 +31,9 @@ const QuestionBank = ({ assessmentId,
   return (
     <div className={`sm:pt-10 md:pt-10${type === "interviewerSection" || type === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
             {/* Header Section */}
-      <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}`}>
+      <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
+       ${type ==="interviewerSection" ? 'hidden': ""}
+      `}>
         {(type === "interviewerSection" || type === "assessment") && (
           <div className={`flex justify-between items-center p-4 ${type === "interviewerSection" || type === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
             <div>
@@ -79,6 +83,11 @@ const QuestionBank = ({ assessmentId,
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+            fromScheduleLater={fromScheduleLater}
+            interviewQuestionsLists={interviewQuestionsLists}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -93,6 +102,11 @@ const QuestionBank = ({ assessmentId,
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+              fromScheduleLater={fromScheduleLater}
+              // interviewQuestionsLists={interviewQuestionsLists}
           />
         )}
       </div>

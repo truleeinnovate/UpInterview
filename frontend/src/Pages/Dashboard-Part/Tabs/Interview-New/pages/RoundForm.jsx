@@ -16,18 +16,25 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import {config} from '../../../../../config';
+import { config } from '../../../../../config';
+import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
+import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 
 
 const RoundForm = () => {
   const {
     assessmentData,
     interviewData,
-    loading
+    loading,
+    sectionQuestions,
+    questionsLoading,
+    questionsError,
+    fetchQuestionsForAssessment,
+    setSectionQuestions,
   } = useCustomContext();
   const { interviewId, roundId } = useParams();
   console.log("interviewId", interviewId);
- console.log("roundId", roundId);
+  console.log("roundId", roundId);
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -37,8 +44,8 @@ const RoundForm = () => {
 
   const interview = interviewData?.find(interview => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
-  console.log("assessmentTemplate",assessmentTemplate);
-  
+  console.log("assessmentTemplate", assessmentTemplate);
+
 
 
   const [candidate, setCandidate] = useState(null);
@@ -82,12 +89,12 @@ const RoundForm = () => {
   const [startTime, setStartTime] = useState(""); // Final Start Time
   const [endTime, setEndTime] = useState(""); // Calculated End Time
   const [combinedDateTime, setCombinedDateTime] = useState("")
-  const [sectionQuestions, setSectionQuestions] = useState({});
+  // const [sectionQuestions, setSectionQuestions] = useState({});
   console.log("sectionQuestions", sectionQuestions);
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-
+  const { resolveInterviewerDetails } = useInterviewerDetails();
 
   console.log("combinedDateTime", combinedDateTime)
   // Function to update start and end time
@@ -167,12 +174,27 @@ const RoundForm = () => {
   //     // );
   //   }
   // }
+  // const handleAddQuestionToRound = (question) => {
+  //   console.log("question:", question);
+
+  //   if (question && question.snapshot) {
+  //     console.log("question _id:", question.questionId);
+
+  //     setInterviewQuestionsList((prevList) => {
+  //       // Check if the questionId already exists in the list
+  //       if (prevList.some((q) => q.questionId === question.questionId)) {
+  //         return prevList; // Return previous list if duplicate
+  //       }
+  //       return [...prevList, question]; // Add new question
+  //     });
+  //   }
+  // };
+
   const handleAddQuestionToRound = (question) => {
-    console.log("question:", question);
+    // console.log("question _id:", question);
+    if (question && question.questionId && question.snapshot) {
 
-    if (question && question.snapshot) {
-      console.log("question _id:", question.questionId);
-
+      // console.log("question _id:", question.questionId);
       setInterviewQuestionsList((prevList) => {
         // Check if the questionId already exists in the list
         if (prevList.some((q) => q.questionId === question.questionId)) {
@@ -180,30 +202,123 @@ const RoundForm = () => {
         }
         return [...prevList, question]; // Add new question
       });
+
+      console.log("question", question);
+
+
+      setErrors(prev => ({
+        ...prev,
+        questions: undefined
+      }));
+
     }
-  };
-  const handleRemoveQuestion = (index) => {
-    setInterviewQuestionsList((prevList) =>
-      prevList.filter((_, qIndex) => qIndex !== index)
+  }
+
+  const handleToggleMandatory = (questionId, mandatory) => {
+    // setInterviewQuestionsList(prev => ({
+    //   ...prev,
+    //   interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
+    //     question.questionId === questionId
+    //       ? { ...question, mandatory: mandatory ? "true" : "false" }
+    //       : question
+    //   )
+    // }));
+
+    setInterviewQuestionsList(prev =>
+      prev.map((question) =>
+        question.questionId === questionId
+          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          : question
+      )
     );
+
+
   };
+
+
+  const handleRemoveQuestion = (questionId,) => {
+
+    // console.log("questionId", questionId);
+    // setInterviewQuestionsList(prev => ({
+    //   ...prev,
+    //   interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
+    // }));
+    setInterviewQuestionsList(prev =>
+      prev.filter((question) => question.questionId !== questionId)
+    );
+
+  };
+
+
+  // const handleRemoveQuestion = (index) => {
+  //   setInterviewQuestionsList((prevList) =>
+  //     prevList.filter((_, qIndex) => qIndex !== index)
+  //   );
+  // };
+
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
 
     if (selectedTitle === "Other") {
       setRoundTitle("Other");
       setCustomRoundTitle(""); // Reset custom input field when "Other" is selected
+      setInstructions("")
+      setInstructions("")
+      setInterviewMode('');
+      setStatus('Pending')
+      setInterviewType("instant");
+      setScheduledDate('')
+      setDuration(30)
+      setStartTime("")
+      setEndTime("")
+      setAssessmentTemplate({ assessmentId: '', assessmentName: '' });
+      setCombinedDateTime("")
     } else {
       setRoundTitle(selectedTitle);
       setCustomRoundTitle(""); // Reset custom field when switching back to dropdown options
+      setInstructions("")
+      setInterviewMode('');
+      setStatus('Pending')
+      setInterviewType("instant");
+      setScheduledDate('')
+      setDuration(30)
+      setStartTime("")
+      setEndTime("")
+      setCombinedDateTime("")
+      setAssessmentTemplate({ assessmentId: '', assessmentName: '' });
+
+
     }
 
     if (selectedTitle === "Other") {
       setCustomRoundTitle("");
+      setInstructions("")
     } else if (selectedTitle === "Assessment") {
       setInterviewMode("Virtual"); // Set interview type to Virtual and disable editing
+      setInterviewQuestionsList([]);
+      setInstructions("")
+    
+      setStatus('Pending')
+      setInterviewType("instant");
+      setScheduledDate('')
+      setDuration(30)
+      setStartTime("")
+      setEndTime("")
+      setAssessmentTemplate({ assessmentId: '', assessmentName: '' });
+      setCombinedDateTime("")
     } else {
       setInterviewMode(""); // Allow user to select type for other rounds
+      setInstructions("")
+      setInstructions("")
+      setInterviewMode('');
+      setStatus('Pending')
+      setInterviewType("instant");
+      setScheduledDate('')
+      setDuration(30)
+      setStartTime("")
+      setEndTime("")
+      setAssessmentTemplate({ assessmentId: '', assessmentName: '' });
+      setCombinedDateTime("")
     }
   };
   const handleSuggestedTabClick = (questionType) => {
@@ -320,35 +435,35 @@ const RoundForm = () => {
 
   console.log("roundEditData", roundEditData);
 
-  const fetchSectionsAndQuestions = async (assessmentId) => {
-    try {
-      // Fetch the assessment data once
-      const response = assessmentData.find(pos => pos._id === assessmentId);
-      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
-      const assessment = response;
+  // const fetchSectionsAndQuestions = async (assessmentId) => {
+  //   try {
+  //     // Fetch the assessment data once
+  //     const response = assessmentData.find(pos => pos._id === assessmentId);
+  //     // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentId}`);
+  //     const assessment = response;
 
-      // Get all section IDs and prepare section questions
-      const newSectionQuestions = {};
-      const newExpandedSections = {};
+  //     // Get all section IDs and prepare section questions
+  //     const newSectionQuestions = {};
+  //     const newExpandedSections = {};
 
-      assessment.Sections.forEach(section => {
-        newExpandedSections[section._id] = false; // Expand all sections by default
-        newSectionQuestions[section._id] = section.Questions || []; // Set questions for each section
-      });
+  //     assessment.Sections.forEach(section => {
+  //       newExpandedSections[section._id] = false; // Expand all sections by default
+  //       newSectionQuestions[section._id] = section.Questions || []; // Set questions for each section
+  //     });
 
-      // Update states with the fetched data
-      setExpandedSections(newExpandedSections);
-      setSectionQuestions(newSectionQuestions);
-    } catch (error) {
-      console.error('Error fetching sections and questions:', error);
-      // Optionally set an error state for each section
-      setSectionQuestions(prev => ({
-        ...prev,
-        // Since we don't have access to section IDs, set a generic error state
-        error: 'Failed to load questions'
-      }));
-    }
-  };
+  //     // Update states with the fetched data
+  //     setExpandedSections(newExpandedSections);
+  //     setSectionQuestions(newSectionQuestions);
+  //   } catch (error) {
+  //     console.error('Error fetching sections and questions:', error);
+  //     // Optionally set an error state for each section
+  //     setSectionQuestions(prev => ({
+  //       ...prev,
+  //       // Since we don't have access to section IDs, set a generic error state
+  //       error: 'Failed to load questions'
+  //     }));
+  //   }
+  // };
 
   useEffect(() => {
     if (isEditing && roundEditData) {
@@ -392,7 +507,7 @@ const RoundForm = () => {
           assessmentId: roundEditData.assessmentId,
           assessmentName: assessmentData.find((a) => a._id === roundEditData.assessmentId)?.AssessmentTitle || '',
         });
-        fetchSectionsAndQuestions(roundEditData.assessmentId);
+        fetchQuestionsForAssessment(roundEditData.assessmentId);
       }
 
     } else {
@@ -508,7 +623,7 @@ const RoundForm = () => {
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
           ? { assessmentId: assessmentTemplate.assessmentId }
           : {}),
-        
+
         instructions,
         status,
         ...(roundTitle !== "Assessment" && {
@@ -656,9 +771,22 @@ const RoundForm = () => {
     setInstructions(assessment.Instructions);
     setExpandedSections({});
     setSectionQuestions({});
+    fetchQuestionsForAssessment(assessment._id);
     setShowDropdown(false);
   };
-  const toggleSection = async (sectionId) => {
+  const toggleSection = async (sectionId, e) => {
+    e.preventDefault(); // Prevent default behavior
+    e.stopPropagation();
+
+    // Close all questions in this section when collapsing
+    if (expandedSections[sectionId]) {
+      const newExpandedQuestions = { ...expandedQuestions };
+      sectionQuestions[sectionId]?.questions?.forEach(question => {
+        newExpandedQuestions[question._id] = false;
+      });
+      setExpandedQuestions(newExpandedQuestions);
+    }
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -666,33 +794,33 @@ const RoundForm = () => {
 
     // Fetch questions if the section is being expanded and questions are not already loaded
     if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
-      await fetchQuestionsForSection(sectionId);
+      await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
     }
   };
 
-  const fetchQuestionsForSection = async (sectionId) => {
-    try {
-      const response = assessmentData.find(pos => pos._id === assessmentTemplate.assessmentId)
-      // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
-      const assessment = response;
+  // const fetchQuestionsForSection = async (sectionId) => {
+  //   try {
+  //     const response = assessmentData.find(pos => pos._id === assessmentTemplate.assessmentId)
+  //     // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
+  //     const assessment = response;
 
-      const section = assessment.Sections.find(s => s._id === sectionId);
-      if (!section) {
-        throw new Error('Section not found');
-      }
+  //     const section = assessment.Sections.find(s => s._id === sectionId);
+  //     if (!section) {
+  //       throw new Error('Section not found');
+  //     }
 
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: section.Questions
-      }));
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: 'error'
-      }));
-    }
-  };
+  //     setSectionQuestions(prev => ({
+  //       ...prev,
+  //       [sectionId]: section.Questions
+  //     }));
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //     setSectionQuestions(prev => ({
+  //       ...prev,
+  //       [sectionId]: 'error'
+  //     }));
+  //   }
+  // };
 
 
   return (
@@ -863,9 +991,9 @@ const RoundForm = () => {
                                 }));
                                 setErrors(prev => ({ ...prev, assessmentTemplate: '' })); // Clear only this error
                               }}
-                              
-                              
-                              
+
+
+
                               onClick={() => setShowDropdown(!showDropdown)}
 
                             />
@@ -895,134 +1023,210 @@ const RoundForm = () => {
                             )}
                           </div>
                           {errors.assessmentTemplate && (
-                        <p className="mt-1 text-sm text-red-500">{errors.assessmentTemplate}</p>
-                      )}
+                            <p className="mt-1 text-sm text-red-500">{errors.assessmentTemplate}</p>
+                          )}
 
                         </div>
 
                         {/* assessment questions */}
                         {assessmentTemplate.assessmentName && (
                           <div className='col-span-2'>
-                            <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1">Questions</label>
-                            {/* {errors.assessmentQuestions && <p className="text-red-500">{errors.assessmentQuestions}</p>} */}
-                            <div className="space-y-4">
-                              {
-                                sectionQuestions.error ? (
-                                  <div className="pl-4 py-2">
-                                    <p className="text-sm text-red-500">{sectionQuestions.error}</p>
-                                    <button
-                                      type="button"
-                                      onClick={() => fetchSectionsAndQuestions(assessmentTemplate.assessmentId)} // CHANGED: Use assessmentId
-                                      className="mt-2 text-sm text-blue-500 hover:text-blue-700"
-                                    >
-                                      Retry Loading
-                                    </button>
+                            {assessmentTemplate.assessmentName && (
+                              <div>
+                                <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
+                                  Assessment
+                                </label>
+                                {questionsError && (
+                                  <div className="text-red-600 font-medium mt-2">
+                                    {questionsError}
                                   </div>
+                                )}
+
+                                {/* {errors.assessmentQuestions && <p className="text-red-500 text-xs">{errors.assessmentQuestions}</p>} */}
+                                {questionsLoading ? (
+                                  <p className="text-gray-500">Loading assessment data...</p>
                                 ) :
+                                  (
+                                    <div className="space-y-4">
+                                      {!sectionQuestions || sectionQuestions.noQuestions ? (
+                                        <div className="text-center py-4 text-gray-500">
+                                          No sections available for this assessment
+                                        </div>
+                                      ) :
 
-                                  assessmentData.find(a => a._id === assessmentTemplate.assessmentId)?.Sections.map((section) => (
-                                    <div key={section._id} id="assessmentQuestions" className="border rounded-md shadow-sm p-4">
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleSection(section._id)}
-                                        className="flex justify-between items-center w-full"
-                                      >
-                                        <span className="font-medium">{section.SectionName}</span>
-                                        <ChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'}`} />
-                                      </button>
 
-                                      {expandedSections[section._id] && (
-                                        <div className="mt-4 space-y-3">
-                                          {sectionQuestions[section._id] === 'error' ? (
-                                            <div className="pl-4 py-2">
-                                              <p className="text-sm text-red-500">Failed to load questions. Please try again.</p>
-                                              <button
-                                                type="button"
-                                                onClick={() => fetchQuestionsForSection(section._id)}
-                                                className="mt-2 text-sm text-blue-500 hover:text-blue-700"
-                                              >
-                                                Retry Loading
-                                              </button>
-                                            </div>
-                                          ) : sectionQuestions[section._id] ? (
-                                            sectionQuestions[section._id].map((question, idx) => (
-                                              <div
-                                                key={question._id || idx}
-                                                className="border rounded-md shadow-sm overflow-hidden"
-                                              >
-                                                <div
-                                                  onClick={() => setExpandedQuestions(prev => ({
-                                                    ...prev,
-                                                    [question._id]: !prev[question._id]
-                                                  }))}
-                                                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                >
-                                                  <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-gray-600">{idx + 1}.</span>
-                                                    <p className="text-sm text-gray-700">{question.snapshot?.questionText}</p>
+
+
+                                        //  <div className="space-y-4">
+                                        Object.keys(sectionQuestions).length > 0 ? (
+                                          Object.entries(sectionQuestions).map(([sectionId, sectionData]) => {
+
+
+                                            // Find section details from assessmentData
+                                            // const selectedAssessment = assessmentData.find(
+                                            //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                            // );
+
+                                            // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+
+                                            if (!sectionData || !Array.isArray(sectionData.questions)) {
+                                              return (
+                                                <div key={sectionId} className="border rounded-md shadow-sm p-4">
+                                                  <div className="text-center py-4 text-gray-500">
+                                                    No valid data for this section
                                                   </div>
-                                                  <ChevronDown
-                                                    className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id] ? 'transform rotate-180' : ''
+                                                </div>
+                                              );
+                                            }
+
+                                            return (
+                                              <div key={sectionId} className="border rounded-md shadow-sm p-4">
+                                                <button
+                                                  onClick={(e) => toggleSection(sectionId, e)}
+                                                  className="flex justify-between items-center w-full"
+                                                >
+                                                  <span className="font-medium">
+                                                    {sectionData?.sectionName || 'Unnamed Section'}
+                                                  </span>
+                                                  <ChevronUp
+                                                    className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
                                                       }`}
                                                   />
-                                                </div>
+                                                </button>
 
-                                                {expandedQuestions[question._id] && (
-                                                  <div className="px-4 py-3">
-                                                    <div className="flex justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">Type:</span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot?.questionType || 'Not specified'}
-                                                        </span>
-                                                      </div>
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">Score:</span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot?.score || '0'}
-                                                        </span>
-                                                      </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-6">
-                                                      {/* Options */}
-                                                      {question.snapshot?.options?.length > 0 && (
-                                                        <div className="flex items-center gap-2">
-                                                          <span className="text-sm font-medium text-gray-500">Options:</span>
-                                                          <div className="grid grid-cols-4 gap-2">
-                                                            {question.snapshot.options.map((option, optionIdx) => (
-                                                              <div
-                                                                key={optionIdx}
-                                                                className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                              >
-                                                                {option}
-                                                              </div>
-                                                            ))}
+                                                {expandedSections[sectionId] && (
+                                                  <div className="mt-4 space-y-3">
+                                                    {sectionData?.questions.length > 0 ? (
+                                                      sectionData?.questions.map((question, idx) => (
+                                                        <div
+                                                          key={question._id || idx}
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
+                                                          <div
+                                                            onClick={() =>
+                                                              setExpandedQuestions(prev => ({
+                                                                ...prev,
+                                                                [question._id]: !prev[question._id]
+                                                              }))
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question.snapshot?.questionText || 'No question text'}
+                                                              </p>
+                                                            </div>
+                                                            <ChevronDown
+                                                              className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id]
+                                                                ? 'transform rotate-180'
+                                                                : ''
+                                                                }`}
+                                                            />
                                                           </div>
-                                                        </div>
-                                                      )}
-                                                    </div>
 
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                      <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Correct Answer:</span>
-                                                      <span className="text-sm text-gray-700">
-                                                        {question.snapshot?.correctAnswer || 'Not specified'}
-                                                      </span>
-                                                    </div>
+                                                          {expandedQuestions[question._id] && (
+                                                            <div className="px-4 py-3">
+                                                              <div className="flex justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Type:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question.snapshot?.questionType || 'Not specified'}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Score:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question.snapshot?.score || '0'}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot?.questionType === 'MCQ' && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map((option, optIdx) => (
+                                                                      <div
+                                                                        key={optIdx}
+                                                                        //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                        className={`text-sm p-2 rounded border ${option === question.snapshot.correctAnswer
+                                                                          ? 'bg-green-50 border-green-200 text-green-800'
+                                                                          : 'bg-gray-50 border-gray-200'
+                                                                          }`}
+                                                                      >
+                                                                        {option}
+                                                                        {option === question.snapshot.correctAnswer && (
+                                                                          <span className="ml-2 text-green-600">✓</span>
+                                                                        )}
+                                                                      </div>
+                                                                    ))}
+                                                                  </div>
+                                                                </div>
+                                                              )}
+
+                                                              {/* Display correct answer */}
+                                                              {/* <div className="mt-2">
+                                                                                              <span className="text-sm font-medium text-gray-500">
+                                                                                                Correct Answer:
+                                                                                              </span>
+                                                                                              <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                                                                                                {question.snapshot?.correctAnswer || 'Not specified'}
+                                                                                              </div>
+                                                                                            </div> */}
+
+                                                              {/* Additional question metadata */}
+                                                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Difficulty:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.difficultyLevel || 'Not specified'}
+                                                                  </span>
+                                                                </div>
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Skills:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.skill?.join(', ') || 'None'}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      ))
+                                                    ) : (
+                                                      <div className="text-center py-4 text-gray-500">
+                                                        No questions found in this section
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 )}
                                               </div>
-                                            ))
-                                          ) : (
-                                            <div className="pl-4 py-2">
-                                              <p className="text-sm text-gray-500">Loading questions...</p>
-                                              <div className="mt-2 w-8 h-8 border-t-2 border-blue-500 rounded-full animate-spin"></div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
+                                            );
+                                          })
+                                        ) : (
+                                          <div className="text-center py-4 text-gray-500">
+                                            No assessment data available
+                                          </div>
+                                        )}
                                     </div>
-                                  ))}
-                            </div>
+
+                                  )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </>
@@ -1292,7 +1496,7 @@ const RoundForm = () => {
                                       <span className="text-gray-900 font-medium">
                                         {qIndex + 1}. {question?.snapshot?.questionText || "No Question Text"}
                                       </span>
-                                      <button onClick={() => handleRemoveQuestion(qIndex)}>
+                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
                                         <span className="text-red-500 text-xl font-bold">&times;</span>
                                       </button>
                                     </li>
@@ -1318,12 +1522,12 @@ const RoundForm = () => {
                                   <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
                                   <button>
                                     <MdOutlineCancel
-                                      className="text-2xl text-white"
+                                      className="text-2xl fill-white"
                                       onClick={() => handlePopupToggle()}
                                     />
                                   </button>
                                 </div>
-                                <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
+                                {/* <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
                                   <div className="flex gap-10 p-4">
                                     <div className="relative inline-block">
                                       <span className="flex items-center cursor-pointer">
@@ -1358,7 +1562,29 @@ const RoundForm = () => {
                                 )}
                                 {activeTab === "MyQuestionsList" && (
                                   <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
+                                )} */}
+
+                                {isInterviewQuestionPopup &&
+                                  <QuestionBank
+                                    // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                                    // sectionName=""
+                                    // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                                    type="interviewerSection"
+
+                                    interviewQuestionsLists={interviewQuestionsList}
+                                    // setInterviewQuestionsList={(questions) =>
+                                    //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                                    // }
+                                    fromScheduleLater={true}
+                                    // interviewQuestionsLists={formData.interviewQuestionsList}
+                                    onAddQuestion={handleAddQuestionToRound}
+                                    handleRemoveQuestion={handleRemoveQuestion}
+                                    handleToggleMandatory={handleToggleMandatory}
+
+                                  />
+
+                                }
+
                               </div>
                             </div>
                           )}
@@ -1377,10 +1603,17 @@ const RoundForm = () => {
                     <textarea
                       id="instructions"
                       name="instructions"
-                      rows={3}
+                      rows="10"
+                      minLength={50}
+                      maxLength={1000}
+
                       value={instructions}
+                      readOnly={roundTitle === 'Assessment'}
                       onChange={(e) => setInstructions(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
+                  ${errors.instructions ? "border-red-400" : ""}
+                  `}
+                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                     <p className="mt-1 text-sm text-gray-500">
                       Add Instructions after the interview round is completed
