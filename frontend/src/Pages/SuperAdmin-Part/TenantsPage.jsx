@@ -94,6 +94,90 @@ function TenantsPage() {
       createdAt: "2024-05-28T08:45:00Z",
       lastActivity: "2025-06-01T11:20:00Z",
     },
+    {
+      id: 6,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 7,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 8,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 9,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 10,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 11,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
+    {
+      id: 12,
+      name: "Quantum Industries",
+      industry: "Manufacturing",
+      plan: "Basic",
+      status: "pending",
+      users: 8,
+      activeJobs: 3,
+      activeCandidates: 12,
+      createdAt: "2024-05-28T08:45:00Z",
+      lastActivity: "2025-06-01T11:20:00Z",
+    },
   ]);
 
   const [selectedType, setSelectedType] = useState("all");
@@ -162,23 +246,23 @@ function TenantsPage() {
     }
   }, [isTablet]);
 
-  useEffect(() => {
-    const getTenants = async () => {
-      setIsLoading(true);
-      const apiUrl = "http://localhost:3000/admin/organizations";
-      const options = {
-        method: "GET",
-      };
+  // useEffect(() => {
+  //   const getTenants = async () => {
+  //     setIsLoading(true);
+  //     const apiUrl = "http://localhost:3000/admin/organizations";
+  //     const options = {
+  //       method: "GET",
+  //     };
 
-      const response = await fetch(apiUrl, options);
-      const data = await response.json();
-      if (response.ok) {
-        setTenants(data.organizations);
-        setIsLoading(false);
-      }
-    };
-    getTenants();
-  }, []);
+  //     const response = await fetch(apiUrl, options);
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       setTenants(data.organizations);
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   getTenants();
+  // }, []);
 
   const dataToUse = tenants;
 
@@ -253,76 +337,6 @@ function TenantsPage() {
     selectedType === "all"
       ? tenants
       : tenants.filter((tenant) => tenant.type === selectedType);
-
-  // const columns = [
-  //   {
-  //     field: "name",
-  //     header: "Tenant Name",
-  //     render: (row) => (
-  //       <div className="flex items-center">
-  //         <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-  //           {row?.firstName?.charAt(0) + row?.lastName?.charAt(0)}
-  //         </div>
-  //         <div className="ml-4">
-  //           <div className="font-medium text-gray-900">
-  //             {row.company || "abc company"}
-  //           </div>
-  //           <div className="text-gray-500">{row.industry || "Technology"}</div>
-  //         </div>
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => <StatusBadge status={row.status} />,
-  //   },
-  //   {
-  //     field: "plan",
-  //     header: "Plan",
-  //     render: (row) => (
-  //       <span className="font-medium text-gray-900">{row.plan || "basic"}</span>
-  //     ),
-  //   },
-  //   {
-  //     field: "organizations",
-  //     header: "Users",
-  //     render: (row) => row.usersCount,
-  //   },
-  //   {
-  //     field: "activeJobs",
-  //     header: "Active Jobs",
-  //     render: (row) => row.activeJobs,
-  //   },
-  //   {
-  //     field: "activeCandidates",
-  //     header: "Active Candidates",
-  //     render: (row) => <span>{row.activeCandidates || 2}</span>,
-  //   },
-  //   {
-  //     field: "lastActivity",
-  //     header: "Last Activity",
-  //     render: (row) => formatDate(row.CreatedDate),
-  //   },
-  //   // {
-  //   //   field: "actions",
-  //   //   header: "Actions",
-  //   //   sortable: false,
-  //   //   render: (row) => (
-  //   //     <div className="flex space-x-2">
-  //   //       <Link
-  //   //         to={`/tenants/${row._id}`}
-  //   //         className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //   //       >
-  //   //         <AiOutlineEye size={20} />
-  //   //       </Link>
-  //   //       <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //   //         <AiOutlineEdit size={20} />
-  //   //       </button>
-  //   //     </div>
-  //   //   ),
-  //   // },
-  // ];
 
   const tableColumns = [
     {
@@ -465,8 +479,8 @@ function TenantsPage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="absolute top-8 md:mt-12 sm:mt-12 left-0 right-0 bg-background">
-        <main className="flex justify-between items-center mb-4 px-4">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="flex justify-between items-center px-4">
           <div className="flex flex-col items-center space-x-2 w-full">
             <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4">
               <button
@@ -501,7 +515,7 @@ function TenantsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 px-1.5 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Total Tenants</div>
                 <div className="text-xl font-semibold">
@@ -548,7 +562,8 @@ function TenantsPage() {
             </div>
           </div>
         </main>
-        <main className="px-6">
+
+        <main className="fixed top-18 left-0 right-0 bg-background px-6">
           <div className="sm:px-0">
             {/* Header */}
             <Header
@@ -576,9 +591,9 @@ function TenantsPage() {
             />
           </div>
         </main>
+
         <div>
-          {/* absolute top-0 2xl:top-0 xl:top-0 lg:top-0 left-0 right-0  */}
-          <main className="bg-background">
+          <main className="fixed top-52 lg:top-80 xl:top-80 2xl:top-80 left-0 right-0 bg-background">
             <div className="sm:px-0">
               {isLoading ? (
                 <Loading />

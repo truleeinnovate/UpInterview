@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Header from "../Components/SuperAdminComponents/Navbar/SuperAdminNavbar/Header";
+import Header from "../Components/Navbar/SuperAdminNavbar/Header";
 function DashboardLayout() {
   return (
     <div className="min-h-screen bg-gray-50">

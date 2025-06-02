@@ -286,6 +286,7 @@ function OutsourceInterviewersPage() {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
@@ -312,81 +313,6 @@ function OutsourceInterviewersPage() {
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
-  // const columns = [
-  //   {
-  //     field: "name",
-  //     header: "Interviewer",
-  //     render: (row) => (
-  //       <div>
-  //         <div className="font-medium text-gray-900">{row.name}</div>
-  //         <div className="text-sm text-gray-500">{row.email}</div>
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "expertise",
-  //     header: "Expertise",
-  //     render: (row) => (
-  //       <div className="flex flex-wrap gap-1">
-  //         {row.expertise.map((skill, index) => (
-  //           <span
-  //             key={index}
-  //             className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-  //           >
-  //             {skill}
-  //           </span>
-  //         ))}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "rating",
-  //     header: "Rating",
-  //     render: (row) => (
-  //       <div className="flex items-center">
-  //         <span className="font-medium">{row.rating}</span>
-  //         <span className="text-yellow-400 ml-1">★</span>
-  //         <span className="text-sm text-gray-500 ml-2">
-  //           ({row.completedInterviews})
-  //         </span>
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "hourlyRate",
-  //     header: "Rate",
-  //     render: (row) => `$${row.hourlyRate}/hr`,
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => <StatusBadge status={row.status} />,
-  //   },
-  //   {
-  //     field: "lastActive",
-  //     header: "Last Active",
-  //     render: (row) => formatDate(row.lastActive),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50">
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineEdit size={18} />
-  //         </button>
-  //         <button className="p-2 text-success-600 hover:text-success-900 rounded-full hover:bg-success-50">
-  //           <AiOutlineCalendar size={18} />
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
 
   const tableColumns = [
     {
@@ -529,9 +455,9 @@ function OutsourceInterviewersPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="absolute md:mt-7 sm:mt-4 top-12 left-0 right-0 bg-background">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
+    <div className="space-y-6 min-h-screen">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Interviewers</div>
             <div className="text-xl font-semibold">{interviewers.length}</div>
@@ -559,39 +485,41 @@ function OutsourceInterviewersPage() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-4">
-          {/* Header and Tool bar */}
-          <div className="md:mt-1 sm:mt-2 w-full">
-            <main className="px-6">
-              <div className="sm:px-0">
-                <Header
-                  title="Outsource Interviewers"
-                  onAddClick={() => navigate("/tenants/add")}
-                  addButtonText="New Request"
-                />
-                <Toolbar
-                  view={view}
-                  setView={setView}
-                  searchQuery={searchQuery}
-                  onSearch={handleSearch}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPrevPage={prevPage}
-                  onNextPage={nextPage}
-                  onFilterClick={handleFilterIconClick}
-                  isFilterPopupOpen={isFilterPopupOpen}
-                  isFilterActive={isFilterActive}
-                  dataLength={dataToUse?.length}
-                  searchPlaceholder="Search Tenants..."
-                  filterIconRef={filterIconRef}
-                />
-              </div>
-            </main>
+        <div className="fixed top-18 left-0 right-0 bg-background">
+          <div className="flex justify-between items-center">
+            {/* Header and Tool bar */}
+            <div className="md:mt-1 sm:mt-2 w-full">
+              <main className="px-4">
+                <div className="sm:px-0">
+                  <Header
+                    title="Outsource Interviewers"
+                    onAddClick={() => navigate("/tenants/add")}
+                    addButtonText="New Request"
+                  />
+                  <Toolbar
+                    view={view}
+                    setView={setView}
+                    searchQuery={searchQuery}
+                    onSearch={handleSearch}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPrevPage={prevPage}
+                    onNextPage={nextPage}
+                    onFilterClick={handleFilterIconClick}
+                    isFilterPopupOpen={isFilterPopupOpen}
+                    isFilterActive={isFilterActive}
+                    dataLength={dataToUse?.length}
+                    searchPlaceholder="Search Tenants..."
+                    filterIconRef={filterIconRef}
+                  />
+                </div>
+              </main>
+            </div>
           </div>
         </div>
 
         {/* New table content */}
-        <main>
+        <main className="fixed top-60 mt-6 lg lg:top-70 xl:top-70 2xl:top-70 left-0 right-0 bg-background">
           <div className="sm:px-0">
             {currentFilteredRows.length === 0 ? (
               <Loading />
@@ -611,15 +539,15 @@ function OutsourceInterviewersPage() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
+                        data={currentFilteredRows.map((interviewer) => ({
                           ...interviewers,
-                          id: candidate.id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
+                          id: interviewer.id,
+                          title: `${interviewer.FirstName || ""} ${
+                            interviewer.LastName || ""
                           }`,
                           subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
+                            interviewer.CurrentRole ||
+                            interviewer.CurrentExperience ||
                             "N/A",
                           avatar: "",
                           status: "active",

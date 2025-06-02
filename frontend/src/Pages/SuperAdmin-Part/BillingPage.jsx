@@ -10,7 +10,7 @@ function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-2 xl:mt-2 2xl:mt-2 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
         </div>

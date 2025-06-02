@@ -14,7 +14,7 @@ function Dashboard() {
 
   const renderSuperAdminContent = () => (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-center">
             <AiOutlineWarning className="text-yellow-500 mr-2" size={24} />
@@ -57,7 +57,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl-grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-4">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Pending Actions
@@ -108,7 +108,7 @@ function Dashboard() {
   );
 
   const renderSupportContent = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
       <div className="bg-white rounded-lg shadow-sm p-4">
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Support Queue
@@ -189,8 +189,8 @@ function Dashboard() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 mt-16 px-4">
+      <div className="flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row 2x:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <div className="text-sm text-gray-500">
           Last updated: {new Date().toLocaleString()}
@@ -202,7 +202,7 @@ function Dashboard() {
       {hasRole("super_admin") && renderSuperAdminContent()}
       {hasRole("support_team") && renderSupportContent()}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
         <TenantMetricsChart />
         <RecentActivity />
       </div>

@@ -476,6 +476,7 @@ function InterviewerRequestsPage() {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
@@ -511,74 +512,6 @@ function InterviewerRequestsPage() {
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
-  // const columns = [
-  //   {
-  //     field: "name",
-  //     header: "Name",
-  //     render: (row) => (
-  //       <div>
-  //         <div className="font-medium text-gray-900">{row.name}</div>
-  //         <div className="text-sm text-gray-500">{row.email}</div>
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "expertise",
-  //     header: "Expertise",
-  //     render: (row) => (
-  //       <div className="flex flex-wrap gap-1">
-  //         {row.expertise.map((skill, index) => (
-  //           <span
-  //             key={index}
-  //             className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-  //           >
-  //             {skill}
-  //           </span>
-  //         ))}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "yearsOfExperience",
-  //     header: "Experience",
-  //     render: (row) => `${row.yearsOfExperience} years`,
-  //   },
-  //   {
-  //     field: "preferredRate",
-  //     header: "Rate",
-  //     render: (row) => `$${row.preferredRate}/hr`,
-  //   },
-  //   {
-  //     field: "availability",
-  //     header: "Availability",
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => <StatusBadge status={row.status} />,
-  //   },
-  //   {
-  //     field: "appliedDate",
-  //     header: "Applied Date",
-  //     render: (row) => formatDate(row.appliedDate),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           onClick={() => setSelectedRequest(row)}
-  //         >
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
 
   const tableColumns = [
     {
@@ -723,15 +656,9 @@ function InterviewerRequestsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="absolute md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <div className="flex justify-between items-center px-4 mb-4">
-          <h1 className="text-2xl font-bold text-custom-blue">
-            Interviewer Requests
-          </h1>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 mb-4">
+    <div className="space-y-6 min-h-screen">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Requests</div>
             <div className="text-xl font-semibold">{requests.length}</div>
@@ -756,28 +683,36 @@ function InterviewerRequestsPage() {
           </div>
         </div>
 
+        <div className="flex justify-between items-center px-4">
+          <h1 className="text-2xl font-bold text-custom-blue">
+            Interviewer Requests
+          </h1>
+        </div>
+
         {/* Toolbar */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden px-4">
-          <Toolbar
-            view={view}
-            setView={setView}
-            searchQuery={searchQuery}
-            onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
-            onFilterClick={handleFilterIconClick}
-            isFilterPopupOpen={isFilterPopupOpen}
-            isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
-            searchPlaceholder="Search invoices..."
-            filterIconRef={filterIconRef}
-          />
+        <div className="fixed top-18 left-0 right-0 bg-background">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden px-4">
+            <Toolbar
+              view={view}
+              setView={setView}
+              searchQuery={searchQuery}
+              onSearch={handleSearch}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterPopupOpen={isFilterPopupOpen}
+              isFilterActive={isFilterActive}
+              dataLength={dataToUse?.length}
+              searchPlaceholder="Search invoices..."
+              filterIconRef={filterIconRef}
+            />
+          </div>
         </div>
 
         {/* New table content */}
-        <main>
+        <main className="fixed top-60 lg lg:top-71 xl:top-71 2xl:top-71 left-0 right-0 bg-background">
           <div className="sm:px-0">
             {requests.length === 0 ? (
               <Loading />

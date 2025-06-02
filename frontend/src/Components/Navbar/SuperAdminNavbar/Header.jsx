@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../Context/AuthContext";
+
 import {
   AiOutlineBell,
-  // AiOutlineSearch,
   AiOutlineQuestionCircle,
   AiOutlineDown,
+  AiOutlineSearch,
+  AiOutlineHome,
 } from "react-icons/ai";
 
-import Navbar from "../Navbar-Sidebar";
+import NavbarSidebar from "../Navbar-Sidebar";
+import Sidebar from "./Sidebar";
+import { FaBars } from "react-icons/fa";
 
 function Header() {
   const { user, hasRole } = useAuth();
@@ -16,13 +20,14 @@ function Header() {
   const [showMore, setShowMore] = useState(false);
   const location = useLocation();
   const [userType, setUserType] = useState("SuperAdmin");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const mainNavItems = [
-    { path: "/", label: "Dashboard" },
+    { path: "/admin-dashboard", label: "Dashboard" },
     { path: "/tenants", label: "Tenants" },
     {
-      path: "/outsource-requests",
-      label: "Outsource Requests",
+      path: "/interviewer-requests",
+      label: "Interviewer Requests",
       role: "super_admin",
     },
     {
@@ -31,33 +36,44 @@ function Header() {
       role: "super_admin",
     },
     { path: "/support-tickets", label: "Support" },
-    { path: "/billing", label: "Billing" },
+    { path: "/admin-billing", label: "Billing" },
   ];
 
   const moreNavItems = [
     { path: "/settings", label: "Settings" },
-    {
-      path: "/interviewer-requests",
-      label: "Interviewer Requests",
-      role: "super_admin",
-    },
+
     { path: "/internal-logs", label: "Internal Logs", role: "super_admin" },
     { path: "/integrations", label: "Integrations", role: "super_admin" },
   ];
 
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
   return userType === "SuperAdmin" ? (
-    <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16 bg-white shadow">
       <div className="flex items-center flex-1">
         <div className="flex items-center flex-shrink-0">
-          <img
-            className="h-8 w-auto"
-            // src="https://via.placeholder.com/40x40/4f46e5/ffffff?text=IA"
-            src="https://ui-avatars.com/api/?name=IA&background=4f46e5&color=ffffff&size=40"
-            alt="Interview Admin"
-          />
+          <button
+            className="mr-2 lg:hidden xl:hidden 2xl:hidden"
+            onClick={handleSidebarToggle}
+          >
+            <FaBars className="size-5 md:size-6" />
+          </button>
+          <div className="flex items-center">
+            <img
+              className="h-8 w-auto"
+              // src="https://via.placeholder.com/40x40/4f46e5/ffffff?text=IA"
+              src="https://ui-avatars.com/api/?name=IA&background=4f46e5&color=ffffff&size=40"
+              alt="Interview Admin"
+            />
+            <span className="ml-2 hidden lg:flex xl:flex 2xl:flex text-xl font-semibold text-gray-900">
+              Interview Admin
+            </span>
+          </div>
         </div>
 
-        <nav className="hidden md:flex ml-8 space-x-1">
+        <nav className="hidden lg:flex xl:flex s2xl:flex ml-8 space-x-1">
           {mainNavItems.map(
             (item) =>
               (!item.role || hasRole(item.role)) && (
@@ -114,6 +130,12 @@ function Header() {
           </div>
         </nav>
 
+        <div className="md:hidden">
+          {isSidebarOpen && (
+            <Sidebar open={isSidebarOpen} onClose={handleSidebarToggle} />
+          )}
+        </div>
+
         {/* Search bar */}
         <div className="ml-8 flex-1 max-w-lg">
           {/* <div className="relative rounded-md shadow-sm">
@@ -130,6 +152,15 @@ function Header() {
       </div>
 
       <div className="flex items-center space-x-2">
+        <Link to="/admin-dashboard">
+          <button
+            type="button"
+            className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
+          >
+            <AiOutlineHome className="h-6 w-6" />
+          </button>
+        </Link>
+
         <button
           type="button"
           className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none hidden sm:block"
@@ -158,7 +189,7 @@ function Header() {
           </button>
 
           {showDropdown && (
-            <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+            <div className="origin-top-right absolute right-0 mt-2 w-48 z-10 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
               <div className="py-1">
                 <a
                   href="#profile"
@@ -197,7 +228,7 @@ function Header() {
       </div>
     </div>
   ) : (
-    <Navbar />
+    <NavbarSidebar />
   );
 }
 

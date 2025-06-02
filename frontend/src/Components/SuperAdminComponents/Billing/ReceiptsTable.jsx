@@ -284,83 +284,6 @@ function ReceiptsTable() {
     return new Date(dateString).toLocaleString();
   };
 
-  // const columns = [
-  //   {
-  //     field: "id",
-  //     header: "Receipt ID",
-  //     render: (row) => <span className="font-mono text-sm">{row.id}</span>,
-  //   },
-  //   {
-  //     field: "invoiceId",
-  //     header: "Invoice ID",
-  //     render: (row) => (
-  //       <span className="font-mono text-sm">{row.invoiceId}</span>
-  //     ),
-  //   },
-  //   {
-  //     field: "amount",
-  //     header: "Amount",
-  //     render: (row) => (
-  //       <div>
-  //         <div className="font-medium">{formatCurrency(row.amount)}</div>
-  //         {row.discount > 0 && (
-  //           <div className="text-xs">
-  //             <span className="text-gray-500">
-  //               Original: {formatCurrency(row.price)}
-  //             </span>
-  //             <span className="text-success-600 ml-2">
-  //               -{formatCurrency(row.discount)}
-  //             </span>
-  //           </div>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "paymentMethod",
-  //     header: "Payment Method",
-  //     render: (row) => (
-  //       <div className="capitalize">{row.paymentMethod.replace("_", " ")}</div>
-  //     ),
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => (
-  //       <StatusBadge
-  //         status={row.status === "success" ? "success" : "warning"}
-  //         text={row.status.toUpperCase()}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     field: "paymentDate",
-  //     header: "Payment Date",
-  //     render: (row) => formatDate(row.paymentDate),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           onClick={() => setSelectedReceipt(row)}
-  //         >
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineDownload size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineMail size={18} />
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
-
   const tableColumns = [
     {
       key: "id",
@@ -509,7 +432,7 @@ function ReceiptsTable() {
           <h2 className="text-lg font-medium text-gray-900">Receipts</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Receipts</div>
             <div className="text-xl font-semibold">{receipts.length}</div>

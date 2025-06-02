@@ -1032,20 +1032,8 @@ const PositionTab = () => {
                     )}
                   </div>
 
-      {/* Main Content */}
-      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
-        <div className="sm:px-0">
-          {
-            isPositionsLoading ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                {view === 'table' ? (
-                  <div className="flex relative w-full overflow-hidden">
-
                   {/* Skills/Technology Section */}
                   <div>
-
                     <div
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsSkillsOpen(!isSkillsOpen)}

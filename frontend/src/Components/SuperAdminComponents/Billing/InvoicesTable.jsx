@@ -481,102 +481,6 @@ function InvoicesTable() {
     }
   };
 
-  // const columns = [
-  //   {
-  //     field: "id",
-  //     header: "Invoice ID",
-  //     render: (row) => <span className="font-mono text-sm">{row.id}</span>,
-  //   },
-  //   {
-  //     field: "type",
-  //     header: "Type",
-  //     render: (row) => (
-  //       <div className="capitalize">
-  //         {row.type.replace("_", " ")}
-  //         {row.type === "subscription" && (
-  //           <div className="text-xs text-gray-500">
-  //             {formatDate(row.startDate)} - {formatDate(row.endDate)}
-  //           </div>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "totalAmount",
-  //     header: "Amount",
-  //     render: (row) => (
-  //       <div>
-  //         <div className="font-medium">{formatCurrency(row.totalAmount)}</div>
-  //         {row.discount > 0 && (
-  //           <div className="text-xs">
-  //             <span className="text-gray-500">
-  //               Original: {formatCurrency(row.price)}
-  //             </span>
-  //             <span className="text-success-600 ml-2">
-  //               -{formatCurrency(row.discount)}
-  //             </span>
-  //           </div>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "amountPaid",
-  //     header: "Paid",
-  //     render: (row) => (
-  //       <div>
-  //         <div>{formatCurrency(row.amountPaid)}</div>
-  //         {row.outstandingAmount > 0 && (
-  //           <div className="text-xs text-error-600">
-  //             Outstanding: {formatCurrency(row.outstandingAmount)}
-  //           </div>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => (
-  //       <StatusBadge
-  //         status={getStatusDisplay(row.status)}
-  //         text={row.status.replace("_", " ").toUpperCase()}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     field: "dueDate",
-  //     header: "Due Date",
-  //     render: (row) => formatDate(row.dueDate),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           onClick={() => setSelectedInvoice(row)}
-  //         >
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineDownload size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineMail size={18} />
-  //         </button>
-  //         {row.status === "pending" && (
-  //           <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //             <AiOutlineEdit size={18} />
-  //           </button>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  // ];
-
   const tableColumns = [
     {
       key: "id",
@@ -733,12 +637,12 @@ function InvoicesTable() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="absolute md:mt-2 sm:mt-4 top-2 left-0 right-0 bg-background">
+    <div className="space-y-6 min-h-screen">
+      <div className="fixe md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4">
           <h2 className="text-lg font-medium text-gray-900">Invoices</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Invoices</div>
             <div className="text-xl font-semibold">{invoices.length}</div>

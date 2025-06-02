@@ -1,9 +1,7 @@
 /** @type {import('tailwindcss').Config} **/
 module.exports = {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
-  darkMode: 'class',
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -40,10 +38,25 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          50: "#ECFDF5",
+          500: "#10B981",
+          700: "#047857",
+        },
+        warning: {
+          50: "#FFFBEB",
+          500: "#F59E0B",
+          700: "#B45309",
+        },
+        error: {
+          50: "#FEF2F2",
+          500: "#EF4444",
+          700: "#B91C1C",
+        },
         // Custom Colors
-        'custom-blue': '#217989',
-        'custom-bg': '#F5F9FA',
-        'toggle-bg': '#DEF5FB',
+        "custom-blue": "#217989",
+        "custom-bg": "#F5F9FA",
+        "toggle-bg": "#DEF5FB",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -67,12 +80,12 @@ module.exports = {
     },
 
     screens: {
-      'sm': {'min': '320px', 'max': '639px'},
-      'md': {'min': '640px', 'max': '1023px'},
-      'lg': {'min': '1024px', 'max': '1279px'},
-      'xl': {'min': '1280px', 'max': '1535px'},
-      '2xl': {'min': '1536px'},
+      sm: { min: "320px", max: "639px" },
+      md: { min: "640px", max: "1023px" },
+      lg: { min: "1024px", max: "1279px" },
+      xl: { min: "1280px", max: "1535px" },
+      "2xl": { min: "1536px" },
     },
   },
   plugins: [],
-}
+};

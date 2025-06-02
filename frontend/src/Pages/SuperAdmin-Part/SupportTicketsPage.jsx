@@ -221,17 +221,17 @@ function SupportTicketsPage() {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((organization) => {
-      const fieldsToSearch = [organization.tenant].filter(
+    return dataToUse.filter((support) => {
+      const fieldsToSearch = [support.tenant, support.id].filter(
         (field) => field !== null && field !== undefined
       );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(organization.HigherQualification);
+        selectedFilters.status.includes(support.HigherQualification);
       const matchesTech =
         selectedFilters.tech.length === 0 ||
-        organization.skills?.some((skill) =>
+        support.skills?.some((skill) =>
           selectedFilters.tech.includes(skill.skill)
         );
 
@@ -305,72 +305,6 @@ function SupportTicketsPage() {
         return { label: status, status: "neutral" };
     }
   };
-
-  // const columns = [
-  //   {
-  //     field: "id",
-  //     header: "Ticket ID",
-  //     render: (row) => <span className="font-mono text-xs">{row.id}</span>,
-  //   },
-  //   {
-  //     field: "subject",
-  //     header: "Subject",
-  //     render: (row) => (
-  //       <div className="font-medium text-gray-900">{row.subject}</div>
-  //     ),
-  //   },
-  //   {
-  //     field: "tenant",
-  //     header: "Tenant",
-  //   },
-  //   {
-  //     field: "requester",
-  //     header: "Requester",
-  //   },
-  //   {
-  //     field: "priority",
-  //     header: "Priority",
-  //     render: (row) => {
-  //       const priority = getPriorityDisplay(row.priority);
-  //       return <StatusBadge status={priority.status} text={priority.label} />;
-  //     },
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => {
-  //       const status = getStatusDisplay(row.status);
-  //       return <StatusBadge status={status.status} text={status.label} />;
-  //     },
-  //   },
-  //   {
-  //     field: "assignee",
-  //     header: "Assignee",
-  //     render: (row) =>
-  //       row.assignee ? (
-  //         row.assignee
-  //       ) : (
-  //         <span className="text-gray-400 italic">Unassigned</span>
-  //       ),
-  //   },
-  //   {
-  //     field: "createdAt",
-  //     header: "Created",
-  //     render: (row) => formatDate(row.createdAt),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: () => (
-  //       <div className="flex space-x-2">
-  //         <button className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50">
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
 
   const tableColumns = [
     {
@@ -511,9 +445,9 @@ function SupportTicketsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="absolute md:mt-7 sm:mt-4 top-12 left-0 right-0 bg-background">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 px-4 w-full mb-2">
+    <div className="space-y-6 min-h-screen">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 2xl-grid-cols-5 gap-4 px-4 w-full">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">All Tickets</div>
             <div className="text-xl font-semibold">{tickets.length}</div>
@@ -544,7 +478,7 @@ function SupportTicketsPage() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
+        <div className="fixed top-18 left-0 right-0 bg-background">
           {/* Header and Tool bar */}
           <div className="md:mt-2 sm:mt-4 w-full">
             <main className="px-4">
@@ -576,7 +510,7 @@ function SupportTicketsPage() {
         </div>
 
         {/* New table content */}
-        <main>
+        <main className="fixed top-60 mt-6 lg lg:top-70 xl:top-70 2xl:top-70 left-0 right-0 bg-background">
           <div className="sm:px-0">
             {tickets.length === 0 ? (
               <Loading />
@@ -596,15 +530,15 @@ function SupportTicketsPage() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
-                          ...tickets,
-                          id: candidate.id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
+                        data={currentFilteredRows.map((support) => ({
+                          ...support,
+                          id: support.id,
+                          title: `${support.requester || ""} ${
+                            support.LastName || ""
                           }`,
                           subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
+                            support.CurrentRole ||
+                            support.CurrentExperience ||
                             "N/A",
                           avatar: "",
                           status: "active",
