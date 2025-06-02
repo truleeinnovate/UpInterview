@@ -18,6 +18,7 @@ import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
+import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
 
 
 function RoundFormPosition() {
@@ -93,24 +94,68 @@ function RoundFormPosition() {
     }));
   };
 
-  const handleAddQuestionToRound = async (question) => {
+  // const handleAddQuestionToRound = async (question) => {
+  //   if (question && question.questionId && question.snapshot) {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+  //         ? prev.interviewQuestionsList
+  //         : [...prev.interviewQuestionsList, question]
+  //     }));
+  //   }
+  // }
+
+    const handleToggleMandatory = (questionId, mandatory) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
+        question.questionId === questionId
+          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          : question
+      )
+    }));
+  };
+
+
+   const handleAddQuestionToRound = (question) => {
+    // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
+
+      // console.log("question _id:", question.questionId);
       setFormData(prev => ({
         ...prev,
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
           : [...prev.interviewQuestionsList, question]
       }));
+
+      console.log("question", question);
+
+
+      setErrors(prev => ({
+        ...prev,
+        questions: undefined
+      }));
+
     }
   }
 
-  const handleRemoveQuestion = (index) => {
+    const handleRemoveQuestion = (questionId,) => {
+
+    // console.log("questionId", questionId);
     setFormData(prev => ({
       ...prev,
-      interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
+      interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
     }));
-
   };
+
+  // const handleRemoveQuestion = (index) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
+  //   }));
+
+  // };
 
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
@@ -311,6 +356,16 @@ function RoundFormPosition() {
   // };
 
   const toggleSection = async (sectionId) => {
+
+       // Close all questions in this section when collapsing
+  if (expandedSections[sectionId]) {
+    const newExpandedQuestions = {...expandedQuestions};
+    sectionQuestions[sectionId]?.questions?.forEach(question => {
+      newExpandedQuestions[question._id] = false;
+    });
+    setExpandedQuestions(newExpandedQuestions);
+  }
+  
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -1262,7 +1317,7 @@ function RoundFormPosition() {
                                       <span className="text-gray-900 font-medium">
                                         {qIndex + 1}. {questionText}
                                       </span>
-                                      <button onClick={() => handleRemoveQuestion(qIndex)}>
+                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
                                         <span className="text-red-500 text-xl font-bold">&times;</span>
                                       </button>
                                     </li>
@@ -1296,7 +1351,7 @@ function RoundFormPosition() {
                                     />
                                   </button>
                                 </div>
-                                <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
+                                {/* <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
                                   <div className="flex gap-10 p-4">
                                     <div className="relative inline-block">
                                       <span className="flex items-center cursor-pointer">
@@ -1331,7 +1386,42 @@ function RoundFormPosition() {
                                 )}
                                 {activeTab === "MyQuestionsList" && (
                                   <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
+                                )} */}
+
+                                 {isInterviewQuestionPopup &&
+                            <QuestionBank
+                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                              // sectionName=""
+                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                              type="interviewerSection"
+                              // closeQuestionBank={handlePopupToggle}
+                              // questionBankPopupVisibility={isInterviewQuestionPopup}
+                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
+                              // addedSections={[]}
+                              // questionsLimit={0}
+                              // checkedCount={formData.interviewQuestionsList.length}
+                              interviewQuestionsLists={formData.interviewQuestionsList}
+                              // setInterviewQuestionsList={(questions) =>
+                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                              // }
+                              fromScheduleLater={true}
+                              // interviewQuestionsLists={formData.interviewQuestionsList}
+                              onAddQuestion={handleAddQuestionToRound}
+                              // setInterviewQuestionsList={(question) =>
+                              //   setFormData((prev) => ({
+                              //     ...prev,
+                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+                              //       ? prev.interviewQuestionsList
+                              //       : [...prev.interviewQuestionsList, question]
+                              //   }))
+                              // }
+
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
+
+                            />
+
+                          }
                               </div>
                             </div>
                           )}

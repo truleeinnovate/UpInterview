@@ -318,11 +318,11 @@ const App = () => {
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
                     <Route path="details/:id" element={<UserProfileDetails />} />
                      {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
-                    <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} />
+                    {/* <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} /> */}
                      
-                     <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} />
-                      <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} />
-                    <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} />
+                     {/* <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} /> */}
+                      {/* <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} /> */}
+                    {/* <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} /> */}
                       {/* <Route path="basic" element={<BasicDetails />} /> */} 
                   </Route>
                 )}

@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
+import BasicDetailsEditPage from './BasicDetailsEditPage';
 
 const BasicDetails = ({mode,usersId}) => {
   const { usersRes  } = useCustomContext();
@@ -16,7 +17,7 @@ const BasicDetails = ({mode,usersId}) => {
   const [contactData, setContactData] = useState({})
   const navigate = useNavigate();
    const location = useLocation();
-  // const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   // const [isBasicUserModalOpen, setIsBasicUserModalOpen] = useState(false);
 
   const authToken = Cookies.get("authToken");
@@ -50,11 +51,10 @@ const BasicDetails = ({mode,usersId}) => {
           <button
             onClick={() => {
               mode === 'users' ? 
-               navigate(`/account-settings/users/details/${usersId}/basic-edit`,
-                 {
-  state: { backgroundLocation: location }
-}
-               )
+               setIsSidebarOpen(true)
+              //  navigate(`/account-settings/users/details/${usersId}/basic-edit`,
+      
+               
                :
               navigate(`/account-settings/my-profile/basic-edit/${contactData?.contactId}`)
             }
@@ -145,6 +145,19 @@ const BasicDetails = ({mode,usersId}) => {
               </div> 
             }
 
+             <div>
+              <p className="text-sm text-gray-500">Role</p>
+              <p className="font-medium truncate">{contactData?.label || "N/A"}</p>
+            </div>
+
+             {
+              contactData.roleName === 'Internal_Interviewer' &&
+               <div>
+                <p className="text-sm text-gray-500">isProfile Completed</p>
+                <p className="font-medium truncate">{contactData.isProfileCompleted || "N/A"}</p>
+               </div> 
+            }
+
 
 
           </div>
@@ -153,6 +166,11 @@ const BasicDetails = ({mode,usersId}) => {
 
 
       </div>
+
+      {isSidebarOpen && 
+      <BasicDetailsEditPage  id={usersId}/>
+        
+      }
 
 
     </>
