@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Edit } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import RoundCard from './RoundCard';
 
 const VerticalRoundsView = ({
