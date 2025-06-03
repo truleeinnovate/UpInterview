@@ -197,7 +197,7 @@ function RoundFormTemplates() {
    
   };
 
- const handleToggleMandatory = (questionId) => {
+  const handleToggleMandatory = (questionId) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
@@ -208,8 +208,8 @@ function RoundFormTemplates() {
               mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
              }
              }
-          
-          
+         
+         
           : question
       )
     }));
@@ -248,15 +248,6 @@ function RoundFormTemplates() {
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId),
     }));
      setRemovedQuestionIds(prev => [...prev, questionId]);
-  };
-
-  const handleToggleMandatory = (questionId, mandatory) => {
-    setFormData((prev) => ({
-      ...prev,
-      interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
-        question.questionId === questionId ? { ...question, mandatory: mandatory ? 'true' : 'false' } : question
-      ),
-    }));
   };
 
   const toggleSection = async (sectionId) => {
@@ -1014,7 +1005,7 @@ function RoundFormTemplates() {
                 </div>
               </div>
 
-            }
+            )}
 
             <div>
               <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">
