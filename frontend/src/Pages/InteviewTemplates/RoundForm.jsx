@@ -94,7 +94,8 @@ function RoundFormTemplates() {
 
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
-              const internalInterviewers = resolveInterviewerDetails(round?.internalInterviewers || []);
+               const interviewers = round?.internalInterviewers || []
+              const internalInterviewers = resolveInterviewerDetails(interviewers);
 
               // console.log("internal Interviewers", internalInterviewers);
 
@@ -187,14 +188,33 @@ function RoundFormTemplates() {
 
   const handleClearAllInterviewers = () => {
     setFormData((prev) => ({
+
       ...prev,
       internalInterviewers: [],
       externalInterviewers: [],
       selectedInterviewType: null,
     }));
-    setRemovedQuestionIds(prev => [...prev, questionId]);
+   
   };
 
+ const handleToggleMandatory = (questionId) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
+        question.questionId === questionId
+          ?  { ...question,
+                snapshot: {
+               ...question.snapshot,
+              mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
+             }
+             }
+          
+          
+          : question
+      )
+    }));
+  };
+  
   const clearError = (fieldName) => {
     setErrors(prev => ({
       ...prev,
@@ -206,9 +226,17 @@ function RoundFormTemplates() {
     if (question && question.questionId && question.snapshot) {
       setFormData((prev) => ({
         ...prev,
-        interviewQuestionsList: prev.interviewQuestionsList.some((q) => q.questionId === question.questionId)
+
+         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
-          : [...prev.interviewQuestionsList, question],
+          : [...prev.interviewQuestionsList, 
+             {
+          ...question,
+          mandatory: "false" // Default to false when adding a new question
+        }
+
+          ]
+
       }));
       setErrors((prev) => ({ ...prev, questions: undefined }));
     }
@@ -219,6 +247,7 @@ function RoundFormTemplates() {
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId),
     }));
+     setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
   const handleToggleMandatory = (questionId, mandatory) => {
@@ -357,15 +386,15 @@ function RoundFormTemplates() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-
+ 
     console.log("Submitting round form...");
     if (!validateForm()) {
       console.log("Validation failed:", errors);
       return;
     }
-
+ 
     try {
       const roundData = {
         tenantId,
@@ -379,21 +408,28 @@ function RoundFormTemplates() {
           formData.selectedInterviewType === 'internal'
             ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
             : [],
-        questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList,
+        questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+          .map(q => ({
+            questionId: q.questionId,
+            snapshot: {
+              ...q.snapshot,
+              mandatory: q.snapshot.mandatory || "false"
+            }
+          })) || [],
         ...(formData.roundTitle === 'Assessment' && {
           assessmentId: formData.assessmentTemplate.assessmentId,
         }),
       };
-
+ 
       console.log("Prepared roundData:", roundData);
-
+ 
       if (roundId) {
         console.log("Editing existing round with roundId:", roundId);
         const updatedRounds = template.rounds.map((round) =>
           round._id === roundId ? { ...round, ...roundData } : round
         );
         console.log("Updated rounds array for PATCH:", updatedRounds);
-
+ 
         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
           rounds: updatedRounds,
@@ -403,14 +439,14 @@ function RoundFormTemplates() {
         console.log("Adding new round...");
         const updatedRounds = [...(template.rounds || []), roundData];
         console.log("Updated rounds array for PATCH:", updatedRounds);
-
+ 
         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
           rounds: updatedRounds,
         });
         console.log("PATCH response for add:", patchRes.data);
       }
-
+ 
       console.log("Navigation to template detail page...");
       navigate(`/interview-templates/${id}`);
     } catch (error) {
@@ -830,11 +866,14 @@ function RoundFormTemplates() {
                         <div className="mb-3">
                           <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                           <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+
+                            
                             {formData.internalInterviewers.map((interviewer) => (
                               <div
                                 key={interviewer._id}
                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
                               >
+
                                 <div className="flex items-center">
                                   <span className="ml-2 text-sm text-blue-800 truncate">
                                     {interviewer.firstName} {interviewer.lastName}
