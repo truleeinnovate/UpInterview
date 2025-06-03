@@ -15,11 +15,11 @@ import { config } from '../../../../../../config';
 
 
 
-const EditInterviewDetails = ({ from }) => {
+const EditInterviewDetails = ({ from,usersId,setInterviewEditOpen,onSuccess }) => {
 
   const {
     skills,
-   singlecontact,
+
    usersRes
   } = useCustomContext();
   const popupRef = useRef(null);
@@ -28,6 +28,7 @@ const EditInterviewDetails = ({ from }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+const resolvedId = usersId || id;
 
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const skillsPopupRef = useRef(null);
@@ -82,7 +83,7 @@ const EditInterviewDetails = ({ from }) => {
   // Changed: Updated useEffect to properly map all backend fields
   useEffect(() => {
    
-        const contact = usersRes.find(user => user.contactId === id);
+        const contact = usersRes.find(user => user.contactId === resolvedId);
        
        
   if (!contact) return;
@@ -117,7 +118,7 @@ const EditInterviewDetails = ({ from }) => {
         setErrors({});
 
       
-  }, [id,usersRes]);
+  }, [resolvedId,usersRes]);
 
   const handleBioChange = (e) => {
     const value = e.target.value;
@@ -272,17 +273,14 @@ const EditInterviewDetails = ({ from }) => {
 
 
 
-   // Calculate back path based on where we came from
-  const getBackPath = () => {
-    if (from === 'users') {
-      return `/account-settings/users/details/${id}`;
-    }
-    return '/account-settings/my-profile/interview';
-  };
 
    const handleCloseModal = () => {
-     navigate(getBackPath());
-    //  navigate(previousPath || '/account-settings/my-profile/basic');
+     if (from === 'users') {
+      setInterviewEditOpen(false)
+    }else{
+      navigate('/account-settings/my-profile/interview', { replace: true })
+    }
+   
   }
 
 
@@ -324,14 +322,15 @@ const EditInterviewDetails = ({ from }) => {
       };
 
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData
       );
 
       if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
-      handleCloseModal()
+      handleCloseModal();
+        onSuccess();
       }
     } catch (error) {
       console.error('Error updating interview details:', error);
@@ -451,11 +450,7 @@ const EditInterviewDetails = ({ from }) => {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigate('/account-settings/my-profile/interview')
-                  // setFormData(userData); // Reset to original data
-                  // setIsBasicModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />

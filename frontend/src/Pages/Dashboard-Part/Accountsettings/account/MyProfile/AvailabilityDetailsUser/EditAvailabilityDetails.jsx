@@ -20,7 +20,7 @@ import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 
 Modal.setAppElement('#root');
 
-const EditAvailabilityDetails = ({ from }) => {
+const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSuccess}) => {
   const {  usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,6 +28,8 @@ const EditAvailabilityDetails = ({ from }) => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+
+  const resolvedId = usersId || id;
 
   // Initialize form data with all days
   // const initialTimes = {
@@ -76,7 +78,7 @@ const EditAvailabilityDetails = ({ from }) => {
         //   contact = singlecontact[0];
         // }
 
-         const contact = usersRes.find(user => user.contactId === id);
+         const contact = usersRes.find(user => user.contactId === resolvedId);
 
         
       const updatedTimes = { ...times };
@@ -108,7 +110,7 @@ const EditAvailabilityDetails = ({ from }) => {
 
     }
     fetchData();
-  }, [id, usersRes]);
+  }, [resolvedId, usersRes]);
 
   // Handler functions from AvailabilityDetails
   const handlePaste = () => {
@@ -208,17 +210,15 @@ const EditAvailabilityDetails = ({ from }) => {
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Calculate back path based on where we came from
-  const getBackPath = () => {
-    if (from === 'users') {
-      return `/account-settings/users/details/${id}`;
-    }
-    return '/account-settings/my-profile/availability';
-  };
-
+ 
   const handleCloseModal = () => {
-    navigate(getBackPath());
-    //  navigate(previousPath || '/account-settings/my-profile/basic');
+     if (from === 'users') {
+     setAvailabilityEditOpen(false);
+   
+    } else {
+      navigate('/account-settings/my-profile/availability');
+    }
+
   }
 
 
@@ -261,12 +261,13 @@ const EditAvailabilityDetails = ({ from }) => {
 
     try {
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData
       );
 
       if (response.status === 200) {
         handleCloseModal()
+         onSuccess();
         // navigate('/account-settings/my-profile/availability')
         // Update parent states
         // setParentTimes(formData.times);
