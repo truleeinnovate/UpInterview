@@ -24,7 +24,7 @@
 //       const allowedDomains = ['upinterview.io', 'app.upinterview.io'];
 //       const originDomain = origin.split('//')[1].split(':')[0];
 //       const isAllowedDomain = allowedDomains.some(domain => originDomain.endsWith(domain));
-      
+
 //       if (isAllowedDomain) {
 //         callback(null, true);
 //       } else {
@@ -49,12 +49,12 @@
 //   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 //   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 //   res.header('Access-Control-Allow-Credentials', 'true');
-  
+
 //   // Handle preflight OPTIONS requests
 //   if (req.method === 'OPTIONS') {
 //     return res.status(200).end();
 //   }
-  
+
 //   // console.log('CORS headers set for:', req.method, req.url);
 //   next();
 // });
@@ -76,20 +76,20 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    
+
     // Allow requests with no origin (like mobile apps, server-to-server, or curl requests)
     if (!origin) {
       return callback(null, true);
     }
-    
+
     // Allow local development
     if (
-      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://localhost:') ||
       origin.startsWith('https://localhost:')
     ) {
       return callback(null, true);
     }
-    
+
     // Parse the origin URL
     let originHost;
     try {
@@ -99,7 +99,7 @@ const corsOptions = {
       console.log('Invalid origin URL:', origin);
       return callback(new Error('Invalid origin URL'));
     }
-    
+
     // Allow main domain and all subdomains of app.upinterview.io
     if (
       originHost === 'app.upinterview.io' ||
@@ -107,7 +107,7 @@ const corsOptions = {
     ) {
       return callback(null, true);
     }
-    
+
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -186,10 +186,10 @@ const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js')
 // Register all routes
 app.use('/linkedin', linkedinAuthRoutes);
 app.use("/Individual", individualLoginRoutes);
-app.use('/',SubscriptionRouter);
-app.use('/',CustomerSubscriptionRouter)
+app.use('/', SubscriptionRouter);
+app.use('/', CustomerSubscriptionRouter)
 app.use('/Organization', organizationRoutes);
-app.use('/',Cardrouter)
+app.use('/', Cardrouter)
 app.use('/emails', EmailRouter)
 
 // Master Data Routes
@@ -385,6 +385,7 @@ const modelMapping = {
 };
 
 const { InterviewRounds } = require('./models/InterviewRounds.js');
+const TenantQuestionsListNames = require('./models/questionbankFavList.js');
 
 app.get('/api/:model', async (req, res) => {
   const { model } = req.params;
@@ -406,20 +407,65 @@ app.get('/api/:model', async (req, res) => {
 
     // Handle specific models with additional population
     switch (model.toLowerCase()) {
-      case 'team':
-        query = query
-          .populate('contactId')
-          .populate({
-            path: 'contactId',
-            populate: {
-              path: 'availability',
-              model: 'Interviewavailability',
-            },
-          });
-        break;
+      // case 'team':
+      //   query = query
+      //     .populate('contactId')
+      //     .populate({
+      //       path: 'contactId',
+      //       populate: {
+      //         path: 'availability',
+      //         model: 'Interviewavailability',
+      //       },
+      //     });
+      //   break;
+
+      // case 'tenentquestions':
+      //   const questions = await TenantQuestions.find()
+      //     .populate({
+      //       path: 'suggestedQuestionId',
+      //       model: 'suggestedQuestions',
+      //     })
+      //     .populate({
+      //       path: 'tenantListId',
+      //       model: 'TenantQuestionsListNames',
+      //       select: 'label name ownerId tenantId',
+      //     })
+      //     .exec();
+
+      //   // Group questions by label
+      //   const groupedQuestions = questions.reduce((acc, question) => {
+      //     const questionData = question.isCustom
+      //       ? question // Use the question data directly if custom
+      //       : question.suggestedQuestionId;
+
+      //     if (!questionData) return acc;
+
+      //     question.tenantListId.forEach((list) => {
+      //       const label = list.label;
+      //       if (!acc[label]) {
+      //         acc[label] = [];
+      //       }
+      //       acc[label].push({
+      //         ...questionData._doc,
+      //         label,
+      //         listId: list._id,
+      //       });
+      //     });
+
+      //     return acc;
+      //   }, {});
+
+      //   return res.status(200).json(groupedQuestions);
 
       case 'tenentquestions':
-        const questions = await TenantQuestions.find()
+        // First fetch all list names for this tenant/owner
+        const lists = await TenantQuestionsListNames.find(tenantId ? { tenantId } : { ownerId });
+
+        // Then fetch questions that match these list IDs
+        const questions = await TenantQuestions.find({
+          [tenantId ? 'tenantId' : 'ownerId']: tenantId || ownerId,
+          tenantListId: { $in: lists.map(list => list._id) }
+        })
           .populate({
             path: 'suggestedQuestionId',
             model: 'suggestedQuestions',
@@ -431,38 +477,32 @@ app.get('/api/:model', async (req, res) => {
           })
           .exec();
 
-        // Group questions by label
-        const groupedQuestions = questions.reduce((acc, question) => {
+        // Create structure with all lists (including empty ones)
+        const groupedQuestions = {};
+
+        // Initialize all lists first
+        lists.forEach(list => {
+          groupedQuestions[list.label] = [];
+        });
+
+        // Add questions to their respective lists
+        questions.forEach(question => {
           const questionData = question.isCustom
-            ? question // Use the question data directly if custom
+            ? question
             : question.suggestedQuestionId;
 
-          if (!questionData) return acc;
-
-          question.tenantListId.forEach((list) => {
-            const label = list.label;
-            if (!acc[label]) {
-              acc[label] = [];
+          question.tenantListId.forEach(list => {
+            if (groupedQuestions[list.label]) {
+              groupedQuestions[list.label].push({
+                ...questionData._doc,
+                label: list.label,
+                listId: list._id
+              });
             }
-            acc[label].push({
-              ...questionData._doc,
-              label,
-              listId: list._id,
-            });
           });
-
-          return acc;
-        }, {});
+        });
 
         return res.status(200).json(groupedQuestions);
-
-      // case 'assessment':
-      // query = query
-      //   .populate({
-      //     path: 'Sections.Questions',
-      //     model: 'assessmentQuestions',
-      //   });
-      // break;
 
       case 'position':
         query = query
@@ -491,7 +531,7 @@ app.get('/api/:model', async (req, res) => {
           })
           .populate({
             path: 'templateId',
-            model: 'InterviewTemplate', 
+            model: 'InterviewTemplate',
           });
 
         const interviews = await query.exec();
@@ -735,7 +775,7 @@ const rolesRoutes = require('./routes/rolesRoutes');
 const rolesPermissionRoutes = require('./routes/rolesPermissionRoutes');
 
 app.use('/permissions', rolesPermissionRoutes);
-app.use('/',  rolesRoutes);
+app.use('/', rolesRoutes);
 
 
 
@@ -786,7 +826,7 @@ app.get('/check-email', async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-    const user = await Users.findOne({  email });
+    const user = await Users.findOne({ email });
     res.json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ message: "Error checking email", error: error.message });
@@ -812,7 +852,7 @@ app.get('/check-email', async (req, res) => {
 
 // app.get('/check-profileId', async (req, res) => {
 //   const { profileId } = req.query;
-  
+
 //   try {
 //     const user = await Users.findOne({ profileId });
 //     res.json({ exists: !!user });
@@ -834,7 +874,7 @@ app.use('/wallet', WalletRouter)
 
 // task
 const taskRoutes = require('./routes/taskRoutes');
-app.use('/tasks', taskRoutes);
+app.use('/tasks', taskRoutes);
 
 //i am using this code for outsource interviewers we need to change his into contact controller
 // app.get('/api/contacts/outsource', async (req, res) => {

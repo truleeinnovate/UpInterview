@@ -54,6 +54,12 @@ const MyQuestionsList = ({
   handleRemoveQuestion,
   removedQuestionIds = []
 }) => {
+const { 
+  fetchMyQuestionsData,
+  myQuestionsList,
+  setMyQuestionsList,
+  setInterviewerSectionData
+} = useCustomContext();
   // const { objectPermissionscontext } = usePermissions();
   // const objectPermissions = useMemo(
   //   () => objectPermissionscontext.questionBank || {},
@@ -70,11 +76,7 @@ const MyQuestionsList = ({
     useState(false);
   const [isFilterByDifficultyOpen, setIsFilterByDifficultyOpen] =
     useState(false);
-  const {
-    setInterviewerSectionData,
-    myQuestionsList,
-    setMyQuestionsList,
-  } = useCustomContext();
+ 
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
       myQuestionsListRef.current.openPopup();
@@ -119,19 +121,36 @@ const MyQuestionsList = ({
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [sidebarOpen, handleOutsideClick]);
-  const handleLabelChange = (label) => {
+const handleLabelChange = (label) => {
+  // Find the listId for this label from the existing data
+  const allQuestions = Object.values(myQuestionsList).flat();
+  const matchingQuestion = allQuestions.find(q => q.label === label);
+  
+  if (matchingQuestion) {
+    // Store the listId in cookies
+    Cookies.set('lastSelectedListId', matchingQuestion.listId);
     setSelectedLabel(label);
-    setIsDropdownOpen(false);
-    Cookies.set("lastSelectedLabel", label);
-  };
+  }
+  setIsDropdownOpen(false);
+};
   // Load last selected label from localStorage on mount
   useEffect(() => {
-    const savedLabel = Cookies.get("lastSelectedLabel");
-    if (savedLabel) {
-      setSelectedLabel(savedLabel);
+  const lastSelectedListId = Cookies.get('lastSelectedListId');
+  if (lastSelectedListId && myQuestionsList) {
+    const allQuestions = Object.values(myQuestionsList).flat();
+    const matchingQuestion = allQuestions.find(q => 
+      q.listId === lastSelectedListId
+    );
+    if (matchingQuestion) {
+      setSelectedLabel(matchingQuestion.label);
     }
-  }, []);
+  }
+}, [myQuestionsList]);
 
+// Keep your existing fetch call
+useEffect(() => {
+  fetchMyQuestionsData();
+}, [fetchMyQuestionsData]);
 
   //    useEffect(() => {
   //   if (removedQuestionIds && removedQuestionIds.length > 0) {
@@ -614,14 +633,18 @@ const MyQuestionsList = ({
 
   // MyQuestionListMain component (UI improvements only)
   return (
-    <div className="bg-white z-50 w-full px-4 py-2">
-      {/* Add Question Button (UI improvement) */}
+
       
+    <div className="bg-white z-50 w-full px-4 py-2 min-h-[calc(100vh-200px)]">
+      {/* Add Question Button (UI improvement) */}
+
       <div
         className={`relative `}
       >
         <button
+
           className="text-md absolute  right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
+
           onClick={toggleSidebar}
         >
           <Plus /> Add Question
@@ -635,47 +658,55 @@ const MyQuestionsList = ({
         {/* List Selection and Filter Section (UI improvement) */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-4 items-center">
-            <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                {selectedLabel || "Select a label"}
-                <svg
-                  className={`w-4 h-4 transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                    } text-gray-500 transition-transform`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {isDropdownOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  {Object.keys(groupedQuestions).map((listName, idx) => (
-                    <div
-                      key={idx}
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                        ? "bg-blue-50 text-custom-blue font-semibold"
-                        : ""
-                        }`}
-                      onClick={() => handleLabelChange(listName)}
-                    >
-                      {listName}
-                    </div>
-                  ))}
-                </div>
-              )}
 
-
-            </div>
+         <div className="relative inline-block w-48">
+  <button
+    className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+  >
+    <span className="truncate">
+      {selectedLabel || "Select a label"}
+    </span>
+    <svg
+      className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
+        isDropdownOpen ? "rotate-180" : "rotate-0"
+      }`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  </button>
+  {isDropdownOpen && (
+    <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+      {Object.keys(groupedQuestions).map((listName, idx) => (
+        <div
+          key={idx}
+          className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+            selectedLabel === listName
+              ? "bg-blue-50 text-custom-blue font-semibold"
+              : ""
+          }`}
+          onClick={() => handleLabelChange(listName)}
+        >
+          <div className="flex justify-between items-center">
+            <span className="truncate">{listName}</span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {groupedQuestions[listName].length}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={openListPopup}
@@ -706,25 +737,37 @@ const MyQuestionsList = ({
             </Popup>
           </div>
         </div>
-        </div>
 
         {/* Empty State (UI improvement) */}
-        {!selectedLabel && (
-          <div className="flex justify-center items-center h-[calc(100vh-400px)]">
-            <div className="text-center flex flex-col items-center ">
-              <div className="text-gray-400 ">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="text-lg font-semibold text-gray-500">
-                Select a label to view questions
-              </p>
-            </div>
-          </div>
-        )}
+     {!selectedLabel && (
+  <div className="flex flex-col items-center justify-center min-h-[400px]">
+    <div className="text-center max-w-md">
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="h-16 w-16 mx-auto text-gray-400 mb-4" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke="currentColor"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={1.5} 
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+        />
+      </svg>
+      <h3 className="text-lg font-medium text-gray-500 mb-2">
+        No Label Selected
+      </h3>
+      <p className="text-gray-400">
+        Please select a label from the dropdown to view questions
+      </p>
+    </div>
+  </div>
+)}
 
         {/* Grouped Questions (UI improvement) */}
+      {/* Grouped Questions (UI improvement) */}
         {Object.entries(groupedQuestions || myQuestionsList).map(
           ([listName, items]) => {
             return (
@@ -981,9 +1024,11 @@ const MyQuestionsList = ({
           ref={myQuestionsListRef}
           fromcreate={true}
           setSelectedLabelnew={setSelectedLabel}
+
           setActionViewMoreSection={setActionViewMoreSection}
         />
       
+
 
       {/* Modals */}
       {showNewCandidateContent && (
