@@ -199,6 +199,8 @@ function RoundForm() {
 
   // question list functionality  
   const handleRemoveQuestion = (questionId,) => {
+
+    // console.log("questionId", questionId);
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
@@ -206,7 +208,7 @@ function RoundForm() {
   };
 
   // Change by Shashank on [02/06/2025]: Added handleToggleMandatory to update mandatory status of a question
-  const handleToggleMandatory = (questionId, mandatory) => {
+const handleToggleMandatory = (questionId, mandatory) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
@@ -218,7 +220,8 @@ function RoundForm() {
   };
 
 
-  const handleAddQuestionToRound = (question) => {
+
+   const handleAddQuestionToRound = (question) => {
     // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
 
@@ -281,6 +284,17 @@ function RoundForm() {
   }, []);
 
   const toggleSection = async (sectionId) => {
+
+      // Close all questions in this section when collapsing
+  if (expandedSections[sectionId]) {
+    const newExpandedQuestions = {...expandedQuestions};
+    sectionQuestions[sectionId]?.questions?.forEach(question => {
+      newExpandedQuestions[question._id] = false;
+    });
+    setExpandedQuestions(newExpandedQuestions);
+  }
+
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -947,9 +961,9 @@ function RoundForm() {
               </div>
             )}
 
+               {formData.roundTitle !== 'Assessment' && 
+
             <div className="space-y-4">
-
-
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">Interviewers</label>
                 <div className="flex space-x-2">
@@ -1136,16 +1150,22 @@ function RoundForm() {
                             />
                           </button>
                         </div>
-                        {isInterviewQuestionPopup &&
-                          <QuestionBank
-                            section="interviewerSection"
-                            fromScheduleLater={true}
-                            interviewQuestionsList={formData.interviewQuestionsList}
-                            onAddQuestion={handleAddQuestionToRound}
-                            handleRemoveQuestion={handleRemoveQuestion}
-                            handleToggleMandatory={handleToggleMandatory}
-                          />
-                        }
+                           {isInterviewQuestionPopup &&
+                            <QuestionBank
+                             
+                              
+                              interviewQuestionsLists={formData.interviewQuestionsList}
+                          type="interviewerSection"
+                              fromScheduleLater={true}
+                              // interviewQuestionsLists={formData.interviewQuestionsList}
+                              onAddQuestion={handleAddQuestionToRound}
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
+
+                            />
+
+                          }
+
                       </div>
                     </div>
                   )}
@@ -1156,9 +1176,9 @@ function RoundForm() {
 
               </div>
 
-
-
             </div>
+
+            }
 
             <div>
               <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions <span className='text-red-400'>*</span> </label>

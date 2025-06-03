@@ -124,48 +124,9 @@ const UserProfileDetails = () => {
   const renderBasicDetails = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4"> */}
-          
+        
           <BasicDetails mode='users' usersId={userData.contactId}/>
-          {/* <div>
-            <p className="text-sm text-gray-500">Email</p>
-            <p className="font-medium">{userData.email || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">First Name</p>
-            <p className="font-medium">{userData.firstName || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Last Name</p>
-            <p className="font-medium">{userData.lastName || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Date Of Birth</p>
-            <p className="font-medium">{userData.dateOfBirth || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Profile ID</p>
-            <p className="font-medium">{userData.profileId || userData._id || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Gender</p>
-            <p className="font-medium">{userData.gender || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Phone</p>
-            <p className="font-medium">{userData.countryCode || "N/A"} - {userData.phone || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">LinkedIn</p>
-            <p className="font-medium">{userData.linkedinUrl || "N/A"}</p>
-          </div> */}
-          {/* {userData.portfolioUrl && (
-            <div>
-              <p className="text-sm text-gray-500">Portfolio URL</p>
-              <p className="font-medium">{userData.portfolioUrl || "N/A"}</p>
-            </div>
-          )} */}
-        {/* </div> */}
+       
       </div>
     </div>
   );
@@ -174,38 +135,7 @@ const UserProfileDetails = () => {
     <div className="space-y-6">
       <div className="space-y-4 bg-white p-6 rounded-lg shadow">
         <AdvancedDetails  mode='users' usersId={userData.contactId}/>
-        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Current Role</p>
-            <p className="font-medium">{userData.currentRole || userData.label || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Industry</p>
-            <p className="font-medium">{userData.industry || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{userData.experienceYears || "N/A"} Years</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Location</p>
-            <p className="font-medium">{userData.location || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Resume PDF</p>
-            <p className="font-medium">{userData.resumePdf || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Cover Letter</p>
-            <p className="font-medium">{userData.coverLetter || "N/A"}</p>
-          </div>
-        </div>
-        {userData.coverLetterDescription && (
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Cover Letter Description</span>
-            <p className="text-gray-800 text-sm mt-1 font-medium">{userData.coverLetterDescription || "N/A"}</p>
-          </div>
-        )} */}
+        
       </div>
     </div>
   );
@@ -214,168 +144,19 @@ const UserProfileDetails = () => {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
         <InterviewUserDetails mode='users' usersId={userData.contactId}/>
-        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div className="mt-2">
-            <p className="text-sm text-gray-500">Technologies</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {userData?.technologies?.length > 0 ? (
-                userData.technologies.map((technology, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                    {technology || "N/A"}
-                  </span>
-                ))
-              ) : (
-                "No Technologies Available"
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Skills</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {userData?.skills?.length > 0 ? (
-                userData.skills.map((skill, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                    {skill || "N/A"}
-                  </span>
-                ))
-              ) : (
-                "No Skills Available"
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Previous Experience Conducting Interviews</p>
-            <p className="font-medium">{userData?.previousExperienceConductingInterviews || "N/A"}</p>
-          </div>
-          {userData?.previousExperienceConductingInterviews === "yes" && (
-            <div>
-              <p className="text-sm text-gray-500">Previous Experience</p>
-              <p className="font-medium">{userData?.previousExperienceConductingInterviewsYears || "N/A"} Years</p>
-            </div>
-          )}
-          <div>
-            <p className="text-sm text-gray-500">Expertise Level Conducting Interviews</p>
-            <p className="font-medium">{userData?.expertiseLevelConductingInterviews || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Hourly Charges</p>
-            <p className="font-medium">$ {userData.hourlyRate || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Interview Formats You Offer</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {userData?.interviewFormatWeOffer?.length > 0 ? (
-                userData.interviewFormatWeOffer.map((interview, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                    {interview || "N/A"}
-                  </span>
-                ))
-              ) : (
-                "No Interview Formats Available"
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">No Show Policy</p>
-            <p className="font-medium">{userData?.noShowPolicy || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Professional Title</p>
-            <p className="font-medium">{userData?.professionalTitle || "N/A"}</p>
-          </div>
-        </div>
-        <div className="flex flex-col mt-2">
-          <span className="text-sm text-gray-500">Professional Bio</span>
-          <p className="text-gray-800 text-sm mt-3 font-medium">{userData.bio || "N/A"}</p>
-        </div> */}
+      
       </div>
     </div>
   );
 
   const renderAvailability = () => {
-    // const times = userData.availability?.[0]?.days?.reduce(
-    //   (acc, day) => ({
-    //     ...acc,
-    //     [day.day]: day.timeSlots.map(slot => ({
-    //       startTime: slot.startTime ? new Date(slot.startTime) : 'unavailable',
-    //       endTime: slot.endTime ? new Date(slot.endTime) : 'unavailable',
-    //     })),
-    //   }),
-    //   {
-    //     Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //     Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   }
-    // ) || {
-    //   Monday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Tuesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Wednesday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Thursday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Friday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Saturday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    //   Sunday: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    // };
-
+   
     return (
      
         <div className="grid grid-cols-1 gap-2 
      bg-white p-2  rounded-lg shadow">
           <AvailabilityUser mode='users' usersId={userData.contactId}/>
-          {/* <div className="text-sm flex flex-col">
-            <div className="border border-gray-300 rounded-lg w-full max-w-md  p-4 
-        sm:p-3 md:p-3 lg:p-4 xl:p-4 2xl:p-4">
-              {Object.entries(times).map(([day, slots]) => (
-                <div key={day} className="mb-3 last:mb-0">
-                  <div className="flex items-start gap-3">
-                    <p className="border border-gray-400 rounded text-center font-medium min-w-[70px] py-2">
-                      {day}
-                    </p>
-                    <div className="flex-1 space-y-2">
-                      {slots.map((slot, index) => (
-                        <div key={index} className="flex items-center gap-3">
-                          {slot.startTime === 'unavailable' ? (
-                            <span className="w-full py-2 bg-gray-200 text-center rounded text-sm">
-                              Unavailable
-                            </span>
-                          ) : (
-                            <>
-                              <span className="border border-gray-400 rounded text-center py-2 px-3 w-24 text-sm">
-                                {slot.startTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              <Minus className="text-gray-600" />
-                              <span className="border border-gray-400 rounded text-center py-2 px-3 w-24 text-sm">
-                                {slot.endTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-6">
-            <div>
-              <p className="text-sm text-gray-500">Timezone</p>
-              <p className="font-medium">
-                {userData.timeZone || "N/A"}
-              </p>
-            </div>
-            <div className="mt-5">
-              <p className="text-sm text-gray-500">Preferred Duration</p>
-              <p className="font-medium">
-                {userData.preferredDuration || "N/A"} minutes
-              </p>
-            </div>
-          </div> */}
+          
 
         </div>
       
