@@ -9,7 +9,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 // import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 
-const AvailabilityUser = ({mode,usersId}) => {
+const AvailabilityUser = ({mode,usersId,setAvailabilityEditOpen}) => {
   const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({})
@@ -162,9 +162,7 @@ const isAvailable = (date, hour) => {
         <button
           onClick={() => 
           mode === 'users' ? 
-           navigate(`/account-settings/users/details/${usersId}/availability-edit`, {
-  state: { from: `/account-settings/users/details/${userId}` }
-})
+          setAvailabilityEditOpen(true)
           :  navigate(`/account-settings/my-profile/availability-edit/${contactData?.contactId}`)
           
           }

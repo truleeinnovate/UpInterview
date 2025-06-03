@@ -12,7 +12,8 @@ const QuestionBank = ({ assessmentId,
   questionsLimit,
   closeQuestionBank,
   checkedCount,
-fromScheduleLater,onAddQuestion,handleRemoveQuestion,handleToggleMandatory,interviewQuestionsLists,
+fromScheduleLater,onAddQuestion,handleRemoveQuestion,handleToggleMandatory,
+interviewQuestionsLists,removedQuestionIds
 }) => {
 
     console.log("type:", type);
@@ -88,6 +89,7 @@ fromScheduleLater,onAddQuestion,handleRemoveQuestion,handleToggleMandatory,inter
             handleToggleMandatory={handleToggleMandatory}
             fromScheduleLater={fromScheduleLater}
             interviewQuestionsLists={interviewQuestionsLists}
+            removedQuestionIds={removedQuestionIds}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -106,6 +108,7 @@ fromScheduleLater,onAddQuestion,handleRemoveQuestion,handleToggleMandatory,inter
             handleRemoveQuestion={handleRemoveQuestion}
             handleToggleMandatory={handleToggleMandatory}
               fromScheduleLater={fromScheduleLater}
+              removedQuestionIds={removedQuestionIds}
               // interviewQuestionsLists={interviewQuestionsLists}
           />
         )}

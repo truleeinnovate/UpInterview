@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
+import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { Tooltip } from "@mui/material";
@@ -28,12 +29,13 @@ const SuggestedQuestionsComponent = ({
     handleRemoveQuestion,
     handleToggleMandatory,
     interviewQuestionsList,
-    interviewQuestionsLists
-
+    interviewQuestionsLists,
+    removedQuestionIds = []
     // -->
 }) => {
     console.log("type:", type);
 
+    console.log("removedQuestionIds", removedQuestionIds);
 
 
     const [tab, setTab] = useState(1);
@@ -99,8 +101,6 @@ const SuggestedQuestionsComponent = ({
 
     useEffect(() => {
 
-
-    
         setMandatoryStatus((prev) => {
             const updatedStatus = { ...prev };
             (interviewQuestionsLists ? interviewQuestionsLists : interviewQuestionsList).forEach((question) => {
@@ -109,6 +109,19 @@ const SuggestedQuestionsComponent = ({
             return updatedStatus;
         });
     }, [interviewQuestionsList, interviewQuestionsLists]);
+
+
+
+    useEffect(() => {
+        if (removedQuestionIds && removedQuestionIds.length > 0) {
+            const newList = suggestedQuestionsFilteredData.map(question => ({
+                ...question,
+                isAdded: removedQuestionIds.includes(question._id) ? false : question.isAdded
+            }));
+            setSuggestedQuestionsFilteredData(newList);
+            setSuggestedQuestions(newList);
+        }
+    }, [removedQuestionIds]);
 
 
     const [mandatoryStatus, setMandatoryStatus] = useState({});
@@ -122,8 +135,8 @@ const SuggestedQuestionsComponent = ({
                 ...prev,
                 [questionId]: newStatus,
             };
+            toast.success(`Question marked as ${newStatus ? 'mandatory' : 'optional'}`);
 
-           
             // Update the parent component with the new mandatory status
             if (handleToggleMandatory) {
                 handleToggleMandatory(questionId, newStatus);
@@ -204,52 +217,57 @@ const SuggestedQuestionsComponent = ({
             }
         } else {
 
+            try {
+                const questionToAdd = {
+                    questionId: item._id,
+                    source: "system",
+                    snapshot: item,
+                    order: "",
+                    customizations: "",
+                    mandatory: mandatoryStatus[item._id] ? "true" : "false",
+                };
 
-            const questionToAdd = {
-                questionId: item._id,
-                source: "system",
-                snapshot: item,
-                order: "",
-                customizations: "",
-                mandatory: mandatoryStatus[item._id] ? "true" : "false",
-            };
-
-            console.log("questionToAdd", questionToAdd);
+                console.log("questionToAdd", questionToAdd);
 
 
-            if (onAddQuestion) {
-                //   onAddQuestion(response.data.question); // Pass the question and index to the parent
-                onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+                if (onAddQuestion) {
+                    //   onAddQuestion(response.data.question); // Pass the question and index to the parent
+                    onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+                }
+
+
+                // setInterviewQuestionsList((prev) => ...prev, questionToAdd)
+                // toast.success("Question added successfully");
+
+                // setInterviewQuestionsList((prev) => [...prev, item]);
+                // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
+                // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
+
+                // const questionToAdd = {
+                //     tenantId: "ten1",
+                //     ownerId: "own1",
+                //     questionId: item._id,
+                //     source: "system",
+                //     addedBy: "interviewer",
+                //     snapshot: {
+                //         questionText: item.questionText,
+                //         correctAnswer: item.correctAnswer,
+                //         options: item.options,
+                //         skillTags: item.skill,
+                //     },
+                // };
+
+                // Update suggestedQuestions with the "isAdded" flag set to true
+                const newList = suggestedQuestionsFilteredData.map((question) =>
+                    question._id === item._id ? { ...question, isAdded: true } : question
+                );
+                setSuggestedQuestionsFilteredData(newList);
+                setSuggestedQuestions(newList);
+                toast.success("Question added successfully!");
+            } catch (error) {
+                toast.error("Failed to add question");
+                console.error("Error adding question:", error);
             }
-
-
-            // setInterviewQuestionsList((prev) => ...prev, questionToAdd)
-            toast.success("Question added successfully");
-
-            // setInterviewQuestionsList((prev) => [...prev, item]);
-            // this logic is written by sashan but we no need to pass question to data base from here we need to work on this later(ashraf)
-            // const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
-
-            // const questionToAdd = {
-            //     tenantId: "ten1",
-            //     ownerId: "own1",
-            //     questionId: item._id,
-            //     source: "system",
-            //     addedBy: "interviewer",
-            //     snapshot: {
-            //         questionText: item.questionText,
-            //         correctAnswer: item.correctAnswer,
-            //         options: item.options,
-            //         skillTags: item.skill,
-            //     },
-            // };
-
-            // Update suggestedQuestions with the "isAdded" flag set to true
-            const newList = suggestedQuestionsFilteredData.map((question) =>
-                question._id === item._id ? { ...question, isAdded: true } : question
-            );
-            setSuggestedQuestionsFilteredData(newList);
-            setSuggestedQuestions(newList);
         }
     };
 
@@ -466,24 +484,21 @@ const SuggestedQuestionsComponent = ({
         if (type === 'interviewerSection') {
             if (handleRemoveQuestion) {
                 handleRemoveQuestion(id)
-                   setMandatoryStatus(prev => ({
-                ...prev,
-                [id]: false
-            }));
+                setMandatoryStatus(prev => ({
+                    ...prev,
+                    [id]: false
+                }));
 
 
 
-            const newList = ( suggestedQuestionsFilteredData).map(question =>
-                question._id === id ? { ...question, isAdded: false } : question
-            );
-            setSuggestedQuestionsFilteredData(newList);
-            setSuggestedQuestions(newList);
+                const newList = (suggestedQuestionsFilteredData).map(question =>
+                    question._id === id ? { ...question, isAdded: false } : question
+                );
+                setSuggestedQuestionsFilteredData(newList);
+                setSuggestedQuestions(newList);
 
             }
-
-          
-
-
+            toast.success("Question removed successfully!");
         } else {
 
 
@@ -659,7 +674,7 @@ const SuggestedQuestionsComponent = ({
                     className={`${type === "assessment" || type === "interviewerSection"
                         ? "w-[75%] sm:w-full"
                         : "w-1/2 sm:w-full"
-                        }  flex items-center `}
+                        }  flex items-center justify-end`}
                 // className="flex items-center w-1/2 sm:w-full"
                 >
                     <div
@@ -899,35 +914,40 @@ const SuggestedQuestionsComponent = ({
                                     </div>
 
                                     {/* Mandatory toggle for schedule later (UI improvement) */}
-                                    {fromScheduleLater && (
-                                        <div className="flex justify-center text-center h-12 border-r border-gray-200">
-                                            <div className="flex items-center w-14 justify-center">
-                                                <button
-                                                    onClick={() => {
-                                                        handleToggle(item._id, item);
-                                                    }}
-                                                    className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                                        ? "bg-blue-100 border-custom-blue justify-end"
-                                                        : "bg-gray-200 border-gray-300 justify-start"
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                                            ? "bg-custom-blue"
-                                                            : "bg-gray-400"
+                                    {fromScheduleLater
+                                        //  && item.isAdded && !removedQuestionIds.includes(item._id)
+                                        && (
+                                            <div className="flex justify-center text-center h-12 border-r border-gray-200">
+                                                <div className="flex items-center w-14 justify-center">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (item.isAdded && !removedQuestionIds.includes(item._id)) {
+                                                                handleToggle(item._id, item);
+                                                            }
+                                                            // handleToggle(item._id, item);
+                                                        }}
+                                                        className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                                            ? "bg-blue-100 border-custom-blue justify-end"
+                                                            : "bg-gray-200 border-gray-300 justify-start"
                                                             }`}
-                                                    />
-                                                </button>
+                                                    >
+                                                        <span
+                                                            className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                                                ? "bg-custom-blue"
+                                                                : "bg-gray-400"
+                                                                }`}
+                                                        />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
                                     {/* Add/Remove buttons for different sections (UI improvement) */}
                                     {(type === "interviewerSection") && (
                                         <div
                                             className="p-1 flex justify-center w-[8%]"
                                         >
-                                            {item.isAdded ? (
+                                            {item.isAdded && !removedQuestionIds.includes(item._id) ? (
                                                 <button
                                                     onClick={() => onClickRemoveQuestion(item._id)}
                                                     className="rounded-md bg-gray-500 w-[80%] px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
