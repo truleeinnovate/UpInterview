@@ -560,6 +560,7 @@ const Assessment = require("../models/assessment");
 //         res.status(500).json({ message: "Internal server error" });
 //     }
 // };
+
 const createInterview = async (req, res) => {
     try {
         const { candidateId, positionId, templateId, status, orgId, userId, interviewId, updatingInterviewStatus, completionReason } = req.body;
@@ -915,7 +916,8 @@ const saveInterviewRound = async (req, res) => {
          * Reorders interview rounds based on sequence. 
          */
         async function reorderInterviewRounds(interviewId) {
-            let rounds = await InterviewRounds.find({ interviewId }).sort({ sequence: 1 });
+            const rounds = await InterviewRounds.find({ interviewId });
+            rounds.sort((a, b) => a.sequence - b.sequence);
 
             for (let i = 0; i < rounds.length; i++) {
                 rounds[i].sequence = i + 1;

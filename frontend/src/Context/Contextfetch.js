@@ -1070,31 +1070,25 @@ const CustomProvider = ({ children }) => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
       let filteredTickets = response.data.tickets || [];
-      console.log("Fetched tickets:", filteredTickets);
 
       if (userRole === "SuperAdmin" || userRole === "Support Team") {
-        console.log("Role: SuperAdmin or Support Team - showing all tickets");
         setTickets(filteredTickets);
       } else if (userRole === "Admin" && tenantId) {
         filteredTickets = filteredTickets.filter(
           (ticket) => ticket.tenantId === tenantId
         );
-        console.log("Role: Admin - filtered by tenantId", tenantId, filteredTickets);
         setTickets(filteredTickets);
       } else if (userRole === "Individual" && userId) {
         filteredTickets = filteredTickets.filter(
           (ticket) => ticket.ownerId === userId
         );
-        console.log("Role: Individual - filtered by ownerId", userId, filteredTickets);
         setTickets(filteredTickets);
       } else if (userId) {
         filteredTickets = filteredTickets.filter(
           (ticket) => ticket.assignedToId === userId
         );
-        console.log("Other role - filtered by assignedToId", userId, filteredTickets);
         setTickets(filteredTickets);
       } else {
-        console.log("No matching role or userId - setting tickets to empty");
         setTickets([]);
       }
     } catch (error) {
