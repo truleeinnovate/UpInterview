@@ -101,7 +101,8 @@ function RoundForm() {
 
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
-              const internalInterviewers = resolveInterviewerDetails(round?.internalInterviewers || []);
+               const interviewers = round?.internalInterviewers || []
+              const internalInterviewers = resolveInterviewerDetails(interviewers);
 
               // console.log("internal Interviewers", internalInterviewers);
 
@@ -199,8 +200,6 @@ function RoundForm() {
 
   // question list functionality  
   const handleRemoveQuestion = (questionId,) => {
-
-    // console.log("questionId", questionId);
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
@@ -209,12 +208,19 @@ function RoundForm() {
   };
 
   // Change by Shashank on [02/06/2025]: Added handleToggleMandatory to update mandatory status of a question
-  const handleToggleMandatory = (questionId, mandatory) => {
+  const handleToggleMandatory = (questionId) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
         question.questionId === questionId
-          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          ?  { ...question,
+                snapshot: {
+               ...question.snapshot,
+              mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
+             }
+             }
+          
+          
           : question
       )
     }));
@@ -231,9 +237,15 @@ function RoundForm() {
       if (!exists) {
       setFormData(prev => ({
         ...prev,
-        interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
-          : [...prev.interviewQuestionsList, question]
+          : [...prev.interviewQuestionsList, 
+             {
+          ...question,
+          mandatory: "false" // Default to false when adding a new question
+        }
+
+          ]
       }));
 
       // console.log("question", question);
@@ -521,7 +533,7 @@ function RoundForm() {
         // Format interviewers data for the backend
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
           // For internal interviewers, extract just the _id
-          roundData.interviewers = formData.internalInterviewers.map(interviewer =>
+          roundData.interviewers = formData?.internalInterviewers.map(interviewer =>
             interviewer._id || interviewer.id
           ).filter(Boolean);
         } else if (formData.externalInterviewers) {
@@ -535,7 +547,15 @@ function RoundForm() {
         // roundData.interviewerGroupId = formData.interviewerGroupId || null;
         // roundData.minimumInterviewers = formData.selectedInterviewerIds.length|| '1';
         // roundData.questions = formData.questions || [];
-        roundData.questions = formData.interviewQuestionsList || [];
+        // roundData.questions = formData.interviewQuestionsList || [];
+
+          roundData.questions = formData.interviewQuestionsList.map(q => ({
+           questionId: q.questionId,
+           snapshot: {
+            ...q.snapshot,
+             mandatory: q.snapshot.mandatory || "false"
+          }
+        })) || []
 
       } else {
         // Default case for other interview types (hr, culture-fit, system-design)
@@ -548,11 +568,18 @@ function RoundForm() {
         roundData.interviewerType = formData.interviewerType || '';
         roundData.interviewDuration = formData.duration;
         roundData.selectedInterviewersType = formData.selectedInterviewersType || 'Individual';
+        roundData.questions = formData.interviewQuestionsList.map(q => ({
+           questionId: q.questionId,
+           snapshot: {
+            ...q.snapshot,
+             mandatory: q.snapshot.mandatory || "false"
+          }
+        })) || []
 
         // Format interviewers data for the backend
         if (formData.internalInterviewers && formData.internalInterviewers.length > 0) {
           // For internal interviewers, extract just the _id or id
-          roundData.interviewers = formData.internalInterviewers.map(interviewer =>
+          roundData.interviewers = formData?.internalInterviewers.map(interviewer =>
             interviewer._id || interviewer.id
           ).filter(Boolean);
         } else {
@@ -1046,7 +1073,7 @@ function RoundForm() {
                         <div className="mb-3">
                           <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                           <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                            {formData.internalInterviewers.map((interviewer, index) => (
+                            {formData?.internalInterviewers.map((interviewer, index) => (
                               <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                 <div className="flex items-center">
                                   <span className="ml-2 text-sm text-blue-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
@@ -1117,7 +1144,7 @@ function RoundForm() {
                       {formData.interviewQuestionsList.length > 0 ? (
                         <ul className="mt-2 space-y-2">
                           {(formData.interviewQuestionsList ?? []).map((question, qIndex) => {
-                            const isMandatory = question?.mandatory === "true";
+                             const isMandatory = question?.snapshot?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li
@@ -1161,12 +1188,9 @@ function RoundForm() {
                           </div>
                           {isInterviewQuestionPopup &&
                             <QuestionBank
-
-
                               interviewQuestionsLists={formData.interviewQuestionsList}
                               type="interviewerSection"
                               fromScheduleLater={true}
-                              // interviewQuestionsLists={formData.interviewQuestionsList}
                               onAddQuestion={handleAddQuestionToRound}
                               handleRemoveQuestion={handleRemoveQuestion}
                               handleToggleMandatory={handleToggleMandatory}
