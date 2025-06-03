@@ -10,16 +10,15 @@ import axios from "axios";
 // import OutsourceOption from "../../Interviews/OutsourceOption.jsx";
 // import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
+// import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
 // import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
-import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
+// import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
-
 
 function RoundFormPosition() {
   const {
@@ -105,7 +104,7 @@ function RoundFormPosition() {
   //   }
   // }
 
-    const handleToggleMandatory = (questionId, mandatory) => {
+  const handleToggleMandatory = (questionId, mandatory) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
@@ -117,7 +116,7 @@ function RoundFormPosition() {
   };
 
 
-   const handleAddQuestionToRound = (question) => {
+  const handleAddQuestionToRound = (question) => {
     // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
 
@@ -140,7 +139,7 @@ function RoundFormPosition() {
     }
   }
 
-    const handleRemoveQuestion = (questionId,) => {
+  const handleRemoveQuestion = (questionId,) => {
 
     // console.log("questionId", questionId);
     setFormData(prev => ({
@@ -277,95 +276,17 @@ function RoundFormPosition() {
     }
   }, [isPositionContext, positionId, isEditing, roundId, tenantId, assessmentData]); // Removed problematic dependencies
 
-
-  // const fetchQuestionsForSection = async (assessmentId) => {
-
-  //   if (!assessmentId) {
-  //     return null;
-  //   }
-
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-  //     const assessmentQuestions = response.data;
-
-  //     const sections = assessmentQuestions.sections || [];
-
-  //     // console.log("assessmentQuestions.sections", assessmentQuestions.sections);
-
-
-  //     // Check for empty sections or questions
-  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-  //       console.warn('No sections or questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Create section questions mapping with all section data
-  //     const newSectionQuestions = {};
-
-  //     sections.forEach((section) => {
-  //       if (!section._id) {
-  //         console.warn('Section missing _id:', section);
-  //         return;
-  //       }
-
-  //       // Store complete section data including sectionName, passScore, totalScore
-  //       newSectionQuestions[section._id] = {
-  //         sectionName: section?.sectionName,
-  //         passScore: Number(section.passScore || 0),
-  //         totalScore: Number(section.totalScore || 0),
-  //         questions: (section.questions || []).map(q => ({
-  //           _id: q._id,
-  //           questionId: q.questionId,
-  //           source: q.source || 'system',
-  //           score: Number(q.score || q.snapshot?.score || 0),
-  //           order: q.order || 0,
-  //           customizations: q.customizations || null,
-  //           snapshot: {
-  //             questionText: q.snapshot?.questionText || '',
-  //             questionType: q.snapshot?.questionType || '',
-  //             score: Number(q.snapshot?.score || q.score || 0),
-  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-  //             correctAnswer: q.snapshot?.correctAnswer || '',
-  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
-  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-  //             questionNo: q.snapshot?.questionNo || ''
-  //           }
-  //         }))
-  //       };
-  //     });
-
-  //     // Verify that at least one section has questions
-  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-  //     if (!hasQuestions) {
-  //       console.warn('No sections with questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Set the section questions state
-  //     setSectionQuestions(newSectionQuestions);
-  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   }
-  // };
-
   const toggleSection = async (sectionId) => {
 
-       // Close all questions in this section when collapsing
-  if (expandedSections[sectionId]) {
-    const newExpandedQuestions = {...expandedQuestions};
-    sectionQuestions[sectionId]?.questions?.forEach(question => {
-      newExpandedQuestions[question._id] = false;
-    });
-    setExpandedQuestions(newExpandedQuestions);
-  }
-  
+    // Close all questions in this section when collapsing
+    if (expandedSections[sectionId]) {
+      const newExpandedQuestions = { ...expandedQuestions };
+      sectionQuestions[sectionId]?.questions?.forEach(question => {
+        newExpandedQuestions[question._id] = false;
+      });
+      setExpandedQuestions(newExpandedQuestions);
+    }
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -377,50 +298,17 @@ function RoundFormPosition() {
     }
   };
 
-
-
   const handleInternalInterviewerSelect = (interviewers) => {
     if (formData.selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
-
-    // const existingInterviewerIds = new Set(
-    //   formData.internalInterviewers.map(i => i._id)
-    // );
-
-    // Filter out any interviewers that are already selected
-    // const uniqueInterviewers = interviewers
-    //   .filter(interviewer => {
-    //     const interviewerId = interviewer.contactId?._id || interviewer._id;
-    //     return !existingInterviewerIds.has(interviewerId);
-    //   })
-    //   .map(interviewer => ({
-    //     _id: interviewer.contactId?._id || interviewer._id || '',
-    //     name: interviewer.contactId?.name || interviewer.name || 'Unknown',
-    //     email: interviewer.contactId?.email || interviewer.email || ''
-    //   }));
-
-    // if (uniqueInterviewers.length === 0) {
-    //   alert("All selected interviewers are already added.");
-    //   return;
-    // }
-
-    // setFormData(prev => ({
-    //   ...prev,
-    //   selectedInterviewType: "internal",
-    //   internalInterviewers: [...prev.internalInterviewers, ...uniqueInterviewers]
-    // }));
-
     setFormData(prev => ({
       ...prev,
       selectedInterviewType: "internal",
       internalInterviewers: interviewers
     }));
-
   };
-
-
 
   const handleExternalInterviewerSelect = () => {
 
@@ -502,7 +390,6 @@ function RoundFormPosition() {
       if (!formData.assessmentTemplate?.assessmentId) {
         newErrors.assessmentTemplate = 'Assessment template is required';
       }
-      // ...other assessment checks...
     }
 
     // Technical round validations
@@ -1149,7 +1036,9 @@ function RoundFormPosition() {
 
 
 
-                    <>
+                  {formData.roundTitle !== 'Assessment' &&
+
+                    <div className="space-y-4">
 
                       {/* Select Interviewers */}
                       <div>
@@ -1209,6 +1098,7 @@ function RoundFormPosition() {
                                         Internal
                                       </span>
                                     )}
+
                                     {isExternalSelected && (
                                       <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                         Outsourced
@@ -1388,46 +1278,48 @@ function RoundFormPosition() {
                                   <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
                                 )} */}
 
-                                 {isInterviewQuestionPopup &&
-                            <QuestionBank
-                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
-                              // sectionName=""
-                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
-                              type="interviewerSection"
-                              // closeQuestionBank={handlePopupToggle}
-                              // questionBankPopupVisibility={isInterviewQuestionPopup}
-                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
-                              // addedSections={[]}
-                              // questionsLimit={0}
-                              // checkedCount={formData.interviewQuestionsList.length}
-                              interviewQuestionsLists={formData.interviewQuestionsList}
-                              // setInterviewQuestionsList={(questions) =>
-                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
-                              // }
-                              fromScheduleLater={true}
-                              // interviewQuestionsLists={formData.interviewQuestionsList}
-                              onAddQuestion={handleAddQuestionToRound}
-                              // setInterviewQuestionsList={(question) =>
-                              //   setFormData((prev) => ({
-                              //     ...prev,
-                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
-                              //       ? prev.interviewQuestionsList
-                              //       : [...prev.interviewQuestionsList, question]
-                              //   }))
-                              // }
+                                {isInterviewQuestionPopup &&
+                                  <QuestionBank
+                                    // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                                    // sectionName=""
+                                    // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                                    type="interviewerSection"
+                                    // closeQuestionBank={handlePopupToggle}
+                                    // questionBankPopupVisibility={isInterviewQuestionPopup}
+                                    // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
+                                    // addedSections={[]}
+                                    // questionsLimit={0}
+                                    // checkedCount={formData.interviewQuestionsList.length}
+                                    interviewQuestionsLists={formData.interviewQuestionsList}
+                                    // setInterviewQuestionsList={(questions) =>
+                                    //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                                    // }
+                                    fromScheduleLater={true}
+                                    // interviewQuestionsLists={formData.interviewQuestionsList}
+                                    onAddQuestion={handleAddQuestionToRound}
+                                    // setInterviewQuestionsList={(question) =>
+                                    //   setFormData((prev) => ({
+                                    //     ...prev,
+                                    //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+                                    //       ? prev.interviewQuestionsList
+                                    //       : [...prev.interviewQuestionsList, question]
+                                    //   }))
+                                    // }
 
-                              handleRemoveQuestion={handleRemoveQuestion}
-                              handleToggleMandatory={handleToggleMandatory}
+                                    handleRemoveQuestion={handleRemoveQuestion}
+                                    handleToggleMandatory={handleToggleMandatory}
 
-                            />
+                                  />
 
-                          }
+                                }
                               </div>
                             </div>
                           )}
                         </div>
                       </div>
-                    </>
+                    </div>
+
+                  }
 
 
                   <div>
