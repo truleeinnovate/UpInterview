@@ -38,15 +38,12 @@ const RoundForm = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
+  const orgId = tokenPayload?.tenantId;
   const [errors, setErrors] = useState({});
   console.log("errors", errors);
 
-
   const interview = interviewData?.find(interview => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
-  console.log("assessmentTemplate", assessmentTemplate);
-
-
 
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
@@ -519,103 +516,23 @@ const RoundForm = () => {
     }
   }, [rounds, isEditing, roundEditData, navigate, assessmentData]);
 
-  const orgId = Cookies.get("organizationId");
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     // if (!name || !type || !mode || selectedInterviewers.length === 0) {
-  //     //   throw new Error('Please fill in all required fields');
-  //     // }
-
-  //     const roundData = {
-  //       roundTitle,
-  //       interviewMode,
-  //       sequence,
-  //       interviewers: selectedInterviewersData || [],
-  //       ...(roundTitle === "Assessment" && assessmentTemplate
-  //         ? { assessmentId: assessmentTemplate._id }
-  //         : {}),
-  //       instructions,
-  //       status,
-  //       ...(roundTitle !== "Assessment" && {
-  //         duration,
-  //         interviewerType: selectedInterviewType, // internal or external
-  //         dateTime: combinedDateTime,
-  //         interviewType,
-  //       }),
-  //     };
-
-  //     const validationErrors = validateInterviewRoundData(roundData);
-  //     setErrors(validationErrors);
-
-  //     console.log("roundData1", roundData);
-  //     if (Object.keys(validationErrors).length === 0) {
-  //       // Include roundId only if editing
-  //       const payload = isEditing ? { interviewId, round: roundData, roundId, questions: interviewQuestionsList } : { interviewId, round: roundData, questions: interviewQuestionsList };
-
-  //       const response = await axios.post(
-  //         `${config.REACT_APP_API_URL}/interview/save-round`,
-  //         payload
-  //       );
-  //       console.log("response", response.data);
-
-
-  //       // const preparingTeamRequestBody = {
-  //       //   name: `Interview with ${candidate}-${candidate._id.slice(-5, -1)} for the position of ${position._id}`,
-  //       //   description: "description",
-  //       //   owner: userId,
-  //       //   createdBy: userId,
-  //       // };
-
-  //       // const teamResponse = await axios.post(`${config.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
-
-  //       if (selectedInterviewers && selectedInterviewers.length > 0) {
-  //         const interviewerObjects = selectedInterviewers.map(id => ({
-  //           id: id._id,
-  //           status: "inprogress"
-  //         }));
-  //         const outsourceRequestData = {
-  //           tenantId: orgId,
-  //           ownerId: userId,
-  //           scheduledInterviewId: interviewId,
-  //           interviewerType: selectedInterviewType,
-  //           interviewerIds: interviewerObjects, // Fixed mapping here
-  //           dateTime: combinedDateTime,
-  //           duration,
-  //           candidateId: candidate?._id,
-  //           positionId: position?._id,
-  //           status: "inprogress",
-  //           roundNumber: sequence,
-  //           requestMessage: "Outsource interview request",
-  //           expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  //         };
-
-  //         await axios.post(
-  //           `${config.REACT_APP_API_URL}/interviewrequest`,
-  //           outsourceRequestData
-  //         );
-  //       }
-  //     }
-  //     navigate(`/interviews/${interviewId}`);
-
-  //   } catch (err) {
-  //     setError(err instanceof Error ? err.message : "An unknown error occurred");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
+    console.log("handleSubmit() called");
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
+  
     try {
-      // Prepare round data for validation
+      console.log("Preparing round data for validation");
       console.log('selectedInterviewType;;;;selectedInterviewersData', selectedInterviewType, selectedInterviewersData);
+  
+      // Clean interviewers data to remove undefined fields
+      const cleanInterviewer = (interviewer) => {
+        const { availability, ...rest } = interviewer;
+        return rest;
+      };
+      const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
+  
       const roundData = {
         roundTitle,
         interviewMode,
@@ -628,60 +545,56 @@ const RoundForm = () => {
         status,
         ...(roundTitle !== "Assessment" && {
           duration,
-          interviewerType: selectedInterviewType, // internal or external
+          interviewerType: selectedInterviewType,
           dateTime: combinedDateTime,
           interviewType,
         }),
-        ...(selectedInterviewType !== "external" && { interviewers: selectedInterviewersData || [] }), // Only pass interviewers if not external
+        ...(selectedInterviewType !== "external" && { interviewers: cleanedInterviewers || [] }),
       };
-
-
-      // Validate the round data
+  
+      console.log("Validating the round data");
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
-
-      // If there are validation errors, stop submission
+  
+      console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
-        console.log("Validation errors:", validationErrors);
-        return; // Stop further execution
+        console.log("Validation errors found, stopping submission");
+        return;
       }
-
+  
       console.log("roundData1", roundData);
-
-      // Include roundId only if editing
       const payload = isEditing
         ? { interviewId, round: roundData, roundId, questions: interviewQuestionsList }
         : { interviewId, round: roundData, questions: interviewQuestionsList };
-
-      // Submit the form data
+  
+      console.log("Payload for submission:", payload);
+  
+      // Add error handling for Axios request
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/interview/save-round`,
-        payload
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if required
+            Authorization: `Bearer ${Cookies.get("authToken")}`,
+          },
+        }
       );
       console.log("response", response.data);
-
-      //       // const preparingTeamRequestBody = {
-      //       //   name: `Interview with ${candidate}-${candidate._id.slice(-5, -1)} for the position of ${position._id}`,
-      //       //   description: "description",
-      //       //   owner: userId,
-      //       //   createdBy: userId,
-      //       // };
-
-      //       // const teamResponse = await axios.post(`${config.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
-
+  
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
         const isInternal = selectedInterviewType === "internal";
-
+        console.log(`Sending ${selectedInterviewers.length} outsource requests`);
         for (const interviewer of selectedInterviewers) {
-          console.log("selecteinterviewer._id from the submit ", interviewer._id);
           const outsourceRequestData = {
             tenantId: orgId,
             ownerId: userId,
             scheduledInterviewId: interviewId,
             interviewerType: selectedInterviewType,
-            interviewerId: interviewer._id, // Directly passing the interviewer ID
-            status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
+            interviewerId: interviewer._id,
+            status: isInternal ? "accepted" : "inprogress",
             dateTime: combinedDateTime,
             duration,
             candidateId: candidate?._id,
@@ -692,27 +605,36 @@ const RoundForm = () => {
               : "Outsource interview request",
             expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           };
-
+  
           console.log("Sending outsource request:", outsourceRequestData);
-
           await axios.post(
             `${config.REACT_APP_API_URL}/interviewrequest`,
-            outsourceRequestData
+            outsourceRequestData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${Cookies.get("authToken")}`,
+              },
+            }
           );
         }
       }
-
-
-
-      // Navigate to the interview details page
+  
+      console.log("Navigating to the interview details page");
       navigate(`/interviews/${interviewId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      console.error("Error submitting the form:", err);
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "An error occurred while submitting the form"
+      );
     } finally {
+      console.log("handleSubmit() finished");
       setIsLoading(false);
     }
   };
-
+  
   useEffect(() => {
     // if (isInstantInterview) {
     // Set interview time to 15 minutes from now

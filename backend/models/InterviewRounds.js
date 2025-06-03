@@ -37,7 +37,7 @@
 
 const mongoose = require('mongoose');
 
-const interviewRoundsSchema = new mongoose.Schema({
+const interviewRoundSchema = new mongoose.Schema({
     interviewId: { type: mongoose.Schema.Types.ObjectId, ref: "Interview" },
     sequence: Number,
     roundTitle: String,
@@ -62,6 +62,6 @@ const interviewRoundsSchema = new mongoose.Schema({
     rejectionReason:String
 });
 
-const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundsSchema);
+const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundSchema);
 
 module.exports = { InterviewRounds };
