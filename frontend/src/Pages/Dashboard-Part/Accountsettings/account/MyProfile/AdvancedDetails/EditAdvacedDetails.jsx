@@ -13,7 +13,7 @@ import { config } from '../../../../../../config';
 
 Modal.setAppElement('#root');
 
-const EditAdvacedDetails = ({ from }) => {
+const EditAdvacedDetails = ({ from,usersId,setAdvacedEditOpen,onSuccess }) => {
   // onSave
   const {
     skills,
@@ -29,6 +29,7 @@ const EditAdvacedDetails = ({ from }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+const resolvedId = usersId || id;
 
 
   // Dropdown states
@@ -58,7 +59,7 @@ const EditAdvacedDetails = ({ from }) => {
   useEffect(() => {
 
 
-    const contact = usersRes.find(user => user.contactId === id);
+    const contact = usersRes.find(user => user.contactId === resolvedId);
 
     if (contact) {
       setFormData({
@@ -73,7 +74,7 @@ const EditAdvacedDetails = ({ from }) => {
     }
 
 
-  }, [id, usersRes]);
+  }, [resolvedId, usersRes]);
 
 
 
@@ -133,17 +134,16 @@ const EditAdvacedDetails = ({ from }) => {
     }
   };
 
-  // Calculate back path based on where we came from
-  const getBackPath = () => {
-    if (from === 'users') {
-      return `/account-settings/users/details/${id}`;
-    }
-    return '/account-settings/my-profile/advanced';
-  };
+
 
   const handleCloseModal = () => {
-    navigate(getBackPath());
+    if (from === 'users') {
+   setAdvacedEditOpen(false);
+  
+    }else{
+     navigate('/account-settings/my-profile/advanced');
     //  navigate(previousPath || '/account-settings/my-profile/basic');
+    }
   }
 
 
@@ -174,7 +174,7 @@ const EditAdvacedDetails = ({ from }) => {
 
 
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData
       );
 
@@ -185,6 +185,7 @@ const EditAdvacedDetails = ({ from }) => {
         // setUserData(prev => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
         handleCloseModal()
+         onSuccess()
       } else {
         console.error('Failed to update advanced details:', response.status);
       }

@@ -12,6 +12,10 @@ import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
 import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
 import InterviewUserDetails from "../MyProfile/InterviewDetails/InterviewDetails";
 import AvailabilityUser from "../MyProfile/AvailabilityDetailsUser/AvailabilityUser";
+import BasicDetailsEditPage from "../MyProfile/BasicDetails/BasicDetailsEditPage";
+import EditAdvacedDetails from "../MyProfile/AdvancedDetails/EditAdvacedDetails";
+import EditInterviewDetails from "../MyProfile/InterviewDetails/EditInterviewDetails";
+import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
 // import ConfirmationModal from './ConfirmModel';
 
 //this is already have common code but due to z index i have added here
@@ -59,7 +63,7 @@ const UserProfileDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
-  const { toggleUserStatus } = useCustomContext();
+  const { toggleUserStatus,refetchUsers } = useCustomContext();
 
   const [activeTab, setActiveTab] = useState('basic');
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -67,9 +71,33 @@ const UserProfileDetails = () => {
   const [newStatus, setNewStatus] = useState(userData?.status || 'active');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+const [basicEditOpen, setBasicEditOpen] = useState(false);
+const [advacedEditOpen,setAdvacedEditOpen] =useState(false);
+const [interviewEditOpen,setInterviewEditOpen] =useState(false);
+const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
+
+
   useEffect(() => {
     document.title = "User Profile Details";
   }, []);
+
+    const handleBasicEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
+  };
+
+
+      const handleAdvacedEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
+  };
+
+      const handleInterviewEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
+  };
+
+  // useEffect(() => {
+  //   refetchUsers()
+
+  // },[handleBasicEditSuccess])
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
@@ -125,7 +153,7 @@ const UserProfileDetails = () => {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
         
-          <BasicDetails mode='users' usersId={userData.contactId}/>
+          <BasicDetails mode='users' usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen} />
        
       </div>
     </div>
@@ -134,7 +162,7 @@ const UserProfileDetails = () => {
   const renderAdvancedDetails = () => (
     <div className="space-y-6">
       <div className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <AdvancedDetails  mode='users' usersId={userData.contactId}/>
+        <AdvancedDetails  mode='users' usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  />
         
       </div>
     </div>
@@ -143,7 +171,7 @@ const UserProfileDetails = () => {
   const renderInterviewDetails = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        <InterviewUserDetails mode='users' usersId={userData.contactId}/>
+        <InterviewUserDetails mode='users' usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}/>
       
       </div>
     </div>
@@ -155,7 +183,7 @@ const UserProfileDetails = () => {
      
         <div className="grid grid-cols-1 gap-2 
      bg-white p-2  rounded-lg shadow">
-          <AvailabilityUser mode='users' usersId={userData.contactId}/>
+          <AvailabilityUser mode='users' usersId={userData.contactId}  setAvailabilityEditOpen={setAvailabilityEditOpen}/>
           
 
         </div>
@@ -172,6 +200,8 @@ const UserProfileDetails = () => {
       'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
     }
   );
+
+
 
   return (
     <>
@@ -287,8 +317,25 @@ const UserProfileDetails = () => {
             </div>
           </div>
         </div>
-      </Modal>
 
+        
+      {basicEditOpen && 
+      <BasicDetailsEditPage from="users" usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen}  onSuccess={handleBasicEditSuccess}/> 
+      }
+
+      {advacedEditOpen &&
+        <EditAdvacedDetails from="users" usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  onSuccess={handleAdvacedEditSuccess}/>
+      }
+     
+
+      {
+        interviewEditOpen &&   <EditInterviewDetails from="users" usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}  onSuccess={handleInterviewEditSuccess}/>
+      }
+
+      {
+       availabilityEditOpen && <EditAvailabilityDetails  from="users" usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen}  onSuccess={handleInterviewEditSuccess}/>
+      }
+ </Modal>
 
     </>
   );

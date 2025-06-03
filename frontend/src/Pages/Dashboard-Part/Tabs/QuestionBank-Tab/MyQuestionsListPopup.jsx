@@ -10,6 +10,7 @@ import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config.js";
 
+
 const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew ,setActionViewMoreSection}, ref) => {
     const {
         fetchMyQuestionsData,
@@ -372,16 +373,25 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
 
             {showNewListPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white flex flex-col rounded-md">
-                        <div className="border-b p-2 flex justify-between bg-custom-blue items-center rounded-t-md">
-                            <h2 className="text-lg text-white font-semibold">
+                <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white  flex flex-col rounded-md">
+                        <div className="border-b p-3 flex justify-between  items-center rounded-t-md">
+                            <h2 className="text-xl text-custom-blue font-semibold">
                                 {isEditing ? "Edit List" : "New List"}
                             </h2>
+                            <button
+                             onClick={() =>{ 
+                                    setShowNewListPopup(false)
+                                setActionViewMoreSection(false)
+                                }}
+                            >
+                                 <X  className="w-6 h-6 text-red-500" />
+                            </button>
+                           
                         </div>
-                        <div className="p-2">
-                            <div className="flex items-center gap-5">
-                                <label className="text-sm font-semibold mr-2 mt-2 w-20">
+                        <div className="p-3">
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-semibold   w-20">
                                     Label <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -392,14 +402,14 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                         setNewListName(sanitizedValue);
                                     }}
                                     onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, "_"))} // Replace spaces with underscores when the input loses focus
-                                    className="border-b flex-grow p-2 mt-2 focus:outline-none"
+                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
                                     placeholder="Enter label"
                                 />
                             </div>
                         </div>
-                        <div className="p-2">
-                            <div className="flex items-center mb-2 gap-5">
-                                <label className="text-sm font-semibold mr-2 mt-2 w-20">
+                        <div className="p-3">
+                            <div className="flex items-center mb-2 gap-2">
+                                <label className="text-sm font-semibold   w-20">
                                     {/* List Name <span className="text-red-500">*</span> */}
                                     Name <span className="text-red-500">*</span>
                                 </label>
@@ -407,21 +417,18 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                     type="text"
                                     value={newListNameForName}
                                     readOnly
-                                    className="border-b flex-grow p-2 mt-2 focus:outline-none"
+                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
                                     placeholder="List name"
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-end border-t p-2 rounded-b-md text-sm">
-                            <button
+                        <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
+                            {/* <button
                                 className="border border-custom-blue px-4 py-2 rounded mr-2"
-                                onClick={() =>{ 
-                                    setShowNewListPopup(false)
-                                setActionViewMoreSection(false)
-                                }}
+                               
                             >
                                 Cancel
-                            </button>
+                            </button> */}
                             <button
                                 className="bg-custom-blue text-white px-4 py-2 rounded"
                                 onClick={handleSave}

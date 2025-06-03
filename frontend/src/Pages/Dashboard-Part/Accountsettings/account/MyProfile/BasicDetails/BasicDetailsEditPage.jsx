@@ -14,15 +14,12 @@ import { config } from '../../../../../../config';
 
 Modal.setAppElement('#root');
 
-const BasicDetailsEditPage = ({ from }) => {
+const BasicDetailsEditPage = ({ from,usersId,setBasicEditOpen,onSuccess }) => {
   const {  usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
 
- const location = useLocation();
-
-  // Store the previous path in state
-  const [previousPath, setPreviousPath] = useState(null);
+const resolvedId = usersId || id;
 
 
   const [formData, setFormData] = useState({});
@@ -31,17 +28,8 @@ const BasicDetailsEditPage = ({ from }) => {
   const [errors, setErrors] = useState({});
   // const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
 
-  console.log("userId BasicDetails", from);
+  // console.log("userId BasicDetails", from);
 
-
-  
-  // Calculate back path based on where we came from
-  const getBackPath = () => {
-    if (from === 'users') {
-      return `/account-settings/users/details/${id}`;
-    }
-    return '/account-settings/my-profile/basic';
-  };
 
 
   // useEffect(() => {
@@ -110,12 +98,12 @@ const BasicDetailsEditPage = ({ from }) => {
 
 
   useEffect(() => {
-  const contact = usersRes.find(user => user.contactId === id);
+  const contact = usersRes.find(user => user.contactId === resolvedId);
 
   if (!contact) return;
 
   
-  console.log("userId BasicDetails", contact);
+  // console.log("userId BasicDetails", contact);
 
 
   setFormData({
@@ -140,7 +128,7 @@ const BasicDetailsEditPage = ({ from }) => {
   }
 
   setErrors({});
-}, [id, usersRes]);
+}, [resolvedId, usersRes]);
 
 
 
@@ -157,15 +145,18 @@ const BasicDetailsEditPage = ({ from }) => {
     setStartDate(date);
   };
 
-  console.log("formData.id", );
+
   
 
   const handleCloseModal = () => {
     if (from === 'users') {
-      navigate(location.state?.backgroundLocation?.pathname || '/fallback', { replace: true });
+     setBasicEditOpen(false);
+   
     } else {
       navigate('/account-settings/my-profile/basic', { replace: true });
     }
+   
+
   };
   
 
@@ -188,6 +179,8 @@ const BasicDetailsEditPage = ({ from }) => {
     if (!isEmptyObject(validationErrors)) {
       return; // Prevent submission if there are errors
     }
+    console.log("errors", errors);
+    
 
     const cleanFormData = {
       // firstname: formData.firstname?.trim() || '',
@@ -203,23 +196,22 @@ const BasicDetailsEditPage = ({ from }) => {
       portfolioUrl: formData.portfolioUrl?.trim() || '',
       id: formData.id
     };
-
-
-    // console.log("cleanFormData", cleanFormData);
+    // console.log("resolvedId", resolvedId);
+    
 
     try {
 
-
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData, // Removed extra nesting
 
       );
 
-      // console.log("response", response);
+      console.log("response", response);
 
       if (response.status === 200) { // Changed from response.ok to status check
-        handleCloseModal()
+        handleCloseModal();
+          onSuccess();
         // setFormData(prev => ({ ...prev, ...cleanFormData }));
         // navigate(`/account-settings/my-profile/basic`);
         // navigate('/account-settings/my-profile/basic');

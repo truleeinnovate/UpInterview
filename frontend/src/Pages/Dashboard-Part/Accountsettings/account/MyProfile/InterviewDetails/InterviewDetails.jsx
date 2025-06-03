@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
-const InterviewUserDetails = ({mode,usersId}) => {
+const InterviewUserDetails = ({mode,usersId,setInterviewEditOpen}) => {
   const { usersRes  } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({})
@@ -48,7 +48,7 @@ const InterviewUserDetails = ({mode,usersId}) => {
 
   if (selectedContact) {
     setContactData(selectedContact);
-    console.log("Selected contact:", selectedContact);
+    // console.log("Selected contact:", selectedContact);
   }
 }, [usersId, userId, usersRes]);
 
@@ -61,9 +61,7 @@ const InterviewUserDetails = ({mode,usersId}) => {
         <button
           onClick={() => { 
              mode === 'users' ? 
-               navigate(`/account-settings/users/details/${usersId}/interview-edit`, {
-  state: { from: `/account-settings/users/details/${usersId}` }
-})
+              setInterviewEditOpen(true)
                :
               navigate(`/account-settings/my-profile/interview-edit/${contactData?.contactId}`)
           //  details/:idinterview-edit

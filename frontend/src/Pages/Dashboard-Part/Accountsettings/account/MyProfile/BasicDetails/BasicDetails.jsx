@@ -8,16 +8,16 @@ import Cookies from "js-cookie";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
-import BasicDetailsEditPage from './BasicDetailsEditPage';
 
-const BasicDetails = ({mode,usersId}) => {
+
+const BasicDetails = ({mode,usersId,setBasicEditOpen}) => {
   const { usersRes  } = useCustomContext();
 
 
   const [contactData, setContactData] = useState({})
   const navigate = useNavigate();
    const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  
   // const [isBasicUserModalOpen, setIsBasicUserModalOpen] = useState(false);
 
   const authToken = Cookies.get("authToken");
@@ -51,7 +51,7 @@ const BasicDetails = ({mode,usersId}) => {
           <button
             onClick={() => {
               mode === 'users' ? 
-               setIsSidebarOpen(true)
+               setBasicEditOpen(true)
               //  navigate(`/account-settings/users/details/${usersId}/basic-edit`,
       
                
@@ -167,10 +167,6 @@ const BasicDetails = ({mode,usersId}) => {
 
       </div>
 
-      {isSidebarOpen && 
-      <BasicDetailsEditPage  id={usersId}/>
-        
-      }
 
 
     </>

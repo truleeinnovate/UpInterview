@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
-const AdvancedDetails = ({ mode, usersId }) => {
+const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
   const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
@@ -40,11 +40,8 @@ const AdvancedDetails = ({ mode, usersId }) => {
           onClick={
             () => {
               mode === 'users' ?
-                navigate(`/account-settings/users/details/${usersId}/advanced-edit`, {
-                  state: { from: `/account-settings/users/details/${usersId}` }
-                })
+              setAdvacedEditOpen(true)            
                 :
-
                 navigate(`/account-settings/my-profile/advanced-edit/${contactData?.contactId}`)
             }
           }

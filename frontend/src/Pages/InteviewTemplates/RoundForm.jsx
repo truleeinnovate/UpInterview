@@ -28,6 +28,7 @@ function RoundFormTemplates() {
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const { id } = useParams();
   const dropdownRef = useRef(null);
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roundId = searchParams.get('roundId');
@@ -191,6 +192,7 @@ function RoundFormTemplates() {
       externalInterviewers: [],
       selectedInterviewType: null,
     }));
+    setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
   const clearError = (fieldName) => {
@@ -211,7 +213,7 @@ function RoundFormTemplates() {
       setErrors((prev) => ({ ...prev, questions: undefined }));
     }
   };
-
+  
   const handleRemoveQuestion = (questionId) => {
     setFormData((prev) => ({
       ...prev,
@@ -786,8 +788,7 @@ function RoundFormTemplates() {
                     </Button>
                   </div>
                 </div>
-
-                <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+               <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
                   {!formData.selectedInterviewType ? (
                     <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                   ) : (
@@ -890,8 +891,10 @@ function RoundFormTemplates() {
                   )}
                 </div>
 
+               
                 <div className="mt-4">
                   <div className="py-3 mx-auto rounded-md">
+                    {/* Header with Title and Add Button */}
                     <div className="flex items-center justify-end mb-2">
                       <button
                         className="text-custom-blue font-semibold hover:underline"
@@ -902,22 +905,23 @@ function RoundFormTemplates() {
                       </button>
                     </div>
                     <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
+                      {/* Display Added Questions */}
                       {formData.interviewQuestionsList.length > 0 ? (
                         <ul className="mt-2 space-y-2">
-                          {formData.interviewQuestionsList.map((question, qIndex) => {
-                            const isMandatory = question?.mandatory === 'true';
-                            const questionText = question?.snapshot?.questionText || 'No Question Texts Available';
+                          {(formData.interviewQuestionsList ?? []).map((question, qIndex) => {
+                             const isMandatory = question?.snapshot?.mandatory === "true";
+                            const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li
                                 key={qIndex}
-                                className={`flex justify-between items-center p-3 border rounded-md ${isMandatory ? 'border-red-500' : 'border-gray-300'
+                                className={`flex justify-between items-center p-3 border rounded-md ${isMandatory ? "border-red-500" : "border-gray-300"
                                   }`}
                               >
                                 <span className="text-gray-900 font-medium">
                                   {qIndex + 1}. {questionText}
                                 </span>
                                 <button onClick={() => handleRemoveQuestion(question.questionId)}>
-                                  <span className="text-red-500 text-xl font-bold">×</span>
+                                  <span className="text-red-500 text-xl font-bold">&times;</span>
                                 </button>
                               </li>
                             );
@@ -927,7 +931,8 @@ function RoundFormTemplates() {
                         <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
                       )}
                     </div>
-                    {errors.questions && <p className="text-red-500 text-sm mt-1">{errors.questions}</p>}
+ 
+                    {/* Question Popup */}
                     {isInterviewQuestionPopup && (
                       <div
                         className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
@@ -946,21 +951,31 @@ function RoundFormTemplates() {
                               />
                             </button>
                           </div>
-                          <QuestionBank
-                            interviewQuestionsLists={formData.interviewQuestionsList}
-                            type="interviewerSection"
-                            fromScheduleLater={true}
-                            onAddQuestion={handleAddQuestionToRound}
-                            handleRemoveQuestion={handleRemoveQuestion}
-                            handleToggleMandatory={handleToggleMandatory}
-                          />
+                          {isInterviewQuestionPopup &&
+                            <QuestionBank
+                              interviewQuestionsLists={formData.interviewQuestionsList}
+                              type="interviewerSection"
+                              fromScheduleLater={true}
+                              onAddQuestion={handleAddQuestionToRound}
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
+                              removedQuestionIds={removedQuestionIds}
+                            />
+ 
+                          }
+ 
                         </div>
                       </div>
                     )}
                   </div>
+                  {errors.questions && (
+                    <p className="text-red-500 text-sm">{errors.questions}</p>
+                  )}
+ 
                 </div>
               </div>
-            )}
+
+            }
 
             <div>
               <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">
@@ -1022,6 +1037,7 @@ function RoundFormTemplates() {
           onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
           selectedInterviewers={formData.internalInterviewers}
+
         />
       )}
     </div>
