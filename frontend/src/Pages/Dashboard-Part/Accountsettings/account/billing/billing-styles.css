@@ -2,8 +2,8 @@
 
 .invoice-tab-wrapper {
   position: relative;
-  height: calc(100vh - 200px);
-  overflow: hidden;
+  height: calc(100vh - 00px);
+  
 }
 
 .invoice-tab-wrapper > div {

@@ -68,8 +68,8 @@ const InvoiceTab = () => {
                     endDate: invoice.endDate ? new Date(invoice.endDate) : null,
                     dueDate: invoice.dueDate ? new Date(invoice.dueDate) : null
                 },
-                status: invoice.status || 'pending',
-                type: invoice.type || 'subscription',
+                status: invoice.status || 'N/A',
+                type: invoice.type || 'N/A',
                 comments: invoice.comments || '',
                 lineItems: invoice.lineItems || [],
                 tenantId: invoice.tenantId
@@ -333,12 +333,18 @@ const InvoiceTab = () => {
                 );
             });
         }
+
+        // filteredData.sort((a, b) => {
+        //     const dateA = a.updatedAt ? new Date(a.updatedAt ) : new Date(0);
+        //     const dateB = b.updatedAt  ? new Date(b.updatedAt ) : new Date(0);
+        //     return dateB - dateA; // For descending order (newest first)
+        // });
         
         return filteredData;
     };
     
     const [currentPage, setCurrentPage] = useState(0);
-    const rowsPerPage = 10;
+    const rowsPerPage = 9;
     const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
     //const [activeArrow, setActiveArrow] = useState(null);
 
@@ -358,8 +364,11 @@ const InvoiceTab = () => {
 
     const startIndex = currentPage * rowsPerPage;
     const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-    const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
-    
+    const currentFilteredRows = FilteredData().slice(startIndex, endIndex).sort((a, b) => {
+        const dateA = a.updatedAt ? new Date(a.updatedAt ) : new Date(0);
+        const dateB = b.updatedAt  ? new Date(b.updatedAt ) : new Date(0);
+        return dateB - dateA; // For descending order (newest first)
+    })
     return (
         <div className="w-full bg-background min-h-screen">
             <div className="fixed top-16 left-0 right-0 bg-background">
@@ -396,7 +405,7 @@ const InvoiceTab = () => {
                 </main>
             </div>
             <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full">
-                    <div className="w-full ">
+                    <div className="w-full overflow-auto">
                         {loading ? (
                             <Loading />
                         ) : (
