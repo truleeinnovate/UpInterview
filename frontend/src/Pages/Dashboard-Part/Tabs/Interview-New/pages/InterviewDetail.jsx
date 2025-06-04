@@ -206,6 +206,7 @@ const InterviewDetail = () => {
     setIsModalOpen(false);
   };
 
+  console.log('interview?.status', interview?.status)
   const canAddRound = () => {
     return interview?.status === 'Draft';
   };
@@ -293,8 +294,8 @@ const InterviewDetail = () => {
 
             <Breadcrumb items={breadcrumbItems} />
 
-            <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
+              <div className="px-5 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
                     Interview Details <span> <StatusBadge status={interview?.status} size="md" /></span>
@@ -306,7 +307,7 @@ const InterviewDetail = () => {
 
               </div>
 
-              <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+              <div className="border-t border-gray-200 px-5 py-5 sm:px-6">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
                   <div className="sm:col-span-1">
                     <dt className="text-sm font-medium text-gray-500 flex items-center">
@@ -450,7 +451,7 @@ const InterviewDetail = () => {
                 </div>
 
                 {/* Interviewers summary */}
-                <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="mt-6 mb-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center mb-2">
                     <Users className="h-5 w-5 text-gray-500 mr-2" />
                     <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
@@ -470,7 +471,7 @@ const InterviewDetail = () => {
 
 
                 {/* Interview Rounds Table Header */}
-                <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <div className="border-gray-200 px-4 py-5 sm:px-6 mt-3">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
                       Interview Rounds
@@ -525,7 +526,7 @@ const InterviewDetail = () => {
 
 
 
-
+                      {console.log('canAddRound', canAddRound)}
                       {canAddRound() && (
                         <button
                           onClick={handleAddRound}
@@ -663,12 +664,12 @@ const InterviewDetail = () => {
             onClose={() => setSelectCandidateView(null)}
           />
         )} */}
-                  {selectPositionView === true && (
-        <PositionSlideDetails 
-          position={selectedPosition} 
-          onClose={() => setSelectPositionView(null)} 
-        />
-      )}
+        {selectPositionView === true && (
+          <PositionSlideDetails
+            position={selectedPosition}
+            onClose={() => setSelectPositionView(null)}
+          />
+        )}
       </div>
     </>
   );
