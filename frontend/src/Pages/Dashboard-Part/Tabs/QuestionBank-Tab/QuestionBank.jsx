@@ -109,7 +109,7 @@ interviewQuestionsLists,removedQuestionIds
             handleToggleMandatory={handleToggleMandatory}
               fromScheduleLater={fromScheduleLater}
               removedQuestionIds={removedQuestionIds}
-              // interviewQuestionsLists={interviewQuestionsLists}
+              interviewQuestionsLists={interviewQuestionsLists}
           />
         )}
       </div>

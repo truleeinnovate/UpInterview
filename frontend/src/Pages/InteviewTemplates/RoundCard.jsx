@@ -39,30 +39,22 @@ const RoundCard = ({
 
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
-  const [questionDetails, setQuestionDetails] = useState({});
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+
   const [expandedQuestions, setExpandedQuestions] = useState({});
   // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
-  // console.log("resolveInterviewerDetails", resolveInterviewerDetails);
-
-
-  // console.log("round", round);
+  
   
 
-  useEffect(() => {
-    setShowQuestions(false);
-    setShowInterviewers(false);
-    setExpandedQuestions({});
-    setExpandedSections({});
-  }, [round]);
+
 
 
 
   useEffect(() => {
-    setSectionQuestions({});
+   
     fetchQuestionsForAssessment(round?.assessmentId)
   }, [round.assessmentId])
 
@@ -179,10 +171,6 @@ const RoundCard = ({
   // Reset question details when round changes
 
 
-
-  useEffect(() => {
-    setQuestionDetails({});
-  }, [round.assessmentTemplate]);
 
   // Fetch questions when showing them
   // useEffect(() => {
@@ -329,7 +317,7 @@ const RoundCard = ({
 
             {showQuestions && (
               <div className="space-y-4">
-                {loadingQuestions ? (
+                {questionsLoading ? (
                   <div className="text-center py-4">
                     <span className="text-gray-600">Loading questions...</span>
                   </div>

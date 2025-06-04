@@ -95,7 +95,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
     onClose();
   };
 
-  const isInterviewerSelected = (item) => selectedInterviewers.some(interviewer => interviewer._id === item._id);
+  const isInterviewerSelected = (item) => selectedInterviewers?.some(interviewer => interviewer._id === item._id);
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
 

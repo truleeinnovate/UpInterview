@@ -2,15 +2,19 @@
 import { useCustomContext } from "../Context/Contextfetch";
 
 export const useInterviewerDetails = () => {
-  const { groups, teamsData } = useCustomContext();
+  const { groups, interviewers } = useCustomContext();
 
-  const resolveInterviewerDetails = (interviewers) => {
-    if (!interviewers || !Array.isArray(interviewers)) return [];
+  console.log("interviewers", interviewers);
 
-    // console.log("interviewers", interviewers);
+  const resolveInterviewerDetails = (interviewerIds) => {
+    if (!interviewerIds || !Array.isArray(interviewerIds)) return [];
+ 
+    console.log("interviewerIds", interviewerIds);
+    
+    
     
 
-    return interviewers?.map(interviewer => {
+    return interviewerIds?.map(interviewer => {
       // If interviewer is already a full object (from API response)
       if (interviewer && typeof interviewer === 'object' && interviewer?.name) {
         return {
@@ -31,13 +35,13 @@ export const useInterviewerDetails = () => {
       };
 
       // Check teamsData first (individual interviewers)
-      const teamMember = teamsData?.find(t => t?.contactId?._id === id);
+      const teamMember = interviewers?.data?.find(t => t?.contact?._id === id);
       if (teamMember) {
         return {
-          _id: teamMember.contactId._id,
-          name: teamMember.contactId.name || 'Unknown Interviewer',
-          email: teamMember.contactId.email || '',
-          type: 'individual'
+          _id: teamMember.contact._id,
+          name: teamMember.contact.lastName || 'Unknown Interviewer',
+          email: teamMember.contact.email || '',
+          type: teamMember.contact.type || ""
         };
       }
 
