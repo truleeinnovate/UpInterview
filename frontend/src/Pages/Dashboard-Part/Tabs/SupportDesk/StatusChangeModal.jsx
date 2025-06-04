@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
 import { useState, useCallback, useMemo } from 'react';
 import { IoClose } from "react-icons/io5";
-import { MdOutlineFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 import axios from 'axios';
 import { config } from '../../../../config';
+import { Minimize, Expand, X } from 'lucide-react';
 
 const statusOptions = ['New', 'Assigned', 'Inprogress', 'Resolved', "Close"];
 
@@ -109,9 +109,9 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
               title={isFullWidth ? "Collapse" : "Expand"}
             >
               {isFullWidth ? (
-                <MdOutlineFullscreenExit className="text-2xl" />
+                <Minimize className="w-5 h-5 text-gray-500" />
               ) : (
-                <MdOutlineFullscreen className="text-2xl" />
+                <Expand className="w-5 h-5 text-gray-500" />
               )}
             </button>
             <button 
@@ -119,7 +119,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
               className=" hover:text-custom-blue rounded-full p-2 transition-colors"
               aria-label="Close modal"
             >
-              <IoClose className="text-2xl" />
+              <X className="text-2xl" />
             </button>
           </div>
         </div>
