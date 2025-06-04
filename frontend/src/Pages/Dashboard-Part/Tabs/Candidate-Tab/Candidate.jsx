@@ -1,5 +1,5 @@
 // Candidate.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
@@ -11,7 +11,6 @@ import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateViewDetails/CandidateDetails';
 import { useMediaQuery } from 'react-responsive';
-// import Loading from '../../../../Components/Loading';
 import { Outlet } from 'react-router-dom';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -42,7 +41,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const { skills, qualification } = useCustomContext();
 
   const { candidateData, isLoading } = useCandidates();
-  console.log('isLoading', isLoading);
   
 
   const navigate = useNavigate();

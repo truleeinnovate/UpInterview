@@ -9,11 +9,13 @@ import AssessmentResultsTab from './AssessmentResultTab.jsx';
 import DetailsTab from './AssessmentDetailTab.jsx';
 import QuestionsTab from './AsseessmentQuestionsTab.jsx';
 import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
-import { useCustomContext } from '../../../../../Context/Contextfetch.js';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+
 import { config } from '../../../../../config.js';
 
 function AssessmentView() {
-  const { assessmentData } = useCustomContext();
+const { assessmentData, isLoading } = useAssessments();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);

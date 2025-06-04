@@ -6,14 +6,12 @@ import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import SingleRoundView from './SingleRoundView';
 import VerticalRoundsView from './VerticalRoundsView';
 import InterviewProgress from './InterviewProgress';
-
-import { useCustomContext } from '../../Context/Contextfetch';
+import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
 
 
 const TemplateDetail = () => {
-  const {
-    templates,
-  } = useCustomContext();
+    const { templatesData} = useInterviewTemplates();
+  
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
@@ -23,7 +21,7 @@ const TemplateDetail = () => {
   const [activeRound, setActiveRound] = useState(null);
 
   useEffect(() => {
-    const foundTemplate = templates.find(tem => tem._id === id)
+    const foundTemplate = templatesData.find(tem => tem._id === id)
     console.log("foundTemplate", foundTemplate);
     setIsLoading(true)
     if (foundTemplate && foundTemplate) {
@@ -44,7 +42,7 @@ const TemplateDetail = () => {
       // setEditedTemplate(null); // Reset rounds to empty array
     }
 
-  }, [id, templates]);
+  }, [id, templatesData]);
 
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';

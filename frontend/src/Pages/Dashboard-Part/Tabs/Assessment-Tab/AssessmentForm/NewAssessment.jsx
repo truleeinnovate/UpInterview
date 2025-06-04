@@ -14,7 +14,6 @@ import Cookies from "js-cookie";
 import { format } from "date-fns";
 import ConfirmationPopup from "../ConfirmationPopup.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
@@ -22,22 +21,22 @@ import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentT
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../../config.js";
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+import { usePositions } from '../../../../../apiHooks/usePositions';
+import LoadingButton from '../../../../../Components/LoadingButton';
 
-// import { useAddOrUpdateAssessment, useUpsertAssessmentQuestions } from '../../../../../Context/Contextfetch.js';
 
 
 const NewAssessment = () => {
+  const { assessmentData, addOrUpdateAssessment, upsertAssessmentQuestions, isMutationLoading } = useAssessments();
+  const { positionData } = usePositions();
+
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
-  // const { mutateAsync: saveAssessment } = useAddOrUpdateAssessment();
-  // const { mutateAsync: upsertQuestions } = useUpsertAssessmentQuestions();
-
-
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
-  const { positions, assessmentData, useAddOrUpdateAssessment, useUpsertAssessmentQuestions } = useCustomContext();
 
   const { id } = useParams();
 
@@ -119,7 +118,7 @@ const NewAssessment = () => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
-      const matchedPosition = positions.find((pos) => pos._id === assessment.Position);
+      const matchedPosition = positionData.find((pos) => pos._id === assessment.Position);
       console.log("matchedPosition", matchedPosition);
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
@@ -161,7 +160,7 @@ const NewAssessment = () => {
 
       setIsPassScoreSubmitted(true); // Enable "Edit Pass Score" button when editing
     }
-  }, [isEditing, assessment, positions]);
+  }, [isEditing, assessment, positionData]);
 
   // Load assessment questions and section-specific scores
   useEffect(() => {
@@ -313,6 +312,93 @@ const NewAssessment = () => {
     return { assessmentData };
   };
 
+  // const handleSave = async (event, currentTab, actionType) => {
+  //   event.preventDefault();
+  //   console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
+
+  //   const { errors, assessmentData } = validateAndPrepareData(currentTab);
+
+  //   if (errors) {
+  //     console.warn("❗ Validation failed:", errors);
+  //     setErrors(errors);
+  //     return;
+  //   }
+
+  //   console.log("✅ Validation passed. Prepared assessment data:", assessmentData);
+
+  //   try {
+  //     // let response;
+
+  //     const response = await useAddOrUpdateAssessment({
+  //       isEditing,
+  //       id: isEditing ? id : tabsSubmitStatus.responseId,
+  //       assessmentData,
+  //       tabsSubmitStatus
+  //     });
+
+
+  //     setTabsSubmitStatus((prev) => ({
+  //       ...prev,
+  //       [currentTab]: true,
+  //       responseId: isEditing ? id : response?._id || prev.responseId,
+  //       responseData: response
+  //     }));
+
+  //     if (currentTab === "Questions") {
+  //       const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
+
+  //       if (!assessmentId) {
+  //         console.error("❌ Missing assessmentId before saving questions.");
+  //         return;
+  //       }
+
+  //       const assessmentQuestionsData = prepareAssessmentQuestionsData(
+  //         addedSections,
+  //         assessmentId
+  //       );
+
+  //       console.log("📦 Prepared questions data:", assessmentQuestionsData);
+
+  //       if (!assessmentQuestionsData.sections?.length) {
+  //         console.error("❌ Sections array is empty. Cannot proceed.");
+  //         return;
+  //       }
+
+  //       const questionsResponse = await useUpsertAssessmentQuestions(
+  //         assessmentQuestionsData
+  //       );
+
+  //       console.log("✅ Questions saved successfully:", questionsResponse.message);
+  //     }
+
+
+  //     // 🧠 Action after save
+  //     if (actionType === "close") {
+  //       console.log("🛑 Closing form after save");
+  //       navigate("/assessments");
+  //     } else if (actionType === "next") {
+  //       const tabOrder = ["Basicdetails", "Details", "Questions", "Candidates"];
+  //       const currentIndex = tabOrder.indexOf(currentTab);
+  //       const nextTab = tabOrder[currentIndex + 1];
+
+  //       if (nextTab) {
+  //         console.log(`➡️ Navigating to next tab: ${nextTab}`);
+  //         setActiveTab(nextTab);
+  //       } else {
+  //         console.log("🚫 No next tab found");
+  //       }
+  //     }
+
+  //   } catch (error) {
+  //     console.error("❌ Error saving data:", {
+  //       message: error.message,
+  //       response: error.response?.data,
+  //       stack: error.stack,
+  //     });
+  //   }
+  // };
+
+
   const handleSave = async (event, currentTab, actionType) => {
     event.preventDefault();
     console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
@@ -320,79 +406,33 @@ const NewAssessment = () => {
     const { errors, assessmentData } = validateAndPrepareData(currentTab);
 
     if (errors) {
-      console.warn("❗ Validation failed:", errors);
+      console.warn('❗ Validation failed:', errors);
       setErrors(errors);
       return;
     }
 
-    console.log("✅ Validation passed. Prepared assessment data:", assessmentData);
+    console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
 
     try {
-      // let response;
-
-      const response = await useAddOrUpdateAssessment.mutateAsync({
+      const response = await addOrUpdateAssessment({
         isEditing,
         id: isEditing ? id : tabsSubmitStatus.responseId,
         assessmentData,
-        tabsSubmitStatus
+        tabsSubmitStatus,
       });
-
 
       setTabsSubmitStatus((prev) => ({
         ...prev,
         [currentTab]: true,
         responseId: isEditing ? id : response?._id || prev.responseId,
-        responseData: response
+        responseData: response,
       }));
 
-
-      // if (isEditing) {
-      //   console.log("✏️ Editing mode. Sending PATCH request...");
-      //   response = await axios.patch(
-      //     `${config.REACT_APP_API_URL}/assessments/update/${id}`,
-      //     assessmentData
-      //   );
-      //   console.log("✅ Assessment updated successfully:", response.data);
-
-      //   setTabsSubmitStatus((prev) => ({
-      //     ...prev,
-      //     [currentTab]: true,
-      //   }));
-      // } else {
-      //   if (!tabsSubmitStatus["Basicdetails"]) {
-      //     console.log("🆕 Creating new assessment. Sending POST request...");
-      //     response = await axios.post(
-      //       `${config.REACT_APP_API_URL}/assessments/new-assessment`,
-      //       assessmentData
-      //     );
-      //     console.log("✅ New assessment created:", response.data);
-
-      //     setTabsSubmitStatus((prev) => ({
-      //       ...prev,
-      //       [currentTab]: true,
-      //       responseId: response.data._id,
-      //       responseData: response.data,
-      //     }));
-      //   } else {
-      //     console.log("♻️ Updating existing assessment (after Basicdetails). Sending PATCH...");
-      //     response = await axios.patch(
-      //       `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
-      //       assessmentData
-      //     );
-      //     console.log("✅ Assessment updated successfully:", response.data);
-
-      //     setTabsSubmitStatus((prev) => ({
-      //       ...prev,
-      //       [currentTab]: true,
-      //     }));
-      //   }
-      // }
-
-      if (currentTab === "Questions") {
+      if (currentTab === 'Questions') {
         const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
 
         if (!assessmentId) {
-          console.error("❌ Missing assessmentId before saving questions.");
+          console.error('❌ Missing assessmentId before saving questions.');
           return;
         }
 
@@ -401,27 +441,26 @@ const NewAssessment = () => {
           assessmentId
         );
 
-        console.log("📦 Prepared questions data:", assessmentQuestionsData);
+        console.log('📦 Prepared questions data:', assessmentQuestionsData);
 
         if (!assessmentQuestionsData.sections?.length) {
-          console.error("❌ Sections array is empty. Cannot proceed.");
+          console.error('❌ Sections array is empty. Cannot proceed.');
           return;
         }
 
-        const questionsResponse = await useUpsertAssessmentQuestions.mutateAsync(
+        const questionsResponse = await upsertAssessmentQuestions(
           assessmentQuestionsData
         );
 
-        console.log("✅ Questions saved successfully:", questionsResponse.message);
+        console.log('✅ Questions saved successfully:', questionsResponse.message);
       }
 
-
       // 🧠 Action after save
-      if (actionType === "close") {
-        console.log("🛑 Closing form after save");
-        navigate("/assessments");
-      } else if (actionType === "next") {
-        const tabOrder = ["Basicdetails", "Details", "Questions", "Candidates"];
+      if (actionType === 'close') {
+        console.log('🛑 Closing form after save');
+        navigate('/assessments');
+      } else if (actionType === 'next') {
+        const tabOrder = ['Basicdetails', 'Details', 'Questions', 'Candidates'];
         const currentIndex = tabOrder.indexOf(currentTab);
         const nextTab = tabOrder[currentIndex + 1];
 
@@ -429,12 +468,11 @@ const NewAssessment = () => {
           console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          console.log("🚫 No next tab found");
+          console.log('🚫 No next tab found');
         }
       }
-
     } catch (error) {
-      console.error("❌ Error saving data:", {
+      console.error('❌ Error saving data:', {
         message: error.message,
         response: error.response?.data,
         stack: error.stack,
@@ -773,7 +811,7 @@ const NewAssessment = () => {
 
   const handleAddNewPositionClick = () => {
     if (value.trim() !== "") {
-      const newPosition = { _id: positions.length + 1, title: value };
+      const newPosition = { _id: positionData.length + 1, title: value };
       // setPositions([newPosition, ...positions]);
       setSelectedPosition(value);
       setValue("");
@@ -1063,20 +1101,22 @@ const NewAssessment = () => {
 
               {isPassScoreSubmitted ? (
                 <>
-                  <button
-                    type="button"
+
+                  <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "close")}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    isLoading={isMutationLoading}
+                    loadingText={id ? "Updating..." : "Saving..."}
                   >
                     {isEditing ? "Update" : "Save"}
-                  </button>
-                  <button
-                    type="button"
+                  </LoadingButton>
+
+                  <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "next")}
-                    className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+                    isLoading={isMutationLoading}
+                    loadingText={id ? "Updating..." : "Saving..."}
                   >
                     {isEditing ? "Update & Next" : "Save & Create Assessment"}
-                  </button>
+                  </LoadingButton>
                 </>
               ) : (
                 <button
@@ -1100,22 +1140,23 @@ const NewAssessment = () => {
             </>
           ) : (
             <>
-              <button
-                type="button"
+
+              <LoadingButton
                 onClick={(e) => handleSave(e, currentTab, "close")}
-                className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                isLoading={isMutationLoading}
+                loadingText={id ? "Updating..." : "Saving..."}
               >
                 {isEditing ? "Update" : "Save"}
-              </button>
+              </LoadingButton>
 
               {getNextTab() && (
-                <button
-                  type="button"
+                <LoadingButton
                   onClick={(e) => handleSave(e, currentTab, "next")}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                  isLoading={isMutationLoading}
+                  loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {isEditing ? "Update & Next" : "Save & Next"}
-                </button>
+                </LoadingButton>
               )}
             </>
           )}
@@ -1187,7 +1228,7 @@ const NewAssessment = () => {
                           setShowDropdownDifficulty={setShowDropdownDifficulty}
                           setShowDropdownPosition={setShowDropdownPosition}
                           setShowDropdownDuration={setShowDropdownDuration}
-                          positions={positions}
+                          positions={positionData}
                           errors={errors}
                           isEditing={isEditing}
                           setActiveTab={setActiveTab}
