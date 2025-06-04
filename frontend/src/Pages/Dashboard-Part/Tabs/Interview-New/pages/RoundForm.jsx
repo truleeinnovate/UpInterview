@@ -9,8 +9,8 @@ import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx
 // import OutsourceOption from "../../Interviews/OutsourceOption.jsx";
 import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
-import SuggesstedQuestions from "../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx";
+// import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
+// import SuggesstedQuestions from "../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx";
 import Cookies from "js-cookie";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
@@ -18,10 +18,11 @@ import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from '../../../../../config';
 import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
-import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
+import Loading from '../../../../../Components/Loading.js';
+// import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 
+const RoundFormInterviews = () => {
 
-const RoundForm = () => {
   const {
     assessmentData,
     interviewData,
@@ -32,15 +33,13 @@ const RoundForm = () => {
     fetchQuestionsForAssessment,
     setSectionQuestions,
   } = useCustomContext();
+
   const { interviewId, roundId } = useParams();
-  console.log("interviewId", interviewId);
-  console.log("roundId", roundId);
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
   const [errors, setErrors] = useState({});
-  console.log("errors", errors);
 
   const interview = interviewData?.find(interview => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
@@ -48,15 +47,10 @@ const RoundForm = () => {
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [rounds, setRounds] = useState(null);
-  console.log("rounds", rounds);
 
 
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
-  console.log("isInternalInterviews", isInternalInterviews);
-
-
-
   const [template, setTemplate] = useState(null);
 
   useEffect(() => {
@@ -86,14 +80,9 @@ const RoundForm = () => {
   const [startTime, setStartTime] = useState(""); // Final Start Time
   const [endTime, setEndTime] = useState(""); // Calculated End Time
   const [combinedDateTime, setCombinedDateTime] = useState("")
-  // const [sectionQuestions, setSectionQuestions] = useState({});
-  console.log("sectionQuestions", sectionQuestions);
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const { resolveInterviewerDetails } = useInterviewerDetails();
-
-  console.log("combinedDateTime", combinedDateTime)
   // Function to update start and end time
   const formatDateTime = (date, showDate = true) => {
     if (!date) return "";
@@ -150,52 +139,15 @@ const RoundForm = () => {
     }
   };
 
-
-  // Update times when mode, date, or duration changes
   useEffect(() => {
     updateTimes(duration);
   }, [interviewType, scheduledDate, duration]);
 
-
-  // const handleAddQuestionToRound = async (question) => {
-  //   console.log("question:", question);
-
-  //   if (question && question.snapshot) {
-  //     console.log("question _id:", question._id);
-
-  //     setInterviewQuestionsList((prevList) => [...prevList, question]);
-
-  //     // Ensure _id is added only once (to prevent duplicates)
-  //     // setSelectedQuestionIds((prevIds) =>
-  //     //   prevIds.includes(question._id) ? prevIds : [...prevIds, question._id]
-  //     // );
-  //   }
-  // }
-  // const handleAddQuestionToRound = (question) => {
-  //   console.log("question:", question);
-
-  //   if (question && question.snapshot) {
-  //     console.log("question _id:", question.questionId);
-
-  //     setInterviewQuestionsList((prevList) => {
-  //       // Check if the questionId already exists in the list
-  //       if (prevList.some((q) => q.questionId === question.questionId)) {
-  //         return prevList; // Return previous list if duplicate
-  //       }
-  //       return [...prevList, question]; // Add new question
-  //     });
-  //   }
-  // };
-
   const handleAddQuestionToRound = (question) => {
-    // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
-
-      // console.log("question _id:", question.questionId);
       setInterviewQuestionsList((prevList) => {
-        // Check if the questionId already exists in the list
         if (prevList.some((q) => q.questionId === question.questionId)) {
-          return prevList; // Return previous list if duplicate
+          return prevList;
         }
         return [...prevList, 
             {
@@ -218,15 +170,6 @@ const RoundForm = () => {
   }
 
   const handleToggleMandatory = (questionId, mandatory) => {
-    // setInterviewQuestionsList(prev => ({
-    //   ...prev,
-    //   interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
-    //     question.questionId === questionId
-    //       ? { ...question, mandatory: mandatory ? "true" : "false" }
-    //       : question
-    //   )
-    // }));
-
     setInterviewQuestionsList(prev =>
       prev.map((question) =>
         question.questionId === questionId
@@ -239,37 +182,21 @@ const RoundForm = () => {
           : question
       )
     );
-
-
   };
 
 
   const handleRemoveQuestion = (questionId,) => {
-
-    // console.log("questionId", questionId);
-    // setInterviewQuestionsList(prev => ({
-    //   ...prev,
-    //   interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
-    // }));
     setInterviewQuestionsList(prev =>
       prev.filter((question) => question.questionId !== questionId)
     );
-
   };
-
-
-  // const handleRemoveQuestion = (index) => {
-  //   setInterviewQuestionsList((prevList) =>
-  //     prevList.filter((_, qIndex) => qIndex !== index)
-  //   );
-  // };
 
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
 
     if (selectedTitle === "Other") {
       setRoundTitle("Other");
-      setCustomRoundTitle(""); // Reset custom input field when "Other" is selected
+      setCustomRoundTitle("");
       setInstructions("")
       setInstructions("")
       setInterviewMode('');
@@ -283,7 +210,7 @@ const RoundForm = () => {
       setCombinedDateTime("")
     } else {
       setRoundTitle(selectedTitle);
-      setCustomRoundTitle(""); // Reset custom field when switching back to dropdown options
+      setCustomRoundTitle("");
       setInstructions("")
       setInterviewMode('');
       setStatus('Pending')
@@ -302,7 +229,7 @@ const RoundForm = () => {
       setCustomRoundTitle("");
       setInstructions("")
     } else if (selectedTitle === "Assessment") {
-      setInterviewMode("Virtual"); // Set interview type to Virtual and disable editing
+      setInterviewMode("Virtual");
       setInterviewQuestionsList([]);
       setInstructions("")
     
@@ -315,7 +242,7 @@ const RoundForm = () => {
       setAssessmentTemplate({ assessmentId: '', assessmentName: '' });
       setCombinedDateTime("")
     } else {
-      setInterviewMode(""); // Allow user to select type for other rounds
+      setInterviewMode("");
       setInstructions("")
       setInstructions("")
       setInterviewMode('');
@@ -329,16 +256,17 @@ const RoundForm = () => {
       setCombinedDateTime("")
     }
   };
-  const handleSuggestedTabClick = (questionType) => {
-    setActiveTab("SuggesstedQuestions");
-  };
 
-  const handleFavoriteTabClick = (questionType) => {
-    setActiveTab("MyQuestionsList");
-  };
+  // const handleSuggestedTabClick = (questionType) => {
+  //   setActiveTab("SuggesstedQuestions");
+  // };
+
+  // const handleFavoriteTabClick = (questionType) => {
+  //   setActiveTab("MyQuestionsList");
+  // };
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
 
 
 
@@ -531,7 +459,7 @@ const RoundForm = () => {
     console.log("handleSubmit() called");
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    // setError(null);
   
     try {
       console.log("Preparing round data for validation");
@@ -641,11 +569,6 @@ const RoundForm = () => {
       navigate(`/interviews/${interviewId}`);
     } catch (err) {
       console.error("Error submitting the form:", err);
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "An error occurred while submitting the form"
-      );
     } finally {
       console.log("handleSubmit() finished");
       setIsLoading(false);
@@ -653,21 +576,16 @@ const RoundForm = () => {
   };
   
   useEffect(() => {
-    // if (isInstantInterview) {
-    // Set interview time to 15 minutes from now
     const date = new Date();
     date.setMinutes(date.getMinutes() + 15);
     setScheduledDate(date.toISOString().slice(0, 16));
-    setDuration(30); // Set default duration for instant interviews
-    // }
+    setDuration(30);
   }, []);
 
   if (!rounds) {
-    return <div>Loading...</div>;
+    return <div><Loading /></div>;
   }
 
-
-  // Create breadcrumb items with status
   const breadcrumbItems = [
     {
       label: 'Interviews',
@@ -1568,4 +1486,4 @@ const RoundForm = () => {
   );
 }
 
-export default RoundForm;
+export default RoundFormInterviews;
