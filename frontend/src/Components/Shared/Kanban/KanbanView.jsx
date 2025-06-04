@@ -18,9 +18,61 @@ const KanbanView = ({
 }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 p-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-48 w-full bg-gray-200 animate-pulse rounded-xl"></div>
+      <div className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${
+        isMenuOpen ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]' : 'w-full'
+      }`}>
+        {[...Array(columns.length > 0 ? columns.length : 1)].map((_, colIndex) => (
+          <div key={colIndex} className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 w-1/4 bg-gray-200 animate-pulse rounded"></div>
+              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+              {[...Array(4)].map((_, cardIndex) => (
+                <motion.div
+                  key={cardIndex}
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center w-3/4">
+                      <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>
+                      <div className="ml-3 space-y-2 w-full">
+                        <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                        <div className="h-3 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="h-3 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-3 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="h-3 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-3 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                    <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex justify-between">
+                      <div className="h-3 w-1/3 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-3 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     );
