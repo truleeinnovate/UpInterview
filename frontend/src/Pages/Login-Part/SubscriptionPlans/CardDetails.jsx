@@ -74,7 +74,7 @@ const CardDetails = () => {
         const fetchUserProfile = async () => {
             try {
                 if (ownerId) {
-                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/owner/${ownerId}`);
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/uniqe-contacts/owner/${ownerId}`);
                     
                     if (response.data && response.data.length > 0) {
                         const contactData = response.data[0];
