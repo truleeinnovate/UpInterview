@@ -1,17 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
-import Tooltip from "@mui/material/Tooltip";
 import { motion } from "framer-motion";
-import { Search, Plus, Eye, Pencil, Share2 } from "lucide-react";
+import { Eye, Pencil, Share2 } from "lucide-react";
 import ShareAssessment from "./ShareAssessment.jsx";
-import { Link, useNavigate } from "react-router-dom";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Loading from "../../../../Components/Loading.js";
-import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
@@ -20,9 +16,11 @@ import AssessmentKanban from "./AssessmentKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { config } from "../../../../config.js";
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
 
 const Assessment = () => {
-  const { assessmentData, fetchAssessmentData, loading, skills, qualification } = useCustomContext();
+const { assessmentData, isLoading } = useAssessments();
+  
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
   const [viewMode, setViewMode] = useState("table");
@@ -307,7 +305,7 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
                   data={currentFilteredRows}
                   columns={tableColumns}
                   actions={tableActions}
-                  loading={loading}
+                  loading={isLoading}
                   emptyState="No assessments found."
                   className="table-fixed w-full"
                 />
@@ -316,6 +314,7 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
               <>
                 <AssessmentKanban
                   assessments={currentFilteredRows}
+                  loading={isLoading}
                   onView={handleView}
                   onEdit={handleEdit}
                   onShare={handleShareClick}

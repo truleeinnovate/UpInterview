@@ -3,7 +3,7 @@ const {
   createPosition,
   updatePosition,
   saveInterviewRoundPosition,
-  getPositionById,
+  // getPositionById,
   // updateRounds
 } = require('../controllers/positionController.js');
 const loggingService = require('../middleware/loggingService.js');
@@ -17,6 +17,6 @@ router.post('/add-rounds',loggingService.internalLoggingMiddleware,loggingServic
 
 // router.get("/:id", updateRounds);
 
-router.get("/details/:id", getPositionById);
+// router.get("/details/:id", getPositionById);
 
 module.exports = router;

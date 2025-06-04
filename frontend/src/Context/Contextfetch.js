@@ -191,97 +191,6 @@ const CustomProvider = ({ children }) => {
 
   const queryClient = useQueryClient();
 
-  // candidate
-  // const sharingPermissionscandidate = useMemo(
-  //   () => sharingPermissionscontext.candidate || {},
-  //   [sharingPermissionscontext]
-  // );
-
-  // const { data: candidateData = [], isLoading: candidatesLoading } = useQuery({
-  //   queryKey: ['candidates', sharingPermissionscandidate],
-  //   queryFn: async () => {
-  //     const filteredCandidates = await fetchFilterData('candidate', sharingPermissionscandidate);
-
-  //     return filteredCandidates
-  //       .map((candidate) => {
-  //         if (candidate.ImageData?.filename) {
-  //           return {
-  //             ...candidate,
-  //             imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`,
-  //           };
-  //         }
-  //         return candidate;
-  //       })
-  //       .reverse(); // show most recent first
-  //   },
-  //   enabled: !!sharingPermissionscandidate, // only run when permissions are available
-  // });
-
-  // // 3. Create a mutation for adding/updating candidate
-  // const addOrUpdateCandidate = useMutation({
-  //   mutationFn: async ({ id, data, file }) => {
-  //     const url = id ? `${config.REACT_APP_API_URL}/candidate/${id}` : `${config.REACT_APP_API_URL}/candidate`;
-
-  //     const method = id ? 'patch' : 'post';
-  //     const response = await axios[method](url, data);
-
-  //     const candidateId = response.data.data._id;
-
-  //     if (file) {
-  //       const imageData = new FormData();
-  //       imageData.append('image', file);
-  //       imageData.append('type', 'candidate');
-  //       imageData.append('id', candidateId);
-
-  //       await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-  //         headers: { 'Content-Type': 'multipart/form-data' },
-  //       });
-  //     }
-
-  //     return response.data;
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries(['candidates']); // ✅ Refreshes the list
-  //   },
-  // });
-
-  // position fetch
-  const sharingPermissionsPosition = useMemo(
-    () => sharingPermissionscontext.position || {},
-    [sharingPermissionscontext]
-  );
-
-  // 📦 Positions Query
-  const {
-    data: positions = [],
-    isLoading: isPositionsLoading,
-    // refetch: refetchPositionData
-  } = useQuery({
-    queryKey: ['positions', sharingPermissionsPosition],
-    queryFn: async () => {
-      const filteredPositions = await fetchFilterData('position', sharingPermissionsPosition);
-      return filteredPositions.reverse(); // Latest first
-    },
-    enabled: !!sharingPermissionsPosition,
-  });
-
-
-  // Add position mutation
-  const addOrUpdatePosition = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const url = id
-        ? `${config.REACT_APP_API_URL}/position/${id}`
-        : `${config.REACT_APP_API_URL}/position`;
-
-      const method = id ? 'patch' : 'post';
-      // return await axios[method](url, data);
-      const response = await axios[method](url, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['positions']);
-    }
-  });
 
   // Mockinterview
   const sharingPermissionsMock = useMemo(
@@ -510,69 +419,69 @@ const CustomProvider = ({ children }) => {
   // notifications
   const [notificationsData] = useState([]);
 
-  const assessmentPermissions = useMemo(
-    () => sharingPermissionscontext.assessment || {},
-    [sharingPermissionscontext]
-  );
+  // const assessmentPermissions = useMemo(
+  //   () => sharingPermissionscontext.assessment || {},
+  //   [sharingPermissionscontext]
+  // );
 
-  const { data: assessmentData = [], isLoading: assessmentDataLoading } =
-    useQuery({
-      queryKey: ['assessments', assessmentPermissions],
-      queryFn: async () => {
-        const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
-        return filteredAssessments.reverse(); // recent first
-      },
-      enabled: !!assessmentPermissions,
-    });
+  // const { data: assessmentData = [], isLoading: assessmentDataLoading } =
+  //   useQuery({
+  //     queryKey: ['assessments', assessmentPermissions],
+  //     queryFn: async () => {
+  //       const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
+  //       return filteredAssessments.reverse(); // recent first
+  //     },
+  //     enabled: !!assessmentPermissions,
+  //   });
 
-  const useAddOrUpdateAssessment = useMutation({
-    mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
-      let response;
+  // const useAddOrUpdateAssessment = useMutation({
+  //   mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
+  //     let response;
 
-      if (isEditing) {
-        // Update existing assessment
-        response = await axios.patch(
-          `${config.REACT_APP_API_URL}/assessments/update/${id}`,
-          assessmentData
-        );
-      } else {
-        if (!tabsSubmitStatus?.["Basicdetails"]) {
-          // Create new assessment
-          response = await axios.post(
-            `${config.REACT_APP_API_URL}/assessments/new-assessment`,
-            assessmentData
-          );
-        } else {
-          // Update after Basicdetails
-          response = await axios.patch(
-            `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
-            assessmentData
-          );
-        }
-      }
+  //     if (isEditing) {
+  //       // Update existing assessment
+  //       response = await axios.patch(
+  //         `${config.REACT_APP_API_URL}/assessments/update/${id}`,
+  //         assessmentData
+  //       );
+  //     } else {
+  //       if (!tabsSubmitStatus?.["Basicdetails"]) {
+  //         // Create new assessment
+  //         response = await axios.post(
+  //           `${config.REACT_APP_API_URL}/assessments/new-assessment`,
+  //           assessmentData
+  //         );
+  //       } else {
+  //         // Update after Basicdetails
+  //         response = await axios.patch(
+  //           `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+  //           assessmentData
+  //         );
+  //       }
+  //     }
 
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['assessments']); // Refresh list
-    },
-    onError: (error) => {
-      console.error('Assessment save error:', error.message);
-      // You might want to show a toast notification here
-    }
-  });
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries(['assessments']); // Refresh list
+  //   },
+  //   onError: (error) => {
+  //     console.error('Assessment save error:', error.message);
+  //     // You might want to show a toast notification here
+  //   }
+  // });
 
 
 
-  const useUpsertAssessmentQuestions = useMutation({
-    mutationFn: async (questionsData) => {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
-        questionsData
-      );
-      return response.data;
-    }
-  });
+  // const useUpsertAssessmentQuestions = useMutation({
+  //   mutationFn: async (questionsData) => {
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
+  //       questionsData
+  //     );
+  //     return response.data;
+  //   }
+  // });
 
   // Fetch groups
   const [groups, setGroups] = useState([]);
@@ -1155,10 +1064,6 @@ const CustomProvider = ({ children }) => {
         // candidatesLoading,
         // addOrUpdateCandidate,
 
-        // position
-        positions,
-        isPositionsLoading,
-        addOrUpdatePosition,
 
         // mockinterview
         mockinterviewData,
@@ -1173,10 +1078,6 @@ const CustomProvider = ({ children }) => {
         Outsourceinterviewers,
         fetchoutsourceInterviewers,
 
-        // assessment
-        assessmentData,
-        useAddOrUpdateAssessment,
-        useUpsertAssessmentQuestions,
 
 
         // master data

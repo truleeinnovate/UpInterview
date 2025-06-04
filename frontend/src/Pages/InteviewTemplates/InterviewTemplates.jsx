@@ -1,19 +1,28 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {Eye, Pencil } from 'lucide-react';
+import { Eye, Pencil } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import KanbanView from './KanbanView';
-import Loading from '../../Components/Loading';
-import { useCustomContext } from '../../Context/Contextfetch';
 import { FilterPopup } from '../../Components/Shared/FilterPopup/FilterPopup.jsx';
 import Header from '../../Components/Shared/Header/Header.jsx';
 import Toolbar from '../../Components/Shared/Toolbar/Toolbar.jsx';
 import TableView from '../../Components/Shared/Table/TableView.jsx';
 import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
+import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates.js';
+import { useMediaQuery } from 'react-responsive';
+
 
 const InterviewTemplates = () => {
-  const { templates, templatesLoading } = useCustomContext();
+  const { templatesData, isLoading } = useInterviewTemplates();
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+    useEffect(() => {
+      if (isTablet) {
+        setView('kanban');
+      } else {
+        setView('table');
+      }
+    }, [isTablet]);
   const navigate = useNavigate();
   const [view, setView] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,14 +60,14 @@ const InterviewTemplates = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (templates?.length !== 0) {
+    if (templatesData?.length !== 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
 
   const filteredTemplates = useMemo(() => {
-    if (!templates || !Array.isArray(templates)) return [];
-    return templates.filter((template) => {
+    if (!templatesData || !Array.isArray(templatesData)) return [];
+    return templatesData.filter((template) => {
       const matchesSearchQuery = template?.templateName
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -69,7 +78,7 @@ const InterviewTemplates = () => {
         );
       return matchesSearchQuery && matchesStatus;
     });
-  }, [templates, searchQuery, selectedFilters]);
+  }, [templatesData, searchQuery, selectedFilters]);
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
@@ -129,13 +138,12 @@ const InterviewTemplates = () => {
       header: 'Status',
       render: (value) => (
         <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-            value === 'active'
+          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${value === 'active'
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
               : value === 'inactive'
-              ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-              : 'bg-slate-50 text-slate-700 border border-slate-200/60'
-          }`}
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                : 'bg-slate-50 text-slate-700 border border-slate-200/60'
+            }`}
         >
           {value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Active'}
         </span>
@@ -185,7 +193,7 @@ const InterviewTemplates = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={templates?.length}
+              dataLength={templatesData?.length}
               searchPlaceholder="Search interview templates..."
               filterIconRef={filterIconRef}
             />
@@ -194,61 +202,64 @@ const InterviewTemplates = () => {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-            <motion.div className="bg-white">
-              {view === 'kanban' ? (
-                <KanbanView templates={paginatedTemplates} />
-              ) : (
-                <TableView
-                  data={paginatedTemplates}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={templatesLoading}
-                  emptyState="No templates found."
-                  className="table-fixed w-full"
-                />
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearAll}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsStatusOpen(!isStatusOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Status</span>
-                      {isStatusOpen ? (
-                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                      ) : (
-                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isStatusOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {['Archived', 'Draft', 'Active'].map((status) => (
-                          <label
-                            key={status}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedStatus.includes(status)}
-                              onChange={() => handleStatusToggle(status)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                            />
-                            <span className="text-sm">{status}</span>
-                          </label>
-                        ))}
-                      </div>
+          <motion.div className="bg-white">
+            {view === 'kanban' ? (
+              <KanbanView templates={paginatedTemplates}
+              loading={isLoading}
+
+               />
+            ) : (
+              <TableView
+                data={paginatedTemplates}
+                columns={tableColumns}
+                actions={tableActions}
+                loading={isLoading}
+                emptyState="No templates found."
+                className="table-fixed w-full"
+              />
+            )}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearAll}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Status</span>
+                    {isStatusOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
                     )}
                   </div>
+                  {isStatusOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {['Archived', 'Draft', 'Active'].map((status) => (
+                        <label
+                          key={status}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStatus.includes(status)}
+                            onChange={() => handleStatusToggle(status)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </FilterPopup>
-            </motion.div>
+              </div>
+            </FilterPopup>
+          </motion.div>
         </div>
       </main>
       <Outlet />

@@ -36,7 +36,7 @@ function AssessmentsTab({ assessment }) {
       return response.data;
     } catch (error) {
       console.error('Error fetching scheduled assessments:', error);
-      toast.error('Failed to fetch scheduled assessments');
+      // toast.error('Failed to fetch scheduled assessments');
       return [];
     } finally {
       setLoading(false);
