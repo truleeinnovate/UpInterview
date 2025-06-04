@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { config } from '../config';
 const PermissionsContext = createContext();
 
 export const PermissionsProvider = ({ children }) => {
@@ -22,17 +23,17 @@ export const PermissionsProvider = ({ children }) => {
 
       let profileResponse, sharesetting;
       try {
-        const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${ownerId}`);
-        if (matchedUser.data && matchedUser.data.Name) {
-          Cookies.set("userName", matchedUser.data.Name);
-        }
-        if (matchedUser.data && matchedUser.data.tenantId) {
-          setOrganization(true);
-          Cookies.set("organization", "true");
-        } else {
-          setOrganization(false);
-          Cookies.set("organization", "false");
-        }
+        const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${ownerId}`);
+        // if (matchedUser.data && matchedUser.data.Name) {
+        //   Cookies.set("userName", matchedUser.data.Name);
+        // }
+        // if (matchedUser.data && matchedUser.data.tenantId) {
+        //   setOrganization(true);
+        //   Cookies.set("organization", "true");
+        // } else {
+        //   setOrganization(false);
+        //   Cookies.set("organization", "false");
+        // }
         if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
           setFreelancer(true);
         } else {
@@ -40,14 +41,14 @@ export const PermissionsProvider = ({ children }) => {
         }
         if (matchedUser.data) {
           if (!organization) {
-            profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profiles/individualProfile`);
+            profileResponse = await axios.get(`${config.REACT_APP_API_URL}/profiles/individualProfile`);
 
 
-            const sharingResponse = await axios.get(`${process.env.REACT_APP_API_URL}/sharingSettings/individual`);
+            const sharingResponse = await axios.get(`${config.REACT_APP_API_URL}/sharingSettings/individual`);
             sharesetting = sharingResponse.data;
           } else {
-            profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/${matchedUser.data.ProfileId}`);
-            const sharingResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/sharing-settings`);
+            profileResponse = await axios.get(`${config.REACT_APP_API_URL}/api/profiles/${matchedUser.data.ProfileId}`);
+            const sharingResponse = await axios.get(`${config.REACT_APP_API_URL}/api/sharing-settings`);
             sharesetting = sharingResponse.data.filter(profile => profile.organizationId === tenantId);
           }
 

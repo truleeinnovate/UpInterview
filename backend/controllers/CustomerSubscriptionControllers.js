@@ -15,7 +15,6 @@ const createSubscriptionControllers = async (req, res) => {
     }
 
     const { subscriptionPlanId } = planDetails;
-    console.log("total amount", totalAmount);
 
     const numericTotalAmount = Number(totalAmount);
     if (isNaN(numericTotalAmount)) {
@@ -41,7 +40,6 @@ const createSubscriptionControllers = async (req, res) => {
         });
     
         await wallet.save(); // Save the new wallet to the database
-        console.log("Wallet created:", wallet);
     } else {
         console.log("Wallet already exists:", wallet);
     }
@@ -92,13 +90,6 @@ const createSubscriptionControllers = async (req, res) => {
         await existingInvoice.save();
       }
 
-      console.log({
-        message: 'Subscription and invoice successfully updated.',
-        subscription: existingSubscription,
-        invoiceId: existingInvoice._id
-      }
-      );
-
       return res.status(200).json({
         message: 'Subscription and invoice successfully updated.',
         subscription: existingSubscription,
@@ -130,8 +121,10 @@ const createSubscriptionControllers = async (req, res) => {
         invoice._id
       );
 
+
       console.log(`Created subscription with status: ${status}`);
       console.log({ invoiceId: invoice._id });
+
 
       return res.status(200).json({
         message: `Subscription successfully created with status: ${status}`,
@@ -186,15 +179,8 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
     const pricing = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyPrice : planDetails.annualPrice);
     const discount = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyDiscount || 0 : planDetails.annualDiscount || 0);
 
-
-    console.log("status", status);
-
-
     if (status === "paid") {
       const requiredPayment = pricing - discount;
-
-      console.log('Required Payment:', pricing, discount);
-
       if (totalPaid >= (pricing - discount)) {
 
         // console.log("status",status);
@@ -275,7 +261,7 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
     // console.log(req.params);
 
     const { ownerId } = req.params;
-    console.log("ownerId", ownerId)
+    // console.log("ownerId", ownerId)
 
     if (!ownerId) {
       return res.status(400).json({ message: 'ownerId ID is required.' });
@@ -302,7 +288,7 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
 
     const subscriptionsWithPlanNames = customerSubscriptions.map((sub) => {
       const plan = subscriptionPlans.find((plan) => String(plan._id) === String(sub.subscriptionPlanId));
-      console.log("plan", plan);
+      // console.log("plan", plan);
       
       return {
         ...sub,

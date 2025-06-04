@@ -15,6 +15,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch';
 import Documents from './Documents';
 import Loading from '../../../../../Components/Loading';
 import Activity from '../../CommonCode-AllTabs/Activity';
+import { config } from '../../../../../config';
 
 const tabs = [
   { id: 'interviews', name: 'Interviews', icon: '👥' },
@@ -48,7 +49,7 @@ const MainContent = () => {
 
   const fetchCandidate = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${id}`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate/${id}`);
       console.log("response.data ", response.data);
 
       const { appliedPositions, ...candidateData } = response.data;

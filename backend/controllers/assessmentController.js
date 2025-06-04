@@ -56,9 +56,7 @@ exports.newAssessment = async (req, res) => {
     if (CandidateDetails && (CandidateDetails.includePosition || CandidateDetails.includePhone || CandidateDetails.includeSkills)) {
       newAssessmentData.CandidateDetails = CandidateDetails;
     }
-    console.log("newAssessmentData", newAssessmentData)
     const assessment = new Assessment(newAssessmentData);
-    console.log('assessment', assessment)
     await assessment.save();
     res.status(201).json(assessment);
   } catch (error) {
@@ -70,7 +68,6 @@ exports.newAssessment = async (req, res) => {
 exports.updateAssessment = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("update assessmnet body", req.body)
 
     // Validate the ID
     if (!isValidObjectId(id)) {

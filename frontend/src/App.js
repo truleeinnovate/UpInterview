@@ -4,7 +4,6 @@ import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
 import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
 import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
@@ -16,6 +15,9 @@ import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billi
 import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
 import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
 import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx';
+
+import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
+
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -34,7 +36,7 @@ const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
 const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home/Home.jsx'));
 const OutsourceInterviewerRequest = lazy(() => import('./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx'));
 const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
-const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
+const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx'));
 const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
 const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails'));
 const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen'));
@@ -54,7 +56,6 @@ const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab
 const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
 const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
 const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const AccountSettingsSidebar = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx'));
 const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx'));
 const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx'));
 const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx'));
@@ -173,7 +174,6 @@ const App = () => {
   const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
   const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
-  const showAppSettings = appSettingsPaths.includes(location.pathname);
 
   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
 
@@ -185,7 +185,6 @@ const App = () => {
       >
         {shouldRenderNavbar && <Navbar />}
         {showSettingsSidebar && <Settingssidebar />}
-        {showAppSettings && <AppSettings />}
         {showLogo && <Logo />}
         <div>
           <Routes>
@@ -217,7 +216,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              {/* Protected Routes */}
+              {/* Protected Routes */} 
               <Route path="/home" element={<Home />} />
               <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
               <Route path="/outsource-interview-request" element={<InterviewRequest />} />
@@ -254,7 +253,7 @@ const App = () => {
               <Route path="/interviews/new" element={<InterviewForm />} />
               <Route path="/interviews/:id" element={<InterviewDetail />} />
               <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:id/rounds/:roundId" element={<RoundForm />} />
+              <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
 
               {/* Question Bank */}
               <Route path="/questionBank" element={<QuestionBank />} />
@@ -288,6 +287,7 @@ const App = () => {
                 } />
                 {organization && (
                   <Route path="profile" element={<CompanyProfile />}>
+                    <Route index element={null} />
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
@@ -299,9 +299,9 @@ const App = () => {
                   <Route path="advanced" element={<AdvancedDetails />} />
                   <Route path="interview" element={<InterviewUserDetails />} />
                   <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-                  <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
+                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage  from="my-profile"/>} />
+                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails   from="my-profile"/>} />
+                  <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
                   <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
                 </Route>
 
@@ -312,19 +312,30 @@ const App = () => {
                 
                 {organization && (
                   <Route path="interviewer-groups" element={<InterviewerGroups />}>
+                      <Route index element={null} />
                     <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
                   </Route>
                 )}
                 {organization && (
+
                   <Route path="users" element={<UsersLayout />}>
-                    <Route index element={null} />
+                     {/* <Route index element={null } /> */}
+                   
                     <Route path="new" element={<UserForm mode="create" />} />
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
                     <Route path="details/:id" element={<UserProfileDetails />} />
+                     {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
+                    {/* <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} /> */}
+                     
+                     {/* <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} /> */}
+                      {/* <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} /> */}
+                    {/* <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} /> */}
+                      {/* <Route path="basic" element={<BasicDetails />} /> */} 
                   </Route>
                 )}
+
                 <Route path="email-settings" element={<EmailTemplate />} />
                 
                 
@@ -362,6 +373,13 @@ const App = () => {
                   </>
                 )}
               </Route>
+
+                            {/* {organization && (
+
+                  <Route path="/account-settings/users/details/:id" element={<UsersLayout ><UserProfileDetails /></UsersLayout>} />
+                  
+                    
+                )} */}
 
               {/* Billing invoice  */}
                <Route path="/billing" element={<InvoiceTab />} >

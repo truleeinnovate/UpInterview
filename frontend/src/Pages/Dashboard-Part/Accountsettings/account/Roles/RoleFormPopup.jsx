@@ -9,6 +9,7 @@ import Modal from 'react-modal';
 import { Maximize, Minimize } from 'lucide-react';
 import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../../config'
 
 export function RoleFormPopup({ onSave, onClose }) {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ console.log("tenantId in roleformpopup", tenantId);
     //   const fetchRoles = async () => {
     //     try {
     //       const response = await axios.get(
-    //         `${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`
+    //         `${config.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`
     //       );
     //       const role_data = response.data
     //       const role = role_data.find(role => role._id === id);
@@ -56,7 +57,7 @@ console.log("tenantId in roleformpopup", tenantId);
   useEffect(() => {
     const fetchPermissionCategories = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/permissions`)
+        const response = await axios.get(`${config.REACT_APP_API_URL}/permissions`)
         const data = response.data
         setPermissionCategories(data)
         
@@ -108,7 +109,7 @@ console.log("tenantId in roleformpopup", tenantId);
     const fetchRoles = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/rolesdata?tenantId=${tenantId}`
+          `${config.REACT_APP_API_URL}/rolesdata?tenantId=${tenantId}`
         )
         const role_data = response.data
         setRoles(role_data)
@@ -173,7 +174,7 @@ console.log("tenantId in roleformpopup", tenantId);
       
       // Handle edit or create based on mode
       if (editMode) {
-        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/rolesdata/${formData._id}`, dataToSend);
+        const response = await axios.patch(`${config.REACT_APP_API_URL}/rolesdata/${formData._id}`, dataToSend);
         console.log('Server response (edit):', response.data);
         if (response.data) {
           // onSave(response.data);
@@ -196,7 +197,7 @@ console.log("tenantId in roleformpopup", tenantId);
       dataToSend.canAssign = dataToSend.canAssign || [];
       
       console.log('Sending data to API:', dataToSend);
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/rolesdata`, dataToSend);
+      const response = await axios.post(`${config.REACT_APP_API_URL}/rolesdata`, dataToSend);
       
       console.log('Server response:', response.data);
       if (response.data) {

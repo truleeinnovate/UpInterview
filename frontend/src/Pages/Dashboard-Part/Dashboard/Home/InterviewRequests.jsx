@@ -60,9 +60,6 @@ const InterviewRequests = () => {
     setSelectedRequest(null);
   };
 
-  // if (loading) return <div className="text-center text-gray-600">Loading...</div>;
-  // if (error) return <div className="text-center text-red-600">{error}</div>;
-
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">

@@ -3,6 +3,7 @@ import { CheckCircleIcon, XCircleIcon, PencilIcon } from '@heroicons/react/24/ou
 import axios from 'axios'
 import Cookies from 'js-cookie'
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../../config';
 
 const DomainManagement = () => {
   const [subdomain, setSubdomain] = useState('')
@@ -34,7 +35,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
     const fetchSubdomain = async () => {
       try {
         setLoading(true)
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organization/subdomain/${organizationId}`)
+        const response = await axios.get(`${config.REACT_APP_API_URL}/organization/subdomain/${organizationId}`)
         
         if (response.data.success && response.data.organization.subdomain) {
           setActiveDomain({
@@ -70,7 +71,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
 
     setIsChecking(true)
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/check-subdomain`, { subdomain: value })
+      const response = await axios.post(`${config.REACT_APP_API_URL}/organization/check-subdomain`, { subdomain: value })
       setAvail({
         available: response.data.available,
         message: response.data.message.includes('available') 
@@ -94,7 +95,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
     try {
       setLoading(true)
       const subdomainAddedDate = new Date().toISOString();
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/update-subdomain`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/organization/update-subdomain`, {
         organizationId,
         subdomain: subdomain.toLowerCase(),
         baseDomain,
@@ -132,7 +133,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
     try {
       setLoading(true)
       const subdomainLastVerified = new Date().toISOString();
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/activate-subdomain`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/organization/activate-subdomain`, {
         organizationId,
         subdomainStatus: 'active',
         subdomainLastVerified
@@ -161,7 +162,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
     if (confirm('Are you sure you want to deactivate this subdomain? This action cannot be undone.')) {
       try {
         setLoading(true)
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/deactivate-subdomain`, {
+        const response = await axios.post(`${config.REACT_APP_API_URL}/organization/deactivate-subdomain`, {
           organizationId
         })
         
@@ -198,7 +199,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
 
     try {
       setLoading(true)
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/organization/update-subdomain`, {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/organization/update-subdomain`, {
         organizationId,
         subdomain: newSubdomain.toLowerCase(),
         baseDomain
@@ -235,9 +236,9 @@ console.log("organizationId in subdomainmanagement", organizationId);
             <div className="flex-shrink-0">
               <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
             </div>
-            <div className="ml-3">
+            {/* <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
-            </div>
+            </div> */}
           </div>
         </div>
       )}

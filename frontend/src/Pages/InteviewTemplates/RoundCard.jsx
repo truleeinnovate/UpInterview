@@ -39,27 +39,22 @@ const RoundCard = ({
 
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
-  const [questionDetails, setQuestionDetails] = useState({});
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+
   const [expandedQuestions, setExpandedQuestions] = useState({});
   // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
-  // console.log("sectionQuestions", sectionQuestions);
+  
+  
 
 
-  useEffect(() => {
-    setShowQuestions(false);
-    setShowInterviewers(false);
-    setExpandedQuestions({});
-    setExpandedSections({});
-  }, [round]);
 
 
 
   useEffect(() => {
-    setSectionQuestions({});
+   
     fetchQuestionsForAssessment(round?.assessmentId)
   }, [round.assessmentId])
 
@@ -137,7 +132,7 @@ const RoundCard = ({
   //       questionIds.map(async (questionId) => {
   //         try {
   //           const response = await axios.get(
-  //             `${process.env.REACT_APP_API_URL}/assessment-questions/${questionId}`
+  //             `${config.REACT_APP_API_URL}/assessment-questions/${questionId}`
   //           );
   //           return response.data?.data;
   //         } catch (error) {
@@ -176,10 +171,6 @@ const RoundCard = ({
   // Reset question details when round changes
 
 
-
-  useEffect(() => {
-    setQuestionDetails({});
-  }, [round.assessmentTemplate]);
 
   // Fetch questions when showing them
   // useEffect(() => {
@@ -244,13 +235,13 @@ const RoundCard = ({
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <Users className="h-4 w-4 mr-1" />
                   <span>
-                    {round?.interviewers.length} interviewer{resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                    {round?.internalInterviewers.length} interviewer{resolveInterviewerDetails(round?.internalInterviewers || []).length !== 1 ? 's' : ''}
                   </span>
                 </div>
 
-                {showInterviewers && round.interviewers && (
+                {showInterviewers && round?.internalInterviewers && (
                   <div className="flex flex-wrap gap-2">
-                    {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                    {resolveInterviewerDetails(round?.internalInterviewers || []).map((interviewer, index) => (
 
                       <div key={index} className="flex items-center">
                         <InterviewerAvatar interviewer={interviewer} size="sm" />
@@ -281,11 +272,11 @@ const RoundCard = ({
               </button>
             </div>
 
-            {showQuestions && round.interviewQuestionsList && (
+            {showQuestions && round?.questions && (
               <div className="space-y-2">
-                {round?.interviewQuestionsList.length > 0 ? (
+                {round?.questions.length > 0 ? (
                   <ul className="mt-2 space-y-2">
-                    {round.interviewQuestionsList.map((question, qIndex) => {
+                    {round.questions.map((question, qIndex) => {
                       const isMandatory = question?.mandatory === "true";
                       const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                       return (
@@ -326,7 +317,7 @@ const RoundCard = ({
 
             {showQuestions && (
               <div className="space-y-4">
-                {loadingQuestions ? (
+                {questionsLoading ? (
                   <div className="text-center py-4">
                     <span className="text-gray-600">Loading questions...</span>
                   </div>

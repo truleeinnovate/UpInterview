@@ -21,6 +21,8 @@ import axios from 'axios';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
+import { config } from '../../../../config';
+import Loading from '../../../../Components/Loading';
 
 
 Modal.setAppElement('#root');
@@ -52,7 +54,7 @@ const PositionSlideDetails = () => {
   useEffect(() => {
     const fetchPosition = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position/details/${id}`, {
+        const response = await axios.get(`${config.REACT_APP_API_URL}/position/details/${id}`, {
           params: {
             tenantId: tenantId
           }
@@ -106,12 +108,12 @@ const PositionSlideDetails = () => {
     { id: 'Activity', name: 'Activity', icon: '📊' }
   ];
 
-  if (!position) return <div className='flex justify-center items-center h-full w-full'>Loading...</div>;
+  if (!position) return <div className='flex justify-center items-center h-full w-full'><Loading /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
-        <div className="top-0 bg-white mt-1 flex justify-between items-center z-10">
+        <div className="top-0 bg-white mt-5 flex justify-between items-center z-10">
           <h2 className="text-xl font-bold text-gray-800">Position Details</h2>
           <div className="flex items-center gap-2">
             <button

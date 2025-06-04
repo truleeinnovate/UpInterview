@@ -1,45 +1,134 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, ArrowLeft, Mail, Phone, ExternalLink, User, Edit2, CheckCircle, XCircle } from 'lucide-react';
-import UserForm from './UserForm';
+import { X, ArrowLeft, Edit2, Minus, Minimize, Expand } from 'lucide-react';
+import Modal from 'react-modal';
+import classNames from 'classnames';
 import maleImage from '../../../Images/man.png';
 import femaleImage from '../../../Images/woman.png';
 import genderlessImage from '../../../Images/transgender.png';
+import { useCustomContext } from '../../../../../Context/Contextfetch';
+import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
+import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
+import InterviewUserDetails from "../MyProfile/InterviewDetails/InterviewDetails";
+import AvailabilityUser from "../MyProfile/AvailabilityDetailsUser/AvailabilityUser";
+import BasicDetailsEditPage from "../MyProfile/BasicDetails/BasicDetailsEditPage";
+import EditAdvacedDetails from "../MyProfile/AdvancedDetails/EditAdvacedDetails";
+import EditInterviewDetails from "../MyProfile/InterviewDetails/EditInterviewDetails";
+import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
+// import ConfirmationModal from './ConfirmModel';
 
-import classNames from 'classnames';
-import Modal from 'react-modal';
+//this is already have common code but due to z index i have added here
+const ConfirmationModal = ({
+  show,
+  userName,
+  newStatus,
+  onCancel,
+  onConfirm
+}) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
+        <p className="mb-2">
+          Are you sure you want to change the status of <span className="font-bold">{userName} to {newStatus}</span>?
+        </p>
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-custom-blue text-white rounded-md"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+// Set app element for accessibility
+Modal.setAppElement('#root');
 
 const UserProfileDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
-  console.log("userData:", userData);
+  const { toggleUserStatus,refetchUsers } = useCustomContext();
 
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [userToEdit, setUserToEdit] = useState(null);
+  const [activeTab, setActiveTab] = useState('basic');
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [newStatus, setNewStatus] = useState(userData?.status || 'active');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+const [basicEditOpen, setBasicEditOpen] = useState(false);
+const [advacedEditOpen,setAdvacedEditOpen] =useState(false);
+const [interviewEditOpen,setInterviewEditOpen] =useState(false);
+const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
+
 
   useEffect(() => {
     document.title = "User Profile Details";
   }, []);
 
-  // const handleEditClick = () => {
-  //   setUserToEdit(userData);
-  //   setShowEditForm(true);
-  // };
-
-  const handleclose = () => {
-    setShowEditForm(false);
-    setUserToEdit(null);
+    const handleBasicEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
   };
 
-  const handleDataAdded = () => {
-    handleclose();
+
+      const handleAdvacedEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
   };
+
+      const handleInterviewEditSuccess = () => {
+    refetchUsers() // Refresh the users data in context
+  };
+
+  // useEffect(() => {
+  //   refetchUsers()
+
+  // },[handleBasicEditSuccess])
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
+  };
+
+  const handleClose = () => {
+    navigate(-1);
+  };
+
+  const handleStatusToggle = () => {
+    const updatedStatus = newStatus === 'active' ? 'inactive' : 'active';
+    setNewStatus(updatedStatus);
+    setShowConfirmation(true);
+    setIsModalOpen(true);
+  };
+
+  const confirmStatusChange = () => {
+    if (userData) {
+      toggleUserStatus.mutate({
+        userId: userData._id,
+        newStatus,
+      });
+    }
+    setShowConfirmation(false);
+    setIsModalOpen(false);
+  };
+
+  const cancelStatusChange = () => {
+    setNewStatus(userData.status);
+    setShowConfirmation(false);
+    setIsModalOpen(false);
   };
 
   if (!userData) {
@@ -47,306 +136,208 @@ const UserProfileDetails = () => {
     return null;
   }
 
-  const content = (
-    <div className={`${isFullScreen ? 'min-h-screen' : 'h-full'} flex flex-col bg-white`}>
-      <div className="p-3 bg-gradient-to-r from-custom-blue to-custom-blue/90">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <button className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <ArrowLeft className="text-2xl" />
-            </button>
-            <h2 className="text-xl font-medium text-white">User Profile</h2>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => { navigate(`/users/edit/${userData._id}`, { state: { userData: userData } }) }}
-              className="p-2 text-white hover:bg-white hover:text-custom-blue rounded-full transition-colors"
-              title="Edit"
-            >
-              <Edit2 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={toggleFullScreen}
-              className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2 transition-colors"
-              title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
-            >
-              <ExternalLink className="w-5 h-5" />
-            </button>
-            {!isFullScreen && (
-              <button
-                onClick={() => navigate(-1)}
-                className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2"
-              >
-                <X className="text-2xl" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+  const isInternalInterviewer = userData.roleName === 'Internal_Interviewer';
+  const tabs = isInternalInterviewer
+    ? [
+      { id: 'basic', label: 'Basic Details' },
+      { id: 'advanced', label: 'Advanced Details' },
+      { id: 'interview', label: 'Interview Details' },
+      { id: 'availability', label: 'Availability' },
+    ]
+    : [
+      { id: 'basic', label: 'Basic Details' },
+      { id: 'advanced', label: 'Advanced Details' },
+    ];
 
-      <div className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <img
-              src={userData.image || (userData.gender === "Male" ? maleImage : userData.gender === "Female" ? femaleImage : genderlessImage)}
-              alt={userData?.firstName || "User"}
-              onError={(e) => { e.target.src = "/default-profile.png"; }}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-            />
-
-          </div>
-
-               <span>
-          Active
-           {
-            userData.status === "active" ?
-              <CheckCircle
-                size={16}
-                className='fill-green-500'
-              /> :
-              <XCircle
-                size={16}
-                className='fill-red-400'
-              />
-          }
-        </span>
-
-         
-        </div>
-
+  const renderBasicDetails = () => (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-lg shadow">
+        
+          <BasicDetails mode='users' usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen} />
        
-       
-
-        <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">{userData.lastName || ''} </h3>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h4>
-          <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">First Name</p>
-                <p className="text-gray-700">{userData.firstName || 'N/A'}</p>
-              </div>
-
-             
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Last Name</p>
-                <p className="text-gray-700">{userData.lastName || 'N/A'}</p>
-              </div>
-            </div>
-
-          
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h4>
-          <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Mail className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Email Address</p>
-                <p className="text-gray-700">{userData?.email || 'N/A'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Phone className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Phone Number</p>
-                <p className="text-gray-700">{userData?.phone || 'N/A'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">Professional Information</h4>
-          <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Role</p>
-                <p className="text-gray-700">{userData?.label || 'N/A'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 
-  if (showEditForm) {
+  const renderAdvancedDetails = () => (
+    <div className="space-y-6">
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow">
+        <AdvancedDetails  mode='users' usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  />
+        
+      </div>
+    </div>
+  );
+
+  const renderInterviewDetails = () => (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-lg shadow">
+        <InterviewUserDetails mode='users' usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}/>
+      
+      </div>
+    </div>
+  );
+
+  const renderAvailability = () => {
+   
     return (
-      <UserForm
-        editMode={true}
-        userData={userToEdit}
-        onClose={handleclose}
-        onDataAdded={handleDataAdded}
-      />
+     
+        <div className="grid grid-cols-1 gap-2 
+     bg-white p-2  rounded-lg shadow">
+          <AvailabilityUser mode='users' usersId={userData.contactId}  setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen}/>
+          
+
+        </div>
+      
     );
-  }
+  };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
+    'fixed bg-white shadow-2xl border-l border-gray-200',
     {
+      'overflow-y-auto': !isModalOpen,
+      'overflow-hidden': isModalOpen,
       'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
     }
   );
 
+
+
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={() => navigate('/account-settings/users')}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    // className={modalClass}
-
-    >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
-        <div>
-
-          <div className="p-6  ">
-            <div className="flex justify-between items-center mb-6">
+    <>
+      <Modal
+        isOpen={true}
+        onRequestClose={handleClose}
+        className={modalClass}
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+      >
+        <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-3">
               <div className="flex items-center space-x-4">
-                {/* <button className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <ArrowLeft className="text-2xl" />
-            </button> */}
+                <button
+                  className="text-gray-500 hover:bg-gray-200 rounded-full p-2"
+                  onClick={handleClose}
+                >
+                  <ArrowLeft className="text-2xl" />
+                </button>
                 <h2 className="text-2xl font-bold text-custom-blue">User Profile</h2>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() =>
-                    navigate(`/account-settings/users/edit/${userData._id}`, {
-                      state: { userData: userData }
-                    })
-                    // {navigate(`edit/${userData._id}`, { state: { userData: userData } })}
-                  }
-                  className="p-2  hover:bg-white hover:text-custom-blue rounded-full transition-colors"
-                  title="Edit"
+                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
                 >
-                  <Edit2 className="w-5 h-5 text-gray-500" />
+                  {isFullScreen ? (
+                    <Minimize className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <Expand className="w-5 h-5 text-gray-500" />
+                  )}
                 </button>
                 <button
-                  onClick={toggleFullScreen}
-                  className=" hover:bg-white hover:text-custom-blue rounded-full p-2 transition-colors"
-                  title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
+                  onClick={handleClose}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <ExternalLink className="w-5 h-5 text-gray-500" />
+                  <X className="w-4 h-4" />
                 </button>
-                {!isFullScreen && (
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="text-gray-500  hover:text-custom-blue rounded-full p-2"
-                  >
-                    <X className="text-2xl" />
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* {content} */}
-
-            <div >
-              <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
-                    src={userData.image || (userData.gender === "Male" ? maleImage : userData.gender === "Female" ? femaleImage : genderlessImage)}
+                    src={userData.imageData?.path ||
+                      (userData.gender === "Male" ? maleImage :
+                        userData.gender === "Female" ? femaleImage : genderlessImage)}
                     alt={userData?.firstName || "User"}
-                    onError={(e) => { e.target.src = "/default-profile.png"; }}
+                    onError={(e) => { e.target.src = genderlessImage; }}
                     className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                   />
                 </div>
-              </div>
-
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-gray-900">{userData.lastName || ''} </h3>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h4>
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-custom-bg rounded-lg">
-                      <User className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">First Name</p>
-                      <p className="text-gray-700">{userData.firstName || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-custom-bg rounded-lg">
-                      <User className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Last Name</p>
-                      <p className="text-gray-700">{userData.lastName || 'N/A'}</p>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {userData.firstName} {userData.lastName}
+                  </h3>
+                  <p className="text-gray-600">{userData.currentRole || userData.label || "N/A"}</p>
                 </div>
               </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h4>
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-custom-bg rounded-lg">
-                      <Mail className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email Address</p>
-                      <p className="text-gray-700">{userData?.email || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-custom-bg rounded-lg">
-                      <Phone className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone Number</p>
-                      <p className="text-gray-700">{userData?.phone || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-center space-x-2">
+                <span className={`text-sm font-medium ${newStatus === 'active' ? 'text-custom-blue' : 'text-gray-500'
+                  }`}>
+                  {newStatus === 'active' ? 'Active' : 'Inactive'}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newStatus === 'active'}
+                    onChange={handleStatusToggle}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-custom-blue rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-blue"></div>
+                </label>
               </div>
+            </div>
 
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Professional Information</h4>
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-custom-bg rounded-lg">
-                      <User className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Role</p>
-                      <p className="text-gray-700">{userData?.label || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={classNames(
+                    'px-4 py-2 text-sm font-medium',
+                    activeTab === tab.id
+                      ? 'border-b-2 border-custom-blue text-custom-blue'
+                      : 'text-gray-500 hover:text-custom-blue'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 230px)' }}>
+              <>
+                {activeTab === 'basic' && renderBasicDetails()}
+                {activeTab === 'advanced' && renderAdvancedDetails()}
+                {activeTab === 'interview' && renderInterviewDetails()}
+                {activeTab === 'availability' && renderAvailability()}
+
+                <ConfirmationModal
+                  show={showConfirmation}
+                  userName={`${userData?.firstName} ${userData?.lastName}`}
+                  newStatus={newStatus}
+                  onCancel={cancelStatusChange}
+                  onConfirm={confirmStatusChange}
+                />
+              </>
+
             </div>
           </div>
         </div>
-      </div>
 
-    </Modal>
+        
+      {basicEditOpen && 
+      <BasicDetailsEditPage from="users" usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen}  onSuccess={handleBasicEditSuccess}/> 
+      }
+
+      {advacedEditOpen &&
+        <EditAdvacedDetails from="users" usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  onSuccess={handleAdvacedEditSuccess}/>
+      }
+     
+
+      {
+        interviewEditOpen &&   <EditInterviewDetails from="users" usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}  onSuccess={handleInterviewEditSuccess}/>
+      }
+
+      {
+       availabilityEditOpen && <EditAvailabilityDetails  from="users" usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen}  onSuccess={handleInterviewEditSuccess}/>
+      }
+ </Modal>
+
+    </>
   );
 };
 

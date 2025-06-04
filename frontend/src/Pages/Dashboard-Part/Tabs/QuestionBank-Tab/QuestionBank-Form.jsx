@@ -21,6 +21,7 @@ import '../styles/tabs.scss'
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
@@ -31,7 +32,7 @@ const Interviewcq = ({
   assessmentId,
   onClose,
   questionBankPopupVisibility,
-  section,
+type,
   onOutsideClick,
   onDataAdded,
   isEdit = false,
@@ -184,7 +185,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
   const handleSubmit = async (e, isSaveAndNext) => {
     e.preventDefault();
     const updatedFormData = { ...formData, tenantListId: selectedListId };
-    const newErrors = validateQuestionBankData(updatedFormData, mcqOptions,section);
+    const newErrors = validateQuestionBankData(updatedFormData, mcqOptions,type);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -258,20 +259,20 @@ const [isModalOpen, setIsModalOpen] = useState(false);
       // API call for saving/updating the question
       const questionResponse = isEdit
         ? await axios.patch(
-          `${process.env.REACT_APP_API_URL}/newquestion/${question._id}`,
+          `${config.REACT_APP_API_URL}/newquestion/${question._id}`,
           // questionData
           questionData
         )
         : await axios.post(
-          `${process.env.REACT_APP_API_URL}/newquestion`,
+          `${config.REACT_APP_API_URL}/newquestion`,
           questionData
         );
         console.log("tenant queston response",questionResponse)
         //shashank-[13/01/2025]
         //saving the question to the assessment child (questions) schema when added from assessement
 
-        if (section==="assessment"){
-          // const questionExistResponse = await axios.get(`${process.env.REACT_APP_API_URL}/assessment-question/${assessmentId}`)
+        if (type==="assessment"){
+          // const questionExistResponse = await axios.get(`${config.REACT_APP_API_URL}/assessment-question/${assessmentId}`)
           const reqBody ={
             // assessmentId:assessmentId,
             questionId:questionResponse.data._id,
@@ -1244,7 +1245,7 @@ style={{
 
                 {/* Score */}
                 {/* //shashank - [13/01/2025] */}
-                { section==='assessment' && <div className="flex gap-5 mb-4">
+                { type==='assessment' && <div className="flex gap-5 mb-4">
                   <div className="flex flex-col w-full">
                   <div>
                     <label
@@ -1568,11 +1569,11 @@ export default Interviewcq;
 //       // API call for saving/updating the question
 //       const questionResponse = isEdit
 //         ? await axios.put(
-//           `${process.env.REACT_APP_API_URL}/newquestion/${question._id}`,
+//           `${config.REACT_APP_API_URL}/newquestion/${question._id}`,
 //           questionData
 //         )
 //         : await axios.post(
-//           `${process.env.REACT_APP_API_URL}/newquestion`,
+//           `${config.REACT_APP_API_URL}/newquestion`,
 //           questionData
 //         );
 //       console.log(isEdit ? "Question updated:" : "Question created:", questionResponse.data);

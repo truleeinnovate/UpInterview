@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -22,6 +22,7 @@ import { Button } from '../../CommonCode-AllTabs/ui/button';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { config } from '../../../../../config';
 
 const RoundCard = ({
   round,
@@ -34,55 +35,39 @@ const RoundCard = ({
 
   const {
     assessmentData,
+    sectionQuestions,
+    fetchQuestionsForAssessment,
+    questionsLoading,
+    questionsError,
+    setSectionQuestions,
   } = useCustomContext();
-    const [expandedSections, setExpandedSections] = useState({});
-    const [expandedQuestions, setExpandedQuestions] = useState({});
-    const [isLoadingSections, setIsLoadingSections] = useState(false);
-      const [sectionQuestions, setSectionQuestions] = useState({});
+  const [expandedSections, setExpandedSections] = useState({});
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+  
 
-  const fetchSectionsAndQuestions = async (assessmentId) => {
-    try {
-      // Fetch the assessment data once
-      setIsLoadingSections(true);
-      const response = assessmentData.find(pos => pos._id === assessmentId);
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-      const assessment = response;
-
-      // Get all section IDs and prepare section questions
-      const newSectionQuestions = {};
-      const newExpandedSections = {};
-
-      assessment.Sections.forEach(section => {
-        newExpandedSections[section._id] = false; // Expand all sections by default
-        newSectionQuestions[section._id] = section.Questions || []; // Set questions for each section
-      });
-
-      // Update states with the fetched data
-      setExpandedSections(newExpandedSections);
-      setSectionQuestions(newSectionQuestions);
-    } catch (error) {
-      console.error('Error fetching sections and questions:', error);
-      // Optionally set an error state for each section
-      setSectionQuestions(prev => ({
-        ...prev,
-        // Since we don't have access to section IDs, set a generic error state
-        error: 'Failed to load questions'
-      }));
-    } finally {
-      // NEW: Set global loading state to false
-      setIsLoadingSections(false);
-    }
-  };
 
 
   useEffect(() => {
     if (round.assessmentId) {
-      fetchSectionsAndQuestions(round.assessmentId)
+      fetchQuestionsForAssessment(round.assessmentId)
     }
 
   }, [round.assessmentId])
 
   const toggleSection = async (sectionId) => {
+
+      if (expandedSections[sectionId]) {
+      const newExpandedQuestions = {...expandedQuestions};
+      const section = sectionQuestions[sectionId];
+      if (section && section.questions) {
+        section.questions.forEach(question => {
+          newExpandedQuestions[question._id] = false;
+        });
+      }
+      setExpandedQuestions(newExpandedQuestions);
+    }
+
+    
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -90,33 +75,43 @@ const RoundCard = ({
 
     // Fetch questions if the section is being expanded and questions are not already loaded
     if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
-      await fetchQuestionsForSection(sectionId);
+      await fetchQuestionsForAssessment(round?.assessmentId);
     }
   };
 
-  const fetchQuestionsForSection = async (sectionId) => {
-    try {
-      const response = assessmentData.find(pos => pos._id === round.assessmentId)
-      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
-      const assessment = response;
-
-      const section = assessment.Sections.find(s => s._id === sectionId);
-      if (!section) {
-        throw new Error('Section not found');
-      }
-
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: section.Questions
-      }));
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setSectionQuestions(prev => ({
-        ...prev,
-        [sectionId]: 'error'
-      }));
+    const toggleShowQuestions = () => {
+    if (showQuestions) {
+      // Collapse all when hiding
+      setExpandedSections({});
+      setExpandedQuestions({});
     }
+    setShowQuestions(!showQuestions);
   };
+
+
+  // const fetchQuestionsForSection = async (sectionId) => {
+  //   try {
+  //     const response = assessmentData.find(pos => pos._id === round.assessmentId)
+  //     // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
+  //     const assessment = response;
+
+  //     const section = assessment.Sections.find(s => s._id === sectionId);
+  //     if (!section) {
+  //       throw new Error('Section not found');
+  //     }
+
+  //     setSectionQuestions(prev => ({
+  //       ...prev,
+  //       [sectionId]: section.Questions
+  //     }));
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //     setSectionQuestions(prev => ({
+  //       ...prev,
+  //       [sectionId]: 'error'
+  //     }));
+  //   }
+  // };
 
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -158,7 +153,7 @@ const RoundCard = ({
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("Status updated:", response.data);
@@ -197,7 +192,6 @@ const RoundCard = ({
 
   // Get questions
   const questions = round?.questions || [];
-  console.log("questions", questions);
 
 
   // Check if round is active (can be modified)
@@ -376,9 +370,9 @@ const RoundCard = ({
               {(questions?.length > 0 || round.assessmentId) && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+                    <h4 className="text-sm font-medium text-gray-700">Assessment Questions</h4>
                     <button
-                      onClick={() => setShowQuestions(!showQuestions)}
+                      onClick={toggleShowQuestions}
                       className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
                     >
                       {showQuestions ? 'Hide' : 'Show'}
@@ -386,167 +380,173 @@ const RoundCard = ({
                     </button>
                   </div>
 
-                  {showQuestions && round.assessmentId && (
-                    <div className="mt-4">
-                      {/* NEW: Added Expand All/Collapse All buttons */}
-                      {/* <div className="flex justify-end space-x-2 mb-4">
-                        <button
-                          type="button"
-                          onClick={() => toggleAllSections(true)}
-                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                        >
-                          Expand All
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleAllSections(false)}
-                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                        >
-                          Collapse All
-                        </button>
-                      </div> */}
-
-                      {/* NEW: Added global loading state */}
-                      {isLoadingSections ? (
-                        <div className="flex justify-center items-center py-4">
-                          <p className="text-sm text-gray-500">Loading sections...</p>
-                          <div className="ml-2 w-6 h-6 border-t-2 border-blue-500 rounded-full animate-spin"></div>
+                  {showQuestions && (
+                    <div className="space-y-4">
+                      {questionsLoading ? (
+                        <div className="text-center py-4">
+                          <span className="text-gray-600">Loading questions...</span>
                         </div>
-                      ) : sectionQuestions.error ? (
-                        <div className="pl-4 py-2">
-                          <p className="text-sm text-red-500">{sectionQuestions.error}</p>
-                          <button
-                            type="button"
-                            onClick={() => fetchSectionsAndQuestions(round.assessmentId)}
-                            className="mt-2 text-sm text-blue-500 hover:text-blue-700"
-                          >
-                            Retry Loading
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {assessmentData.find(a => a._id === round.assessmentId)?.Sections.map((section) => (
-                            <div key={section._id} className="border rounded-md shadow-sm p-4 bg-gray-50">
-                              <button
-                                type="button"
-                                onClick={() => toggleSection(section._id)}
-                                className="flex justify-between items-center w-full"
-                              >
-                                <span className="font-medium text-gray-800">{section.SectionName}</span>
-                                <ChevronUp className={`transform transition-transform ${expandedSections[section._id] ? '' : 'rotate-180'} text-gray-500`} />
-                              </button>
+                      ) :
+                        (
+                          <div className="space-y-4">
+                            {/* Check if sectionQuestions is properly structured */}
+                            {Object.keys(sectionQuestions).length > 0 ? (
+                              Object.entries(sectionQuestions).map(([sectionId, sectionData]) => {
+                                // Find section details from assessmentData
+                                // const selectedAssessment = assessmentData.find(
+                                //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                // );
 
-                              {expandedSections[section._id] && (
-                                <div className="mt-4 space-y-3">
-                                  {sectionQuestions[section._id] === 'error' ? (
-                                    <div className="pl-4 py-2">
-                                      <p className="text-sm text-red-500">Failed to load questions. Please try again.</p>
-                                      <button
-                                        type="button"
-                                        onClick={() => fetchQuestionsForSection(section._id)}
-                                        className="mt-2 text-sm text-blue-500 hover:text-blue-700"
-                                      >
-                                        Retry Loading
-                                      </button>
-                                    </div>
-                                  ) : sectionQuestions[section._id] ? (
-                                    sectionQuestions[section._id].length > 0 ? (
-                                      sectionQuestions[section._id].map((question, idx) => (
-                                        <div
-                                          key={question._id || idx}
-                                          className="border rounded-md shadow-sm overflow-hidden bg-white"
-                                        >
-                                          <div
-                                            onClick={() => setExpandedQuestions(prev => ({
-                                              ...prev,
-                                              [question._id]: !prev[question._id]
-                                            }))}
-                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                          >
-                                            <div className="flex items-center gap-2">
-                                              <span className="font-medium text-gray-600">{idx + 1}.</span>
-                                              <p className="text-sm text-gray-700">{question.snapshot?.questionText || 'No question text'}</p>
-                                            </div>
-                                            <ChevronDown
-                                              className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id] ? 'transform rotate-180' : ''}`}
-                                            />
-                                          </div>
+                                // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                          {expandedQuestions[question._id] && (
-                                            <div className="px-4 py-3 bg-gray-50">
-                                              <div className="flex justify-between mb-2">
+                                return (
+                                  <div key={sectionId} className="border rounded-md shadow-sm p-4">
+                                    <button
+                                      onClick={() => toggleSection(sectionId)}
+                                      className="flex justify-between items-center w-full"
+                                    >
+                                      <span className="font-medium">
+                                        {sectionData?.sectionName || 'Unnamed Section'}
+                                      </span>
+                                      <ChevronUp
+                                        className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
+                                          }`}
+                                      />
+                                    </button>
+
+                                    {expandedSections[sectionId] && (
+                                      <div className="mt-4 space-y-3">
+                                        {Array.isArray(sectionData.questions) && sectionData.questions.length > 0 ? (
+                                          sectionData.questions.map((question, idx) => (
+                                            <div
+                                              key={question._id || idx}
+                                              className="border rounded-md shadow-sm overflow-hidden"
+                                            >
+                                              <div
+                                                onClick={() =>
+                                                  setExpandedQuestions(prev => ({
+                                                    ...prev,
+                                                    [question._id]: !prev[question._id]
+                                                  }))
+                                                }
+                                                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                              >
                                                 <div className="flex items-center gap-2">
-                                                  <span className="text-sm font-medium text-gray-500">Type:</span>
-                                                  <span className="text-sm text-gray-700">
-                                                    {question.snapshot?.questionType || 'Not specified'}
+                                                  <span className="font-medium text-gray-600">
+                                                    {idx + 1}.
                                                   </span>
+                                                  <p className="text-sm text-gray-700">
+                                                    {question.snapshot?.questionText || 'No question text'}
+                                                  </p>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                  <span className="text-sm font-medium text-gray-500">Score:</span>
-                                                  <span className="text-sm text-gray-700">
-                                                    {question.snapshot?.score || '0'}
-                                                  </span>
-                                                </div>
+                                                <ChevronDown
+                                                  className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id]
+                                                    ? 'transform rotate-180'
+                                                    : ''
+                                                    }`}
+                                                />
                                               </div>
-                                              <div className="flex items-center gap-6">
-                                                {question.snapshot?.options?.length > 0 && (
-                                                  <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium text-gray-500">Options:</span>
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                      {question.snapshot.options.map((option, optionIdx) => (
-                                                        <div
-                                                          key={optionIdx}
-                                                          className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border border-gray-200"
-                                                        >
-                                                          {option}
-                                                        </div>
-                                                      ))}
+
+                                              {expandedQuestions[question._id] && (
+                                                <div className="px-4 py-3">
+                                                  <div className="flex justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="text-sm font-medium text-gray-500">
+                                                        Type:
+                                                      </span>
+                                                      <span className="text-sm text-gray-700">
+                                                        {question.snapshot?.questionType || 'Not specified'}
+                                                      </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="text-sm font-medium text-gray-500">
+                                                        Score:
+                                                      </span>
+                                                      <span className="text-sm text-gray-700">
+                                                        {question.snapshot?.score || '0'}
+                                                      </span>
                                                     </div>
                                                   </div>
-                                                )}
-                                              </div>
 
-                                              <div className="flex items-center gap-2 mt-2">
-                                                <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Correct Answer:</span>
-                                                <span className="text-sm text-gray-700">
-                                                  {question.snapshot?.correctAnswer || 'Not specified'}
-                                                </span>
-                                              </div>
+                                                  {/* Display question options if MCQ */}
+                                                  {question.snapshot?.questionType === 'MCQ' && (
+                                                    <div className="mt-2">
+                                                      <span className="text-sm font-medium text-gray-500">
+                                                        Options:
+                                                      </span>
+                                                      <div className="grid grid-cols-2 gap-2 mt-1">
+                                                        {question.snapshot?.options?.map((option, optIdx) => (
+                                                          <div
+                                                            key={optIdx}
+                                                            //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                            className={`text-sm p-2 rounded border ${option === question.snapshot.correctAnswer
+                                                              ? 'bg-green-50 border-green-200 text-green-800'
+                                                              : 'bg-gray-50 border-gray-200'
+                                                              }`}
+                                                          >
+                                                            {option}
+                                                            {option === question.snapshot.correctAnswer && (
+                                                              <span className="ml-2 text-green-600">✓</span>
+                                                            )}
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                  )}
+
+                                                  {/* Display correct answer */}
+                                                  {/* <div className="mt-2">
+                                                                                   <span className="text-sm font-medium text-gray-500">
+                                                                                     Correct Answer:
+                                                                                   </span>
+                                                                                   <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                                                                                     {question.snapshot?.correctAnswer || 'Not specified'}
+                                                                                   </div>
+                                                                                 </div> */}
+
+                                                  {/* Additional question metadata */}
+                                                  <div className="grid grid-cols-2 gap-4 mt-3">
+                                                    <div>
+                                                      <span className="text-xs font-medium text-gray-500">
+                                                        Difficulty:
+                                                      </span>
+                                                      <span className="text-xs text-gray-700 ml-1">
+                                                        {question.snapshot?.difficultyLevel || 'Not specified'}
+                                                      </span>
+                                                    </div>
+                                                    <div>
+                                                      <span className="text-xs font-medium text-gray-500">
+                                                        Skills:
+                                                      </span>
+                                                      <span className="text-xs text-gray-700 ml-1">
+                                                        {question.snapshot?.skill?.join(', ') || 'None'}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
                                             </div>
-                                          )}
-                                        </div>
-                                      ))
-                                    ) : (
-                                      <div className="pl-4 py-2">
-                                        <p className="text-sm text-gray-500">No questions available for this section.</p>
+                                          ))
+                                        ) : (
+                                          <div className="text-center py-4 text-gray-500">
+                                            No questions found in this section
+                                          </div>
+                                        )}
                                       </div>
-                                    )
-                                  ) : (
-                                    <div className="pl-4 py-2">
-                                      <p className="text-sm text-gray-500">Loading questions...</p>
-                                      <div className="mt-2 w-8 h-8 border-t-2 border-blue-500 rounded-full animate-spin"></div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                                    )}
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-center py-4 text-gray-500">
+                                No sections available for this assessment
+                              </div>
+                            )}
+                          </div>
+                        )
+                      }
                     </div>
                   )}
-
-                  {showQuestions && !round.assessmentId && questions.length > 0 && (
-                    <div className="space-y-2">
-                      {questions.map((question) => (
-                        <div key={question._id} className="text-sm text-gray-600">
-                          • {question.snapshot?.questionText || "No question text available"}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-
 
 
 

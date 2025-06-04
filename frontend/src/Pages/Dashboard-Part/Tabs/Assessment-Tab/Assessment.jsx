@@ -19,6 +19,7 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import AssessmentKanban from "./AssessmentKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
+import { config } from "../../../../config.js";
 
 const Assessment = () => {
   const { assessmentData, fetchAssessmentData, loading, skills, qualification } = useCustomContext();
@@ -58,7 +59,7 @@ const Assessment = () => {
         try {
           const sectionPromises = currentAssessments.map(async (assessment) => {
             const response = await axios.get(
-              `${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
+              `${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
             );
             const sections = response.data.exists === false
               ? 0
@@ -177,7 +178,7 @@ const Assessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "N/A"}
+          {value || "Not Provided"}
         </div>
       ),
     },
@@ -189,28 +190,29 @@ const Assessment = () => {
     {
       key: "NumberOfQuestions",
       header: "No.of Questions",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "DifficultyLevel",
       header: "Difficulty Level",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "totalScore",
       header: "Total Score",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
     {
       key: "passScore",
       header: "Pass Score (Number / %)",
       render: (value, row) =>
-        `${row.passScore || "N/A"} ${row.passScoreType === "Percentage" ? "%" : "Number"}`,
+row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided"
+
     },
     {
       key: "Duration",
       header: "Duration",
-      render: (value) => value || "N/A",
+      render: (value) => value || "Not Provided",
     },
   ];
 
@@ -269,13 +271,13 @@ const Assessment = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed md:mt-6 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <main className="px-6 max-w-7xl mx-auto">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
           <div className="sm:px-0">
             <Header
               title="Assessment Templates"
               onAddClick={() => navigate("/assessment/new")}
-              addButtonText="New"
+              addButtonText="New Template"
             />
             <Toolbar
               view={viewMode}

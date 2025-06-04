@@ -1,15 +1,16 @@
 const InterviewTemplate = require('../models/InterviewTemplate');
 
+
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
     try {
         const template = new InterviewTemplate({
             ...req.body,
             // For now, we'll use a default user ID since auth is not implemented
-            createdBy: req.body.tenantId ,
-            tenantId: req.body.tenantId 
+            createdBy: req.body.tenantId,
+            tenantId: req.body.tenantId
         });
-        
+
         const savedTemplate = await template.save();
         res.status(201).json({
             status: 'success',
@@ -24,61 +25,83 @@ exports.createInterviewTemplate = async (req, res) => {
 };
 
 // Get all interview templates for a tenant
+// Get all interview templates based on organization or owner
 exports.getAllTemplates = async (req, res) => {
-    try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        // const tenantId = "670286b86ebcb318dab2f676";
-        const tenantId = req.query.tenantId;
-        const templates = await InterviewTemplate.find({ tenantId })
-            .sort({ createdAt: -1 });
-            
-        res.status(200).json({
-            success: true,
-            data: templates
+  try {
+    const { tenantId, ownerId, organization } = req.query;
+
+    let filter = {};
+
+    if (organization === 'true') {
+      if (!tenantId) {
+        console.error('Missing tenantId for organization');
+        return res.status(400).json({
+          success: false,
+          message: 'tenantId is required for organization',
         });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
+      }
+      filter.tenantId = tenantId;
+    } else {
+      if (!ownerId) {
+        console.error('Missing ownerId for individual user');
+        return res.status(400).json({
+          success: false,
+          message: 'ownerId is required for individual user',
         });
+      }
+      filter.ownerId = ownerId;
+      console.log('Filtering by ownerId:', ownerId);
     }
+
+    const templates = await InterviewTemplate.find(filter);
+
+    return res.status(200).json({
+      success: true,
+      data: templates,
+    });
+  } catch (error) {
+    console.error('Error fetching interview templates:', error.message, error.stack);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.',
+      error: error.message,
+    });
+  }
 };
 
 // Get template by ID
-exports.getTemplateById = async (req, res) => {
-    try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        // const tenantId = "670286b86ebcb318dab2f676";
-        const tenantId = req.query.tenantId;
-        const template = await InterviewTemplate.findOne({
-            _id: req.params.id,
-            tenantId
-        });
+// exports.getTemplateById = async (req, res) => {
+//     try {
+//         const tenantId = req.query.tenantId;
+//         const template = await InterviewTemplate.findOne({
+//             _id: req.params.id,
+//             tenantId
+//         });
 
-        if (!template) {
-            return res.status(404).json({
-                success: false,
-                message: 'Template not found'
-            });
-        }
+//         if (!template) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Template not found'
+//             });
+//         }
 
-        res.status(200).json({
-            success: true,
-            data: template
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
+//         res.status(200).json({
+//             success: true,
+//             data: template
+//         });
+//     } catch (error) {
+//         res.status(400).json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
+// };
 
 
 exports.updateTemplate = async (req, res) => {
     try {
         // Validate required fields
-        if (!req.body.tenantId ) {
+        if (!req.body.tenantId) {
             return res.status(400).json({
                 status: false,
                 message: 'Tenant ID is required'
@@ -92,7 +115,10 @@ exports.updateTemplate = async (req, res) => {
             });
         }
 
-      
+        // console.log("req.body", req.body);
+
+
+
         // Prepare update data
         const updateData = {
             updatedAt: Date.now()
@@ -116,9 +142,12 @@ exports.updateTemplate = async (req, res) => {
             // Process each round
             const processedRounds = req.body.rounds.map((round, index) => {
                 // Ensure sequence is set - use provided or default to position
-                const sequence = typeof round.sequence === 'number' 
-                    ? round.sequence 
+                const sequence = typeof round.sequence === 'number'
+                    ? round.sequence
                     : index + 1;
+
+                console.log("req.body.rounds", req.body.rounds);
+
 
                 // Return the processed round with required fields
                 return {
@@ -133,7 +162,7 @@ exports.updateTemplate = async (req, res) => {
                     interviewQuestionsList: round.interviewQuestionsList || [],
                     assessmentId: round.assessmentId || null,
                     interviewerGroupId: round.interviewerGroupId || null,
-                    interviewers: round.interviewers || [],
+                    internalInterviewers: round.internalInterviewers || [],
                     minimumInterviewers: round.minimumInterviewers || '1',
                     // Include any other fields from the original round
                     ...round
@@ -145,7 +174,7 @@ exports.updateTemplate = async (req, res) => {
         }
 
         // console.log("req", req.body);
-        
+
 
         // Update the template
         const template = await InterviewTemplate.findOneAndUpdate(
@@ -153,12 +182,12 @@ exports.updateTemplate = async (req, res) => {
                 _id: req.params.id,
                 tenantId: req.body.tenantId
             },
-            
-                updateData,
-            
-            { 
-                new: true, 
-                runValidators: true 
+
+            updateData,
+
+            {
+                new: true,
+                runValidators: true
             }
         );
 
@@ -168,7 +197,7 @@ exports.updateTemplate = async (req, res) => {
                 message: 'Template not found'
             });
         }
-// console.log("template", template);
+        // console.log("template", template);
 
         res.status(200).json({
             status: 'success',

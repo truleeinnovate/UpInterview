@@ -13,83 +13,104 @@ import axios from 'axios';
 import { isEmptyObject, validateAvailabilityForm } from '../../../../../../utils/MyProfileValidations';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
+import { config } from '../../../../../../config';
+import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 
 
 
 Modal.setAppElement('#root');
 
-const EditAvailabilityDetails = () => {
-  const {contacts,setContacts} = useCustomContext();
-   const { id } = useParams();
-   const navigate = useNavigate();
+const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSuccess}) => {
+  const {  usersRes } = useCustomContext();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
+  const resolvedId = usersId || id;
+
   // Initialize form data with all days
-  const initialTimes = {
-    Monday: [{ startTime: null, endTime: null }],
-    Tuesday: [{ startTime: null, endTime: null }],
-    Wednesday: [{ startTime: null, endTime: null }],
-    Thursday: [{ startTime: null, endTime: null }],
-    Friday: [{ startTime: null, endTime: null }],
-    Saturday: [{ startTime: null, endTime: null }],
-    Sunday: [{ startTime: null, endTime: null }],
-  };
+  // const initialTimes = {
+  //   Monday: [{ startTime: null, endTime: null }],
+  //   Tuesday: [{ startTime: null, endTime: null }],
+  //   Wednesday: [{ startTime: null, endTime: null }],
+  //   Thursday: [{ startTime: null, endTime: null }],
+  //   Friday: [{ startTime: null, endTime: null }],
+  //   Saturday: [{ startTime: null, endTime: null }],
+  //   Sunday: [{ startTime: null, endTime: null }],
+  // };
+  const [times, setTimes] = useState({
+    Sun: [{ startTime: null, endTime: null }],
+    Mon: [{ startTime: null, endTime: null }],
+    Tue: [{ startTime: null, endTime: null }],
+    Wed: [{ startTime: null, endTime: null }],
+    Thu: [{ startTime: null, endTime: null }],
+    Fri: [{ startTime: null, endTime: null }],
+    Sat: [{ startTime: null, endTime: null }]
+  });
 
 
   // Separate form state
   const [formData, setFormData] = useState({
-    times: initialTimes,
+    times: times,
     selectedTimezone: '',
     selectedOption: ''
   });
 
+
+
   // Initialize form state when modal opens
   useEffect(() => {
     const fetchData = () => {
-    
-   try {
+      try {
+        // const user = contacts.find(user => user.ownerId === id);
+        //  const contact = singlecontact[0]; 
+        // console.log("singlecontact availability contact" , contact);
 
+        // let contact
 
-    const user = contacts.find(user => user.ownerId === id);
-            
+        // if (from === "users") {
+        //   const selectedContact = usersRes.find(user => user.contactId === id);
+        //   contact = selectedContact
+        // } else {
+        //   contact = singlecontact[0];
+        // }
 
-    console.log("availability user" , user);
-    
-      
+         const contact = usersRes.find(user => user.contactId === resolvedId);
 
-    const updatedTimes = { ...initialTimes };
+        
+      const updatedTimes = { ...times };
 
-    // Map availability data from userData
-    if (user.availability && user.availability[0]?.days) {
-      user.availability[0].days.forEach(day => {
-        updatedTimes[day.day] = day.timeSlots.map(slot => ({
-          startTime: slot.startTime ? new Date(slot.startTime) : null,
-          endTime: slot.endTime ? new Date(slot.endTime) : null
-        }));
-      });
+      // Safely map availability if exists
+      const days = contact?.availability?.[0]?.days;
+      if (Array.isArray(days)) {
+        days.forEach(day => {
+          updatedTimes[day.day] = day.timeSlots.map(slot => ({
+            startTime: slot?.startTime || null,
+            endTime: slot?.endTime || null
+          }));
+        });
+      }
+
+      setTimes(updatedTimes);
+
+        setFormData({
+          // times: updatedTimes, // Deep copy
+          selectedTimezone: contact?.timeZone || "",
+          selectedOption: contact?.preferredDuration || '',
+          id: contact._id
+        });
+        setErrors({});
+
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+
     }
-
-    setFormData({
-      times: updatedTimes, // Deep copy
-      selectedTimezone: user.timeZone ,
-      selectedOption: user?.preferredDuration || '',
-      id:user._id
-    });
-    setErrors({});
-    
-   } catch (error) {
-    console.error('Error fetching user data:', error);
-   }
-    
-  }
-
- 
     fetchData();
-  
-  }, [id]);
+  }, [resolvedId, usersRes]);
 
   // Handler functions from AvailabilityDetails
   const handlePaste = () => {
@@ -189,10 +210,22 @@ const EditAvailabilityDetails = () => {
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+ 
+  const handleCloseModal = () => {
+     if (from === 'users') {
+     setAvailabilityEditOpen(false);
+   
+    } else {
+      navigate('/account-settings/my-profile/availability');
+    }
+
+  }
+
+
   const handleSave = async (e) => {
     e.preventDefault();
 
-    const validationErrors = validateAvailabilityForm(formData);
+    const validationErrors = validateAvailabilityForm(formData, times);
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
@@ -201,14 +234,14 @@ const EditAvailabilityDetails = () => {
 
     // Format availability data for API
     const formattedAvailability = {
-      days: Object.entries(formData.times)
+      days: Object.entries(times)
         .map(([day, timeSlots]) => ({
           day,
           timeSlots: timeSlots
             .filter(slot => slot.startTime && slot.endTime) // Only include slots with both start and end times
             .map(slot => ({
-              startTime: slot.startTime.toISOString(),
-              endTime: slot.endTime.toISOString(),
+              startTime: slot.startTime,
+              endTime: slot.endTime,
             })),
         }))
         .filter(day => day.timeSlots.length > 0), // Only include days with valid time slots
@@ -228,13 +261,14 @@ const EditAvailabilityDetails = () => {
 
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData
       );
 
       if (response.status === 200) {
-
-        navigate('/account-settings/my-profile/availability')
+        handleCloseModal()
+         onSuccess();
+        // navigate('/account-settings/my-profile/availability')
         // Update parent states
         // setParentTimes(formData.times);
         // setParentSelectedTimezone(typeof formData.selectedTimezone === 'object'
@@ -286,7 +320,7 @@ const EditAvailabilityDetails = () => {
     <Modal
       // isOpen={isBasicModalOpen}
       isOpen={true}
-      onRequestClose={() =>  navigate('/account-settings/my-profile/availability')}
+      onRequestClose={handleCloseModal}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
@@ -306,11 +340,7 @@ const EditAvailabilityDetails = () => {
               )}
             </button>
             <button
-              onClick={() => {
-                navigate('/account-settings/my-profile/availability')
-                //   setEditData(userData);
-                // setIsBasicModalOpen(false);
-              }}
+              onClick={handleCloseModal}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="w-5 h-5 text-gray-500" />
@@ -349,8 +379,20 @@ const EditAvailabilityDetails = () => {
               {/* {errors.TimeSlot && (
                   <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
                 )} */}
-              <div className="border border-gray-300 p-4 rounded-lg w-full">
-                {Object.keys(formData.times).map((day) => (
+              <div className=" p-4  rounded-lg ">
+                {/* Availability */}
+
+                <Availability
+                  times={times}
+                  onTimesChange={setTimes}
+                  availabilityError={errors}
+                  onAvailabilityErrorChange={setErrors}
+                  from="myProfileEditPage"
+                // setAvailabilityDetailsData={setAvailabilityDetailsData}
+
+                />
+
+                {/* {Object.keys(formData.times).map((day) => (
                   <div key={day} className="relative   ">
                     <div className="flex space-x-3 mt-2  ">
                       <p className="border border-gray-400 rounded w-20 h-9 pt-2 text-center text-sm">
@@ -394,14 +436,14 @@ const EditAvailabilityDetails = () => {
                                 }}
                                 popperPlacement="bottom-start"
                               />
-                              {/* {formData.times[day].length > 1 || (timeSlot.startTime || timeSlot.endTime) ? ( */}
+                             
                               <X
-                                // className={`text-xl cursor-pointer text-red-500 `}
+                               
                                 className={`text-4xl cursor-pointer text-red-500 ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}`}
-                                // ${timeSlot.startTime && timeSlot.endTime && timeSlot.startTime !== "unavailable" ? "visible" : "invisible"}
+                              
                                 onClick={() => handleRemoveTimeSlot(day, index)}
                               />
-                              {/* // ) : null} */}
+                             
                             </>
 
                           </div>
@@ -473,7 +515,9 @@ const EditAvailabilityDetails = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                ))} */}
+
+
               </div>
             </div>
           </div>
@@ -508,11 +552,7 @@ const EditAvailabilityDetails = () => {
 
         <div className="flex justify-end space-x-3 mt-10">
           <button
-            onClick={() => {
-              navigate('/account-settings/my-profile/availability')
-              // setEditData(userData);
-              // setIsBasicModalOpen(false);
-            }}
+            onClick={handleCloseModal}
             className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
           >
             Cancel

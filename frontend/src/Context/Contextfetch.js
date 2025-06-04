@@ -10,6 +10,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
+  const organization = tokenPayload?.organization;
+
+
+
+
+
+
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const sharingPermissions = useMemo(
     () => sharingPermissionscontext.questionBank || {},
@@ -25,10 +36,7 @@ const CustomProvider = ({ children }) => {
   const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   const [createdLists, setCreatedLists] = useState([]);
 
-  const authToken = Cookies.get('authToken');
-  const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload?.userId;
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
@@ -56,13 +64,11 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // console.log('Fetching user profile...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
-        // console.log('User profile fetched successfully:', response.data);
         setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
-      }  
+      }
     };
 
     if (userId) {
@@ -73,7 +79,6 @@ const CustomProvider = ({ children }) => {
   // Fetch master data
   useEffect(() => {
     const fetchMasterData = async () => {
-      // console.log('Fetching master data...');
       try {
         const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
@@ -85,16 +90,6 @@ const CustomProvider = ({ children }) => {
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
-
-        // console.log('Master data fetched successfully');
-        // console.log('Locations:', locationsRes.data.length);
-        // console.log('Industries:', industriesRes.data.length);
-        // console.log('Roles:', rolesRes.data.length);
-        // console.log('Skills:', skillsRes.data.length);
-        // console.log('Technologies:', TechnologyRes.data.length);
-        // console.log('Qualifications:', QualificationRes.data.length);
-        // console.log('Colleges:', CollegeRes.data.length);
-        // console.log('Companies:', CompanyRes.data.length);
 
         setLocations(locationsRes.data);
         setIndustries(industriesRes.data);
@@ -117,10 +112,8 @@ const CustomProvider = ({ children }) => {
   // Fetch Interviewer Questions
   const getInterviewerQuestions = useCallback(async () => {
     try {
-      // console.log('Fetching interviewer questions...');
       const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
       const response = await axios.get(url);
-      // console.log('Interviewer questions fetched successfully:', response.data.questions.length);
 
       const formattedList = response.data.questions.map((question) => ({
         id: question._id,
@@ -144,9 +137,7 @@ const CustomProvider = ({ children }) => {
   // Fetch My Questions Data
   const fetchMyQuestionsData = useCallback(async () => {
     try {
-      // console.log('Fetching my questions data...');
       const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
-      // console.log('My questions data filtered:', filteredPositions);
 
       const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
         acc[key] = Array.isArray(filteredPositions[key])
@@ -155,7 +146,6 @@ const CustomProvider = ({ children }) => {
         return acc;
       }, {});
 
-      // console.log('Processed my questions data:', newObject);
       setMyQuestionsList(newObject);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -167,9 +157,7 @@ const CustomProvider = ({ children }) => {
   // Fetch Created Lists
   const fetchLists = useCallback(async () => {
     try {
-      // console.log(`Fetching lists for user ${userId}...`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
-      // console.log('User lists fetched successfully:', response.data);
       setCreatedLists(response.data.reverse());
     } catch (error) {
       // console.error('Error fetching lists:', error);
@@ -185,13 +173,10 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const getQuestions = async () => {
       try {
-        // console.log('Fetching suggested questions...');
         const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
-        // console.log('Suggested questions response:', response.data);
 
         if (response.data.success) {
           const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
-          // console.log('Processed suggested questions:', newList);
           setSuggestedQuestions(newList);
           setSuggestedQuestionsFilteredData(newList);
         }
@@ -279,18 +264,22 @@ const CustomProvider = ({ children }) => {
     enabled: !!sharingPermissionsPosition,
   });
 
+
   // Add position mutation
   const addOrUpdatePosition = useMutation({
     mutationFn: async ({ id, data }) => {
-      const url = id ? `${config.REACT_APP_API_URL}/position/${id}` : `${config.REACT_APP_API_URL}/position`;
+      const url = id
+        ? `${config.REACT_APP_API_URL}/position/${id}`
+        : `${config.REACT_APP_API_URL}/position`;
 
       const method = id ? 'patch' : 'post';
+      // return await axios[method](url, data);
       const response = await axios[method](url, data);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['positions']);
-    },
+    }
   });
 
   // Mockinterview
@@ -342,8 +331,8 @@ const CustomProvider = ({ children }) => {
       };
 
       const url = isEdit
-        ? `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${process.env.REACT_APP_API_URL}/mockinterview`;
+        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview`;
 
       const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
 
@@ -363,7 +352,7 @@ const CustomProvider = ({ children }) => {
               requestMessage: "Outsource interview request",
               expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             };
-            await axios.post(`${process.env.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
           })
         );
       }
@@ -520,31 +509,69 @@ const CustomProvider = ({ children }) => {
   // notifications
   const [notificationsData] = useState([]);
 
-  const [assessmentData, setAssessmentData] = useState([]);
   const assessmentPermissions = useMemo(
     () => sharingPermissionscontext.assessment || {},
     [sharingPermissionscontext]
   );
 
-  const fetchAssessmentData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
-      // Reverse the data to show the most recent first
-      const reversedData = filteredAssessments.reverse();
-      setAssessmentData(reversedData);
-    } catch (error) {
-      console.error('Error fetching assessment data:', error);
-    } finally {
-      setLoading(false);
+  const { data: assessmentData = [], isLoading: assessmentDataLoading } =
+    useQuery({
+      queryKey: ['assessments', assessmentPermissions],
+      queryFn: async () => {
+        const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
+        return filteredAssessments.reverse(); // recent first
+      },
+      enabled: !!assessmentPermissions,
+    });
+
+  const useAddOrUpdateAssessment = useMutation({
+    mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
+      let response;
+
+      if (isEditing) {
+        // Update existing assessment
+        response = await axios.patch(
+          `${config.REACT_APP_API_URL}/assessments/update/${id}`,
+          assessmentData
+        );
+      } else {
+        if (!tabsSubmitStatus?.["Basicdetails"]) {
+          // Create new assessment
+          response = await axios.post(
+            `${config.REACT_APP_API_URL}/assessments/new-assessment`,
+            assessmentData
+          );
+        } else {
+          // Update after Basicdetails
+          response = await axios.patch(
+            `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
+            assessmentData
+          );
+        }
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['assessments']); // Refresh list
+    },
+    onError: (error) => {
+      console.error('Assessment save error:', error.message);
+      // You might want to show a toast notification here
     }
-  }, [assessmentPermissions]);
+  });
 
-  useEffect(() => {
-    fetchAssessmentData();
-  }, [fetchAssessmentData]);
 
-  const tenantId = tokenPayload?.tenantId;
+
+  const useUpsertAssessmentQuestions = useMutation({
+    mutationFn: async (questionsData) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
+        questionsData
+      );
+      return response.data;
+    }
+  });
 
   // Fetch groups
   const [groups, setGroups] = useState([]);
@@ -558,11 +585,12 @@ const CustomProvider = ({ children }) => {
     }
 
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups/data`, {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/groups/data`, {
         params: {
           tenantId: tenantId,
         },
       });
+
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
@@ -588,7 +616,7 @@ const CustomProvider = ({ children }) => {
   // Fetch users data
   const fetchUsersData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
       setUsersData(response.data);
     } catch (error) {
       console.error('Error fetching users data:', error);
@@ -602,37 +630,37 @@ const CustomProvider = ({ children }) => {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
- 
+
   const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
     if (!assessmentId) {
       return null;
     }
- 
+
     setQuestionsLoading(true);
     setQuestionsError(null);
- 
+
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
- 
+
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       // Create section questions mapping
       const newSectionQuestions = {};
- 
+
       sections.forEach((section) => {
         if (!section._id) {
           console.warn('Section missing _id:', section);
           return;
         }
- 
+
         newSectionQuestions[section._id] = {
           sectionName: section?.sectionName,
           passScore: Number(section.passScore || 0),
@@ -660,17 +688,17 @@ const CustomProvider = ({ children }) => {
           }))
         };
       });
- 
+
       // Verify questions exist
       const hasQuestions = Object.values(newSectionQuestions).some(
         section => section.questions.length > 0
       );
- 
+
       if (!hasQuestions) {
         setSectionQuestions({ noQuestions: true });
         return { noQuestions: true };
       }
- 
+
       setSectionQuestions(newSectionQuestions);
       return newSectionQuestions;
     } catch (error) {
@@ -683,29 +711,53 @@ const CustomProvider = ({ children }) => {
   }, []);
 
   // interview template
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
-    queryKey: ['interviewTemplates', tenantId],
+  const { data: templates = [], isLoading: templatesLoading, error } = useQuery({
+    queryKey: ['interviewTemplates', tenantId, userId],
     queryFn: async () => {
-      const apiUrl = `${process.env.REACT_APP_API_URL}/interviewTemplates?tenantId=${tenantId}`;
-      const response = await axios.get(apiUrl);
-      return response.data.data;
+      try {
+        let queryString = '';
+        if (organization) {
+          queryString = `tenantId=${tenantId}&organization=true`;
+        } else {
+          queryString = `ownerId=${userId}&organization=false`;
+        }
+        const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
+        const headers = { Authorization: `Bearer ${authToken}` };
+        const response = await axios.get(apiUrl, { headers });
+        const templatesData = response.data.data;
+
+        return templatesData;
+      } catch (err) {
+        console.error('Error fetching templates:', err);
+        throw err; // Let react-query handle the error
+      }
     },
-    enabled: !!tenantId,
+    enabled: !!authToken,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
+
+  // Log error if it occurs
+  if (error) {
+    console.error('useQuery error:', error.message);
+  }
+
 
   // Mutation for creating/updating templates
   const saveTemplateMutation = useMutation({
     mutationFn: async ({ id, templateData, isEditMode }) => {
       let response;
       if (isEditMode) {
-        response = await axios.patch(`${process.env.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+        response = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
           tenantId,
+          ownerId: userId,
           templateData,
         });
       } else {
-        response = await axios.post(`${process.env.REACT_APP_API_URL}/interviewTemplates`, {
+        response = await axios.post(`${config.REACT_APP_API_URL}/interviewTemplates`, {
           ...templateData,
           tenantId,
+          ownerId: userId,
         });
       }
       return response.data;
@@ -767,6 +819,8 @@ const CustomProvider = ({ children }) => {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
+
+
       setContacts(allUsers_data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -780,8 +834,52 @@ const CustomProvider = ({ children }) => {
   }, []);
 
 
+  const [singlecontact, setsingleContact] = useState([]);
 
-    // Query for fetching users
+// console.log("singlecontact", singlecontact);
+
+
+   
+
+  useEffect(() => {
+    const fetchContacts = async (usersId = null) => {
+      try {
+
+
+
+        const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
+        setsingleContact(res.data);
+      } catch (err) {
+        console.error('Error fetching user contacts:', err);
+      }
+    };
+  
+    fetchContacts();
+  }, [userId]);
+
+
+
+
+  // getting interveiwers and showing it in the home (available interviewers) and interveiwers
+  const [interviewers, setInterviewers] = useState([]);
+  useEffect(() => {
+    const fetchInterviewers = async () => {
+      try {
+        const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
+
+        setInterviewers(response.data);
+      } catch (err) {
+        console.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchInterviewers();
+  }, [tenantId]);
+
+
+
+  // Query for fetching users
   const {
     data: usersRes = [],
     isLoading: usersLoading,
@@ -790,14 +888,14 @@ const CustomProvider = ({ children }) => {
     queryKey: ['users', tenantId],
     queryFn: async () => {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/organization/${tenantId}`
+        `${config.REACT_APP_API_URL}/users/${tenantId}`
       );
-      
+
       // Process image URLs and reverse the array (newest first)
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
-            const imageUrl = `${process.env.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+            const imageUrl = `${config.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
             return { ...contact, imageUrl };
           }
           return contact;
@@ -807,11 +905,14 @@ const CustomProvider = ({ children }) => {
     enabled: !!tenantId,
   });
 
+  // console.log("usersRes", usersRes);
+  
+
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, editMode }) => {
       const payload = {
-        UserData: { 
+        UserData: {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -834,7 +935,7 @@ const CustomProvider = ({ children }) => {
 
       // Use the same endpoint for both create and edit
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/Organization/new-user-Creation`,
+        `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
       );
 
@@ -845,17 +946,17 @@ const CustomProvider = ({ children }) => {
         imageData.append("type", "contact");
         imageData.append("id", response.data.contactId);
 
-        await axios.post(`${process.env.REACT_APP_API_URL}/upload`, imageData, {
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else if (!userData.imageUrl && editMode) {
         // Delete image if no file and no existing image in edit mode
-        await axios.delete(`${process.env.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
+        await axios.delete(`${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
       }
 
       // Send welcome email only for new user creation
       if (!editMode) {
-        await axios.post(`${process.env.REACT_APP_API_URL}/forgot-password`, {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
           type: "usercreatepass"
         });
@@ -875,12 +976,12 @@ const CustomProvider = ({ children }) => {
 
   // Mutation for toggling user status
   const toggleUserStatus = useMutation({
-    mutationFn: async ({userId,newStatus}) => {
+    mutationFn: async ({ userId, newStatus }) => {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/users/${userId}/status`,
+        `${config.REACT_APP_API_URL}/users/${userId}/status`,
         {
           status: newStatus, // or you could send the new status explicitly
-          modifiedBy: `admin - ${tenantId}` // Track who made the change
+          updatedBy: `${userId}` // Track who made the change
         }
       );
       return response.data;
@@ -898,7 +999,7 @@ const CustomProvider = ({ children }) => {
   const deleteUser = useMutation({
     mutationFn: async (userId) => {
       const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL}/users/${userId}`
+        `${config.REACT_APP_API_URL}/users/${userId}`
       );
       return response.data;
     },
@@ -912,58 +1013,95 @@ const CustomProvider = ({ children }) => {
   });
 
 
-     const [currentPlan, setcurrentPlan] = useState([]);
-      // const [loading, setLoading] = useState(true);
-      // this will check that that plans is already set or not
-  
-      useEffect(() => {
-        const fetchData = async () => {
-          try {
-            const Sub_res = await axios.get(`${process.env.REACT_APP_API_URL}/subscriptions/${userId}`);
-            const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-            // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("Sub_res Sub_res",Subscription_data);
-  
-  
-            if (Subscription_data.subscriptionPlanId) {
-              setcurrentPlan(Subscription_data);
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-    
-        if (userId) {
-          fetchData();
-        }
-      }, [userId]);
+  const [currentPlan, setcurrentPlan] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // this will check that that plans is already set or not
 
-          const [walletBalance, SetWalletBalance] = useState([]);
-      // const [loading, setLoading] = useState(true);
-      // this will check that that plans is already set or not
-  
-      useEffect(() => {
-        const fetchWalletData = async () => {
-          try {
-            const WalletBalance_res = await axios.get(`${process.env.REACT_APP_API_URL}/wallet/${userId}`);
-            const WalletBalance_data = WalletBalance_res.data || {};
-            // If subscription exists, set it; otherwise, keep it empty
-        //  console.log("WalletBalance_res ",WalletBalance_res);
-  
-  
-            if (WalletBalance_data) {
-              SetWalletBalance(WalletBalance_data);
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-    
-        if (userId) {
-          fetchWalletData();
-        }
-      }, [userId]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
+        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
+        // If subscription exists, set it; otherwise, keep it empty
 
+        if (Subscription_data.subscriptionPlanId) {
+          setcurrentPlan(Subscription_data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
+
+  const [walletBalance, SetWalletBalance] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // this will check that that plans is already set or not
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
+        const WalletBalance_data = WalletBalance_res.data || {};
+
+
+        if (WalletBalance_data) {
+          SetWalletBalance(WalletBalance_data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    if (userId) {
+      fetchWalletData();
+    }
+  }, [userId]);
+
+  const [tickets, setTickets] = useState([]);
+
+  const [userRole, setuserRole] = useState("Admin");
+
+  const getTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+      let filteredTickets = response.data.tickets || [];
+
+      if (userRole === "SuperAdmin" || userRole === "Support Team") {
+        setTickets(filteredTickets);
+      } else if (userRole === "Admin" && tenantId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.tenantId === tenantId
+        );
+        setTickets(filteredTickets);
+      } else if (userRole === "Individual" && userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.ownerId === userId
+        );
+        setTickets(filteredTickets);
+      } else if (userId) {
+        filteredTickets = filteredTickets.filter(
+          (ticket) => ticket.assignedToId === userId
+        );
+        setTickets(filteredTickets);
+      } else {
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userRole, tenantId, userId]);
+
+  useEffect(() => {
+    getTickets();
+  }, [getTickets]);
 
   return (
     <CustomContext.Provider
@@ -999,18 +1137,18 @@ const CustomProvider = ({ children }) => {
         loading,
 
         // users
-         usersRes,
-    usersLoading,
-    refetchUsers,
-    addOrUpdateUser,
-    toggleUserStatus,
-    deleteUser,
+        usersRes,
+        usersLoading,
+        refetchUsers,
+        addOrUpdateUser,
+        toggleUserStatus,
+        deleteUser,
 
-    // wallet Balance
-    walletBalance,
+        // wallet Balance
+        walletBalance,
 
-    // subscription current plan 
-    currentPlan,
+        // subscription current plan 
+        currentPlan,
 
         // // candidate
         // candidateData,
@@ -1037,7 +1175,9 @@ const CustomProvider = ({ children }) => {
 
         // assessment
         assessmentData,
-        fetchAssessmentData,
+        useAddOrUpdateAssessment,
+        useUpsertAssessmentQuestions,
+
 
         // master data
         skills,
@@ -1085,6 +1225,13 @@ const CustomProvider = ({ children }) => {
         fetchContactsData,
         contacts,
         setContacts,
+        singlecontact,
+        // fetchContacts,
+
+        interviewers,
+
+        tickets,
+        userRole
       }}
     >
       {children}

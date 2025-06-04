@@ -2,6 +2,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTrash, FaSearch, FaRegUser } from 'react-icons/fa';
+import { config } from '../../config';
+import Loading from '../../Components/Loading';
 
 
 const AssessmentType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndAddRound, onUpdate, onValidityChange, isEditMode, isViewMode, rounds }) => {
@@ -422,7 +424,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`)
+        const response = await axios.get(`${config.REACT_APP_API_URL}/users`)
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error)
@@ -436,7 +438,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
     const fetchGroups = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/groups`);
         console.log('Fetched groups:', response.data); // Debug log
         setGroups(response.data);
       } catch (error) {
@@ -942,7 +944,7 @@ const TechnicalType = ({ roundDetails, onCancel, onSave, roundNumber, onSaveAndA
                 {showDropdown && formData.selectedInterviewersType && formData.interviewerType !== 'Outsourced Interviewer' && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                     {loading ? (
-                      <div className="px-3 py-2 text-gray-500">Loading...</div>
+                      <div className="px-3 py-2 text-gray-500"><Loading /></div>
                     ) : formData.selectedInterviewersType === 'Individual' ? (
                       users.length > 0 ? (
                         users.map((user, index) => (
@@ -1296,8 +1298,8 @@ const TemplateModal = ({ isOpen, onClose, isEditMode, isViewMode, setEditMode, s
 
     try {
       const url = isEditMode 
-        ? `${process.env.REACT_APP_API_URL}/interviewTemplates/${initialData._id}`
-        : `${process.env.REACT_APP_API_URL}/interviewTemplates`;
+        ? `${config.REACT_APP_API_URL}/interviewTemplates/${initialData._id}`
+        : `${config.REACT_APP_API_URL}/interviewTemplates`;
       
       const response = await axios[isEditMode ? 'patch' : 'post'](url, templateData, {
         headers: {

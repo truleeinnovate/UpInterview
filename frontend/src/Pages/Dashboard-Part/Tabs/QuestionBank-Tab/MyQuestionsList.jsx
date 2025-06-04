@@ -18,20 +18,31 @@ import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
-// import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { config } from "../../../../config.js";
+import Loading from "../../../../Components/Loading.js";
+import { Pencil,  } from 'lucide-react';
 
-// const MyQuestionsList = ({ interviewQuestionsList, setInterviewQuestionsList, section, questionBankPopupVisibility }) => {
-// changes made by shashank
+
+const removeQuestionFromChild = (questionId, myQuestionsList) => {
+   const updatedList = {};
+
+  Object.keys(myQuestionsList).forEach(listName => {
+    updatedList[listName] = myQuestionsList[listName].map(question =>
+      question._id === questionId ? { ...question, isAdded: false } : question
+    );
+  });
+
+  return updatedList;
+};
+
 
 const MyQuestionsList = ({
   assessmentId,
   sectionName,
   updateQuestionsInAddedSectionFromQuestionBank,
-  interviewQuestionsList,
-  setInterviewQuestionsList,
-  section,
+  type,
   questionBankPopupVisibility,
   addedSections,
   questionsLimit,
@@ -39,13 +50,25 @@ const MyQuestionsList = ({
 
   // mansoor
   fromScheduleLater,
+  interviewQuestionsLists,
   onAddQuestion,
+  handleRemoveQuestion,
+  removedQuestionIds = []
 }) => {
+const { 
+  fetchMyQuestionsData,
+  myQuestionsList,
+  setMyQuestionsList,
+  setInterviewerSectionData
+} = useCustomContext();
   // const { objectPermissionscontext } = usePermissions();
   // const objectPermissions = useMemo(
   //   () => objectPermissionscontext.questionBank || {},
   //   [objectPermissionscontext]
   // );
+
+  // console.log("removedQuestionIds", removedQuestionIds);
+  
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,14 +77,7 @@ const MyQuestionsList = ({
     useState(false);
   const [isFilterByDifficultyOpen, setIsFilterByDifficultyOpen] =
     useState(false);
-  const {
-    // interviewerSectionData,
-    setInterviewerSectionData,
-    myQuestionsList,
-    setMyQuestionsList,
-    // fetchMyQuestionsData,
-    // getInterviewerQuestions,
-  } = useCustomContext();
+ 
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
       myQuestionsListRef.current.openPopup();
@@ -75,6 +91,7 @@ const MyQuestionsList = ({
         sectionId: labelId,
         label: labelName,
       });
+      setActionViewMoreSection({})
     }
   };
 
@@ -105,18 +122,67 @@ const MyQuestionsList = ({
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [sidebarOpen, handleOutsideClick]);
-  const handleLabelChange = (label) => {
+const handleLabelChange = (label) => {
+  // Find the listId for this label from the existing data
+  const allQuestions = Object.values(myQuestionsList).flat();
+  const matchingQuestion = allQuestions.find(q => q.label === label);
+  
+  if (matchingQuestion) {
+    // Store the listId in cookies
+    Cookies.set('lastSelectedListId', matchingQuestion.listId);
     setSelectedLabel(label);
-    setIsDropdownOpen(false);
-    Cookies.set("lastSelectedLabel", label);
-  };
+  }
+  setIsDropdownOpen(false);
+};
   // Load last selected label from localStorage on mount
   useEffect(() => {
-    const savedLabel = Cookies.get("lastSelectedLabel");
-    if (savedLabel) {
-      setSelectedLabel(savedLabel);
+  const lastSelectedListId = Cookies.get('lastSelectedListId');
+  if (lastSelectedListId && myQuestionsList) {
+    const allQuestions = Object.values(myQuestionsList).flat();
+    const matchingQuestion = allQuestions.find(q => 
+      q.listId === lastSelectedListId
+    );
+    if (matchingQuestion) {
+      setSelectedLabel(matchingQuestion.label);
     }
-  }, []);
+  }
+}, [myQuestionsList]);
+
+// Keep your existing fetch call
+useEffect(() => {
+  fetchMyQuestionsData();
+}, [fetchMyQuestionsData]);
+
+  //    useEffect(() => {
+  //   if (removedQuestionIds && removedQuestionIds.length > 0) {
+  //     // Update the local state to mark these questions as not added
+  //     removedQuestionIds.forEach(questionId => {
+  //       setMyQuestionsList(prev => removeQuestionFromChild(questionId, prev));
+  //     });
+  //   }
+  // }, [removedQuestionIds, setMyQuestionsList]);
+
+  useEffect(() => {
+    if (removedQuestionIds && removedQuestionIds.length > 0) {
+     setMyQuestionsList(prev => {
+      let updatedList = { ...prev };
+      removedQuestionIds.forEach(questionId => {
+        updatedList = removeQuestionFromChild(questionId, updatedList);
+      });
+      return updatedList;
+    });
+      // const requiredArray = myQuestionsList;
+      // console.log("myQuestionsList", requiredArray);
+      
+    // const requiredObj = requiredArray.map((item) =>
+    //   item._id === question._id ? { ...item, isAdded: false } : item
+    // );
+    //     setMyQuestionsList((prev) => ({
+    //   ...prev,
+    //   [listName]: requiredObj,
+    // }));
+    }
+  }, [removedQuestionIds, setMyQuestionsList]);
 
 
   const [loading, setLoading] = useState(true);
@@ -154,24 +220,15 @@ const MyQuestionsList = ({
     useState([]);
   const [filteredMyQuestionsList, setFilteredMyQuestionsList] = useState({});
 
-  //changes made by shashank - [09/01/2025]
-  // const [questionScore, setQuestionScore] = useState("");
-  // const [questionScoreError, setQuestionScoreError] = useState("");
 
   useEffect(() => {
     if (myQuestionsList && Object.keys(myQuestionsList).length > 0) {
-      // const newMyQuestionsObj = {
-      //   ...myQuestionsList,
-      //   interviewQuestions: interviewQuestionsList,
-      // };
-      // console.log("new my questions ojb", newMyQuestionsObj);
       setMyQuestionsList(myQuestionsList);
       setFilteredMyQuestionsList(myQuestionsList);
       setLoading(false);
     }
   }, []);
   useEffect(() => {
-    // setIsOpen({ ...myQuestionsList });
     setIsOpen({ ...myQuestionsList });
     setLoading(false);
   }, []);
@@ -215,7 +272,7 @@ const MyQuestionsList = ({
 
   if (loading) {
     return (
-      <div className=" fixed text-center top-60 right-0 left-0">Loading...</div>
+      <div className=" fixed text-center top-60 right-0 left-0"><Loading /></div>
     );
   }
 
@@ -227,6 +284,7 @@ const MyQuestionsList = ({
     setActionViewMoreSection((prev) =>
       prev === sectionIndex ? null : sectionIndex
     );
+    setDropdownOpen(null)
   };
   const toggleSection = (listName) => {
     setIsOpen((prev) => ({
@@ -248,11 +306,13 @@ const MyQuestionsList = ({
   };
   const toggleDropdown = (questionId) => {
     setDropdownOpen(dropdownOpen === questionId ? null : questionId);
+     setActionViewMoreSection({})
   };
 
   const handleEditClick = (question) => {
     setShowNewCandidateContent(question);
     setDropdownOpen(null);
+      
   };
   const handleclose = () => {
     setShowNewCandidateContent(false);
@@ -260,10 +320,10 @@ const MyQuestionsList = ({
 
 
   // added by shashank
-  const onClickAddButton = async (question) => {
+  const onClickAddButton = async (question, listName, indx) => {
     console.log("question", question);
-    // console.log(question)
-    if (section === "assessment") {
+    console.log("type", type)
+    if (type === "assessment") {
       const isDuplicate = addedSections.some(section =>
         section.Questions.some(q => q.questionId === question._id)
       );
@@ -316,6 +376,46 @@ const MyQuestionsList = ({
           toast.success('You have reached the required number of questions!');
         }
       }
+    } else {
+
+      try {
+
+        console.log("question", question);
+
+        const questionToAdd = {
+          questionId: question._id,
+          source: "system",
+          snapshot: question,
+          order: "",
+          customizations: "",
+          // mandatory: mandatoryStatus[item._id] ? "true" : "false",
+        };
+
+        console.log("questionToAdd", questionToAdd);
+
+        if (onAddQuestion) {
+          onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+        }
+
+        const requiredArray = myQuestionsList[listName];
+        const requiredObj = requiredArray.map((item, index) =>
+          index === indx ? { ...item, isAdded: true } : item
+        );
+        setMyQuestionsList((prev) => ({
+          ...prev,
+          [listName]: requiredObj,
+        }));
+
+
+        toast.success("Question added successfully");
+        //   }
+      } catch (error) {
+        toast.error("Failed to add question");
+        console.error("Error adding question:", error);
+      }
+
+
+
     }
     // else if (section === "interviewSection") {
     //   const requiredArray = myQuestionsList[listName];
@@ -327,7 +427,7 @@ const MyQuestionsList = ({
     //     [listName]: requiredObj,
     //   }));
 
-    //   const url = `${process.env.REACT_APP_API_URL}/interview-questions/add-question`;
+    //   const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
 
     //   const questionToAdd = {
     //     // id: interviewerSectionData.length + 1,
@@ -351,26 +451,41 @@ const MyQuestionsList = ({
     // }
   };
 
-  const onClickRemoveQuestion = async (listName, question, indx) => {
+
+
+
+  const onClickRemoveQuestion = async (question, listName, indx) => {
+
+    if (type === 'interviewerSection') {
+      if (handleRemoveQuestion) {
+        handleRemoveQuestion(question._id)
+
+      }
     const requiredArray = myQuestionsList[listName];
-    const requiredObj = requiredArray.map((item, index) =>
-      index === indx ? { ...item, isAdded: false } : item
+    const requiredObj = requiredArray.map((item) =>
+      item._id === question._id ? { ...item, isAdded: false } : item
     );
     setMyQuestionsList((prev) => ({
       ...prev,
       [listName]: requiredObj,
     }));
+
+        toast.error("Question removed successfully!");
+    }else{
+
     try {
-      const url = `${process.env.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+      const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response = await axios.delete(url);
-      alert(response.data.message);
+      // alert(response.data.message);
+        toast.error("Question removed successfully!");
       // getInterviewerQuestions()
-      const addedQuestionUrl = `${process.env.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+      const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response2 = await axios.get(addedQuestionUrl);
       setInterviewerSectionData((prev) => [...prev, response2.data.question]);
     } catch (error) {
       console.log("error in deleting question", error);
     }
+  }
   };
 
   // const groupedQuestions = myQuestionsList;
@@ -491,6 +606,11 @@ const MyQuestionsList = ({
   };
 
 
+
+
+
+
+
   // adding interview questions to parent form interview
 
   const onClickForSchedulelater = async (question) => {
@@ -516,218 +636,247 @@ const MyQuestionsList = ({
     }
   };
 
-// MyQuestionListMain component (UI improvements only)
-return (
-  <div className="bg-white z-50 w-full px-4 py-2">
-    {/* Add Question Button (UI improvement) */}
-    <div
-      className={`relative `}
-    >
-      <button
-        className="text-md absolute top-[8px] right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
-        onClick={toggleSidebar}
-      >
-        <Plus /> Add Question
-      </button>
-    </div>
+  // MyQuestionListMain component (UI improvements only)
+  return (
 
-    <div
-      className={`${section === "interviewerSection" || section === "Popup" ? "" : "mt-2"
-        }`}
-    >
-      {/* List Selection and Filter Section (UI improvement) */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex gap-4 items-center">
-          <div className="relative inline-block w-48">
-            <button
-              className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              {selectedLabel || "Select a label"}
-              <svg
-                className={`w-4 h-4 transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                  } text-gray-500 transition-transform`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                {Object.keys(groupedQuestions).map((listName, idx) => (
-                  <div
-                    key={idx}
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                        ? "bg-blue-50 text-custom-blue font-semibold"
-                        : ""
-                      }`}
-                    onClick={() => handleLabelChange(listName)}
-                  >
-                    {listName}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <button
-            className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
-            onClick={openListPopup}
-          >
-            <Plus size={14} /> Create New List
-          </button>
-        </div>
-        <div className="relative">
-          <Popup
-            responsive={true}
-            trigger={
-              <button className="border border-gray-300 rounded-md p-2 hover:border-gray-400 transition-colors">
-                {filterIsOpen ? (
-                  <LuFilterX className="text-custom-blue" />
-                ) : (
-                  <FiFilter className="text-custom-blue" />
-                )}
-              </button>
-            }
-            onOpen={() => SetFilterIsOpen(true)}
-            onClose={() => SetFilterIsOpen(false)}
-          >
-            {(closeFilter) => (
-              <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-2 border-gray-300 shadow-lg">
-                {FilterSection(closeFilter)}
-              </div>
-            )}
-          </Popup>
-        </div>
+      
+    <div className="bg-white z-50 w-full px-4 py-2 min-h-[calc(100vh-200px)]">
+      {/* Add Question Button (UI improvement) */}
+
+      <div
+        className={`relative `}
+      >
+        <button
+
+          className="text-md absolute  right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
+
+          onClick={toggleSidebar}
+        >
+          <Plus /> Add Question
+        </button>
       </div>
 
-      {/* Empty State (UI improvement) */}
-      {!selectedLabel && (
-        <div className="flex justify-center items-center h-[calc(100vh-400px)]">
-          <div className="text-center flex flex-col items-center ">
-            <div className="text-gray-400 ">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <p className="text-lg font-semibold text-gray-500">
-              Select a label to view questions
-            </p>
+      <div
+        className={`${type === "interviewerSection mt-2"
+          }`}
+      >
+        {/* List Selection and Filter Section (UI improvement) */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-4 items-center">
+
+         <div className="relative inline-block w-48">
+  <button
+    className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+  >
+    <span className="truncate">
+      {selectedLabel || "Select a label"}
+    </span>
+    <svg
+      className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
+        isDropdownOpen ? "rotate-180" : "rotate-0"
+      }`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  </button>
+  {isDropdownOpen && (
+    <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+      {Object.keys(groupedQuestions).map((listName, idx) => (
+        <div
+          key={idx}
+          className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+            selectedLabel === listName
+              ? "bg-blue-50 text-custom-blue font-semibold"
+              : ""
+          }`}
+          onClick={() => handleLabelChange(listName)}
+        >
+          <div className="flex justify-between items-center">
+            <span className="truncate">{listName}</span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {groupedQuestions[listName].length}
+            </span>
           </div>
         </div>
-      )}
-
-      {/* Grouped Questions (UI improvement) */}
-      {Object.entries(groupedQuestions || myQuestionsList).map(
-        ([listName, items]) => {
-          return (
-            selectedLabel === listName && (
-              <div key={listName} className="mt-4">
-                {/* List Header (UI improvement) */}
-                <div
-                  className={`flex justify-between items-center bg-custom-blue text-white p-4 rounded-lg ${isOpen[listName] ? "rounded-b-none" : ""
-                    }`}
-                >
-                  <div className="flex items-center w-3/4">
-                    <p className="font-semibold truncate">{listName}</p>
-                    <span className="ml-4 text-sm text-white border border-white  px-2 py-1 rounded-full">
-                      {items.length} questions
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="relative">
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => toggleActionSection(listName)}
-                          className="p-1 rounded-full transition-colors"
-                        >
-                          <MdMoreVert className="text-xl" />
-                        </button>
-                        <button
-                          onClick={() => toggleSection(listName)}
-                          className=" p-1 rounded-full ml-2 transition-colors"
-                        >
-                          {isOpen[listName] ? (
-                            <IoIosArrowUp className="text-xl" />
-                          ) : (
-                            <IoIosArrowDown className="text-xl" />
-                          )}
-                        </button>
-                      </div>
-                      {actionViewMoreSection === listName && (
-                        <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                          <p
-                            className="px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                            onClick={() => {
-                              items.forEach((item) => {
-                                handleEdit(item.listId, item.label);
-                              });
-                            }}
-                          >
-                            Edit List
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+      ))}
+    </div>
+  )}
+</div>
+            <button
+              className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
+              onClick={openListPopup}
+            >
+              <Plus size={14} /> Create New List
+            </button>
+          </div>
+          <div className="relative">
+            <Popup
+              responsive={true}
+              trigger={
+                <button className="border border-gray-300 rounded-md p-2 hover:border-gray-400 transition-colors">
+                  {filterIsOpen ? (
+                    <LuFilterX className="text-custom-blue" />
+                  ) : (
+                    <FiFilter className="text-custom-blue" />
+                  )}
+                </button>
+              }
+              onOpen={() => SetFilterIsOpen(true)}
+              onClose={() => SetFilterIsOpen(false)}
+            >
+              {(closeFilter) => (
+                <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-2 border-gray-300 shadow-lg">
+                  {FilterSection(closeFilter)}
                 </div>
+              )}
+            </Popup>
+          </div>
+        </div>
 
-                {/* Questions List (UI improvement) */}
-                {isOpen[listName] && (
+        {/* Empty State (UI improvement) */}
+     {!selectedLabel && (
+  <div className="flex flex-col items-center justify-center min-h-[400px]">
+    <div className="text-center max-w-md">
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="h-16 w-16 mx-auto text-gray-400 mb-4" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke="currentColor"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={1.5} 
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+        />
+      </svg>
+      <h3 className="text-lg font-medium text-gray-500 mb-2">
+        No Label Selected
+      </h3>
+      <p className="text-gray-400">
+        Please select a label from the dropdown to view questions
+      </p>
+    </div>
+  </div>
+)}
+
+        {/* Grouped Questions (UI improvement) */}
+      {/* Grouped Questions (UI improvement) */}
+        {Object.entries(groupedQuestions || myQuestionsList).map(
+          ([listName, items]) => {
+            return (
+              selectedLabel === listName && (
+                <div key={listName} className="mt-4">
+                  {/* List Header (UI improvement) */}
                   <div
-                    className={`p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-300 ${section === "interviewerSection"
-                        ? "h-[62vh]"
-                        : "h-[calc(100vh-310px)]"
-                      } overflow-y-auto`}
+                    className={`flex justify-between items-center bg-custom-blue text-white p-3 rounded-lg ${isOpen[listName] ? "rounded-b-none" : ""
+                      }`}
                   >
-                    {items.map((question, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                          <div className="flex items-start w-3/4">
-                            <span className="font-semibold w-8">{index + 1}.</span>
-                            <p className="text-gray-700">
-                              {question.questionText}
+                    <div className="flex items-center w-3/4">
+                      <p className="font-semibold truncate">{listName}</p>
+                      <span className="ml-4 text-sm text-white border border-white  px-2 py-1 rounded-full">
+                        {items.length} questions
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <div className="flex items-center">
+                           {isOpen[listName] && <button
+                            onClick={() => toggleActionSection(listName)}
+                            className="p-1 rounded-full transition-colors"
+                          >
+                            <MdMoreVert className="text-xl" />
+                          </button>
+          }
+                          <button
+                            onClick={() => toggleSection(listName)}
+                            className=" p-1 rounded-full ml-2 transition-colors"
+                          >
+                            {isOpen[listName] ? (
+                              <IoIosArrowUp className="text-xl" />
+                            ) : (
+                              <IoIosArrowDown className="text-xl" />
+                            )}
+                          </button>
+                        </div>
+                        {actionViewMoreSection === listName && (
+                          <div className="absolute right-10  w-24 bg-white hover:bg-gray-200  rounded-md shadow-lg border border-gray-200 z-10">
+                            <p
+                              className="px-2 py-1 flex items-center gap-2 text-sm text-gray-700 cursor-pointer transition-colors"
+                              onClick={() => {
+                                items.forEach((item) => {
+                                  handleEdit(item.listId, item.label);
+                                });
+                              }}
+                            >
+                               <Pencil className="w-4 h-4 text-blue-600" /> Edit List
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`text-xs px-2 py-1 rounded-md ${question.isCustom
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Questions List (UI improvement) */}
+                  {isOpen[listName] && (
+                    <div
+                      className={`p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection"
+                        ? "h-[62vh]"
+                        : "h-[calc(100vh-310px)]"
+                        } overflow-y-auto`}
+                    >
+                      {items.map((question, index) => (
+                        <div
+                          key={index}
+                          className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                            <div className="flex items-start w-3/4">
+                              <span className="font-semibold w-8">{index + 1}.</span>
+                              <p className="text-gray-700">
+                                {question.questionText}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-xs px-2 py-1 rounded-md ${question.isCustom
                                   ? "bg-purple-100 text-purple-800"
                                   : "bg-blue-100 text-blue-800"
-                                }`}
-                              title="Question Type"
-                            >
-                              {question.isCustom ? "Custom" : "System"}
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(
-                                question.difficultyLevel
-                              )}`}
-                              title="Difficulty Level"
-                            >
-                              {question.difficultyLevel}
-                            </span>
+                                  }`}
+                                title="Question Type"
+                              >
+                                {question.isCustom ? "Custom" : "System"}
+                              </span>
+                              <span
+                                className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(
+                                  question.difficultyLevel
+                                )}`}
+                                title="Difficulty Level"
+                              >
+                                {question.difficultyLevel}
+                              </span>
 
-                            {/* Add/Remove buttons for different sections (UI improvement) */}
-                            {(section === "Popup" ||
-                              section === "interviewerSection") && (
+                              {/* Add/Remove buttons for different sections (UI improvement) */}
+                              {(type === "interviewerSection") && (
                                 <div>
-                                  {question.isAdded ? (
+                                  {interviewQuestionsLists?.some(q => q.questionId === question._id) ? (
                                     <button
                                       onClick={() =>
                                         onClickRemoveQuestion(
-                                          listName,
                                           question,
+                                          listName,
+
                                           index
                                         )
                                       }
@@ -737,11 +886,13 @@ return (
                                     </button>
                                   ) : (
                                     <button
-                                      className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                                      className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md  transition-colors"
                                       onClick={() =>
+                                        // onClickForSchedulelater( question, index)
                                         onClickAddButton(
-                                          listName,
                                           question,
+                                          listName,
+
                                           index
                                         )
                                       }
@@ -752,31 +903,31 @@ return (
                                 </div>
                               )}
 
-                            {section === "assessment" && (
-                              <div className="w-[8%] flex justify-center">
-                                {addedSections.some(s => s.Questions.some(q => q.questionId === question._id)) ? (
-                                  <span className="text-green-600 text-sm font-medium py-1 px-1">
-                                    ✓ Added
-                                  </span>
-                                ) : (
-                                  <button
-                                    className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md hover:bg-blue-700 transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                      ? 'opacity-50 cursor-not-allowed'
-                                      : ''
-                                      }`}
-                                    onClick={() => onClickAddButton(question)}
-                                    disabled={
-                                      addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                    }
-                                  >
-                                    Add
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                              {type === "assessment" && (
+                                <div className="w-[8%] flex justify-center">
+                                  {addedSections.some(s => s.Questions.some(q => q.questionId === question._id)) ? (
+                                    <span className="text-green-600 text-sm font-medium py-1 px-1">
+                                      ✓ Added
+                                    </span>
+                                  ) : (
+                                    <button
+                                      className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md hover:bg-blue-700 transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : ''
+                                        }`}
+                                      onClick={() => onClickAddButton(question)}
+                                      disabled={
+                                        addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                      }
+                                    >
+                                      Add
+                                    </button>
+                                  )}
+                                </div>
+                              )}
 
-                            {/* Add button for schedule later (UI improvement) */}
-                            {fromScheduleLater && (
+                              {/* Add button for schedule later (UI improvement) */}
+                              {/* {fromScheduleLater && (
                               <button
                                 type="button"
                                 className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
@@ -786,123 +937,131 @@ return (
                               >
                                 Add
                               </button>
-                            )}
+                            )} */}
 
-                            {/* Edit button for custom questions (UI improvement) */}
-                            {question.isCustom && (
-                              <div className="relative">
-                                <button
-                                  onClick={() => toggleDropdown(question._id)}
-                                  className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-                                >
-                                  <MdMoreVert className="text-gray-600" />
-                                </button>
-                                {dropdownOpen === question._id && (
-                                  <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                    <p
-                                      className="px-3 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                      onClick={() => handleEditClick(question)}
-                                    >
-                                      Edit
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                              {/* Edit button for custom questions (UI improvement) */}
+                              {question.isCustom && (
+                                <div className="relative">
+                                  <button
+                                    onClick={() => toggleDropdown(question._id)}
+                                    className="hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                  >
+                                    <MdMoreVert className="text-gray-600" />
+                                  </button>
+                                  {dropdownOpen === question._id && (
+                                    <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                      <p
+                                        className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                                        onClick={() => 
+                                          handleEditClick(question)
+                                       
+                                        
+                                        }
+                                      >
+                                      <Pencil className="w-4 h-4 text-blue-600" />  Edit
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* MCQ Options (UI improvement) */}
-                        {question.questionType === "MCQ" &&
-                          question.options && (
-                            <div className="mb-2 ml-12 mt-2">
-                              <ul className="list-none">
-                                {(() => {
-                                  const isAnyOptionLong = question.options.some(
-                                    (option) => option.length > 55
-                                  );
-                                  return question.options.map((option, idx) => (
-                                    <li
-                                      key={idx}
-                                      className={`${isAnyOptionLong
+                          {/* MCQ Options (UI improvement) */}
+                          {question.questionType === "MCQ" &&
+                            question.options && (
+                              <div className="mb-2 ml-12 mt-2">
+                                <ul className="list-none">
+                                  {(() => {
+                                    const isAnyOptionLong = question.options.some(
+                                      (option) => option.length > 55
+                                    );
+                                    return question.options.map((option, idx) => (
+                                      <li
+                                        key={idx}
+                                        className={`${isAnyOptionLong
                                           ? "block w-full"
                                           : "inline-block w-1/2"
-                                        } mb-2`}
-                                    >
-                                      <span className="mr-2 text-gray-500">
-                                        {String.fromCharCode(97 + idx)})
-                                      </span>
-                                      <span className="text-gray-700">
-                                        {option}
-                                      </span>
-                                    </li>
-                                  ));
-                                })()}
-                              </ul>
-                            </div>
-                          )}
+                                          } mb-2`}
+                                      >
+                                        <span className="mr-2 text-gray-500">
+                                          {String.fromCharCode(97 + idx)})
+                                        </span>
+                                        <span className="text-gray-700">
+                                          {option}
+                                        </span>
+                                      </li>
+                                    ));
+                                  })()}
+                                </ul>
+                              </div>
+                            )}
 
-                        {/* Answer (UI improvement) */}
-                        <div className="p-4 pt-0">
-                          <p className="text-sm  break-words whitespace-pre-wrap">
-                            <span className="font-medium text-gray-700">
-                              Answer:{" "}
-                            </span>
-                            <span className="text-gray-600">
-                              {question.questionType === "MCQ" && question.options
-                                ? `${String.fromCharCode(
-                                  97 +
-                                  question.options.indexOf(
-                                    question.correctAnswer
-                                  )
-                                )}) `
-                                : ""}
-                              {question.correctAnswer}
-                            </span>
-                          </p>
+                          {/* Answer (UI improvement) */}
+                          <div className="p-4 pt-0">
+                            <p className="text-sm  break-words whitespace-pre-wrap">
+                              <span className="font-medium text-gray-700">
+                                Answer:{" "}
+                              </span>
+                              <span className="text-gray-600">
+                                {question.questionType === "MCQ" && question.options
+                                  ? `${String.fromCharCode(
+                                    97 +
+                                    question.options.indexOf(
+                                      question.correctAnswer
+                                    )
+                                  )}) `
+                                  : ""}
+                                {question.correctAnswer}
+                              </span>
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          );
-        }
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            );
+          }
+        )}
+        <MyQuestionList
+          ref={myQuestionsListRef}
+          fromcreate={true}
+          setSelectedLabelnew={setSelectedLabel}
+
+          setActionViewMoreSection={setActionViewMoreSection}
+        />
+      
+
+
+      {/* Modals */}
+      {showNewCandidateContent && (
+        <Editassesmentquestion
+          type={type}
+          questionBankPopupVisibility={questionBankPopupVisibility}
+          onClose={handleclose}
+          question={showNewCandidateContent}
+          isEdit={true}
+        />
       )}
-      <MyQuestionList
-        ref={myQuestionsListRef}
-        fromcreate={true}
-        setSelectedLabelnew={setSelectedLabel}
-      />
+
+      {sidebarOpen && (
+        <Sidebar
+          sectionName={sectionName}
+          assessmentId={assessmentId}
+          updateQuestionsInAddedSectionFromQuestionBank={
+            updateQuestionsInAddedSectionFromQuestionBank
+          }
+          type={type}
+          questionBankPopupVisibility={questionBankPopupVisibility}
+          onClose={closeSidebar}
+          onOutsideClick={handleOutsideClick}
+        />
+      )}
+       </div>
     </div>
-
-    {/* Modals */}
-    {showNewCandidateContent && (
-      <Editassesmentquestion
-        section={section}
-        questionBankPopupVisibility={questionBankPopupVisibility}
-        onClose={handleclose}
-        question={showNewCandidateContent}
-        isEdit={true}
-      />
-    )}
-
-    {sidebarOpen && (
-      <Sidebar
-        sectionName={sectionName}
-        assessmentId={assessmentId}
-        updateQuestionsInAddedSectionFromQuestionBank={
-          updateQuestionsInAddedSectionFromQuestionBank
-        }
-        section={section}
-        questionBankPopupVisibility={questionBankPopupVisibility}
-        onClose={closeSidebar}
-        onOutsideClick={handleOutsideClick}
-      />
-    )}
-  </div>
-);
+  );
 };
 
 export default MyQuestionsList;

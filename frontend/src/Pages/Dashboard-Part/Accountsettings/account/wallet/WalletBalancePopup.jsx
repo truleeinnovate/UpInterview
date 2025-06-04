@@ -17,7 +17,7 @@ const WalletBalancePopup = ({ walletBalance }) => {
   //   const fetchData = async () => {
   //     try {
   //       setIsLoading(true);
-  //       const wallet_res = await axios.get(`${process.env.REACT_APP_API_URL}/get-top-up/${userId}`);
+  //       const wallet_res = await axios.get(`${config.REACT_APP_API_URL}/get-top-up/${userId}`);
   //       // Find user based on userId
 
   //       const walletDetailsArray = wallet_res.data.walletDetials;

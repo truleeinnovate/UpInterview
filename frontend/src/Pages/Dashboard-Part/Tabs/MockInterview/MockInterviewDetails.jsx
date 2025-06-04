@@ -17,6 +17,7 @@ import StatusBadge from '../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../CommonCode-AllTabs/Breadcrumb.jsx';
 import MoockRoundCard from './MockInterviewRoundCard.jsx';
 import MockCandidateDetails from './MockinterviewCandidate.jsx';
+import { config } from '../../../../config.js';
 
 
 const MockInterviewDetails = () => {
@@ -95,7 +96,7 @@ const MockInterviewDetails = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!mockinterview) {
-    return <div className='flex justify-center items-center h-screen'>Invalid interview ID</div>;
+    return <div className='flex justify-center items-center h-screen'>No interview found</div>;
   }
 
     // Toggle round expansion
@@ -149,7 +150,7 @@ const MockInterviewDetails = () => {
       };
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
           ...interviewData,
           interviewId: id,
           updatingInterviewStatus: true
@@ -263,7 +264,7 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                    Mock Interview Details <span> <StatusBadge status={mockinterview?.status} size="md" /></span>
                   </h3>
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    Created on {mockinterview?.createdDate.split(" ")[0] || "N/A"}
+                   Created on {mockinterview?.createdDate ? new Date(mockinterview.createdDate).toLocaleDateString() : "N/A"}
                   </p>
                 </div>
 

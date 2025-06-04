@@ -12,20 +12,16 @@ exports.individualLogin = async (req, res) => {
     // Step 1: Create User in DB
     const newUser = new Users(userData);
     const savedUser = await newUser.save();
-    console.log("User successfully created:", savedUser);
 
     // Step 2: Create Contact and Link to User
-    console.log("Saving contact data in DB...");
     const newContact = new Contacts({
       ...contactData,
       ownerId: savedUser._id,
     });
     const savedContact = await newContact.save();
-    console.log("Contact successfully created:", savedContact);
 
     // Step 3: Save Interview Availability (if provided)
     if (availabilityData && availabilityData.length > 0) {
-      console.log("Saving interview availability in DB...");
 
       const mockReq = { body: { contact: savedContact._id, days: availabilityData } };
       const mockRes = {
@@ -61,7 +57,6 @@ exports.individualLogin = async (req, res) => {
     const savedInterviewer = await newInterviewer.save();
     console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
     // <-----------------------OutsourceInterviewer------------------------------->
-
 
     // Generate JWT
     const payload = {

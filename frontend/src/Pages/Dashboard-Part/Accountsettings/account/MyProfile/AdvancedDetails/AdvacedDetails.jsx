@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import EditAdvacedDetails from './EditAdvacedDetails';
-import axios from 'axios';
+import { useEffect, useState } from 'react'
 import Cookies from "js-cookie";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 
-const AdvancedDetails = () => {
-  const { contacts, setContacts } = useCustomContext();
+const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
+  const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
-  const [userData, setUserData] = useState({})
+  const [contactData, setContactData] = useState({})
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -19,39 +17,33 @@ const AdvancedDetails = () => {
 
   // console.log("userId AdvancedDetails", userId);
 
-  useEffect(() => {
-    const fetchData = () => {
-      try {
+ useEffect(() => {
+   const selectedContact = usersId
+     ? usersRes.find(user => user?.contactId === usersId)
+     : usersRes.find(user => user?._id === userId);
+ 
+   if (selectedContact) {
+     setContactData(selectedContact);
+     console.log("Selected contact:", selectedContact);
+   }
+ }, [usersId, userId, usersRes]);
 
-        // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user.ownerId === userId);
-        console.log("user", user);
-
-        if (user) {
-          setUserData(user);
-
-        }
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        // setLoading(false);
-      }
-    };
-
-
-    fetchData();
-
-  }, [userId, contacts]);
+ console.log("contactData?.contactId", contactData?.contactId);
+ 
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center  mt-4">
-        <h3 className="text-lg font-medium">Advanced Details</h3>
+      <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
+        <h3 className={`text-lg font-medium  ${mode === 'users' ? 'hidden' : ""}`}>Advanced Details</h3>
 
         <button
           onClick={
-            () => { navigate(`/account-settings/my-profile/advanced-edit/${userId}`) }
+            () => {
+              mode === 'users' ?
+              setAdvacedEditOpen(true)            
+                :
+                navigate(`/account-settings/my-profile/advanced-edit/${contactData?.contactId}`)
+            }
           }
           // onClick={() => setIsBasicModalOpen(true)}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
@@ -67,13 +59,13 @@ const AdvancedDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
-            <p className="font-medium">{userData.currentRole || "N/A"}</p>
+            <p className="font-medium">{contactData.currentRole || "N/A"}</p>
           </div>
 
 
           <div>
             <p className="text-sm text-gray-500">Industry</p>
-            <p className="font-medium">{userData.industry || "N/A"}</p>
+            <p className="font-medium">{contactData.industry || "N/A"}</p>
           </div>
         </div>
 
@@ -81,12 +73,12 @@ const AdvancedDetails = () => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{userData.experienceYears || "N/A"} Years</p>
+            <p className="font-medium">{contactData.experienceYears || "N/A"} Years</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Location</p>
-            <p className="font-medium">{userData.location || "N/A"}</p>
+            <p className="font-medium">{contactData.location || "N/A"}</p>
           </div>
 
 
@@ -98,12 +90,12 @@ const AdvancedDetails = () => {
 
           <div>
             <p className="text-sm text-gray-500">Resume PDF </p>
-            <p className="font-medium">{userData.ResumePdf || "N/A"}</p>
+            <p className="font-medium">{contactData.ResumePdf || "N/A"}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Cover Letter </p>
-            <p className="font-medium">{userData.coverletter || "N/A"}</p>
+            <p className="font-medium">{contactData.coverletter || "N/A"}</p>
           </div>
 
         </div>
@@ -112,7 +104,7 @@ const AdvancedDetails = () => {
         {/* <div>
                 <p className="text-sm text-gray-500">Skills</p>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {userData.skills.map((skill, index) => (
+                  {contactData.skills.map((skill, index) => (
                     <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                       {skill || "N/A"}
                     </span>
@@ -122,7 +114,7 @@ const AdvancedDetails = () => {
 
         {/*  Cover Letter Description */}
         {
-          userData.coverLetterdescription ?
+          contactData.coverLetterdescription ?
             (
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">
@@ -130,31 +122,14 @@ const AdvancedDetails = () => {
                 </span>
 
                 <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium">
-                  {userData.coverLetterdescription || "N/A"}
+                  {contactData.coverLetterdescription || "N/A"}
                 </p>
               </div>
             ) : ""
         }
 
-
-
-
       </div>
 
-
-
-      {/* {isBasicModalOpen && (
-
-            <EditAdvacedDetails
-  isBasicModalOpen={isBasicModalOpen}
-  setIsBasicModalOpen={setIsBasicModalOpen}
-  // editData={editData}
-  // setEditData={setEditData}
-  userData={userData}
-  setUserData={setUserData}
-
-            />
-          )} */}
     </div>
   )
 }

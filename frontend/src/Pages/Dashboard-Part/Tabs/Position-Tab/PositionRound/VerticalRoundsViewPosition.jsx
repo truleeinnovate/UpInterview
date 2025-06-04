@@ -8,12 +8,12 @@ import {
 } from 'lucide-react';
 import PositionRoundCard from './PositionRoundCard';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
+
 const VerticalRoundsViewPosition = ({
   rounds,
   interviewData,
   canEditRound,
   onEditRound,
-  
 }) => {
   console.log("rounds", rounds)
   // Sort rounds by sequence

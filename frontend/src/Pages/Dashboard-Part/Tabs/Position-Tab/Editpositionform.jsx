@@ -84,7 +84,7 @@
 //     };
 
 //     try {
-//       const response = await axios.put(`${process.env.REACT_APP_API_URL}/position/${_id}`, data);
+//       const response = await axios.put(`${config.REACT_APP_API_URL}/position/${_id}`, data);
 //       setFormData({
 //         title: "",
 //         companyname: "",

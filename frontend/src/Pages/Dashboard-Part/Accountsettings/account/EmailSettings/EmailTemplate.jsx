@@ -8,6 +8,7 @@ import EmailTemplateDetails from "./EmailTemplateDetails";
 import { SettingsIcon, ToggleLeft, ToggleRight, X } from "lucide-react";
 import Settings from "./Settings";
 import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
+import { config } from "../../../../../config";
 
 const EmailTemplate = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +30,7 @@ const EmailTemplate = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/emailTemplate/get-templates`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/emailTemplate/get-templates`);
       const emailData = response.data.reverse();
       setEmailRecords(emailData);
     } catch (error) {
@@ -79,7 +80,7 @@ const EmailTemplate = () => {
   const updateTemplateStatus = async (newStatus) => {
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/emailTemplate/templates/${selectedTemplate._id}/status`,
+        `${config.REACT_APP_API_URL}/emailTemplate/templates/${selectedTemplate._id}/status`,
         { isActive: newStatus }
       );
       

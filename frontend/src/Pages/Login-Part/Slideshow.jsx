@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import img1 from '../Dashboard-Part/Images/slideshow1.webp';
-import img2 from '../Dashboard-Part/Images/slideshow2.webp';
-import img3 from '../Dashboard-Part/Images/slideshow3.webp';
+import img1 from '../Dashboard-Part/Images/outsource.webp';
+import img2 from '../Dashboard-Part/Images/assessment.webp';
+import img3 from '../Dashboard-Part/Images/internal.webp';
+import img4 from '../Dashboard-Part/Images/mock.webp';
+import img5 from '../Dashboard-Part/Images/questionBank.webp';
 
-const images = [img1, img2, img3];
+
+
+const images = [img1, img2, img3, img4, img5];
 
 const Slideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

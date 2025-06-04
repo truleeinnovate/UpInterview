@@ -20,6 +20,7 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
 import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
+import { config } from "../../../../config.js";
 
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
@@ -370,7 +371,7 @@ const Task = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/tasks`
+        `${config.REACT_APP_API_URL}/tasks`
       );
       setTaskData(response.data);
     } catch (error) {

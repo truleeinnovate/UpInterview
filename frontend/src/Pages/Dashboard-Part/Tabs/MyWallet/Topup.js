@@ -6,6 +6,7 @@ import { decryptData, } from '../../../../utils/PaymentCard';
 import { handleAmountChange } from '../../../../utils/WalletDashboard';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import { config } from '../../../../config';
 
 const Topup = () => {
     const authToken = Cookies.get("authToken");
@@ -81,7 +82,7 @@ const Topup = () => {
 
         const fetchCardDetails = async () => {
             try {
-                const response = await axios.post(`${process.env.REACT_APP_API_URL}/get-card-details`, { ownerId: ownerId });
+                const response = await axios.post(`${config.REACT_APP_API_URL}/get-card-details`, { ownerId: ownerId });
                 const { cards } = response.data.cardDetials[0];
 
 
@@ -183,7 +184,7 @@ const Topup = () => {
 
             };
 
-            const paymentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/payment/submit`, {
+            const paymentResponse = await axios.post(`${config.REACT_APP_API_URL}/payment/submit`, {
                 cardDetails: updatedPaymentData,
             });
 
@@ -192,7 +193,7 @@ const Topup = () => {
             if (status === 'paid') {
                 alert('Payment successful.');
 
-                const topupResponse = await axios.post(`${process.env.REACT_APP_API_URL}/top-up`, {
+                const topupResponse = await axios.post(`${config.REACT_APP_API_URL}/top-up`, {
                     tenantId,
                     ownerId,
                     amount: parseFloat(updatedPaymentData.amountToAdd),

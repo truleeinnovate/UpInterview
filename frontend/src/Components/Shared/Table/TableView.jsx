@@ -8,38 +8,46 @@ const TableView = ({
   columns = [],
   loading = false,
   actions = [],
-  emptyState = 'No data found.'
+  emptyState = 'No data found.',
 }) => {
   const menuRefs = useRef({});
   const menuButtonRefs = useRef({});
   const scrollContainerRef = useRef(null);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [openUpwards, setOpenUpwards] = useState(false);
-
   const [delayedLoading, setDelayedLoading] = useState(loading);
   const [showEmptyState, setShowEmptyState] = useState(false);
 
-  // Delay hiding loading by 1 second
-  useEffect(() => {
-    let timeout;
-    if (!loading) {
-      timeout = setTimeout(() => setDelayedLoading(false), 1000);
-    } else {
-      setDelayedLoading(true);
-    }
-    return () => clearTimeout(timeout);
-  }, [loading]);
+  // // Delay hiding loading by 1 second
+  // useEffect(() => {
+  //   let timeout;
+  //   if (!loading) {
+  //     timeout = setTimeout(() => setDelayedLoading(false), 1000);
+  //   } else {
+  //     setDelayedLoading(true);
+  //   }
+  //   return () => clearTimeout(timeout);
+  // }, [loading]);
 
-  // Delay empty state by 2 seconds after loading finishes
-  useEffect(() => {
-    let timeout;
-    if (!loading && data.length === 0) {
-      timeout = setTimeout(() => setShowEmptyState(true), 2000);
-    } else {
-      setShowEmptyState(false);
-    }
-    return () => clearTimeout(timeout);
-  }, [loading, data]);
+  // // Delay empty state by 2 seconds after loading finishes
+  // useEffect(() => {
+  //   let timeout;
+  //   if (!loading && data.length === 0) {
+  //     timeout = setTimeout(() => setShowEmptyState(true), 2000);
+  //   } else {
+  //     setShowEmptyState(false);
+  //   }
+  //   return () => clearTimeout(timeout);
+  // }, [loading, data]);
+
+    // Use these instead for immediate state updates
+    useEffect(() => {
+      setDelayedLoading(loading);
+    }, [loading]);
+  
+    useEffect(() => {
+      setShowEmptyState(!loading && data.length === 0);
+    }, [loading, data]);
 
   const handleMenuOpen = (row, e) => {
     e.stopPropagation();
@@ -171,12 +179,19 @@ const TableView = ({
                                         action.onClick(row);
                                         setOpenMenuIndex(null);
                                       }}
-                                      className={`${active ? 'bg-gray-50' : ''
-                                        } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                      className={`${
+                                        active ? 'bg-gray-50' : ''
+                                      } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
                                       disabled={action.disabled ? action.disabled(row) : false}
                                     >
-                                      {action.icon}
-                                      {action.label}
+                                      {/* Render icon as a function if it is one, otherwise render directly */}
+                                      {typeof action.icon === 'function'
+                                        ? action.icon(row)
+                                        : action.icon}
+                                      {/* Render label as a function if it is one, otherwise render directly */}
+                                      {typeof action.label === 'function'
+                                        ? action.label(row)
+                                        : action.label}
                                     </button>
                                   )}
                                 </Menu.Item>

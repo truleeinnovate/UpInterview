@@ -6,7 +6,7 @@ const fetchContacts = async (req, res) => {
         const contacts = await Contacts.find().populate('availability')
         .populate({
             path: 'ownerId',
-            select: 'firstName lastName email roleId',
+            select: 'firstName lastName email roleId isFreelancer',
             model: 'Users', // Explicitly specify model
             populate: {
                 path: 'roleId',
@@ -14,6 +14,30 @@ const fetchContacts = async (req, res) => {
                 select: 'roleName'
             }
         }).lean();
+
+         console.log("contact",contacts);
+
+        //  const transformedContacts = contacts.map(contact => {
+
+           
+            
+        //     // If ownerId is populated, extract the roleName
+        //     if (contact.ownerId && contact.ownerId.roleId) {
+        //         return {
+        //             ...contact,
+        //             owner: {
+        //                 ...contact.ownerId,
+        //                 roleName: contact.ownerId.roleId?.roleName
+        //             }
+        //         };
+        //     }
+        //     return contact;
+        // });
+
+
+
+        //   const contacts = await Contacts.find().populate('availability');
+    res.status(200).json(contacts);
 
       
         // console.log("Debugging populated contacts:");
@@ -46,7 +70,7 @@ const fetchContacts = async (req, res) => {
 
 
         // .populate('ownerId');
-        res.status(200).json(contacts);
+        // res.status(200).json(contacts);
     } catch (error) {
         console.error('Error fetching contacts:', error);
         res.status(500).json({ message: 'Error fetching contacts', error: error.message });
@@ -78,6 +102,32 @@ const updateContact = async (req, res) => {
         res.status(500).json({ message: 'Error updating contact', error: error.message });
     }
 };
+
+const getContactsByOwnerId = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+
+    if (!ownerId) {
+      return res.status(400).json({ message: 'Owner ID is required' });
+    }
+
+    const contacts = await Contacts.find({ ownerId }).populate('availability').populate({
+            path: 'ownerId',
+            select: 'firstName lastName email roleId isFreelancer',
+            model: 'Users', // Explicitly specify model
+            populate: {
+                path: 'roleId',
+                model: 'Role', // Explicitly specify model
+                select: 'roleName'
+            }
+        })
+
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.error('Error fetching contacts by ownerId:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
 
 // // PATCH endpoint to update contact details
 // // router.patch('/contacts/:id', 
@@ -197,10 +247,6 @@ const updateContactsDetails =   async (req, res) => {
     try {
         const contactId = req.params.id;
         const updateData = req.body;
- 
-        console.log("contactId", contactId);
-       
- 
         // Separate availability data if present
         const { availability, ...contactData } = updateData;
  
@@ -336,5 +382,7 @@ module.exports = {
     createContact,
     updateContact,
     updateContactsDetails,
-    getUniqueContactsByOwnerId
+    getUniqueContactsByOwnerId,
+    getContactsByOwnerId
+
 };

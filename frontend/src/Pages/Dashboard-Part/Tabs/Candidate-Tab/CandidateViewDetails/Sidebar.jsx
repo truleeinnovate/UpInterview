@@ -42,7 +42,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
                 className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
                 title="Back to Dashboard"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
               <h2 className="text-lg font-bold  text-custom-blue">
                 Profile
@@ -53,13 +53,13 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
                 onClick={() =>   navigate(`edit`)}
                 className="p-1.5 rounded-full bg-custom-bg text-custom-blue  transition-colors"
               >
-                {editMode ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                {editMode ? <Check className="w-5 h-5" /> : <Pencil className="w-5 h-5" />}
               </button>
               <button
                onClick={() => onClose()}
                 className="sm:block md:block lg:hidden xl:hidden 2xl:hidden p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>

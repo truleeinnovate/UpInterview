@@ -147,35 +147,47 @@ const MockInterview = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/mockinterview-details/${row._id}`)}
         >
-          {row?.rounds?.roundTitle || 'N/A'}
+          {row?.rounds?.roundTitle || 'Not Provided'}
         </div>
       ),
     },
     {
       key: 'technology',
       header: 'Technology',
-      render: (value) => value || 'N/A',
+      render: (value) => value || 'Not Provided',
     },
     {
       key: 'status',
       header: 'Status',
-      render: (value, row) => row?.rounds?.status || 'N/A',
+      render: (value, row) => row?.rounds?.status || 'Not Provided',
     },
     {
       key: 'duration',
       header: 'Duration',
-      render: (value, row) => row?.rounds?.duration || 'N/A',
+      render: (value, row) => row?.rounds?.duration || 'Not Provided',
     },
     {
       key: 'interviewer',
       header: 'Interviewer',
-      render: () => 'N/A', // Placeholder, update if interviewer data is available
+      render: () => 'Not Provided', // Placeholder, update if interviewer data is available
     },
-    {
-      key: 'createdDate',
-      header: 'Created On',
-      render: (value) => value || 'N/A',
-    },
+ {
+  key: 'createdAt',
+  header: 'Created On',
+  render: (value) => {
+    if (!value) return 'Not Provided';
+    const date = new Date(value);
+    return date.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  },
+}
+
   ];
 
   const tableActions = [
@@ -207,8 +219,8 @@ const MockInterview = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed md:mt-6 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <main className="px-6 max-w-7xl mx-auto">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"

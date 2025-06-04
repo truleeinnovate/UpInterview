@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import  { useEffect, useRef, useState } from 'react'
 
-import { Trash, Maximize, Minimize, Search, X, ChevronDown } from 'lucide-react';
+import {  Maximize, Minimize, Search, X, ChevronDown } from 'lucide-react';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 import axios from 'axios';
@@ -11,15 +11,16 @@ import { ReactComponent as Technology } from '../../../../../../icons/technology
 import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { useNavigate, useParams } from 'react-router-dom';
+import { config } from '../../../../../../config';
 
 
 
-const EditInterviewDetails = () => {
+const EditInterviewDetails = ({ from,usersId,setInterviewEditOpen,onSuccess }) => {
 
   const {
     skills,
-    contacts,
-    setContacts
+
+   usersRes
   } = useCustomContext();
   const popupRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -27,6 +28,7 @@ const EditInterviewDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+const resolvedId = usersId || id;
 
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const skillsPopupRef = useRef(null);
@@ -62,7 +64,7 @@ const EditInterviewDetails = () => {
 
   const bioLength = formData.bio?.length || 0;
 
-
+  console.log("userId Interview Details", from);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,46 +82,43 @@ const EditInterviewDetails = () => {
 
   // Changed: Updated useEffect to properly map all backend fields
   useEffect(() => {
-    const fetchUserData = async () => {
-
-      try {
-
-
-        // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user.ownerId === id);
+   
+        const contact = usersRes.find(user => user.contactId === resolvedId);
+       
+       
+  if (!contact) return;
+        // singlecontact[0];
+        // const user = contacts.find(user => user.ownerId === id);
+        console.log("Edit Interview Details contact", contact);
         // console.log("user", user);
         setFormData({
-          PreviousExperienceConductingInterviews: user.PreviousExperienceConductingInterviews || '',
-          PreviousExperienceConductingInterviewsYears: user.PreviousExperienceConductingInterviewsYears || '',
-          ExpertiseLevel_ConductingInterviews: user.ExpertiseLevel_ConductingInterviews || '',
+          PreviousExperienceConductingInterviews: contact?.previousExperienceConductingInterviews || '',
+          PreviousExperienceConductingInterviewsYears: contact?.previousExperienceConductingInterviewsYears || '',
+          ExpertiseLevel_ConductingInterviews: contact?.expertiseLevelConductingInterviews || '',
           // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
           // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
           // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
-          Technology: Array.isArray(user.technologies) ? user.technologies : [],
-          NoShowPolicy: user.NoShowPolicy || '',
+          Technology: Array.isArray(contact?.technologies) ? contact?.technologies : [],
+          NoShowPolicy: contact?.noShowPolicy || '',
           // ExpectedRateMin: String(user.ExpectedRateMin || ''),
           // ExpectedRateMax: String(user.ExpectedRateMax || ''),
-          skills: Array.isArray(user.skills) ? user.skills : [],
-          interviewFormatWeOffer: Array.isArray(user.InterviewFormatWeOffer) ? user.InterviewFormatWeOffer : [], professionalTitle: user.professionalTitle || "",
-          bio: user.bio || "",
-          hourlyRate: user.hourlyRate,
-          id:user._id
+          skills: Array.isArray(contact?.skills) ? contact?.skills : [],
+          interviewFormatWeOffer: Array.isArray(contact?.interviewFormatWeOffer) ? contact?.interviewFormatWeOffer : [],
+          professionalTitle: contact?.professionalTitle || "",
+          bio: contact?.bio || "",
+          hourlyRate: contact?.hourlyRate,
+          id:contact?._id,
+          
         });
-        setSelectedSkills(Array.isArray(user.skills) ? user.skills : []);
-        setInterviewPreviousExperience(user.PreviousExperienceConductingInterviews || '');
-        setExpertiseLevel(user.ExpertiseLevel_ConductingInterviews || '');
-        setIsReady(user.IsReadyForMockInterviews === 'yes');
-        setSelectedCandidates(user.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
+        setSelectedSkills(Array.isArray(contact?.skills) ? contact?.skills : []);
+        setInterviewPreviousExperience(contact?.previousExperienceConductingInterviews || '');
+        setExpertiseLevel(contact?.expertiseLevelConductingInterviews || '');
+        setIsReady(contact?.IsReadyForMockInterviews === 'yes');
+        setSelectedCandidates(contact?.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
         setErrors({});
 
-      } catch (error) {
-        console.error('Error updating advanced details:', error);
-      }
-
-    }
-
-    fetchUserData();
-  }, [id]);
+      
+  }, [resolvedId,usersRes]);
 
   const handleBioChange = (e) => {
     const value = e.target.value;
@@ -181,26 +180,26 @@ const EditInterviewDetails = () => {
   };
 
 
-  const handleRadioChange3 = (event) => {
-    const value = event.target.value;
-    setFormData((prevData) => ({
-      ...prevData,
-      IsReadyForMockInterviews: value,
-      ...(value === "no" ? {
-        ExpectedRatePerMockInterviewMin: "",
-        ExpectedRatePerMockInterviewMax: ""
-      } : {}),
-    }));
-    setIsReady(value === "yes");
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      IsReadyForMockInterviews: value ? "" : "Please select an option",
-      ...(value === "no" ? {
-        ExpectedRatePerMockInterviewMin: "",
-        ExpectedRatePerMockInterviewMax: ""
-      } : {}),
-    }));
-  };
+  // const handleRadioChange3 = (event) => {
+  //   const value = event.target.value;
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     IsReadyForMockInterviews: value,
+  //     ...(value === "no" ? {
+  //       ExpectedRatePerMockInterviewMin: "",
+  //       ExpectedRatePerMockInterviewMax: ""
+  //     } : {}),
+  //   }));
+  //   setIsReady(value === "yes");
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     IsReadyForMockInterviews: value ? "" : "Please select an option",
+  //     ...(value === "no" ? {
+  //       ExpectedRatePerMockInterviewMin: "",
+  //       ExpectedRatePerMockInterviewMax: ""
+  //     } : {}),
+  //   }));
+  // };
 
   const handleChangeExperienceYears = (e) => {
     const value = e.target.value;
@@ -214,17 +213,7 @@ const EditInterviewDetails = () => {
     }));
   };
 
-  const handleChangeforExp = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === "" ? "" : Math.max(1, Math.min(100, Number(value))), // Changed: Adjusted max to 100 to match UI
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
+
 
 
   const handleSelectCandidate = (technologies) => {
@@ -242,17 +231,17 @@ const EditInterviewDetails = () => {
     }));
   };
 
-  const clearRemoveCandidate = () => {
-    setSelectedCandidates([]);
-    setFormData(prev => ({
-      ...prev,
-      Technology: []
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      Technology: "At least one technology is required",
-    }));
-  };
+  // const clearRemoveCandidate = () => {
+  //   setSelectedCandidates([]);
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     Technology: []
+  //   }));
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     Technology: "At least one technology is required",
+  //   }));
+  // };
 
   const handleRemoveCandidate = (index) => {
     const newCandidates = selectedCandidates.filter((_, i) => i !== index);
@@ -284,18 +273,15 @@ const EditInterviewDetails = () => {
 
 
 
-  // Handle input changes for text fields
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
+
+   const handleCloseModal = () => {
+     if (from === 'users') {
+      setInterviewEditOpen(false)
+    }else{
+      navigate('/account-settings/my-profile/interview', { replace: true })
+    }
+   
+  }
 
 
   // API call to save all changes
@@ -336,14 +322,15 @@ const EditInterviewDetails = () => {
       };
 
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
         cleanFormData
       );
 
       if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
-        navigate('/account-settings/my-profile/interview')
+      handleCloseModal();
+        onSuccess();
       }
     } catch (error) {
       console.error('Error updating interview details:', error);
@@ -435,7 +422,7 @@ const EditInterviewDetails = () => {
   return (
     <Modal
       isOpen={true}
-      onRequestClose={() => navigate('/account-settings/my-profile/interview')}
+      onRequestClose={handleCloseModal}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     // shouldCloseOnOverlayClick={false}
@@ -463,11 +450,7 @@ const EditInterviewDetails = () => {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigate('/account-settings/my-profile/interview')
-                  // setFormData(userData); // Reset to original data
-                  // setIsBasicModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -939,7 +922,7 @@ const EditInterviewDetails = () => {
               {/* Professional Bio */}
               <div className="sm:col-span-6 col-span-2">
                 <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                  Professional Bio
+                  Professional Bio <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <textarea
@@ -985,7 +968,7 @@ const EditInterviewDetails = () => {
             <div className="flex justify-end space-x-3  ">
               <button
                 type="button"
-                onClick={() => navigate('/account-settings/my-profile/interview')}
+                onClick={handleCloseModal}
 
                 className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
               >

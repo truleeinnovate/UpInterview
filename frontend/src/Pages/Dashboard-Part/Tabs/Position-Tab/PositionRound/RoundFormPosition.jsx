@@ -3,22 +3,22 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
-
+import Loading from '../../../../../Components/Loading.js';
 import { ChevronDown, X, User, Users, Trash2, ChevronUp } from 'lucide-react';
 // import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 import axios from "axios";
 // import OutsourceOption from "../../Interviews/OutsourceOption.jsx";
 // import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
+// import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
 // import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
-import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
+// import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
-
+import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
 
 function RoundFormPosition() {
   const {
@@ -37,10 +37,10 @@ function RoundFormPosition() {
 
 
   // Get user token information
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    // const userId = tokenPayload?.userId;
-    // const userName = tokenPayload?.userName;
-    const tenantId = tokenPayload?.tenantId;
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  // const userId = tokenPayload?.userId;
+  // const userName = tokenPayload?.userName;
+  const tenantId = tokenPayload?.tenantId;
 
 
   // Determine context (interview or position) based on params
@@ -60,19 +60,14 @@ function RoundFormPosition() {
     assessmentTemplate: { assessmentId: '', assessmentName: '' },
     roundTitle: '',
     customRoundTitle: '',
-    // interviewerType: '',
-    // externalInterviewers: '',
-    // selectedInterviewersType: 'Individual',
     interviewMode: '',
     selectedQuestions: [],
-    // status: 'Pending',
     instructions: '',
     sequence: 1,
-    // isInstantInterview: false,
     interviewQuestionsList: [],
     selectedInterviewType: null,
+    interviewers: [],
     internalInterviewers: [],
-    externalInterviewers: '',
     interviewType: 'instant',
     scheduledDate: '',
     duration: 30
@@ -83,7 +78,6 @@ function RoundFormPosition() {
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
 
@@ -99,24 +93,81 @@ function RoundFormPosition() {
     }));
   };
 
-  const handleAddQuestionToRound = async (question) => {
+  // const handleAddQuestionToRound = async (question) => {
+  //   if (question && question.questionId && question.snapshot) {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+  //         ? prev.interviewQuestionsList
+  //         : [...prev.interviewQuestionsList, question]
+  //     }));
+  //   }
+  // }
+
+    const handleToggleMandatory = (questionId) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
+        question.questionId === questionId
+          ? { ...question,
+                snapshot: {
+               ...question.snapshot,
+              mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
+             }
+             }
+          : question
+      )
+    }));
+  };
+
+
+  const handleAddQuestionToRound = (question) => {
+    // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
+
+      // console.log("question _id:", question.questionId);
       setFormData(prev => ({
         ...prev,
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
-          : [...prev.interviewQuestionsList, question]
+          : [...prev.interviewQuestionsList, 
+             {
+          ...question,
+          mandatory: "false" // Default to false when adding a new question
+        }
+            // question
+          ]
       }));
+
+      // console.log("question", question);
+
+
+      setErrors(prev => ({
+        ...prev,
+        questions: undefined
+      }));
+
     }
   }
 
-  const handleRemoveQuestion = (index) => {
+  const handleRemoveQuestion = (questionId,) => {
+
+    // console.log("questionId", questionId);
     setFormData(prev => ({
       ...prev,
-      interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
+      interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
     }));
-
+     setRemovedQuestionIds(prev => [...prev, questionId]);
   };
+
+  // const handleRemoveQuestion = (index) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
+  //   }));
+
+  // };
+
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
     setFormData(prev => ({
@@ -126,15 +177,12 @@ function RoundFormPosition() {
       interviewMode: selectedTitle === "Assessment" ? "Virtual" : selectedTitle === "Other" ? "" : prev.interviewMode,
       duration: 30,
       interviewerType: "",
-      externalInterviewers: "",
       instructions: "",
-      internalInterviewers: [],
+      interviewers: [],
       interviewQuestionsList: [],
       assessmentTemplate: [{ assessmentId: '', assessmentName: '' }]
     }));
 
-    // Clear relevant errors
-    // Clear relevant errors
     clearError('roundTitle');
     clearError('customRoundTitle');
     clearError('interviewMode');
@@ -146,19 +194,13 @@ function RoundFormPosition() {
     clearError('assessmentTemplate');
     clearError('assessmentQuestions');
 
-
-    // Reset section questions and expanded sections
     setSectionQuestions({});
     setExpandedSections({});
     setExpandedQuestions({});
     setErrors({});
     setShowDropdown(false);
-
   };
-
-
-  const handleSuggestedTabClick = () => setActiveTab("SuggesstedQuestions");
-  const handleFavoriteTabClick = () => setActiveTab("MyQuestionsList");
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
 
   // while editing
   const isEditing = !!roundId && roundId !== 'new';
@@ -182,11 +224,6 @@ function RoundFormPosition() {
 
           const foundPosition = response.data;
 
-          if (!foundPosition) {
-            setError('Position not found');
-            return;
-          }
-
           // Only update rounds if they're different to prevent unnecessary re-renders
           setPosition(foundPosition || []);
           setRounds(foundPosition.rounds || [])
@@ -194,11 +231,6 @@ function RoundFormPosition() {
           if (isEditing && roundId) {
             // Add safety check for foundPosition.rounds
             const roundEditData = foundPosition.rounds?.find(r => r._id === roundId);
-
-            if (!roundEditData) {
-              setError('Round not found');
-              return;
-            }
 
             console.log("roundEditData", roundEditData);
             // Add fallback empty array for interviewers
@@ -221,14 +253,14 @@ function RoundFormPosition() {
               sequence: roundEditData.sequence || 1,
               interviewQuestionsList: roundEditData.questions || [],
               selectedInterviewType: roundEditData.interviewerType || null,
-              internalInterviewers: internalInterviewers || [],
-              externalInterviewers: roundEditData.interviewerType === "External"
-                ? "Outsourced will be selected at interview schdedule time."
-                : '',
+              interviewers: internalInterviewers || [],
               interviewType: roundEditData.interviewType || 'instant',
               scheduledDate: '',
               duration: roundEditData.duration || 30
             }));
+
+            console.log("roundEditData.questions ", roundEditData.questions );
+            
 
             if (roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId) {
               const assessmentDataForTemplate = {
@@ -248,7 +280,6 @@ function RoundFormPosition() {
         }
       } catch (error) {
         console.error('Error fetching position data:', error);
-        setError('Failed to load position data');
       }
     };
 
@@ -258,85 +289,17 @@ function RoundFormPosition() {
     }
   }, [isPositionContext, positionId, isEditing, roundId, tenantId, assessmentData]); // Removed problematic dependencies
 
-
-  // const fetchQuestionsForSection = async (assessmentId) => {
-
-  //   if (!assessmentId) {
-  //     return null;
-  //   }
-
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-  //     const assessmentQuestions = response.data;
-
-  //     const sections = assessmentQuestions.sections || [];
-
-  //     // console.log("assessmentQuestions.sections", assessmentQuestions.sections);
-
-
-  //     // Check for empty sections or questions
-  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-  //       console.warn('No sections or questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Create section questions mapping with all section data
-  //     const newSectionQuestions = {};
-
-  //     sections.forEach((section) => {
-  //       if (!section._id) {
-  //         console.warn('Section missing _id:', section);
-  //         return;
-  //       }
-
-  //       // Store complete section data including sectionName, passScore, totalScore
-  //       newSectionQuestions[section._id] = {
-  //         sectionName: section?.sectionName,
-  //         passScore: Number(section.passScore || 0),
-  //         totalScore: Number(section.totalScore || 0),
-  //         questions: (section.questions || []).map(q => ({
-  //           _id: q._id,
-  //           questionId: q.questionId,
-  //           source: q.source || 'system',
-  //           score: Number(q.score || q.snapshot?.score || 0),
-  //           order: q.order || 0,
-  //           customizations: q.customizations || null,
-  //           snapshot: {
-  //             questionText: q.snapshot?.questionText || '',
-  //             questionType: q.snapshot?.questionType || '',
-  //             score: Number(q.snapshot?.score || q.score || 0),
-  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-  //             correctAnswer: q.snapshot?.correctAnswer || '',
-  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
-  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-  //             questionNo: q.snapshot?.questionNo || ''
-  //           }
-  //         }))
-  //       };
-  //     });
-
-  //     // Verify that at least one section has questions
-  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-  //     if (!hasQuestions) {
-  //       console.warn('No sections with questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Set the section questions state
-  //     setSectionQuestions(newSectionQuestions);
-  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   }
-  // };
-
   const toggleSection = async (sectionId) => {
+
+    // Close all questions in this section when collapsing
+    if (expandedSections[sectionId]) {
+      const newExpandedQuestions = { ...expandedQuestions };
+      sectionQuestions[sectionId]?.questions?.forEach(question => {
+        newExpandedQuestions[question._id] = false;
+      });
+      setExpandedQuestions(newExpandedQuestions);
+    }
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -348,45 +311,17 @@ function RoundFormPosition() {
     }
   };
 
-
-
   const handleInternalInterviewerSelect = (interviewers) => {
     if (formData.selectedInterviewType === "external") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
-
-    const existingInterviewerIds = new Set(
-      formData.internalInterviewers.map(i => i._id)
-    );
-
-    // Filter out any interviewers that are already selected
-    const uniqueInterviewers = interviewers
-      .filter(interviewer => {
-        const interviewerId = interviewer.contactId?._id || interviewer._id;
-        return !existingInterviewerIds.has(interviewerId);
-      })
-      .map(interviewer => ({
-        _id: interviewer.contactId?._id || interviewer._id || '',
-        name: interviewer.contactId?.name || interviewer.name || 'Unknown',
-        email: interviewer.contactId?.email || interviewer.email || ''
-      }));
-
-    if (uniqueInterviewers.length === 0) {
-      alert("All selected interviewers are already added.");
-      return;
-    }
-
     setFormData(prev => ({
       ...prev,
       selectedInterviewType: "internal",
-      internalInterviewers: [...prev.internalInterviewers, ...uniqueInterviewers]
+      internalInterviewers: interviewers
     }));
-
-
   };
-
-
 
   const handleExternalInterviewerSelect = () => {
 
@@ -397,7 +332,6 @@ function RoundFormPosition() {
     setFormData(prev => ({
       ...prev,
       selectedInterviewType: "external",
-      externalInterviewers: "Outsourced will be selected at interview schdedule time."
     }));
 
   };
@@ -417,8 +351,7 @@ function RoundFormPosition() {
   const handleClearAllInterviewers = () => {
     setFormData(prev => ({
       ...prev,
-      internalInterviewers: [],
-      externalInterviewers: '',
+      interviewers: [],
       selectedInterviewType: null
     }));
 
@@ -426,7 +359,7 @@ function RoundFormPosition() {
 
   const selectedInterviewers = formData.selectedInterviewType === "internal"
     ? formData.internalInterviewers
-    : (formData.selectedInterviewType === "external" ? formData.externalInterviewers : []);
+    : (formData.selectedInterviewType === "external" && []);
   const isInternalSelected = formData.selectedInterviewType === "internal";
   const isExternalSelected = formData.selectedInterviewType === "external";
   const selectedInterviewersData = isInternalSelected && Array.isArray(selectedInterviewers)
@@ -444,19 +377,18 @@ function RoundFormPosition() {
       duration: '',
       instructions: '',
       interviewerType: '',
-      // interviewers: '',
       questions: '',
-      // assessmentQuestions: ''
     };
 
     // Round title validation
     if (!formData.roundTitle?.trim()) {
       newErrors.roundTitle = 'Round title is required';
-    } else if (formData.roundTitle === 'Other' && !formData.customRoundTitle?.trim()) {
+    }
+    if (formData.roundTitle === 'Other' && !formData.customRoundTitle?.trim()) {
       newErrors.roundTitle = 'Custom round title is required';
     }
 
-    // Interview mode validation
+    // Interview mode validation (skip for Assessment)
     if (!formData.interviewMode && formData.roundTitle !== 'Assessment') {
       newErrors.interviewMode = 'Interview mode is required';
     }
@@ -471,42 +403,47 @@ function RoundFormPosition() {
       if (!formData.assessmentTemplate?.assessmentId) {
         newErrors.assessmentTemplate = 'Assessment template is required';
       }
-
-      // Check if any sections have errors loading questions
-      // const hasSectionErrors = Object.values(sectionQuestions).some(
-      //   section => section === null || section.error
-      // );
-
-      // if (hasSectionErrors) {
-      //   newErrors.assessmentQuestions = 'Some sections failed to load questions';
-      // }
     }
 
     // Technical round validations
-    if (formData.roundTitle !== 'Assessment') {
+    if (formData.roundTitle === 'Technical') {
       if (!formData.duration) {
         newErrors.duration = 'Duration is required';
       }
-
       if (!formData.instructions?.trim()) {
         newErrors.instructions = 'Instructions are required';
-      } else if (formData.instructions.length < 250) {
-        newErrors.instructions = 'Instructions must be at least 250 characters';
+      } else if (formData.instructions.length < 50) {
+        newErrors.instructions = 'Instructions must be at least 50 characters';
       } else if (formData.instructions.length > 1000) {
         newErrors.instructions = 'Instructions cannot exceed 1000 characters';
       }
-
       if (!formData.selectedInterviewType) {
         newErrors.interviewerType = 'Interviewer type is required';
       }
-
-      // if (formData.selectedInterviewType === 'internal' && formData.internalInterviewers.length === 0) {
-      //   newErrors.interviewers = 'At least one interviewer is required';
-      // }
-
       if (formData.interviewQuestionsList.length === 0) {
         newErrors.questions = 'At least one question is required';
       }
+    }
+
+    // Final, HR Interview, etc. (minimal validation)
+    if (
+      formData.roundTitle === 'Final' ||
+      formData.roundTitle === 'HR Interview'
+      // add more round types here if needed
+    ) {
+      if (!formData.duration) {
+        newErrors.duration = 'Duration is required';
+      }
+      if (!formData.instructions?.trim()) {
+        newErrors.instructions = 'Instructions are required';
+      } else if (formData.instructions.length < 50) {
+        newErrors.instructions = 'Instructions must be at least 50 characters';
+      } else if (formData.instructions.length > 1000) {
+        newErrors.instructions = 'Instructions cannot exceed 1000 characters';
+      }
+      // Remove interviewerType and questions errors for these rounds
+      newErrors.interviewerType = '';
+      newErrors.questions = '';
     }
 
     setErrors(newErrors);
@@ -514,44 +451,51 @@ function RoundFormPosition() {
   };
 
   const handleSubmit = async (e) => {
+    console.log('click add button')
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     // Run validation first
     const isValid = validateForm();
+    console.log('validateForm result', isValid)
+    console.log('errors after validation', errors);
     if (!isValid) {
       setIsLoading(false);
       return; // Stop submission if there are errors
     }
-    console.log("isValid", errors);
-
+    console.log('errors after validation', errors);
 
     const roundData = {
-      roundTitle: formData.roundTitle,
+      roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
       interviewMode: formData.interviewMode,
       duration: formData.duration,
       interviewType: formData.interviewType,
       interviewerType: formData.selectedInterviewType,
       sequence: formData.sequence,
-      // selectedInterviewersType: formData.roundTitle === 'Technical' ? roundData.selectedInterviewersType : '',
-      // interviewers: selectedInterviewersData || [],
-      interviewers: formData.selectedInterviewType === "internal"
-        ? formData.internalInterviewers.map(interviewer => interviewer._id)
-        : formData.selectedInterviewType === "external"
-          ? ["Outsourced will be selected at interview schedule time"]
-          : [],
+      // Only include interviewers for non-assessment rounds
+      ...(formData.roundTitle !== "Assessment" && {
+        interviewers:
+          formData.selectedInterviewType === "internal"
+            ? formData.internalInterviewers.map(interviewer => interviewer._id)
+            : [], // If outsource, send empty array
+      }),
       ...(formData.roundTitle === "Assessment" && formData.assessmentTemplate.assessmentId
         ? {
           assessmentId: formData.assessmentTemplate.assessmentId,
-          questions: [] // Clear questions for assessment as they come from the template
+          questions: []
         }
         : {
-          questions: formData.interviewQuestionsList || []
+          questions: formData.interviewQuestionsList.map(q => ({
+           questionId: q.questionId,
+           snapshot: {
+            ...q.snapshot,
+             mandatory: q.snapshot.mandatory || "false"
+          }
+        })) || []
+          
+          // formData.interviewQuestionsList || []
         }),
       instructions: formData.instructions,
-      // status: formData.status,
-      // questions: formData.interviewQuestionsList || []
     };
 
     try {
@@ -617,7 +561,6 @@ function RoundFormPosition() {
       // navigate(`/interviews/${interviewId}`);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -625,7 +568,7 @@ function RoundFormPosition() {
 
 
   if (!rounds) {
-    return <div>Loading...</div>;
+    return <div><Loading /></div>;
   }
 
   // Create breadcrumb items with status
@@ -712,11 +655,6 @@ function RoundFormPosition() {
 
             <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
               <div>
-                {error && (
-                  <div className="mb-4 p-4 bg-red-50 rounded-md">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                )}
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
@@ -732,14 +670,18 @@ function RoundFormPosition() {
                           name="roundTitle"
                           value={formData.customRoundTitle}
                           onChange={(e) => {
-                            setFormData(prev => ({ ...prev, customRoundTitle: e.target.value }));
-                            // CHANGE: Clear customRoundTitle error when user types
+                            setFormData(prev => ({
+                              ...prev,
+                              customRoundTitle: e.target.value
+                              // DO NOT update roundTitle here!
+                            }));
                             clearError('roundTitle');
                           }}
                           onBlur={() => {
-                            if (!formData.customRoundTitle.trim()) setFormData(prev => ({ ...prev, roundTitle: "" }));
+                            if (!formData.customRoundTitle.trim()) {
+                              setFormData(prev => ({ ...prev, customRoundTitle: "" }));
+                            }
                           }}
-
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
                           required
                           placeholder="Enter custom round title"
@@ -878,7 +820,7 @@ function RoundFormPosition() {
                             {showDropdown && (
                               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                 {loading ? (
-                                  <div className="px-3 py-2 text-gray-500">Loading...</div>
+                                  <div className="px-3 py-2 text-gray-500"><Loading /></div>
                                 ) : (
                                   assessmentData.length > 0 ? (
                                     assessmentData.map((assessment, index) => (
@@ -916,9 +858,9 @@ function RoundFormPosition() {
 
                       {formData.assessmentTemplate.assessmentName && (
                         <div>
-                          <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
-                            Assessment
-                          </label>
+                          <h4 htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
+                            Assessment Questions
+                          </h4>
                           {questionsError && (
                             <div className="text-red-600 font-medium mt-2">
                               {questionsError}
@@ -952,113 +894,113 @@ function RoundFormPosition() {
 
                                       // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                       if (!sectionData || !Array.isArray(sectionData.questions)) {
-          return (
-            <div key={sectionId} className="border rounded-md shadow-sm p-4">
-              <div className="text-center py-4 text-gray-500">
-                No valid data for this section
-              </div>
-            </div>
-          );
-        }
+                                      if (!sectionData || !Array.isArray(sectionData.questions)) {
+                                        return (
+                                          <div key={sectionId} className="border rounded-md shadow-sm p-4">
+                                            <div className="text-center py-4 text-gray-500">
+                                              No valid data for this section
+                                            </div>
+                                          </div>
+                                        );
+                                      }
 
                                       return (
-                                      <div key={sectionId} className="border rounded-md shadow-sm p-4">
-                                        <button
-                                          onClick={() => toggleSection(sectionId)}
-                                          className="flex justify-between items-center w-full"
-                                        >
-                                          <span className="font-medium">
-                                            {sectionData?.sectionName || 'Unnamed Section'}
-                                          </span>
-                                          <ChevronUp
-                                            className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
-                                              }`}
-                                          />
-                                        </button>
+                                        <div key={sectionId} className="border rounded-md shadow-sm p-4">
+                                          <button
+                                            onClick={() => toggleSection(sectionId)}
+                                            className="flex justify-between items-center w-full"
+                                          >
+                                            <span className="font-medium">
+                                              {sectionData?.sectionName || 'Unnamed Section'}
+                                            </span>
+                                            <ChevronUp
+                                              className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
+                                                }`}
+                                            />
+                                          </button>
 
-                                        {expandedSections[sectionId] && (
-                                          <div className="mt-4 space-y-3">
-                                            {sectionData?.questions.length > 0 ? (
-                                              sectionData?.questions.map((question, idx) => (
-                                                <div
-                                                  key={question._id || idx}
-                                                  className="border rounded-md shadow-sm overflow-hidden"
-                                                >
+                                          {expandedSections[sectionId] && (
+                                            <div className="mt-4 space-y-3">
+                                              {sectionData?.questions.length > 0 ? (
+                                                sectionData?.questions.map((question, idx) => (
                                                   <div
-                                                    onClick={() =>
-                                                      setExpandedQuestions(prev => ({
-                                                        ...prev,
-                                                        [question._id]: !prev[question._id]
-                                                      }))
-                                                    }
-                                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                    key={question._id || idx}
+                                                    className="border rounded-md shadow-sm overflow-hidden"
                                                   >
-                                                    <div className="flex items-center gap-2">
-                                                      <span className="font-medium text-gray-600">
-                                                        {idx + 1}.
-                                                      </span>
-                                                      <p className="text-sm text-gray-700">
-                                                        {question.snapshot?.questionText || 'No question text'}
-                                                      </p>
-                                                    </div>
-                                                    <ChevronDown
-                                                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id]
-                                                        ? 'transform rotate-180'
-                                                        : ''
-                                                        }`}
-                                                    />
-                                                  </div>
-
-                                                  {expandedQuestions[question._id] && (
-                                                    <div className="px-4 py-3">
-                                                      <div className="flex justify-between mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                          <span className="text-sm font-medium text-gray-500">
-                                                            Type:
-                                                          </span>
-                                                          <span className="text-sm text-gray-700">
-                                                            {question.snapshot?.questionType || 'Not specified'}
-                                                          </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                          <span className="text-sm font-medium text-gray-500">
-                                                            Score:
-                                                          </span>
-                                                          <span className="text-sm text-gray-700">
-                                                            {question.snapshot?.score || '0'}
-                                                          </span>
-                                                        </div>
+                                                    <div
+                                                      onClick={() =>
+                                                        setExpandedQuestions(prev => ({
+                                                          ...prev,
+                                                          [question._id]: !prev[question._id]
+                                                        }))
+                                                      }
+                                                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                      <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-gray-600">
+                                                          {idx + 1}.
+                                                        </span>
+                                                        <p className="text-sm text-gray-700">
+                                                          {question.snapshot?.questionText || 'No question text'}
+                                                        </p>
                                                       </div>
+                                                      <ChevronDown
+                                                        className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[question._id]
+                                                          ? 'transform rotate-180'
+                                                          : ''
+                                                          }`}
+                                                      />
+                                                    </div>
 
-                                                      {/* Display question options if MCQ */}
-                                                      {question.snapshot?.questionType === 'MCQ' && (
-                                                        <div className="mt-2">
-                                                          <span className="text-sm font-medium text-gray-500">
-                                                            Options:
-                                                          </span>
-                                                          <div className="grid grid-cols-2 gap-2 mt-1">
-                                                            {question.snapshot?.options?.map((option, optIdx) => (
-                                                              <div
-                                                                key={optIdx}
-                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                className={`text-sm p-2 rounded border ${option === question.snapshot.correctAnswer
-                                                                  ? 'bg-green-50 border-green-200 text-green-800'
-                                                                  : 'bg-gray-50 border-gray-200'
-                                                                  }`}
-                                                              >
-                                                                {option}
-                                                                {option === question.snapshot.correctAnswer && (
-                                                                  <span className="ml-2 text-green-600">✓</span>
-                                                                )}
-                                                              </div>
-                                                            ))}
+                                                    {expandedQuestions[question._id] && (
+                                                      <div className="px-4 py-3">
+                                                        <div className="flex justify-between mb-2">
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Type:
+                                                            </span>
+                                                            <span className="text-sm text-gray-700">
+                                                              {question.snapshot?.questionType || 'Not specified'}
+                                                            </span>
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Score:
+                                                            </span>
+                                                            <span className="text-sm text-gray-700">
+                                                              {question.snapshot?.score || '0'}
+                                                            </span>
                                                           </div>
                                                         </div>
-                                                      )}
 
-                                                      {/* Display correct answer */}
-                                                      {/* <div className="mt-2">
+                                                        {/* Display question options if MCQ */}
+                                                        {question.snapshot?.questionType === 'MCQ' && (
+                                                          <div className="mt-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Options:
+                                                            </span>
+                                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                              {question.snapshot?.options?.map((option, optIdx) => (
+                                                                <div
+                                                                  key={optIdx}
+                                                                  //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                  className={`text-sm p-2 rounded border ${option === question.snapshot.correctAnswer
+                                                                    ? 'bg-green-50 border-green-200 text-green-800'
+                                                                    : 'bg-gray-50 border-gray-200'
+                                                                    }`}
+                                                                >
+                                                                  {option}
+                                                                  {option === question.snapshot.correctAnswer && (
+                                                                    <span className="ml-2 text-green-600">✓</span>
+                                                                  )}
+                                                                </div>
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                        )}
+
+                                                        {/* Display correct answer */}
+                                                        {/* <div className="mt-2">
                                                                   <span className="text-sm font-medium text-gray-500">
                                                                     Correct Answer:
                                                                   </span>
@@ -1067,39 +1009,39 @@ function RoundFormPosition() {
                                                                   </div>
                                                                 </div> */}
 
-                                                      {/* Additional question metadata */}
-                                                      <div className="grid grid-cols-2 gap-4 mt-3">
-                                                        <div>
-                                                          <span className="text-xs font-medium text-gray-500">
-                                                            Difficulty:
-                                                          </span>
-                                                          <span className="text-xs text-gray-700 ml-1">
-                                                            {question.snapshot?.difficultyLevel || 'Not specified'}
-                                                          </span>
-                                                        </div>
-                                                        <div>
-                                                          <span className="text-xs font-medium text-gray-500">
-                                                            Skills:
-                                                          </span>
-                                                          <span className="text-xs text-gray-700 ml-1">
-                                                            {question.snapshot?.skill?.join(', ') || 'None'}
-                                                          </span>
+                                                        {/* Additional question metadata */}
+                                                        <div className="grid grid-cols-2 gap-4 mt-3">
+                                                          <div>
+                                                            <span className="text-xs font-medium text-gray-500">
+                                                              Difficulty:
+                                                            </span>
+                                                            <span className="text-xs text-gray-700 ml-1">
+                                                              {question.snapshot?.difficultyLevel || 'Not specified'}
+                                                            </span>
+                                                          </div>
+                                                          <div>
+                                                            <span className="text-xs font-medium text-gray-500">
+                                                              Skills:
+                                                            </span>
+                                                            <span className="text-xs text-gray-700 ml-1">
+                                                              {question.snapshot?.skill?.join(', ') || 'None'}
+                                                            </span>
+                                                          </div>
                                                         </div>
                                                       </div>
-                                                    </div>
-                                                  )}
+                                                    )}
+                                                  </div>
+                                                ))
+                                              ) : (
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No questions found in this section
                                                 </div>
-                                              ))
-                                            ) : (
-                                              <div className="text-center py-4 text-gray-500">
-                                                No questions found in this section
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
                                       );
-})
+                                    })
                                   ) : (
                                     <div className="text-center py-4 text-gray-500">
                                       No assessment data available
@@ -1115,8 +1057,6 @@ function RoundFormPosition() {
 
 
 
-
-                  {formData.roundTitle === "Technical" && (
                     <>
 
                       {/* Select Interviewers */}
@@ -1177,6 +1117,7 @@ function RoundFormPosition() {
                                         Internal
                                       </span>
                                     )}
+
                                     {isExternalSelected && (
                                       <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                         Outsourced
@@ -1196,16 +1137,16 @@ function RoundFormPosition() {
                                 )}
                               </div>
 
-
                               {/* Internal Interviewers */}
                               {isInternalSelected && (
                                 <div className="mb-1">
                                   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                    {console.log('formData.internalInterviewers', formData.internalInterviewers)}
                                     {formData.internalInterviewers.map((interviewer, index) => (
                                       <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                         <div className="flex items-center">
-                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.name || 'Unnamed Interviewer'}</span>
+                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName} {interviewer?.lastName}</span>
                                         </div>
                                         <button
                                           type="button"
@@ -1229,7 +1170,7 @@ function RoundFormPosition() {
                                     {/* {externalInterviewers.map((interviewer) => ( */}
                                     <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-orange-800 truncate">{formData.externalInterviewers} (Outsourced)</span>
+                                        <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
                                       </div>
                                       <button
                                         type="button"
@@ -1251,10 +1192,9 @@ function RoundFormPosition() {
                           <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
                         )}
 
-
                       </div>
 
-                      {/* questions */}
+                      {/* interview Questions List */}
                       <div className="mt-4">
                         <div className="py-3 mx-auto rounded-md">
                           {/* Header with Title and Add Button */}
@@ -1275,18 +1215,20 @@ function RoundFormPosition() {
                             {formData.interviewQuestionsList.length > 0 ? (
                               <ul className="mt-2 space-y-2">
                                 {formData.interviewQuestionsList.map((question, qIndex) => {
-                                  const isMandatory = question?.mandatory === "true";
+                                  // const isMandatory = question?.mandatory === "true";
+                                  const isMandatory = question?.snapshot?.mandatory === "true";
                                   const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                                   return (
                                     <li
                                       key={qIndex}
-                                      className={`flex justify-between items-center p-3 border rounded-md ${isMandatory ? "border-red-500" : "border-gray-300"
+                                      className={`flex justify-between items-center p-3 border rounded-md 
+                                        ${isMandatory ? "border-red-500" : "border-gray-300"
                                         }`}
                                     >
                                       <span className="text-gray-900 font-medium">
                                         {qIndex + 1}. {questionText}
                                       </span>
-                                      <button onClick={() => handleRemoveQuestion(qIndex)}>
+                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
                                         <span className="text-red-500 text-xl font-bold">&times;</span>
                                       </button>
                                     </li>
@@ -1311,58 +1253,57 @@ function RoundFormPosition() {
                                 className="bg-white rounded-md w-[95%] h-[90%]"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="py-3 px-4 bg-custom-blue flex items-center justify-between">
-                                  <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
+                                <div className="py-3 px-4  flex items-center justify-between">
+                                  <h2 className="text-xl text-custom-blue  font-semibold">Add Interview Question</h2>
                                   <button>
-                                    <MdOutlineCancel
-                                      className="text-2xl text-white"
+                                    <X
+                                      className="text-2xl text-red-500"
                                       onClick={() => handlePopupToggle()}
                                     />
                                   </button>
                                 </div>
-                                <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
-                                  <div className="flex gap-10 p-4">
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "SuggesstedQuestions"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleSuggestedTabClick()}
-                                        >
-                                          Suggested Questions
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "MyQuestionsList"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleFavoriteTabClick()}
-                                        >
-                                          My Questions List
-                                        </span>
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                {activeTab === "SuggesstedQuestions" && (
-                                  <SuggesstedQuestions fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
-                                {activeTab === "MyQuestionsList" && (
-                                  <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
+ 
+
+                                 {isInterviewQuestionPopup &&
+                            <QuestionBank
+                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                              // sectionName=""
+                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                              type="interviewerSection"
+                              // closeQuestionBank={handlePopupToggle}
+                              // questionBankPopupVisibility={isInterviewQuestionPopup}
+                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
+                              // addedSections={[]}
+                              // questionsLimit={0}
+                              // checkedCount={formData.interviewQuestionsList.length}
+                              interviewQuestionsLists={formData.interviewQuestionsList}
+                              // setInterviewQuestionsList={(questions) =>
+                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                              // }
+                              fromScheduleLater={true}
+                              // interviewQuestionsLists={formData.interviewQuestionsList}
+                              onAddQuestion={handleAddQuestionToRound}
+                              // setInterviewQuestionsList={(question) =>
+                              //   setFormData((prev) => ({
+                              //     ...prev,
+                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+                              //       ? prev.interviewQuestionsList
+                              //       : [...prev.interviewQuestionsList, question]
+                              //   }))
+                              // }
+
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
+
+                                  />
+
+                                }
                               </div>
                             </div>
                           )}
                         </div>
                       </div>
                     </>
-                  )}
 
 
                   <div>
@@ -1375,25 +1316,23 @@ function RoundFormPosition() {
                         setFormData(prev => ({ ...prev, instructions: e.target.value }));
                         clearError('instructions');
                       }}
-
                       className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-64
-                          ${errors.instructions ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}    
-                        `}
+                        ${errors.instructions ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}    
+                      `}
                       placeholder="Enter round instructions..."
                       rows="10"
-                      minLength={250}
+                      minLength={50}
                       maxLength={1000}
                       readOnly={formData.roundTitle === 'Assessment'}
                     />
                     <div className="flex justify-between items-center mt-1">
 
-
                       <span className="text-sm text-gray-500">
                         {errors.instructions ? (
                           <p className="text-red-500 text-xs pt-1">{errors.instructions}</p>
-                        ) : formData.instructions.length > 0 && formData.instructions.length < 250 ? (
+                        ) : formData.instructions.length > 0 && formData.instructions.length < 50 ? (
                           <p className="text-gray-500 text-xs">
-                            Minimum {250 - formData.instructions.length} more characters needed
+                            Minimum {50 - formData.instructions.length} more characters needed
                           </p>
                         ) : null}
 
@@ -1413,7 +1352,6 @@ function RoundFormPosition() {
                         <span className="text-sm text-gray-500"> {formData.instructions?.length || 0}/1000</span>
                       </span>
                     </div> */}
-
 
                   </div>
                   {/* footer */}
@@ -1455,6 +1393,7 @@ function RoundFormPosition() {
           isOpen={isInternalInterviews}
           onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
+          selectedInterviewers={formData.internalInterviewers}
         />
       )}
     </div>

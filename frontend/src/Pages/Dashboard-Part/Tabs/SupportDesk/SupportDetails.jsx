@@ -8,6 +8,9 @@ import { format, parseISO, isValid } from "date-fns";
 import StatusChangeModal from './StatusChangeModal';
 import StatusHistory from './StatusHistory';
 import axios from 'axios';
+import { config } from '../../../../config';
+import { useCustomContext } from '../../../../Context/Contextfetch';
+import { Minimize, Expand, X } from 'lucide-react';
 
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
@@ -27,6 +30,8 @@ const getStatusColor = (status) => {
 };
 
 function SupportDetails() {
+  const { userRole } = useCustomContext();
+
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTicket, setCurrentTicket] = useState(location.state?.ticketData || null);
@@ -40,9 +45,9 @@ function SupportDetails() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users`);
-        const filteredUsers = response.data.filter(user => 
-          user.RoleId === "67f77613588be9a9ef019765" || 
+        const response = await axios.get(`${config.REACT_APP_API_URL}/api/users`);
+        const filteredUsers = response.data.filter(user =>
+          user.RoleId === "67f77613588be9a9ef019765" ||
           user.RoleId === "67f77640588be9a9ef019767"
         );
         setOwnerOptions(filteredUsers);
@@ -50,7 +55,7 @@ function SupportDetails() {
         console.error('Error fetching users:', error);
       }
     };
-    
+
     fetchUsers();
   }, []);
 
@@ -60,11 +65,10 @@ function SupportDetails() {
   const currentStepIndex = statusSteps.indexOf(currentTicket.status);
   // User role - in a real app, this would come from authentication context or API
   // eslint-disable-next-line no-unused-vars
-  const [userRole, setUserRole] = useState('SuperAdmin'); // Default to SuperAdmin for testing
 
   // useEffect(() => {
   //   document.title = "Support Ticket Details";
-    
+
   //   // In a real application, you would fetch the user role from an API or auth context
   //   // For demo purposes, we'll simulate getting the role
   //   // This could be replaced with actual authentication logic
@@ -74,7 +78,7 @@ function SupportDetails() {
   //     const role = localStorage.getItem('userRole');
   //     setUserRole(role);
   //   };
-    
+
   //   getUserRole();
   // }, []);
 
@@ -95,7 +99,7 @@ function SupportDetails() {
     const date = parseISO(dateString);
     return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
   }, []);
-  
+
   const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
   }, []);
@@ -114,7 +118,7 @@ function SupportDetails() {
   const handleOwnerChange = (e) => {
     const selectedUserId = e.target.value;
     const selectedUser = ownerOptions.find(user => user._id === selectedUserId);
-    
+
     if (selectedUser) {
       setSelectedOwner(selectedUser.Name);
       setSelectedOwnerId(selectedUser._id);
@@ -141,24 +145,24 @@ function SupportDetails() {
     setIsUpdatingOwner(true);
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/api/update-ticket/${currentTicket._id}`,
-        { 
+        `${config.REACT_APP_API_URL}/api/update-ticket/${currentTicket._id}`,
+        {
           assignedTo: selectedOwner,
           assignedToId: selectedOwnerId,
           issueType: currentTicket.issueType,
           description: currentTicket.description
         }
       );
-      
+
       const updatedTicket = {
         ...currentTicket,
         assignedTo: selectedOwner,
         assignedToId: selectedOwnerId
       };
-      
+
       setCurrentTicket(updatedTicket);
       setIsOwnerEditing(false);
-      
+
       console.log('Owner updated successfully:', response.data);
     } catch (error) {
       console.error('Error updating owner:', error);
@@ -177,39 +181,38 @@ function SupportDetails() {
 
   const content = (
     <div className={`${isFullScreen ? 'min-h-screen' : 'h-full'} flex flex-col`}>
-      <div className="p-3 border-b">
+      <div className="p-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <button className=" hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <IoArrowBack className="text-2xl" />
-            </button>
+          <div className="flex items-center">
             <h2 className="text-xl font-medium">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
             {userRole === 'SuperAdmin' && (
               <button
                 onClick={toggleStatusModal}
-                className="p-2  hover:text-custom-blue rounded-md transition-colors"
+                className="p-2 bg-custom-blue text-white hover:text-custom-blue/90 rounded-md transition-colors"
                 title="Change Status"
               >
                 Change Status
               </button>
             )}
+
             <button
-              onClick={toggleFullScreen}
-              className=" hover:text-custom-blue rounded-full p-2 transition-colors"
-              title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
             >
-              <FaExternalLinkAlt className="w-5 h-5" />
+              {isFullScreen ? (
+                <Minimize className="w-5 h-5 text-gray-500" />
+              ) : (
+                <Expand className="w-5 h-5 text-gray-500" />
+              )}
             </button>
-            {!isFullScreen && (
-              <button 
-                onClick={() => navigate(-1)}
-                className=" hover:text-custom-blue rounded-full p-2"
-              >
-                <MdOutlineCancel className="text-2xl" />
-              </button>
-            )}
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -229,17 +232,16 @@ function SupportDetails() {
             {currentTicket.status}
           </span>
         </div>
-        
+
         <div className="mb-4 border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {['details', 'status'].map((tab) => (
-              <button 
+              <button
                 key={tab}
-                className={`pt-2 pb-2 capitalize transition-colors ${
-                  activeTab === tab
+                className={`pt-2 pb-2 capitalize transition-colors ${activeTab === tab
                     ? 'border-b-2 border-custom-blue text-custom-blue'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
                 onClick={() => handleTabChange(tab)}
               >
                 {tab === 'status' ? 'Status History' : tab}
@@ -251,62 +253,60 @@ function SupportDetails() {
         {activeTab === 'details' ? (
           <>
             <div className={`flex justify-center items-center ${isFullScreen ? 'max-w-4xl' : 'w-[70%]'} mx-auto mt-8 mb-8`}>
-                   {statusSteps.map((step, index) => (
-                     <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
-                       <div className="flex flex-col items-center relative">
-                         {/* Status Circle */}
-                         <div
-                           className={`${isFullScreen ? 'w-8 h-8' : 'w-6 h-6'} rounded-full border-2 flex items-center justify-center ${
-                             index === 0
-                               ? "border-teal-600" // Default first circle
-                               : index < currentStepIndex
-                               ? "border-teal-600"
-                               : index === currentStepIndex
-                               ? "border-orange-500"
-                               : "border-gray-300"
-                           }`}
-                         >
-                           {/* First circle has no tick */}
-                           {index === 0 ? (
-                             <FaCircle className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} text-teal-600  text-base`} />
-                           ) : index < currentStepIndex ? (
-                             <FaCheckCircle className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} text-teal-600 text-base`} />
-                           ) : index === currentStepIndex ? (
-                             <div className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} bg-orange-500`}></div>
-                           ) : (
-                             <div className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} bg-gray-300`}></div>
-                           )}
-                         </div>
-                       </div>
-             
-                       {/* Connecting Line */}
-                       {index < statusSteps.length - 1 && (
-                         <div className="relative flex-1 h-[2px] mx-2">
-                           {/* Text Between Circles */}
-                           {index >= 0 && (
-                             <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-sm text-gray-500">
-                               {statusSteps[index + 1]}
-                             </div>
-                           )}
-                           {/* Line */}
-                           <div
-                             className={`h-full ${
-                               index < currentStepIndex - 1
-                                 ? "bg-teal-600"
-                                 : index === currentStepIndex - 1
-                                 ? "bg-orange-500"
-                                 : "bg-gray-300"
-                             }`}
-                           />
-                         </div>
-                       )}
-                     </div>
-                   ))}
+              {statusSteps.map((step, index) => (
+                <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
+                  <div className="flex flex-col items-center relative">
+                    {/* Status Circle */}
+                    <div
+                      className={`${isFullScreen ? 'w-8 h-8' : 'w-6 h-6'} rounded-full border-2 flex items-center justify-center ${index === 0
+                          ? "border-teal-600" // Default first circle
+                          : index < currentStepIndex
+                            ? "border-teal-600"
+                            : index === currentStepIndex
+                              ? "border-orange-500"
+                              : "border-gray-300"
+                        }`}
+                    >
+                      {/* First circle has no tick */}
+                      {index === 0 ? (
+                        <FaCircle className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} text-teal-600  text-base`} />
+                      ) : index < currentStepIndex ? (
+                        <FaCheckCircle className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} text-teal-600 text-base`} />
+                      ) : index === currentStepIndex ? (
+                        <div className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} bg-orange-500`}></div>
+                      ) : (
+                        <div className={`${isFullScreen ? 'h-5 w-5 rounded-full' : 'w-3 h-3 rounded-full'} bg-gray-300`}></div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Connecting Line */}
+                  {index < statusSteps.length - 1 && (
+                    <div className="relative flex-1 h-[2px] mx-2">
+                      {/* Text Between Circles */}
+                      {index >= 0 && (
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 whitespace-nowrap">
+                          {statusSteps[index + 1]}
+                        </div>
+                      )}
+                      {/* Line */}
+                      <div
+                        className={`h-full ${index < currentStepIndex - 1
+                            ? "bg-teal-600"
+                            : index === currentStepIndex - 1
+                              ? "bg-orange-500"
+                              : "bg-gray-300"
+                          }`}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-            
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 mt-4">
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 mt-2">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">Ticket Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
                     <FaUser className="w-5 h-5 text-custom-blue" />
@@ -343,74 +343,65 @@ function SupportDetails() {
                     <p className="text-gray-700">{currentTicket.priority || 'N/A'}</p>
                   </div>
                 </div>
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
                     <FaUser className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div className="flex items-start gap-24">
-                  <div className="flex flex-col items-start">
-                    <p className="text-sm text-gray-500">Owner</p>
-                    {isOwnerEditing ? (
-                      <div className="flex items-center gap-2">
-                        <select
-                          className="border border-gray-300 rounded-md p-1 text-sm"
-                          value={selectedOwnerId}
-                          onChange={handleOwnerChange}
-                          disabled={isUpdatingOwner}
-                        >
-                          <option value="" hidden>Select Owner</option>
-                          {ownerOptions.map((user) => (
-                            <option key={user._id} value={user._id}>
-                              {user.Name}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={updateOwner}
-                          className="text-green-600 hover:text-green-800 p-1"
-                          disabled={isUpdatingOwner}
-                        >
-                          {isUpdatingOwner ? (
-                            <span>Saving...</span>
-                          ) : (
-                            <FaCheckCircle className="w-5 h-5" />
-                          )}
-                        </button>
+                    <div className="flex flex-col items-start">
+                      <p className="text-sm text-gray-500">Owner</p>
+                      {isOwnerEditing ? (
+                        <div className="flex items-center gap-2">
+                          <select
+                            className="border border-gray-300 rounded-md p-1 text-sm"
+                            value={selectedOwnerId}
+                            onChange={handleOwnerChange}
+                            disabled={isUpdatingOwner}
+                          >
+                            <option value="" hidden>Select Owner</option>
+                            {ownerOptions.map((user) => (
+                              <option key={user._id} value={user._id}>
+                                {user.Name}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={updateOwner}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            disabled={isUpdatingOwner}
+                          >
+                            {isUpdatingOwner ? (
+                              <span>Saving...</span>
+                            ) : (
+                              <FaCheckCircle className="w-5 h-5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={toggleOwnerEdit}
+                            className="text-red-600 hover:text-red-800 p-1"
+                            disabled={isUpdatingOwner}
+                          >
+                            <MdOutlineCancel className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700">{currentTicket.assignedTo || 'N/A'}</p>
+                      )}
+                    </div>
+                    {userRole === 'SuperAdmin' && (
+                      <div className="flex items-center justify-center w-full">
                         <button
                           onClick={toggleOwnerEdit}
-                          className="text-red-600 hover:text-red-800 p-1"
-                          disabled={isUpdatingOwner}
+                          className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
+                          title="Change Owner"
                         >
-                          <MdOutlineCancel className="w-5 h-5" />
+                          <FaExchangeAlt className="w-5 h-5 text-custom-blue" />
                         </button>
                       </div>
-                    ) : (
-                      <p className="text-gray-700">{currentTicket.assignedTo || 'N/A'}</p>
                     )}
                   </div>
-                  {userRole === 'SuperAdmin' && (
-                    <div className="flex items-center justify-center w-full">
-                      <button
-                        onClick={toggleOwnerEdit}
-                        className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
-                        title="Change Owner"
-                      >
-                        <FaExchangeAlt className="w-5 h-5 text-custom-blue" />
-                      </button>
-                    </div>
-                  )}
-                  </div>
-              </div>
-              <div className="flex items-center gap-3">
-                  <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaCalendarAlt className="w-5 h-5 text-custom-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Created Date</p>
-                    <p className="text-gray-700">{formatDate(currentTicket.createdAt)}</p>
-                  </div>
                 </div>
-            </div>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
@@ -448,7 +439,7 @@ function SupportDetails() {
                 </div>
               </div>
             </div>
-          
+
           </>
         ) : (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">

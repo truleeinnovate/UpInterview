@@ -30,6 +30,7 @@ import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import axios from "axios";
 // import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
+import { config } from '../../../../../config.js';
 
 
 const InterviewDetail = () => {
@@ -44,7 +45,6 @@ const InterviewDetail = () => {
   }, [fetchInterviewData]);
 
   const interview = interviewData?.find(interview => interview._id === id);
-  console.log("interview", interview);
 
   const [loading, setLoading] = useState(true);
 
@@ -70,8 +70,6 @@ const InterviewDetail = () => {
   const [rounds, setRounds] = useState([]);
   const [template, setTemplate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  console.log("rounds", rounds)
 
   useEffect(() => {
     if (interview) {
@@ -114,7 +112,7 @@ const InterviewDetail = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!interview) {
-    return <div className='flex justify-center items-center h-screen'>Invalid interview ID</div>;
+    return <div className='flex justify-center items-center h-screen'>No interview found</div>;
   }
 
   if (!interview) {
@@ -185,7 +183,7 @@ const InterviewDetail = () => {
       };
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
           ...interviewData,
           interviewId: id,
           updatingInterviewStatus: true
@@ -287,7 +285,7 @@ const InterviewDetail = () => {
         <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center mb-4">
-              <Link to="/interviewList" className="text-blue-600 hover:text-blue-800 flex items-center mr-4">
+              <Link to="/interviewList" className="text-gray-800 flex items-center mr-4">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>

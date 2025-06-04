@@ -17,15 +17,20 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "./KanbanView.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
+import { useCustomContext } from '../../../../Context/Contextfetch';
 
 function SupportDesk() {
+
+  const { tickets, userRole } = useCustomContext();
+  console.log('userRole from main', userRole)
+
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const currentUserId = tokenPayload?.userId;
   const currentOrganizationId = tokenPayload?.tenantId;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [tickets, setTickets] = useState([]);
+  // const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -35,41 +40,48 @@ function SupportDesk() {
     status: [],
   });
   const [viewMode, setViewMode] = useState("table");
-  const [userRole, setUserRole] = useState("Admin"); // Adjust based on your auth logic
+  // const [userRole, setUserRole] = useState("Admin"); // Adjust based on your auth logic
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
-  const getTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
-      let filteredTickets = response.data.tickets || [];
+  // const getTickets = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+  //     let filteredTickets = response.data.tickets || [];
 
-      if (userRole === "SuperAdmin" || userRole === "Support Team") {
-        setTickets(filteredTickets);
-      } else if (userRole === "Admin" && currentOrganizationId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.tenantId === currentOrganizationId
-        );
-        setTickets(filteredTickets);
-      } else if (currentUserId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.assignedToId === currentUserId
-        );
-        setTickets(filteredTickets);
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [userRole, currentUserId, currentOrganizationId]);
+  //     if (userRole === "SuperAdmin" || userRole === "Support Team") {
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Admin" && currentOrganizationId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.tenantId === currentOrganizationId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Individual" && currentUserId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.ownerId === currentUserId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (currentUserId) { 
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.assignedToId === currentUserId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else {
+  //       setTickets([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching tickets:", error);
+  //     // Set an error state to display in the UI
+  //     // setError("Failed to fetch tickets. Please try again later.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [userRole, currentUserId, currentOrganizationId]);
 
-  useEffect(() => {
-    getTickets();
-  }, [getTickets]);
+  //   useEffect(() => {
+  //     getTickets();
+  //   }, [getTickets]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -220,20 +232,20 @@ function SupportDesk() {
     },
     ...(userRole === "SuperAdmin" || userRole === "Support Team"
       ? [
-          {
-            key: "priority",
-            header: "Priority",
-            render: (value) => (
-              <span
-                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                  value
-                )}`}
-              >
-                {value || "N/A"}
-              </span>
-            ),
-          },
-        ]
+        {
+          key: "priority",
+          header: "Priority",
+          render: (value) => (
+            <span
+              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                value
+              )}`}
+            >
+              {value || "N/A"}
+            </span>
+          ),
+        },
+      ]
       : []),
     {
       key: "createdAt",
@@ -242,12 +254,12 @@ function SupportDesk() {
     },
     ...(userRole === "SuperAdmin"
       ? [
-          {
-            key: "assignedTo",
-            header: "Assigned To",
-            render: (value) => value || "N/A",
-          },
-        ]
+        {
+          key: "assignedTo",
+          header: "Assigned To",
+          render: (value) => value || "N/A",
+        },
+      ]
       : []),
   ];
 
@@ -279,15 +291,15 @@ function SupportDesk() {
     },
     ...(userRole === "Admin"
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) =>
-              navigate(`/support-desk/edit-ticket/${row._id}`, { state: { ticketData: row } }),
-            disabled: (row) => !hasActionAccess(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) =>
+            navigate(`/support-desk/edit-ticket/${row._id}`, { state: { ticketData: row } }),
+          disabled: (row) => !hasActionAccess(row),
+        },
+      ]
       : []),
   ];
 
@@ -308,8 +320,8 @@ function SupportDesk() {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed md:mt-6 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <main className="px-6 max-w-7xl mx-auto">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
           <div className="sm:px-0">
             <Header
               title="Support Desk"
@@ -337,63 +349,63 @@ function SupportDesk() {
       </div>
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-            <motion.div className="bg-white">
-              {viewMode === "table" ? (
-                <TableView
-                  data={currentFilteredRows}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={loading}
-                  emptyState="No tickets found."
-                  className="table-fixed w-full"
-                />
-              ) : (
-                <KanbanView
-                  currentTickets={currentFilteredRows}
-                  tickets={tickets}
-                  userRole={userRole}
-                  currentUserId={currentUserId}
-                />
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setIsFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearFilters}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsStatusOpen(!isStatusOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Status</span>
-                      {isStatusOpen ? (
-                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                      ) : (
-                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isStatusOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {statusOptions.map((option) => (
-                          <label key={option} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedStatus.includes(option)}
-                              onChange={() => handleStatusToggle(option)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                            />
-                            <span className="text-sm">{option}</span>
-                          </label>
-                        ))}
-                      </div>
+          <motion.div className="bg-white">
+            {viewMode === "table" ? (
+              <TableView
+                data={currentFilteredRows}
+                columns={tableColumns}
+                actions={tableActions}
+                loading={loading}
+                emptyState="No tickets found."
+                className="table-fixed w-full"
+              />
+            ) : (
+              <KanbanView
+                currentTickets={currentFilteredRows}
+                tickets={tickets}
+                userRole={userRole}
+                currentUserId={currentUserId}
+              />
+            )}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setIsFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearFilters}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Status</span>
+                    {isStatusOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
                     )}
                   </div>
+                  {isStatusOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {statusOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedStatus.includes(option)}
+                            onChange={() => handleStatusToggle(option)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </FilterPopup>
-            </motion.div>
+              </div>
+            </FilterPopup>
+          </motion.div>
         </div>
       </main>
     </div>

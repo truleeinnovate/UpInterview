@@ -158,13 +158,10 @@ exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
   try {
     const {id}= req.params 
     if (!id){
-      console.log("id is missing")
       return res.status(400).send({message:"id is missing"})
     }
     const document = await CandidateAssessment.findById(id) 
-    console.log("document",document)
     if (!document){
-      console.log("no document found")
       return res.status(400).send({message:`no document found for given candidate assessment id:${id}`})
     }
     return res.status(200).send({
@@ -173,7 +170,6 @@ exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
       candidateAssessment:document
     })
   } catch (error) {
-    console.log("error in getting candidate assessment details",error)
     res.status(500).send({
       success:false,
       message:"Failed to get candidate assessment details",
@@ -232,7 +228,6 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.submitCandidateAssessment = async (req, res) => {
-  console.log('Started backend process');
   try {
     const {
       candidateAssessmentId, // Add candidateAssessmentId
@@ -244,16 +239,6 @@ exports.submitCandidateAssessment = async (req, res) => {
       submittedAt,
     } = req.body;
 
-    console.log('Received request body:', {
-      candidateAssessmentId,
-      scheduledAssessmentId,
-      candidateId,
-      status,
-      sections,
-      totalScore,
-      submittedAt,
-    });
-
     // Validate required fields (allow 0 for totalScore)
     if (
       candidateAssessmentId === undefined || candidateAssessmentId === null ||
@@ -261,19 +246,11 @@ exports.submitCandidateAssessment = async (req, res) => {
       totalScore === undefined || totalScore === null ||
       submittedAt === undefined || submittedAt === null
     ) {
-      console.log('Missing fields:', {
-        candidateAssessmentId: candidateAssessmentId !== undefined && candidateAssessmentId !== null,
-        sections: sections !== undefined && sections !== null,
-        totalScore: totalScore !== undefined && totalScore !== null,
-        submittedAt: submittedAt !== undefined && submittedAt !== null,
-      });
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
-
-    console.log('Validation passed, searching for candidate assessment...');
 
     // Find the existing candidate assessment by candidateAssessmentId
 
@@ -281,14 +258,11 @@ let candidateAssessment = await CandidateAssessment.findById(new mongoose.Types.
 
 
     if (!candidateAssessment) {
-      console.log('No candidate assessment found for:', { candidateAssessmentId });
       return res.status(404).json({
         success: false,
         message: "Candidate assessment not found",
       });
     }
-
-    console.log('Found candidate assessment before update:', candidateAssessment);
 
     // Update the candidate assessment with submitted data
     candidateAssessment.status = status || 'completed';
@@ -330,12 +304,8 @@ let candidateAssessment = await CandidateAssessment.findById(new mongoose.Types.
     // Update the overall result
     candidateAssessment.overallResult = overallResult;
 
-    console.log('Candidate assessment after update (before save):', candidateAssessment);
-
     // Save the updated assessment to the database
     const updatedAssessment = await candidateAssessment.save();
-
-    console.log('Updated assessment saved to database:', updatedAssessment);
 
     return res.status(200).json({
       success: true,

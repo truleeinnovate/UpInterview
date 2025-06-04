@@ -1,21 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from "axios";
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
-// import PopupComponent from "../Interviews/OutsourceOption";
 import Cookies from "js-cookie";
-// import Candidate2MiniTab from "./Candidate2MiniTab.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
-import toast from "react-hot-toast";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import { X, User, Users, Trash2, Clock, Calendar } from 'lucide-react';
-import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
-// import OutsourceOption from "../Interviews/OutsourceOption.jsx";
+import { X, Users, User, Trash2, Clock, Calendar } from 'lucide-react';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import InternalInterviews from "../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx";
+import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
+import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -41,8 +38,6 @@ const formatToCustomDateTime = (date) => {
   })}`;
 };
 
-
-
 const MockSchedulelater = () => {
   const {
     // fetchMockInterviewData,
@@ -51,8 +46,10 @@ const MockSchedulelater = () => {
     technologies,
     skills,
     currentRole,
-    mockinterviewData
+    mockinterviewData,
+    singlecontact
   } = useCustomContext();
+  console.log('singlecontact:', singlecontact);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -77,12 +74,13 @@ const MockSchedulelater = () => {
     },
     // status: 'Pending',
   });
+  console.log("formData", formData);
 
-  const [candidate, setCandidate] = useState(null);
+
   const [interviewType, setInterviewType] = useState("scheduled");
   const [combinedDateTime, setCombinedDateTime] = useState("")
   const [scheduledDate, setScheduledDate] = useState("");
-  const [userProfile, setUserProfile] = useState(null);
+
   const [mockEdit, setmockEdit] = useState(false);
 
 
@@ -98,11 +96,11 @@ const MockSchedulelater = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [teamData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [externalInterviewers, setExternalInterviewers] = useState([]);
-  const [roles, setRoles] = useState([])
+
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -126,78 +124,28 @@ const MockSchedulelater = () => {
     setShowDropdownRole(false);
   };
 
-  const handleExternalInterviewerSelect = (interviewers) => {
-
-    // Ensure no duplicates and append new interviewers
-    const uniqueInterviewers = interviewers.filter(
-      (newInterviewer) => !externalInterviewers.some((i) => i.id === newInterviewer.id)
-    );
-
-    // setSelectedInterviewType("external");
-    setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
-  };
-
+  const filteredSkills = skills.filter(skill =>
+    skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/auth/users/${userId}`
-        );
-
-        // const allRolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`);
-        // const allRoles = allRolesResponse.data;
-
-        // console.log("allRoles", currentRole);
-        setUserProfile(response.data);
-
-        // console.log("response.data", response.data);
-        // setRoles(allRoles)
-        setRoles(currentRole)
-
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-
-    fetchData();
-  }, [userId, currentRole]);
-
-
-
-  const handleRemoveExternalInterviewer = (interviewerId) => {
-    setExternalInterviewers((prev) => {
-      const updatedInterviewers = prev.filter((i) => i.id !== interviewerId);
-
-      // Reset selectedInterviewType if no interviewers are left
-      if (updatedInterviewers.length === 0 && formData.rounds.interviewers.length === 0) {
-        // setSelectedInterviewType(null);
-      }
-
-      return updatedInterviewers;
-    });
-  };
-
-  const handleClearAllInterviewers = () => {
-
-    setExternalInterviewers([]);
-
-  };
-
-
-
-  useEffect(() => {
-    if (!id && userProfile) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        candidateName: userProfile.Name || "",
-        higherQualification: userProfile.HigherQualification || "",
-        currentExperience: userProfile.Experience || "",
-        technology: userProfile.technology || "",
+    if (!id && singlecontact?.length > 0) {
+      const contact = singlecontact[0]; // Use first contact
+      setFormData((prev) => ({
+        ...prev,
+        candidateName: `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
+        higherQualification: contact.HigherQualification || "",
+        currentExperience: contact.Experience || "",
+        technology: contact.technologies?.[0] || "",
+        skills: contact.skills || [],
       }));
+      setEntries(contact.skills || []);
+      setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
-  }, [userProfile]);
+  }, [singlecontact, id]);
+
+
 
 
   useEffect(() => {
@@ -291,17 +239,17 @@ const MockSchedulelater = () => {
 
 
     let errorMessage = getErrorMessage(name, value);
-  if (name === 'currentExperience') {
-    const numValue = parseInt(value, 10);
-    if (isNaN(numValue) || numValue < 1 || numValue > 15) {
-      errorMessage = 'Experience must be between 1 and 15';
+    if (name === 'currentExperience') {
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+        errorMessage = 'Experience must be between 1 and 15';
+      }
+    } else {
+      errorMessage = getErrorMessage(name, value);
     }
-  } else {
-    errorMessage = getErrorMessage(name, value);
-  }
 
 
- 
+
     if (name.startsWith("rounds.")) {
       const roundField = name.split(".")[1];
       setFormData((prev) => ({
@@ -316,23 +264,23 @@ const MockSchedulelater = () => {
 
 
   const handleExperienceKeyDown = (e) => {
-  // Allow: backspace, delete, tab, escape, enter
-  if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
-    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-    (e.keyCode === 65 && e.ctrlKey === true) ||
-    (e.keyCode === 67 && e.ctrlKey === true) ||
-    (e.keyCode === 86 && e.ctrlKey === true) ||
-    (e.keyCode === 88 && e.ctrlKey === true) ||
-    // Allow: home, end, left, right
-    (e.keyCode >= 35 && e.keyCode <= 39)) {
-    return;
-  }
-  
-  // Block everything except numbers (0-9)
-  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
-    e.preventDefault();
-  }
-};
+    // Allow: backspace, delete, tab, escape, enter
+    if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
+      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+      (e.keyCode === 65 && e.ctrlKey === true) ||
+      (e.keyCode === 67 && e.ctrlKey === true) ||
+      (e.keyCode === 86 && e.ctrlKey === true) ||
+      (e.keyCode === 88 && e.ctrlKey === true) ||
+      // Allow: home, end, left, right
+      (e.keyCode >= 35 && e.keyCode <= 39)) {
+      return;
+    }
+
+    // Block everything except numbers (0-9)
+    if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+      e.preventDefault();
+    }
+  };
 
 
 
@@ -354,7 +302,6 @@ const MockSchedulelater = () => {
         ...formData,
         entries,
         combinedDateTime, // Make sure this is included
-        candidate // Include if needed
       },
       id: mockEdit ? id : undefined,
       isEdit: mockEdit,
@@ -388,155 +335,12 @@ const MockSchedulelater = () => {
       }
     });
 
-    // try {
-
-    //   const status = formData.rounds.interviewers.length > 0 ? "Requests Sent" : "Draft";
-    //   // Prepare the payload
-    //   const payload = {
-    //     skills: entries.map((entry) => ({
-    //       skill: entry.skill,
-    //       experience: entry.experience,
-    //       expertise: entry.expertise,
-    //     })),
-    //     Role: formData.Role,
-    //     candidateName: formData.candidateName,
-    //     higherQualification: formData.higherQualification,
-    //     currentExperience: formData.currentExperience,
-    //     technology: formData.technology,
-    //     jobDescription: formData.jobDescription,
-    //     rounds: {
-    //       ...formData.rounds,
-    //       dateTime: combinedDateTime,
-    //       status: status,
-    //     },
-    //     createdById: userId,
-    //     lastModifiedById: userId,
-    //     ownerId: userId,
-    //     tenantId: organizationId,
-    //   };
-
-    //   // Add additional fields for new interviews
-    //   // if (!mockEdit) {
-    //   //   // payload.status = "Scheduled";
-    //   //   payload.interviewType = InterviewType;
-
-    //   // }
-
-    //   // // Add tenant ID if applicable
-    //   // if (organizationId) {
-    //   //   payload.tenantId = organizationId;
-    //   // }
-
-    //   console.log("Payload:", payload);
-
-    //   let response;
-
-    //   if (mockEdit) {
-    //     response = await axios.patch(
-    //       `${process.env.REACT_APP_API_URL}/updateMockInterview/${id}`,
-    //       payload
-    //     );
-    //   } else {
-    //     // Create a new mock interview
-    //     response = await axios.post(
-    //       `${process.env.REACT_APP_API_URL}/mockinterview`,
-    //       payload
-    //     );
-    //   }
-
-    //   console.log(mockEdit ? "Mock updated:" : "Mock created:", response.data);
-
-    //   // Handle successful response
-    //   if (response?.data) {
-
-    //     if (formData.rounds.interviewers && formData.rounds.interviewers.length > 0) {
-
-
-    //       for (const interviewer of formData.rounds.interviewers) {
-    //         const outsourceRequestData = {
-    //           tenantId: organizationId,
-    //           ownerId: userId,
-    //           scheduledInterviewId: interviewer,
-    //           // interviewerType: selectedInterviewType,
-    //           id: interviewer._id, // Directly passing the interviewer ID
-    //           // status: isInternal ? "accepted" : "inprogress", // Status is already in the main schema
-    //           dateTime: combinedDateTime,
-    //           duration: formData.rounds.duration,
-    //           candidateId: candidate?._id,
-    //           // positionId: position?._id,
-    //           roundId: response.data.savedRound._id,
-    //           requestMessage: "Outsource interview request",
-    //           expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    //         };
-
-    //         console.log("Sending outsource request:", outsourceRequestData);
-
-    //         await axios.post(
-    //           `${process.env.REACT_APP_API_URL}/interviewrequest`,
-    //           outsourceRequestData
-    //         );
-    //       }
-    //     }
-
-    //     // Reset form data
-    //     setFormData({
-    //       skills: [],
-    //       candidateName: "",
-    //       higherQualification: "",
-    //       currentExperience: "",
-    //       technology: "",
-    //       jobDescription: "",
-    //       Role: "",
-    //       rounds: {
-    //         roundTitle: "",
-    //         interviewMode: "",
-    //         duration: "30",
-    //         instructions: "",
-    //         interviewType: "",
-    //         interviewers: [],
-    //         status: "Pending",
-    //         dateTime: "",
-    //       },
-    //     })
-
-    //     // if (formData.rounds.interviewType === 'InstantInterview') {
-    //     //   Navigate('/');
-    //     // }
-
-
-    //     navigate('/mockinterview');
-    //     // await fetchMockInterviewData();
-    //     toast.success(mockEdit ? "Mock Interview updated successfully" : "Candidate saved successfully");
-    //   }
-    // } catch (error) {
-    //   console.error("Error creating/updating mock interview:", error);
-    //   toast.error(mockEdit ? "Failed to update mock interview" : "Failed to save mock interview");
-
-    // }
   };
 
-
-  const [textareaValue, setTextareaValue] = useState("");
-
-  const handleChangedescription = (event) => {
-    const value = event.target.value;
-    if (value.length <= 250) {
-      setTextareaValue(value);
-      event.target.style.height = "auto";
-      event.target.style.height = event.target.scrollHeight + "px";
-      setFormData({ ...formData, instructions: value });
-
-      setErrors({ ...errors, instructions: "" });
-    }
-  };
   //for skills
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   const closeSidebar = () => {
     setSidebarOpen(false);
@@ -578,10 +382,6 @@ const MockSchedulelater = () => {
   const handleRemoveFile = () => {
     setFileName("");
   };
-
-
-
-
 
   const experienceOptions = [
     "0-1 Years",
@@ -721,12 +521,6 @@ const MockSchedulelater = () => {
   // date and duration
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
-  const getCurrentTime = () => {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  };
-
-
   const calculateEndTime = (startTime, duration) => {
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const durationMinutes = Number(duration);
@@ -749,22 +543,13 @@ const MockSchedulelater = () => {
 
 
   const [dateTime, setDateTime] = useState("");
-  // const [duration, setDuration] = useState("60 minutes");
   const [showPopup, setShowPopup] = useState(false);
 
-
-  const durationOptions = ["30 minutes", "60 minutes", "90 minutes", "120 minutes"];
-
   useEffect(() => {
-    // Update end time and display default combined date and time
     const calculatedEndTime = calculateEndTime(startTime, formData.duration);
     setEndTime(calculatedEndTime);
     setDateTime(`${formatDate(selectedDate)} ${formatTime(startTime)} - ${calculatedEndTime}`);
   }, [startTime, formData.duration, selectedDate]);
-
-  const handleDateClick = () => {
-    setShowPopup(true);
-  };
 
   const formatTime = (time) => {
     const [hour, minute] = time.split(":");
@@ -796,11 +581,6 @@ const MockSchedulelater = () => {
   };
 
 
-  const handleCancel = () => {
-    setUserProfile(false);
-    navigate?.('/mockinterview')
-  };
-
   // const [selectedTechnology, setSelectedTechnology] = useState("");
   const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -822,10 +602,6 @@ const MockSchedulelater = () => {
     }));
     // setUnsavedChanges(true);
   };
-
-
-  // const [selectedQualification, setSelectedQualification] = useState("");
-
 
   const handleQualificationSelect = (qualification) => {
     // setSelectedQualification(qualification.QualificationName);
@@ -849,14 +625,6 @@ const MockSchedulelater = () => {
     } else {
       console.log("Page 1 validation failed:", newErrors);
     }
-  };
-
-  const handleRoundTitleChange = (e) => {
-    const selectedTitle = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      roundTitle: selectedTitle,
-    }));
   };
 
 
@@ -912,6 +680,43 @@ const MockSchedulelater = () => {
 
   console.log("role data", formData.Role);
 
+  // const [isInternalInterviews, setInternalInterviews] = useState(false);
+  // const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+  // const [internalInterviewers, setInternalInterviewers] = useState([]);
+  // console.log("internalInterviewers selected", internalInterviewers);
+  // const selectedInterviewers =
+  //   selectedInterviewType === "internal"
+  //     ? internalInterviewers
+  //     : [];
+  // const isInternalSelected = selectedInterviewType === "internal";
+
+  // Add state for external interviewers only
+  const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+  const [externalInterviewers, setExternalInterviewers] = useState([]);
+
+  // Handler for selecting external interviewers
+  const handleExternalInterviewerSelect = (interviewers) => {
+    setSelectedInterviewType("external");
+    setExternalInterviewers(interviewers);
+  };
+
+  // Handler for removing an external interviewer
+  const handleRemoveExternalInterviewer = (interviewerId) => {
+    setExternalInterviewers(prev =>
+      prev.filter(i => i._id !== interviewerId)
+    );
+    if (externalInterviewers.length === 1) {
+      setSelectedInterviewType(null);
+    }
+  };
+
+  // Handler for clearing all external interviewers
+  const handleClearAllInterviewers = () => {
+    setExternalInterviewers([]);
+    setSelectedInterviewType(null);
+  };
+
+  const selectedInterviewers = selectedInterviewType === "external" ? externalInterviewers : [];
 
   return (
     <div className="flex items-center justify-center">
@@ -1092,7 +897,7 @@ const MockSchedulelater = () => {
                             min="1"
                             max="15"
                             autoComplete="off"
-                             onKeyDown={handleExperienceKeyDown}
+                            onKeyDown={handleExperienceKeyDown}
                             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
                               }`}
                           />
@@ -1132,7 +937,7 @@ const MockSchedulelater = () => {
                           )}
                           {showDropdownRole && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {roles.map((role, index) => (
+                              {currentRole.map((role, index) => (
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
@@ -1150,224 +955,84 @@ const MockSchedulelater = () => {
 
                     </div>
 
-                    {/* <hr className="border-t border-gray-300 my-5" /> */}
+
+                    <p className='text-lg font-semibold col-span-2'>Skills Details</p>
+
                     <div>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center mb-2">
-                          <label htmlFor="Skills" className="text-sm font-medium text-gray-900" >
+                          <label htmlFor="Skills" className="text-sm font-medium text-gray-900">
                             Skills <span className="text-red-500">*</span>
-                            {/* <span className="text-red-500">*</span> */}
                           </label>
                         </div>
-                        {/* skills */}
-
 
                         <button
                           type="button"
-                          onClick={() => setIsModalOpen(true)}
-                          className="flex items-center justify-center text-sm bg-custom-blue text-white py-1 rounded w-28"
+                          onClick={() => {
+                            setIsModalOpen(true)
+                            if (editingIndex === null) {
+                              setSelectedSkill(""); // Reset selection when adding new skill
+                              setSelectedExp("");
+                              setSelectedLevel("");
+                            }
+
+                          }}
+                          className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded"
                         >
-                          <FaPlus className="text-md mr-2" />
-                          Add Skills
+                          <FaPlus className="mr-1 w-5 h-5" /> Add Skills
                         </button>
                       </div>
-
-
                       {errors.skills && (
                         <p className="text-red-500 text-sm">{errors.skills}</p>
                       )}
-
-
                       <div>
                         <div className="space-y-2 mb-4 mt-5">
-                          {entries.map((entry, index,) => (
-                            <div key={index}
-                              className="border p-2 rounded-lg bg-gray-100 w-[85%] sm:w-full md:w-full flex"
-                            // className="flex flex-wrap -mx-2 border p-3 rounded-lg items-center bg-toggle-bg"
-                            >
+                          {entries.map((entry, index) => (
+                            <div className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
                               <div className="flex justify-between border bg-white rounded w-full mr-3">
-                                <div className="w-1/3 px-2 text-center">{entry.skill}</div>
-                                <div className="w-1/3 px-2 text-center">{entry.experience}</div>
-                                <div className="w-1/3 px-2 text-center">{entry.expertise}</div>
-                                {/* <div className="w-full flex justify-end space-x-2 -mt-5"> */}
+                                <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {entry.skill}
+                                </div>
+                                <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {entry.experience}
+                                </div>
+                                <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {entry.expertise}
+                                </div>
                               </div>
                               <div className="flex space-x-2">
                                 <button type="button" onClick={() => handleEdit(index)} className="text-custom-blue text-md">
                                   <FaEdit />
                                 </button>
-                                <button type="button" onClick={() => handleDelete(index)} className=" text-md">
-                                  <FaTrash fill='red' />
+                                <button type="button" onClick={() => handleDelete(index)} className="text-md">
+                                  <FaTrash fill="red" />
                                 </button>
                               </div>
                             </div>
-                            // </div>
                           ))}
                         </div>
 
-                        {
-                          isModalOpen && (
-                            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-                              <div className="bg-white rounded-lg shadow-lg w-80 relative">
-                                <header className="flex justify-between items-center w-full border-b py-3 px-4">
-                                  <h2 className="text-lg font-bold">Select Skills</h2>
-                                  <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
-                                    <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" />
-                                  </button>
-                                </header>
-                                <div>
-                                  {currentStep === 0 && (
-                                    <div>
-                                      <div className="max-h-56 overflow-y-auto">
-                                        <div className="mt-3 ml-4 mb-3">
-                                          <div>
-                                            <input
-                                              type="text"
-                                              placeholder="Search skills..."
-                                              value={searchTerm}
-                                              onChange={(e) => setSearchTerm(e.target.value)}
-                                              className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
-                                            />
-                                            <div className="min-h-56">
-                                              {skills.length > 0 ? (
-                                                skills.map(skill => (
-                                                  <label key={skill._id} className="block mb-1">
-                                                    <input
-                                                      type="radio"
-                                                      value={skill.SkillName}
-                                                      checked={selectedSkill === skill.SkillName}
-                                                      disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
-                                                      onChange={(e) => setSelectedSkill(e.target.value)}
-                                                      className="mr-3"
-                                                    />
-                                                    {skill.SkillName}
-                                                  </label>
-                                                ))
-                                              ) : (
-                                                <p className="text-gray-500">No skills available</p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {currentStep === 1 && (
-                                    <div>
-                                      <div className="max-h-56 overflow-y-auto">
-                                        <div className="mt-3 ml-4 mb-3">
-                                          {experienceOptions.map(exp => (
-                                            <label key={exp} className="block mb-1">
-                                              <input
-                                                type="radio"
-                                                name="experience"
-                                                value={exp}
-                                                checked={selectedExp === exp}
-                                                onChange={(e) => setSelectedExp(e.target.value)}
-                                                className="mr-3"
-                                              />
-                                              {exp}
-                                            </label>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {currentStep === 2 && (
-                                    <div>
-                                      <div className="min-h-56 overflow-y-auto">
-                                        <div className="mt-3 ml-4 mb-3">
-                                          {expertiseOptions.map(exp => (
-                                            <label key={exp} className="block mb-1">
-                                              <input
-                                                type="radio"
-                                                name="expertise"
-                                                value={exp}
-                                                checked={selectedLevel === exp}
-                                                onChange={(e) => setSelectedLevel(e.target.value)}
-                                                className="mr-3"
-                                              />
-                                              {exp}
-                                            </label>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                                <footer className="flex justify-end border-t py-2 px-4">
-                                  {currentStep === 0 && (
-                                    <button
-                                      onClick={() => {
-                                        setCurrentStep(1);
-                                        setSearchTerm("");
-                                      }}
-                                      className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                      disabled={!isNextEnabled()}
-                                    >
-                                      Next
-                                    </button>
-                                  )}
-                                  {currentStep === 1 && (
-                                    <div className="flex justify-between gap-4">
-                                      <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                        Back
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => setCurrentStep(2)}
-                                        className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        disabled={!isNextEnabled()}
-                                      >
-                                        Next
-                                      </button>
-                                    </div>
-                                  )}
-                                  {currentStep === 2 && (
-                                    <div className="flex justify-between gap-4">
-                                      <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
-                                        Back
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={handleAddEntry}
-                                        className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        disabled={!isNextEnabled()}
-                                      >
-                                        {editingIndex !== null ? 'Update' : 'Add'}
-                                      </button>
-                                    </div>
-                                  )}
-                                </footer>
+                        {deleteIndex !== null && (
+                          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-end items-center right-0 pr-44 z-50">
+                            <div className="bg-white p-5 rounded shadow-lg">
+                              <p>Are you sure you want to delete this Skill?</p>
+                              <div className="flex justify-center space-x-2 mt-4">
+                                <button
+                                  onClick={confirmDelete}
+                                  className="bg-red-500 text-white px-4 py-2 rounded"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={cancelDelete}
+                                  className="bg-gray-300 text-black px-4 py-2 rounded"
+                                >
+                                  No
+                                </button>
                               </div>
                             </div>
-                          )
-                        }
-
-                        {
-                          deleteIndex !== null && (
-                            <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
-                              <div className="bg-white p-5 rounded shadow-lg">
-                                <p>Are you sure you want to delete this Skill?</p>
-                                <div className="flex justify-end space-x-2 mt-4">
-                                  <button
-                                    type="button"
-                                    onClick={confirmDelete}
-                                    className="bg-red-500 text-white px-4 py-2 rounded"
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={cancelDelete}
-                                    className="bg-gray-300 text-black px-4 py-2 rounded"
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        }
+                          </div>
+                        )}
                       </div>
                     </div>
                     {/* Job Responsibilities */}
@@ -1658,17 +1323,17 @@ const MockSchedulelater = () => {
                         )}
                       </div>
 
-
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">Interviewers</label>
                         <div className="flex space-x-2">
-
                           <Button
                             type="button"
-                            onClick={toggleSidebar}
+                            onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-
+                            className={`${selectedInterviewType === "external" ? "" : ""}`}
+                            disabled={false}
+                            title=""
                           >
                             <User className="h-4 w-4 mr-1 text-orange-600" />
                             Select Outsourced
@@ -1676,9 +1341,9 @@ const MockSchedulelater = () => {
                         </div>
                       </div>
 
-
+                      {/* Selected Interviewers Summary */}
                       <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                        {formData.rounds?.interviewers?.length > 0 ? (
+                        {selectedInterviewers.length === 0 ? (
                           <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                         ) : (
                           <div>
@@ -1686,18 +1351,16 @@ const MockSchedulelater = () => {
                               <div className="flex items-center">
                                 <Users className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
-
-
+                                  {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
                                   <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                     Outsourced
                                   </span>
-
                                 </span>
                               </div>
-                              {formData.rounds?.interviewers?.length > 0 && (
+                              {selectedInterviewers.length > 0 && (
                                 <button
                                   type="button"
-                                  // onClick={handleClearAllInterviewers}
+                                  onClick={handleClearAllInterviewers}
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
@@ -1705,36 +1368,30 @@ const MockSchedulelater = () => {
                                 </button>
                               )}
                             </div>
-
-
-
-
-                            {formData?.rounds?.interviewers && (
-                              <div>
-                                <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {/* {externalInterviewers.map((interviewer) => (
-                                                      <div key={interviewer.id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
-                                                        <div className="flex items-center">
-                                                          <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.name} (Outsourced)</span>
-                                                        </div>
-                                                        <button
-                                                          type="button"
-                                                          onClick={() => handleRemoveExternalInterviewer(interviewer.id)}
-                                                          className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                                          title="Remove interviewer"
-                                                        >
-                                                          <X className="h-4 w-4" />
-                                                        </button>
-                                                      </div>
-                                                    ))} */}
-                                </div>
+                            <div className="mb-3">
+                              <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
+                              <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                {externalInterviewers.map((interviewer) => (
+                                  <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                                    <div className="flex items-center">
+                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
+                                      className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                      title="Remove interviewer"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                            )}
+                            </div>
                           </div>
                         )}
                       </div>
-                      {errors.rounds?.interviewers && <p className="text-red-500 text-sm -mt-5">{errors.rounds.interviewers}</p>}
+                      {errors.interviewers && <p className="text-red-500 text-sm -mt-5">{errors.interviewers}</p>}
 
                     </>
 
@@ -1842,13 +1499,13 @@ const MockSchedulelater = () => {
                   className="bg-custom-blue text-white p-3 rounded py-1"
                   onClick={handleNext}
                 >
-                 {mockEdit ? "Update" :"Save"} & Next
+                  {mockEdit ? "Update" : "Save"} & Next
                 </button>
               </div>
 
               :
 
-              <div className="flex justify-end gap-4 mt-5 mb-4 ">
+              <div className="flex justify-end gap-3 mt-5 mb-4 ">
                 <button
                   className="border border-custom-blue mt-3 p-3 rounded py-1 mr-5"
                   onClick={() => setCurrentPage(1)}
@@ -1908,24 +1565,160 @@ const MockSchedulelater = () => {
               </div>
             )
           }
-          {/* {
-            sidebarOpen && (
-              <>
-                <OutsourceOption
-                  onClose={() => setSidebarOpen(false)}
-                  dateTime={combinedDateTime}
-                  candidateData1={candidate}
-                  onProceed={handleExternalInterviewerSelect}
-                />
-              </>
-            )
-          } */}
 
 
 
         </div >
 
       </div>
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 pr-44 z-50">
+            <div className="bg-white rounded-lg shadow-lg w-80 relative">
+              <header className="flex justify-between items-center w-full border-b py-3 px-4">
+                <h2 className="text-lg font-bold">Select Skills</h2>
+                <button type="button" className="text-gray-700" onClick={skillpopupcancelbutton}>
+                  <FaTimes className="text-gray-400 border rounded-full p-1 text-2xl" />
+                </button>
+              </header>
+              <div>
+                {currentStep === 0 && (
+                  <div>
+                    <div className="max-h-56 overflow-y-auto">
+                      <div className="mt-3 ml-4 mb-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Search skills..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="border p-2 mb-3 w-[96%] rounded focus:outline-none"
+                          />
+                          <div className="min-h-56">
+                            {filteredSkills.length > 0 ? (
+                              filteredSkills.map(skill => (
+                                <label key={skill._id} className="block mb-1">
+                                  <input
+                                    type="radio"
+                                    value={skill.SkillName}
+                                    checked={selectedSkill === skill.SkillName}
+                                    disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
+                                    onChange={(e) => setSelectedSkill(e.target.value)}
+                                    className="mr-3"
+                                  />
+                                  {skill.SkillName}
+                                </label>
+                              ))
+                            ) : (
+                              <p className="text-gray-500">No skills available</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {currentStep === 1 && (
+                  <div>
+                    <div className="max-h-56 overflow-y-auto">
+                      <div className="mt-3 ml-4 mb-3">
+                        {experienceOptions.map(exp => (
+                          <label key={exp} className="block mb-1">
+                            <input
+                              type="radio"
+                              name="experience"
+                              value={exp}
+                              checked={selectedExp === exp}
+                              onChange={(e) => setSelectedExp(e.target.value)}
+                              className="mr-3"
+                            />
+                            {exp}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {currentStep === 2 && (
+                  <div>
+                    <div className="min-h-56 overflow-y-auto">
+                      <div className="mt-3 ml-4 mb-3">
+                        {expertiseOptions.map(exp => (
+                          <label key={exp} className="block mb-1">
+                            <input
+                              type="radio"
+                              name="expertise"
+                              value={exp}
+                              checked={selectedLevel === exp}
+                              onChange={(e) => setSelectedLevel(e.target.value)}
+                              className="mr-3"
+                            />
+                            {exp}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <footer className="flex justify-end border-t py-2 px-4">
+                {currentStep === 0 && (
+                  <button
+                    onClick={() => {
+                      setCurrentStep(1);
+                      setSearchTerm("");
+                    }}
+                    className={`bg-custom-blue text-white px-4 py-2 rounded block float-right ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!isNextEnabled()}
+                  >
+                    Next
+                  </button>
+                )}
+                {currentStep === 1 && (
+                  <div className="flex justify-between gap-4">
+                    <button type="button" onClick={() => setCurrentStep(0)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!isNextEnabled()}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+                {currentStep === 2 && (
+                  <div className="flex justify-between gap-4">
+                    <button type="button" onClick={() => setCurrentStep(1)} className="bg-gray-300 text-black px-4 py-2 rounded">
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddEntry}
+                      className={`bg-custom-blue text-white px-4 py-2 rounded ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!isNextEnabled()}
+                    >
+                      {editingIndex !== null ? 'Update' : 'Add'}
+                    </button>
+                  </div>
+                )}
+              </footer>
+            </div>
+          </div>
+        )
+      }
+
+      {/* External Interviews Modal */}
+      {showOutsourcePopup && (
+        <OutsourceOption
+          onClose={() => setShowOutsourcePopup(false)}
+          dateTime={combinedDateTime}
+          onProceed={handleExternalInterviewerSelect}
+        />
+      )}
+
     </div >
   );
 };

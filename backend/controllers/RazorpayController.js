@@ -459,6 +459,7 @@ const verifyPayment = async (req, res) => {
                           invoice.lastPaymentId = razorpay_payment_id;
                           invoice.startDate = startDate;
                           invoice.endDate = endDate;
+
                           
                           await invoice.save();
                           console.log('Invoice updated to paid status:', invoice._id);
@@ -498,7 +499,7 @@ const verifyPayment = async (req, res) => {
   
                       // Update wallet if plan has credits
                       if (plan && plan.walletCredits > 0) {
-                          console.log('Plan includes wallet credits:', plan.walletCredits);
+                        //   console.log('Plan includes wallet credits:', plan.walletCredits);
                           
                           const wallet = await Wallet.findOne({ ownerId: cardDetails.ownerId });
                           
@@ -1961,7 +1962,7 @@ const createRecurringSubscription = async (req, res) => {
         let plan;
         try {
             plan = await getOrCreateSubscriptionPlan(planDetails, membershipType);
-            console.log('Plan created/retrieved:', plan.id);
+            // console.log('Plan created/retrieved:', plan.id);
         } catch (planError) {
             console.error('Error creating/retrieving plan:', planError);
             // Create a mock plan

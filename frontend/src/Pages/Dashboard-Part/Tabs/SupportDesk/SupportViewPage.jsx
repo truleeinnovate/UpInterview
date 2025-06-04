@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineCancel } from "react-icons/md";
 import { IoArrowBack } from "react-icons/io5";
 import { FaExternalLinkAlt, FaEdit, FaTicketAlt, FaUser, FaBuilding, FaCalendarAlt, FaTag, FaFileAlt } from "react-icons/fa";
+import { Minimize, Expand, X } from 'lucide-react';
 import { format, parseISO, isValid } from "date-fns";
 //import SupportForm from "./SupportForm";
 
@@ -43,37 +44,37 @@ const SupportViewPage = () => {
 
   const content = (
     <div className={`${isFullScreen ? 'min-h-screen' : 'h-full'} flex flex-col`}>
-      <div className="p-3 border-b">
+      <div className="p-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <button className="hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <IoArrowBack className="text-2xl" />
-            </button>
+          <div className="flex items-center">
             <h2 className="text-xl font-medium">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => {navigate(`/support-desk/edit-ticket/${ticketData._id}`, { state: { ticketData: ticketData } })}}
+            {/* <button
+              onClick={() => { navigate(`/support-desk/edit-ticket/${ticketData._id}`, { state: { ticketData: ticketData } }) }}
               className="p-2 hover:text-custom-blue rounded-full transition-colors"
               title="Edit Ticket"
             >
               <FaEdit className="w-5 h-5" />
-            </button>
-            <button
-              onClick={toggleFullScreen}
-              className=" hover:text-custom-blue rounded-full p-2 transition-colors"
-              title={isFullScreen ? "Exit Fullscreen" : "Open in Fullscreen"}
-            >
-              <FaExternalLinkAlt className="w-5 h-5" />
-            </button>
-            {!isFullScreen && (
-              <button 
-                onClick={() => navigate(-1)}
-                className=" hover:text-custom-blue rounded-full p-2"
+            </button> */}
+  
+
+               <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
               >
-                <MdOutlineCancel className="text-2xl" />
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
               </button>
-            )}
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
           </div>
         </div>
       </div>
@@ -88,13 +89,12 @@ const SupportViewPage = () => {
         </div>
 
         <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">Ticket #{ticketData._id}</h3>
-          <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${
-            ticketData.status === "Open" ? "bg-green-100 text-green-800" :
-            ticketData.status === "In Progress" ? "bg-blue-100 text-blue-800" :
-            ticketData.status === "Resolved" ? "bg-gray-100 text-gray-800" :
-            "bg-red-100 text-red-800"
-          }`}>
+          <h3 className="text-2xl font-bold text-gray-900">Ticket #{ticketData._id.slice(-5, -1)}</h3>
+          <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${ticketData.status === "Open" ? "bg-green-100 text-green-800" :
+              ticketData.status === "In Progress" ? "bg-blue-100 text-blue-800" :
+                ticketData.status === "Resolved" ? "bg-gray-100 text-gray-800" :
+                  "bg-red-100 text-red-800"
+            }`}>
             {ticketData.status}
           </span>
         </div>
@@ -111,8 +111,8 @@ const SupportViewPage = () => {
               </button>
             )} */}
           </div>
-          <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 col-span-1">
               <div className="p-2 bg-custom-bg rounded-lg">
                 <FaTag className="w-5 h-5 text-gray-500" />
               </div>
@@ -121,7 +121,7 @@ const SupportViewPage = () => {
                 <p className="text-gray-700">{ticketData.issueType || 'N/A'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 col-span-1">
               <div className="p-2 bg-custom-bg rounded-lg">
                 <FaUser className="w-5 h-5 text-gray-500" />
               </div>
@@ -130,22 +130,13 @@ const SupportViewPage = () => {
                 <p className="text-gray-700">{ticketData.contact || 'N/A'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 col-span-1">
               <div className="p-2 bg-custom-bg rounded-lg">
                 <FaBuilding className="w-5 h-5 text-gray-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Organization</p>
                 <p className="text-gray-700">{ticketData.organization || 'N/A'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <FaCalendarAlt className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Created Date</p>
-                <p className="text-gray-700">{formatDate(ticketData.createdAt)}</p>
               </div>
             </div>
           </div>

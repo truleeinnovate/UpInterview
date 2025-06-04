@@ -3,13 +3,15 @@ import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "re
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Search ,Trash2, X,User,BookOpen} from 'lucide-react';
+import { Search ,Trash2, X,BookOpen} from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
 
-const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew }, ref) => {
+
+const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew ,setActionViewMoreSection}, ref) => {
     const {
         fetchMyQuestionsData,
         createdLists,
@@ -57,7 +59,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         if (isEditing) {
             // PUT request for updating the list (no need for questionId)
             if (editingSectionId) {
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
+                const response = await fetch(`${config.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -84,7 +86,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         } else {
             if (newListName.trim()) {
                 try {
-                    const response = await axios.post(`${process.env.REACT_APP_API_URL}/tenant-list/lists`, {
+                    const response = await axios.post(`${config.REACT_APP_API_URL}/tenant-list/lists`, {
                         label: newListName,
                         name: newListNameForName,
                         ownerId: userId,
@@ -129,7 +131,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         }
         try {
             const questionResponse = await axios.post(
-                `${process.env.REACT_APP_API_URL}/newquestion`,
+                `${config.REACT_APP_API_URL}/newquestion`,
                 questionData
             );
             console.log('Question added successfully:', questionResponse.data);
@@ -188,18 +190,18 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
                 <div className="absolute right-3 mt-10 w-48 bg-white border rounded shadow-lg z-50">
                     <div className="absolute -top-2 right-4 transform translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-gray-300"></div>
-                    <div className="flex justify-between items-center mb-2 border-b p-1">
-                        <p className="font-semibold">Select List</p>
+                    <div className="flex justify-between  items-center mb-2 border-b p-2">
+                        <p className="text-xl font-medium text-custom-blue">Select List</p>
                         <button onClick={() => closeDropdown()} className="text-gray-500 text-lg font-semibold">
-                            &times;
+                            <X  className="h-5 w-5 text-red-400" />
                         </button>
                     </div>
-                    <div className="flex items-center cursor-pointer hover:bg-gray-200 p-1 -mt-2 rounded" onClick={handleCreateNewList}>
-                        <span><IoIosAdd /></span>
+                    <div className="flex items-center cursor-pointer hover:bg-gray-200 pl-2 pr-2 pt-2  -mt-2 rounded" onClick={handleCreateNewList}>
+                        <span><IoIosAdd  /></span>
                         <span className="ml-2">Create New List</span>
                     </div>
 
-                    <div className="max-h-40 overflow-y-auto">
+                    <div className="max-h-40 p-2 overflow-y-auto">
                         {createdLists.map((list) => (
                             <label key={list._id} className="flex items-center cursor-pointer hover:bg-gray-200 p-1 rounded">
                                 <input
@@ -371,16 +373,25 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
 
             {showNewListPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white flex flex-col rounded-md">
-                        <div className="border-b p-2 flex justify-between bg-custom-blue items-center rounded-t-md">
-                            <h2 className="text-lg text-white font-semibold">
+                <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white  flex flex-col rounded-md">
+                        <div className="border-b p-3 flex justify-between  items-center rounded-t-md">
+                            <h2 className="text-xl text-custom-blue font-semibold">
                                 {isEditing ? "Edit List" : "New List"}
                             </h2>
+                            <button
+                             onClick={() =>{ 
+                                    setShowNewListPopup(false)
+                                setActionViewMoreSection(false)
+                                }}
+                            >
+                                 <X  className="w-6 h-6 text-red-500" />
+                            </button>
+                           
                         </div>
-                        <div className="p-2">
-                            <div className="flex items-center gap-5">
-                                <label className="text-sm font-semibold mr-2 mt-2 w-20">
+                        <div className="p-3">
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-semibold   w-20">
                                     Label <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -391,14 +402,14 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                         setNewListName(sanitizedValue);
                                     }}
                                     onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, "_"))} // Replace spaces with underscores when the input loses focus
-                                    className="border-b flex-grow p-2 mt-2 focus:outline-none"
+                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
                                     placeholder="Enter label"
                                 />
                             </div>
                         </div>
-                        <div className="p-2">
-                            <div className="flex items-center mb-2 gap-5">
-                                <label className="text-sm font-semibold mr-2 mt-2 w-20">
+                        <div className="p-3">
+                            <div className="flex items-center mb-2 gap-2">
+                                <label className="text-sm font-semibold   w-20">
                                     {/* List Name <span className="text-red-500">*</span> */}
                                     Name <span className="text-red-500">*</span>
                                 </label>
@@ -406,18 +417,18 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                     type="text"
                                     value={newListNameForName}
                                     readOnly
-                                    className="border-b flex-grow p-2 mt-2 focus:outline-none"
+                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
                                     placeholder="List name"
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-end border-t p-2 rounded-b-md text-sm">
-                            <button
+                        <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
+                            {/* <button
                                 className="border border-custom-blue px-4 py-2 rounded mr-2"
-                                onClick={() => setShowNewListPopup(false)}
+                               
                             >
                                 Cancel
-                            </button>
+                            </button> */}
                             <button
                                 className="bg-custom-blue text-white px-4 py-2 rounded"
                                 onClick={handleSave}

@@ -6,10 +6,13 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode'; // Import the utility
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
+//import { useCustomContext } from '../../../../../Context/Contextfetch';
+//import { config } from '../../../../../config';
 const Subscription = () => {
   console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
+
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -19,6 +22,7 @@ const Subscription = () => {
   const organization = tokenPayload?.organization?.toString();
   const orgId = tokenPayload?.tenantId;
 
+
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
@@ -27,6 +31,7 @@ const Subscription = () => {
     tenantId: orgId,
     ownerId: userId,
   });
+
 
   const navigate = useNavigate();
 
@@ -80,6 +85,7 @@ const Subscription = () => {
       fetchData();
     }
   }, [userId, authToken]);
+
 
   // Fetch subscription plans
   useEffect(() => {
@@ -211,7 +217,7 @@ const Subscription = () => {
       setLoading(false);
     }
   };
-  
+
   // Function to directly update subscription plan in Razorpay
   const updateSubscriptionPlan = async (plan) => {
     if (!plan || !subscriptionData) return;

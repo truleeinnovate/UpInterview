@@ -1,20 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Pencil } from 'lucide-react';
+import {Eye, Pencil } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Tooltip from '@mui/material/Tooltip';
 import KanbanView from './KanbanView';
 import Loading from '../../Components/Loading';
 import { useCustomContext } from '../../Context/Contextfetch';
-import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
 import { FilterPopup } from '../../Components/Shared/FilterPopup/FilterPopup.jsx';
 import Header from '../../Components/Shared/Header/Header.jsx';
 import Toolbar from '../../Components/Shared/Toolbar/Toolbar.jsx';
 import TableView from '../../Components/Shared/Table/TableView.jsx';
-import { ReactComponent as IoIosArrowBack } from '../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../icons/IoIosArrowForward.svg';
-import { ReactComponent as FaList } from '../../icons/FaList.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../icons/TbLayoutGridRemove.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
 
@@ -138,7 +132,7 @@ const InterviewTemplates = () => {
           className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
             value === 'active'
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-              : value === 'draft'
+              : value === 'inactive'
               ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
               : 'bg-slate-50 text-slate-700 border border-slate-200/60'
           }`}
@@ -171,8 +165,8 @@ const InterviewTemplates = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed top-16 left-0 right-0 bg-background">
-        <main className="px-6 max-w-7xl mx-auto">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
           <div className="sm:px-0">
             <Header
               title="Interview Templates"
