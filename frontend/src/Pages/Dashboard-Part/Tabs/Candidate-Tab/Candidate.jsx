@@ -41,7 +41,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   const { skills, qualification } = useCustomContext();
 
-  const { candidateData, loading } = useCandidates();
+  const { candidateData, isLoading } = useCandidates();
+  console.log('isLoading', isLoading);
+  
 
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -387,7 +389,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
-                      loading={loading}
+                      loading={isLoading}
                       actions={tableActions}
                       emptyState="No candidates found."
                     />
@@ -405,7 +407,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         isAssessmentView: isAssessmentView
                       }))}
                       columns={kanbanColumns}
-                      loading={loading}
+                      loading={isLoading}
                       renderActions={renderKanbanActions}
                       emptyState="No candidates found."
                     />

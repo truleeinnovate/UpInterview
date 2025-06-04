@@ -16,6 +16,7 @@ const CustomProvider = ({ children }) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
+  const [userRole, setuserRole] = useState("SuperAdmin");
 
 
 
@@ -1063,7 +1064,6 @@ const CustomProvider = ({ children }) => {
 
   const [tickets, setTickets] = useState([]);
 
-  const [userRole, setuserRole] = useState("Admin");
 
   const getTickets = useCallback(async () => {
     setLoading(true);
