@@ -5,74 +5,86 @@ import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
 export const usePositions = () => {
-    const queryClient = useQueryClient();
-    const { sharingPermissionscontext = {} } = usePermissions() || {};
-    const positionPermissions = sharingPermissionscontext?.position || {};
+  const queryClient = useQueryClient();
+  const { sharingPermissionscontext = {} } = usePermissions() || {};
+  const positionPermissions = sharingPermissionscontext?.position || {};
 
-    // Fetch positions
-    const { data: positions = [], isLoading: isPositionsLoading } = useQuery({
-        queryKey: ['positions', positionPermissions],
-        queryFn: async () => {
-            const filteredPositions = await fetchFilterData('position', positionPermissions);
-            return filteredPositions.reverse(); // Latest first
-        },
-        enabled: !!positionPermissions,
-    });
+  console.log('usePositions initialized with permissions:', positionPermissions);
 
-    // Add/update position mutation
-    const addOrUpdatePosition = useMutation({
-        mutationFn: async ({ id, data }) => {
-            const method = id ? 'patch' : 'post';
-            const url = id
-                ? `${config.REACT_APP_API_URL}/position/${id}`
-                : `${config.REACT_APP_API_URL}/position`;
+  const {
+    data: positionData = [],
+    isLoading: isQueryLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['positions', positionPermissions],
+    queryFn: async () => {
+      const filteredPositions = await fetchFilterData('position', positionPermissions);
+      return filteredPositions.reverse(); // Latest first
+    },
+    enabled: !!positionPermissions,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+  });
 
-            const response = await axios[method](url, data);
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['positions']);
-        },
-    });
+  const positionMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const method = id ? 'patch' : 'post';
+      const url = id
+        ? `${config.REACT_APP_API_URL}/position/${id}`
+        : `${config.REACT_APP_API_URL}/position`;
 
-    // Add/update round mutation
-    const addOrUpdateRound = useMutation({
-        mutationFn: async ({ positionId, round, roundId }) => {
-            const payload = roundId
-                ? { positionId, round, roundId }
-                : { positionId, round };
+      const response = await axios[method](url, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['positions']);
+    },
+    onError: (error) => {
+      console.error('Error adding/updating position:', error);
+    },
+  });
 
-            const response = await axios.post(
-                `${config.REACT_APP_API_URL}/position/add-rounds`,
-                payload
-            );
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['positions']);
-        },
-    });
+  const addRoundsMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/position/add-rounds`,
+        payload
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['positions']);
+    },
+    onError: (error) => {
+      console.error('Error adding rounds:', error);
+    },
+  });
 
-    // Fetch single position details
-    const usePositionDetails = (id, tenantId) => {
-        return useQuery({
-            queryKey: ['position', id],
-            queryFn: async () => {
-                const response = await axios.get(
-                    `${config.REACT_APP_API_URL}/position/details/${id}`,
-                    { params: { tenantId } }
-                );
-                return response.data;
-            },
-            enabled: !!id && !!tenantId,
-        });
-    };
+  const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending;
+  const isLoading = isQueryLoading || isMutationLoading;
 
-    return {
-        positions,
-        isPositionsLoading,
-        addOrUpdatePosition,
-        addOrUpdateRound,
-        usePositionDetails
-    };
+  console.log('usePositions states:', {
+    isQueryLoading,
+    isMutationLoading,
+    isLoading,
+    positionDataCount: positionData.length,
+    positionMutationState: positionMutation,
+    addRoundsMutationState: addRoundsMutation,
+  });
+
+  return {
+    positionData,
+    isLoading,
+    isQueryLoading,
+    isMutationLoading,
+    isError,
+    error,
+    isPositionMutationError: positionMutation.isError,
+    positionMutationError: positionMutation.error,
+    isAddRoundsMutationError: addRoundsMutation.isError,
+    addRoundsMutationError: addRoundsMutation.error,
+    addOrUpdatePosition: positionMutation.mutateAsync,
+    addRounds: addRoundsMutation.mutateAsync,
+  };
 };

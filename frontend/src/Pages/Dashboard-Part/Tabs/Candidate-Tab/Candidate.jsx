@@ -1,5 +1,5 @@
 // Candidate.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
@@ -11,7 +11,6 @@ import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
 import AddCandidateForm from './AddCandidateForm';
 import CandidateDetails from './CandidateViewDetails/CandidateDetails';
 import { useMediaQuery } from 'react-responsive';
-// import Loading from '../../../../Components/Loading';
 import { Outlet } from 'react-router-dom';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -41,7 +40,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   const { skills, qualification } = useCustomContext();
 
-  const { candidateData, loading } = useCandidates();
+  const { candidateData, isLoading } = useCandidates();
+  
 
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -387,7 +387,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
-                      loading={loading}
+                      loading={isLoading}
                       actions={tableActions}
                       emptyState="No candidates found."
                     />
@@ -405,7 +405,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         isAssessmentView: isAssessmentView
                       }))}
                       columns={kanbanColumns}
-                      loading={loading}
+                      loading={isLoading}
                       renderActions={renderKanbanActions}
                       emptyState="No candidates found."
                     />

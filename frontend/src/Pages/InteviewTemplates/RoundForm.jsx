@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import { ChevronDown, User, X, Users, Trash2, ChevronUp, Search } from 'lucide-react';
@@ -10,21 +9,23 @@ import { ReactComponent as MdOutlineCancel } from '../../icons/MdOutlineCancel.s
 import Cookies from 'js-cookie';
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
-import { config } from '../../config.js';
-import Loading from '../../Components/Loading.js';
 import QuestionBank from '../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
-// import OutsourceOption from '../Dashboard-Part/Tabs/Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx'; // Assuming this is available
+import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
+import { useAssessments } from '../../apiHooks/useAssessments.js';
+import LoadingButton from '../../Components/LoadingButton';
 
 function RoundFormTemplates() {
   const {
-    assessmentData,
-    loading,
     sectionQuestions,
     questionsLoading,
     fetchQuestionsForAssessment,
     setSectionQuestions,
-    templates,
   } = useCustomContext();
+
+  const { templatesData,isMutationLoading,addOrUpdateRound } = useInterviewTemplates();
+  const { assessmentData } = useAssessments();
+
+
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const { id } = useParams();
   const dropdownRef = useRef(null);
@@ -76,7 +77,7 @@ function RoundFormTemplates() {
       try {
 
         // templates
-        const response = templates.find(
+        const response = templatesData.find(
           (template) => template._id === id
         );
 
@@ -378,74 +379,122 @@ function RoundFormTemplates() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   console.log("Submitting round form...");
+  //   if (!validateForm()) {
+  //     console.log("Validation failed:", errors);
+  //     return;
+  //   }
+
+  //   try {
+  //     const roundData = {
+  //       tenantId,
+  //       roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+  //       interviewMode: formData.interviewMode,
+  //       sequence: formData.sequence,
+  //       interviewDuration: formData.duration,
+  //       instructions: formData.instructions,
+  //       interviewerType: formData.selectedInterviewType,
+  //       interviewers:
+  //         formData.selectedInterviewType === 'internal'
+  //           ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
+  //           : [],
+  //       questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+  //         .map(q => ({
+  //           questionId: q.questionId,
+  //           snapshot: {
+  //             ...q.snapshot,
+  //             mandatory: q.snapshot.mandatory || "false"
+  //           }
+  //         })) || [],
+  //       ...(formData.roundTitle === 'Assessment' && {
+  //         assessmentId: formData.assessmentTemplate.assessmentId,
+  //       }),
+  //     };
+
+  //     console.log("Prepared roundData:", roundData);
+
+  //     if (roundId) {
+  //       console.log("Editing existing round with roundId:", roundId);
+  //       const updatedRounds = template.rounds.map((round) =>
+  //         round._id === roundId ? { ...round, ...roundData } : round
+  //       );
+  //       console.log("Updated rounds array for PATCH:", updatedRounds);
+
+  //       const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+  //         tenantId,
+  //         rounds: updatedRounds,
+  //       });
+  //       console.log("PATCH response for edit:", patchRes.data);
+  //     } else {
+  //       console.log("Adding new round...");
+  //       const updatedRounds = [...(template.rounds || []), roundData];
+  //       console.log("Updated rounds array for PATCH:", updatedRounds);
+
+  //       const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+  //         tenantId,
+  //         rounds: updatedRounds,
+  //       });
+  //       console.log("PATCH response for add:", patchRes.data);
+  //     }
+
+  //     console.log("Navigation to template detail page...");
+  //     navigate(`/interview-templates/${id}`);
+  //   } catch (error) {
+  //     console.error('Error saving round:', error);
+  //     alert('Failed to save round. Please try again.');
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     console.log("Submitting round form...");
     if (!validateForm()) {
-      console.log("Validation failed:", errors);
-      return;
+        console.log("Validation failed:", errors);
+        return;
     }
 
     try {
-      const roundData = {
-        tenantId,
-        roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
-        interviewMode: formData.interviewMode,
-        sequence: formData.sequence,
-        interviewDuration: formData.duration,
-        instructions: formData.instructions,
-        interviewerType: formData.selectedInterviewType,
-        interviewers:
-          formData.selectedInterviewType === 'internal'
-            ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
-            : [],
-        questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
-          .map(q => ({
-            questionId: q.questionId,
-            snapshot: {
-              ...q.snapshot,
-              mandatory: q.snapshot.mandatory || "false"
-            }
-          })) || [],
-        ...(formData.roundTitle === 'Assessment' && {
-          assessmentId: formData.assessmentTemplate.assessmentId,
-        }),
-      };
+        const roundData = {
+            tenantId,
+            roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+            interviewMode: formData.interviewMode,
+            sequence: formData.sequence,
+            interviewDuration: formData.duration,
+            instructions: formData.instructions,
+            interviewerType: formData.selectedInterviewType,
+            interviewers:
+                formData.selectedInterviewType === 'internal'
+                    ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
+                    : [],
+            questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+                .map(q => ({
+                    questionId: q.questionId,
+                    snapshot: {
+                        ...q.snapshot,
+                        mandatory: q.snapshot.mandatory || "false"
+                    }
+                })) || [],
+            ...(formData.roundTitle === 'Assessment' && {
+                assessmentId: formData.assessmentTemplate.assessmentId,
+            }),
+        };
 
-      console.log("Prepared roundData:", roundData);
+        console.log("Prepared roundData:", roundData);
 
-      if (roundId) {
-        console.log("Editing existing round with roundId:", roundId);
-        const updatedRounds = template.rounds.map((round) =>
-          round._id === roundId ? { ...round, ...roundData } : round
-        );
-        console.log("Updated rounds array for PATCH:", updatedRounds);
+        await addOrUpdateRound({ id, roundData, roundId, template });
 
-        const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          rounds: updatedRounds,
-        });
-        console.log("PATCH response for edit:", patchRes.data);
-      } else {
-        console.log("Adding new round...");
-        const updatedRounds = [...(template.rounds || []), roundData];
-        console.log("Updated rounds array for PATCH:", updatedRounds);
+        console.log("Navigation to template detail page...");
+        navigate(`/interview-templates/${id}`);
 
-        const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          rounds: updatedRounds,
-        });
-        console.log("PATCH response for add:", patchRes.data);
-      }
-
-      console.log("Navigation to template detail page...");
-      navigate(`/interview-templates/${id}`);
     } catch (error) {
-      console.error('Error saving round:', error);
-      alert('Failed to save round. Please try again.');
+        console.error('Error saving round:', error);
+        alert('Failed to save round. Please try again.');
     }
-  };
+};
 
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -621,11 +670,7 @@ function RoundFormTemplates() {
                     </div>
                     {showDropdown && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                        {loading ? (
-                          <div className="px-3 py-2 text-gray-500">
-                            <Loading />
-                          </div>
-                        ) : assessmentData.length > 0 ? (
+                        {assessmentData.length > 0 ? (
                           assessmentData.map((assessment, index) => (
                             <div
                               key={index}
@@ -1043,24 +1088,20 @@ function RoundFormTemplates() {
               <Button variant="outline" onClick={() => navigate(`/interview-templates/${id}`)}>
                 Cancel
               </Button>
-              <button
+
+              <LoadingButton
                 onClick={handleSubmit}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
+                isLoading={isMutationLoading}
+                loadingText={id ? "Updating..." : "Saving..."}
               >
                 {roundId ? 'Update Round' : 'Save Round'}
-              </button>
+              </LoadingButton>
+
             </div>
             {errors.submit && <p className="text-red-500 text-sm mt-4 text-center">{errors.submit}</p>}
           </div>
         </div>
       </div>
-
-      {/* {showOutsourcePopup && (
-        <OutsourceOption
-          onClose={() => setShowOutsourcePopup(false)}
-          onProceed={handleExternalInterviewerSelect}
-        />
-      )} */}
 
       {isInternalInterviews && (
         <InternalInterviews

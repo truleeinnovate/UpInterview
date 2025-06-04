@@ -62,7 +62,11 @@ const InvocieTable = ({ currentFilteredRows, toggleAction, actionViewMore, handl
                    ) :(
                  
               
-                  currentFilteredRows?.length > 0 ? currentFilteredRows.map((invoice) => (
+                  currentFilteredRows?.length > 0 ? currentFilteredRows.sort((a, b) => {
+                    const dateA = a.updatedAt ? new Date(a.updatedAt ) : new Date(0);
+                    const dateB = b.updatedAt  ? new Date(b.updatedAt ) : new Date(0);
+                    return dateB - dateA; // For descending order (newest first)
+                }).map((invoice) => (
                     <motion.tr
                       key={invoice.id}
                       initial={{ opacity: 0 }}
@@ -91,7 +95,7 @@ const InvocieTable = ({ currentFilteredRows, toggleAction, actionViewMore, handl
 
                        {/* Created Date */}
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                        {format(invoice.dates.createdAt, 'MMM dd, yyyy')}
+                        {format(invoice.updatedAt, 'MMM dd, yyyy')}
                       </td>
 
 

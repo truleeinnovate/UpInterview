@@ -106,7 +106,7 @@ const TableView = ({
             </thead>
             <tbody className="divide-y divide-gray-200">
               {delayedLoading ? (
-                [...Array(5)].map((_, i) => (
+                [...Array(10)].map((_, i) => (
                   <tr key={`loading-${i}`}>
                     {columns.map((_, j) => (
                       <td key={j} className="px-3 py-2">

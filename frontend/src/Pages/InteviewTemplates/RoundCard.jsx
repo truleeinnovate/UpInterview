@@ -1,7 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 import {
   Clock,
@@ -10,7 +8,6 @@ import {
   ChevronDown,
   FileText,
   User,
-  Info,
   Edit
 } from 'lucide-react';
 
@@ -45,12 +42,6 @@ const RoundCard = ({
   // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
-
-  
-  
-
-
-
 
 
   useEffect(() => {
