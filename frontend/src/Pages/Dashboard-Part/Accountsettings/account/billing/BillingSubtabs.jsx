@@ -14,8 +14,8 @@ const BillingSubtabs = () => {
   
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-sm overflow-hidden h-screen">
-      <div className="invoice-tab-wrapper overflow-hidden">
+    <div className="w-full bg-white rounded-lg shadow-sm h-screen">
+      <div className="invoice-tab-wrapper">
         {isMounted && <InvoiceTab />}
       </div>
     </div>
