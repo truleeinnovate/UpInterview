@@ -190,18 +190,18 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
                 <div className="absolute right-3 mt-10 w-48 bg-white border rounded shadow-lg z-50">
                     <div className="absolute -top-2 right-4 transform translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-gray-300"></div>
-                    <div className="flex justify-between items-center mb-2 border-b p-1">
-                        <p className="font-semibold">Select List</p>
+                    <div className="flex justify-between  items-center mb-2 border-b p-2">
+                        <p className="text-xl font-medium text-custom-blue">Select List</p>
                         <button onClick={() => closeDropdown()} className="text-gray-500 text-lg font-semibold">
-                            &times;
+                            <X  className="h-5 w-5 text-red-400" />
                         </button>
                     </div>
-                    <div className="flex items-center cursor-pointer hover:bg-gray-200 p-1 -mt-2 rounded" onClick={handleCreateNewList}>
-                        <span><IoIosAdd /></span>
+                    <div className="flex items-center cursor-pointer hover:bg-gray-200 pl-2 pr-2 pt-2  -mt-2 rounded" onClick={handleCreateNewList}>
+                        <span><IoIosAdd  /></span>
                         <span className="ml-2">Create New List</span>
                     </div>
 
-                    <div className="max-h-40 overflow-y-auto">
+                    <div className="max-h-40 p-2 overflow-y-auto">
                         {createdLists.map((list) => (
                             <label key={list._id} className="flex items-center cursor-pointer hover:bg-gray-200 p-1 rounded">
                                 <input

@@ -104,12 +104,17 @@ function RoundFormPosition() {
   //   }
   // }
 
-  const handleToggleMandatory = (questionId, mandatory) => {
+    const handleToggleMandatory = (questionId) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
         question.questionId === questionId
-          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          ? { ...question,
+                snapshot: {
+               ...question.snapshot,
+              mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
+             }
+             }
           : question
       )
     }));
@@ -125,10 +130,16 @@ function RoundFormPosition() {
         ...prev,
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
-          : [...prev.interviewQuestionsList, question]
+          : [...prev.interviewQuestionsList, 
+             {
+          ...question,
+          mandatory: "false" // Default to false when adding a new question
+        }
+            // question
+          ]
       }));
 
-      console.log("question", question);
+      // console.log("question", question);
 
 
       setErrors(prev => ({
@@ -146,6 +157,7 @@ function RoundFormPosition() {
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
     }));
+     setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
   // const handleRemoveQuestion = (index) => {
@@ -188,9 +200,7 @@ function RoundFormPosition() {
     setErrors({});
     setShowDropdown(false);
   };
-
-  const handleSuggestedTabClick = () => setActiveTab("SuggesstedQuestions");
-  const handleFavoriteTabClick = () => setActiveTab("MyQuestionsList");
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
 
   // while editing
   const isEditing = !!roundId && roundId !== 'new';
@@ -248,6 +258,9 @@ function RoundFormPosition() {
               scheduledDate: '',
               duration: roundEditData.duration || 30
             }));
+
+            console.log("roundEditData.questions ", roundEditData.questions );
+            
 
             if (roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId) {
               const assessmentDataForTemplate = {
@@ -472,7 +485,15 @@ function RoundFormPosition() {
           questions: []
         }
         : {
-          questions: formData.interviewQuestionsList || []
+          questions: formData.interviewQuestionsList.map(q => ({
+           questionId: q.questionId,
+           snapshot: {
+            ...q.snapshot,
+             mandatory: q.snapshot.mandatory || "false"
+          }
+        })) || []
+          
+          // formData.interviewQuestionsList || []
         }),
       instructions: formData.instructions,
     };
@@ -837,9 +858,9 @@ function RoundFormPosition() {
 
                       {formData.assessmentTemplate.assessmentName && (
                         <div>
-                          <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
-                            Assessment
-                          </label>
+                          <h4 htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
+                            Assessment Questions
+                          </h4>
                           {questionsError && (
                             <div className="text-red-600 font-medium mt-2">
                               {questionsError}
@@ -1036,9 +1057,7 @@ function RoundFormPosition() {
 
 
 
-                  {formData.roundTitle !== 'Assessment' &&
-
-                    <div className="space-y-4">
+                    <>
 
                       {/* Select Interviewers */}
                       <div>
@@ -1175,7 +1194,7 @@ function RoundFormPosition() {
 
                       </div>
 
-                      {/* questions */}
+                      {/* interview Questions List */}
                       <div className="mt-4">
                         <div className="py-3 mx-auto rounded-md">
                           {/* Header with Title and Add Button */}
@@ -1196,12 +1215,14 @@ function RoundFormPosition() {
                             {formData.interviewQuestionsList.length > 0 ? (
                               <ul className="mt-2 space-y-2">
                                 {formData.interviewQuestionsList.map((question, qIndex) => {
-                                  const isMandatory = question?.mandatory === "true";
+                                  // const isMandatory = question?.mandatory === "true";
+                                  const isMandatory = question?.snapshot?.mandatory === "true";
                                   const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                                   return (
                                     <li
                                       key={qIndex}
-                                      className={`flex justify-between items-center p-3 border rounded-md ${isMandatory ? "border-red-500" : "border-gray-300"
+                                      className={`flex justify-between items-center p-3 border rounded-md 
+                                        ${isMandatory ? "border-red-500" : "border-gray-300"
                                         }`}
                                     >
                                       <span className="text-gray-900 font-medium">
@@ -1232,82 +1253,47 @@ function RoundFormPosition() {
                                 className="bg-white rounded-md w-[95%] h-[90%]"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="py-3 px-4 bg-custom-blue flex items-center justify-between">
-                                  <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
+                                <div className="py-3 px-4  flex items-center justify-between">
+                                  <h2 className="text-xl text-custom-blue  font-semibold">Add Interview Question</h2>
                                   <button>
-                                    <MdOutlineCancel
-                                      className="text-2xl text-white"
+                                    <X
+                                      className="text-2xl text-red-500"
                                       onClick={() => handlePopupToggle()}
                                     />
                                   </button>
                                 </div>
-                                {/* <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
-                                  <div className="flex gap-10 p-4">
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "SuggesstedQuestions"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleSuggestedTabClick()}
-                                        >
-                                          Suggested Questions
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "MyQuestionsList"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleFavoriteTabClick()}
-                                        >
-                                          My Questions List
-                                        </span>
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                {activeTab === "SuggesstedQuestions" && (
-                                  <SuggesstedQuestions fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
-                                {activeTab === "MyQuestionsList" && (
-                                  <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )} */}
+ 
 
-                                {isInterviewQuestionPopup &&
-                                  <QuestionBank
-                                    // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
-                                    // sectionName=""
-                                    // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
-                                    type="interviewerSection"
-                                    // closeQuestionBank={handlePopupToggle}
-                                    // questionBankPopupVisibility={isInterviewQuestionPopup}
-                                    // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
-                                    // addedSections={[]}
-                                    // questionsLimit={0}
-                                    // checkedCount={formData.interviewQuestionsList.length}
-                                    interviewQuestionsLists={formData.interviewQuestionsList}
-                                    // setInterviewQuestionsList={(questions) =>
-                                    //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
-                                    // }
-                                    fromScheduleLater={true}
-                                    // interviewQuestionsLists={formData.interviewQuestionsList}
-                                    onAddQuestion={handleAddQuestionToRound}
-                                    // setInterviewQuestionsList={(question) =>
-                                    //   setFormData((prev) => ({
-                                    //     ...prev,
-                                    //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
-                                    //       ? prev.interviewQuestionsList
-                                    //       : [...prev.interviewQuestionsList, question]
-                                    //   }))
-                                    // }
+                                 {isInterviewQuestionPopup &&
+                            <QuestionBank
+                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
+                              // sectionName=""
+                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                              type="interviewerSection"
+                              // closeQuestionBank={handlePopupToggle}
+                              // questionBankPopupVisibility={isInterviewQuestionPopup}
+                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
+                              // addedSections={[]}
+                              // questionsLimit={0}
+                              // checkedCount={formData.interviewQuestionsList.length}
+                              interviewQuestionsLists={formData.interviewQuestionsList}
+                              // setInterviewQuestionsList={(questions) =>
+                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
+                              // }
+                              fromScheduleLater={true}
+                              // interviewQuestionsLists={formData.interviewQuestionsList}
+                              onAddQuestion={handleAddQuestionToRound}
+                              // setInterviewQuestionsList={(question) =>
+                              //   setFormData((prev) => ({
+                              //     ...prev,
+                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+                              //       ? prev.interviewQuestionsList
+                              //       : [...prev.interviewQuestionsList, question]
+                              //   }))
+                              // }
 
-                                    handleRemoveQuestion={handleRemoveQuestion}
-                                    handleToggleMandatory={handleToggleMandatory}
+                              handleRemoveQuestion={handleRemoveQuestion}
+                              handleToggleMandatory={handleToggleMandatory}
 
                                   />
 
@@ -1317,9 +1303,7 @@ function RoundFormPosition() {
                           )}
                         </div>
                       </div>
-                    </div>
-
-                  }
+                    </>
 
 
                   <div>

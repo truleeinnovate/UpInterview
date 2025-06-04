@@ -183,7 +183,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
      
         <div className="grid grid-cols-1 gap-2 
      bg-white p-2  rounded-lg shadow">
-          <AvailabilityUser mode='users' usersId={userData.contactId}  setAvailabilityEditOpen={setAvailabilityEditOpen}/>
+          <AvailabilityUser mode='users' usersId={userData.contactId}  setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen}/>
           
 
         </div>
@@ -211,7 +211,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
-        <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+        <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center space-x-4">

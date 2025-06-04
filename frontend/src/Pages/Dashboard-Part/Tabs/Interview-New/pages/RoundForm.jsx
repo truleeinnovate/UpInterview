@@ -149,10 +149,16 @@ const RoundFormInterviews = () => {
         if (prevList.some((q) => q.questionId === question.questionId)) {
           return prevList;
         }
-        return [...prevList, question];
+        return [...prevList, 
+            {
+          ...question,
+          mandatory: "false" // Default to false when adding a new question
+        }
+
+        ]; // Add new question
       });
 
-      console.log("question", question);
+      // console.log("question", question);
 
 
       setErrors(prev => ({
@@ -167,7 +173,12 @@ const RoundFormInterviews = () => {
     setInterviewQuestionsList(prev =>
       prev.map((question) =>
         question.questionId === questionId
-          ? { ...question, mandatory: mandatory ? "true" : "false" }
+          ? { ...question,
+                snapshot: {
+               ...question.snapshot,
+              mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
+             }
+             }
           : question
       )
     );
@@ -493,7 +504,13 @@ const RoundFormInterviews = () => {
       console.log("roundData1", roundData);
       const payload = isEditing
         ? { interviewId, round: roundData, roundId, questions: interviewQuestionsList }
-        : { interviewId, round: roundData, questions: interviewQuestionsList };
+        : { interviewId, round: roundData, questions: interviewQuestionsList.map(q => ({
+           questionId: q.questionId,
+           snapshot: {
+            ...q.snapshot,
+             mandatory: q.snapshot.mandatory || "false"
+          }
+        })) || [] };
   
       console.log("Payload for submission:", payload);
   
@@ -713,7 +730,7 @@ const RoundFormInterviews = () => {
                           }}
                           className={`mt-1 block w-full border ${errors.roundTitle ? 'border-red-500' : 'border-gray-300'
                             } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          required
+                          // required
                           placeholder="Enter custom round title"
                         />
                       ) : (
@@ -727,7 +744,7 @@ const RoundFormInterviews = () => {
                           }}
                           className={`mt-1 block w-full border ${errors.roundTitle ? 'border-red-500' : 'border-gray-300'
                             } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          required
+                          // required
                         >
                           <option value="">Select Round Title</option>
                           <option value="Assessment">Assessment</option>
@@ -757,7 +774,7 @@ const RoundFormInterviews = () => {
                         }}
                         className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${errors.interviewMode ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                        required
+                        // required
                         disabled={roundTitle === "Assessment"}
                       >
                         <option value="">Select Interview Mode</option>
@@ -788,7 +805,7 @@ const RoundFormInterviews = () => {
                         }}
                         className={`mt-1 block w-full border ${errors.sequence ? 'border-red-500' : 'border-gray-300'
                           } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                        required
+                        // required
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview process
@@ -1325,8 +1342,8 @@ const RoundFormInterviews = () => {
                             {interviewQuestionsList.length > 0 ? (
                               <ul className="mt-2 space-y-2">
                                 {interviewQuestionsList.map((question, qIndex) => {
-                                  const isMandatory = question?.mandatory === "true";
-
+                                  // const isMandatory = question?.mandatory === "true";
+                            const isMandatory = question?.snapshot?.mandatory === "true";
                                   return (
                                     <li
                                       key={qIndex}
@@ -1358,51 +1375,16 @@ const RoundFormInterviews = () => {
                                 className="bg-white rounded-md w-[95%] h-[90%]"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="py-3 px-4 bg-custom-blue flex items-center justify-between">
-                                  <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
+                                <div className="py-3 px-4  flex items-center justify-between">
+                                  <h2 className="text-xl text-custom-blue font-semibold">Add Interview Question</h2>
                                   <button>
-                                    <MdOutlineCancel
-                                      className="text-2xl fill-white"
+                                    <X
+                                      className="text-2xl text-red-500"
                                       onClick={() => handlePopupToggle()}
                                     />
                                   </button>
                                 </div>
-                                {/* <div className="z-10 top-28 sm:top-32 md:top-36 left-0 right-0">
-                                  <div className="flex gap-10 p-4">
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "SuggesstedQuestions"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleSuggestedTabClick()}
-                                        >
-                                          Suggested Questions
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <div className="relative inline-block">
-                                      <span className="flex items-center cursor-pointer">
-                                        <span
-                                          className={`pb-3 ${activeTab === "MyQuestionsList"
-                                            ? "text-black font-semibold border-b-2 border-custom-blue"
-                                            : "text-gray-500"
-                                            }`}
-                                          onClick={() => handleFavoriteTabClick()}
-                                        >
-                                          My Questions List
-                                        </span>
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                {activeTab === "SuggesstedQuestions" && (
-                                  <SuggesstedQuestions fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )}
-                                {activeTab === "MyQuestionsList" && (
-                                  <MyQuestionListMain fromScheduleLater={true} onAddQuestion={handleAddQuestionToRound} />
-                                )} */}
+                              
 
                                 {isInterviewQuestionPopup &&
                                   <QuestionBank

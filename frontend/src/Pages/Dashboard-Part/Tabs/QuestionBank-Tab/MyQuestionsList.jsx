@@ -50,6 +50,7 @@ const MyQuestionsList = ({
 
   // mansoor
   fromScheduleLater,
+  interviewQuestionsLists,
   onAddQuestion,
   handleRemoveQuestion,
   removedQuestionIds = []
@@ -459,9 +460,7 @@ useEffect(() => {
       if (handleRemoveQuestion) {
         handleRemoveQuestion(question._id)
 
-
       }
-    }
     const requiredArray = myQuestionsList[listName];
     const requiredObj = requiredArray.map((item) =>
       item._id === question._id ? { ...item, isAdded: false } : item
@@ -470,10 +469,15 @@ useEffect(() => {
       ...prev,
       [listName]: requiredObj,
     }));
+
+        toast.error("Question removed successfully!");
+    }else{
+
     try {
       const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response = await axios.delete(url);
-      alert(response.data.message);
+      // alert(response.data.message);
+        toast.error("Question removed successfully!");
       // getInterviewerQuestions()
       const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
       const response2 = await axios.get(addedQuestionUrl);
@@ -481,6 +485,7 @@ useEffect(() => {
     } catch (error) {
       console.log("error in deleting question", error);
     }
+  }
   };
 
   // const groupedQuestions = myQuestionsList;
@@ -865,7 +870,7 @@ useEffect(() => {
                               {/* Add/Remove buttons for different sections (UI improvement) */}
                               {(type === "interviewerSection") && (
                                 <div>
-                                  {question.isAdded && !removedQuestionIds.includes(question._id) ? (
+                                  {interviewQuestionsLists?.some(q => q.questionId === question._id) ? (
                                     <button
                                       onClick={() =>
                                         onClickRemoveQuestion(

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import {   Clock, Globe,  MapPin  } from 'lucide-react';
+import { Clock, Globe, MapPin } from 'lucide-react';
 import Cookies from "js-cookie";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -9,22 +9,21 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 // import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 
-const AvailabilityUser = ({mode,usersId,setAvailabilityEditOpen}) => {
+const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen }) => {
   const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({})
-  const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState('');
   const [selectedOption, setSelectedOption] = useState(null);
   const [times, setTimes] = useState({
-     Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+    Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Mon: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Tue: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Wed: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Thu: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Fri: [{ startTime: 'unavailable', endTime: 'unavailable' }],
     Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-   
+
   });
 
   const authToken = Cookies.get("authToken");
@@ -58,45 +57,45 @@ const AvailabilityUser = ({mode,usersId,setAvailabilityEditOpen}) => {
 
   // }, [userId, singlecontact,usersRes]);
 
-   useEffect(() => {
-     const selectedContact = usersId
-       ? usersRes.find(user => user?.contactId === usersId)
-       : usersRes.find(user => user?._id === userId);
-   
-     if (selectedContact) {
-       setContactData(selectedContact);
+  useEffect(() => {
+    const selectedContact = usersId
+      ? usersRes.find(user => user?.contactId === usersId)
+      : usersRes.find(user => user?._id === userId);
+
+    if (selectedContact) {
+      setContactData(selectedContact);
       //  console.log("Selected contact:", selectedContact);
-     }
-   }, [usersId, userId, usersRes]);
+    }
+  }, [usersId, userId, usersRes]);
 
 
- const fetchData = () => {
-  if (!contactData) return;
+  const fetchData = () => {
+    if (!contactData) return;
 
-  setSelectedTimezone(typeof contactData?.timeZone === 'object' ? contactData?.timeZone.label : contactData?.timeZone);
-  setSelectedOption(contactData?.preferredDuration || null);
+    setSelectedTimezone(typeof contactData?.timeZone === 'object' ? contactData?.timeZone.label : contactData?.timeZone);
+    setSelectedOption(contactData?.preferredDuration || null);
 
-  if (contactData?.availability && contactData?.availability.length > 0) {
-    const updatedTimes = {
-      Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Mon: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Tue: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Wed: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Thu: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Fri: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-      Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    };
+    if (contactData?.availability && contactData?.availability.length > 0) {
+      const updatedTimes = {
+        Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Mon: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Tue: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Wed: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Thu: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Fri: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+      };
 
-    const days = contactData?.availability[0].days || [];
-    days.forEach(day => {
-      if (day.timeSlots.length > 0 && day.timeSlots[0].startTime !== 'unavailable') {
-        updatedTimes[day.day] = day.timeSlots;
-      }
-    });
+      const days = contactData?.availability[0].days || [];
+      days.forEach(day => {
+        if (day.timeSlots.length > 0 && day.timeSlots[0].startTime !== 'unavailable') {
+          updatedTimes[day.day] = day.timeSlots;
+        }
+      });
 
-    setTimes(updatedTimes);
-  }
-};
+      setTimes(updatedTimes);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -127,28 +126,28 @@ const AvailabilityUser = ({mode,usersId,setAvailabilityEditOpen}) => {
 
 
   // Check if a time slot is available
-const isAvailable = (date, hour) => {
-  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
-  const dayAvailability = times[dayOfWeek];
+  const isAvailable = (date, hour) => {
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+    const dayAvailability = times[dayOfWeek];
 
-  if (!dayAvailability || dayAvailability[0]?.startTime === 'unavailable') return false;
+    if (!dayAvailability || dayAvailability[0]?.startTime === 'unavailable') return false;
 
-  return dayAvailability.some(slot => {
-    if (slot.startTime === 'unavailable') return false;
+    return dayAvailability.some(slot => {
+      if (slot.startTime === 'unavailable') return false;
 
-    const [startHour, startMin] = slot.startTime.split(':').map(Number);
-    const [endHour, endMin] = slot.endTime.split(':').map(Number);
+      const [startHour, startMin] = slot.startTime.split(':').map(Number);
+      const [endHour, endMin] = slot.endTime.split(':').map(Number);
 
-    const slotStart = startHour * 60 + startMin;
-    const slotEnd = endHour * 60 + endMin;
+      const slotStart = startHour * 60 + startMin;
+      const slotEnd = endHour * 60 + endMin;
 
-    const currentHourStart = hour * 60;
-    const currentHourEnd = (hour + 1) * 60;
+      const currentHourStart = hour * 60;
+      const currentHourEnd = (hour + 1) * 60;
 
-    // Check if any part of the slot overlaps with this hour
-    return slotStart < currentHourEnd && slotEnd > currentHourStart;
-  });
-};
+      // Check if any part of the slot overlaps with this hour
+      return slotStart < currentHourEnd && slotEnd > currentHourStart;
+    });
+  };
 
 
 
@@ -160,11 +159,11 @@ const isAvailable = (date, hour) => {
         <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Availability</h3>
 
         <button
-          onClick={() => 
-          mode === 'users' ? 
-          setAvailabilityEditOpen(true)
-          :  navigate(`/account-settings/my-profile/availability-edit/${contactData?.contactId}`)
-          
+          onClick={() =>
+            mode === 'users' ?
+              setAvailabilityEditOpen(true)
+              : navigate(`/account-settings/my-profile/availability-edit/${contactData?.contactId}`)
+
           }
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
         >
@@ -173,8 +172,10 @@ const isAvailable = (date, hour) => {
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6 
-    sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8  bg-white p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg shadow">
+      <div className={`grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2  gap-6 
+    sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8  bg-white p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg shadow
+    ${isFullScreen === false ? ' grid-cols-1' :'2xl:grid-cols-2'}
+    `}>
 
 
 
@@ -202,40 +203,39 @@ const isAvailable = (date, hour) => {
                 ))}
 
                 {/* Time slots */}
-       {timeSlots.map(hour => {
-  const isHourAvailable = weekDates.some(date => isAvailable(date, hour));
-  if (!isHourAvailable) return null; // ❌ Skip if this hour is not available at all
+                {timeSlots.map(hour => {
+                  const isHourAvailable = weekDates.some(date => isAvailable(date, hour));
+                  if (!isHourAvailable) return null; // ❌ Skip if this hour is not available at all
 
-  return (
-    <React.Fragment key={hour}>
-      {/* ✅ Time label */}
-      <div className="h-12 flex items-center justify-end mr-1 text-sm text-gray-500">
-        {formatTime(hour)}
-      </div>
+                  return (
+                    <React.Fragment key={hour}>
+                      {/* ✅ Time label */}
+                      <div className="h-12 flex items-center justify-end mr-1 text-sm text-gray-500">
+                        {formatTime(hour)}
+                      </div>
 
-      {/* ✅ Availability cells for each day */}
-      {weekDates.map((date, dateIndex) => {
-        const available = isAvailable(date, hour);
-        return (
-          <div
-            key={`${hour}-${dateIndex}`}
-            className={`h-12 border border-gray-100 rounded-md ${
-              available
-                ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
-                : 'bg-gray-50'
-            }`}
-          >
-            {available && (
-              <div className="h-full flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </React.Fragment>
-  );
-})}
+                      {/* ✅ Availability cells for each day */}
+                      {weekDates.map((date, dateIndex) => {
+                        const available = isAvailable(date, hour);
+                        return (
+                          <div
+                            key={`${hour}-${dateIndex}`}
+                            className={`h-12 border border-gray-100 rounded-md ${available
+                                ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
+                                : 'bg-gray-50'
+                              }`}
+                          >
+                            {available && (
+                              <div className="h-full flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })}
 
               </div>
             </div>
@@ -252,6 +252,68 @@ const isAvailable = (date, hour) => {
           </div>
         </div>
 
+        <div className={`  ${isFullScreen === false ? 'flex items-center gap-3 m-auto' : 'space-y-6'}`}>
+          {/* Enhanced Timezone Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Globe className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Timezone</h3>
+                <p className="text-sm text-gray-500">Your local timezone</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                <p className="font-semibold text-gray-800 text-lg">
+                  {selectedTimezone || "Not set"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Duration Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <Clock className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Preferred Duration</h3>
+                <p className="text-sm text-gray-500">Interview length</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {selectedOption || "?"}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-gray-800 text-lg">
+                    {selectedOption || "Not set"} {selectedOption && "minutes"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+
+
+    </div>
+  )
+}
+
+export default AvailabilityUser
+
+
+
         {/* <div className="mt-6 ">
           <div>
             <p className="text-sm text-gray-500 sm:text-xs md:text-sm lg:text-base">Timezone</p>
@@ -267,62 +329,3 @@ const isAvailable = (date, hour) => {
             <p className="font-medium sm:text-sm md:text-base lg:text-lg">{selectedOption || "N/A"} minutes</p>
           </div>
         </div> */}
-            <div className="space-y-6">
-                {/* Enhanced Timezone Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-3 bg-blue-100 rounded-xl">
-                      <Globe className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-800">Timezone</h3>
-                      <p className="text-sm text-gray-500">Your local timezone</p>
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-blue-600" />
-                      <p className="font-semibold text-gray-800 text-lg">
-                        {selectedTimezone || "Not set"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhanced Duration Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-3 bg-purple-100 rounded-xl">
-                      <Clock className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-800">Preferred Duration</h3>
-                      <p className="text-sm text-gray-500">Interview length</p>
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {selectedOption || "?"}
-                          </span>
-                        </div>
-                        <span className="font-semibold text-gray-800 text-lg">
-                          {selectedOption || "Not set"} {selectedOption && "minutes"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-</div>
-
-
-      </div>
-
-
-    </div>
-  )
-}
-
-export default AvailabilityUser

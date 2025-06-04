@@ -285,7 +285,7 @@ const InterviewDetail = () => {
         <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center mb-4">
-              <Link to="/interviewList" className="text-blue-600 hover:text-blue-800 flex items-center mr-4">
+              <Link to="/interviewList" className="text-gray-800 flex items-center mr-4">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>

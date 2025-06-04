@@ -104,7 +104,8 @@ const SuggestedQuestionsComponent = ({
         setMandatoryStatus((prev) => {
             const updatedStatus = { ...prev };
             (interviewQuestionsLists ? interviewQuestionsLists : interviewQuestionsList).forEach((question) => {
-                updatedStatus[question.questionId ? question.questionId : question.id] = question.mandatory === "true";
+                // updatedStatus[question.questionId ? question.questionId : question.id] = question.mandatory === "true";
+            updatedStatus[question.questionId ? question.questionId : question.id] = question.snapshot?.mandatory === "true" || false;
             });
             return updatedStatus;
         });
@@ -126,7 +127,7 @@ const SuggestedQuestionsComponent = ({
 
     const [mandatoryStatus, setMandatoryStatus] = useState({});
 
-    console.log("interviewQuestionsList", interviewQuestionsList);
+    // console.log("interviewQuestionsList", interviewQuestionsList);
 
     const handleToggle = (questionId, item) => {
         setMandatoryStatus((prev) => {
@@ -139,7 +140,7 @@ const SuggestedQuestionsComponent = ({
 
             // Update the parent component with the new mandatory status
             if (handleToggleMandatory) {
-                handleToggleMandatory(questionId, newStatus);
+                handleToggleMandatory(questionId);
             }
 
             // If the question is already added, update its mandatory status in the parent
@@ -150,7 +151,8 @@ const SuggestedQuestionsComponent = ({
                     snapshot: item,
                     order: "",
                     customizations: "",
-                    mandatory: newStatus ? "true" : "false",
+                    mandatory: newStatus ? "true" : "false"
+                    // mandatory: newStatus ? "true" : "false",
                 });
             }
 
@@ -224,7 +226,7 @@ const SuggestedQuestionsComponent = ({
                     snapshot: item,
                     order: "",
                     customizations: "",
-                    mandatory: mandatoryStatus[item._id] ? "true" : "false",
+                   mandatory: mandatoryStatus[item._id] ? "true" : "false"
                 };
 
                 console.log("questionToAdd", questionToAdd);
@@ -498,7 +500,7 @@ const SuggestedQuestionsComponent = ({
                 setSuggestedQuestions(newList);
 
             }
-            toast.success("Question removed successfully!");
+            toast.error("Question removed successfully!");
         } else {
 
 
@@ -644,22 +646,22 @@ const SuggestedQuestionsComponent = ({
 
     const ReturnSearchFilterSection = () => {
         return (
-            <div className={`flex sm:flex-col gap-4 justify-between items-center`}>
+            <div className={`flex w-full sm:flex-col flex-row  items-center justify-between gap-4`}>
                 <div
                     className={` ${type === "assessment" || type === "interviewerSection"
-                        ? "w-[35%] sm:w-full"
-                        : "w-full sm:w-full"
-                        } `}
+                         ? "w-[35%] sm:w-full"
+            : "w-full sm:w-full"
+            } `}
                 >
                     <div
                         className={` ${type === "assessment" || type === "interviewerSection"
-                            ? "w-[240px]"
-                            : "w-[300px]"
-                            }  relative flex items-center rounded-md border`}
+                         ? "w-[200px]  sm:w-full"
+                : "w-[300px] md:w-[180px] sm:w-full"
+                } relative flex items-center rounded-md border`}
                     // className="relative flex items-center rounded-md border w-[300px]"
                     >
                         <span className="text-custom-blue p-2">
-                            <Search />
+                            <Search   className="w-5 h-5"/>
                         </span>
                         <input
                             onChange={(e) => setSkillInput(e.target.value)}
@@ -672,19 +674,19 @@ const SuggestedQuestionsComponent = ({
                 </div>
                 <div
                     className={`${type === "assessment" || type === "interviewerSection"
-                        ? "w-[75%] sm:w-full"
-                        : "w-1/2 sm:w-full"
-                        }  flex items-center justify-end`}
+                    ? "w-[65%] sm:w-full"
+            : "w-auto sm:w-full "
+            } flex flex-row items-center sm:flex-col justify-end gap-4 flex-1`}
                 // className="flex items-center w-1/2 sm:w-full"
                 >
                     <div
                         className={`${type === "assessment" || type === "interviewerSection"
-                            ? "w-[240px]"
-                            : "w-[200px] sm:w-full"
-                            } relative flex items-center rounded-md border`}
+                               ? "w-[240px] sm:w-full"
+                : "w-[300px] lg:w-[320px] md:w-[180px] sm:w-full"
+                }  relative flex items-center rounded-md border`}
                     >
                         <span className={`p-2 text-[#227a8a]`}>
-                            <Search />
+                            <Search  className="w-5 h-5"/>
                         </span>
                         <input
                             type="search"
@@ -692,8 +694,9 @@ const SuggestedQuestionsComponent = ({
                             className={` p-2 pr-none border-none  h-outline-none w-[85%]`}
                         />
                     </div>
-                    <div className="flex items-center ml-2 ">
-                        <p className="text-custom-blue">
+                    <div className=" flex sm:items-center sm:gap-3">
+                    <div className="flex items-center  ">
+                        <p className="text-custom-blue whitespace-nowrap">
                             {suggestedQuestionsFilteredData.length} Questions{" "}
                         </p>
                     </div>
@@ -723,7 +726,7 @@ const SuggestedQuestionsComponent = ({
                             </span>
                         </Tooltip>
                     </div>
-                    <div className="relative">
+                    <div >
                         <Popup
                             responsive={true}
                             trigger={
@@ -746,6 +749,7 @@ const SuggestedQuestionsComponent = ({
                                 </div>
                             )}
                         </Popup>
+                    </div>
                     </div>
                 </div>
             </div >
@@ -829,14 +833,16 @@ const SuggestedQuestionsComponent = ({
 
         // -->
         return (
-            <div className={`p-4`}>
+            <div className={`p-4 h-full`}>
                 {/* Search and Filter Section */}
                 {ReturnSearchFilterSection()}
 
+
+<div className="overflow-y-auto  ">
                 {/* Selected skills section (UI improvement) */}
                 {selectedSkills && (
                     <div className="my-4">
-                        <ul className="flex gap-2 flex-wrap">
+                        <ul className="flex gap-2 flex-wrap ">
                             {selectedSkills.map((skill, index) => (
                                 <li
                                     key={index}
@@ -857,7 +863,7 @@ const SuggestedQuestionsComponent = ({
 
                 {/* Applied filters section (UI improvement) */}
                 {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                    <div className="flex items-center gap-3 my-4 flex-wrap">
+                    <div className="flex items-center   flex-wrap">
                         <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
                         <ul className="flex gap-2 flex-wrap">
                             {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
@@ -894,7 +900,7 @@ const SuggestedQuestionsComponent = ({
                 >
                     {paginatedData.length > 0 ? (
                         paginatedData.map((item, index) => (
-                            <li key={index} className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <li key={index} className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex justify-between items-center border-b border-gray-200 px-4">
                                     <h2 className="font-medium w-[85%] text-gray-800">
                                         {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
@@ -921,7 +927,10 @@ const SuggestedQuestionsComponent = ({
                                                 <div className="flex items-center w-14 justify-center">
                                                     <button
                                                         onClick={() => {
-                                                            if (item.isAdded && !removedQuestionIds.includes(item._id)) {
+                                                            if (
+                                                                interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                                                // item.isAdded && !removedQuestionIds.includes(item._id)
+                                                            ) {
                                                                 handleToggle(item._id, item);
                                                             }
                                                             // handleToggle(item._id, item);
@@ -947,17 +956,20 @@ const SuggestedQuestionsComponent = ({
                                         <div
                                             className="p-1 flex justify-center w-[8%]"
                                         >
-                                            {item.isAdded && !removedQuestionIds.includes(item._id) ? (
+                                            {interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                            // item.isAdded && !removedQuestionIds.includes(item._id) 
+                                            ? (
                                                 <button
+                                                
                                                     onClick={() => onClickRemoveQuestion(item._id)}
-                                                    className="rounded-md bg-gray-500 w-[80%] px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
+                                                    className="rounded-md md:ml-4 bg-gray-500  px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
                                                 >
                                                     Remove
                                                 </button>
                                             ) : (
                                                 <button
-                                                    className="bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm"
-                                                    onClick={() => onClickAddButton(item)}
+                                                    className="bg-custom-blue  py-1 px-2 text-white rounded-md transition-colors text-sm"
+                                                    onClick={(e) => onClickAddButton(item)}
                                                 >
                                                     Add
                                                 </button>
@@ -1051,6 +1063,8 @@ const SuggestedQuestionsComponent = ({
                         </div>
                     )}
                 </ul>
+                </div>
+                
             </div>
         );
     };
