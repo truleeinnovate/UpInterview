@@ -4,11 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
-import { config } from '../../../config.js'
 import axios from "axios";
-import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js";
+import { handleMembershipChange } from "../../../../../utils/PaymentpageValidations.js";
 //import { useCustomContext } from "../../../Context/Contextfetch";
-import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -28,7 +27,7 @@ const loadRazorpayScript = () => {
     });
 };
 
-const CardDetails = () => {
+const SubscriptionCardDetails = () => {
     console.log('card details')
 
     const authToken = Cookies.get("authToken");
@@ -224,7 +223,7 @@ const CardDetails = () => {
             
             console.log('Sending order to backend:', {
                 amount: amountToCharge,
-                currency: 'USD',
+                currency: 'INR',
                 membershipType: cardDetails.membershipType,
                 planId: orderData.planId,
                 autoRenew: true
@@ -304,7 +303,6 @@ const CardDetails = () => {
                                         ownerId: cardDetails.ownerId,
                                         tenantId: tenantId,
                                         planId: planDetails.planId,
-                                        planName: planDetails.planName,
                                         membershipType: cardDetails.membershipType,
                                         autoRenew: cardDetails.autoRenew,
                                         invoiceId: planDetails.invoiceId // Include the invoiceId passed from SubscriptionPlan.jsx
@@ -317,7 +315,7 @@ const CardDetails = () => {
 
                                     // Verify payment with backend
                                     const verifyResponse = await axios.post(
-                                        `${config.REACT_APP_API_URL}/payment/verify`,
+                                        `${process.env.REACT_APP_API_URL}/payment/verify`,
                                         verificationData
                                     );
 
@@ -336,7 +334,7 @@ const CardDetails = () => {
                                                 subscriptionId: orderResponse.data.subscriptionId,
                                                 orderId: response.razorpay_order_id,
                                                 isUpgrading: isUpgrading,
-                                                nextRoute: isUpgrading ? '/account-settings/subscription' : '/home'
+                                                nextRoute: isUpgrading ? '/SubscriptionDetails' : '/account-settings/subscription'
                                             }
                                         });
                                     } else {
@@ -388,65 +386,6 @@ const CardDetails = () => {
     };
     
     
-    useEffect(() => {
-        const checkSubscriptionStatus = async () => {
-            // Check if we're returning from a subscription authorization
-            const pendingSubscription = localStorage.getItem('pendingSubscription');
-            const params = new URLSearchParams(window.location.search);
-            const razorpayPaymentId = params.get('razorpay_payment_id');
-            const razorpaySignature = params.get('razorpay_signature');
-            
-            if (pendingSubscription && (razorpayPaymentId || params.get('error_code'))) {
-                const subscriptionData = JSON.parse(pendingSubscription);
-                
-                // Clear the pending subscription data
-                localStorage.removeItem('pendingSubscription');
-                
-                // If we have a payment ID, verify the payment
-                if (razorpayPaymentId && razorpaySignature) {
-                    try {
-                        toast.loading("Verifying subscription...");
-                        
-                        const verificationResponse = await axios.post(
-                            `${process.env.REACT_APP_API_URL}/payment/verify-subscription`, 
-                            {
-                                razorpay_payment_id: razorpayPaymentId,
-                                razorpay_subscription_id: subscriptionData.subscriptionId,
-                                razorpay_signature: razorpaySignature,
-                                ownerId: subscriptionData.ownerId,
-                                tenantId: subscriptionData.tenantId,
-                                planId: subscriptionData.planId,
-                                membershipType: subscriptionData.membershipType
-                            }
-                        );
-                        
-                        toast.dismiss();
-                        
-                        if (verificationResponse.data.status === "success") {
-                            toast.success("Subscription successfully activated!");
-                            
-                            // Navigate based on upgrade status
-                            if (isUpgrading) {
-                                navigate("/account-settings/subscription");
-                            } else {
-                                navigate("/home");
-                            }
-                        } else {
-                            toast.error("Subscription verification failed. Please contact support.");
-                        }
-                    } catch (error) {
-                        console.error("Error verifying subscription:", error);
-                        toast.error("Failed to verify subscription. Please contact support.");
-                    }
-                } else if (params.get('error_code')) {
-                    // Handle payment failure
-                    toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`);
-                }
-            }
-        };
-        
-        checkSubscriptionStatus();
-    }, [isUpgrading, navigate]); // Added isUpgrading and navigate to dependency array
 
     return (
         <div className="flex pt-4 flex-col h-full w-full items-center bg-white">
@@ -456,7 +395,7 @@ const CardDetails = () => {
             {processing ? (
                 <div className="flex flex-col items-center justify-center h-screen">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                    <p className="mt-4 text-lg font-medium text-gray-700">Processing your Home...</p>
+                    <p className="mt-4 text-lg font-medium text-gray-700">Processing your Subscription...</p>
                 </div>
             ) : (
                 <form
@@ -468,7 +407,7 @@ const CardDetails = () => {
                         Upgrade to a Basic Membership
                     </h2>
                     <XCircle
-                        onClick={() => navigate("/subscription-plans")}
+                        onClick={() => navigate("/account-settings/subscription")}
                         className="h-7 w-7" />
                 </div>
                 <p className="text-gray-500  text-md mb-2">
@@ -650,8 +589,8 @@ const CardDetails = () => {
                         </p>
                         <button
                             type="submit"
-                            className={`w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg ${buttonLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={buttonLoading}
+                            className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
+                            disabled={buttonLoading || processing}
                         >
                             {buttonLoading ? "Processing..." : "Pay"}
                         </button>
@@ -664,4 +603,4 @@ const CardDetails = () => {
     );
 };
 
-export default CardDetails;
+export default SubscriptionCardDetails;

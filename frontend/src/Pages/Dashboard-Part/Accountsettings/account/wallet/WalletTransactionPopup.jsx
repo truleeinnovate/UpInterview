@@ -1,71 +1,19 @@
 import { Maximize, Minimize, X } from 'lucide-react';
 import classNames from 'classnames';
 import Modal from 'react-modal';
-import { useEffect, useState } from 'react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getTransactionTypeStyle } from './Wallet';
-Modal.setAppElement('#root');
+// Modal.setAppElement('#root');
 
- const  WalletTransactionPopup = ({  onClose })  => {
-    
-      const { id } = useParams();
-      const navigate = useNavigate();
-      const [transaction, setTransaction ] = useState(null)
+const WalletTransactionPopup = ({ transaction, onClose }) => {
+  const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const {walletBalance} = useCustomContext();
+  
+  console.log("Transaction in popup:", transaction);
 
-    console.log("walletBalance ", walletBalance);
-
-
-  // useEffect(() => {
-  //   const fetchTransaction = () => {
-
-  //     const  transaction = walletBalance?.transactions.find(transaction => transaction._id === id );
-      
-  //     console.log("transaction", transaction);
-
-  //     if(transaction){
-  //       setTransaction(transaction || null)
-  //     }
-
-  //   }
-
-  //   fetchTransaction();
-
-  // },[id])
-  const [loading, setIsLoading] = useState();
-  const [error,setError] = useState();
-
-
-  useEffect(() => {
-    const fetchTransaction = () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        if (!walletBalance?.transactions) {
-          throw new Error('No transactions available');
-        }
-
-        const foundTransaction = walletBalance.transactions.find(
-          transaction => transaction._id === id
-        );
-
-        if (!foundTransaction) {
-          throw new Error('Transaction not found');
-        }
-
-        setTransaction(foundTransaction);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTransaction();
-  }, [id, walletBalance]);
+  const [loading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
@@ -145,7 +93,7 @@ Modal.setAppElement('#root');
             </div>
             <div>
               <p className="text-sm text-gray-500">Category</p>
-              <p className="font-medium capitalize">{transaction?.category}</p>
+              <p className="font-medium capitalize">{transaction?.type}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Description</p>

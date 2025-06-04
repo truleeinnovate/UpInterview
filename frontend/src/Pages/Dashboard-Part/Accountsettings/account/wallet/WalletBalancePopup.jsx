@@ -3,15 +3,14 @@ import classNames from 'classnames';
 import { useState } from 'react';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { calculatePendingBalance } from './Wallet';
-Modal.setAppElement('#root');
+// Modal.setAppElement('#root');
 
-const  WalletBalancePopup = ({ onClose }) =>  {
-  const { walletBalance } = useCustomContext();
+const WalletBalancePopup = ({ walletBalance }) => {
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+ // console.log('Wallet data in popup:', walletBalance);
 
   const pendingBalance = calculatePendingBalance(walletBalance);
   // useEffect(() => {

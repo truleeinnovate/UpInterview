@@ -11,6 +11,7 @@ const InvoiceSchema = new mongoose.Schema({
         ref: 'SubscriptionPlan', 
         required: false 
     }, 
+    planName: { type: String },
     type: { 
         type: String, 
         enum: ['subscription', 'wallet', 'payout', 'custom'], 
@@ -23,12 +24,12 @@ const InvoiceSchema = new mongoose.Schema({
     outstandingAmount: { type: Number, default: function() { return this.totalAmount - this.amountPaid; } },
     status: { 
         type: String, 
-        enum: ['pending', 'paid', 'partially_paid', 'failed', 'overdue'], 
+        enum: ['pending', 'paid', 'partially_paid', 'failed', 'overdue', 'charged','cancelled'], 
         default: 'pending' 
     },
     relatedObjectId: { type: mongoose.Schema.Types.ObjectId, required: false }, 
     metadata: { type: mongoose.Schema.Types.Mixed },
-    dueDate: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+    dueDate: { type: Date },
     startDate: { type: Date,  function() { return this.type === 'subscription'; },
     default:null, },
     endDate: { 

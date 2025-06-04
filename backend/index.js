@@ -1,4 +1,4 @@
-// require('dotenv').config();
+ require('dotenv').config();
 
 // const express = require('express');
 // const mongoose = require('mongoose');
@@ -58,6 +58,11 @@
 //   // console.log('CORS headers set for:', req.method, req.url);
 //   next();
 // });
+
+// Force production mode to avoid webhook issues
+process.env.NODE_ENV = 'production';
+console.log(`🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`);
+
 
 require('dotenv').config();
 const express = require('express');
@@ -121,8 +126,27 @@ app.use(cors(corsOptions));
 
 // Explicitly handle preflight requests
 app.options('*', cors(corsOptions));
-app.use(cookieParser());
+
+// Special middleware to capture raw body for webhook signature verification
+// This MUST come before any bodyParsers
+const rawBodyParser = require('body-parser').raw({ type: '*/*' });
+
+// Use raw body parser only for webhook endpoints
+app.use((req, res, next) => {
+  if (req.originalUrl === '/payment/webhook' || req.path === '/payment/webhook') {
+    rawBodyParser(req, res, (err) => {
+      if (err) return next(err);
+      req.rawBody = req.body.toString();
+      next();
+    });
+  } else {
+    next();
+  }
+});
+
+// Standard middleware
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // app.get('/api/validate-domain', (req, res) => {
 //   const token = req.cookies.token;
@@ -780,6 +804,12 @@ app.use('/', MyQuestionListRoutes);
 const razorpayRoutes = require('./routes/RazorpayRoutes.js');
 app.use('/', razorpayRoutes);
 
+// Card details routes for payment and subscription management
+const CardDetailsRouter = require('./routes/Carddetailsroutes.js');
+app.use('/', CardDetailsRouter);
+
+// Note: Subscription cancellation routes are now part of RazorpayRoutes.js
+
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 app.get('/check-email', async (req, res) => {
   try {
@@ -862,4 +892,8 @@ const InterviewRoutes = require('./routes/interviewRoutes.js')
 app.use('/interview', InterviewRoutes);
 const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
 app.use('/candidateposition', candidatePositionRoutes);
+
+// Subscription update routes
+const subscriptionUpdateRoutes = require('./routes/subscriptionUpdateRoutes.js');
+app.use('/subscription-update', subscriptionUpdateRoutes);
 

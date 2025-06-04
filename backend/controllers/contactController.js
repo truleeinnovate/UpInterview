@@ -302,9 +302,39 @@ const updateContactsDetails =   async (req, res) => {
     }
 };
 
+const getUniqueContactsByOwnerId = async (req, res) => {
+    try {
+        const { ownerId } = req.params;
+
+        if (!ownerId) {
+            return res.status(400).json({ message: 'Owner ID is required' });
+        }
+
+        const contacts = await Contacts.find({ ownerId })
+            .populate('availability')
+            .populate({
+                path: 'ownerId',
+                select: 'firstName lastName email roleId',
+                model: 'Users',
+                populate: {
+                    path: 'roleId',
+                    model: 'Role',
+                    select: 'roleName'
+                }
+            })
+            .lean();
+
+        res.status(200).json(contacts);
+    } catch (error) {
+        console.error('Error fetching contacts by owner ID:', error);
+        res.status(500).json({ message: 'Error fetching contacts by owner ID', error: error.message });
+    }
+};
+
 module.exports = {
     fetchContacts,
     createContact,
     updateContact,
-    updateContactsDetails
+    updateContactsDetails,
+    getUniqueContactsByOwnerId
 };

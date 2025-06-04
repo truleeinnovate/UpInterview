@@ -4,6 +4,7 @@ const ReceiptSchema = new mongoose.Schema({
     invoiceId: {type:mongoose.Schema.Types.ObjectId, ref: 'Invoice',required:true},
     tenantId: { type: String},
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    planName: { type: String },
     amount: { type: Number, required: true },
     price: { type: Number }, // Original price before discount
     discount: { type: Number, default: 0 }, // Amount of discount applied
