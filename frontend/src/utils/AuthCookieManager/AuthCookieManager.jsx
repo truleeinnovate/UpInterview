@@ -13,15 +13,27 @@ export const setAuthCookies = (token) => {
   });
 };
 
-// Function to clear all authentication cookies
-export const clearAuthCookies = () => {
-  const isLocalhost = window.location.hostname === 'localhost';
-  const domain = isLocalhost ? undefined : '.upinterview.io';
+// // Function to clear all authentication cookies
+// export const clearAuthCookies = () => {
+//   const isLocalhost = window.location.hostname === 'localhost';
+//   const domain = isLocalhost ? undefined : '.upinterview.io';
 
-  Cookies.remove('authToken', { domain });
-  Cookies.remove('userId', { domain });
-  Cookies.remove('organizationId', { domain });
-  Cookies.remove('token', { domain });
+//   Cookies.remove('authToken', { domain });
+//   Cookies.remove('userId', { domain });
+//   Cookies.remove('organizationId', { domain });
+//   Cookies.remove('token', { domain });
+// };
+
+export const clearAllCookies = () => {
+  const cookies = document.cookie.split("; ");
+  for (const cookie of cookies) {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    // Remove for current path
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    // Remove for root domain (if any)
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=localhost`;
+  }
 };
 
 // Function to get the JWT from cookies

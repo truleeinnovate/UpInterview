@@ -489,6 +489,7 @@ function RoundFormTemplates() {
 
         console.log("Navigation to template detail page...");
         navigate(`/interview-templates/${id}`);
+
     } catch (error) {
         console.error('Error saving round:', error);
         alert('Failed to save round. Please try again.');
@@ -1070,16 +1071,16 @@ function RoundFormTemplates() {
                 readOnly={formData.roundTitle === 'Assessment'}
               />
               <div className="flex justify-between items-center mt-1">
-                {errors.instructions ? (
-                  <p className="text-red-500 text-sm">{errors.instructions}</p>
-                ) : (
-                  formData.instructions.length < 50 && (
-                    <p className="text-gray-500 text-sm">
+                <span className="text-sm text-gray-500">
+                  {errors.instructions ? (
+                    <p className="text-red-500 text-xs pt-1">{errors.instructions}</p>
+                  ) : formData.instructions.length > 0 && formData.instructions.length < 50 ? (
+                    <p className="text-gray-500 text-xs">
                       Minimum {50 - formData.instructions.length} more characters needed
                     </p>
-                  )
-                )}
-                <span className="text-sm text-gray-500">{formData.instructions?.length || 0}/1000</span>
+                  ) : null}
+                </span>
+                <p className="text-sm text-gray-500">{formData.instructions.length}/1000</p>
               </div>
             </div>
 

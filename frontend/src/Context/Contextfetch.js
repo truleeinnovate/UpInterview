@@ -746,10 +746,10 @@ const CustomProvider = ({ children }) => {
 
   const [singlecontact, setsingleContact] = useState([]);
 
-// console.log("singlecontact", singlecontact);
+  // console.log("singlecontact", singlecontact);
 
 
-   
+
 
   useEffect(() => {
     const fetchContacts = async (usersId = null) => {
@@ -763,7 +763,7 @@ const CustomProvider = ({ children }) => {
         console.error('Error fetching user contacts:', err);
       }
     };
-  
+
     fetchContacts();
   }, [userId]);
 
@@ -816,7 +816,7 @@ const CustomProvider = ({ children }) => {
   });
 
   // console.log("usersRes", usersRes);
-  
+
 
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({
@@ -1012,6 +1012,25 @@ const CustomProvider = ({ children }) => {
     getTickets();
   }, [getTickets]);
 
+  // <-- interview rounds to show the data in the home for upcoming interviews -->
+  const [interviewRounds, setInterviewRounds] = useState([]);
+
+  const fetchInterviewRounds = useCallback(async () => {
+    try {
+      // Fetch all interview rounds with interviewId populated
+      const response = await axios.get(`${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`);
+      // You may need to adjust the API endpoint to support population if not already
+      setInterviewRounds(response.data.reverse());
+    } catch (error) {
+      console.error('Error fetching interview rounds:', error);
+      setInterviewRounds([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInterviewRounds();
+  }, [fetchInterviewRounds]);
+
   return (
     <CustomContext.Provider
       value={{
@@ -1132,7 +1151,10 @@ const CustomProvider = ({ children }) => {
         interviewers,
 
         tickets,
-        userRole
+        userRole,
+
+        interviewRounds,
+        fetchInterviewRounds,
       }}
     >
       {children}

@@ -1,98 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Clock, Video, CheckCircle, XCircle } from 'lucide-react';
+import { ChevronRight, Clock, CheckCircle, XCircle, Calendar, User, Briefcase, Hash } from 'lucide-react';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
-import { parse, isValid, isAfter, startOfDay } from 'date-fns';
+import { parse, isValid, isAfter, isToday, startOfDay } from 'date-fns';
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
-  const { interviewData } = useCustomContext();
-  const [roundsData, setRoundsData] = useState([]);
+  const { interviewRounds } = useCustomContext();
+  const [upcomingRounds, setUpcomingRounds] = useState([]);
+  console.log('upcomingRounds', upcomingRounds)
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Process interviewData to extract rounds
   useEffect(() => {
-    if (interviewData && interviewData.length > 0) {
-      console.log("Processing interview data for rounds");
-      const allRounds = [];
-
-      interviewData.forEach((interview, index) => {
-        console.log(`Processing interview ${index}:`, interview._id);
-
-        if (interview.rounds && Array.isArray(interview.rounds)) {
-          console.log(`Interview ${index} has ${interview.rounds.length} rounds`);
-
-          interview.rounds.forEach((round, roundIndex) => {
-            console.log(`Round ${roundIndex} in interview ${index}:`, round);
-
-            if (!round.dateTime || round.dateTime === "No date available") {
-              console.log(`Round ${roundIndex} in interview ${index} has no valid dateTime, skipping`);
-              return;
-            }
-
-            allRounds.push({
-              id: `${interview._id}_${roundIndex}`,
-              roundObject: round,
-              dateTime: round.dateTime,
-              interviewTitle: interview.Title || "Interview",
-              roundTitle: round.roundTitle || `Round ${roundIndex + 1}`,
-              interviewId: interview._id,
-              candidateName: interview.Candidate || "Unknown Candidate",
-              position:
-                interview.positionId && typeof interview.positionId === 'object'
-                  ? interview.positionId.title
-                  : interview.Position || "Unknown Position",
-              roundIndex,
-              interviewers: round.interviewers || [],
-              status: round.status || "Pending",
-              platform: round.meetLink?.[0]?.link ? new URL(round.meetLink[0].link).hostname : "Zoom",
-            });
-          });
-        } else {
-          console.log(`Interview ${index} has no rounds or rounds is not an array`);
-        }
-      });
-
-      // Sort rounds by dateTime and filter for today or future
+    if (interviewRounds && interviewRounds.length > 0) {
       const now = new Date();
       const today = startOfDay(now);
-      const filteredAndSortedRounds = allRounds
-        .filter((round) => {
-          const roundDate = parse(round.dateTime, 'dd-MM-yyyy h:mm a', new Date());
-          return isValid(roundDate) && isAfter(roundDate, today);
-        })
-        .sort((a, b) => {
-          const dateA = parse(a.dateTime, 'dd-MM-yyyy h:mm a', new Date());
-          const dateB = parse(b.dateTime, 'dd-MM-yyyy h:mm a', new Date());
-          return dateA - dateB;
-        })
-        .slice(0, 3); // Limit to 3 rounds
 
-      console.log("Final rounds data:", filteredAndSortedRounds);
-      setRoundsData(filteredAndSortedRounds);
-    }
-  }, [interviewData]);
-
-  // Date and time formatting
-  const displayDateTime = (dateTimeStr) => {
-    if (!dateTimeStr || dateTimeStr === "No date available") {
-      return "No date available";
-    }
-    try {
-      const parsedDate = parse(dateTimeStr, 'dd-MM-yyyy h:mm a', new Date());
-      if (!isValid(parsedDate)) {
-        return "Invalid date";
-      }
-      return parsedDate.toLocaleString('en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
+      const filtered = interviewRounds.filter(round => {
+        if (!round.dateTime) return false;
+        const startTime = round.dateTime.split(' - ')[0];
+        const parsedStart = parse(startTime, 'dd-MM-yyyy hh:mm a', new Date());
+        return isValid(parsedStart) && (isAfter(parsedStart, today) || isToday(parsedStart));
       });
-    } catch (error) {
-      console.error("Error formatting date:", error);
+
+      filtered.sort((a, b) => {
+        const aStart = parse(a.dateTime.split(' - ')[0], 'dd-MM-yyyy hh:mm a', new Date());
+        const bStart = parse(b.dateTime.split(' - ')[0], 'dd-MM-yyyy hh:mm a', new Date());
+        return aStart - bStart;
+      });
+
+      setUpcomingRounds(filtered.slice(0, 3));
+      setCurrentIndex(0);
+    }
+  }, [interviewRounds]);
+
+  useEffect(() => {
+    if (upcomingRounds.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % upcomingRounds.length);
+      }, 3500);
+      return () => clearInterval(interval);
+    }
+  }, [upcomingRounds.length]);
+
+  const displayDateTime = (dateTimeStr) => {
+    if (!dateTimeStr) return "No date available";
+    try {
+      const [startTime, endTime] = dateTimeStr.split(' - ');
+      const parsedStart = parse(startTime, 'dd-MM-yyyy hh:mm a', new Date());
+      if (!isValid(parsedStart)) return "Invalid date";
+
+      const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+      const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+
+      return (
+        <div className="flex flex-col">
+          <span>{parsedStart.toLocaleString('en-US', dateOptions)}</span>
+          <span className="text-sm text-gray-600">
+            {parsedStart.toLocaleString('en-US', timeOptions)}
+            {endTime && ` - ${endTime}`}
+          </span>
+        </div>
+      );
+    } catch {
       return "Invalid date";
+    }
+  };
+
+  const getStatusDetails = (status) => {
+    switch (status) {
+      case 'Confirmed':
+      case 'Scheduled':
+      case 'Completed':
+        return { bg: 'bg-green-100', text: 'text-green-600', icon: <CheckCircle size={16} /> };
+      case 'Pending':
+      case 'Reschedule':
+        return { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: <Clock size={16} /> };
+      default:
+        return { bg: 'bg-red-100', text: 'text-red-600', icon: <XCircle size={16} /> };
     }
   };
 
@@ -114,68 +99,83 @@ const InterviewerSchedule = () => {
         </button>
       </div>
 
-      <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto pr-2 -mr-2">
-        {roundsData.length === 0 ? (
-          <p className="text-center text-gray-500">No upcoming interview rounds found.</p>
+      <div className="relative h-[220px] overflow-hidden">
+        {upcomingRounds.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-gray-500">No upcoming interview rounds found.</p>
+          </div>
         ) : (
-          roundsData.map((round) => {
+          upcomingRounds.map((round, index) => {
             const statusToShow = round.status || 'Pending';
-            const platform = round.platform || 'Zoom';
+            const statusDetails = getStatusDetails(statusToShow);
+            const interviewCode = round.interviewId?.interviewCode || 'no interview';
+            const candidateName = round.interviewId?.candidateId?.FirstName
+              ? `${round.interviewId.candidateId.FirstName} ${round.interviewId.candidateId.LastName || ''}`
+              : 'Unknown Candidate';
+            const positionTitle = round.interviewId?.positionId?.title || 'Unknown Position';
+            const companyName = round.interviewId?.positionId?.companyname || '';
 
             return (
               <div
-                key={round.id}
-                className="p-4 border border-gray-100 rounded-xl hover:border-purple-100 hover:bg-purple-50/5 transition-all duration-300"
+                key={round._id}
+                className={`absolute top-0 left-0 w-full p-5 border border-gray-100 rounded-xl bg-white hover:border-purple-100 hover:shadow-md transition-all duration-500
+                  ${index === currentIndex
+                    ? 'opacity-100 translate-x-0'
+                    : index < currentIndex
+                      ? '-translate-x-full opacity-0'
+                      : 'translate-x-full opacity-0'
+                  }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-sm font-medium text-gray-900">{displayDateTime(round.dateTime)}</span>
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          statusToShow === 'Confirmed' || statusToShow === 'Scheduled' || statusToShow === 'Completed'
-                            ? 'bg-green-100 text-green-600'
-                            : statusToShow === 'Pending' || statusToShow === 'Reschedule'
-                            ? 'bg-yellow-100 text-yellow-600'
-                            : 'bg-red-100 text-red-600'
-                        }`}
-                      >
+                <div className='space-y-4'>
+                  <div className='flex items-center'>
+                    {/* date and time */}
+                    <div className="flex items-center gap-2 w-56">
+                      <Calendar size={18} className="text-gray-400" />
+                      <p className="font-medium text-gray-800">
+                        {displayDateTime(round.dateTime)}
+                      </p>
+                    </div>
+                    {/* interview code */}
+                    <div className="flex items-center gap-2">
+                      <Hash size={18} className="text-gray-400" />
+                      <span className="font-medium text-custom-blue">{interviewCode}</span>
+                    </div>
+                  </div>
+                  <div className='flex items-center'>
+                    {/* candidate name and email */}
+                    <div className="flex items-center gap-2 w-56">
+                      <User size={18} className="text-gray-400" />
+                      <div>
+                        <p className="font-medium text-gray-800">{candidateName}</p>
+                        <p className="text-sm text-gray-600">{round.interviewId?.candidateId?.Email || 'no email provided'}</p>
+                      </div>
+                    </div>
+                    {/* position title, company name */}
+                    <div className="flex items-center gap-2">
+                      <Briefcase size={18} className="text-gray-400" />
+                      <div>
+                        <p className="font-medium text-gray-800">{positionTitle}</p>
+                        {companyName && <p className="text-sm text-gray-600">{companyName}</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='flex items-center'>
+                    {/* roundTitle, interviewMode */}
+                    <div className="flex flex-wrap gap-2 w-56">
+                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                        {round.roundTitle}
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                        {round.interviewMode}
+                      </span>
+                    </div>
+                    {/* status */}
+                    <div className="flex items-center gap-2">
+                      {statusDetails.icon}
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusDetails.bg} ${statusDetails.text}`}>
                         {statusToShow}
                       </span>
                     </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Clock size={16} className="text-gray-400 flex-shrink-0" />
-                        <span className="text-sm font-medium text-gray-800">{round.candidateName}</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{round.position}</p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Video size={16} className="flex-shrink-0" />
-                        <span>{platform}</span>
-                      </div>
-                      <span className="inline-flex px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
-                        {round.roundTitle}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 self-end sm:self-center">
-                    {(statusToShow === 'Confirmed' || statusToShow === 'Scheduled' || statusToShow === 'Completed') ? (
-                      <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-300">
-                        <CheckCircle size={20} />
-                      </button>
-                    ) : (
-                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-300">
-                        <XCircle size={20} />
-                      </button>
-                    )}
-                    <button className="px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors duration-300 whitespace-nowrap">
-                      Join Call
-                    </button>
                   </div>
                 </div>
               </div>
@@ -183,6 +183,21 @@ const InterviewerSchedule = () => {
           })
         )}
       </div>
+
+      {/* Navigation dots */}
+      {upcomingRounds.length > 1 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          {upcomingRounds.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? 'bg-custom-blue w-4' : 'bg-gray-300'
+                }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

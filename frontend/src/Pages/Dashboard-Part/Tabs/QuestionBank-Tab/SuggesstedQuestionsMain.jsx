@@ -105,7 +105,7 @@ const SuggestedQuestionsComponent = ({
             const updatedStatus = { ...prev };
             (interviewQuestionsLists ? interviewQuestionsLists : interviewQuestionsList).forEach((question) => {
                 // updatedStatus[question.questionId ? question.questionId : question.id] = question.mandatory === "true";
-            updatedStatus[question.questionId ? question.questionId : question.id] = question.snapshot?.mandatory === "true" || false;
+                updatedStatus[question.questionId ? question.questionId : question.id] = question.snapshot?.mandatory === "true" || false;
             });
             return updatedStatus;
         });
@@ -226,7 +226,7 @@ const SuggestedQuestionsComponent = ({
                     snapshot: item,
                     order: "",
                     customizations: "",
-                   mandatory: mandatoryStatus[item._id] ? "true" : "false"
+                    mandatory: mandatoryStatus[item._id] ? "true" : "false"
                 };
 
                 console.log("questionToAdd", questionToAdd);
@@ -649,19 +649,19 @@ const SuggestedQuestionsComponent = ({
             <div className={`flex w-full sm:flex-col flex-row  items-center justify-between gap-4`}>
                 <div
                     className={` ${type === "assessment" || type === "interviewerSection"
-                         ? "w-[35%] sm:w-full"
-            : "w-full sm:w-full"
-            } `}
+                        ? "w-[35%] sm:w-full"
+                        : "w-full sm:w-full"
+                        } `}
                 >
                     <div
                         className={` ${type === "assessment" || type === "interviewerSection"
-                         ? "w-[200px]  sm:w-full"
-                : "w-[300px] md:w-[180px] sm:w-full"
-                } relative flex items-center rounded-md border`}
+                            ? "w-[200px]  sm:w-full"
+                            : "w-[300px] md:w-[180px] sm:w-full"
+                            } relative flex items-center rounded-md border`}
                     // className="relative flex items-center rounded-md border w-[300px]"
                     >
                         <span className="text-custom-blue p-2">
-                            <Search   className="w-5 h-5"/>
+                            <Search className="w-5 h-5" />
                         </span>
                         <input
                             onChange={(e) => setSkillInput(e.target.value)}
@@ -674,19 +674,19 @@ const SuggestedQuestionsComponent = ({
                 </div>
                 <div
                     className={`${type === "assessment" || type === "interviewerSection"
-                    ? "w-[65%] sm:w-full"
-            : "w-auto sm:w-full "
-            } flex flex-row items-center sm:flex-col justify-end gap-4 flex-1`}
+                        ? "w-[65%] sm:w-full"
+                        : "w-auto sm:w-full "
+                        } flex flex-row items-center sm:flex-col justify-end gap-4 flex-1`}
                 // className="flex items-center w-1/2 sm:w-full"
                 >
                     <div
                         className={`${type === "assessment" || type === "interviewerSection"
-                               ? "w-[240px] sm:w-full"
-                : "w-[300px] lg:w-[320px] md:w-[180px] sm:w-full"
-                }  relative flex items-center rounded-md border`}
+                            ? "w-[240px] sm:w-full"
+                            : "w-[300px] lg:w-[320px] md:w-[180px] sm:w-full"
+                            }  relative flex items-center rounded-md border`}
                     >
                         <span className={`p-2 text-[#227a8a]`}>
-                            <Search  className="w-5 h-5"/>
+                            <Search className="w-5 h-5" />
                         </span>
                         <input
                             type="search"
@@ -695,61 +695,62 @@ const SuggestedQuestionsComponent = ({
                         />
                     </div>
                     <div className=" flex sm:items-center sm:gap-3">
-                    <div className="flex items-center  ">
-                        <p className="text-custom-blue whitespace-nowrap">
-                            {suggestedQuestionsFilteredData.length} Questions{" "}
-                        </p>
-                    </div>
-                    <div className="flex p-2 items-center">
-                        <p>
-                            {currentPage}/{totalPages}
-                        </p>
-                    </div>
-                    <div className="flex items-center">
-                        <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                            <span
-                                className={`text-xl sm:text-md md:text-md rounded-md p-2 mr-2 ${currentPage === 0 ? " cursor-not-allowed" : ""
-                                    }`}
-                                onClick={onClickLeftPaginationIcon}
-                            >
-                                <IoIosArrowBack className="text-custom-blue" />
-                            </span>
-                        </Tooltip>
-                        <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                            <span
-                                onClick={onClickRightPagination}
-                                disabled={currentPage === totalPages}
-                                className={`rounded-md cursor-pointer ${currentPage === totalPages ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <IoIosArrowForward className="text-custom-blue" />
-                            </span>
-                        </Tooltip>
-                    </div>
-                    <div >
-                        <Popup
-                            responsive={true}
-                            trigger={
-                                <button
-                                    className="cursor-pointer text-xl sm:text-md md:text-md border rounded-md p-2 mr-2"
+                        <div className="flex items-center  ">
+                            <p className="text-custom-blue whitespace-nowrap">
+                                {suggestedQuestionsFilteredData.length} Questions{" "}
+                            </p>
+                        </div>
+                        <div className="flex p-2 items-center">
+                            <p>
+                                {currentPage}/{totalPages}
+                            </p>
+                        </div>
+                        <div className="flex items-center">
+                            <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+                                <span
+                                    className={`text-xl sm:text-md md:text-md rounded-md p-2 mr-2 ${currentPage === 0 ? " cursor-not-allowed" : ""
+                                        }`}
+                                    onClick={onClickLeftPaginationIcon}
                                 >
-                                    {isPopupOpen ? (
-                                        <LuFilterX className="text-custom-blue" />
-                                    ) : (
-                                        <FiFilter className="text-custom-blue" />
-                                    )}
-                                </button>
-                            }
-                            onOpen={() => setIsPopupOpen(true)} // Set popup open state
-                            onClose={() => setIsPopupOpen(false)} // Set popup close state
-                        >
-                            {(closeFilter) => (
-                                <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-[2px] border-[#80808086]">
-                                    {FilterSection(closeFilter)}
-                                </div>
-                            )}
-                        </Popup>
-                    </div>
+                                    <IoIosArrowBack className="text-custom-blue" />
+                                </span>
+                            </Tooltip>
+                            <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+                                <span
+                                    onClick={onClickRightPagination}
+                                    disabled={currentPage === totalPages}
+                                    className={`rounded-md cursor-pointer ${currentPage === totalPages ? "cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <IoIosArrowForward className="text-custom-blue" />
+                                </span>
+                            </Tooltip>
+                        </div>
+                        <div >
+                            <Popup
+                                responsive={true}
+                                trigger={
+                                    <button
+                                         type="button"
+                                        className="cursor-pointer text-xl sm:text-md md:text-md border rounded-md p-2 mr-2"
+                                    >
+                                        {isPopupOpen ? (
+                                            <LuFilterX className="text-custom-blue" />
+                                        ) : (
+                                            <FiFilter className="text-custom-blue" />
+                                        )}
+                                    </button>
+                                }
+                                onOpen={() => setIsPopupOpen(true)} // Set popup open state
+                                onClose={() => setIsPopupOpen(false)} // Set popup close state
+                            >
+                                {(closeFilter) => (
+                                    <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-[2px] border-[#80808086]">
+                                        {FilterSection(closeFilter)}
+                                    </div>
+                                )}
+                            </Popup>
+                        </div>
                     </div>
                 </div>
             </div >
@@ -838,172 +839,177 @@ const SuggestedQuestionsComponent = ({
                 {ReturnSearchFilterSection()}
 
 
-<div className="overflow-y-auto  ">
-                {/* Selected skills section (UI improvement) */}
-                {selectedSkills && (
-                    <div className="my-4">
-                        <ul className="flex gap-2 flex-wrap ">
-                            {selectedSkills.map((skill, index) => (
-                                <li
-                                    key={index}
-                                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                                >
-                                    <span>{skill}</span>
-                                    <button
-                                        className="cursor-pointer hover:text-red-500 transition-colors"
-                                        onClick={() => onClickCrossIcon(skill)}
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                {/* Applied filters section (UI improvement) */}
-                {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                    <div className="flex items-center   flex-wrap">
-                        <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
-                        <ul className="flex gap-2 flex-wrap">
-                            {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
-                                (filterItem, index) => (
+                <div className="overflow-y-auto  ">
+                    {/* Selected skills section (UI improvement) */}
+                    {selectedSkills && (
+                        <div className="my-4">
+                            <ul className="flex gap-2 flex-wrap ">
+                                {selectedSkills.map((skill, index) => (
                                     <li
                                         key={index}
-                                        className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
+                                        className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
                                     >
-                                        <span>{filterItem}</span>
+                                        <span>{skill}</span>
                                         <button
-                                            className="hover:text-red-500 transition-colors"
-                                            onClick={() =>
-                                                onClickRemoveSelectedFilterItem(index, filterItem)
-                                            }
+                                            type="button"
+                                            className="cursor-pointer hover:text-red-500 transition-colors"
+                                            onClick={() => onClickCrossIcon(skill)}
                                         >
                                             <X size={14} />
                                         </button>
                                     </li>
-                                )
-                            )}
-                        </ul>
-                    </div>
-                )}
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
-                {/* Questions list (UI improvement) */}
-                <ul
-                    className={`${type === "interviewerSection" ||
-                        type === "assessment"
-                        ? "h-[calc(100vh-280px)]"
-                        : fromScheduleLater
-                            ? "h-[calc(100vh-300px)]"
-                            : "h-[calc(100vh-250px)]"
-                        } flex flex-col gap-4 my-2 pr-2`}
-                >
-                    {paginatedData.length > 0 ? (
-                        paginatedData.map((item, index) => (
-                            <li key={index} className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                                    <h2 className="font-medium w-[85%] text-gray-800">
-                                        {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
-                                    </h2>
-
-                                    <div
-                                        className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(type === "interviewerSection" || type === "assessment") ? "w-[15%]" : "w-[10%]"}`}
-                                    >
-                                        <p
-                                            className={`w-20 text-center text-sm ${getDifficultyStyles(
-                                                item.difficultyLevel
-                                            )} rounded-full px-2 py-1`}
-                                            title="Difficulty Level"
+                    {/* Applied filters section (UI improvement) */}
+                    {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
+                        <div className="flex items-center   flex-wrap">
+                            <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
+                            <ul className="flex gap-2 flex-wrap">
+                                {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
+                                    (filterItem, index) => (
+                                        <li
+                                            key={index}
+                                            className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
                                         >
-                                            {item.difficultyLevel}
-                                        </p>
-                                    </div>
+                                            <span>{filterItem}</span>
+                                            <button
+                                                className="hover:text-red-500 transition-colors"
+                                                onClick={() =>
+                                                    onClickRemoveSelectedFilterItem(index, filterItem)
+                                                }
+                                                type="button"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </li>
+                                    )
+                                )}
+                            </ul>
+                        </div>
+                    )}
 
-                                    {/* Mandatory toggle for schedule later (UI improvement) */}
-                                    {fromScheduleLater
-                                        //  && item.isAdded && !removedQuestionIds.includes(item._id)
-                                        && (
-                                            <div className="flex justify-center text-center h-12 border-r border-gray-200">
-                                                <div className="flex items-center w-14 justify-center">
-                                                    <button
-                                                        onClick={() => {
-                                                            if (
-                                                                interviewQuestionsLists?.some(q => q.questionId === item._id)
-                                                                // item.isAdded && !removedQuestionIds.includes(item._id)
-                                                            ) {
-                                                                handleToggle(item._id, item);
-                                                            }
-                                                            // handleToggle(item._id, item);
-                                                        }}
-                                                        className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                                            ? "bg-blue-100 border-custom-blue justify-end"
-                                                            : "bg-gray-200 border-gray-300 justify-start"
-                                                            }`}
-                                                    >
-                                                        <span
-                                                            className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                                                ? "bg-custom-blue"
-                                                                : "bg-gray-400"
+                    {/* Questions list (UI improvement) */}
+                    <ul
+                        className={`${type === "interviewerSection" ||
+                            type === "assessment"
+                            ? "h-[calc(100vh-280px)]"
+                            : fromScheduleLater
+                                ? "h-[calc(100vh-300px)]"
+                                : "h-[calc(100vh-250px)]"
+                            } flex flex-col gap-4 my-2 pr-2`}
+                    >
+                        {paginatedData.length > 0 ? (
+                            paginatedData.map((item, index) => (
+                                <li key={index} className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                                        <h2 className="font-medium w-[85%] text-gray-800">
+                                            {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
+                                        </h2>
+
+                                        <div
+                                            className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(type === "interviewerSection" || type === "assessment") ? "w-[15%]" : "w-[10%]"}`}
+                                        >
+                                            <p
+                                                className={`w-20 text-center text-sm ${getDifficultyStyles(
+                                                    item.difficultyLevel
+                                                )} rounded-full px-2 py-1`}
+                                                title="Difficulty Level"
+                                            >
+                                                {item.difficultyLevel}
+                                            </p>
+                                        </div>
+
+                                        {/* Mandatory toggle for schedule later (UI improvement) */}
+                                        {fromScheduleLater
+                                            //  && item.isAdded && !removedQuestionIds.includes(item._id)
+                                            && (
+                                                <div className="flex justify-center text-center h-12 border-r border-gray-200">
+                                                    <div className="flex items-center w-14 justify-center">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (
+                                                                    interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                                                    // item.isAdded && !removedQuestionIds.includes(item._id)
+                                                                ) {
+                                                                    handleToggle(item._id, item);
+                                                                }
+                                                                // handleToggle(item._id, item);
+                                                            }}
+                                                            className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                                                ? "bg-blue-100 border-custom-blue justify-end"
+                                                                : "bg-gray-200 border-gray-300 justify-start"
                                                                 }`}
-                                                        />
-                                                    </button>
+                                                            type="button"
+                                                        >
+                                                            <span
+                                                                className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                                                    ? "bg-custom-blue"
+                                                                    : "bg-gray-400"
+                                                                    }`}
+                                                            />
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                            )}
+
+                                        {/* Add/Remove buttons for different sections (UI improvement) */}
+                                        {(type === "interviewerSection") && (
+                                            <div
+                                                className="p-1 flex justify-center w-[8%]"
+                                            >
+                                                {interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                                    // item.isAdded && !removedQuestionIds.includes(item._id) 
+                                                    ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onClickRemoveQuestion(item._id)}
+                                                            className="rounded-md md:ml-4 bg-gray-500  px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            className="bg-custom-blue  py-1 px-2 text-white rounded-md transition-colors text-sm"
+                                                            onClick={(e) => onClickAddButton(item)}
+                                                        >
+                                                            Add
+                                                        </button>
+                                                    )}
                                             </div>
                                         )}
 
-                                    {/* Add/Remove buttons for different sections (UI improvement) */}
-                                    {(type === "interviewerSection") && (
-                                        <div
-                                            className="p-1 flex justify-center w-[8%]"
-                                        >
-                                            {interviewQuestionsLists?.some(q => q.questionId === item._id)
-                                            // item.isAdded && !removedQuestionIds.includes(item._id) 
-                                            ? (
-                                                <button
-                                                
-                                                    onClick={() => onClickRemoveQuestion(item._id)}
-                                                    className="rounded-md md:ml-4 bg-gray-500  px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
-                                                >
-                                                    Remove
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    className="bg-custom-blue  py-1 px-2 text-white rounded-md transition-colors text-sm"
-                                                    onClick={(e) => onClickAddButton(item)}
-                                                >
-                                                    Add
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
+                                        {type === "assessment" && (
+                                            <div className="w-[8%] flex justify-center">
+                                                {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
+                                                    <span className="text-green-600 text-sm font-medium py-1 px-1">
+                                                        ✓ Added
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                            ? 'opacity-50 cursor-not-allowed'
+                                                            : ''
+                                                            }`}
+                                                        onClick={() => onClickAddButton(item)}
+                                                        disabled={
+                                                            addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                        }
+                                                    >
+                                                        Add
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
 
-                                    {type === "assessment" && (
-                                        <div className="w-[8%] flex justify-center">
-                                            {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
-                                                <span className="text-green-600 text-sm font-medium py-1 px-1">
-                                                    ✓ Added
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                                        ? 'opacity-50 cursor-not-allowed'
-                                                        : ''
-                                                        }`}
-                                                    onClick={() => onClickAddButton(item)}
-                                                    disabled={
-                                                        addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                                    }
-                                                >
-                                                    Add
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Add button for schedule later (UI improvement) */}
+                                        {/* Add button for schedule later (UI improvement) */}
 
 
-                                    {/* {fromScheduleLater && (
+                                        {/* {fromScheduleLater && (
                                     <div className="flex justify-center mx-3">
                                         <button
                                             type="button"
@@ -1015,56 +1021,57 @@ const SuggestedQuestionsComponent = ({
                                     </div>
                                 )} */}
 
-                                    {/* Default dropdown for other sections (UI improvement) */}
-                                    {!type && !fromScheduleLater && (
-                                        <div className="w-[5%] flex justify-center relative">
-                                            <button
-                                                className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
-                                                onClick={() => toggleDropdown(item._id)}
-                                            >
-                                                <Plus />
-                                            </button>
-                                            {dropdownOpen === item._id && (
-                                                <MyQuestionList
-                                                    question={item}
-                                                    closeDropdown={closeDropdown}
+                                        {/* Default dropdown for other sections (UI improvement) */}
+                                        {!type && !fromScheduleLater && (
+                                            <div className="w-[5%] flex justify-center relative">
+                                                <button
+                                                    type="button"
+                                                    className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
+                                                    onClick={() => toggleDropdown(item._id)}
+                                                >
+                                                    <Plus />
+                                                </button>
+                                                {dropdownOpen === item._id && (
+                                                    <MyQuestionList
+                                                        question={item}
+                                                        closeDropdown={closeDropdown}
 
 
-                                                />
-                                            )}
-                                        </div>
-                                    )}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="px-4 py-2">
+                                        <p className="text-gray-600 mb-2">
+                                            <span className="font-medium">Answer: </span>
+                                            {item.correctAnswer}
+                                        </p>
+                                        <p className="font-medium">
+                                            Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
+                                        </p>
+                                    </div>
+                                </li>
+                            ))
+                        ) : (
+                            <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
+                                <div className="text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </div>
-
-                                <div className="px-4 py-2">
-                                    <p className="text-gray-600 mb-2">
-                                        <span className="font-medium">Answer: </span>
-                                        {item.correctAnswer}
-                                    </p>
-                                    <p className="font-medium">
-                                        Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
-                                    </p>
-                                </div>
-                            </li>
-                        ))
-                    ) : (
-                        <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
-                            <div className="text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <h2 className="text-gray-700 font-semibold text-lg">
+                                    No questions found
+                                </h2>
+                                <p className="text-gray-500">
+                                    Try again with different filter options
+                                </p>
                             </div>
-                            <h2 className="text-gray-700 font-semibold text-lg">
-                                No questions found
-                            </h2>
-                            <p className="text-gray-500">
-                                Try again with different filter options
-                            </p>
-                        </div>
-                    )}
-                </ul>
+                        )}
+                    </ul>
                 </div>
-                
+
             </div>
         );
     };
