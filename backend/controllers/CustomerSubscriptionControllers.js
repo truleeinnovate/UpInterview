@@ -56,15 +56,24 @@ const createSubscriptionControllers = async (req, res) => {
     const existingSubscription = await CustomerSubscription.findOne({ ownerId: userDetails.ownerId });
 
     if (existingSubscription) {
-
+      // Update subscription details
       existingSubscription.subscriptionPlanId = subscriptionPlanId;
       existingSubscription.selectedBillingCycle = userDetails.membershipType;
       existingSubscription.price = pricing;
       existingSubscription.discount = discount;
       existingSubscription.startDate = new Date();
-      existingSubscription.totalAmount = calculatedTotalAmount,
-
-        existingSubscription.status = 'active';
+      existingSubscription.totalAmount = calculatedTotalAmount;
+      existingSubscription.endDate = null;
+      existingSubscription.features = [];
+      //existingSubscription.razorpayCustomerId = null;
+      //existingSubscription.razorpaySubscriptionId = null;
+      existingSubscription.receiptId = null;
+      existingSubscription.nextBillingDate = null;
+      
+      
+      // Use the provided status instead of hardcoding to 'active'
+      // This allows flexibility in subscription status management
+      existingSubscription.status = status;
       await existingSubscription.save();
 
       // const plan = await SubscriptionPlan.findById(subscriptionPlanId);
@@ -88,15 +97,18 @@ const createSubscriptionControllers = async (req, res) => {
       });
     }
 
-    if (status === "pending") {
-
+    // Accept both 'pending' and 'created' statuses for new subscriptions
+    if (status === "pending" || status === "created") {
+      console.log(`Processing subscription with status: ${status}`);
+      
       const invoice = await createInvoice(
         userDetails.tenantId,
         userDetails.ownerId,
+        planDetails.planName,
         planDetails.subscriptionPlanId,
         numericTotalAmount,
         userDetails,
-        status,
+        status, // Pass the original status to maintain consistency
         discount
       );
 
@@ -109,16 +121,22 @@ const createSubscriptionControllers = async (req, res) => {
         invoice._id
       );
 
-      // console.log( { subscription,
-      //   invoiceId: invoice._id});
+
+      console.log(`Created subscription with status: ${status}`);
+      console.log({ invoiceId: invoice._id });
+
 
       return res.status(200).json({
-        message: 'Subscription successfully created and payment processed.',
+        message: `Subscription successfully created with status: ${status}`,
         subscription,
         invoiceId: invoice._id,
       });
     }
-    return res.status(400).json({ message: 'Invalid payment status.' });
+    
+    // Provide more informative error for invalid status
+    return res.status(400).json({ 
+      message: 'Invalid payment status. Allowed values are "pending" or "created".' 
+    });
   } catch (error) {
     console.error('Error creating/updating subscription:', error);
     res.status(500).json({ message: 'An error occurred.', error });
@@ -168,6 +186,7 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
         // console.log("status",status);
         // Update the invoice
         invoice.status = status;
+        invoice.planName = planDetails.planName;
         invoice.amountPaid = totalPaid
         invoice.endDate = endDate;
         invoice.startDate = new Date();

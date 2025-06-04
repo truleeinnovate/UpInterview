@@ -6,6 +6,7 @@ const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const  createInvoice = async (
   tenantId,
   ownerId,
+  planName,
   planId = null,
   totalAmount,
   userDetails = null,
@@ -44,6 +45,7 @@ const  createInvoice = async (
     // invoiceId: invoiceId,
     tenantId: tenantId,
     ownerId: ownerId,
+    planName: planName,
     subscriptionId: planId,
     type: type,
     totalAmount: finalAmount,

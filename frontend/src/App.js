@@ -14,6 +14,8 @@ import PageSetter from './Components/PageSetter';
 import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx';
 import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
 import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
+import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx';
+
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
 
 
@@ -27,6 +29,7 @@ const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogi
 const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan'));
 const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback'));
 const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails'));
+const SubscriptionCardDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx'));
 const ForgetPassword = lazy(() => import('./Pages/Login-Part/ForgetPassword'));
 const ResetPassword = lazy(() => import('./Pages/Login-Part/ResetPassword'));
 
@@ -95,6 +98,7 @@ const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportD
 const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
 const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
 const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
+
 
 
 
@@ -194,6 +198,8 @@ const App = () => {
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<CardDetails />} />
+            <Route path="/subscription-payment-details" element={<SubscriptionCardDetails/>} />
+            <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
@@ -263,6 +269,9 @@ const App = () => {
               </Route>
 
               <Route path="/assessmenttest" element={<AssessmentTest />} />
+
+              {/*Wallet */}
+              <Route path="/wallet-transcations" element={<Wallet />}></Route>
 
               {/* Account Settings Routes */}
               <Route path="/account-settings" element={<AccountSettingsSidebar />}>

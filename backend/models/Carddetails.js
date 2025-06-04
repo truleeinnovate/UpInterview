@@ -9,7 +9,7 @@ const cardSchema = new mongoose.Schema({
   
   // Payment status
   status: { type: String, enum: ['active', 'inactive', 'expired'], default: 'active' },
-  currency: { type: String, default: 'USD' },
+  currency: { type: String, default: 'INR' },
   
   // CRITICAL FIELDS FOR RECURRING PAYMENTS
   razorpayTokenId: { type: String, required: true },  // Token ID for auto-debit

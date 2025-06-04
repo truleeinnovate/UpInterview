@@ -97,6 +97,8 @@ const SubscriptionPlan = () => {
             monthlyPrice: monthlyPricing?.price || 0,
             annualPrice: annualPricing?.price || 0,
             isDefault: plan.name === "Pro",
+            // Add Razorpay plan IDs if available
+            razorpayPlanIds: plan.razorpayPlanIds || {},
             features: plan.features.map(
               (feature) => `${feature.name} (${feature.description})`
             ),
@@ -137,79 +139,6 @@ const SubscriptionPlan = () => {
     fetchPlans();
   }, [user.userType, location.pathname, authToken]);
 
-  // Submit selected plan
-  // const submitPlans = async (plan) => {
-  //   if (!plan) {
-  //     toast.success("No plan is selected");
-  //     return;
-  //   }
-  //   const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-
-  //   const payload = {
-  //     planDetails: {
-  //       subscriptionPlanId: plan.planId,
-  //       monthlyPrice: plan.monthlyPrice,
-  //       annualPrice: plan.annualPrice,
-  //       monthDiscount: plan.monthlyDiscount,
-  //       annualDiscount: plan.annualDiscount,
-  //     },
-  //     userDetails: {
-  //       tenantId: user.tenantId,
-  //       ownerId: user.ownerId,
-  //       userType: user.userType,
-  //       membershipType: isAnnual ? "annual" : "monthly",
-  //     },
-  //     totalAmount,
-  //     status: "pending",
-  //   };
-
-  //   try {
-  //     const subscriptionResponse = await axios.post(
-  //       `${config.REACT_APP_API_URL}/create-customer-subscription`,
-  //       payload,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${authToken}`, // Include token in request headers
-  //         },
-  //       }
-  //     );
-
-  //     console.log(
-  //       "Payment and Subscription submitted successfully",
-  //       subscriptionResponse.data
-  //     );
-  //     if (organization === "false" && plan.name === "Base") {
-  //       await axios.post(
-  //         `${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`,
-  //         {
-  //           ownerId: userId,
-  //           tenantId: orgId,
-  //         },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${authToken}`, // Include token in request headers
-  //           },
-  //         }
-  //       );
-
-  //       navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
-  //     } else {
-  //       navigate("/payment-details", {
-  //         state: {
-  //           plan: {
-  //             ...plan,
-  //             billingCycle: isAnnual ? "annual" : "monthly",
-  //             user,
-  //             invoiceId: subscriptionResponse?.data?.invoiceId,
-  //           },
-  //           isUpgrading,
-  //         },
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting subscription:", error);
-  //   }
-  // };
 
   const submitPlans = async (plan) => {
 
@@ -281,7 +210,7 @@ const SubscriptionPlan = () => {
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
 
   return (
-    <div className="h-full w-full flex justify-center items-center">
+    <div className="h-full w-full flex justify-center items-center pt-3">
       <div className="flex flex-col sm:px-[7%] px-[15%] md:px-[2%] rounded-lg">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -378,7 +307,7 @@ const SubscriptionPlan = () => {
               >
                 {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
               ? "Subscribed"
-              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "pending"
+              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
               ? "Continue to Payment"
               : "Choose"}
               </button>

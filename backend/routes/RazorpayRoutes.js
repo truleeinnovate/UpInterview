@@ -1,17 +1,17 @@
 const express = require('express');
 const razorpayRouter = express.Router();
 const { 
-    createOrder, 
     verifyPayment, 
     verifySubscription, 
     handleWebhook,
-    createCustomer,
-    getOrCreateSubscriptionPlan,
     createRecurringSubscription
 } = require('../controllers/RazorpayController.js');
 
-// Create a Razorpay order or subscription
-razorpayRouter.post('/payment/create-order', createOrder);
+// Import the subscription cancellation controller
+const { cancelSubscription } = require('../controllers/SubscriptionCancelController.js');
+
+// Create a Razorpay subscription (recurring payment)
+razorpayRouter.post('/payment/create-subscription', createRecurringSubscription);
 
 // Verify Razorpay payment
 razorpayRouter.post('/payment/verify', verifyPayment);
@@ -20,7 +20,10 @@ razorpayRouter.post('/payment/verify', verifyPayment);
 razorpayRouter.post('/payment/verify-subscription', verifySubscription);
 
 // Webhook endpoint for Razorpay events
-razorpayRouter.post('/payment/webhook', handleWebhook);
+razorpayRouter.post('/payment-webhook', handleWebhook);
+
+// Cancel subscription endpoint
+razorpayRouter.post('/cancel-subscription', cancelSubscription);
 
 // Test mode subscription success endpoint has been removed
 
