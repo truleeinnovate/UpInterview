@@ -50,7 +50,7 @@ function Header() {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  return userType === "SuperAdmin" ? (
+  return user?.role === "super_admin" ? (
     <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 h-16 bg-white shadow">
       <div className="flex items-center flex-1">
         <div className="flex items-center flex-shrink-0 gap-2">

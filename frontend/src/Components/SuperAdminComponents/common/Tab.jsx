@@ -4,7 +4,7 @@ function Tab({ active, onClick, icon, label, count }) {
       onClick={onClick}
       className={`px-4 py-4 flex items-center text-sm font-medium border-b-2 ${
         active
-          ? 'border-primary-500 text-primary-600'
+          ? 'border-primary text-primary-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
       } focus:outline-none transition-colors duration-150`}
     >
@@ -12,7 +12,7 @@ function Tab({ active, onClick, icon, label, count }) {
       {label}
       {count !== undefined && (
         <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-          active ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 text-gray-600'
+          active ? 'bg-primary-100 text-primary' : 'bg-gray-100 text-gray-600'
         }`}>
           {count}
         </span>

@@ -341,11 +341,6 @@ function TenantsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const filteredTenants =
-    selectedType === "all"
-      ? tenants
-      : tenants.filter((tenant) => tenant.type === selectedType);
-
   const tableColumns = [
     {
       key: "name",

@@ -594,7 +594,7 @@ function InternalLogsPage() {
     <div className="space-y-6 min-h-screen">
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4 mt-4">
-          <h1 className="text-2xl font-bold text-gray-900">Internal Logs</h1>
+          <h1 className="text-2xl font-bold text-custom-blue">Internal Logs</h1>
           <div className="flex space-x-2">
             <button className="flex items-center btn-secondary border border-gray-200 rounded-md py-1 px-2">
               <AiOutlineDownload className="mr-2" />

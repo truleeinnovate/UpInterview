@@ -700,9 +700,6 @@ function InvoicesTable() {
   return (
     <div className="space-y-6 min-h-screen">
       <div className="fixe md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
-        <div className="flex justify-between items-center px-4 mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Invoices</h2>
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Invoices</div>
@@ -736,7 +733,6 @@ function InvoicesTable() {
             </div>
           </div>
         </div>
-
         <div className="flex justify-between items-center">
           {/* Header and Tool bar */}
           <div className="md:mt-2 sm:mt-4 w-full">
@@ -767,7 +763,6 @@ function InvoicesTable() {
             </main>
           </div>
         </div>
-
         {/* New table content */}
         <main>
           <div className="sm:px-0">

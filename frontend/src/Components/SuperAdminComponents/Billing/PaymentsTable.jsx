@@ -518,7 +518,7 @@ function PaymentsTable() {
     <div className="space-y-6">
       <div className="absolute md:mt-2 sm:mt-4 top-2 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Payments</h2>
+          <h2 className="text-lg font-medium text-custom-blue">Payments</h2>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
