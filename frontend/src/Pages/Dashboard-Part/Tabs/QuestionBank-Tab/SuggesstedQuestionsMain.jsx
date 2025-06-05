@@ -1,19 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
-// import { toast } from 'react-toastify';
 import toast from "react-hot-toast";
 import Popup from "reactjs-popup";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { Tooltip } from "@mui/material";
 import { XCircle, ChevronUp, ChevronDown, Search, X, Plus } from 'lucide-react';
-
 import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBack.svg";
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import { config } from "../../../../config.js";
-
 
 const SuggestedQuestionsComponent = ({
     sectionName,
@@ -33,14 +28,8 @@ const SuggestedQuestionsComponent = ({
     removedQuestionIds = []
     // -->
 }) => {
-    console.log("type:", type);
-
-    console.log("removedQuestionIds", removedQuestionIds);
-
-
     const [tab, setTab] = useState(1);
     const {
-        getInterviewerQuestions,
         suggestedQuestions,
         setSuggestedQuestions,
         suggestedQuestionsFilteredData,
@@ -67,7 +56,6 @@ const SuggestedQuestionsComponent = ({
             isOpen: false,
             id: 2,
             filterType: "Difficulty Level",
-            // options:["Easy","Medium","Hard"]
             options: [
                 { level: "Easy", isChecked: false },
                 { level: "Medium", isChecked: false },
@@ -94,15 +82,11 @@ const SuggestedQuestionsComponent = ({
         suggestedQuestionsFilteredData.length / itemsPerPage
     );
 
-    // Added by Shashank on [02/01/2025]: Feature to handle add question to interviewer section when clicked on add button
-
-
     useEffect(() => {
 
         setMandatoryStatus((prev) => {
             const updatedStatus = { ...prev };
             (interviewQuestionsLists ? interviewQuestionsLists : interviewQuestionsList).forEach((question) => {
-                // updatedStatus[question.questionId ? question.questionId : question.id] = question.mandatory === "true";
                 updatedStatus[question.questionId ? question.questionId : question.id] = question.snapshot?.mandatory === "true" || false;
             });
             return updatedStatus;
@@ -122,10 +106,7 @@ const SuggestedQuestionsComponent = ({
         }
     }, [removedQuestionIds]);
 
-
     const [mandatoryStatus, setMandatoryStatus] = useState({});
-
-    // console.log("interviewQuestionsList", interviewQuestionsList);
 
     const handleToggle = (questionId, item) => {
         setMandatoryStatus((prev) => {
@@ -136,12 +117,10 @@ const SuggestedQuestionsComponent = ({
             };
             toast.success(`Question marked as ${newStatus ? 'mandatory' : 'optional'}`);
 
-            // Update the parent component with the new mandatory status
             if (handleToggleMandatory) {
                 handleToggleMandatory(questionId);
             }
 
-            // If the question is already added, update its mandatory status in the parent
             if (interviewQuestionsLists.some((q) => q.questionId === questionId)) {
                 onAddQuestion({
                     questionId: item._id,
@@ -150,7 +129,6 @@ const SuggestedQuestionsComponent = ({
                     order: "",
                     customizations: "",
                     mandatory: newStatus ? "true" : "false"
-                    // mandatory: newStatus ? "true" : "false",
                 });
             }
 
@@ -480,7 +458,6 @@ const SuggestedQuestionsComponent = ({
     };
 
     const onClickRemoveQuestion = async (id) => {
-        // alert(${id})
         if (type === 'interviewerSection') {
             if (handleRemoveQuestion) {
                 handleRemoveQuestion(id)
@@ -500,25 +477,7 @@ const SuggestedQuestionsComponent = ({
             }
             toast.error("Question removed successfully!");
         } else {
-
-
-            try {
-                const url = `${config.REACT_APP_API_URL}/interview-questions/question/${id}`;
-                const response = await axios.delete(url);
-                // alert(response.data.message)
-                getInterviewerQuestions();
-                const newList = suggestedQuestionsFilteredData.map((question) =>
-                    question._id === id ? { ...question, isAdded: false } : question
-                );
-                setSuggestedQuestionsFilteredData(newList);
-                setInterviewQuestionsList((prev) =>
-                    prev.filter((each) => each._id !== id)
-                );
-                setSuggestedQuestions(newList);
-            } catch (error) {
-                console.error("error in deleting question", error);
-            }
-
+            console.error('failed to remove')
         }
     };
 
@@ -644,20 +603,9 @@ const SuggestedQuestionsComponent = ({
 
     const ReturnSearchFilterSection = () => {
         return (
-            <div className={`flex w-full sm:flex-col flex-row  items-center justify-between gap-4`}>
-                <div
-                    className={` ${type === "assessment" || type === "interviewerSection"
-                        ? "w-[35%] sm:w-full"
-                        : "w-full sm:w-full"
-                        } `}
-                >
-                    <div
-                        className={` ${type === "assessment" || type === "interviewerSection"
-                            ? "w-[200px]  sm:w-full"
-                            : "w-[300px] md:w-[180px] sm:w-full"
-                            } relative flex items-center rounded-md border`}
-                    // className="relative flex items-center rounded-md border w-[300px]"
-                    >
+            <div className="fixed top-32 left-5 right-5 flex items-center justify-between">
+                <div>
+                    <div className="relative flex items-center rounded-md border">
                         <span className="text-custom-blue p-2">
                             <Search className="w-5 h-5" />
                         </span>
@@ -666,39 +614,28 @@ const SuggestedQuestionsComponent = ({
                             value={skillInput}
                             type="search"
                             placeholder="Search by skills"
-                            className="w-[85%] p-2 pr-none  h-outline-none"
+                            className="w-[85%] rounded-md"
                         />
                     </div>
                 </div>
-                <div
-                    className={`${type === "assessment" || type === "interviewerSection"
-                        ? "w-[65%] sm:w-full"
-                        : "w-auto sm:w-full "
-                        } flex flex-row items-center sm:flex-col justify-end gap-4 flex-1`}
-                // className="flex items-center w-1/2 sm:w-full"
-                >
-                    <div
-                        className={`${type === "assessment" || type === "interviewerSection"
-                            ? "w-[240px] sm:w-full"
-                            : "w-[300px] lg:w-[320px] md:w-[180px] sm:w-full"
-                            }  relative flex items-center rounded-md border`}
-                    >
-                        <span className={`p-2 text-[#227a8a]`}>
+                <div className="flex gap-x-3" >
+                    <div className="relative flex items-center rounded-md border">
+                        <span className={`p-2 text-custom-blue`}>
                             <Search className="w-5 h-5" />
                         </span>
                         <input
                             type="search"
-                            placeholder="Search by Question Text"
-                            className={` p-2 pr-none border-none  h-outline-none w-[85%]`}
+                            placeholder="Search by Questions"
+                            className={`w-[85%] rounded-md`}
                         />
                     </div>
-                    <div className=" flex sm:items-center sm:gap-3">
-                        <div className="flex items-center  ">
+                    <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center">
                             <p className="text-custom-blue whitespace-nowrap">
                                 {suggestedQuestionsFilteredData.length} Questions{" "}
                             </p>
-                        </div>
-                        <div className="flex p-2 items-center">
+                        </div> */}
+                        <div className="flex items-center">
                             <p>
                                 {currentPage}/{totalPages}
                             </p>
@@ -706,31 +643,29 @@ const SuggestedQuestionsComponent = ({
                         <div className="flex items-center">
                             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
                                 <span
-                                    className={`text-xl sm:text-md md:text-md rounded-md p-2 mr-2 ${currentPage === 0 ? " cursor-not-allowed" : ""
-                                        }`}
                                     onClick={onClickLeftPaginationIcon}
+                                    className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                                 >
-                                    <IoIosArrowBack className="text-custom-blue" />
+                                    <IoIosArrowBack />
                                 </span>
                             </Tooltip>
+
                             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
                                 <span
                                     onClick={onClickRightPagination}
-                                    disabled={currentPage === totalPages}
-                                    className={`rounded-md cursor-pointer ${currentPage === totalPages ? "cursor-not-allowed" : ""
-                                        }`}
+                                    className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                                 >
-                                    <IoIosArrowForward className="text-custom-blue" />
+                                    <IoIosArrowForward />
                                 </span>
                             </Tooltip>
                         </div>
-                        <div >
+                        <div>
                             <Popup
                                 responsive={true}
                                 trigger={
                                     <button
-                                         type="button"
-                                        className="cursor-pointer text-xl sm:text-md md:text-md border rounded-md p-2 mr-2"
+                                        type="button"
+                                        className="border p-2 text-xl rounded-md cursor-pointer mr-2"
                                     >
                                         {isPopupOpen ? (
                                             <LuFilterX className="text-custom-blue" />
@@ -739,11 +674,11 @@ const SuggestedQuestionsComponent = ({
                                         )}
                                     </button>
                                 }
-                                onOpen={() => setIsPopupOpen(true)} // Set popup open state
-                                onClose={() => setIsPopupOpen(false)} // Set popup close state
+                                onOpen={() => setIsPopupOpen(true)}
+                                onClose={() => setIsPopupOpen(false)}
                             >
                                 {(closeFilter) => (
-                                    <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-[2px] border-[#80808086]">
+                                    <div className="absolute top-3 right-0 rounded-md bg-white border-[2px] border-[#80808086]">
                                         {FilterSection(closeFilter)}
                                     </div>
                                 )}
@@ -777,71 +712,19 @@ const SuggestedQuestionsComponent = ({
     };
 
     const ReturnSuggestedQuestionsData = () => {
-        // <-- (mansoor)
-
-        // const [mandatoryStatus, setMandatoryStatus] = useState({});
-
-        // const handleToggle = (questionId) => {
-        //     setMandatoryStatus((prev) => {
-        //         const updatedStatus = {
-        //             ...prev,
-        //             [questionId]: !prev[questionId],
-        //         };
-        //         return updatedStatus;
-        //     });
-        // };
-
-        // const onClickForSchedulelater = async (item) => {
-        //     try {
-        //         const questionToAdd = {
-        //             questionId: item._id,
-        //             source: "system",
-        //             snapshot: item,
-        //             order: "",
-        //             customizations: "",
-        //             mandatory: mandatoryStatus[item._id] ? "true" : "false",
-        //         };
-
-        //         //   const response = await axios.post(
-        //         //     `${config.REACT_APP_API_URL}/interview-questions/add-question`,
-        //         //     questionToAdd,
-        //         //     { headers: { 'Content-Type': 'application/json' } }
-        //         //   );
-
-        //         //   const simulatedResponse = {
-        //         //     data: {
-        //         //       success: true,
-        //         //       recordId: `record-${item._id}`,
-        //         //     },
-        //         //   };
-
-        //         //   if (simulatedResponse.data.success) {
-
-        //         if (onAddQuestion) {
-        //             //   onAddQuestion(response.data.question); // Pass the question and index to the parent
-        //             onAddQuestion(questionToAdd,); // Pass the question and index to the parent
-
-        //         }
-        //         toast.success("Question added successfully");
-        //         //   }
-        //     } catch (error) {
-        //         toast.error("Failed to add question");
-        //         console.error("Error adding question:", error);
-        //     }
-        // };
-
-        // -->
         return (
-            <div className={`p-4 h-full`}>
-                {/* Search and Filter Section */}
-                {ReturnSearchFilterSection()}
+            <div>
+                <div className="h-full flex flex-col">
+                    {/* Fixed Tab Navigation is in parent (QuestionBank.jsx) */}
+                    {/* Fixed Search/Filter Bar */}
+                    <div className="z-50 bg-white fixed left-0 right-0">
+                        {ReturnSearchFilterSection()}
+                    </div>
 
-
-                <div className="overflow-y-auto  ">
-                    {/* Selected skills section (UI improvement) */}
-                    {selectedSkills && (
-                        <div className="my-4">
-                            <ul className="flex gap-2 flex-wrap ">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-5 mt-[110px]">
+                        {/* Content below search/filter bar */}
+                        {selectedSkills && (
+                            <ul className="flex gap-2 flex-wrap px-4 pt-2">
                                 {selectedSkills.map((skill, index) => (
                                     <li
                                         key={index}
@@ -858,235 +741,201 @@ const SuggestedQuestionsComponent = ({
                                     </li>
                                 ))}
                             </ul>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Applied filters section (UI improvement) */}
-                    {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                        <div className="flex items-center   flex-wrap">
-                            <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
-                            <ul className="flex gap-2 flex-wrap">
-                                {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
-                                    (filterItem, index) => (
-                                        <li
-                                            key={index}
-                                            className="flex items-center gap-1 rounded-full border border-[#227a8a] px-3 py-1 text-[#227a8a] font-medium bg-blue-50 text-sm"
-                                        >
-                                            <span>{filterItem}</span>
-                                            <button
-                                                className="hover:text-red-500 transition-colors"
-                                                onClick={() =>
-                                                    onClickRemoveSelectedFilterItem(index, filterItem)
-                                                }
-                                                type="button"
+                        {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
+                            <div className="flex items-center flex-wrap px-4 pt-2">
+                                <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
+                                <ul className="flex gap-2 flex-wrap">
+                                    {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
+                                        (filterItem, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
                                             >
-                                                <X size={14} />
-                                            </button>
-                                        </li>
-                                    )
+                                                <span>{filterItem}</span>
+                                                <button
+                                                    className="hover:text-red-500 transition-colors"
+                                                    onClick={() =>
+                                                        onClickRemoveSelectedFilterItem(index, filterItem)
+                                                    }
+                                                    type="button"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </li>
+                                        )
+                                    )}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Questions list */}
+                        <div className="flex-1 min-h-0">
+                            <ul className="flex flex-col gap-4 pr-2">
+                                {paginatedData.length > 0 ? (
+                                    paginatedData.map((item, index) => (
+                                        <div key={index} className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow text-sm">
+                                            <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                                                <h2 className="font-medium w-[85%] text-gray-800">
+                                                    {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
+                                                </h2>
+                                                <div className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(type === "interviewerSection" || type === "assessment") ? "w-[15%]" : "w-[10%]"}`}>
+                                                    <p
+                                                        className={`w-16 text-center ${getDifficultyStyles(
+                                                            item.difficultyLevel
+                                                        )} rounded-full py-1`}
+                                                        title="Difficulty Level"
+                                                    >
+                                                        {item.difficultyLevel}
+                                                    </p>
+                                                </div>
+
+                                                {fromScheduleLater
+                                                    && (
+                                                        <div className="flex justify-center text-center h-12 border-r border-gray-200">
+                                                            <div className="flex items-center w-14 justify-center">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                                                        ) {
+                                                                            handleToggle(item._id, item);
+                                                                        }
+                                                                    }}
+                                                                    className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                                                        ? "bg-blue-100 border-custom-blue justify-end"
+                                                                        : "bg-gray-200 border-gray-300 justify-start"
+                                                                        }`}
+                                                                    type="button"
+                                                                >
+                                                                    <span
+                                                                        className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                                                            ? "bg-custom-blue"
+                                                                            : "bg-gray-400"
+                                                                            }`}
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                {(type === "interviewerSection") && (
+                                                    <div
+                                                        className="p-1 flex justify-center w-[8%]"
+                                                    >
+                                                        {interviewQuestionsLists?.some(q => q.questionId === item._id)
+                                                            ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => onClickRemoveQuestion(item._id)}
+                                                                    className="rounded-md md:ml-4 bg-gray-500  px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                                                                >
+                                                                    Remove
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    className="bg-custom-blue  py-1 px-2 text-white rounded-md transition-colors"
+                                                                    onClick={(e) => onClickAddButton(item)}
+                                                                >
+                                                                    Add
+                                                                </button>
+                                                            )}
+                                                    </div>
+                                                )}
+
+                                                {type === "assessment" && (
+                                                    <div className="w-[8%] flex justify-center">
+                                                        {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
+                                                            <span className="text-green-600 font-medium py-1 px-1">
+                                                                ✓ Added
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                                    ? 'opacity-50 cursor-not-allowed'
+                                                                    : ''
+                                                                    }`}
+                                                                onClick={() => onClickAddButton(item)}
+                                                                disabled={
+                                                                    addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                                }
+                                                            >
+                                                                Add
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {!type && !fromScheduleLater && (
+                                                    <div className="w-[10%] flex justify-center relative">
+                                                        <button
+                                                            type="button"
+                                                            className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                                                            onClick={() => toggleDropdown(item._id)}
+                                                        >
+                                                           Add to list
+                                                        </button>
+                                                        {dropdownOpen === item._id && (
+                                                            <MyQuestionList
+                                                                question={item}
+                                                                closeDropdown={closeDropdown}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="px-4 py-2">
+                                                <p className="text-gray-600 mb-2">
+                                                    <span className="font-medium">Answer: </span>
+                                                    {item.correctAnswer}
+                                                </p>
+                                                <p className="font-medium">
+                                                    Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
+                                        <div className="text-gray-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <h2 className="text-gray-700 font-semibold text-lg">
+                                            No questions found
+                                        </h2>
+                                        <p className="text-gray-500">
+                                            Try again with different filter options
+                                        </p>
+                                    </div>
                                 )}
                             </ul>
                         </div>
-                    )}
-
-                    {/* Questions list (UI improvement) */}
-                    <ul
-                        className={`${type === "interviewerSection" ||
-                            type === "assessment"
-                            ? "h-[calc(100vh-280px)]"
-                            : fromScheduleLater
-                                ? "h-[calc(100vh-300px)]"
-                                : "h-[calc(100vh-250px)]"
-                            } flex flex-col gap-4 my-2 pr-2`}
-                    >
-                        {paginatedData.length > 0 ? (
-                            paginatedData.map((item, index) => (
-                                <li key={index} className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                                        <h2 className="font-medium w-[85%] text-gray-800">
-                                            {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
-                                        </h2>
-
-                                        <div
-                                            className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${(type === "interviewerSection" || type === "assessment") ? "w-[15%]" : "w-[10%]"}`}
-                                        >
-                                            <p
-                                                className={`w-20 text-center text-sm ${getDifficultyStyles(
-                                                    item.difficultyLevel
-                                                )} rounded-full px-2 py-1`}
-                                                title="Difficulty Level"
-                                            >
-                                                {item.difficultyLevel}
-                                            </p>
-                                        </div>
-
-                                        {/* Mandatory toggle for schedule later (UI improvement) */}
-                                        {fromScheduleLater
-                                            //  && item.isAdded && !removedQuestionIds.includes(item._id)
-                                            && (
-                                                <div className="flex justify-center text-center h-12 border-r border-gray-200">
-                                                    <div className="flex items-center w-14 justify-center">
-                                                        <button
-                                                            onClick={() => {
-                                                                if (
-                                                                    interviewQuestionsLists?.some(q => q.questionId === item._id)
-                                                                    // item.isAdded && !removedQuestionIds.includes(item._id)
-                                                                ) {
-                                                                    handleToggle(item._id, item);
-                                                                }
-                                                                // handleToggle(item._id, item);
-                                                            }}
-                                                            className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                                                ? "bg-blue-100 border-custom-blue justify-end"
-                                                                : "bg-gray-200 border-gray-300 justify-start"
-                                                                }`}
-                                                            type="button"
-                                                        >
-                                                            <span
-                                                                className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                                                    ? "bg-custom-blue"
-                                                                    : "bg-gray-400"
-                                                                    }`}
-                                                            />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                        {/* Add/Remove buttons for different sections (UI improvement) */}
-                                        {(type === "interviewerSection") && (
-                                            <div
-                                                className="p-1 flex justify-center w-[8%]"
-                                            >
-                                                {interviewQuestionsLists?.some(q => q.questionId === item._id)
-                                                    // item.isAdded && !removedQuestionIds.includes(item._id) 
-                                                    ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => onClickRemoveQuestion(item._id)}
-                                                            className="rounded-md md:ml-4 bg-gray-500  px-2 py-1 text-white hover:bg-gray-600 transition-colors text-sm"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            className="bg-custom-blue  py-1 px-2 text-white rounded-md transition-colors text-sm"
-                                                            onClick={(e) => onClickAddButton(item)}
-                                                        >
-                                                            Add
-                                                        </button>
-                                                    )}
-                                            </div>
-                                        )}
-
-                                        {type === "assessment" && (
-                                            <div className="w-[8%] flex justify-center">
-                                                {addedSections.some(s => s.Questions.some(q => q.questionId === item._id)) ? (
-                                                    <span className="text-green-600 text-sm font-medium py-1 px-1">
-                                                        ✓ Added
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors text-sm ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                                            ? 'opacity-50 cursor-not-allowed'
-                                                            : ''
-                                                            }`}
-                                                        onClick={() => onClickAddButton(item)}
-                                                        disabled={
-                                                            addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                                        }
-                                                    >
-                                                        Add
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Add button for schedule later (UI improvement) */}
-
-
-                                        {/* {fromScheduleLater && (
-                                    <div className="flex justify-center mx-3">
-                                        <button
-                                            type="button"
-                                            className="bg-custom-blue text-sm py-1 px-3 text-white rounded-md transition-colors"
-                                            onClick={() => onClickForSchedulelater(item, index)}
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                )} */}
-
-                                        {/* Default dropdown for other sections (UI improvement) */}
-                                        {!type && !fromScheduleLater && (
-                                            <div className="w-[5%] flex justify-center relative">
-                                                <button
-                                                    type="button"
-                                                    className="border cursor-pointer rounded-md p-1 font-bold border-custom-blue text-custom-blue transition-colors"
-                                                    onClick={() => toggleDropdown(item._id)}
-                                                >
-                                                    <Plus />
-                                                </button>
-                                                {dropdownOpen === item._id && (
-                                                    <MyQuestionList
-                                                        question={item}
-                                                        closeDropdown={closeDropdown}
-
-
-                                                    />
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="px-4 py-2">
-                                        <p className="text-gray-600 mb-2">
-                                            <span className="font-medium">Answer: </span>
-                                            {item.correctAnswer}
-                                        </p>
-                                        <p className="font-medium">
-                                            Tags: <span className="text-gray-600">{item.tags.join(", ")}</span>
-                                        </p>
-                                    </div>
-                                </li>
-                            ))
-                        ) : (
-                            <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
-                                <div className="text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h2 className="text-gray-700 font-semibold text-lg">
-                                    No questions found
-                                </h2>
-                                <p className="text-gray-500">
-                                    Try again with different filter options
-                                </p>
-                            </div>
-                        )}
-                    </ul>
+                    </div>
                 </div>
-
             </div>
         );
     };
 
     const ReturnMyQuestionsListData = () => {
-        return <h1 className="p-8">My Questions list</h1>;
+        return <h1 className="">My Questions list</h1>;
     };
 
-    const DisplayTabsData = () => {
-        switch (tab) {
-            case 1:
-                return ReturnSuggestedQuestionsData();
-            case 2:
-                return ReturnMyQuestionsListData();
-        }
-    };
-    return <div className={`flex flex-col`}>{DisplayTabsData()}</div>;
+    return (
+        <div>
+            {tab === 1
+                ? ReturnSuggestedQuestionsData()
+                : tab === 2
+                    ? ReturnMyQuestionsListData()
+                    : <div className="p-8 text-gray-500">No data available for this tab.</div>
+            }
+        </div>
+    )
 };
 
 export default SuggestedQuestionsComponent;
