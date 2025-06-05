@@ -6,11 +6,7 @@ import { ChevronDown, X, User, Users, Trash2, Clock, Calendar } from 'lucide-rea
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
-// import OutsourceOption from "../../Interviews/OutsourceOption.jsx";
 import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
-import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-// import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
-// import SuggesstedQuestions from "../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx";
 import Cookies from "js-cookie";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
@@ -19,14 +15,20 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from '../../../../../config';
 import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
 import Loading from '../../../../../Components/Loading.js';
-// import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
+import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+import LoadingButton from '../../../../../Components/LoadingButton';
+
 
 const RoundFormInterviews = () => {
+  const {
+    interviewData,
+    isMutationLoading,
+    saveInterviewRound,
+  } = useInterviews();
+  const { assessmentData } = useAssessments();
 
   const {
-    assessmentData,
-    interviewData,
-    loading,
     sectionQuestions,
     questionsLoading,
     questionsError,
@@ -149,8 +151,8 @@ const RoundFormInterviews = () => {
         if (prevList.some((q) => q.questionId === question.questionId)) {
           return prevList;
         }
-        return [...prevList, 
-            {
+        return [...prevList,
+        {
           ...question,
           mandatory: "false" // Default to false when adding a new question
         }
@@ -173,12 +175,13 @@ const RoundFormInterviews = () => {
     setInterviewQuestionsList(prev =>
       prev.map((question) =>
         question.questionId === questionId
-          ? { ...question,
-                snapshot: {
-               ...question.snapshot,
+          ? {
+            ...question,
+            snapshot: {
+              ...question.snapshot,
               mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
-             }
-             }
+            }
+          }
           : question
       )
     );
@@ -232,7 +235,7 @@ const RoundFormInterviews = () => {
       setInterviewMode("Virtual");
       setInterviewQuestionsList([]);
       setInstructions("")
-    
+
       setStatus('Pending')
       setInterviewType("instant");
       setScheduledDate('')
@@ -265,7 +268,6 @@ const RoundFormInterviews = () => {
   //   setActiveTab("MyQuestionsList");
   // };
 
-  const [isLoading, setIsLoading] = useState(false);
   // const [error, setError] = useState(null);
 
 
@@ -458,20 +460,18 @@ const RoundFormInterviews = () => {
   const handleSubmit = async (e) => {
     console.log("handleSubmit() called");
     e.preventDefault();
-    setIsLoading(true);
-    // setError(null);
-  
+
     try {
       console.log("Preparing round data for validation");
       console.log('selectedInterviewType;;;;selectedInterviewersData', selectedInterviewType, selectedInterviewersData);
-  
+
       // Clean interviewers data to remove undefined fields
       const cleanInterviewer = (interviewer) => {
         const { availability, ...rest } = interviewer;
         return rest;
       };
       const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
-  
+
       const roundData = {
         roundTitle,
         interviewMode,
@@ -479,7 +479,6 @@ const RoundFormInterviews = () => {
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
           ? { assessmentId: assessmentTemplate.assessmentId }
           : {}),
-
         instructions,
         status,
         ...(roundTitle !== "Assessment" && {
@@ -490,44 +489,37 @@ const RoundFormInterviews = () => {
         }),
         ...(selectedInterviewType !== "external" && { interviewers: cleanedInterviewers || [] }),
       };
-  
+
       console.log("Validating the round data");
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
-  
+
       console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
         console.log("Validation errors found, stopping submission");
         return;
       }
-  
-      console.log("roundData1", roundData);
+
+      console.log("roundData", roundData);
       const payload = isEditing
         ? { interviewId, round: roundData, roundId, questions: interviewQuestionsList }
-        : { interviewId, round: roundData, questions: interviewQuestionsList.map(q => ({
-           questionId: q.questionId,
-           snapshot: {
-            ...q.snapshot,
-             mandatory: q.snapshot.mandatory || "false"
-          }
-        })) || [] };
-  
+        : {
+          interviewId,
+          round: roundData,
+          questions: interviewQuestionsList.map(q => ({
+            questionId: q.questionId,
+            snapshot: {
+              ...q.snapshot,
+              mandatory: q.snapshot.mandatory || "false"
+            }
+          })) || []
+        };
+
       console.log("Payload for submission:", payload);
-  
-      // Add error handling for Axios request
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/interview/save-round`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            // Add authorization header if required
-            Authorization: `Bearer ${Cookies.get("authToken")}`,
-          },
-        }
-      );
-      console.log("response", response.data);
-  
+
+      // Use saveInterviewRound mutation from useInterviews hook
+      const response = await saveInterviewRound(payload);
+
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
         const isInternal = selectedInterviewType === "internal";
@@ -544,13 +536,13 @@ const RoundFormInterviews = () => {
             duration,
             candidateId: candidate?._id,
             positionId: position?._id,
-            roundId: response.data.savedRound._id,
+            roundId: response.savedRound._id,
             requestMessage: isInternal
               ? "Internal interview request"
               : "Outsource interview request",
             expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           };
-  
+
           console.log("Sending outsource request:", outsourceRequestData);
           await axios.post(
             `${config.REACT_APP_API_URL}/interviewrequest`,
@@ -564,17 +556,17 @@ const RoundFormInterviews = () => {
           );
         }
       }
-  
+
       console.log("Navigating to the interview details page");
       navigate(`/interviews/${interviewId}`);
     } catch (err) {
       console.error("Error submitting the form:", err);
+      setErrors({ submit: err instanceof Error ? err.message : 'An unknown error occurred' });
     } finally {
       console.log("handleSubmit() finished");
-      setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     const date = new Date();
     date.setMinutes(date.getMinutes() + 15);
@@ -744,7 +736,7 @@ const RoundFormInterviews = () => {
                           }}
                           className={`mt-1 block w-full border ${errors.roundTitle ? 'border-red-500' : 'border-gray-300'
                             } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          // required
+                        // required
                         >
                           <option value="">Select Round Title</option>
                           <option value="Assessment">Assessment</option>
@@ -805,7 +797,7 @@ const RoundFormInterviews = () => {
                         }}
                         className={`mt-1 block w-full border ${errors.sequence ? 'border-red-500' : 'border-gray-300'
                           } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                        // required
+                      // required
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview process
@@ -859,9 +851,7 @@ const RoundFormInterviews = () => {
                             </div>
                             {showDropdown && (
                               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                {loading ? (
-                                  <div className="px-3 py-2 text-gray-500">Loading...</div>
-                                ) : (
+                                {
                                   assessmentData.length > 0 ? (
                                     assessmentData.map((user, index) => (
                                       <div
@@ -875,7 +865,7 @@ const RoundFormInterviews = () => {
                                   ) : (
                                     <div className="px-3 py-2 text-gray-500">No assessments found</div>
                                   )
-                                )}
+                                }
                               </div>
                             )}
                           </div>
@@ -1343,7 +1333,7 @@ const RoundFormInterviews = () => {
                               <ul className="mt-2 space-y-2">
                                 {interviewQuestionsList.map((question, qIndex) => {
                                   // const isMandatory = question?.mandatory === "true";
-                            const isMandatory = question?.snapshot?.mandatory === "true";
+                                  const isMandatory = question?.snapshot?.mandatory === "true";
                                   return (
                                     <li
                                       key={qIndex}
@@ -1384,7 +1374,7 @@ const RoundFormInterviews = () => {
                                     />
                                   </button>
                                 </div>
-                              
+
 
                                 {isInterviewQuestionPopup &&
                                   <QuestionBank
@@ -1441,13 +1431,14 @@ const RoundFormInterviews = () => {
                     >
                       Cancel
                     </button>
-                    <button
+
+                    <LoadingButton
                       onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      isLoading={isMutationLoading}
+                      loadingText={isEditing ? "Updating..." : "Saving..."}
                     >
-                      {isLoading ? 'Processing...' : isEditing ? 'Update Round' : 'Add Round'}
-                    </button>
+                      {isEditing ? "Update Round" : "Add Round"}
+                    </LoadingButton>
                   </div>
                 </div>
               </form>

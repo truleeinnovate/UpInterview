@@ -1507,9 +1507,9 @@ const MockSchedulelater = () => {
 
               :
 
-              <div className="flex justify-end gap-3 mt-5 mb-4 ">
+              <div className="flex justify-end gap-4 mt-5 mb-4 ">
                 <button
-                  className="border border-custom-blue mt-3 p-3 rounded py-1 mr-5"
+                  className="border border-custom-blue p-3 rounded py-1"
                   onClick={() => setCurrentPage(1)}
                 >
                   Back
