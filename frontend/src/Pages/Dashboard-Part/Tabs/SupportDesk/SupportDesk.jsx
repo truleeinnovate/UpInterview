@@ -323,11 +323,26 @@ function SupportDesk() {
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
+          {userRole === "SuperAdmin" && (
+            <motion.div
+            className="flex justify-between items-center py-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <h1 className="text-2xl font-semibold text-custom-blue">
+                Support Desk
+            </h1>
+            {/* No Add Invoice button as per requirement */}
+        </motion.div>
+          )}
+          {userRole === "Admin" && (
             <Header
               title="Support Desk"
               onAddClick={() => userRole === "Admin" && navigate("/support-desk/new-ticket")}
               addButtonText="Create Ticket"
             />
+          )}
             <Toolbar
               view={viewMode}
               setView={setViewMode}

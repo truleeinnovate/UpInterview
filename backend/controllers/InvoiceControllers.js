@@ -11,7 +11,7 @@ const getInvoiceById = async (req, res) => {
       return res.status(400).json({ error: 'Invalid ownerId format' });
     }
 
-    const invoices = await Invoice.find({ ownerId })
+    const invoices = await Invoice.find({ ownerId }).sort({ updatedAt: -1, createdAt: -1 })
       .populate('planId')
       .populate('ownerId');
 

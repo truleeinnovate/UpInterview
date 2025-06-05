@@ -45,7 +45,7 @@ function SupportDetails() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/api/users`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
         const filteredUsers = response.data.filter(user =>
           user.RoleId === "67f77613588be9a9ef019765" ||
           user.RoleId === "67f77640588be9a9ef019767"
@@ -145,7 +145,7 @@ function SupportDetails() {
     setIsUpdatingOwner(true);
     try {
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/api/update-ticket/${currentTicket._id}`,
+        `${config.REACT_APP_API_URL}/update-ticket/${currentTicket._id}`,
         {
           assignedTo: selectedOwner,
           assignedToId: selectedOwnerId,
@@ -425,7 +425,7 @@ function SupportDetails() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created By</p>
-                    <p className="text-gray-700">{currentTicket.createdBy || 'Unknown'}, {formatDate(currentTicket.createdDate)}</p>
+                    <p className="text-gray-700">{currentTicket.contact || 'Unknown'}, {formatDate(currentTicket.createdAt)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -434,7 +434,7 @@ function SupportDetails() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Modified By</p>
-                    <p className="text-gray-700">{currentTicket.updatedBy || 'Unknown'}, {formatDate(currentTicket.modifiedDate)}</p>
+                    <p className="text-gray-700">{currentTicket?.statusHistory?.[0]?.user || 'Unknown'}, {formatDate(currentTicket?.statusHistory?.[0]?.date)}</p>
                   </div>
                 </div>
               </div>
