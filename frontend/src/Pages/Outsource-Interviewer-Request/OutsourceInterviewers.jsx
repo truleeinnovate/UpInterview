@@ -17,11 +17,13 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrow
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
 import { ReactComponent as CgInfo } from '../../icons/CgInfo.svg';
 import Loading from '../../Components/Loading.js';
+import { useMasterData } from '../../apiHooks/useMasterData.js';
+
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const {
     skills,
-  } = useCustomContext();
+  } = useMasterData();
   const [isTechDropdownOpen, setTechDropdownOpen] = useState(false);
   const [isStatusMainChecked, setStatusMainChecked] = useState(false);
   const [isTechMainChecked, setTechMainChecked] = useState(false);

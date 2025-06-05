@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import InfoBox from './InfoBox.jsx';
 import { ChevronDown } from 'lucide-react';
 import { Search } from 'lucide-react';
-import { useCustomContext } from "../../../Context/Contextfetch.js";
+import { useMasterData } from '../../../apiHooks/useMasterData.js';
 
 const AdditionalDetails = ({
     errors,
@@ -10,12 +10,11 @@ const AdditionalDetails = ({
     additionalDetailsData,
     setAdditionalDetailsData,
 }) => {
-
-    const {
+      const {
         locations,
         industries,
-        currentRole
-    } = useCustomContext();
+        currentRoles
+    } = useMasterData();
 
     const resumeInputRef = useRef(null);
     const coverLetterInputRef = useRef(null);
@@ -90,7 +89,7 @@ const AdditionalDetails = ({
         }));
     };
 
-    const filteredCurrentRoles = currentRole?.filter(role =>
+    const filteredCurrentRoles = currentRoles?.filter(role =>
         role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
     );
 

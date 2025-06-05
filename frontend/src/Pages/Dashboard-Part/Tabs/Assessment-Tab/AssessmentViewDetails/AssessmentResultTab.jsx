@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ChevronUpIcon, ChevronDownIcon, UserPlusIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
 import ScheduledAssessmentResultView from './ScheduledAssessmentResultView';
-import { config } from '../../../../../config';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullscreen, assessmentQuestions }) {
   const [results, setResults] = useState([]);
@@ -11,27 +10,22 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [showResultView, setShowResultView] = useState(false);
+  const { fetchAssessmentResults } = useAssessments();
 
-  useEffect(() => {
-    const fetchAssessmentResults = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/assessments/${assessment._id}/results`
-        );
-        setResults(response.data);
-      } catch (error) {
-        console.error('Error fetching assessment results:', error);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (assessment) {
-      fetchAssessmentResults();
+useEffect(() => {
+  const getResults = async () => {
+    const { data, error } = await fetchAssessmentResults(assessment._id);
+    if (!error) {
+      setResults(data);
+    } else {
+      console.error('Error loading results:', error);
     }
-  }, [assessment]);
+  };
+
+  if (assessment._id) {
+    getResults();
+  }
+}, [assessment._id]);
 
   const toggleSchedule = (index) => {
     toggleArrow1(index);

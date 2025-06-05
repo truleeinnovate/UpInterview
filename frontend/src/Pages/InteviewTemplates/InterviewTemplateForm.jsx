@@ -4,11 +4,13 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import { Minimize, Expand, X } from 'lucide-react';
 import Switch from "react-switch";
-import { useCustomContext } from '../../Context/Contextfetch';
 import { validateInterviewTemplate } from '../../utils/InterviewTemplateValidation';
+import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
+
 
 const InterviewSlideover = ({ mode }) => {
-    const { templates, saveTemplateMutation } = useCustomContext();
+    const { templatesData, saveTemplate } = useInterviewTemplates();
+
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -28,7 +30,7 @@ const InterviewSlideover = ({ mode }) => {
     useEffect(() => {
         if (id) {
             setIsEditMode(true);
-            const foundTemplate = templates.find(tem => tem._id === id);
+            const foundTemplate = templatesData.find(tem => tem._id === id);
             if (foundTemplate) {
                 setNewTemplate({
                     templateTitle: foundTemplate.templateName || '',
@@ -48,7 +50,7 @@ const InterviewSlideover = ({ mode }) => {
                 rounds: []
             });
         }
-    }, [id, templates]);
+    }, [id, templatesData]);
 
     const validateForm = () => {
         const templateForValidation = {
@@ -149,15 +151,12 @@ const InterviewSlideover = ({ mode }) => {
             };
             console.log('Template Data:', templateData);
 
-            const response = await saveTemplateMutation.mutateAsync({
+            await saveTemplate({
                 id,
                 templateData,
                 isEditMode
             });
             
-            console.log('--- Template Saved Successfully ---');
-            console.log('Saved Template Data:', response.data);
-            console.log('Status:', response.status);
             
             onClose();
         } catch (error) {

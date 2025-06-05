@@ -5,19 +5,13 @@ import TechnicalType from './TechnicalType';
 import Cookies from 'js-cookie';
 import { format } from 'date-fns';
 import { validateForm, } from "../../../../utils/PositionValidation.js";
-import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
-import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
-import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
-import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ChevronDown, Search } from 'lucide-react';
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-
 import SkillsField from '../CommonCode-AllTabs/SkillsInput.jsx';
-
 import { usePositions } from '../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../Components/LoadingButton';
+import { useMasterData } from '../../../../apiHooks/useMasterData';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -269,7 +263,9 @@ const PositionForm = ({ mode }) => {
     locations,
     templates,
     skills,
-  } = useCustomContext();
+  } = useMasterData();
+
+
 
 
 

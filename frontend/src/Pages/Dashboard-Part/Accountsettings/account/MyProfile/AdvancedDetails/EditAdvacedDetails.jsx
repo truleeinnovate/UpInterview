@@ -8,6 +8,8 @@ import axios from 'axios';
 import { isEmptyObject, validateAdvancedForm } from '../../../../../../utils/MyProfileValidations';
 import { useNavigate, useParams } from 'react-router-dom';
 import { config } from '../../../../../../config';
+import { useMasterData } from '../../../../../../apiHooks/useMasterData';
+
 
 // Skills.svg
 
@@ -16,13 +18,19 @@ Modal.setAppElement('#root');
 const EditAdvacedDetails = ({ from,usersId,setAdvacedEditOpen,onSuccess }) => {
   // onSave
   const {
-    skills,
-    locations,
-    industries,
-    currentRole,
     singlecontact,
     usersRes
   } = useCustomContext();
+
+
+  const {
+  skills,
+  locations,
+  industries,
+  currentRoles,
+} = useMasterData();
+
+
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -237,7 +245,7 @@ const resolvedId = usersId || id;
     location?.LocationName?.toLowerCase()?.includes(searchTermLocation.toLowerCase() || '')
   ) : [];
 
-  const filteredCurrentRoles = Array.isArray(currentRole) ? currentRole.filter((role) =>
+  const filteredCurrentRoles = Array.isArray(currentRoles) ? currentRoles.filter((role) =>
     role?.RoleName?.toLowerCase()?.includes(searchTermCurrentRole.toLowerCase() || '')
   ) : [];
 

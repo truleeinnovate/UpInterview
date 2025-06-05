@@ -12,10 +12,15 @@ import PositionSlideDetails from './PositionSlideDetails';
 import PositionForm from './Position-Form';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { usePositions } from '../../../../apiHooks/usePositions';
+import { useMasterData } from '../../../../apiHooks/useMasterData';
+
+
+
 
 
 const PositionTab = () => {
-  const { isPositionsLoading, skills } = useCustomContext();
+  const { skills } = useMasterData();
+
 
     const { positionData, isLoading } = usePositions();
   

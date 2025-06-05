@@ -4,7 +4,7 @@ import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
-const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
+const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading = false }) => {
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
@@ -55,6 +55,66 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
+          {[...Array(6)].map((_, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full"
+            >
+              <div className="flex justify-between items-start mb-4 gap-2">
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
+                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
+                </div>
+              </div>
+              <div className="mt-auto space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -63,24 +123,34 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
       className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
     >
       <div className="h-full w-full">
-        <div className="flex items-center justify-between mb-6">
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <h3 className="text-xl font-semibold text-gray-800">All Tickets</h3>
-          <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
+          <motion.span 
+            className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200"
+            whileHover={{ scale: 1.05 }}
+          >
             {tickets?.length} Tickets
-          </span>
-        </div>
+          </motion.span>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
           {currentTickets.map((ticket, index) => (
             <motion.div
               key={ticket._id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className={`bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full ${index >= currentTickets.length - 5 ? 'mb-10' : ''
-                }`}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              whileHover={{ y: -5 }}
+              className={`bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full ${
+                index >= currentTickets.length - 5 ? 'mb-10' : ''
+              }`}
             >
               <div className="flex justify-between items-start mb-4 gap-2">
-                <div
+                <motion.div
                   className="flex-1 min-w-0 cursor-pointer"
                   onClick={() =>
                     navigate(
@@ -88,8 +158,10 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
                       { state: { ticketData: ticket } }
                     )
                   }
+                  whileHover={{ x: 2 }}
                 >
-                  <h4 className="text-xl font-medium text-custom-blue truncate"
+                  <h4 
+                    className="text-xl font-medium text-custom-blue truncate"
                     onClick={() => {
                       if (userRole === 'Admin') {
                         navigate(`/support-desk/${ticket._id}`, {
@@ -100,15 +172,18 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
                           state: { ticketData: ticket },
                         });
                       }
-                    }}>
+                    }}
+                  >
                     Ticket #{ticket._id.slice(-5, -1)}
                   </h4>
                   <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
-                </div>
+                </motion.div>
                 <div className="flex gap-1 flex-shrink-0">
                   {hasActionAccess(ticket) && (
                     <>
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() =>
                           navigate(
                             userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
@@ -119,9 +194,11 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
                         className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <FaEye className="w-4 h-4" />
-                      </button>
+                      </motion.button>
                       {userRole === 'Admin' && (
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                           onClick={() =>
                             navigate(`/support-desk/edit-ticket/${ticket._id}`, {
                               state: { ticketData: ticket },
@@ -131,7 +208,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
                           className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
                         >
                           <FaPencilAlt className="w-4 h-4" />
-                        </button>
+                        </motion.button>
                       )}
                     </>
                   )}
@@ -139,35 +216,50 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId }) => {
               </div>
               <div className="mt-auto space-y-2 text-sm">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5 text-gray-600">
+                  <motion.div 
+                    className="flex items-center gap-1.5 text-gray-600"
+                    whileHover={{ x: 2 }}
+                  >
                     <span className="text-gray-500">Contact</span>
                     <span className="truncate">{ticket.contact || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-gray-600">
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center gap-1.5 text-gray-600"
+                    whileHover={{ x: 2 }}
+                  >
                     <span className="text-gray-500">Issue Type</span>
                     <span>{ticket.issueType || 'N/A'}</span>
-                  </div>
+                  </motion.div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5">
+                  <motion.div 
+                    className="flex items-center gap-1.5"
+                    whileHover={{ scale: 1.05 }}
+                  >
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
                       {ticket.status || 'N/A'}
                     </span>
-                  </div>
+                  </motion.div>
                   {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
-                    <div className="flex items-center gap-1.5">
+                    <motion.div 
+                      className="flex items-center gap-1.5"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
                         {ticket.priority || 'N/A'}
                       </span>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
                 {userRole === 'SuperAdmin' && (
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1.5 text-gray-600">
+                    <motion.div 
+                      className="flex items-center gap-1.5 text-gray-600"
+                      whileHover={{ x: 2 }}
+                    >
                       <span className="text-gray-500">Assigned To</span>
                       <span>{ticket.assignedTo || 'N/A'}</span>
-                    </div>
+                    </motion.div>
                   </div>
                 )}
               </div>

@@ -79,6 +79,50 @@ export const useAssessments = () => {
     }
   });
 
+  // Fetch assessment questions by assessment ID
+  const fetchAssessmentQuestions = async (assessmentId) => {
+    try {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/assessment-questions/list/${assessmentId}`
+      );
+      if (response.data.success) {
+        return {
+          data: response.data.data,
+          error: null
+        };
+      } else {
+        throw new Error('Failed to fetch assessment questions');
+      }
+    } catch (error) {
+      console.error('Error fetching assessment questions:', error.message);
+      return {
+        data: null,
+        error: error.message
+      };
+    }
+  };
+
+
+  // Fetch results for a specific assessment
+const fetchAssessmentResults = async (assessmentId) => {
+  try {
+    const response = await axios.get(
+      `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`
+    );
+    return {
+      data: response.data,
+      error: null
+    };
+  } catch (error) {
+    console.error('Error fetching assessment results:', error.message);
+    return {
+      data: [],
+      error: error.message
+    };
+  }
+};
+
+
   // Calculate loading states
   const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
@@ -110,5 +154,7 @@ export const useAssessments = () => {
     upsertQuestionsError: upsertAssessmentQuestions.error,
     addOrUpdateAssessment: addOrUpdateAssessment.mutateAsync,
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
+    fetchAssessmentQuestions,
+    fetchAssessmentResults
   };
 };

@@ -43,8 +43,6 @@ const SuggestedQuestionsComponent = ({
         getInterviewerQuestions,
         suggestedQuestions,
         setSuggestedQuestions,
-        interviewerSectionData,
-        setInterviewerSectionData,
         suggestedQuestionsFilteredData,
         setSuggestedQuestionsFilteredData,
     } = useCustomContext();

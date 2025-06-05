@@ -23,11 +23,6 @@ const MoockRoundCard = ({
   hideHeader = false
 }) => {
 
-    // const {
-    //   assessmentData,
-    // } = useCustomContext();
-
-
   const [showInterviewers, setShowInterviewers] = useState(false);
 
 
