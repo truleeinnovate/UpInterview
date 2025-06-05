@@ -10,9 +10,10 @@ import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../ut
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { X, Users, User, Trash2, Clock, Calendar } from 'lucide-react';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import InternalInterviews from "../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx";
 import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
 import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
+import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import LoadingButton from '../../../../Components/LoadingButton';
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -40,15 +41,20 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const {
-    // fetchMockInterviewData,
-    addOrUpdateMockInterview,
     qualification,
     technologies,
     skills,
     currentRole,
-    mockinterviewData,
     singlecontact
   } = useCustomContext();
+
+  const {
+    mockinterviewData,
+    addOrUpdateMockInterview,
+    isMutationLoading
+  } = useMockInterviews();
+
+  // Usage remains exactly the same as before
   console.log('singlecontact:', singlecontact);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,12 +88,6 @@ const MockSchedulelater = () => {
   const [scheduledDate, setScheduledDate] = useState("");
 
   const [mockEdit, setmockEdit] = useState(false);
-
-
-  // skills
-  // const [unsavedChanges, setUnsavedChanges] = useState(false);
-
-
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
@@ -98,7 +98,6 @@ const MockSchedulelater = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [teamData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
 
@@ -297,7 +296,7 @@ const MockSchedulelater = () => {
     }
 
     // Call the mutation
-    addOrUpdateMockInterview.mutate({
+    addOrUpdateMockInterview({
       formData: {
         ...formData,
         entries,
@@ -1495,12 +1494,15 @@ const MockSchedulelater = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="bg-custom-blue text-white p-3 rounded py-1"
+
+                <LoadingButton
                   onClick={handleNext}
+                  isLoading={isMutationLoading}
+                  loadingText={mockEdit ? "Updating..." : "Saving..."}
+
                 >
                   {mockEdit ? "Update" : "Save"} & Next
-                </button>
+                </LoadingButton>
               </div>
 
               :
@@ -1512,14 +1514,17 @@ const MockSchedulelater = () => {
                 >
                   Back
                 </button>
-                <button
-                  type="submit"
-                  className="bg-custom-blue text-white mt-3 p-3 rounded py-1"
+
+
+                <LoadingButton
                   onClick={(e) => handleSubmit(e)}
+                  isLoading={isMutationLoading}
+                  loadingText={mockEdit ? "Updating..." : "Saving..."}
 
                 >
                   {formData.rounds.interviewType === 'InstantInterview' ? 'Save & Schedule' : 'Save'}
-                </button>
+
+                </LoadingButton>
               </div>
           }
 

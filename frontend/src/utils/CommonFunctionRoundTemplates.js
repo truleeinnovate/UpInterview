@@ -11,9 +11,6 @@ export const useInterviewerDetails = () => {
  
    
     
-    
-    
-
     return interviewerIds?.map(interviewer => {
       // If interviewer is already a full object (from API response)
       if (interviewer && typeof interviewer === 'object' && interviewer?.name) {

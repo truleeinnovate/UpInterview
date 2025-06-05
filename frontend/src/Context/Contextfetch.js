@@ -192,94 +192,94 @@ const CustomProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
 
-  // Mockinterview
-  const sharingPermissionsMock = useMemo(
-    () => sharingPermissionscontext.mockInterviews || {},
-    [sharingPermissionscontext]
-  );
+  // // Mockinterview
+  // const sharingPermissionsMock = useMemo(
+  //   () => sharingPermissionscontext.mockInterviews || {},
+  //   [sharingPermissionscontext]
+  // );
 
-  // Query for fetching mock interviews
-  const {
-    data: mockinterviewData = [],
-    isLoading: mockInterviewsLoading,
-    refetch: refetchMockInterviews
-  } = useQuery({
-    queryKey: ['mockinterviews', sharingPermissionsMock],
-    queryFn: async () => {
-      const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
-      return filteredInterviews.reverse(); // Show most recent first
-    },
-    enabled: !!sharingPermissionsMock,
-  });
+  // // Query for fetching mock interviews
+  // const {
+  //   data: mockinterviewData = [],
+  //   isLoading: mockInterviewsLoading,
+  //   refetch: refetchMockInterviews
+  // } = useQuery({
+  //   queryKey: ['mockinterviews', sharingPermissionsMock],
+  //   queryFn: async () => {
+  //     const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
+  //     return filteredInterviews.reverse(); // Show most recent first
+  //   },
+  //   enabled: !!sharingPermissionsMock,
+  // });
 
-  // Mutation for creating/updating mock interviews
-  const addOrUpdateMockInterview = useMutation({
-    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
-      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+  // // Mutation for creating/updating mock interviews
+  // const addOrUpdateMockInterview = useMutation({
+  //   mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+  //     const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
 
-      const payload = {
-        skills: formData.entries?.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        Role: formData.Role,
-        candidateName: formData.candidateName,
-        higherQualification: formData.higherQualification,
-        currentExperience: formData.currentExperience,
-        technology: formData.technology,
-        jobDescription: formData.jobDescription,
-        rounds: {
-          ...formData.rounds,
-          dateTime: formData.combinedDateTime, // Expecting combinedDateTime in formData
-          status: status,
-        },
-        createdById: userId,
-        lastModifiedById: userId,
-        ownerId: userId,
-        tenantId: organizationId,
-      };
+  //     const payload = {
+  //       skills: formData.entries?.map((entry) => ({
+  //         skill: entry.skill,
+  //         experience: entry.experience,
+  //         expertise: entry.expertise,
+  //       })),
+  //       Role: formData.Role,
+  //       candidateName: formData.candidateName,
+  //       higherQualification: formData.higherQualification,
+  //       currentExperience: formData.currentExperience,
+  //       technology: formData.technology,
+  //       jobDescription: formData.jobDescription,
+  //       rounds: {
+  //         ...formData.rounds,
+  //         dateTime: formData.combinedDateTime, // Expecting combinedDateTime in formData
+  //         status: status,
+  //       },
+  //       createdById: userId,
+  //       lastModifiedById: userId,
+  //       ownerId: userId,
+  //       tenantId: organizationId,
+  //     };
 
-      const url = isEdit
-        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${config.REACT_APP_API_URL}/mockinterview`;
+  //     const url = isEdit
+  //       ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+  //       : `${config.REACT_APP_API_URL}/mockinterview`;
 
-      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+  //     const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
 
-      // Handle interviewer requests if any
-      if (formData.rounds.interviewers?.length > 0) {
-        await Promise.all(
-          formData.rounds.interviewers.map(async (interviewer) => {
-            const outsourceRequestData = {
-              tenantId: organizationId,
-              ownerId: userId,
-              scheduledInterviewId: interviewer,
-              id: interviewer._id,
-              dateTime: formData.combinedDateTime,
-              duration: formData.rounds.duration,
-              candidateId: formData.candidate?._id,
-              roundId: response.data.savedRound._id,
-              requestMessage: "Outsource interview request",
-              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            };
-            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
-          })
-        );
-      }
+  //     // Handle interviewer requests if any
+  //     if (formData.rounds.interviewers?.length > 0) {
+  //       await Promise.all(
+  //         formData.rounds.interviewers.map(async (interviewer) => {
+  //           const outsourceRequestData = {
+  //             tenantId: organizationId,
+  //             ownerId: userId,
+  //             scheduledInterviewId: interviewer,
+  //             id: interviewer._id,
+  //             dateTime: formData.combinedDateTime,
+  //             duration: formData.rounds.duration,
+  //             candidateId: formData.candidate?._id,
+  //             roundId: response.data.savedRound._id,
+  //             requestMessage: "Outsource interview request",
+  //             expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  //           };
+  //           await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+  //         })
+  //       );
+  //     }
 
-      return response.data;
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['mockinterviews']); // Refresh the list
-      // You can add navigation here if needed
-      // variables.navigate('/mockinterview');
-    },
-    onError: (error) => {
-      console.error("Mock interview error:", error);
-      // You can add toast notifications here
-      // toast.error(error.message);
-    }
-  });
+  //     return response.data;
+  //   },
+  //   onSuccess: (data, variables) => {
+  //     queryClient.invalidateQueries(['mockinterviews']); // Refresh the list
+  //     // You can add navigation here if needed
+  //     // variables.navigate('/mockinterview');
+  //   },
+  //   onError: (error) => {
+  //     console.error("Mock interview error:", error);
+  //     // You can add toast notifications here
+  //     // toast.error(error.message);
+  //   }
+  // });
 
   // const fetchMockInterviewData = useCallback(async () => {
   //   setLoading(true);
@@ -620,62 +620,6 @@ const CustomProvider = ({ children }) => {
     }
   }, []);
 
-  // interview template
-  const { data: templates = [], isLoading: templatesLoading, error } = useQuery({
-    queryKey: ['interviewTemplates', tenantId, userId],
-    queryFn: async () => {
-      try {
-        let queryString = '';
-        if (organization) {
-          queryString = `tenantId=${tenantId}&organization=true`;
-        } else {
-          queryString = `ownerId=${userId}&organization=false`;
-        }
-        const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-        const headers = { Authorization: `Bearer ${authToken}` };
-        const response = await axios.get(apiUrl, { headers });
-        const templatesData = response.data.data;
-
-        return templatesData;
-      } catch (err) {
-        console.error('Error fetching templates:', err);
-        throw err; // Let react-query handle the error
-      }
-    },
-    enabled: !!authToken,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  // Log error if it occurs
-  if (error) {
-    console.error('useQuery error:', error.message);
-  }
-
-
-  // Mutation for creating/updating templates
-  const saveTemplateMutation = useMutation({
-    mutationFn: async ({ id, templateData, isEditMode }) => {
-      let response;
-      if (isEditMode) {
-        response = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          ownerId: userId,
-          templateData,
-        });
-      } else {
-        response = await axios.post(`${config.REACT_APP_API_URL}/interviewTemplates`, {
-          ...templateData,
-          tenantId,
-          ownerId: userId,
-        });
-      }
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['interviewTemplates']); // Refresh templates list
-    },
-  });
 
   // organization code
   const { data: organizationData, isLoading: organizationsLoading, error: organizationError } = useQuery({
@@ -1084,10 +1028,6 @@ const CustomProvider = ({ children }) => {
         // addOrUpdateCandidate,
 
 
-        // mockinterview
-        mockinterviewData,
-        mockInterviewsLoading,
-        addOrUpdateMockInterview,
 
         // teams
         // teamsData,
@@ -1131,10 +1071,6 @@ const CustomProvider = ({ children }) => {
         fetchQuestionsForAssessment,
         setSectionQuestions,
 
-        // interview templates
-        templates,
-        saveTemplateMutation,
-        templatesLoading,
 
         // organization
         organizationData,
