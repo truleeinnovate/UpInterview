@@ -14,6 +14,8 @@ import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
 import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import LoadingButton from '../../../../Components/LoadingButton';
+import { useMasterData } from "../../../../apiHooks/useMasterData";
+
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -41,12 +43,14 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const {
+    singlecontact
+  } = useCustomContext();
+  const {
     qualification,
     technologies,
     skills,
-    currentRole,
-    singlecontact
-  } = useCustomContext();
+    currentRoles,
+  } = useMasterData();
 
   const {
     mockinterviewData,
@@ -936,7 +940,7 @@ const MockSchedulelater = () => {
                           )}
                           {showDropdownRole && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {currentRole.map((role, index) => (
+                              {currentRoles.map((role, index) => (
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"

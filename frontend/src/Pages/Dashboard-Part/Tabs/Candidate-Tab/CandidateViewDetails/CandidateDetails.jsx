@@ -9,11 +9,6 @@ import { useCandidates } from '../../../../../apiHooks/useCandidates';
 Modal.setAppElement('#root');
 
 const CandidateDetails = ({mode}) => {
-  // const {
-  //   candidateData,
-  //   loading,
-  //   // fetchCandidates
-  // } = useCustomContext();
     const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});

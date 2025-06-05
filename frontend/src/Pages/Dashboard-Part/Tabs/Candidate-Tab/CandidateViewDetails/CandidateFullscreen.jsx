@@ -9,11 +9,6 @@ import Loading from '../../../../../Components/Loading';
 Modal.setAppElement('#root');
 
 const CandidateFullscreen = () => {
-  // const {
-  //   candidateData,
-  //   loading,
-  //   // fetchCandidates
-  // } = useCustomContext();
 
   const { candidateData } = useCandidates();
   const navigate = useNavigate();

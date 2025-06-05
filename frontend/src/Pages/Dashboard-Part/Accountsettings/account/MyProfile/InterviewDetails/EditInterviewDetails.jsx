@@ -12,16 +12,18 @@ import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg'
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { useNavigate, useParams } from 'react-router-dom';
 import { config } from '../../../../../../config';
+import { useMasterData } from '../../../../../../apiHooks/useMasterData';
 
 
 
 const EditInterviewDetails = ({ from,usersId,setInterviewEditOpen,onSuccess }) => {
 
   const {
-    skills,
-
    usersRes
   } = useCustomContext();
+    const {
+    skills,
+  } = useMasterData();
   const popupRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 

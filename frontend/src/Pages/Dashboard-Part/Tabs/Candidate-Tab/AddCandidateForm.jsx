@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import { format } from "date-fns";
 import { Search } from 'lucide-react';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
-import { useCustomContext } from '../../../../Context/Contextfetch';
 import CustomDatePicker from '../../../../utils/CustomDatePicker';
 import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
 import Cookies from 'js-cookie';
@@ -15,6 +14,7 @@ import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import { useCandidates } from '../../../../apiHooks/useCandidates';
 import LoadingButton from '../../../../Components/LoadingButton';
 import SkillsField from '../CommonCode-AllTabs/SkillsInput';
+import { useMasterData } from '../../../../apiHooks/useMasterData';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -124,15 +124,15 @@ const CustomDropdown = ({
 
 // Main AddCandidateForm Component
 const AddCandidateForm = ({ mode }) => {
-  const {
-    skills,
-    college,
-    qualification,
-    currentRole,
-    // candidateData,
-    // addOrUpdateCandidate
-  } = useCustomContext();
 
+    const {
+    skills,
+    colleges,
+    qualifications,
+    currentRoles
+  } = useMasterData();
+
+console.log('currentRoles:', currentRoles);
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
@@ -264,7 +264,7 @@ const AddCandidateForm = ({ mode }) => {
   };
 
 
-  const filteredCurrentRoles = currentRole?.filter(role =>
+  const filteredCurrentRoles = currentRoles?.filter(role =>
     role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
   );
 
@@ -808,7 +808,7 @@ const AddCandidateForm = ({ mode }) => {
                   label="Higher Qualification"
                   name="HigherQualification"
                   value={formData.HigherQualification}
-                  options={qualification}
+                  options={qualifications}
                   onChange={handleChange}
                   error={errors.HigherQualification}
                   placeholder="Select Higher Qualification"
@@ -821,7 +821,7 @@ const AddCandidateForm = ({ mode }) => {
                   label="University College"
                   name="UniversityCollege"
                   value={formData.UniversityCollege}
-                  options={college}
+                  options={colleges}
                   onChange={handleChange}
                   error={errors.UniversityCollege}
                   placeholder="Select University College"

@@ -4,14 +4,19 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { Minimize, Expand, X } from 'lucide-react';
-import { toast } from "react-toastify";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
-import { config } from "../../../../config";
+import { useSupportTickets } from '../../../../apiHooks/useSupportDesks';
+import LoadingButton from '../../../../Components/LoadingButton';
+
 
 const maxDescriptionLen = 500;
 
 const SupportForm = () => {
+  const {
+    isMutationLoading,
+    submitTicket
+  } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
@@ -145,35 +150,25 @@ const SupportForm = () => {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setErrors({ issueType: '', description: '' }); // Clear errors on submit
+    setErrors({ issueType: '', description: '' });
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     const formData = createFormData();
 
     try {
-      const url = editMode
-        ? `${config.REACT_APP_API_URL}/update-ticket/${initialTicketData._id}`
-        : `${config.REACT_APP_API_URL}/create-ticket`;
+      await submitTicket({
+        data: formData,
+        editMode,
+        ticketId: initialTicketData?._id,
+      });
 
-      const response = await axios[editMode ? 'patch' : 'post'](url, formData);
-
-      toast.success(response.data.message);
-
-      if (response.data.success) {
-        setFormState(initialFormState);
-        navigate('/support-desk');
-      }
+      setFormState(initialFormState);
+      navigate('/support-desk');
     } catch (error) {
-      console.error(error);
-      toast.error(editMode
-        ? "Failed to update ticket. Please try again."
-        : "Something went wrong while sending the ticket."
-      );
+      // Error is already handled in mutation's onError
     }
-  }, [editMode, initialTicketData, createFormData, navigate, initialFormState, validateForm]);
+  }, [formState, editMode, initialTicketData, submitTicket, navigate]);
 
   const renderIssueOptions = useCallback(() => (
     issuesData.map(each => (
@@ -323,13 +318,14 @@ const SupportForm = () => {
             >
               Cancel
             </button>
-            <button
-              type="button"
+
+            <LoadingButton
               onClick={handleSubmit}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 text-sm font-medium"
+              isLoading={isMutationLoading}
+              loadingText={editMode ? "Updating..." : "Saving..."}
             >
               {editMode ? "Update" : "Submit"}
-            </button>
+            </LoadingButton>
           </div>
         </div>
       </div>
