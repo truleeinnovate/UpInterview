@@ -1,28 +1,30 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
-import Tooltip from "@mui/material/Tooltip";
 import MockProfileDetails from "./MockProfileDetails";
 import ReschedulePopup from "./ReschedulePopup.jsx";
 import { motion } from 'framer-motion';
-import { Search, Plus, Eye, Pencil, Timer, XCircle } from 'lucide-react';
+import { Eye, Pencil, Timer, XCircle } from 'lucide-react';
 import CancelPopup from "./ScheduleCancelPopup.jsx";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { useNavigate } from "react-router-dom";
-import Loading from "../../../../Components/Loading.js";
-import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
-import { Menu } from '@headlessui/react';
-import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
+import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 
 const MockInterview = () => {
-  const { mockinterviewData, loading } = useCustomContext();
+  const { 
+  mockinterviewData, 
+  isLoading, 
+} = useMockInterviews();
+console.log("mockinterviewData:", mockinterviewData);
+
+
+// Usage remains exactly the same as before
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -253,7 +255,7 @@ const MockInterview = () => {
               <MockInterviewKanban
                 mockinterviews={currentFilteredRows}
                 mockinterviewData={mockinterviewData}
-                loading={loading}
+                loading={isLoading}
                 mockinterviewDataView={setmockinterviewDataView}
                 onRescheduleClick={onRescheduleClick}
                 onCancel={onCancelClick}
@@ -263,7 +265,7 @@ const MockInterview = () => {
                 data={currentFilteredRows}
                 columns={tableColumns}
                 actions={tableActions}
-                loading={loading}
+                loading={isLoading}
                 emptyState="No interviews found."
                 className="table-fixed w-full"
               />
