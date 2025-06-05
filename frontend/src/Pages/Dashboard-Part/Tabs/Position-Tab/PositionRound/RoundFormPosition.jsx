@@ -32,22 +32,14 @@ function RoundFormPosition() {
   } = useCustomContext();
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const { roundId, id } = useParams();
-
   const positionId = id;
-
-
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  // const userId = tokenPayload?.userId;
-  // const userName = tokenPayload?.userName;
   const tenantId = tokenPayload?.tenantId;
-
-
-  // Determine context (interview or position) based on params
+  
   const isPositionContext = !!positionId;
   const contextId = isPositionContext && positionId;
-  // const entityData = isPositionContext
-  //   && positions?.find(pos => pos._id === positionId)
+
 
   const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
   const [position, setPosition] = useState(null);
@@ -67,21 +59,14 @@ function RoundFormPosition() {
     interviewQuestionsList: [],
     selectedInterviewType: null,
     interviewers: [],
-    internalInterviewers: [],
+    // internalInterviewers: [],
     interviewType: 'instant',
     scheduledDate: '',
     duration: 30
   });
-
-
-
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
-  const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-
-
-  // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [errors, setErrors] = useState({ roundTitle: '', interviewMode: '' });
@@ -122,10 +107,8 @@ function RoundFormPosition() {
 
 
   const handleAddQuestionToRound = (question) => {
-    // console.log("question _id:", question);
     if (question && question.questionId && question.snapshot) {
 
-      // console.log("question _id:", question.questionId);
       setFormData(prev => ({
         ...prev,
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
@@ -133,14 +116,10 @@ function RoundFormPosition() {
           : [...prev.interviewQuestionsList, 
              {
           ...question,
-          mandatory: "false" // Default to false when adding a new question
+          mandatory: "false" 
         }
-            // question
           ]
       }));
-
-      // console.log("question", question);
-
 
       setErrors(prev => ({
         ...prev,
@@ -152,7 +131,6 @@ function RoundFormPosition() {
 
   const handleRemoveQuestion = (questionId,) => {
 
-    // console.log("questionId", questionId);
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
@@ -160,13 +138,7 @@ function RoundFormPosition() {
      setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
-  // const handleRemoveQuestion = (index) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     interviewQuestionsList: prev.interviewQuestionsList.filter((_, qIndex) => qIndex !== index)
-  //   }));
 
-  // };
 
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
@@ -232,7 +204,6 @@ function RoundFormPosition() {
             // Add safety check for foundPosition.rounds
             const roundEditData = foundPosition.rounds?.find(r => r._id === roundId);
 
-            console.log("roundEditData", roundEditData);
             // Add fallback empty array for interviewers
             const interviewers = roundEditData.interviewers || [];
             const internalInterviewers = resolveInterviewerDetails(interviewers);
@@ -254,12 +225,11 @@ function RoundFormPosition() {
               interviewQuestionsList: roundEditData.questions || [],
               selectedInterviewType: roundEditData.interviewerType || null,
               interviewers: internalInterviewers || [],
+              // internalInterviewers:internalInterviewers || [],
               interviewType: roundEditData.interviewType || 'instant',
               scheduledDate: '',
               duration: roundEditData.duration || 30
             }));
-
-            console.log("roundEditData.questions ", roundEditData.questions );
             
 
             if (roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId) {
@@ -312,26 +282,32 @@ function RoundFormPosition() {
   };
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    if (formData.selectedInterviewType === "external") {
+    if (formData.selectedInterviewType === "External") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
+    // Add name property by combining firstName and lastName
+  const interviewersWithFullName = interviewers.map(interviewer => ({
+    ...interviewer,
+    name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
+  }));
+
     setFormData(prev => ({
       ...prev,
-      selectedInterviewType: "internal",
-      internalInterviewers: interviewers
+      selectedInterviewType: "Internal",
+      interviewers:interviewersWithFullName
     }));
   };
 
   const handleExternalInterviewerSelect = () => {
 
-    if (formData.selectedInterviewType === "internal") {
+    if (formData.selectedInterviewType === "Internal") {
       alert("You need to clear internal interviewers before selecting outsourced interviewers.");
       return;
     }
     setFormData(prev => ({
       ...prev,
-      selectedInterviewType: "external",
+      selectedInterviewType: "External",
     }));
 
   };
@@ -339,11 +315,11 @@ function RoundFormPosition() {
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setFormData(prev => ({
       ...prev,
-      internalInterviewers: prev.internalInterviewers.filter(
+      interviewers: prev.interviewers.filter(
         interviewer => interviewer._id !== interviewerId
       ),
 
-      interviewerType: prev.internalInterviewers.length === 1 ? '' : prev.selectedInterviewType
+      interviewerType: prev.interviewers.length === 1 ? '' : prev.selectedInterviewType
     }));
 
   };
@@ -357,11 +333,11 @@ function RoundFormPosition() {
 
   };
 
-  const selectedInterviewers = formData.selectedInterviewType === "internal"
-    ? formData.internalInterviewers
-    : (formData.selectedInterviewType === "external" && []);
-  const isInternalSelected = formData.selectedInterviewType === "internal";
-  const isExternalSelected = formData.selectedInterviewType === "external";
+  const selectedInterviewers = formData.selectedInterviewType === "Internal"
+    ? formData.interviewers
+    : (formData.selectedInterviewType === "External" && []);
+  const isInternalSelected = formData.selectedInterviewType === "Internal";
+  const isExternalSelected = formData.selectedInterviewType === "External";
   const selectedInterviewersData = isInternalSelected && Array.isArray(selectedInterviewers)
     ? selectedInterviewers.map(interviewer => interviewer?._id).filter(Boolean)
     : [];
@@ -406,7 +382,7 @@ function RoundFormPosition() {
     }
 
     // Technical round validations
-    if (formData.roundTitle === 'Technical') {
+    if (formData.roundTitle !== 'Assessment') {
       if (!formData.duration) {
         newErrors.duration = 'Duration is required';
       }
@@ -457,26 +433,25 @@ function RoundFormPosition() {
 
     // Run validation first
     const isValid = validateForm();
-    console.log('validateForm result', isValid)
-    console.log('errors after validation', errors);
+
     if (!isValid) {
       setIsLoading(false);
       return; // Stop submission if there are errors
     }
-    console.log('errors after validation', errors);
+    // console.log('errors after validation', errors);
 
     const roundData = {
       roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
       interviewMode: formData.interviewMode,
       duration: formData.duration,
       interviewType: formData.interviewType,
-      interviewerType: formData.selectedInterviewType,
+      interviewerType: formData.roundTitle === "Assessment" ?  "" : formData.selectedInterviewType,
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
-        interviewers:
-          formData.selectedInterviewType === "internal"
-            ? formData.internalInterviewers.map(interviewer => interviewer._id)
+        interviewers: formData.roundTitle === "Assessment" ? [] :
+          formData.selectedInterviewType === "Internal"
+            ? formData.interviewers.map(interviewer => interviewer._id)
             : [], // If outsource, send empty array
       }),
       ...(formData.roundTitle === "Assessment" && formData.assessmentTemplate.assessmentId
@@ -484,16 +459,18 @@ function RoundFormPosition() {
           assessmentId: formData.assessmentTemplate.assessmentId,
           questions: []
         }
-        : {
-          questions: formData.interviewQuestionsList.map(q => ({
-           questionId: q.questionId,
-           snapshot: {
-            ...q.snapshot,
-             mandatory: q.snapshot.mandatory || "false"
-          }
-        })) || []
-          
-          // formData.interviewQuestionsList || []
+        : 
+        // {
+        //   questions: formData.interviewQuestionsList.map(q => ({
+        //    questionId: q.questionId,
+        //    snapshot: {
+        //     ...q.snapshot,
+        //      mandatory: q.snapshot.mandatory || "false"
+        //   }
+        // })) || []
+         { 
+         questions:  formData.interviewQuestionsList || []
+        
         }),
       instructions: formData.instructions,
     };
@@ -502,13 +479,10 @@ function RoundFormPosition() {
       // Include roundId only if editing
       const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData }
 
-      // console.log("payload roundData1", payload);
-
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/position/add-rounds`,
         payload
       );
-      // console.log("response", response.data);
 
       if (response.status === 201 || response.status === 200) {
         navigate(`/position/view-details/${positionId}`)
@@ -631,8 +605,6 @@ function RoundFormPosition() {
     ? (isPositionContext ? 'Edit Position Round' : 'Edit Interview Round')
     : (isPositionContext ? 'Add New Position Round' : 'Add New Interview Round');
 
-
-  // console.log("internalInterviewers selectedInterviewType ", formData);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1056,9 +1028,8 @@ function RoundFormPosition() {
                   )}
 
 
-
+ {formData.roundTitle !== 'Assessment' && (
                     <>
-
                       {/* Select Interviewers */}
                       <div>
                         <div className="flex justify-between items-center mb-2">
@@ -1110,7 +1081,7 @@ function RoundFormPosition() {
                                   <Users className="h-4 w-4 text-gray-500 mr-2" />
                                   <span className="text-sm text-gray-700">
                                     {isInternalSelected
-                                      ? `${formData.internalInterviewers.length} interviewer${formData.internalInterviewers.length !== 1 ? "s" : ""}`
+                                      ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? "s" : ""}`
                                       : "Outsourced interviewers"} selected
                                     {isInternalSelected && (
                                       <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
@@ -1142,11 +1113,11 @@ function RoundFormPosition() {
                                 <div className="mb-1">
                                   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                    {console.log('formData.internalInterviewers', formData.internalInterviewers)}
-                                    {formData.internalInterviewers.map((interviewer, index) => (
+                                    {console.log('formData.internalInterviewers', formData.interviewers)}
+                                    {formData.interviewers.map((interviewer, index) => (
                                       <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                         <div className="flex items-center">
-                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName} {interviewer?.lastName}</span>
+                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.name || ""}</span>
                                         </div>
                                         <button
                                           type="button"
@@ -1265,33 +1236,11 @@ function RoundFormPosition() {
  
 
                                  {isInterviewQuestionPopup &&
-                            <QuestionBank
-                              // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
-                              // sectionName=""
-                              // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                            <QuestionBank             
                               type="interviewerSection"
-                              // closeQuestionBank={handlePopupToggle}
-                              // questionBankPopupVisibility={isInterviewQuestionPopup}
-                              // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
-                              // addedSections={[]}
-                              // questionsLimit={0}
-                              // checkedCount={formData.interviewQuestionsList.length}
-                              interviewQuestionsLists={formData.interviewQuestionsList}
-                              // setInterviewQuestionsList={(questions) =>
-                              //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
-                              // }
+                              interviewQuestionsLists={formData.interviewQuestionsList}    
                               fromScheduleLater={true}
-                              // interviewQuestionsLists={formData.interviewQuestionsList}
                               onAddQuestion={handleAddQuestionToRound}
-                              // setInterviewQuestionsList={(question) =>
-                              //   setFormData((prev) => ({
-                              //     ...prev,
-                              //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
-                              //       ? prev.interviewQuestionsList
-                              //       : [...prev.interviewQuestionsList, question]
-                              //   }))
-                              // }
-
                               handleRemoveQuestion={handleRemoveQuestion}
                               handleToggleMandatory={handleToggleMandatory}
 
@@ -1304,6 +1253,7 @@ function RoundFormPosition() {
                         </div>
                       </div>
                     </>
+)}
 
 
                   <div>
@@ -1393,7 +1343,7 @@ function RoundFormPosition() {
           isOpen={isInternalInterviews}
           onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
-          selectedInterviewers={formData.internalInterviewers}
+          selectedInterviewers={formData.interviewers}
         />
       )}
     </div>

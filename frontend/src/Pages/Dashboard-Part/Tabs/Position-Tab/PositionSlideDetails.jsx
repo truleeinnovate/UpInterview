@@ -118,9 +118,9 @@ const PositionSlideDetails = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/position')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-red-100 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-red-400" />
             </button>
           </div>
         </div>

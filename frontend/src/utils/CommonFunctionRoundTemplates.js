@@ -4,12 +4,12 @@ import { useCustomContext } from "../Context/Contextfetch";
 export const useInterviewerDetails = () => {
   const { groups, interviewers } = useCustomContext();
 
-  console.log("interviewers", interviewers);
+  // console.log("interviewers", interviewers);
 
   const resolveInterviewerDetails = (interviewerIds) => {
     if (!interviewerIds || !Array.isArray(interviewerIds)) return [];
  
-    console.log("interviewerIds", interviewerIds);
+   
     
     
     
@@ -17,6 +17,7 @@ export const useInterviewerDetails = () => {
     return interviewerIds?.map(interviewer => {
       // If interviewer is already a full object (from API response)
       if (interviewer && typeof interviewer === 'object' && interviewer?.name) {
+        
         return {
           _id: interviewer?._id || interviewer?.$oid,
           name: interviewer?.name || 'Unknown Interviewer',
@@ -24,7 +25,7 @@ export const useInterviewerDetails = () => {
           type: 'individual'
         };
       }
-      
+       console.log("interviewerIds", interviewer);
       // Handle case where interviewer is just an ID object (like {$oid: "..."})
       const id = interviewer?.$oid || interviewer?._id || interviewer;
       
@@ -39,7 +40,7 @@ export const useInterviewerDetails = () => {
       if (teamMember) {
         return {
           _id: teamMember.contact._id,
-          name: teamMember.contact.lastName || 'Unknown Interviewer',
+          name:   (teamMember.contact.firstName || '') + " " + (teamMember.contact.lastName || '') || 'Unknown Interviewer',
           email: teamMember.contact.email || '',
           type: teamMember.contact.type || ""
         };
