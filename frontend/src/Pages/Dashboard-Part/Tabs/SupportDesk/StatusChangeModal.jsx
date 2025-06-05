@@ -1,19 +1,40 @@
 /* eslint-disable react/prop-types */
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { IoClose } from "react-icons/io5";
 import axios from 'axios';
 import { config } from '../../../../config';
 import { Minimize, Expand, X } from 'lucide-react';
-
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import Cookies from 'js-cookie';
 const statusOptions = ['New', 'Assigned', 'Inprogress', 'Resolved', "Close"];
 
 function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
+  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
+
   const [newStatus, setNewStatus] = useState('');
   const [comment, setComment] = useState('');
   const [notifyUser, setNotifyUser] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isFullWidth, setIsFullWidth] = useState(false);
+  const [modifiedUser, setModifiedUser] = useState(null);
+
+  
+  useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/${ownerId}`);
+          setModifiedUser(response.data.data);
+        } catch (error) {
+          console.error('Error fetching users:', error);
+        }
+      };
+  
+      fetchUsers();
+    }, [ownerId]);
+
 
   const isFormValid = useMemo(() => 
     newStatus && comment.trim().length > 0,
@@ -37,10 +58,11 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
 
     try {
       const statusData = { 
+        updatedByUserId: modifiedUser._id,
         status: newStatus, 
         comment: comment.trim(),
         notifyUser,
-        user: 'System' // You can replace this with actual user info if available
+        user: modifiedUser.firstName || 'System' // You can replace this with actual user info if available
       };
 
       const response = await axios.patch(
@@ -71,7 +93,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isFormValid, newStatus, comment, notifyUser, ticketId, onClose, onStatusUpdate]);
+  }, [isFormValid, newStatus, comment, notifyUser, ticketId, onClose, onStatusUpdate, modifiedUser]);
 
   const handleSubmit = useCallback(() => {
     updateTicketStatus();

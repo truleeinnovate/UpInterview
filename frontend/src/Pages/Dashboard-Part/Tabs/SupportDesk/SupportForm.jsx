@@ -39,24 +39,24 @@ const SupportForm = () => {
   const [formState, setFormState] = useState(initialFormState);
   const { otherIssueFlag, otherIssue, selectedIssue, file, description } = formState;
   const fileRef = useRef(null);
-  const [contact, setContact] = useState('');
+  const [contact, setContact] = useState(null);
   const [organization, setOrganization] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/api/auth/users/${ownerId}`);
-        setContact(response.data.Name);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/${ownerId}`);
+        setContact(response.data.data);
 
-        const response2 = await axios.get(`${config.REACT_APP_API_URL}/organization/${response.data.tenantId}`);
-        setOrganization(response2.data.Organization);
+        const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`);
+        setOrganization(response2.data.company);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     };
 
     fetchUsers();
-  }, []);
+  }, [ownerId, tenantId]);
 
   useEffect(() => {
     if (editMode && initialTicketData) {
@@ -135,11 +135,13 @@ const SupportForm = () => {
     description,
     file: file !== "No file selected" ? file : null,
     ...(editMode ? {} : {
-      contact: "Anu",
+      contact: contact?.firstName || '',
       tenantId,
       ownerId,
+      organization: organization,
+      createdByUserId: ownerId,
     })
-  }), [selectedIssue, otherIssue, description, file, editMode]);
+  }), [selectedIssue, otherIssue, description, file, editMode, contact, ownerId, tenantId, organization]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();

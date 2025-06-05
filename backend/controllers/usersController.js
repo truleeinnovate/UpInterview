@@ -16,9 +16,35 @@ const getUsers = async (req, res) => {
   }
 };
 
+// GET /api/users/owner/:ownerId
+const getUniqueUserByOwnerId = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+    // Find user by ownerId
+    const user = await Users.findOne({ _id: ownerId });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found for the given ownerId'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('❌ [getUniqueUserByOwnerId] Error:', error.message, error.stack);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
 
 
-
+    
 // ashraf's modified code which is using in the home availability interviewers
 // // Helper function to determine availability and next available time
 // const getAvailabilityInfo = async (availabilityIds) => {
@@ -30,7 +56,7 @@ const getUsers = async (req, res) => {
 //   const availabilityData = await Interviewavailability.find({
 //     _id: { $in: availabilityIds },
 //   }).lean();
-
+    
 //   // Current date and time (in IST, as per context: May 27, 2025, 12:21 PM IST)
 //   const now = new Date('2025-05-27T12:21:00+05:30');
 //   const today = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Kolkata' });
@@ -549,4 +575,4 @@ const getUsersByTenant = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant };
+module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant, getUniqueUserByOwnerId };
