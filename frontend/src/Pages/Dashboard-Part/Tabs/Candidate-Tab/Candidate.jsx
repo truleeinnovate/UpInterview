@@ -8,7 +8,7 @@ import Header from '../../../../Components/Shared/Header/Header';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
 import TableView from '../../../../Components/Shared/Table/TableView';
 import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
-import AddCandidateForm from './AddCandidateForm';
+import AddCandidateForm from './AddCandidateForm.jsx';
 import CandidateDetails from './CandidateViewDetails/CandidateDetails';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet } from 'react-router-dom';
