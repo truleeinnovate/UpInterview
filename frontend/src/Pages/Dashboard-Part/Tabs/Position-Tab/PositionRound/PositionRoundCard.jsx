@@ -34,39 +34,25 @@ const PositionRoundCard = ({
   hideHeader = false
 }) => {
 
-    const {
-      // assessmentData,
-      // loading,
-       sectionQuestions,
-      // questionsLoading,
-      // questionsError,
-      fetchQuestionsForAssessment,
-    
+  const {
+    sectionQuestions,
+    fetchQuestionsForAssessment,
     questionsLoading,
     questionsError,
-
     setSectionQuestions,
-      // setSectionQuestions,
-    } = useCustomContext();
+  } = useCustomContext();
 
   const { resolveInterviewerDetails } = useInterviewerDetails();
-  // const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [confirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  // console.log("sectionQuestions", sectionQuestions);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [loadingQuestions] = useState(false);
 
   const interview = interviewData;
-  // const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
-
-  console.log("resolveInterviewerDetails", resolveInterviewerDetails());
-  
-
 
   useEffect(() => {
     fetchQuestionsForAssessment(round.assessmentId)
@@ -74,12 +60,12 @@ const PositionRoundCard = ({
 
 
 
- 
+
 
   const toggleSection = async (sectionId) => {
     // First close all questions in this section if we're collapsing
     if (expandedSections[sectionId]) {
-      const newExpandedQuestions = {...expandedQuestions};
+      const newExpandedQuestions = { ...expandedQuestions };
       const section = sectionQuestions[sectionId];
       if (section && section.questions) {
         section.questions.forEach(question => {
@@ -88,13 +74,13 @@ const PositionRoundCard = ({
       }
       setExpandedQuestions(newExpandedQuestions);
     }
-  
+
     // Then toggle the section
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
     }));
-  
+
     // Fetch questions if expanding and not already loaded
     if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
       await fetchQuestionsForAssessment(round?.assessmentId);
@@ -111,7 +97,7 @@ const PositionRoundCard = ({
     setShowQuestions(!showQuestions);
   };
 
- 
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not scheduled';
@@ -160,31 +146,14 @@ const PositionRoundCard = ({
     setShowConfirmModal(false);
   };
 
-  // const handleReject = (reason) => {
-  //   handleStatusChange("Rejected", reason);
-  //   setShowRejectionModal(false);
-  // };
-
-  // const handleRemoveInterviewer = (interviewerId) => {
-  //   const updatedRound = {
-  //     interviewers: round.interviewers.filter(id => id !== interviewerId)
-  //   };
-  // };
 
   // Get interviewers based on interviewerType
   const internalInterviewers =
-    round?.interviewerType === "internal" ? round?.interviewers || [] : [];
+    round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
   const externalInterviewers =
-    round?.interviewerType === "external" ? round?.interviewers || [] : [];
+    round?.interviewerType === "External" ? round?.interviewers || [] : [];
 
-  // Get questions
-  // const questions = round?.questions || [];
-  // console.log("questions", questions);
-
-
-  // Check if round is active (can be modified)
-  // const isRoundActive = round.status !== 'Completed' && round.status !== 'Cancelled' && round.status !== 'Rejected' && !isInterviewCompleted;
 
   // Check if round has feedback
   const hasFeedback = round?.detailedFeedback || (round?.feedbacks && round.feedbacks.length > 0);
@@ -200,7 +169,7 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  console.log("internalInterviewers",internalInterviewers,round);
+  // console.log("internalInterviewers", internalInterviewers, round);
 
 
   return (
@@ -266,11 +235,14 @@ const PositionRoundCard = ({
                 </div>
                 {round.assessmentId ? <div></div>
                   : <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+                    <div className="flex justify-between items-center ">
+                      <h4 className="text-sm font-medium text-gray-700"> {showInterviewers &&
+                      <span>{round?.interviewerType || ""}</span>
+                    } Interviewers </h4>
                       <button
-                        onClick={() => {setShowInterviewers(!showInterviewers)
-                       
+                        onClick={() => {
+                          setShowInterviewers(!showInterviewers)
+
                         }}
                         className="text-sm text-custom-blue hover:text-custom-blue flex items-center"
                       >
@@ -279,37 +251,32 @@ const PositionRoundCard = ({
                       </button>
                     </div>
 
+                   
+
                     {showInterviewers && round?.interviewers && (
                       <div className="space-y-2">
                         {internalInterviewers.length > 0 && (
                           <div>
-                            <div className="flex items-center text-xs text-gray-500 mb-1">
+                            <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
                               <User className="h-3 w-3 mr-1" />
                               <span>
                                 {/* Internal ({round?.interviewers.length}) */}
                                 {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
                               </span>
                             </div>
-                             {showInterviewers && round.interviewers && (
-                            <div className="flex flex-wrap gap-2">
-                              {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
-                                <div key={index} className="flex items-center">
-                                  <InterviewerAvatar interviewer={interviewer} size="sm" />
-                                  <span className="ml-1 text-xs text-gray-600">
-                                    {interviewer.name}
-                                  </span>
-                                  {/* {isRoundActive && canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveInterviewer(interviewer._id)}
-                                    className="ml-1 text-gray-400 hover:text-red-500"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </button>
-                                )} */}
-                                </div>
-                              ))}
-                            </div>
-                              )}
+                            {showInterviewers && round.interviewers && (
+                              <div className="flex flex-wrap gap-2">
+                                {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                                  <div key={index} className="flex items-center">
+                                    <InterviewerAvatar interviewer={interviewer} size="sm" />
+                                    <span className="ml-1 text-xs text-gray-600">
+                                      {interviewer.name}
+                                    </span>
+                               
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -326,19 +293,18 @@ const PositionRoundCard = ({
                                   <span className="ml-1 text-xs text-gray-600">
                                     {interviewer.name}
                                   </span>
-                                  {/* {isRoundActive && canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveInterviewer(interviewer._id)}
-                                    className="ml-1 text-gray-400 hover:text-red-500"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </button>
-                                )} */}
+                               
                                 </div>
                               ))}
                             </div>
                           </div>
-                        )}
+
+                        )
+                      }
+
+                      {externalInterviewers.length === 0 &&  round?.interviewerType === "External" &&
+                      <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
+                      }
                       </div>
                     )}
                   </div>
@@ -347,10 +313,10 @@ const PositionRoundCard = ({
               </div>
 
 
-              {round.roundTitle === 'Technical' && (
+              {round.roundTitle !== 'Assessment' && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+                    <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
                     <button
                       onClick={() => setShowQuestions(!showQuestions)}
                       className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
@@ -370,7 +336,7 @@ const PositionRoundCard = ({
                             return (
                               <li
                                 key={qIndex}
-                              className="text-gray-600 font-sm"
+                                className="text-gray-600 font-sm"
 
                               >
                                 <span >
@@ -584,24 +550,24 @@ const PositionRoundCard = ({
         </div>
 
         {/* {isRoundActive && ( */}
-            <div className="m-4 flex justify-end space-x-3">
-              {canEdit && (
-                <Button
-                  onClick={onEdit}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Round
-                </Button>
-              )}
-            </div>
-          {/* )} */}
+        <div className="m-4 flex justify-end space-x-3">
+          {canEdit && (
+            <Button
+              onClick={onEdit}
+              variant="outline"
+              size="sm"
+              className="flex items-center"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit Round
+            </Button>
+          )}
+        </div>
+        {/* )} */}
 
       </div>
 
- 
+
 
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">

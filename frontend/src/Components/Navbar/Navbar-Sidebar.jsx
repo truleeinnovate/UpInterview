@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaArrowRight, FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import {IoMdInformationCircleOutline, IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import { IoMdInformationCircleOutline, IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { IoHome } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { LiaWalletSolid } from "react-icons/lia";
 import { NavLink, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+// import { useAuth0 } from "@auth0/auth0-react";
 import "./Navbar-Sidebar.scss";
 import Cookies from "js-cookie";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
 import { config } from "../../config.js";
+import { clearAllCookies } from "../../utils/AuthCookieManager/AuthCookieManager";
 
 const Navbar = () => {
   const location = useLocation();
@@ -23,7 +24,7 @@ const Navbar = () => {
   const userId = tokenPayload?.userId;
   const userName = tokenPayload?.userName;
   const organization = tokenPayload?.organization;
-  const { logout } = useAuth0();
+  // const { logout } = useAuth0();
   const navigate = useNavigate();
 
   // State for dropdowns and sidebar
@@ -201,7 +202,8 @@ const Navbar = () => {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-            logout({ returnTo: window.location.origin });
+            clearAllCookies();
+            navigate("/");
           }}
         >
           Log Out
@@ -301,7 +303,7 @@ const Navbar = () => {
           <div className="flex justify-between items-center border-gray-100 p-2 sm:px-4">
             {/* Mobile menu button and logo */}
             <div className="flex items-center">
-              <button 
+              <button
                 className="sidebar-icon12 mr-2 lg:hidden xl:hidden 2xl:hidden"
                 onClick={toggleSidebar}
               >
@@ -315,9 +317,8 @@ const Navbar = () => {
               <div className="flex items-center space-x-8 max-w-3xl">
                 <NavLink
                   to="/candidate"
-                  className={`h-full flex items-center relative px-1 ${
-                    isActive("/candidate") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
-                  }`}
+                  className={`h-full flex items-center relative px-1 ${isActive("/candidate") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
+                    }`}
                   onClick={() => closeAllDropdowns()}
                 >
                   Candidates
@@ -328,9 +329,8 @@ const Navbar = () => {
 
                 <NavLink
                   to="/position"
-                  className={`h-full flex items-center relative px-1 ${
-                    isActive("/position") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
-                  }`}
+                  className={`h-full flex items-center relative px-1 ${isActive("/position") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
+                    }`}
                   onClick={() => closeAllDropdowns()}
                 >
                   Positions
@@ -341,11 +341,10 @@ const Navbar = () => {
 
                 <div className="relative h-full flex items-center" ref={interviewRef}>
                   <button
-                    className={`flex items-center h-full relative px-1 ${
-                      isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
-                        ? "text-custom-blue font-bold"
-                        : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                    className={`flex items-center h-full relative px-1 ${isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                      }`}
                     onClick={toggleInterviewDropdown}
                   >
                     Interviews
@@ -354,37 +353,35 @@ const Navbar = () => {
                       <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                     )}
                   </button>
-                {dropdownState.interviewDropdown && (
-  <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-    <div className="space-y-1">
-      {[
-        { to: "/interview-templates", label: "Interview Templates" },
-        { to: "/interviewList", label: "Interviews" },
-        ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
-      ].map(({ to, label }) => (
-        <NavLink
-          key={to}
-          className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-            isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-          }`}
-          to={to}
-          onClick={() => closeAllDropdowns()}
-        >
-          {label}
-        </NavLink>
-      ))}
-    </div>
-  </div>
-)}
+                  {dropdownState.interviewDropdown && (
+                    <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                      <div className="space-y-1">
+                        {[
+                          { to: "/interview-templates", label: "Interview Templates" },
+                          { to: "/interviewList", label: "Interviews" },
+                          ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+                        ].map(({ to, label }) => (
+                          <NavLink
+                            key={to}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                              }`}
+                            to={to}
+                            onClick={() => closeAllDropdowns()}
+                          >
+                            {label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="relative h-full flex items-center" ref={assessmentRef}>
                   <button
-                    className={`flex items-center h-full relative px-1 ${
-                      isActive("/assessments") || isActive("/questionBank")
-                        ? "text-custom-blue font-bold"
-                        : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                    className={`flex items-center h-full relative px-1 ${isActive("/assessments") || isActive("/questionBank")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                      }`}
                     onClick={toggleAssessmentDropdown}
                   >
                     Assessments
@@ -402,9 +399,8 @@ const Navbar = () => {
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                            }`}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                              }`}
                             to={to}
                             onClick={() => closeAllDropdowns()}
                           >
@@ -418,11 +414,10 @@ const Navbar = () => {
 
                 <div className="relative h-full flex items-center" ref={moreRef}>
                   <button
-                    className={`flex items-center h-full relative px-1 ${
-                      isActive("/analytics") || isActive("/support-desk")
-                        ? "text-custom-blue font-bold"
-                        : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                    className={`flex items-center h-full relative px-1 ${isActive("/analytics") || isActive("/support-desk")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                      }`}
                     onClick={toggleMoreDropdown}
                   >
                     More
@@ -440,9 +435,8 @@ const Navbar = () => {
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                            }`}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                              }`}
                             to={to}
                             onClick={() => closeAllDropdowns()}
                           >
@@ -478,9 +472,8 @@ const Navbar = () => {
               <div className="p-4 space-y-1">
                 <NavLink
                   to="/candidate"
-                  className={`block px-4 py-3 rounded-md ${
-                    isActive("/candidate") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`block px-4 py-3 rounded-md ${isActive("/candidate") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   onClick={() => {
                     closeAllDropdowns();
                     toggleSidebar();
@@ -491,9 +484,8 @@ const Navbar = () => {
 
                 <NavLink
                   to="/position"
-                  className={`block px-4 py-3 rounded-md ${
-                    isActive("/position") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`block px-4 py-3 rounded-md ${isActive("/position") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   onClick={() => {
                     closeAllDropdowns();
                     toggleSidebar();
@@ -504,48 +496,45 @@ const Navbar = () => {
 
                 <div className="relative" ref={interviewRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                      isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
-                        ? "bg-gray-100 text-custom-blue font-bold"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={toggleInterviewDropdown}
                   >
                     <span>Interviews</span>
                     {dropdownState.interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
                   </button>
-               {dropdownState.interviewDropdown && (
-  <div className="mt-1 ml-4 space-y-1">
-    {[
-      { to: "/interview-templates", label: "Interview Templates" },
-      { to: "/interviewList", label: "Interviews" },
-      ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
-    ].map(({ to, label }) => (
-      <NavLink
-        key={to}
-        className={`block px-4 py-2 rounded-md ${
-          isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-        }`}
-        to={to}
-        onClick={() => {
-          closeAllDropdowns();
-          toggleSidebar();
-        }}
-      >
-        {label}
-      </NavLink>
-    ))}
-  </div>
-)}
+                  {dropdownState.interviewDropdown && (
+                    <div className="mt-1 ml-4 space-y-1">
+                      {[
+                        { to: "/interview-templates", label: "Interview Templates" },
+                        { to: "/interviewList", label: "Interviews" },
+                        ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+                      ].map(({ to, label }) => (
+                        <NavLink
+                          key={to}
+                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
+                            }`}
+                          to={to}
+                          onClick={() => {
+                            closeAllDropdowns();
+                            toggleSidebar();
+                          }}
+                        >
+                          {label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="relative" ref={assessmentRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                      isActive("/assessments") || isActive("/questionBank")
-                        ? "bg-gray-100 text-custom-blue font-bold"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") || isActive("/questionBank")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={toggleAssessmentDropdown}
                   >
                     <span>Assessments</span>
@@ -559,9 +548,8 @@ const Navbar = () => {
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}
-                          className={`block px-4 py-2 rounded-md ${
-                            isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                          }`}
+                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
+                            }`}
                           to={to}
                           onClick={() => {
                             closeAllDropdowns();
@@ -577,11 +565,10 @@ const Navbar = () => {
 
                 <div className="relative" ref={moreRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                      isActive("/analytics") || isActive("/support-desk")
-                        ? "bg-gray-100 text-custom-blue font-bold"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") || isActive("/support-desk")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={toggleMoreDropdown}
                   >
                     <span>More</span>
@@ -595,9 +582,8 @@ const Navbar = () => {
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}
-                          className={`block px-4 py-2 rounded-md ${
-                            isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                          }`}
+                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
+                            }`}
                           to={to}
                           onClick={() => {
                             closeAllDropdowns();

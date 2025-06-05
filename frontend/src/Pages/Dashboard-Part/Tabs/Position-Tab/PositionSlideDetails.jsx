@@ -13,25 +13,22 @@ import {
   Users
 } from 'lucide-react';
 import Modal from 'react-modal';
-import { useCustomContext } from '../../../../Context/Contextfetch';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
-import axios from 'axios';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
-import { config } from '../../../../config';
 import Loading from '../../../../Components/Loading';
+import { usePositions } from '../../../../apiHooks/usePositions';
 
 
 Modal.setAppElement('#root');
 
 const PositionSlideDetails = () => {
   const { id } = useParams();
-  const {
-    positions,
-  } = useCustomContext();
+    const { positionData } = usePositions();
+  
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState('vertical');
@@ -54,13 +51,9 @@ const PositionSlideDetails = () => {
   useEffect(() => {
     const fetchPosition = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/position/details/${id}`, {
-          params: {
-            tenantId: tenantId
-          }
-        });
-
-        const foundPosition = response.data;
+        const foundPosition = positionData?.find((pos) => pos._id === id);
+        console.log('Found Position:', foundPosition);
+        
 
         if (foundPosition) {
           setPosition(foundPosition || []);
@@ -118,9 +111,9 @@ const PositionSlideDetails = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/position')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-red-100 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-red-400" />
             </button>
           </div>
         </div>

@@ -59,7 +59,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-800">Internal Interviewers</h2>
-                    <p className="text-sm text-gray-500">Expert interviewers ready to help</p>
+                    <p className="text-sm text-gray-500">internal interviewers ready to help</p>
                 </div>
                 <button
                     onClick={() => setInternalInterviews(true)}

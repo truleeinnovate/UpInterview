@@ -1,7 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 import {
   Clock,
@@ -10,8 +8,11 @@ import {
   ChevronDown,
   FileText,
   User,
+
   Info,
-  Edit
+  Edit,
+  ExternalLink
+
 } from 'lucide-react';
 
 
@@ -46,11 +47,6 @@ const RoundCard = ({
   const [expandedSections, setExpandedSections] = useState({});
   const { resolveInterviewerDetails } = useInterviewerDetails();
 
-  
-  
-
-
-
 
 
   useEffect(() => {
@@ -59,18 +55,14 @@ const RoundCard = ({
   }, [round.assessmentId])
 
 
+    // Get interviewers based on interviewerType
+  const internalInterviewers =
+    round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
-  // const toggleSection = async (sectionId) => {
-  //   setExpandedSections(prev => ({
-  //     ...prev,
-  //     [sectionId]: !prev[sectionId]
-  //   }));
+  const externalInterviewers =
+    round?.interviewerType === "External" ? round?.interviewers || [] : [];
 
-  //   if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-  //     await fetchQuestionsForAssessment(round?.assessmentId);
-  //     // await fetchAssessmentData(formData.assessmentTemplate[0].assessmentId)
-  //   }
-  // };
+
 
 
   // Fetch question details when showing questions
@@ -112,73 +104,6 @@ const RoundCard = ({
 
 
 
-  // const fetchQuestionDetails = useCallback(async () => {
-  //   if (!showQuestions || !round.assessmentQuestions?.length) return;
-
-  //   setLoadingQuestions(true);
-  //   try {
-  //     const questionIds = [...new Set(
-  //       round.assessmentQuestions
-  //         .map(q => q.questionId)
-  //         .filter(id => id?.length > 0) // More robust empty check
-  //     )];
-
-  //     if (!questionIds.length) {
-  //       console.error('No valid question IDs found');
-  //       return;
-  //     }
-
-  //     const questions = await Promise.all(
-  //       questionIds.map(async (questionId) => {
-  //         try {
-  //           const response = await axios.get(
-  //             `${config.REACT_APP_API_URL}/assessment-questions/${questionId}`
-  //           );
-  //           return response.data?.data;
-  //         } catch (error) {
-  //           console.error(`Error fetching question ${questionId}:`, error.message);
-  //           return null;
-  //         }
-  //       })
-  //     );
-
-  //     // Create map with full question data
-  //     const questionsMap = questions.reduce((acc, question) => {
-  //       if (question?._id && question?.snapshot) {
-  //         acc[question._id] = {
-  //           ...question.snapshot, // Spread snapshot properties
-  //           _id: question._id     // Preserve question ID
-  //         };
-  //       }
-  //       return acc;
-  //     }, {});
-
-  //     if (!Object.keys(questionsMap).length) {
-  //       console.error('No valid questions found');
-  //       return;
-  //     }
-
-  //     setQuestionDetails(questionsMap);
-  //   } catch (error) {
-  //     console.error('Fetch error:', error.message);
-  //   } finally {
-  //     setLoadingQuestions(false);
-  //   }
-  // }, [showQuestions, round.assessmentQuestions]);
-
-
-
-  // Reset question details when round changes
-
-
-
-  // Fetch questions when showing them
-  // useEffect(() => {
-  //   if (showQuestions && round.assessmentQuestions?.length > 0) {
-  //     fetchQuestionDetails();
-  //   }
-  // }, [fetchQuestionDetails, showQuestions, round.assessmentQuestions]);
-
   return (
     <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-custom-blue' : ''}`}>
       <div className="p-5">
@@ -198,14 +123,15 @@ const RoundCard = ({
                   </div>
                 </>
               ) : (
-                <>
-                  {round?.roundTitle !== 'Assessment' &&
-                    <div className="flex items-center text-sm text-gray-500">
-                      <User className="h-4 w-4 mr-1" />
-                      <span>Interviewer Type: {round.interviewerType}</span>
-                    </div>
-                  }
-                </>
+                <></>
+                // <>
+                //   {round?.roundTitle !== 'Assessment' &&
+                //     <div className="flex items-center text-sm text-gray-500">
+                //       <User className="h-4 w-4 mr-1" />
+                //       <span>Interviewer Type: {round.interviewerType}</span>
+                //     </div>
+                //   }
+                // </>
               )}
 
               <div className="flex items-center text-sm text-gray-500">
@@ -219,10 +145,12 @@ const RoundCard = ({
 
           {/* Right Column */}
           <div>
-            {round.roundTitle === 'Technical' && (
+            {round.roundTitle !== 'Assessment' && (
               <>
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    {showInterviewers &&
+                      <span>{round?.interviewerType || ""}</span>} Interviewers</h4>
                   <button
                     onClick={() => setShowInterviewers(!showInterviewers)}
                     className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
@@ -232,37 +160,70 @@ const RoundCard = ({
                   </button>
                 </div>
 
-                <div className="flex items-center text-sm text-gray-600 mb-2">
-                  <Users className="h-4 w-4 mr-1" />
-                  <span>
-                    {round?.internalInterviewers.length} interviewer{resolveInterviewerDetails(round?.internalInterviewers || []).length !== 1 ? 's' : ''}
-                  </span>
-                </div>
+                  {showInterviewers && round?.interviewers && (
+                      <div className="space-y-2">
+                        {internalInterviewers.length > 0 && (
+                          <div>
+                            <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
+                              <User className="h-3 w-3 mr-1" />
+                              <span>
+                                {/* Internal ({round?.interviewers.length}) */}
+                                {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                            {showInterviewers && round.interviewers && (
+                              <div className="flex flex-wrap gap-2">
+                                {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                                  <div key={index} className="flex items-center">
+                                    <InterviewerAvatar interviewer={interviewer} size="sm" />
+                                    <span className="ml-1 text-xs text-gray-600">
+                                      {interviewer.name}
+                                    </span>
+                               
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                {showInterviewers && round?.internalInterviewers && (
-                  <div className="flex flex-wrap gap-2">
-                    {resolveInterviewerDetails(round?.internalInterviewers || []).map((interviewer, index) => (
+                        {externalInterviewers.length > 0 && (
+                          <div>
+                            <div className="flex items-center text-xs text-gray-500 mb-1">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              <span>External ({externalInterviewers.length})</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {externalInterviewers.map(interviewer => (
+                                <div key={interviewer._id} className="flex items-center">
+                                  <InterviewerAvatar interviewer={interviewer} size="sm" />
+                                  <span className="ml-1 text-xs text-gray-600">
+                                    {interviewer.name}
+                                  </span>
+                               
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-                      <div key={index} className="flex items-center">
-                        <InterviewerAvatar interviewer={interviewer} size="sm" />
-                        <span className="ml-1 text-xs text-gray-600">
-                          {interviewer.name}
-                        </span>
+                        )
+                      }
+
+                      {externalInterviewers.length === 0 &&  round?.interviewerType === "External" &&
+                      <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
+                      }
                       </div>
-
-                    ))}
-                  </div>
-                )}
+                    )}
 
               </>
             )}
           </div>
         </div>
 
-        {round.roundTitle === 'Technical' && (
+        {round.roundTitle !== 'Assessment' && (
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
-              <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+              <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
               <button
                 onClick={() => setShowQuestions(!showQuestions)}
                 className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"

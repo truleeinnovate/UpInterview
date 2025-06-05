@@ -139,13 +139,6 @@ const AddCandidateForm = ({ mode }) => {
   const orgId = tokenPayload?.tenantId;
 
   const { candidateData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdateCandidate } = useCandidates();
-  console.log('isMutationLoading:', isMutationLoading);
-  console.log('isLoading:', isLoading);
-
-
-  console.log("currentRole", currentRole);
-
-
   const { id } = useParams();
   const navigate = useNavigate();
 

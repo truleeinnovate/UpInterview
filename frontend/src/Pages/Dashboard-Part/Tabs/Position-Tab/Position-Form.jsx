@@ -13,7 +13,12 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+
 import SkillsField from '../CommonCode-AllTabs/SkillsInput.jsx';
+
+import { usePositions } from '../../../../apiHooks/usePositions';
+import LoadingButton from '../../../../Components/LoadingButton';
+
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
   label,
@@ -245,18 +250,16 @@ const CustomDropdown = ({
 // };
 
 const PositionForm = ({ mode }) => {
+  const { positionData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdatePosition } = usePositions();
+
   const { id, } = useParams();
   const location = useLocation();
-  const {
-    addOrUpdatePosition
-
-  } = useCustomContext();
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
   console.log('User info:', { userId, orgId });
-  
+
   // Get the previous path from navigation state
   const fromPath = location.state?.from || '/position';
 
@@ -266,7 +269,6 @@ const PositionForm = ({ mode }) => {
     locations,
     templates,
     skills,
-    positions
   } = useCustomContext();
 
 
@@ -449,7 +451,7 @@ const PositionForm = ({ mode }) => {
   useEffect(() => {
     if (id) {
 
-      const selectedPosition = positions.find(pos => pos._id === id);
+      const selectedPosition = positionData.find(pos => pos._id === id);
       setIsEdit(true)
       const matchingTemplate = templates.find(
         (template) => template.templateName === selectedPosition?.selectedTemplete
@@ -487,7 +489,7 @@ const PositionForm = ({ mode }) => {
       setAllSelectedSkills(selectedPosition.skills?.map(skill => skill.skill) || []);
     }
 
-  }, [isEdit, id, positions]);
+  }, [isEdit, id, positionData]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
@@ -562,7 +564,7 @@ const PositionForm = ({ mode }) => {
       //   );
       //   setPositionId(response.data.data._id);
       // }
-      const response = await addOrUpdatePosition.mutateAsync({
+      const response = await addOrUpdatePosition({
         id: id || null,
         data: basicdetails
       });
@@ -1370,60 +1372,19 @@ const PositionForm = ({ mode }) => {
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
+                <LoadingButton
                   onClick={(e) => handleSubmit(e, "BasicDetailsSave")}
-                  className="px-3 py-1 border bg-custom-blue text-white rounded hover:bg-custom-blue font-medium"
-                > {isEdit ? 'Update' : 'Save'}
+                  isLoading={isMutationLoading}
+                  loadingText={id ? "Updating..." : "Saving..."}
+                >
+                  {isEdit ? 'Update' : 'Save'}
+                </LoadingButton>
 
-                </button>
-
-                {/* Show 'Save & Add Round' if no rounds are added */}
-                {/* {!hasRounds && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleSubmit(e, "BasicDetailsSave&AddRounds")}
-                    className="px-3 py-1 border bg-custom-blue text-white rounded hover:bg-custom-blue font-medium"
-                  >
-                    Save & Add Round
-                  </button>
-                )} */}
-
-                {/* Show 'Save & Next' only when positionId exists & at least one round is added */}
-                {/* {positionId && hasRounds && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleSubmit(e, "BasicDetailsSave&Next")}
-                    className="px-3 py-1 border bg-custom-blue text-white rounded hover:bg-custom-blue font-medium"
-                  >
-                    Save & Next
-                  </button>
-                )} */}
 
               </div>
             </>
           )}
         </div>
-        {/* Round Modal */}
-        {/* {isRoundModalOpen && (
-          <RoundModal
-            isOpen={true}
-            // onClose={() => {
-            //   setIsRoundModalOpen(false);
-            //   setInsertIndex(-1);
-            // }}
-            onNext={handleRoundNext}
-            currentRoundNumber={insertIndex + 1}
-          />
-        )} */}
-
-        {/* Delete Confirmation Modal */}
-        {/* <DeleteConfirmationModal
-          isOpen={deleteConfirmation.isOpen}
-          roundNumber={deleteConfirmation.roundIndex + 1}
-          onConfirm={confirmDelete}
-          onCancel={() => setDeleteConfirmation({ isOpen: false, roundIndex: -1 })}
-        /> */}
       </div>
     </div>
   );

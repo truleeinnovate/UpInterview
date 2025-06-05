@@ -16,6 +16,7 @@ import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 
 function InterviewList() {
   const { interviewData, loading, skills, qualification } = useCustomContext();
+  console.log('interviewdata from interviews', interviewData)
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -197,6 +198,11 @@ function InterviewList() {
 
   // Table Columns Configuration
   const tableColumns = [
+    {
+      key: 'order',
+      header: "Order",
+      render: (value, row) => row.interviewCode || '-',
+    },
     {
       key: 'candidateName',
       header: 'Candidate Name',

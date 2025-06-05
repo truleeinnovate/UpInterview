@@ -929,6 +929,7 @@ app.use('/outsourceInterviewers', outsourceInterviewerRoutes);
 
 const InterviewRoutes = require('./routes/interviewRoutes.js')
 app.use('/interview', InterviewRoutes);
+
 const candidatePositionRoutes = require('./routes/candidatePositionRoutes.js');
 app.use('/candidateposition', candidatePositionRoutes);
 
@@ -936,3 +937,5 @@ app.use('/candidateposition', candidatePositionRoutes);
 const subscriptionUpdateRoutes = require('./routes/subscriptionUpdateRoutes.js');
 app.use('/subscription-update', subscriptionUpdateRoutes);
 
+const interviewRoundsRoutes = require('./routes/interviewRoundsRoutes.js');
+app.use('/interviewRounds', interviewRoundsRoutes);

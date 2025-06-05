@@ -1,0 +1,134 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { useEffect, useMemo, useRef } from 'react';
+import { fetchFilterData } from '../utils/dataUtils';
+import { config } from '../config';
+import { usePermissions } from '../Context/PermissionsContext';
+
+export const useMockInterviews = () => {
+  const queryClient = useQueryClient();
+  const { sharingPermissionscontext = {} } = usePermissions() || {};
+  const initialLoad = useRef(true);
+  
+  // Use simple assignment instead of memo if issues persist
+  const mockInterviewPermissions = sharingPermissionscontext?.mockInterviews || {};
+
+  // Query implementation
+  const {
+    data: mockinterviewData = [],
+    isLoading: isQueryLoading,
+    isError,
+    error,
+    refetch: refetchMockInterviews,
+  } = useQuery({
+    queryKey: ['mockinterviews', mockInterviewPermissions],
+    queryFn: async () => {
+      try {
+        const filteredInterviews = await fetchFilterData('mockinterview', mockInterviewPermissions);
+        return filteredInterviews.reverse();
+      } catch (err) {
+        console.error('Fetch error:', err);
+        throw err;
+      }
+    },
+    enabled: !!mockInterviewPermissions, // Original simpler condition
+    retry: 1,
+  });
+
+
+  // Add/Update mock interview mutation
+  const addOrUpdateMockInterview = useMutation({
+    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+
+      const payload = {
+        skills: formData.entries?.map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
+        Role: formData.Role,
+        candidateName: formData.candidateName,
+        higherQualification: formData.higherQualification,
+        currentExperience: formData.currentExperience,
+        technology: formData.technology,
+        jobDescription: formData.jobDescription,
+        rounds: {
+          ...formData.rounds,
+          dateTime: formData.combinedDateTime,
+          status: status,
+        },
+        createdById: userId,
+        lastModifiedById: userId,
+        ownerId: userId,
+        tenantId: organizationId,
+      };
+
+      const url = isEdit
+        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview`;
+
+      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+
+      // Handle interviewer requests if any
+      if (formData.rounds.interviewers?.length > 0) {
+        await Promise.all(
+          formData.rounds.interviewers.map(async (interviewer) => {
+            const outsourceRequestData = {
+              tenantId: organizationId,
+              ownerId: userId,
+              scheduledInterviewId: interviewer,
+              id: interviewer._id,
+              dateTime: formData.combinedDateTime,
+              duration: formData.rounds.duration,
+              candidateId: formData.candidate?._id,
+              roundId: response.data.savedRound._id,
+              requestMessage: "Outsource interview request",
+              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            };
+            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+          })
+        );
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['mockinterviews']);
+    },
+    onError: (error) => {
+      console.error("Mock interview error:", error);
+    }
+  });
+
+  // Calculate loading states
+  const isMutationLoading = addOrUpdateMockInterview.isPending;
+  const isLoading = isQueryLoading || isMutationLoading;
+
+  // Controlled logging
+  useEffect(() => {
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
+    }
+    console.log('useMockInterviews state update:', {
+      mockInterviewCount: mockinterviewData.length,
+      isLoading,
+      isQueryLoading,
+      isMutationLoading
+    });
+  }, [mockinterviewData.length, isLoading, isQueryLoading, isMutationLoading]);
+
+  return {
+    mockinterviewData,
+    isLoading,
+    isQueryLoading,
+    isMutationLoading,
+    isError,
+    error,
+    isAddOrUpdateError: addOrUpdateMockInterview.isError,
+    addOrUpdateError: addOrUpdateMockInterview.error,
+    addOrUpdateMockInterview: addOrUpdateMockInterview.mutateAsync,
+    refetchMockInterviews,
+  };
+};
