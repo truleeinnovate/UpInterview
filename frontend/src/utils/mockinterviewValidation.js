@@ -1,5 +1,4 @@
-
-
+// utils/mockinterviewValidation.js
 const getErrorMessage = (field, value) => {
   const messages = {
     candidateName: "Candidate Name is required",
@@ -55,7 +54,6 @@ const validatePage1 = (formData, entries) => {
   return { formIsValid, newErrors };
 };
 
-
 const validatemockForm = (formData, entries, errors) => {
   console.log("formData", formData);
   
@@ -89,7 +87,6 @@ const validatemockForm = (formData, entries, errors) => {
 
   console.log("newErrors", newErrors);
 
-
   if (entries.length === 0) {
     newErrors.skills = getErrorMessage("skills", entries.length);
     formIsValid = false;
@@ -100,8 +97,4 @@ const validatemockForm = (formData, entries, errors) => {
   return { formIsValid, newErrors };
 };
 
-module.exports = {
-  validatemockForm,
-  getErrorMessage,
-  validatePage1
-};
+export { validatemockForm, getErrorMessage, validatePage1 };
