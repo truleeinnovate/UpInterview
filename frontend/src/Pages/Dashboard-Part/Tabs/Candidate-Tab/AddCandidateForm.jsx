@@ -16,6 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import { useCandidates } from '../../../../apiHooks/useCandidates';
+import LoadingButton from '../../../../Components/LoadingButton';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -139,11 +140,7 @@ const AddCandidateForm = ({ mode }) => {
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
 
-  const { addOrUpdateCandidate, candidateData } = useCandidates();
-
-  console.log("currentRole", currentRole);
-
-
+  const { candidateData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdateCandidate } = useCandidates();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -476,15 +473,12 @@ const AddCandidateForm = ({ mode }) => {
 
   };
 
+
+
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
     console.log('Starting submit process...');
-    // Validate form data
-    const { formIsValid, newErrors } = validateCandidateForm(
-      formData,
-      entries || [],
-      errors || {}
-    );
+    const { formIsValid, newErrors } = validateCandidateForm(formData, entries, errors);
 
     if (!formIsValid) {
       console.log('Form validation failed:', newErrors);
@@ -492,7 +486,6 @@ const AddCandidateForm = ({ mode }) => {
       return;
     }
 
-    // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
     console.log('Current date and time:', currentDateTime);
 
@@ -516,35 +509,34 @@ const AddCandidateForm = ({ mode }) => {
       resume: null,
       CurrentRole: formData.CurrentRole,
       ownerId: userId,
-      tenantId: orgId
+      tenantId: orgId,
     };
 
     console.log('Submitting candidate data:', data);
 
     try {
-      let candidateId;
-      // getting the API from the apihooks for add or update candidate (post or patch)
-
-      await addOrUpdateCandidate.mutateAsync({ id, data, file });
+      console.log('Calling addOrUpdateCandidate with:', { id, data, file });
+      await addOrUpdateCandidate({ id, data, file });
       resetFormData();
-
       if (!isAddCandidate) {
-        switch (mode) {
-          case 'Edit':
-            navigate(`/candidate`);
-            break;
-          case 'Candidate Edit':
-            navigate(`/candidate/${id}`);
-            break;
-          default: // Create mode
-            navigate('/candidate');
-        }
+        setTimeout(() => {
+          switch (mode) {
+            case 'Edit':
+              navigate(`/candidate`);
+              break;
+            case 'Candidate Edit':
+              navigate(`/candidate/${id}`);
+              break;
+            default:
+              navigate('/candidate');
+          }
+        }, 500); // Delay navigation to ensure loading state is visible
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
+      setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
     }
   };
-
   const resetFormData = () => {
     setFormData({
       FirstName: '',
@@ -592,7 +584,7 @@ const AddCandidateForm = ({ mode }) => {
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
-        <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+        <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
 
@@ -1046,25 +1038,29 @@ const AddCandidateForm = ({ mode }) => {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors"
+                  disabled={isMutationLoading}
+                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
                   Cancel
                 </button>
-                <button
+
+                <LoadingButton
                   onClick={handleSubmit}
-                  className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
+                  isLoading={isMutationLoading}
+                  loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {id ? "Update" : "Save"}
-                </button>
+                </LoadingButton>
 
                 {!id && (
-                  <button
-                    type="button"
+                  <LoadingButton
                     onClick={(e) => handleSubmit(e, true)}
-                    className="px-4 py-2 bg-custom-blue text-white rounded-lg transition-colors flex items-center gap-2"
+                    isLoading={isMutationLoading}
+                    loadingText="Adding..."
                   >
-                    <FaPlus className="w-5 h-5" /> Add Candidate
-                  </button>
+                    <FaPlus className="w-5 h-5 mr-1" /> Add Candidate
+                  </LoadingButton>
                 )}
               </div>
             </form>
@@ -1207,7 +1203,6 @@ const AddCandidateForm = ({ mode }) => {
           </div>
         )}
       </Modal>
-
     </>
   );
 };

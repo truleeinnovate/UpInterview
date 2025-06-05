@@ -122,7 +122,7 @@ const UserInvoiceDetails = () => {
                                     </div>
                                     <div className="flex flex-col items-center ">
                                         <span className="text-gray-700">Plan Name</span>
-                                        <p className='text-black font-medium'>{invoiceData?.plan?.name || ""}</p>
+                                        <p className='text-black font-medium'>{invoiceData.plan?.name || ""}</p>
                                     </div>
                                 </div>
 

@@ -1,13 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion';
-import { Eye, Pencil, Mail, Phone, Briefcase, Linkedin, Badge, Info } from 'lucide-react';
-import maleImage from "../../Images/man.png";
-import femaleImage from "../../Images/woman.png";
-import genderlessImage from "../../Images/transgender.png";
+import { Eye } from 'lucide-react';
+// Fixing image imports - these images aren't needed for invoices
+// import maleImage from "../../../../assets/images/man.png";
+// import femaleImage from "../../../../assets/images/woman.png";
+// import genderlessImage from "../../../../assets/images/transgender.png";
 import { useNavigate } from "react-router-dom";
 
 
-const InvocieKanban = ({ currentFilteredRows, handleUserClick, handleEditClick, loading,  toggleSidebar }) => {
+const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handleEditClick = () => {}, loading = false, toggleSidebar = () => {} }) => {
  
   const navigate = useNavigate();
     return (

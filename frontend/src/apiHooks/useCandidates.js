@@ -4,19 +4,22 @@ import { fetchFilterData } from '../utils/dataUtils';
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
-// API hooks for getting the data and showing it in the candidate table and 
-// kanban from the backend mapping
 export const useCandidates = () => {
   const queryClient = useQueryClient();
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const candidatePermissions = sharingPermissionscontext?.candidate || {};
 
-  const { data: candidateData = [], loading } = useQuery({
+  console.log('useCandidates initialized with permissions:', candidatePermissions);
+
+  const {
+    data: candidateData = [],
+    isLoading: isQueryLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['candidates', candidatePermissions],
-    
     queryFn: async () => {
       const filteredCandidates = await fetchFilterData('candidate', candidatePermissions);
-      console.log('filteredCandidates', filteredCandidates);
       return filteredCandidates.map(candidate => {
         if (candidate.ImageData?.filename) {
           return {
@@ -24,32 +27,32 @@ export const useCandidates = () => {
             imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`,
           };
         }
-        console.log('candidate', candidate);
         return candidate;
       }).reverse();
     },
     enabled: !!candidatePermissions,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
   });
 
-  // API hooks for adding or updating the candidate data
-  const addOrUpdateCandidate = useMutation({
+  const mutation = useMutation({
     mutationFn: async ({ id, data, file }) => {
       const method = id ? 'patch' : 'post';
-      const url = id 
-        ? `${config.REACT_APP_API_URL}/candidate/${id}` 
+      const url = id
+        ? `${config.REACT_APP_API_URL}/candidate/${id}`
         : `${config.REACT_APP_API_URL}/candidate`;
-        
+
       const response = await axios[method](url, data);
       const candidateId = response.data.data._id;
 
       if (file) {
         const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "candidate");
-        imageData.append("id", candidateId);
+        imageData.append('image', file);
+        imageData.append('type', 'candidate');
+        imageData.append('id', candidateId);
 
         await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
@@ -57,8 +60,34 @@ export const useCandidates = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['candidates']);
-    }
+    },
+    onError: (error) => {
+      console.error('Error adding/updating candidate:', error);
+    },
   });
 
-  return { candidateData, loading, addOrUpdateCandidate };
+  // Use mutation.isPending instead of checking status (for v5+)
+  // For v4, use mutation.isLoading
+  const isMutationLoading = mutation.isPending; // or mutation.isLoading for v4
+  const isLoading = isQueryLoading || isMutationLoading;
+
+  console.log('useCandidates states:', {
+    isQueryLoading,
+    isMutationLoading,
+    isLoading,
+    candidateDataCount: candidateData.length,
+    mutationState: mutation,
+  });
+
+  return {
+    candidateData,
+    isLoading,
+    isQueryLoading,
+    isMutationLoading,
+    isError,
+    error,
+    isMutationError: mutation.isError,
+    mutationError: mutation.error,
+    addOrUpdateCandidate: mutation.mutateAsync,
+  };
 };

@@ -26,7 +26,7 @@ export function SidePopup({ title, onClose, children, position = 'right', size =
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 ">
       <div 
         className={`fixed ${isFullScreen ? 'inset-0' : positionClasses[position]} bg-white shadow-xl 
-          ${!isFullScreen && sizeClasses[size]} h-full overflow-y-auto transition-all duration-300 top-0`}
+          ${!isFullScreen && sizeClasses[size]} h-full overflow-y-auto transition-all duration-300 top-12`}
       >
         <div className="p-4 sm:p-6">
           <div className="flex justify-between items-center mb-6 sticky  bg-white z-10 pb-4 border-b">

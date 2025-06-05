@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import { ChevronDown, User, X, Users, Trash2, ChevronUp, Search } from 'lucide-react';
@@ -10,21 +9,23 @@ import { ReactComponent as MdOutlineCancel } from '../../icons/MdOutlineCancel.s
 import Cookies from 'js-cookie';
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
-import { config } from '../../config.js';
-import Loading from '../../Components/Loading.js';
 import QuestionBank from '../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
-// import OutsourceOption from '../Dashboard-Part/Tabs/Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx'; // Assuming this is available
+import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
+import { useAssessments } from '../../apiHooks/useAssessments.js';
+import LoadingButton from '../../Components/LoadingButton';
 
 function RoundFormTemplates() {
   const {
-    assessmentData,
-    loading,
     sectionQuestions,
     questionsLoading,
     fetchQuestionsForAssessment,
     setSectionQuestions,
-    templates,
   } = useCustomContext();
+
+  const { templatesData,isMutationLoading,addOrUpdateRound } = useInterviewTemplates();
+  const { assessmentData } = useAssessments();
+
+
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const { id } = useParams();
   const dropdownRef = useRef(null);
@@ -77,7 +78,7 @@ function RoundFormTemplates() {
       try {
 
         // templates
-        const response = templates.find(
+        const response = templatesData.find(
           (template) => template._id === id
         );
 
@@ -91,7 +92,9 @@ function RoundFormTemplates() {
 
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
+
                const interviewers = round?.interviewers  || []
+
               const internalInterviewers = resolveInterviewerDetails(interviewers);
 
               // console.log("internal Interviewers", internalInterviewers);
@@ -203,7 +206,7 @@ function RoundFormTemplates() {
       // externalInterviewers: [],
       interviewerType: null,
     }));
-   
+
   };
 
   const handleToggleMandatory = (questionId) => {
@@ -211,19 +214,20 @@ function RoundFormTemplates() {
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
         question.questionId === questionId
-          ?  { ...question,
-                snapshot: {
-               ...question.snapshot,
+          ? {
+            ...question,
+            snapshot: {
+              ...question.snapshot,
               mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
-             }
-             }
-         
-         
+            }
+          }
+
+
           : question
       )
     }));
   };
-  
+
   const clearError = (fieldName) => {
     setErrors(prev => ({
       ...prev,
@@ -236,13 +240,13 @@ function RoundFormTemplates() {
       setFormData((prev) => ({
         ...prev,
 
-         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
+        interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
-          : [...prev.interviewQuestionsList, 
-             {
-          ...question,
-          mandatory: "false" // Default to false when adding a new question
-        }
+          : [...prev.interviewQuestionsList,
+          {
+            ...question,
+            mandatory: "false" // Default to false when adding a new question
+          }
 
           ]
 
@@ -250,13 +254,13 @@ function RoundFormTemplates() {
       setErrors((prev) => ({ ...prev, questions: undefined }));
     }
   };
-  
+
   const handleRemoveQuestion = (questionId) => {
     setFormData((prev) => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId),
     }));
-     setRemovedQuestionIds(prev => [...prev, questionId]);
+    setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
   const toggleSection = async (sectionId) => {
@@ -392,74 +396,182 @@ function RoundFormTemplates() {
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   console.log("Submitting round form...");
+  //   if (!validateForm()) {
+  //     console.log("Validation failed:", errors);
+  //     return;
+  //   }
+
+  //   try {
+  //     const roundData = {
+  //       tenantId,
+  //       roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+  //       interviewMode: formData.interviewMode,
+  //       sequence: formData.sequence,
+  //       interviewDuration: formData.duration,
+  //       instructions: formData.instructions,
+  //       interviewerType: formData.selectedInterviewType,
+  //       interviewers:
+  //         formData.selectedInterviewType === 'internal'
+  //           ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
+  //           : [],
+  //       questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+  //         .map(q => ({
+  //           questionId: q.questionId,
+  //           snapshot: {
+  //             ...q.snapshot,
+  //             mandatory: q.snapshot.mandatory || "false"
+  //           }
+  //         })) || [],
+  //       ...(formData.roundTitle === 'Assessment' && {
+  //         assessmentId: formData.assessmentTemplate.assessmentId,
+  //       }),
+  //     };
+
+  //     console.log("Prepared roundData:", roundData);
+
+  //     if (roundId) {
+  //       console.log("Editing existing round with roundId:", roundId);
+  //       const updatedRounds = template.rounds.map((round) =>
+  //         round._id === roundId ? { ...round, ...roundData } : round
+  //       );
+  //       console.log("Updated rounds array for PATCH:", updatedRounds);
+
+  //       const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+  //         tenantId,
+  //         rounds: updatedRounds,
+  //       });
+  //       console.log("PATCH response for edit:", patchRes.data);
+  //     } else {
+  //       console.log("Adding new round...");
+  //       const updatedRounds = [...(template.rounds || []), roundData];
+  //       console.log("Updated rounds array for PATCH:", updatedRounds);
+
+  //       const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+  //         tenantId,
+  //         rounds: updatedRounds,
+  //       });
+  //       console.log("PATCH response for add:", patchRes.data);
+  //     }
+
+  //     console.log("Navigation to template detail page...");
+  //     navigate(`/interview-templates/${id}`);
+  //   } catch (error) {
+  //     console.error('Error saving round:', error);
+  //     alert('Failed to save round. Please try again.');
+  //   }
+  // };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     // console.log("Submitting round form...");
     if (!validateForm()) {
       // console.log("Validation failed:", errors);
       return;
+
+
+
     }
- 
+
     try {
-      const roundData = {
-        tenantId,
-        roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
-        interviewMode: formData.interviewMode,
-        sequence: formData.sequence,
-        interviewDuration: formData.duration,
-        instructions: formData.instructions,
-        //  interviewerType: formData.interviewerType, 
-        interviewerType: formData.roundTitle === 'Assessment' ? "" : formData.interviewerType,
-        interviewers:
-          formData.interviewerType === 'Internal'
-            ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
-            : [],
-        questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
-          .map(q => ({
-            questionId: q.questionId,
-            snapshot: {
-              ...q.snapshot,
-              mandatory: q.snapshot.mandatory || "false"
-            }
-          })) || [],
-        ...(formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId && {
-        assessmentId: formData.assessmentTemplate.assessmentId
-        }),
-      };
+
+//       const roundData = {
+//         tenantId,
+//         roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+//         interviewMode: formData.interviewMode,
+//         sequence: formData.sequence,
+//         interviewDuration: formData.duration,
+//         instructions: formData.instructions,
+//         //  interviewerType: formData.interviewerType, 
+//         interviewerType: formData.roundTitle === 'Assessment' ? "" : formData.interviewerType,
+//         interviewers:
+//           formData.interviewerType === 'Internal'
+//             ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
+//             : [],
+//         questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+//           .map(q => ({
+//             questionId: q.questionId,
+//             snapshot: {
+//               ...q.snapshot,
+//               mandatory: q.snapshot.mandatory || "false"
+//             }
+//           })) || [],
+//         ...(formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId && {
+//         assessmentId: formData.assessmentTemplate.assessmentId
+//         }),
+//       };
  
-      console.log("Prepared roundData:", roundData);
+//       console.log("Prepared roundData:", roundData);
  
-      if (roundId) {
-        console.log("Editing existing round with roundId:", roundId);
-        const updatedRounds = template.rounds.map((round) =>
-          round._id === roundId ? { ...round, ...roundData } : round
-        );
-        console.log("Updated rounds array for PATCH:", updatedRounds);
+//       if (roundId) {
+//         console.log("Editing existing round with roundId:", roundId);
+//         const updatedRounds = template.rounds.map((round) =>
+//           round._id === roundId ? { ...round, ...roundData } : round
+//         );
+//         console.log("Updated rounds array for PATCH:", updatedRounds);
  
-        const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          rounds: updatedRounds,
-        });
-        // console.log("PATCH response for edit:", patchRes.data);
-      } else {
-        console.log("Adding new round...");
-        const updatedRounds = [...(template.rounds || []), roundData];
-        // console.log("Updated rounds array for PATCH:", updatedRounds);
+//         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+//           tenantId,
+//           rounds: updatedRounds,
+//         });
+//         // console.log("PATCH response for edit:", patchRes.data);
+//       } else {
+//         console.log("Adding new round...");
+//         const updatedRounds = [...(template.rounds || []), roundData];
+//         // console.log("Updated rounds array for PATCH:", updatedRounds);
  
-        const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          rounds: updatedRounds,
-        });
-        console.log("PATCH response for add:", patchRes.data);
-      }
+//         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+//           tenantId,
+//           rounds: updatedRounds,
+//         });
+//         console.log("PATCH response for add:", patchRes.data);
+//       }
  
-      console.log("Navigation to template detail page...");
-      navigate(`/interview-templates/${id}`);
+//       console.log("Navigation to template detail page...");
+//       navigate(`/interview-templates/${id}`);
+
+        const roundData = {
+            tenantId,
+            roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+            interviewMode: formData.interviewMode,
+            sequence: formData.sequence,
+            interviewDuration: formData.duration,
+            instructions: formData.instructions,
+            interviewerType: formData.selectedInterviewType,
+            interviewers:
+                formData.selectedInterviewType === 'internal'
+                    ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
+                    : [],
+            questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+                .map(q => ({
+                    questionId: q.questionId,
+                    snapshot: {
+                        ...q.snapshot,
+                        mandatory: q.snapshot.mandatory || "false"
+                    }
+                })) || [],
+            ...(formData.roundTitle === 'Assessment' && {
+                assessmentId: formData.assessmentTemplate.assessmentId,
+            }),
+        };
+
+        console.log("Prepared roundData:", roundData);
+
+        await addOrUpdateRound({ id, roundData, roundId, template });
+
+        console.log("Navigation to template detail page...");
+        navigate(`/interview-templates/${id}`);
+
+
     } catch (error) {
-      console.error('Error saving round:', error);
-      alert('Failed to save round. Please try again.');
+        console.error('Error saving round:', error);
+        alert('Failed to save round. Please try again.');
     }
-  };
+};
 
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -492,49 +604,49 @@ function RoundFormTemplates() {
                   Round Name <span className="text-red-500">*</span>
                 </label>
                 {formData.roundTitle === "Other" ? (
-                        <input
-                          type="text"
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={formData.customRoundTitle}
-                          onChange={(e) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              customRoundTitle: e.target.value
-                              // DO NOT update roundTitle here!
-                            }));
-                            clearError('roundTitle');
-                          }}
-                          onBlur={() => {
-                            if (!formData.customRoundTitle.trim()) {
-                              setFormData(prev => ({ ...prev, customRoundTitle: "" }));
-                            }
-                          }}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
-                          required
-                          placeholder="Enter custom round title"
-                        />
-                      ) : (
-                        <select
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={formData.roundTitle}
-                          onChange={handleRoundTitleChange}
-                          // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
+                  <input
+                    type="text"
+                    id="roundTitle"
+                    name="roundTitle"
+                    value={formData.customRoundTitle}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        customRoundTitle: e.target.value
+                        // DO NOT update roundTitle here!
+                      }));
+                      clearError('roundTitle');
+                    }}
+                    onBlur={() => {
+                      if (!formData.customRoundTitle.trim()) {
+                        setFormData(prev => ({ ...prev, customRoundTitle: "" }));
+                      }
+                    }}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
+                    required
+                    placeholder="Enter custom round title"
+                  />
+                ) : (
+                  <select
+                    id="roundTitle"
+                    name="roundTitle"
+                    value={formData.roundTitle}
+                    onChange={handleRoundTitleChange}
+                    // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
 
-                          className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 
+                    className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 
                             ${errors.roundTitle ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}
                             focus:outline-none  sm:text-sm`}
-                          required
-                        >
-                          <option value="">Select Round Title</option>
-                          <option value="Assessment">Assessment</option>
-                          <option value="Technical">Technical</option>
-                          <option value="Final">Final</option>
-                          <option value="HR Interview">HR Interview</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      )}
+                    required
+                  >
+                    <option value="">Select Round Title</option>
+                    <option value="Assessment">Assessment</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Final">Final</option>
+                    <option value="HR Interview">HR Interview</option>
+                    <option value="Other">Other</option>
+                  </select>
+                )}
                 {errors.roundTitle && <p className="text-red-500 text-sm mt-1">{errors.roundTitle}</p>}
               </div>
 
@@ -635,11 +747,7 @@ function RoundFormTemplates() {
                     </div>
                     {showDropdown && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                        {loading ? (
-                          <div className="px-3 py-2 text-gray-500">
-                            <Loading />
-                          </div>
-                        ) : assessmentData.length > 0 ? (
+                        {assessmentData.length > 0 ? (
                           assessmentData.map((assessment, index) => (
                             <div
                               key={index}
@@ -831,8 +939,10 @@ function RoundFormTemplates() {
                     </Button>
                   </div>
                 </div>
+
                <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
                   {!formData.interviewerType ? (
+
                     <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                   ) : (
                     <div>
@@ -874,8 +984,10 @@ function RoundFormTemplates() {
                           <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                           <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
 
+
                             
                             {formData.interviewers.map((interviewer) => (
+
                               <div
                                 key={interviewer._id}
                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
@@ -938,7 +1050,7 @@ function RoundFormTemplates() {
                   )}
                 </div>
 
-               
+
                 <div className="mt-4">
                   <div className="py-3 mx-auto rounded-md">
                     {/* Header with Title and Add Button */}
@@ -956,7 +1068,7 @@ function RoundFormTemplates() {
                       {formData.interviewQuestionsList.length > 0 ? (
                         <ul className="mt-2 space-y-2">
                           {(formData.interviewQuestionsList ?? []).map((question, qIndex) => {
-                             const isMandatory = question?.snapshot?.mandatory === "true";
+                            const isMandatory = question?.snapshot?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li
@@ -978,7 +1090,7 @@ function RoundFormTemplates() {
                         <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
                       )}
                     </div>
- 
+
                     {/* Question Popup */}
                     {isInterviewQuestionPopup && (
                       <div
@@ -1008,9 +1120,9 @@ function RoundFormTemplates() {
                               handleToggleMandatory={handleToggleMandatory}
                               removedQuestionIds={removedQuestionIds}
                             />
- 
+
                           }
- 
+
                         </div>
                       </div>
                     )}
@@ -1018,7 +1130,7 @@ function RoundFormTemplates() {
                   {errors.questions && (
                     <p className="text-red-500 text-sm">{errors.questions}</p>
                   )}
- 
+
                 </div>
               </div>
 </>
@@ -1042,16 +1154,16 @@ function RoundFormTemplates() {
                 readOnly={formData.roundTitle === 'Assessment'}
               />
               <div className="flex justify-between items-center mt-1">
-                {errors.instructions ? (
-                  <p className="text-red-500 text-sm">{errors.instructions}</p>
-                ) : (
-                  formData.instructions.length < 50 && (
-                    <p className="text-gray-500 text-sm">
+                <span className="text-sm text-gray-500">
+                  {errors.instructions ? (
+                    <p className="text-red-500 text-xs pt-1">{errors.instructions}</p>
+                  ) : formData.instructions.length > 0 && formData.instructions.length < 50 ? (
+                    <p className="text-gray-500 text-xs">
                       Minimum {50 - formData.instructions.length} more characters needed
                     </p>
-                  )
-                )}
-                <span className="text-sm text-gray-500">{formData.instructions?.length || 0}/1000</span>
+                  ) : null}
+                </span>
+                <p className="text-sm text-gray-500">{formData.instructions.length}/1000</p>
               </div>
             </div>
 
@@ -1059,24 +1171,20 @@ function RoundFormTemplates() {
               <Button variant="outline" onClick={() => navigate(`/interview-templates/${id}`)}>
                 Cancel
               </Button>
-              <button
+
+              <LoadingButton
                 onClick={handleSubmit}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
+                isLoading={isMutationLoading}
+                loadingText={id ? "Updating..." : "Saving..."}
               >
                 {roundId ? 'Update Round' : 'Save Round'}
-              </button>
+              </LoadingButton>
+
             </div>
             {errors.submit && <p className="text-red-500 text-sm mt-4 text-center">{errors.submit}</p>}
           </div>
         </div>
       </div>
-
-      {/* {showOutsourcePopup && (
-        <OutsourceOption
-          onClose={() => setShowOutsourcePopup(false)}
-          onProceed={handleExternalInterviewerSelect}
-        />
-      )} */}
 
       {isInternalInterviews && (
         <InternalInterviews

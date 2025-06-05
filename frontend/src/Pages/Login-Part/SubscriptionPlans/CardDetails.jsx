@@ -7,61 +7,25 @@ import Cookies from "js-cookie";
 import { config } from '../../../config.js'
 import axios from "axios";
 import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js";
-import { useCustomContext } from "../../../Context/Contextfetch";
+//import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 
-// Function to load scripts dynamically
-const loadScript = (src) => {
+// Simple function to load Razorpay script
+const loadRazorpayScript = () => {
     return new Promise((resolve) => {
         const script = document.createElement('script');
-        script.src = src;
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
         script.onload = () => {
+            console.log('Razorpay script loaded successfully');
             resolve(true);
         };
         script.onerror = () => {
+            console.error('Failed to load Razorpay script');
             resolve(false);
         };
         document.body.appendChild(script);
     });
-};
-
-// Check if Razorpay is available in the window object
-const isRazorpayAvailable = () => {
-    return typeof window.Razorpay === 'function';
-};
-
-// Function to load the Razorpay script if not already available
-const loadRazorpayScript = async () => {
-    // If Razorpay is already available, return true immediately
-    if (isRazorpayAvailable()) {
-        return true;
-    }
-    
-    // Otherwise, try to load the script with the latest version
-    const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
-    if (!res) {
-        toast.error('Razorpay SDK failed to load. Please check your internet connection.');
-        return false;
-    }
-    
-    // Wait a moment for the script to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Verify that Razorpay is now available and has the required methods
-    if (!isRazorpayAvailable()) {
-        console.error('Razorpay is not available as a constructor after loading');
-        toast.error('Payment gateway is not available. Please try again later.');
-        return false;
-    }
-    
-    // Additional check for required methods
-    if (typeof window.Razorpay.createToken === 'undefined') {
-        console.error('Razorpay tokenization methods not available');
-        toast.error('Payment gateway initialization failed. Please refresh and try again.');
-        return false;
-    }
-    
-    return true;
 };
 
 const CardDetails = () => {
@@ -76,9 +40,11 @@ const CardDetails = () => {
 
     const location = useLocation();
     const isUpgrading = location.state?.isUpgrading || false;
-    const {
-        userProfile,
-    } = useCustomContext();
+    // const {
+    //     userProfile,
+    // } = useCustomContext();
+
+
 
     const [cardDetails, setCardDetails] = useState({
         membershipType: "",
@@ -101,210 +67,37 @@ const CardDetails = () => {
         annually: 0,
     });
 
+    const [userProfile, setUserProfile] = useState([])
 
-    // Function to initialize Razorpay payment
-    const initializeRazorpayPayment = async (orderData) => {
-        // Ensure Razorpay is loaded before proceeding
-        if (!isRazorpayAvailable()) {
-            // Try loading it again if not available
-            const isLoaded = await loadRazorpayScript();
-            if (!isLoaded) {
-                setProcessing(false);
-                toast.error('Payment gateway failed to load. Please try again.');
-                return; // Exit if loading fails
-            }
-        }
-        
-        console.log('Initializing Razorpay popup with data:', orderData);
-    
-    // Debug Razorpay key
-    console.log('Razorpay key from response:', { 
-        razorpayKeyId: orderData.razorpayKeyId,
-        key_id: orderData.key_id,
-        fromOrder: orderData.order?.key_id
-    });
-    
-    // Get the amount from the order response
-    // The backend should have converted it to cents already
-    let amount;
-    if (orderData.order?.amount) {
-        // If we have the amount in the order object, use that
-        amount = orderData.order.amount;
-    } else if (orderData.amount) {
-        // If we have the amount directly in the response
-        amount = orderData.amount;
-    } else {
-        // Fallback to calculating it ourselves
-        amount = Math.round(totalPaid * 100);
-    }
-
-    // Log the amount for debugging
-    console.log('Payment amount in cents:', amount, '($' + (amount/100).toFixed(2) + ')');
-        
-        // Keep loading active while Razorpay payment window is open
-        const options = {
-            key: orderData.razorpayKeyId,
-            amount: amount,
-            currency: 'USD', // Explicitly setting USD currency for dollar payments
-            name: "Upinterview",
-            description: `${planDetails.name || 'Subscription Plan'} - $${(amount/100).toFixed(2)}`,
-            order_id: orderData.orderId,
-            // Customer details
-            prefill: {
-                name: userProfile?.name || '',
-                email: userProfile?.email || '',
-                contact: userProfile?.phone || ''
-            },
-            // Notes for the payment
-            notes: {
-                planId: planDetails.planId || planDetails.subscriptionPlanId || '',
-                planName: planDetails.name || 'Subscription',
-                billingCycle: cardDetails.membershipType || 'monthly',
-                autoRenew: cardDetails.autoRenew ? '1' : '0',
-                tenantId: tenantId,
-                ownerId: ownerId,
-                isSubscription: '1'
-            },
-            // Theme configuration
-            theme: {
-                color: "#3399cc"
-            },
-            // Enable card saving for future payments
-            save: 1,
-            // Enable recurring payments
-            recurring: 1,
-            modal: {
-                // This will be called when the user closes the Razorpay popup
-                // without completing the payment
-                ondismiss: function() {
-                    console.log('Payment popup closed by user');
+    // Fetch user profile data from contacts API
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                if (ownerId) {
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/uniqe-contacts/owner/${ownerId}`);
                     
-                    toast.info('Payment cancelled');
-                    setButtonLoading(false);
-                }
-            },
-            handler: async function (response) {
-                try {
-                    // No need to verify card details as we're using Razorpay's secure form
-
-                    // Log payment response for debugging
-                    console.log('Razorpay payment response:', response);
-                    
-                    // Extract card details from Razorpay response if available
-                    // Razorpay might provide card details in the response that we can use
-                    const cardInfo = response.razorpay_payment_id ? {
-                        // We only store the last 4 digits for reference, not the full number
-                        cardNumber: response.card?.last4 || '',
-                        cardHolderName: userProfile?.name || '',
-                        // We don't store CVV at all
-                        // We don't need to store full expiry, just month/year if provided
-                        expiryMonth: response.card?.expiry_month || '',
-                        expiryYear: response.card?.expiry_year || '',
-                        cardBrand: response.card?.network || '',
-                        currency: 'USD'
-                    } : null;
-                    
-                    // Prepare comprehensive data for verification and webhook processing
-                    const verificationData = {
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature,
-                        planDetails: {
-                            ...planDetails,
-                            // Ensure invoiceId is included when sending to backend
-                            invoiceId: planDetails.invoiceId || ''
-                        },
-                        // Only include card info if we have it from Razorpay
-                        ...(cardInfo && { 
-                            cardDetails: cardInfo,
-                            // Add token information for recurring payments
-                            token: response.razorpay_payment_id ? {
-                                card_id: response.razorpay_payment_id,
-                                last4: response.card?.last4 || '',
-                                network: response.card?.network || '',
-                                type: response.card?.type || '',
-                                recurring: true
-                            } : null
-                        }),
-                        metadata: {
-                            ownerId: ownerId,
-                            tenantId: tenantId,
-                            planId: planDetails.planId || '',
-                            planName: planDetails.name || 'Subscription',
-                            billingCycle: cardDetails.membershipType || 'monthly',
-                            autoRenew: cardDetails.autoRenew,
-                            invoiceId: planDetails.invoiceId || '' // Also include invoiceId in metadata
-                        }
-                    };
-                    
-                    console.log('Sending verification data to backend:', JSON.stringify(verificationData, null, 2));
-                    
-                    // Verify the payment signature with backend
-                    const verifyResponse = await axios.post(
-                        `${config.REACT_APP_API_URL}/payment/verify`, 
-                        verificationData
-                    );
-
-                    console.log('Payment verification response:', verifyResponse.data);
-        
-                    // Check for successful payment - be more flexible with the response format
-                    const isSuccess = verifyResponse.data.status === 'paid' || 
-                                     verifyResponse.data.status === 'success' ||
-                                     verifyResponse.data.message?.toLowerCase().includes('success');
-
-                    if (isSuccess) {
-                        // Set processing state to true only after successful payment
-                        // This ensures the spinner is only shown after payment success
-                        setProcessing(true);
-                        
-                        // Show success toast
-                        toast.success("Payment successfully completed! Your subscription is now active.");
-                        
-                        // Log payment details for reference
-                        console.log("Payment completed successfully:", {
-                            paymentId: response.razorpay_payment_id,
-                            orderId: response.razorpay_order_id
+                    if (response.data && response.data.length > 0) {
+                        const contactData = response.data[0];
+                        // Extract name, email and phone from the response
+                        setUserProfile({
+                            name: `${contactData.firstName} ${contactData.lastName}`,
+                            email: contactData.email,
+                            phone: contactData.phone
                         });
-                        
-                        // Delay navigation to allow toast to be visible
-                        setTimeout(() => {
-                            console.log('Navigating after successful payment');
-                            // Only set processing to false right before navigation
-                            setProcessing(false);
-                            if (isUpgrading) {
-                                navigate("/SubscriptionDetails");
-                            } else {
-                                navigate("/home");
-                            }
-                        }, 2000); // 2 second delay before navigation
+                        console.log('User profile fetched:', contactData);
                     } else {
-                        setProcessing(false);
-                        toast.error("Payment verification failed!");
+                        console.log('No contact data found for this owner');
                     }
-                } catch (error) {
-                    console.error("Error verifying payment:", error);
-                    setProcessing(false);
-                    toast.error("Payment verification failed. Please try again.");
                 }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                toast.error('Failed to fetch user profile data');
             }
         };
 
-        try {
-            // Double-check that Razorpay is available right before using it
-            if (!isRazorpayAvailable()) {
-                throw new Error('Razorpay is not available as a constructor');
-            }
-            
-            // Create the Razorpay instance and open the payment form
-            const razorpay = new window.Razorpay(options);
-            razorpay.open();
-        } catch (error) {
-            console.error('Error creating Razorpay instance:', error);
-            toast.error('Unable to initialize payment gateway. Please try again later.');
-            setButtonLoading(false);
-        }
-    };
-    
+        fetchUserProfile();
+    }, [ownerId]);
+
     useEffect(() => {
         if (planDetails) {
             const { monthlyPrice, annualPrice } = planDetails;
@@ -392,7 +185,7 @@ const CardDetails = () => {
 
             // Ensure totalAmount is a valid number and properly formatted
             const amountToCharge = parseFloat(totalPaid) || 0;
-            console.log('Creating order with amount:', amountToCharge, 'USD');
+            console.log('Creating order with amount:', amountToCharge, 'INR');
             
             // Create order data object
             const orderData = {
@@ -403,19 +196,28 @@ const CardDetails = () => {
                     annualPrice: parseFloat(planDetails.annualPrice) || 0,
                     monthDiscount: parseFloat(planDetails.monthDiscount) || 0,
                     annualDiscount: parseFloat(planDetails.annualDiscount) || 0,
+                    razorpayPlanIds: planDetails.razorpayPlanIds || {}
                 },
                 ownerId,
                 tenantId,
                 planId: planDetails.planId || planDetails._id || '',
                 membershipType: cardDetails.membershipType,
                 userProfile,
-                amount: amountToCharge, // Send amount in dollars, backend will convert to cents
-                currency: 'USD',
-                autoRenew: cardDetails.autoRenew,
+                // Send the amount in INR
+                amount: amountToCharge,
+                currency: 'INR',
+                autoRenew: true, // Always set to true since we're only using subscriptions
                 // Additional metadata for better tracking
                 metadata: {
                     billingCycle: cardDetails.membershipType,
-                    userId: ownerId,
+                    ownerId: ownerId,
+                    tenantId: tenantId,
+                    planId: planDetails.planId || planDetails._id || '',
+                    planName: planDetails.name || 'Subscription Plan',
+                    autoRenew: cardDetails.autoRenew,
+                    // Include Razorpay plan ID for the selected billing cycle if available
+                    razorpayPlanId: (planDetails.razorpayPlanIds && 
+                        planDetails.razorpayPlanIds[cardDetails.membershipType]) || '',
                     timestamp: new Date().toISOString()
                 }
             };
@@ -425,51 +227,158 @@ const CardDetails = () => {
                 currency: 'USD',
                 membershipType: cardDetails.membershipType,
                 planId: orderData.planId,
-                autoRenew: cardDetails.autoRenew
+                autoRenew: true
             });
 
-            // Send request to create order
-            const orderResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/payment/create-order`,
-                orderData
-            );
+            // Always use the subscription endpoint
+            const endpoint = `${process.env.REACT_APP_API_URL}/payment/create-subscription`;
+            
+            console.log('Using subscription payment endpoint:', endpoint);
+            
+            // Send request to create order or subscription
+            const orderResponse = await axios.post(endpoint, orderData);
 
             console.log('Order response:', orderResponse.data);
 
             // Check if this is a subscription or one-time payment
             if (orderResponse.data.isSubscription) {
-                // Handle subscription flow - if we have isMockSubscription flag
-                // if (orderResponse.data.isMockSubscription) {
-                //     handleMockSubscription(orderResponse.data);
-                //     return;
-                // }
+                console.log('Processing subscription response:', orderResponse.data);
                 
-                // If we have authLink, we need to check if we should use popup or redirect
-                if (orderResponse.data.authLink && orderResponse.data.authLink !== '#') {
-                    // Save subscription info for confirmation later
-                    localStorage.setItem('pendingSubscription', JSON.stringify({
-                        subscriptionId: orderResponse.data.subscriptionId,
-                        planId: planDetails.planId || planDetails._id || '',
-                        membershipType: cardDetails.membershipType,
-                        ownerId,
-                        tenantId
-                    }));
-                    
-                    // Redirect to Razorpay's authorization page for subscriptions
-                    window.location.href = orderResponse.data.authLink;
-                    return;
-                }
+                // Save subscription info for confirmation later
+                localStorage.setItem('pendingSubscription', JSON.stringify({
+                    subscriptionId: orderResponse.data.subscriptionId,
+                    planId: planDetails.planId || planDetails._id || '',
+                    membershipType: cardDetails.membershipType,
+                    ownerId,
+                    tenantId,
+                    autoRenew: cardDetails.autoRenew
+                }));
                 
-                // For normal orders, open Razorpay popup
-                if (orderResponse.data.orderId || orderResponse.data.order?.id) {
-                    initializeRazorpayPayment(orderResponse.data);
+                if (orderResponse.data.orderId) {
+                    try {
+                        // First, make sure the Razorpay script is loaded
+                        const scriptLoaded = await loadRazorpayScript();
+                        if (!scriptLoaded) {
+                            throw new Error('Failed to load Razorpay script');
+                        }
+                        
+                        // Prepare options for Razorpay checkout
+                        // Make sure amount is exactly the same as in the order (no modifications)
+                        console.log('Order amount from backend:', orderResponse.data.amount);
+                        
+                        const options = {
+                            key: orderResponse.data.razorpayKeyId,
+                            subscription_id: orderResponse.data.subscriptionId,
+                            order_id: orderResponse.data.orderId,
+                            // Don't include amount here as it's already in the order
+                            // amount: orderResponse.data.amount,
+                            currency: 'INR',//orderResponse.data.currency || 
+                            name: "UpInterview",
+                            description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount/100).toFixed(2)}`,
+                            image: "https://upinterview.io/logo.png",
+                            prefill: {
+                                name: userProfile?.name || "",
+                                email: userProfile?.email || "",
+                                contact: userProfile?.phone || "",
+                            },
+                            notes: {
+                                ownerId: ownerId,
+                                planId: planDetails._id,
+                                membershipType: cardDetails.membershipType,
+                            },
+                            theme: {
+                                color: "#3399cc",
+                            },
+                            handler: async function(response) {
+                                try {
+                                    // Handle successful payment
+                                    console.log("Payment successful:", response);
+                                    setProcessing(true);
+
+                                    // Prepare verification data
+                                    const verificationData = {
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_order_id: orderResponse.data.orderId,
+                                        razorpay_signature: response.razorpay_signature,
+                                        razorpay_subscription_id: orderResponse.data.subscriptionId,
+                                        ownerId: cardDetails.ownerId,
+                                        tenantId: tenantId,
+                                        planId: planDetails.planId,
+                                        planName: planDetails.planName,
+                                        membershipType: cardDetails.membershipType,
+                                        autoRenew: cardDetails.autoRenew,
+                                        invoiceId: planDetails.invoiceId // Include the invoiceId passed from SubscriptionPlan.jsx
+                                    };
+                                    
+                                    // Log to verify invoiceId is included
+                                    console.log('Including invoiceId in verification data:', planDetails.invoiceId);
+
+                                    console.log('Sending verification data:', verificationData);
+
+                                    // Verify payment with backend
+                                    const verifyResponse = await axios.post(
+                                        `${config.REACT_APP_API_URL}/payment/verify`,
+                                        verificationData
+                                    );
+
+                                    console.log('Payment verification response:', verifyResponse.data);
+
+                                    if (verifyResponse.data.status === 'paid' || 
+                                        verifyResponse.data.status === 'success' ||
+                                        verifyResponse.data.message?.toLowerCase().includes('success')) {
+                                        
+                                        toast.success("Payment successfully completed!");
+
+                                        // Navigate to success page
+                                        navigate('/subscription-success', {
+                                            state: {
+                                                paymentId: response.razorpay_payment_id,
+                                                subscriptionId: orderResponse.data.subscriptionId,
+                                                orderId: response.razorpay_order_id,
+                                                isUpgrading: isUpgrading,
+                                                nextRoute: isUpgrading ? '/account-settings/subscription' : '/home'
+                                            }
+                                        });
+                                    } else {
+                                        setProcessing(false);
+                                        toast.error('Payment verification failed');
+                                    }
+                                } catch (error) {
+                                    console.error('Error verifying payment:', error);
+                                    setProcessing(false);
+                                    toast.error('Error verifying payment. Please try again.');
+                                }
+                                //         planName: planDetails.name,
+                                //         billingCycle: cardDetails.membershipType,
+                                //     },
+                                // });
+                            },
+                            modal: {
+                                ondismiss: function() {
+                                    console.log('Payment cancelled by user');
+                                    toast.info('Payment cancelled');
+                                    setProcessing(false);
+                                }
+                            }
+                        };
+                        
+                        console.log('Opening Razorpay checkout with options:', options);
+                        
+                        // Create and open Razorpay checkout in one step
+                        const rzp1 = new window.Razorpay(options);
+                        rzp1.open();
+                    } catch (error) {
+                        console.error('Error with Razorpay checkout:', error);
+                        toast.error(`Payment error: ${error.message}`);
+                        setProcessing(false);
+                    }
                 } else {
-                    toast.error("Failed to create payment order. Please try again.");
+                    toast.error("Failed to create subscription. Please try again.");
                     setProcessing(false);
                 }
             } else {
                 // Regular payment flow - open Razorpay popup
-                initializeRazorpayPayment(orderResponse.data);
+                //initializeRazorpayPayment(orderResponse.data);
             }
         } catch (error) {
             console.error("Error processing payment:", error);
@@ -478,32 +387,7 @@ const CardDetails = () => {
         }
     };
     
-    // // Handle mock subscription during testing
-    // const handleMockSubscription = async (subscriptionData) => {
-    //     try {
-    //         const { subscriptionId } = subscriptionData;
-            
-    //         toast.success("Test mode: Subscription created successfully");
-            
-    //         // For development/testing: simulate a successful subscription
-    //         const verificationResponse = await axios.post(
-    //             `${config.REACT_APP_API_URL}/payment/test-subscription-success`, 
-    //             {
-    //                 subscriptionId,
-    //                 ownerId,
-    //                 tenantId,
-    //                 planId: planDetails.subscriptionPlanId,
-    //                 membershipType: cardDetails.membershipType
-    //             }
-    //         );
-    //             };
-
-    //             // Log payment response for debugging
-    //             console.log('Razorpay payment response:', response);
-    //         setProcessing(false);
-    //     }
     
-
     useEffect(() => {
         const checkSubscriptionStatus = async () => {
             // Check if we're returning from a subscription authorization
@@ -524,7 +408,7 @@ const CardDetails = () => {
                         toast.loading("Verifying subscription...");
                         
                         const verificationResponse = await axios.post(
-                            `${config.REACT_APP_API_URL}/payment/verify-subscription`, 
+                            `${process.env.REACT_APP_API_URL}/payment/verify-subscription`, 
                             {
                                 razorpay_payment_id: razorpayPaymentId,
                                 razorpay_subscription_id: subscriptionData.subscriptionId,
@@ -541,15 +425,9 @@ const CardDetails = () => {
                         if (verificationResponse.data.status === "success") {
                             toast.success("Subscription successfully activated!");
                             
-                            // Send email notification
-                            await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/paid`, {
-                                ownerId: subscriptionData.ownerId,
-                                tenantId: subscriptionData.tenantId,
-                            });
-                            
                             // Navigate based on upgrade status
                             if (isUpgrading) {
-                                navigate("/SubscriptionDetails");
+                                navigate("/account-settings/subscription");
                             } else {
                                 navigate("/home");
                             }
@@ -562,7 +440,7 @@ const CardDetails = () => {
                     }
                 } else if (params.get('error_code')) {
                     // Handle payment failure
-                    toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`); 
+                    toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`);
                 }
             }
         };
@@ -772,8 +650,8 @@ const CardDetails = () => {
                         </p>
                         <button
                             type="submit"
-                            className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
-                            disabled={buttonLoading || processing}
+                            className={`w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg ${buttonLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                            disabled={buttonLoading}
                         >
                             {buttonLoading ? "Processing..." : "Pay"}
                         </button>
@@ -786,6 +664,4 @@ const CardDetails = () => {
     );
 };
 
-
-
-export default CardDetails
+export default CardDetails;

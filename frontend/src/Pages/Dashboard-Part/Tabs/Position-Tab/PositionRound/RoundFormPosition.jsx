@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
-// import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
 import Loading from '../../../../../Components/Loading.js';
 import { ChevronDown, X, User, Users, Trash2, ChevronUp } from 'lucide-react';
-// import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 import axios from "axios";
-// import OutsourceOption from "../../Interviews/OutsourceOption.jsx";
-// import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
-import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-// import MyQuestionListMain from "../../QuestionBank-Tab/MyQuestionsList.jsx";
 import Cookies from "js-cookie";
-// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useCustomContext } from '../../../../../Context/Contextfetch.js';
-// import SuggesstedQuestions from '../../QuestionBank-Tab/SuggesstedQuestionsMain.jsx'
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+import { usePositions } from '../../../../../apiHooks/usePositions';
+import LoadingButton from '../../../../../Components/LoadingButton';
+
 
 function RoundFormPosition() {
   const {
-    assessmentData,
     loading,
     sectionQuestions,
     questionsLoading,
@@ -30,6 +25,11 @@ function RoundFormPosition() {
     fetchQuestionsForAssessment,
     setSectionQuestions,
   } = useCustomContext();
+  const { assessmentData } = useAssessments();
+
+
+  const { positionData, isMutationLoading,addRounds } = usePositions();
+
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const { roundId, id } = useParams();
   const positionId = id;
@@ -65,7 +65,7 @@ function RoundFormPosition() {
     duration: 30
   });
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -89,17 +89,18 @@ function RoundFormPosition() {
   //   }
   // }
 
-    const handleToggleMandatory = (questionId) => {
+  const handleToggleMandatory = (questionId) => {
     setFormData(prev => ({
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
         question.questionId === questionId
-          ? { ...question,
-                snapshot: {
-               ...question.snapshot,
+          ? {
+            ...question,
+            snapshot: {
+              ...question.snapshot,
               mandatory: question.snapshot.mandatory === "true" ? "false" : "true"
-             }
-             }
+            }
+          }
           : question
       )
     }));
@@ -113,11 +114,13 @@ function RoundFormPosition() {
         ...prev,
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
+
           : [...prev.interviewQuestionsList, 
              {
           ...question,
           mandatory: "false" 
         }
+
           ]
       }));
 
@@ -135,7 +138,7 @@ function RoundFormPosition() {
       ...prev,
       interviewQuestionsList: prev.interviewQuestionsList.filter((question) => question.questionId !== questionId)
     }));
-     setRemovedQuestionIds(prev => [...prev, questionId]);
+    setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
 
@@ -184,17 +187,7 @@ function RoundFormPosition() {
     const fetchPositionData = async () => {
       try {
         if (isPositionContext && positionId) {
-          // Fetch position details from API
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/position/details/${positionId}`,
-            {
-              params: {
-                tenantId: tenantId
-              }
-            }
-          );
-
-          const foundPosition = response.data;
+          const foundPosition = positionData.find(pos => pos._id === positionId);
 
           // Only update rounds if they're different to prevent unnecessary re-renders
           setPosition(foundPosition || []);
@@ -230,7 +223,7 @@ function RoundFormPosition() {
               scheduledDate: '',
               duration: roundEditData.duration || 30
             }));
-            
+
 
             if (roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId) {
               const assessmentDataForTemplate = {
@@ -429,13 +422,11 @@ function RoundFormPosition() {
   const handleSubmit = async (e) => {
     console.log('click add button')
     e.preventDefault();
-    setIsLoading(true);
 
     // Run validation first
     const isValid = validateForm();
 
     if (!isValid) {
-      setIsLoading(false);
       return; // Stop submission if there are errors
     }
     // console.log('errors after validation', errors);
@@ -459,6 +450,7 @@ function RoundFormPosition() {
           assessmentId: formData.assessmentTemplate.assessmentId,
           questions: []
         }
+
         : 
         // {
         //   questions: formData.interviewQuestionsList.map(q => ({
@@ -471,75 +463,24 @@ function RoundFormPosition() {
          { 
          questions:  formData.interviewQuestionsList || []
         
+
         }),
       instructions: formData.instructions,
     };
 
-    try {
-      // Include roundId only if editing
-      const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData }
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/position/add-rounds`,
-        payload
-      );
-
-      if (response.status === 201 || response.status === 200) {
-        navigate(`/position/view-details/${positionId}`)
-      }
+  try {
+    // Include roundId only if editing
+    const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData };
 
 
-      // const preparingTeamRequestBody = {
-      //   name: `Interview with ${candidate}-${candidate._id.slice(-5, -1)} for the position of ${position._id}`,
-      //   description: "description",
-      //   owner: userId,
-      //   createdBy: userId,
-      // };
-
-      // const teamResponse = await axios.post(`${process.env.REACT_APP_API_URL}/createTeam`, preparingTeamRequestBody);
-
-      // if (selectedInterviewers && selectedInterviewers.length > 0) {
-      //   const interviewerObjects = selectedInterviewers.map(id => ({
-      //     id: id._id,
-      //     status: "inprogress"
-      //   }));
-      //   const outsourceRequestData = {
-      //     tenantId: orgId,
-      //     ownerId: userId,
-      //     scheduledInterviewId: interviewId,
-      //     interviewerType: selectedInterviewType,
-      //     interviewerIds: interviewerObjects, // Fixed mapping here
-      //     dateTime: combinedDateTime,
-      //     duration,
-      //     candidateId: candidate?._id,
-      //     positionId: position?._id,
-      //     status: "inprogress",
-      //     roundNumber: sequence,
-      //     requestMessage: "Outsource interview request",
-      //     expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      //   };
-
-      //   await axios.post(
-      //     `${process.env.REACT_APP_API_URL}/interviewrequest`,
-      //     outsourceRequestData
-      //   );
-      // }
-
-
-      // setStatus((prevStatus) => {
-      //   const newStatus = [...prevStatus];
-      //   newStatus = "Request Sent";
-      //   return newStatus;
-      // });
-
-      // navigate(`/interviews/${interviewId}`);
-
-    } catch (err) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+    await addRounds(payload);
+    
+    navigate(`/position/view-details/${positionId}`);
+  } catch (err) {
+    console.error('Error submitting round:', err);
+  }
+};
 
   if (!rounds) {
     return <div><Loading /></div>;
@@ -1068,7 +1009,10 @@ function RoundFormPosition() {
                               Select Outsourced
                             </Button>
                           </div>
+
                         </div>
+                      </div>
+
 
                         {/* Selected Interviewers Summary */}
                         <div className=" p-4 bg-gray-50 rounded-md border border-gray-200">
@@ -1131,95 +1075,127 @@ function RoundFormPosition() {
                                     ))}
                                   </div>
                                 </div>
-                              )}
 
-                              {/* External Interviewers */}
-                              {isExternalSelected && (
-                                <div>
-                                  <h4 className="text-xs font-medium text-gray-500 mb-1">Outsourced Interviewers</h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {/* {externalInterviewers.map((interviewer) => ( */}
-                                    <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                              )}
+                            </div>
+
+                            {/* Internal Interviewers */}
+                            {isInternalSelected && (
+                              <div className="mb-1">
+                                <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
+                                <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                  {console.log('formData.internalInterviewers', formData.internalInterviewers)}
+                                  {formData.internalInterviewers.map((interviewer, index) => (
+                                    <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
+                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName} {interviewer?.lastName}</span>
                                       </div>
                                       <button
                                         type="button"
-                                        onClick={handleClearAllInterviewers}
-                                        className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                        onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
+                                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
                                         title="Remove interviewer"
                                       >
                                         <X className="h-4 w-4" />
                                       </button>
                                     </div>
-                                    {/* ))} */}
-                                  </div>
+                                  ))}
                                 </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {errors.interviewerType && (
-                          <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
-                        )}
-
-                      </div>
-
-                      {/* interview Questions List */}
-                      <div className="mt-4">
-                        <div className="py-3 mx-auto rounded-md">
-                          {/* Header with Title and Add Button */}
-                          <div className="flex items-center justify-end mb-2">
-                            <button
-                              className="text-custom-blue font-semibold hover:underline"
-                              onClick={() => {
-                                handlePopupToggle();
-                                clearError('questions');
-                              }}
-                              type="button"
-                            >
-                              + Add Question
-                            </button>
-                          </div>
-                          <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
-                            {/* Display Added Questions */}
-                            {formData.interviewQuestionsList.length > 0 ? (
-                              <ul className="mt-2 space-y-2">
-                                {formData.interviewQuestionsList.map((question, qIndex) => {
-                                  // const isMandatory = question?.mandatory === "true";
-                                  const isMandatory = question?.snapshot?.mandatory === "true";
-                                  const questionText = question?.snapshot?.questionText || 'No Question Text Available';
-                                  return (
-                                    <li
-                                      key={qIndex}
-                                      className={`flex justify-between items-center p-3 border rounded-md 
-                                        ${isMandatory ? "border-red-500" : "border-gray-300"
-                                        }`}
-                                    >
-                                      <span className="text-gray-900 font-medium">
-                                        {qIndex + 1}. {questionText}
-                                      </span>
-                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
-                                        <span className="text-red-500 text-xl font-bold">&times;</span>
-                                      </button>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            ) : (
-                              <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                              </div>
                             )}
 
+                            {/* External Interviewers */}
+                            {isExternalSelected && (
+                              <div>
+                                <h4 className="text-xs font-medium text-gray-500 mb-1">Outsourced Interviewers</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* {externalInterviewers.map((interviewer) => ( */}
+                                  <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                                    <div className="flex items-center">
+                                      <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={handleClearAllInterviewers}
+                                      className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                      title="Remove interviewer"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                  {/* ))} */}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          {errors.questions && (
-                            <p className="mt-1 text-xs text-red-500">{errors.questions}</p>
+                        )}
+                      </div>
+                      {errors.interviewerType && (
+                        <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
+                      )}
+
+                    </div>
+
+                    {/* interview Questions List */}
+                    <div className="mt-4">
+                      <div className="py-3 mx-auto rounded-md">
+                        {/* Header with Title and Add Button */}
+                        <div className="flex items-center justify-end mb-2">
+                          <button
+                            className="text-custom-blue font-semibold hover:underline"
+                            onClick={() => {
+                              handlePopupToggle();
+                              clearError('questions');
+                            }}
+                            type="button"
+                          >
+                            + Add Question
+                          </button>
+                        </div>
+                        <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
+                          {/* Display Added Questions */}
+                          {formData.interviewQuestionsList.length > 0 ? (
+                            <ul className="mt-2 space-y-2">
+                              {formData.interviewQuestionsList.map((question, qIndex) => {
+                                // const isMandatory = question?.mandatory === "true";
+                                const isMandatory = question?.snapshot?.mandatory === "true";
+                                const questionText = question?.snapshot?.questionText || 'No Question Text Available';
+                                return (
+                                  <li
+                                    key={qIndex}
+                                    className={`flex justify-between items-center p-3 border rounded-md 
+                                        ${isMandatory ? "border-red-500" : "border-gray-300"
+                                      }`}
+                                  >
+                                    <span className="text-gray-900 font-medium">
+                                      {qIndex + 1}. {questionText}
+                                    </span>
+                                    <button onClick={() => handleRemoveQuestion(question.questionId)}>
+                                      <span className="text-red-500 text-xl font-bold">&times;</span>
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
                           )}
-                          {/* Question Popup */}
-                          {isInterviewQuestionPopup && (
+
+                        </div>
+                        {errors.questions && (
+                          <p className="mt-1 text-xs text-red-500">{errors.questions}</p>
+                        )}
+                        {/* Question Popup */}
+                        {isInterviewQuestionPopup && (
+                          <div
+                            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                            onClick={() => setIsInterviewQuestionPopup(false)}
+                          >
                             <div
-                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
-                              onClick={() => setIsInterviewQuestionPopup(false)}
+                              className="bg-white rounded-md w-[95%] h-[90%]"
+                              onClick={(e) => e.stopPropagation()}
                             >
+
                               <div
                                 className="bg-white rounded-md w-[95%] h-[90%]"
                                 onClick={(e) => e.stopPropagation()}
@@ -1244,16 +1220,21 @@ function RoundFormPosition() {
                               handleRemoveQuestion={handleRemoveQuestion}
                               handleToggleMandatory={handleToggleMandatory}
 
-                                  />
 
-                                }
+                                  />
+                                </button>
                               </div>
+
+
+                
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
+
                     </>
 )}
+
 
 
                   <div>
@@ -1313,13 +1294,14 @@ function RoundFormPosition() {
                     >
                       Cancel
                     </button>
-                    <button
+
+                    <LoadingButton
                       onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2  disabled:opacity-50"
+                      isLoading={isMutationLoading}
+                      loadingText={id ? "Updating..." : "Saving..."}
                     >
-                      {isLoading ? 'Processing...' : isEditing ? 'Update Round' : 'Add Round'}
-                    </button>
+                      {isEditing ? 'Update Round' : 'Add Round'}
+                    </LoadingButton>
                   </div>
                 </div>
               </div>

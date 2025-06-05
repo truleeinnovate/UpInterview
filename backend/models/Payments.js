@@ -5,10 +5,10 @@ const PaymentSchema = new mongoose.Schema({
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: false },
     amount: { type: Number, required: true },
-    currency: { type: String, default: 'USD', required: true },
+    currency: { type: String, default: 'INR', required: true },
     status: { 
         type: String, 
-        enum: ['pending', 'authorized', 'captured', 'failed', 'refunded'], 
+        enum: ['pending', 'authorized', 'captured', 'failed', 'refunded','charged'], 
         default: 'pending' 
     },
     paymentMethod: { type: String, enum: ['card', 'bank_transfer', 'wallet', 'upi'], required: true },
@@ -19,7 +19,7 @@ const PaymentSchema = new mongoose.Schema({
     razorpayCustomerId: { type: String },
     transactionId: { type: String, sparse: true }, // Added with sparse index to allow multiple null values
     cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'CardPayment' },
-    isRecurring: { type: Boolean, default: false },
+    //isRecurring: { type: Boolean, default: false },
     subscriptionId: { type: String }, // For recurring payments
     invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice' },
     receiptId: { type: mongoose.Schema.Types.ObjectId, ref: 'Receipt' },

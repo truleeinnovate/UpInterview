@@ -1,0 +1,36 @@
+/* Custom styles for Billing tab invoice integration */
+
+.invoice-tab-wrapper {
+  position: relative;
+  height: calc(100vh - 00px);
+  
+}
+
+.invoice-tab-wrapper > div {
+  /* Remove the min-height constraint from the Invoice component */
+  min-height: auto !important;
+}
+
+/* Override fixed positioning for headers and content */
+.invoice-tab-wrapper .fixed {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+}
+
+/* Ensure proper spacing and margins */
+.invoice-tab-wrapper main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Ensure table takes full width */
+.invoice-tab-wrapper table {
+  width: 100% !important;
+}
+
+/* Hide unnecessary UI elements when embedded */
+.invoice-tab-wrapper .bg-background {
+  background: transparent !important;
+}
