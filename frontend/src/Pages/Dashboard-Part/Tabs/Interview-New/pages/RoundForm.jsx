@@ -1388,21 +1388,12 @@ const RoundFormInterviews = () => {
 
                                 {isInterviewQuestionPopup &&
                                   <QuestionBank
-                                    // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
-                                    // sectionName=""
-                                    // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
                                     type="interviewerSection"
-
                                     interviewQuestionsLists={interviewQuestionsList}
-                                    // setInterviewQuestionsList={(questions) =>
-                                    //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
-                                    // }
                                     fromScheduleLater={true}
-                                    // interviewQuestionsLists={formData.interviewQuestionsList}
                                     onAddQuestion={handleAddQuestionToRound}
                                     handleRemoveQuestion={handleRemoveQuestion}
                                     handleToggleMandatory={handleToggleMandatory}
-
                                   />
 
                                 }

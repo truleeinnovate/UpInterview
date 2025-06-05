@@ -15,7 +15,7 @@ const VerticalRoundsViewPosition = ({
   canEditRound,
   onEditRound,
 }) => {
-  console.log("rounds", rounds)
+  // console.log("rounds", rounds)
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -23,18 +23,22 @@ const VerticalRoundsViewPosition = ({
   const [expandedRounds, setExpandedRounds] = useState({});
 
   // Toggle round expansion
-  const toggleRound = (roundId) => {
-    setExpandedRounds(prev => ({
-      ...prev,
-      [roundId]: !prev[roundId]
-    }));
-  };
+const toggleRound = (roundId) => {
+  setExpandedRounds(prev => {
+    // If the clicked round is already expanded, close it
+    if (prev[roundId]) {
+      return { ...prev, [roundId]: false };
+    }
+    // Otherwise, close all rounds and open the clicked one
+    return { [roundId]: true };
+  });
+};
 
   // Check if a round is expanded
   const isExpanded = (roundId) => !!expandedRounds[roundId];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ">
       {sortedRounds.map((round) => (
         <div key={round._id} className="bg-white rounded-lg shadow-md overflow-hidden">
           <button
@@ -49,13 +53,15 @@ const VerticalRoundsViewPosition = ({
                 <h3 className="text-lg font-semibold text-gray-900">
                   {round.roundTitle}</h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
-                  <span className="mr-2">{round.interviewType}</span>
+                  {/* <span className="mr-2">{round.interviewType}</span> */}
                   <span>•</span>
                   <span className="mx-2">{round.interviewMode}</span>
                 </div>
               </div>
             </div>
-            <div className='flex items-center space-x-4'>
+            <div 
+            
+            className='flex items-center space-x-4'>
               {/* {canEditRound(round) && (
                 <Button
                   onClick={() => onEditRound(round)}

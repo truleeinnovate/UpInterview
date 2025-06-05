@@ -43,8 +43,9 @@ function RoundFormTemplates() {
     sequence: 1,
     duration: 30,
     selectedInterviewType: null,
-    internalInterviewers: [],
-    externalInterviewers: [], // Added for external interviewers
+    interviewers: [],
+    interviewerType:'',
+    // externalInterviewers: [], // Added for external interviewers
     instructions: '',
     assessmentTemplate: { assessmentId: '', assessmentName: '' },
     interviewQuestionsList: [],
@@ -54,7 +55,7 @@ function RoundFormTemplates() {
   const [errors, setErrors] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const isInternalSelected = formData.selectedInterviewType === "internal";
+  const isInternalSelected = formData.interviewerType === "Internal";
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const tenantId = tokenPayload?.tenantId;
@@ -82,12 +83,8 @@ function RoundFormTemplates() {
         );
 
         if (response && response) {
-
-
           const rounds_res = response
-
           setTemplate(response);
-
           if (roundId) {
             const round = rounds_res.rounds.find(r => r._id === roundId);
 
@@ -95,7 +92,9 @@ function RoundFormTemplates() {
 
               // Then resolve interviewer details
               // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
-              const interviewers = round?.internalInterviewers || []
+
+               const interviewers = round?.interviewers  || []
+
               const internalInterviewers = resolveInterviewerDetails(interviewers);
 
               // console.log("internal Interviewers", internalInterviewers);
@@ -111,7 +110,7 @@ function RoundFormTemplates() {
                 instructions: round.instructions || '',
                 // minimumInterviewers: round.minimumInterviewers?.toString() || '1',
                 questions: round.questions || [],
-                internalInterviewers: internalInterviewers || [],
+                interviewers: internalInterviewers || [],
                 assessmentTemplate: round?.roundTitle === "Assessment" && round?.assessmentId
                   ? {
                     assessmentId: round.assessmentId,
@@ -121,7 +120,7 @@ function RoundFormTemplates() {
 
 
                 interviewQuestionsList: round?.questions || [],
-                externalInterviewers: 'Outsourced will be selected at interview schdedule time.',
+                // externalInterviewers: 'Outsourced will be selected at interview schdedule time.',
               });
               await fetchQuestionsForAssessment(round?.assessmentId)
             }
@@ -144,46 +143,58 @@ function RoundFormTemplates() {
 
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    if (formData.selectedInterviewType === 'external') {
+    if (formData.interviewerType === 'External') {
       alert('You need to clear external interviewers before selecting internal interviewers.');
       return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      selectedInterviewType: 'internal',
-      internalInterviewers: interviewers,
-      externalInterviewers: [],
-    }));
+
+       // Add name property by combining firstName and lastName
+  const interviewersWithFullName = interviewers.map(interviewer => ({
+    ...interviewer,
+    name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
+  }));
+
+
+    
+  setFormData((prev) => ({
+    ...prev,
+    interviewerType: 'Internal',
+    interviewers: interviewersWithFullName,
+  }));
     setErrors((prev) => ({ ...prev, interviewerType: '', interviewers: '' }));
   };
 
+  console.log("from data",formData.interviewers);
+  
+
   const handleExternalInterviewerSelect = () => {
-    if (formData.selectedInterviewType === 'internal') {
-      alert('You need to clear internal interviewers before selecting outsourced interviewers.');
+    if (formData.interviewerType === 'Internal') {
+      alert('You need to clear Internal interviewers before selecting outsourced interviewers.');
       return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      selectedInterviewType: 'external',
-      internalInterviewers: [],
-      externalInterviewers: ['Outsourced'], // Mock external interviewer
-    }));
+
+
+   setFormData((prev) => ({
+    ...prev,
+    interviewerType: 'External',
+    interviewers: [],
+  }));
     setErrors((prev) => ({ ...prev, interviewerType: '', interviewers: '' }));
   };
 
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setFormData((prev) => ({
       ...prev,
-      internalInterviewers: prev.internalInterviewers.filter((interviewer) => interviewer._id !== interviewerId),
-      selectedInterviewType: prev.internalInterviewers.length === 1 ? null : prev.selectedInterviewType,
+      interviewers: prev.interviewers.filter((interviewer) => interviewer._id !== interviewerId),
+      interviewerType: prev.interviewers.length === 1 ? null : prev.interviewerType,
     }));
   };
 
   const handleRemoveExternalInterviewer = () => {
     setFormData((prev) => ({
       ...prev,
-      externalInterviewers: [],
-      selectedInterviewType: null,
+      // externalInterviewers: [],
+      interviewerType: null,
     }));
   };
 
@@ -191,9 +202,9 @@ function RoundFormTemplates() {
     setFormData((prev) => ({
 
       ...prev,
-      internalInterviewers: [],
-      externalInterviewers: [],
-      selectedInterviewType: null,
+      interviewers: [],
+      // externalInterviewers: [],
+      interviewerType: null,
     }));
 
   };
@@ -279,9 +290,9 @@ function RoundFormTemplates() {
       customRoundTitle: selectedTitle === "Other" ? "" : prev.customRoundTitle,
       interviewMode: selectedTitle === "Assessment" ? "Virtual" : selectedTitle === "Other" ? "" : prev.interviewMode,
       duration: 30,
-      selectedInterviewType: null,
-      internalInterviewers: [],
-      externalInterviewers: [],
+      interviewerType: null,
+      interviewers: [],
+      // externalInterviewers: [],
       instructions: '',
       interviewQuestionsList: [],
       assessmentTemplate: { assessmentId: '', assessmentName: '' },
@@ -294,6 +305,9 @@ function RoundFormTemplates() {
     setShowDropdown(false);
   };
 
+ 
+  
+
   const handleAssessmentSelect = (assessment) => {
     const assessmentData = {
       assessmentId: assessment._id,
@@ -305,6 +319,9 @@ function RoundFormTemplates() {
       duration: parseInt(assessment.Duration.replace(' minutes', '')),
       instructions: assessment.Instructions,
       interviewQuestionsList: [],
+      
+    interviewerType: null, // Clear interviewer selection
+    interviewers: [], // Clear interviewers
     }));
     setExpandedSections({});
     setSectionQuestions({});
@@ -340,7 +357,7 @@ function RoundFormTemplates() {
       }
     }
 
-    if (formData.roundTitle === 'Technical') {
+    if (formData.roundTitle !== 'Assessment') {
       if (!formData.duration) {
         newErrors.duration = 'Duration is required';
       }
@@ -351,11 +368,11 @@ function RoundFormTemplates() {
       } else if (formData.instructions.length > 1000) {
         newErrors.instructions = 'Instructions cannot exceed 1000 characters';
       }
-      if (!formData.selectedInterviewType) {
+      if (!formData.interviewerType) {
         newErrors.interviewerType = 'Interviewer type is required';
       }
-      if (formData.selectedInterviewType === 'internal' && formData.internalInterviewers.length === 0) {
-        newErrors.interviewers = 'At least one internal interviewer is required';
+      if (formData.interviewerType === 'Internal' && formData.interviewers.length === 0) {
+        newErrors.interviewers = 'At least one Internal interviewer is required';
       }
       if (formData.interviewQuestionsList.length === 0) {
         newErrors.questions = 'At least one question is required';
@@ -451,13 +468,72 @@ function RoundFormTemplates() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Submitting round form...");
+    // console.log("Submitting round form...");
     if (!validateForm()) {
-        console.log("Validation failed:", errors);
-        return;
+      // console.log("Validation failed:", errors);
+      return;
+
+
+
     }
 
     try {
+
+//       const roundData = {
+//         tenantId,
+//         roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
+//         interviewMode: formData.interviewMode,
+//         sequence: formData.sequence,
+//         interviewDuration: formData.duration,
+//         instructions: formData.instructions,
+//         //  interviewerType: formData.interviewerType, 
+//         interviewerType: formData.roundTitle === 'Assessment' ? "" : formData.interviewerType,
+//         interviewers:
+//           formData.interviewerType === 'Internal'
+//             ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
+//             : [],
+//         questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
+//           .map(q => ({
+//             questionId: q.questionId,
+//             snapshot: {
+//               ...q.snapshot,
+//               mandatory: q.snapshot.mandatory || "false"
+//             }
+//           })) || [],
+//         ...(formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId && {
+//         assessmentId: formData.assessmentTemplate.assessmentId
+//         }),
+//       };
+ 
+//       console.log("Prepared roundData:", roundData);
+ 
+//       if (roundId) {
+//         console.log("Editing existing round with roundId:", roundId);
+//         const updatedRounds = template.rounds.map((round) =>
+//           round._id === roundId ? { ...round, ...roundData } : round
+//         );
+//         console.log("Updated rounds array for PATCH:", updatedRounds);
+ 
+//         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+//           tenantId,
+//           rounds: updatedRounds,
+//         });
+//         // console.log("PATCH response for edit:", patchRes.data);
+//       } else {
+//         console.log("Adding new round...");
+//         const updatedRounds = [...(template.rounds || []), roundData];
+//         // console.log("Updated rounds array for PATCH:", updatedRounds);
+ 
+//         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
+//           tenantId,
+//           rounds: updatedRounds,
+//         });
+//         console.log("PATCH response for add:", patchRes.data);
+//       }
+ 
+//       console.log("Navigation to template detail page...");
+//       navigate(`/interview-templates/${id}`);
+
         const roundData = {
             tenantId,
             roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
@@ -489,6 +565,7 @@ function RoundFormTemplates() {
 
         console.log("Navigation to template detail page...");
         navigate(`/interview-templates/${id}`);
+
 
     } catch (error) {
         console.error('Error saving round:', error);
@@ -697,7 +774,7 @@ function RoundFormTemplates() {
               <div className="space-y-6">
                 <div>
                   <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
-                    Assessment
+                    Assessment Questions
                   </label>
                   {errors.assessmentQuestions && (
                     <p className="text-red-500 text-sm">{errors.assessmentQuestions}</p>
@@ -824,6 +901,7 @@ function RoundFormTemplates() {
             )}
 
             {formData.roundTitle !== 'Assessment' && (
+              <>
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700">Interviewers</label>
@@ -836,9 +914,9 @@ function RoundFormTemplates() {
                       }}
                       variant="outline"
                       size="sm"
-                      className={`${formData.selectedInterviewType === 'external' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={formData.selectedInterviewType === 'external'}
-                      title={formData.selectedInterviewType === 'external' ? 'Clear external interviewers first' : ''}
+                      className={`${formData.interviewerType === 'External' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={formData.interviewerType === 'External'}
+                      title={formData.interviewerType === 'External' ? 'Clear External interviewers first' : ''}
                     >
                       <User className="h-4 w-4 mr-1 text-blue-600" />
                       Select Internal
@@ -852,17 +930,19 @@ function RoundFormTemplates() {
                       }}
                       variant="outline"
                       size="sm"
-                      className={`${formData.selectedInterviewType === 'internal' ? "opacity-50 cursor-not-allowed" : ""}`}
-                      disabled={formData.selectedInterviewType === 'internal'}
-                      title={formData.selectedInterviewType === 'internal' ? "Clear internal interviewers first" : ""}
+                      className={`${formData.interviewerType === 'Internal' ? "opacity-50 cursor-not-allowed" : ""}`}
+                      disabled={formData.interviewerType === 'Internal'}
+                      title={formData.interviewerType === 'Internal' ? "Clear Internal interviewers first" : ""}
                     >
                       <User className="h-4 w-4 mr-1 text-orange-600" />
                       Select Outsourced
                     </Button>
                   </div>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                  {!formData.selectedInterviewType ? (
+
+               <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                  {!formData.interviewerType ? (
+
                     <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                   ) : (
                     <div>
@@ -870,24 +950,24 @@ function RoundFormTemplates() {
                         <div className="flex items-center">
                           <Users className="h-4 w-4 text-gray-500 mr-2" />
                           <span className="text-sm text-gray-700">
-                            {formData.selectedInterviewType === 'internal'
-                              ? `${formData.internalInterviewers.length} interviewer${formData.internalInterviewers.length !== 1 ? 's' : ''
+                            {formData.interviewerType === 'Internal'
+                              ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? 's' : ''
                               }`
                               : 'Outsourced interviewers'}{' '}
                             selected
-                            {formData.selectedInterviewType === 'internal' && (
+                            {formData.interviewerType === 'Internal' && (
                               <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                 Internal
                               </span>
                             )}
-                            {formData.selectedInterviewType === 'external' && (
+                            {formData.interviewerType === 'External' && (
                               <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                 Outsourced
                               </span>
                             )}
                           </span>
                         </div>
-                        {(formData.internalInterviewers.length > 0 || formData.externalInterviewers.length > 0) && (
+                        {(formData.interviewerType === 'External' || formData.interviewerType === 'Internal') && (
                           <button
                             type="button"
                             onClick={handleClearAllInterviewers}
@@ -899,13 +979,15 @@ function RoundFormTemplates() {
                         )}
                       </div>
 
-                      {formData.selectedInterviewType === 'internal' && (
+                      {formData.interviewerType === 'Internal' && (
                         <div className="mb-3">
                           <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                           <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
 
 
-                            {formData.internalInterviewers.map((interviewer) => (
+                            
+                            {formData.interviewers.map((interviewer) => (
+
                               <div
                                 key={interviewer._id}
                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
@@ -913,7 +995,7 @@ function RoundFormTemplates() {
 
                                 <div className="flex items-center">
                                   <span className="ml-2 text-sm text-blue-800 truncate">
-                                    {interviewer.firstName} {interviewer.lastName}
+                                    {interviewer.name}
                                   </span>
                                 </div>
                                 <button
@@ -930,15 +1012,15 @@ function RoundFormTemplates() {
                         </div>
                       )}
 
-                      {formData.selectedInterviewType === 'external' && (
+                      {formData.interviewerType === 'External' && (
                         <div>
                           <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {formData.externalInterviewers.map((interviewer, index) => (
+                             {/* {formData.interviewers.map((interviewer, index) => ( */}
                               <div
-                                key={index}
+                                // key={index}
                                 className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
-                              >
+                              > 
                                 <div className="flex items-center">
                                   <span className="ml-2 text-sm text-orange-800 truncate">
                                     Outsourced will be selected at interview schedule time.
@@ -952,8 +1034,9 @@ function RoundFormTemplates() {
                                 >
                                   <X className="h-4 w-4" />
                                 </button>
-                              </div>
-                            ))}
+                                 </div>
+                             {/* ))} */}
+
                           </div>
                         </div>
                       )}
@@ -1018,11 +1101,11 @@ function RoundFormTemplates() {
                           className="bg-white rounded-md w-[95%] h-[90%]"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="py-3 px-4 bg-custom-blue flex items-center justify-between">
-                            <h2 className="text-xl text-white font-semibold">Add Interview Question</h2>
+                          <div className="py-3 px-4  flex items-center justify-between">
+                            <h2 className="text-xl text-custom-blue font-semibold">Add Interview Question</h2>
                             <button>
-                              <MdOutlineCancel
-                                className="text-2xl fill-white"
+                              <X
+                                className="text-2xl text-red-500"
                                 onClick={() => handlePopupToggle()}
                               />
                             </button>
@@ -1050,7 +1133,7 @@ function RoundFormTemplates() {
 
                 </div>
               </div>
-
+</>
             )}
 
             <div>
@@ -1084,7 +1167,7 @@ function RoundFormTemplates() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 p-6 bg-gray-50 rounded-b-lg">
+            <div className="flex justify-end gap-4 p-6  rounded-b-lg">
               <Button variant="outline" onClick={() => navigate(`/interview-templates/${id}`)}>
                 Cancel
               </Button>
@@ -1108,7 +1191,7 @@ function RoundFormTemplates() {
           isOpen={isInternalInterviews}
           onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
-          selectedInterviewers={formData.internalInterviewers}
+          selectedInterviewers={formData.interviewers}
 
         />
       )}

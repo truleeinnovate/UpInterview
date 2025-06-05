@@ -26,14 +26,13 @@ const InterviewTemplateSchema = new mongoose.Schema({
         selectedInterviewers: [{ type: String }], // Made array items optional
         interviewerType: { type: String }, // Made optional
         selectedInterviewersType: { type: String }, // user or group
-        interviewerGroupId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewerGroup' },
+        // interviewerGroupId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewerGroup' },
     //   internalInterviewers: [
     //         mongoose.Schema.Types.ObjectId,
     //       ],
-           internalInterviewers: [
+           interviewers: [
         mongoose.Schema.Types.ObjectId,
-            //    type: mongoose.Schema.Types.Mixed, required: true ,
-            // interviewerName: { type: String, required: true }
+           
         ],
         // interviewers: [{
         //     interviewerId: { type: mongoose.Schema.Types.Mixed, required: true },

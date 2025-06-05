@@ -15,6 +15,8 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
   const dropdownRef = useRef(null);
   const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
 
+    // console.log("interviewers Data", interviewers);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -53,6 +55,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
           contactId: interviewer.contact?._id || null,
           type: interviewer.type,
           availability: interviewer.availability,
+          name:interviewer.firstName + interviewer.lastName
           // Include any other fields you need
         }));
     } else {
@@ -198,7 +201,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
               <div
                 key={item._id}
                 className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== 'dashboard' ? 'cursor-pointer' : 'cursor-default'} ${navigatedfrom !== 'dashboard' && isInterviewerSelected(item)
-                  ? 'bg-blue-100 border border-blue-300'
+                  ? 'bg-custom-bg border border-custom-blue'
                   : 'hover:bg-gray-50 border border-gray-200'
                   }`}
                 onClick={() => navigatedfrom !== 'dashboard' && handleSelectClick(item)}
@@ -277,7 +280,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
             <button
               onClick={handleScheduleClick}
               disabled={selectedInterviewers.length === 0}
-              className="bg-custom-blue px-4 py-2 rounded-md text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-custom-blue px-4 py-2 rounded-md text-white  disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Schedule ({selectedInterviewers.length})
             </button>

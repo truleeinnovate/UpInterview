@@ -156,14 +156,15 @@ exports.updateTemplate = async (req, res) => {
                     interviewDuration: round.interviewDuration || 60,
                     instructions: round.instructions || '',
                     interviewMode: round.interviewMode || 'virtual',
-                    interviewerType: round.interviewerType || 'internal',
-                    selectedInterviewersType: round.selectedInterviewersType || 'Individual',
-                    selectedInterviewerIds: round.selectedInterviewerIds || [],
+                    interviewerType: round.interviewerType || '',
+                    selectedInterviewersType: round.selectedInterviewersType || '',
+                    // selectedInterviewerIds: round.selectedInterviewerIds || [],
                     interviewQuestionsList: round.interviewQuestionsList || [],
+                    interviewers:round.interviewers || [],
                     assessmentId: round.assessmentId || null,
-                    interviewerGroupId: round.interviewerGroupId || null,
-                    internalInterviewers: round.internalInterviewers || [],
-                    minimumInterviewers: round.minimumInterviewers || '1',
+                    // interviewerGroupId: round.interviewerGroupId || null,
+                    interviewers: round.interviewers || [],
+                    // minimumInterviewers: round.minimumInterviewers || '1',
                     // Include any other fields from the original round
                     ...round
                 };
