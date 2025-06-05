@@ -1,7 +1,14 @@
-const express = require('express');
-const { getInvoiceById } = require('../controllers/InvoiceControllers');
+const express = require("express");
 const InvoiceRouter = express.Router();
 
-InvoiceRouter.get('/:ownerId',getInvoiceById);
+const {
+  getInvoiceById,
+  getInvoices,
+} = require("../controllers/InvoiceControllers");
+
+// SUPER ADMIN
+InvoiceRouter.get("/", getInvoices);
+
+InvoiceRouter.get("/:ownerId", getInvoiceById);
 
 module.exports = InvoiceRouter;

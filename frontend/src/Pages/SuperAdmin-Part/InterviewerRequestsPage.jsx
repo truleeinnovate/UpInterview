@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -767,6 +767,7 @@ function InterviewerRequestsPage() {
           </div>
         </main>
       </div>
+      <Outlet />
     </div>
   );
 }

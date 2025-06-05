@@ -8,6 +8,8 @@ import {
   AiOutlineCustomerService,
   AiOutlineUserSwitch,
 } from "react-icons/ai";
+import axios from "axios";
+import { config } from "../../../config";
 
 function MetricsOverview() {
   const [metrics, setMetrics] = useState([
@@ -18,7 +20,7 @@ function MetricsOverview() {
       icon: <AiOutlineCalendar size={24} />,
       trend: "up",
       trendValue: "15%",
-      endpoint: "http://localhost:3000/admin/interviews",
+      endpoint: `${config.REACT_APP_API_URL}/interview/all-interviews`,
     },
     {
       title: "Active Assessments",
@@ -27,7 +29,7 @@ function MetricsOverview() {
       icon: <AiOutlineCheckSquare size={24} />,
       trend: "up",
       trendValue: "8%",
-      endpoint: "http://localhost:3000/admin/assessments",
+      endpoint: `${config.REACT_APP_API_URL}/assessments/all-assessments`,
     },
     {
       title: "Platform Users",
@@ -36,7 +38,7 @@ function MetricsOverview() {
       icon: <AiOutlineTeam size={24} />,
       trend: "up",
       trendValue: "12%",
-      endpoint: "http://localhost:3000/admin/users",
+      endpoint: `${config.REACT_APP_API_URL}/users/platform-users`,
     },
     {
       title: "Outsource Interviews",
@@ -45,7 +47,7 @@ function MetricsOverview() {
       icon: <AiOutlineUserSwitch size={24} />,
       trend: "up",
       trendValue: "25%",
-      endpoint: "http://localhost:3000/admin/outsource-interviewers",
+      endpoint: `${config.REACT_APP_API_URL}/outsourceInterviewers/all-interviews`,
     },
     {
       title: "Support Tickets",
@@ -54,7 +56,7 @@ function MetricsOverview() {
       icon: <AiOutlineCustomerService size={24} />,
       trend: "down",
       trendValue: "10%",
-      endpoint: "http://localhost:3000/admin/support-users",
+      endpoint: `${config.REACT_APP_API_URL}/all-tickets`,
     },
   ]);
 
@@ -63,11 +65,13 @@ function MetricsOverview() {
       const updatedMetrics = await Promise.all(
         metrics.map(async (card) => {
           try {
-            const res = await fetch(card.endpoint);
-            const data = await res.json();
+            const res = await axios.get(card?.endpoint);
             return {
               ...card,
-              value: data.value,
+              value: res.data.metric.value,
+              title: res.data.metric.title,
+              trend: res.data.metric.trend,
+              trendValue: res.data.metric.trendValue,
             };
           } catch (error) {
             console.error(`Error fetching data for ${card.title}:`, error);

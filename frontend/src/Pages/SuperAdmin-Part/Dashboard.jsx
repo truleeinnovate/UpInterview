@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import MetricsOverview from "../../Components/SuperAdminComponents/Dashboard/MetricsOverview";
 import RecentActivity from "../../Components/SuperAdminComponents/Dashboard/RecentActivity";
@@ -206,6 +207,7 @@ function Dashboard() {
         <TenantMetricsChart />
         <RecentActivity />
       </div>
+      <Outlet />
     </div>
   );
 }

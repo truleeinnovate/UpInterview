@@ -1,63 +1,108 @@
-const bcrypt = require('bcrypt');
-const { Organization } = require('../models/Organization');
-const { Users } = require('../models/Users');
-const { Contacts } = require('../models/Contacts');
-const SharingSettings = require('../models/SharingSettings');
-const Profile = require('../models/Profile');
-const Role = require('../models/RolesData.js');
-const Tabs = require('../models/Tabs');
-const Objects = require('../models/Objects');
+const bcrypt = require("bcrypt");
+const { Organization } = require("../models/Organization");
+const { Users } = require("../models/Users");
+const { Contacts } = require("../models/Contacts");
+const SharingSettings = require("../models/SharingSettings");
+const Profile = require("../models/Profile");
+const Role = require("../models/RolesData.js");
+const Tabs = require("../models/Tabs");
+const Objects = require("../models/Objects");
 const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
-const RolesPermissionObject = require('../models/rolesPermissionObject');
-const { generateToken } = require('../utils/jwt');
+const RolesPermissionObject = require("../models/rolesPermissionObject");
+const { generateToken } = require("../utils/jwt");
 const saltRounds = 10;
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const registerOrganization = async (req, res) => {
   let savedOrganization = null;
   try {
-    console.log('Starting organization registration process...');
+    console.log("Starting organization registration process...");
     const {
-      firstName, lastName, email, phone, countryCode, profileId, jobTitle,
-      company, employees, country, password
+      firstName,
+      lastName,
+      email,
+      phone,
+      countryCode,
+      profileId,
+      jobTitle,
+      company,
+      employees,
+      country,
+      password,
     } = req.body;
-    console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
+    console.log("Request body received:", {
+      firstName,
+      lastName,
+      email,
+      phone,
+      countryCode,
+      profileId,
+      jobTitle,
+      company,
+      employees,
+      country,
+    });
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !countryCode ||
+      !profileId ||
+      !jobTitle ||
+      !company ||
+      !employees ||
+      !country ||
+      !password
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     // Fetch tabs and objects data from DB
-    console.log('Fetching tabs and objects data from database...');
+    console.log("Fetching tabs and objects data from database...");
     const tabsData = await Tabs.findOne({});
     const objectsData = await Objects.findOne({});
-    console.log('Tabs data:', tabsData ? 'Found' : 'Not found');
-    console.log('Objects data:', objectsData ? 'Found' : 'Not found');
+    console.log("Tabs data:", tabsData ? "Found" : "Not found");
+    console.log("Objects data:", objectsData ? "Found" : "Not found");
 
     if (!tabsData || !objectsData) {
-      console.log('Tabs or Objects data not found in database');
-      return res.status(500).json({ message: 'Tabs or Objects data not found' });
+      console.log("Tabs or Objects data not found in database");
+      return res
+        .status(500)
+        .json({ message: "Tabs or Objects data not found" });
     }
 
     // Hash password
-    console.log('Hashing password...');
+    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log('Password hashed successfully');
+    console.log("Password hashed successfully");
 
     // Create new organization
-    console.log('Creating new organization...');
+    console.log("Creating new organization...");
     const organization = new Organization({
-      firstName, lastName, email, phone, profileId, jobTitle,
-      company, employees, country, password: hashedPassword
+      firstName,
+      lastName,
+      email,
+      phone,
+      profileId,
+      jobTitle,
+      company,
+      employees,
+      country,
+      password: hashedPassword,
     });
 
     savedOrganization = await organization.save();
-    console.log('Organization saved successfully with ID:', savedOrganization._id);
+    console.log(
+      "Organization saved successfully with ID:",
+      savedOrganization._id
+    );
 
     // Create new user
-    console.log('Creating new user...');
+    console.log("Creating new user...");
     const newUser = new Users({
       lastName,
       firstName,
@@ -65,14 +110,14 @@ const registerOrganization = async (req, res) => {
       profileId,
       phone,
       tenantId: savedOrganization._id,
-      password: hashedPassword
+      password: hashedPassword,
     });
-    console.log('New user object:', JSON.stringify(newUser, null, 2));
+    console.log("New user object:", JSON.stringify(newUser, null, 2));
     const savedUser = await newUser.save();
-    console.log('User saved successfully with ID:', savedUser._id);
+    console.log("User saved successfully with ID:", savedUser._id);
 
     // Create new contact
-    console.log('Creating new contact...');
+    console.log("Creating new contact...");
     const contact = new Contacts({
       lastName,
       firstName,
@@ -84,48 +129,55 @@ const registerOrganization = async (req, res) => {
       employees: employees,
       countryCode: countryCode,
       tenantId: savedOrganization._id,
-      ownerId: savedUser._id
+      ownerId: savedUser._id,
     });
 
     const savedContact = await contact.save();
-    console.log('Contact saved successfully with ID:', savedContact._id);
+    console.log("Contact saved successfully with ID:", savedContact._id);
 
     // Create default sharing settings
-    console.log('Creating default sharing settings...');
-    const accessBody = objectsData.objects.map(obj => ({
+    console.log("Creating default sharing settings...");
+    const accessBody = objectsData.objects.map((obj) => ({
       ObjName: obj,
-      Access: 'Public',
-      GrantAccess: false
+      Access: "Public",
+      GrantAccess: false,
     }));
 
     const sharingSettings = new SharingSettings({
-      Name: 'sharingSettingDefaultName',
+      Name: "sharingSettingDefaultName",
       organizationId: savedOrganization._id,
-      accessBody
+      accessBody,
     });
 
     await sharingSettings.save();
-    console.log('Sharing settings saved successfully');
+    console.log("Sharing settings saved successfully");
 
     // Create default profiles
-    console.log('Creating default profiles...');
-    const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
+    console.log("Creating default profiles...");
+    const profileNames = [
+      "Admin",
+      "CEO",
+      "HR Manager",
+      "HR Lead",
+      "HR Recruiter",
+      "Internal Interviewer",
+    ];
     let adminProfileId = "";
 
     for (let profileName of profileNames) {
-      const profileTabs = tabsData.tabs.map(tab => ({
+      const profileTabs = tabsData.tabs.map((tab) => ({
         name: tab,
-        status: profileName === "Admin" ? 'Visible' : 'Hidden'
+        status: profileName === "Admin" ? "Visible" : "Hidden",
       }));
 
-      const profileObjects = objectsData.objects.map(object => ({
+      const profileObjects = objectsData.objects.map((object) => ({
         name: object,
         permissions: {
           View: true,
           Create: true,
           Edit: true,
-          Delete: profileName === "Admin"
-        }
+          Delete: profileName === "Admin",
+        },
       }));
 
       const profile = new Profile({
@@ -134,7 +186,7 @@ const registerOrganization = async (req, res) => {
         Description: `Default profile description for ${profileName}`,
         Tabs: profileTabs,
         Objects: profileObjects,
-        organizationId: savedOrganization._id
+        organizationId: savedOrganization._id,
       });
 
       const savedProfile = await profile.save();
@@ -144,16 +196,16 @@ const registerOrganization = async (req, res) => {
     }
 
     // Create default roles from RolesPermissionObject
-    console.log('Creating default roles from RolesPermissionObject...');
+    console.log("Creating default roles from RolesPermissionObject...");
     const rolesPermissionObjects = await RolesPermissionObject.find({});
     let roleIds = {};
 
     for (let roleObj of rolesPermissionObjects) {
       const { label, roleName, objects, level } = roleObj;
 
-      const roleObjects = objects.map(obj => ({
+      const roleObjects = objects.map((obj) => ({
         objectName: obj.objectName,
-        permissions: obj.permissions
+        permissions: obj.permissions,
       }));
 
       const newRole = new Role({
@@ -164,7 +216,7 @@ const registerOrganization = async (req, res) => {
         objects: roleObjects,
         level,
         inherits: [],
-        isDefault: true
+        isDefault: true,
       });
 
       const savedRole = await newRole.save();
@@ -172,12 +224,12 @@ const registerOrganization = async (req, res) => {
     }
 
     // Assign Admin Role and Profile to the User
-    console.log('Assigning Admin role and profile to user:', savedUser._id);
+    console.log("Assigning Admin role and profile to user:", savedUser._id);
     await Users.findByIdAndUpdate(savedUser._id, {
       roleId: roleIds["Admin"],
-      ProfileId: adminProfileId
+      ProfileId: adminProfileId,
     });
-    console.log('Admin role and profile assigned successfully');
+    console.log("Admin role and profile assigned successfully");
 
     // Generate JWT
     const payload = {
@@ -189,38 +241,39 @@ const registerOrganization = async (req, res) => {
     const token = generateToken(payload);
 
     // Set JWT token in HTTP-only cookie
-    res.cookie('jwt', token, {
+    res.cookie("jwt", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
-    console.log('Organization registration completed successfully');
+    console.log("Organization registration completed successfully");
     res.status(201).json({
       message: "Organization created successfully",
       tenantId: savedOrganization._id,
       ownerId: savedUser._id,
       organization: savedOrganization,
-      token
+      token,
     });
-
   } catch (error) {
-    console.error('Error in organization registration:', error);
+    console.error("Error in organization registration:", error);
     if (error.code === 11000) {
-      console.log('Duplicate key error detected:', error.message);
+      console.log("Duplicate key error detected:", error.message);
       if (savedOrganization) {
-        console.log('Cleaning up organization with ID:', savedOrganization._id);
+        console.log("Cleaning up organization with ID:", savedOrganization._id);
         await Organization.deleteOne({ _id: savedOrganization._id });
       }
-      return res.status(400).json({ message: 'Duplicate key error' });
+      return res.status(400).json({ message: "Duplicate key error" });
     }
-    console.error('Unexpected error:', error.message, error.stack);
+    console.error("Unexpected error:", error.message, error.stack);
     if (savedOrganization) {
-      console.log('Cleaning up organization with ID:', savedOrganization._id);
+      console.log("Cleaning up organization with ID:", savedOrganization._id);
       await Organization.deleteOne({ _id: savedOrganization._id });
     }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -229,10 +282,22 @@ const organizationUserCreation = async (req, res) => {
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
-      return res.status(400).json({ message: "User and Contact data are required" });
+      return res
+        .status(400)
+        .json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id } = UserData;
+    const {
+      firstName,
+      lastName,
+      email,
+      tenantId,
+      roleId,
+      isProfileCompleted,
+      countryCode,
+      editMode,
+      _id,
+    } = UserData;
 
     if (editMode && _id) {
       // Update existing user
@@ -267,7 +332,7 @@ const organizationUserCreation = async (req, res) => {
       return res.status(200).json({
         message: "User updated successfully",
         userId: savedUser._id,
-        contactId: existingContact?._id
+        contactId: existingContact?._id,
       });
     } else {
       // Create new user
@@ -283,7 +348,7 @@ const organizationUserCreation = async (req, res) => {
         tenantId,
         roleId,
         countryCode,
-        isProfileCompleted
+        isProfileCompleted,
       });
 
       const savedUser = await newUser.save();
@@ -295,7 +360,7 @@ const organizationUserCreation = async (req, res) => {
 
       const newContact = new Contacts({
         ...contactData,
-        ownerId: savedUserId
+        ownerId: savedUserId,
       });
 
       const savedContact = await newContact.save();
@@ -303,12 +368,14 @@ const organizationUserCreation = async (req, res) => {
       return res.status(201).json({
         message: "User and Contact created successfully",
         userId: savedUserId,
-        contactId: savedContact._id
+        contactId: savedContact._id,
       });
     }
   } catch (error) {
     console.error("Error in organization registration:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -319,17 +386,23 @@ const loginOrganization = async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
     }
 
     const user = await Users.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     let roleName = null;
@@ -353,22 +426,19 @@ const loginOrganization = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       ownerId: user._id,
       tenantId: user.tenantId,
       token,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
-      contactDataFromOrg
+      contactDataFromOrg,
     });
-
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error during login:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
-
 
 const getRolesByTenant = async (req, res) => {
   try {
@@ -376,17 +446,19 @@ const getRolesByTenant = async (req, res) => {
     const roles = await Role.find({ tenantId });
     res.status(200).json(roles);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
-// reset password 
+// reset password
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: "Invalid request" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid request" });
     }
 
     // Verify token and extract type
@@ -394,7 +466,9 @@ const resetPassword = async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired token" });
     }
 
     const { id, type } = decoded; // Extract type from token
@@ -402,14 +476,19 @@ const resetPassword = async (req, res) => {
     // Find user
     const user = await Users.findById(id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // If user is resetting password, ensure it's different from the old one
     if (type !== "usercreatepass") {
       const isSamePassword = await bcrypt.compare(newPassword, user.password);
       if (isSamePassword) {
-        return res.status(400).json({ success: false, message: "New password must be different from the old password." });
+        return res.status(400).json({
+          success: false,
+          message: "New password must be different from the old password.",
+        });
       }
     }
 
@@ -418,13 +497,13 @@ const resetPassword = async (req, res) => {
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
-
   } catch (error) {
     console.error("Reset Password Error:", error);
-    return res.status(500).json({ success: false, message: "Something went wrong" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Something went wrong" });
   }
 };
-
 
 // get organization details
 const getBasedIdOrganizations = async (req, res) => {
@@ -433,25 +512,89 @@ const getBasedIdOrganizations = async (req, res) => {
     // console.log("Requested Organization ID:", id);
 
     if (!id) {
-      return res.status(400).json({ message: 'Organization ID is required.' });
+      return res.status(400).json({ message: "Organization ID is required." });
     }
 
     // ✅ Fetch the organization by _id
     const organization = await Organization.findById(id).lean();
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found.' });
+      return res.status(404).json({ message: "Organization not found." });
     }
 
     // ✅ Respond with the full organization object
     return res.status(200).json(organization);
-
   } catch (error) {
-    console.error('Error fetching organization:', error);
-    return res.status(500).json({ message: 'An error occurred.', error });
+    console.error("Error fetching organization:", error);
+    return res.status(500).json({ message: "An error occurred.", error });
   }
 };
 
+// SUPER ADMIN
+const getAllOrganizations = async (req, res) => {
+  try {
+    const userCounts = await Users.aggregate([
+      {
+        $group: {
+          _id: "$tenantId",
+          userCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const userCountMap = {};
+    userCounts.forEach(({ _id, userCount }) => {
+      userCountMap[_id?.toString()] = userCount;
+    });
+
+    const organizations = await Organization.find();
+
+    const enrichedOrganizations = organizations.map((org) => {
+      const orgId = org._id.toString();
+      return {
+        ...org.toObject(),
+        usersCount: userCountMap[orgId] || 0,
+      };
+    });
+
+    return res.status(200).json({
+      organizations: enrichedOrganizations,
+      totalOrganizations: organizations.length,
+      status: true,
+    });
+  } catch (error) {
+    console.log("Error in get organizations controller:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", status: false });
+  }
+};
+
+const getOrganizationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
+    const users = await Users.find({ tenantId: id });
+
+    const organization = await Organization.findById(id);
+
+    const tenant = {
+      tenant: organization,
+      users,
+    };
+
+    return res.status(200).json({ organization: tenant });
+  } catch (error) {
+    console.log("Error fetching organization:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ------------------------------------
 
 //related to subdomain
 
@@ -461,7 +604,7 @@ const checkSubdomainAvailability = async (req, res) => {
     const { subdomain } = req.body;
 
     if (!subdomain) {
-      return res.status(400).json({ message: 'Subdomain is required' });
+      return res.status(400).json({ message: "Subdomain is required" });
     }
 
     // Validate subdomain format
@@ -469,7 +612,8 @@ const checkSubdomainAvailability = async (req, res) => {
     if (!subdomainRegex.test(subdomain)) {
       return res.status(400).json({
         available: false,
-        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+        message:
+          "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.",
       });
     }
 
@@ -479,32 +623,45 @@ const checkSubdomainAvailability = async (req, res) => {
     if (existingOrganization) {
       return res.status(200).json({
         available: false,
-        message: `${subdomain} is already taken`
+        message: `${subdomain} is already taken`,
       });
     }
 
     return res.status(200).json({
       available: true,
-      message: `${subdomain} is available`
+      message: `${subdomain} is available`,
     });
   } catch (error) {
-    console.error('Error checking subdomain availability:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error checking subdomain availability:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
 // Update organization subdomain
 const updateSubdomain = async (req, res) => {
   try {
-    const { organizationId, subdomain, baseDomain, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+    const {
+      organizationId,
+      subdomain,
+      baseDomain,
+      subdomainStatus,
+      subdomainAddedDate,
+      subdomainLastVerified,
+    } = req.body;
 
     if (!organizationId || !subdomain) {
-      return res.status(400).json({ message: 'Organization ID and subdomain are required' });
+      return res
+        .status(400)
+        .json({ message: "Organization ID and subdomain are required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     // Validate subdomain format
@@ -512,25 +669,26 @@ const updateSubdomain = async (req, res) => {
     if (!subdomainRegex.test(subdomain)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+        message:
+          "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.",
       });
     }
 
     // Check if subdomain already exists for other organizations
     const existingOrganization = await Organization.findOne({
       subdomain,
-      _id: { $ne: organizationId }
+      _id: { $ne: organizationId },
     });
 
     if (existingOrganization) {
       return res.status(400).json({
         success: false,
-        message: `${subdomain} is already taken by another organization`
+        message: `${subdomain} is already taken by another organization`,
       });
     }
 
     // Update organization with new subdomain
-    const fullDomain = `${subdomain}.${baseDomain || 'app.upinterview.io'}`;
+    const fullDomain = `${subdomain}.${baseDomain || "app.upinterview.io"}`;
     const updatedOrganization = await Organization.findByIdAndUpdate(
       organizationId,
       {
@@ -538,31 +696,32 @@ const updateSubdomain = async (req, res) => {
         fullDomain,
         subdomainStatus,
         subdomainAddedDate,
-        subdomainLastVerified
-
+        subdomainLastVerified,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain updated successfully',
+      message: "Subdomain updated successfully",
       organization: {
         //id: updatedOrganization._id,
         subdomain: updatedOrganization.subdomain,
         fullDomain: updatedOrganization.fullDomain,
         subdomainStatus: updatedOrganization.subdomainStatus,
         subdomainAddedDate: updatedOrganization.subdomainAddedDate,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error updating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error updating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -572,18 +731,20 @@ const getOrganizationSubdomain = async (req, res) => {
     const { organizationId } = req.params;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const organization = await Organization.findById(organizationId);
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
@@ -594,55 +755,66 @@ const getOrganizationSubdomain = async (req, res) => {
         fullDomain: organization.fullDomain || null,
         subdomainStatus: organization.subdomainStatus || null,
         subdomainAddedDate: organization.subdomainAddedDate || null,
-        subdomainLastVerified: organization.subdomainLastVerified || null
-      }
+        subdomainLastVerified: organization.subdomainLastVerified || null,
+      },
     });
   } catch (error) {
-    console.error('Error getting organization subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error getting organization subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
 // Activate subdomain
 const activateSubdomain = async (req, res) => {
   try {
-    const { organizationId, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+    const {
+      organizationId,
+      subdomainStatus,
+      subdomainAddedDate,
+      subdomainLastVerified,
+    } = req.body;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const updatedOrganization = await Organization.findByIdAndUpdate(
       organizationId,
       {
         subdomainStatus,
-        subdomainLastVerified
+        subdomainLastVerified,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain activated successfully',
+      message: "Subdomain activated successfully",
       organization: {
         //id: updatedOrganization._id,
 
         subdomainStatus: updatedOrganization.subdomainStatus,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error activating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error activating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -652,12 +824,14 @@ const deactivateSubdomain = async (req, res) => {
     const { organizationId } = req.body;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const updatedOrganization = await Organization.findByIdAndUpdate(
@@ -667,34 +841,36 @@ const deactivateSubdomain = async (req, res) => {
         fullDomain: null,
         subdomainStatus: null,
         subdomainAddedDate: null,
-        subdomainLastVerified: null
+        subdomainLastVerified: null,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain deactivated successfully',
+      message: "Subdomain deactivated successfully",
       organization: {
         //id: updatedOrganization._id,
         subdomain: updatedOrganization.subdomain,
         fullDomain: updatedOrganization.fullDomain,
         subdomainStatus: updatedOrganization.subdomainStatus,
         subdomainAddedDate: updatedOrganization.subdomainAddedDate,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error deactivating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error deactivating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
-// patch organization details 
+// patch organization details
 
 const updateBasedIdOrganizations = async (req, res) => {
   try {
@@ -703,44 +879,52 @@ const updateBasedIdOrganizations = async (req, res) => {
 
     // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid organization ID' });
+      return res.status(400).json({ message: "Invalid organization ID" });
     }
 
     // Update the organization
     const organization = await Organization.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { 
+      {
         new: true, // Return the updated document
-        runValidators: true // Run schema validators
+        runValidators: true, // Run schema validators
       }
     );
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
-    res.status(200).json(
-      {
-        status: 'success',
-        message: 'Organization updated success',
-        data: organization
+    res.status(200).json({
+      status: "success",
+      message: "Organization updated success",
+      data: organization,
     });
   } catch (error) {
-    console.error('Error updating organization:', error);
-    res.status(500).json({ 
-      message: 'Error updating organization',
-      error: error.message 
+    console.error("Error updating organization:", error);
+    res.status(500).json({
+      message: "Error updating organization",
+      error: error.message,
     });
   }
 };
 
 module.exports = {
-  registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
+  registerOrganization,
+  loginOrganization,
+  resetPassword,
+  organizationUserCreation,
+  getRolesByTenant,
+  getBasedIdOrganizations,
+  checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
   deactivateSubdomain,
-  updateBasedIdOrganizations
-};
+  updateBasedIdOrganizations,
 
+  // SUPER ADMIN
+  getAllOrganizations,
+  getOrganizationById,
+};

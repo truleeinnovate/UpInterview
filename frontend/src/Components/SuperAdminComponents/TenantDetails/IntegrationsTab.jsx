@@ -31,7 +31,7 @@ function IntegrationsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">ATS Integration</h3>
@@ -103,7 +103,7 @@ function IntegrationsTab() {
               <span className="text-sm font-medium text-gray-900">45,678 / 100,000</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-primary-600 h-2 rounded-full" style={{ width: '45.678%' }}></div>
+              <div className="bg-primary h-2 rounded-full" style={{ width: '45.678%' }}></div>
             </div>
           </div>
           <div className="space-y-2">

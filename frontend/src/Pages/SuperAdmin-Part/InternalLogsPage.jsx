@@ -11,7 +11,16 @@ import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../config.js";
 
 function InternalLogsPage() {
   const [view, setView] = useState("table");
@@ -25,8 +34,7 @@ function InternalLogsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    experience: { min: "", max: "" },
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -38,7 +46,7 @@ function InternalLogsPage() {
   }, []);
 
   const [selectedLog, setSelectedLog] = useState(null);
-  const [logs] = useState([
+  const [logs, setLogs] = useState([
     {
       timeStamp: "2025-06-02T10:15:00Z",
       logId: "LOG-001",
@@ -266,6 +274,75 @@ function InternalLogsPage() {
     },
   ]);
 
+  // filters
+  const statusOptions = ["success", "pending", "captured", "charged"];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
+    setFilterPopupOpen(false);
+  };
+
+  // Get Internal logs API
+  useEffect(() => {
+    const getInternalLogs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/internal-log`
+        );
+        setLogs(response.data.logs);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInternalLogs();
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -296,29 +373,18 @@ function InternalLogsPage() {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((log) => {
-      const fieldsToSearch = [log.logId].filter(
+      const fieldsToSearch = [log.logId ? log.logId : log._id].filter(
         (field) => field !== null && field !== undefined
       );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(log.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        log.skills?.some((skill) => selectedFilters.tech.includes(skill.skill));
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          log.CurrentExperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          log.CurrentExperience <= selectedFilters.experience.max);
-
+        selectedFilters.status.includes(log.status);
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
-      );
+      return matchesSearchQuery && matchesStatus;
     });
   };
 
@@ -392,73 +458,6 @@ function InternalLogsPage() {
     }
   };
 
-  // const columns = [
-  //   {
-  //     field: "timeStamp",
-  //     header: "Timestamp",
-  //     render: (row) => formatDate(row.timeStamp),
-  //   },
-  //   {
-  //     field: "logId",
-  //     header: "Log ID",
-  //     render: (row) => <span className="font-mono text-xs">{row.logId}</span>,
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => (
-  //       <StatusBadge
-  //         status={getStatusDisplay(row.status)}
-  //         text={row.status.toUpperCase()}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     field: "severity",
-  //     header: "Severity",
-  //     render: (row) => (
-  //       <StatusBadge
-  //         status={getSeverityDisplay(row.severity)}
-  //         text={row.severity.toUpperCase()}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     field: "processName",
-  //     header: "Process",
-  //   },
-  //   {
-  //     field: "message",
-  //     header: "Message",
-  //   },
-  //   {
-  //     field: "executionTime",
-  //     header: "Execution Time",
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           title="View Details"
-  //           onClick={() => setSelectedLog(row)}
-  //         >
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //         <button
-  //           className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50"
-  //           title="Download"
-  //         >
-  //           <AiOutlineDownload size={18} />
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
-
   const tableColumns = [
     {
       key: "timestamp",
@@ -469,7 +468,9 @@ function InternalLogsPage() {
       key: "logId",
       header: "Log ID",
       render: (value, row) => (
-        <span className="font-mono text-xs">{row.logId}</span>
+        <span className="font-mono text-xs">
+          {row.logId ? row.logId : row._id}
+        </span>
       ),
     },
     {
@@ -512,13 +513,13 @@ function InternalLogsPage() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/internal-log/${row._id}`),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/internal-log/${row._id}`),
     },
     {
       key: "edit",
@@ -555,7 +556,7 @@ function InternalLogsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
+              item?._id && navigate(`/internal-log/${item._id}`);
             }}
             className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="360° View"
@@ -591,8 +592,8 @@ function InternalLogsPage() {
 
   return (
     <div className="space-y-6 min-h-screen">
-      <div className="absolute md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
-        <div className="flex justify-between items-center px-4 mb-4">
+      <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
+        <div className="flex justify-between items-center px-4 mb-4 mt-4">
           <h1 className="text-2xl font-bold text-gray-900">Internal Logs</h1>
           <div className="flex space-x-2">
             <button className="flex items-center btn-secondary border border-gray-200 rounded-md py-1 px-2">
@@ -642,7 +643,7 @@ function InternalLogsPage() {
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
             dataLength={dataToUse?.length}
-            searchPlaceholder="Search invoices..."
+            searchPlaceholder="Search logs..."
             filterIconRef={filterIconRef}
           />
         </div>
@@ -670,12 +671,12 @@ function InternalLogsPage() {
                       <KanbanView
                         data={currentFilteredRows.map((log) => ({
                           ...logs,
-                          id: log.id,
-                          title: `${log.firstName || ""} ${log.lastName || ""}`,
+                          id: log.id ? log.id : log._id,
+                          title: `${log.id ? log.id : log._id || ""} ${""}`,
                           subtitle:
                             log.CurrentRole || log.CurrentExperience || "N/A",
                           avatar: "",
-                          status: "active",
+                          status: log.status,
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
                         columns={kanbanColumns}
@@ -686,13 +687,63 @@ function InternalLogsPage() {
                     </div>
                   )}
 
+                  {/* Render FilterPopup */}
                   <FilterPopup
                     isOpen={isFilterPopupOpen}
                     onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
+                    onApply={handleApplyFilters}
+                    onClearAll={handleClearAll}
                     filterIconRef={filterIconRef}
-                  />
+                  >
+                    <div className="space-y-3">
+                      {/* Current Status Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() =>
+                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                          }
+                        >
+                          <span className="font-medium text-gray-700">
+                            Current Status
+                          </span>
+                          {isCurrentStatusOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isCurrentStatusOpen && (
+                          <div className="mt-1 space-y-2 pl-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                  {statusOptions.map((status) => (
+                                    <label
+                                      key={status}
+                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedStatus.includes(
+                                          status
+                                        )}
+                                        onChange={() =>
+                                          handleCurrentStatusToggle(status)
+                                        }
+                                        className="accent-custom-blue"
+                                      />
+                                      <span>{status}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FilterPopup>
                 </div>
               </motion.div>
             )}

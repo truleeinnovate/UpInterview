@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
 import ReceiptDetailsModal from "./ReceiptDetailsModal";
 
@@ -10,7 +10,16 @@ import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../../config.js";
 
 function ReceiptsTable() {
   const [view, setView] = useState("table");
@@ -24,8 +33,7 @@ function ReceiptsTable() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    experience: { min: "", max: "" },
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -33,7 +41,7 @@ function ReceiptsTable() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
-  const [receipts] = useState([
+  const [receipts, setReceipts] = useState([
     {
       id: "RCP-001",
       invoiceId: "INV-001",
@@ -192,6 +200,75 @@ function ReceiptsTable() {
     },
   ]);
 
+  // filters
+  const statusOptions = ["success", "pending", "captured", "charged"];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
+    setFilterPopupOpen(false);
+  };
+
+  // Get Receipts API
+  useEffect(() => {
+    const getReceiptsSummary = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/receipts`
+        );
+        setReceipts(response.data.receipts);
+      } catch (error) {
+        console.error("Error fetching receipts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getReceiptsSummary();
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -199,17 +276,6 @@ function ReceiptsTable() {
       setView("table");
     }
   }, [isTablet]);
-
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
-  };
 
   const dataToUse = receipts;
 
@@ -222,31 +288,18 @@ function ReceiptsTable() {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((receipt) => {
-      const fieldsToSearch = [receipt.id].filter(
+      const fieldsToSearch = [receipt.id ? receipt.id : receipt._id].filter(
         (field) => field !== null && field !== undefined
       );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(receipt.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        receipt.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          receipt.CurrentExperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          receipt.CurrentExperience <= selectedFilters.experience.max);
-
+        selectedFilters.status.includes(receipt.status);
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
-      );
+      return matchesSearchQuery && matchesStatus;
     });
   };
 
@@ -289,14 +342,14 @@ function ReceiptsTable() {
       key: "id",
       header: "Receipt ID",
       render: (vale, row) => (
-        <span className="font-mono text-sm">{row.id}</span>
+        <span className="font-mono text-sm">{row.id ? row.id : row._id}</span>
       ),
     },
     {
       key: "invoiceId",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row.invoiceId}</span>
+        <span className="font-mono text-sm">{row?.invoiceId}</span>
       ),
     },
     {
@@ -322,7 +375,9 @@ function ReceiptsTable() {
       key: "paymentMethod",
       header: "Payment Method",
       render: (value, row) => (
-        <div className="capitalize">{row.paymentMethod.replace("_", " ")}</div>
+        <div className="capitalize">
+          {row?.paymentMethod?.replace("_", " ")}
+        </div>
       ),
     },
     {
@@ -503,18 +558,18 @@ function ReceiptsTable() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
+                        data={currentFilteredRows.map((receipt) => ({
                           ...receipts,
-                          id: candidate.id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
+                          id: receipt.id ? receipts.id : receipt._id,
+                          title: `${receipt._id || ""} ${
+                            receipt.LastName || ""
                           }`,
                           subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
+                            receipt.CurrentRole ||
+                            receipt.CurrentExperience ||
                             "N/A",
                           avatar: "",
-                          status: "active",
+                          status: receipt.status,
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
                         columns={kanbanColumns}
@@ -525,13 +580,63 @@ function ReceiptsTable() {
                     </div>
                   )}
 
+                  {/* Render FilterPopup */}
                   <FilterPopup
                     isOpen={isFilterPopupOpen}
                     onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
+                    onApply={handleApplyFilters}
+                    onClearAll={handleClearAll}
                     filterIconRef={filterIconRef}
-                  />
+                  >
+                    <div className="space-y-3">
+                      {/* Current Status Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() =>
+                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                          }
+                        >
+                          <span className="font-medium text-gray-700">
+                            Current Status
+                          </span>
+                          {isCurrentStatusOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isCurrentStatusOpen && (
+                          <div className="mt-1 space-y-2 pl-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                  {statusOptions.map((status) => (
+                                    <label
+                                      key={status}
+                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedStatus.includes(
+                                          status
+                                        )}
+                                        onChange={() =>
+                                          handleCurrentStatusToggle(status)
+                                        }
+                                        className="accent-custom-blue"
+                                      />
+                                      <span>{status}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FilterPopup>
                 </div>
               </motion.div>
             )}
@@ -544,6 +649,7 @@ function ReceiptsTable() {
           onClose={() => setSelectedReceipt(null)}
         />
       )}
+      <Outlet />
     </div>
   );
 }

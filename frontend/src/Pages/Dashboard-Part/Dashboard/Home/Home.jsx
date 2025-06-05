@@ -154,7 +154,6 @@
 //   const freelancer = Cookies.get("freelancer");
 //   // const { sharingPermissionscontext, objectPermissionscontext } = usePermissions();
 
-
 //   const apps = [
 //     {
 //       to: "/internalinterview",
@@ -223,7 +222,6 @@
 //   const [lastFetchedInterviews, setLastFetchedInterviews] = useState([]);
 //   const [notificationsData, setNotificationsData] = useState([]);
 
-
 //   const data = {
 //     labels: ["1 Week", "2 Week", "3 Week", "4 Week"],
 //     datasets: [
@@ -282,7 +280,6 @@
 
 //   const [showAllInterviewsPopup, setShowAllInterviewsPopup] = useState(false);
 //   const [roundsData, setRoundsData] = useState({});
-
 
 //   // Improved date extraction function to handle various formats including DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM and DD-MM-YYYY HH:MM
 //   const extractDate = (dateTimeStr) => {
@@ -514,7 +511,6 @@
 
 //   const [outsourceInterviews, setOutsourceInterviews] = useState([]);
 
-
 //   // for candidate profile details
 //   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
@@ -562,7 +558,6 @@
 
 //   // for internal interviews profile details
 //   const [selectedInterview, setSelectedInterview] = useState(null);
-
 
 //   const handleInterviewClick = async (interview) => {
 //     // if (objectPermissions.interviews?.View) {
@@ -636,7 +631,6 @@
 //   const [modalFilterCriteria, setModalFilterCriteria] = useState('all');
 //   const [searchQuery, setSearchQuery] = useState('');
 //   const [showFilters, setShowFilters] = useState(false);
-
 
 //   // All Upcoming Interviews Modal
 //   const AllUpcomingInterviewsModal = () => {
@@ -1039,8 +1033,6 @@
 
 //   const [isPopupTasksOpen, setIsPopupTasksOpen] = useState(false);
 
-
-
 //   const [taskData, setTaskData] = useState([]);
 
 //   useEffect(() => {
@@ -1090,8 +1082,6 @@
 //   const scheduledCount = statusCounts['Scheduled'] || 0;
 //   const completedCount = statusCounts['Completed'] || 0;
 //   const cancelledCount = statusCounts['ScheduleCancel'] || 0;
-
-
 
 //   const [openPopup, setOpenPopup] = useState(null);
 
@@ -1574,7 +1564,6 @@
 //                   </div>
 //                 ))}
 //               </div>
-
 
 //               <div className="border mt-9 rounded-md border-[#217989]">
 //                 <div className="bg-[#217989] bg-opacity-5 p-2 rounded-md">
@@ -2234,8 +2223,6 @@
 //         </div>
 //       </div>
 
-
-
 //       <AppViewMore isModalOpen={isModalOpen} closeModal={closeModal} />
 
 //       {/* Render the All Upcoming Interviews Modal when showAllInterviewsPopup is true */}
@@ -2247,53 +2234,54 @@
 
 // export default Home;
 
-
-import { useState,useEffect } from 'react';
-import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { TrendingUp, AlertCircle, UserCheck } from "lucide-react";
+import { motion } from "framer-motion";
 // import Header from './components/Header/Header';
-import WelcomeSection from './WelcomeSection';
-import StatsCard from './StatsCard';
-import AnalyticsChart from './AnalyticsChart';
-import InterviewRequests from './InterviewRequests';
-import InterviewersList from './InterviewersList';
-import FeedbackList from './FeedbackList';
-import NotificationSection from "../NotificationTab/NotificationsSection"
-import TaskList from './TaskList';
-import InterviewerSchedule from './InterviewManagement/UpcomingInterviews';
+import WelcomeSection from "./WelcomeSection";
+import StatsCard from "./StatsCard";
+import AnalyticsChart from "./AnalyticsChart";
+import InterviewRequests from "./InterviewRequests";
+import InterviewersList from "./InterviewersList";
+import FeedbackList from "./FeedbackList";
+import NotificationSection from "../NotificationTab/NotificationsSection";
+import TaskList from "./TaskList";
+import InterviewerSchedule from "./InterviewManagement/UpcomingInterviews";
 // import { notificationsData } from './data/notifications';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import Cookies from 'js-cookie';
-import axios from 'axios';
-import { config } from '../../../../config';
-
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
+import axios from "axios";
+import { config } from "../../../../config";
 
 const Home = () => {
-  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const isOrganization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-  const [selectedFilter, setSelectedFilter] = useState('All');
-const freelancer = Cookies.get("freelancer");
+  const [selectedFilter, setSelectedFilter] = useState("All");
+  const freelancer = Cookies.get("freelancer");
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
-    interviewChange: '0%',
-    successRate: '0%',
-    successRateChange: '0%',
+    interviewChange: "0%",
+    successRate: "0%",
+    successRateChange: "0%",
     chartData: [],
   });
-  const [period, setPeriod] = useState('monthly');
+  const [period, setPeriod] = useState("monthly");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/interview/dashboard-stats`, {
-          params: { isOrganization, tenantId, ownerId, period },
-        });
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/interview/dashboard-stats`,
+          {
+            params: { isOrganization, tenantId, ownerId, period },
+          }
+        );
         setStats(response.data);
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error("Error fetching stats:", error);
       }
     };
     fetchStats();
@@ -2308,7 +2296,10 @@ const freelancer = Cookies.get("freelancer");
           transition={{ duration: 0.5 }}
           className="space-y-6 sm:space-y-8"
         >
-          <WelcomeSection selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+          <WelcomeSection
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+          />
         </motion.div>
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row sm:gap-8 gap-6 mt-6">
@@ -2356,18 +2347,18 @@ const freelancer = Cookies.get("freelancer");
                 />
               </motion.div>
             </div>
-            {freelancer && (
-            <InterviewRequests />
-            )}
-
-
+            {freelancer && <InterviewRequests />}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <AnalyticsChart data={stats.chartData} setPeriod={setPeriod} period={period} />
+              <AnalyticsChart
+                data={stats.chartData}
+                setPeriod={setPeriod}
+                period={period}
+              />
             </motion.div>
 
             <FeedbackList />
@@ -2389,6 +2380,6 @@ const freelancer = Cookies.get("freelancer");
       </main>
     </div>
   );
-}
+};
 
 export default Home;

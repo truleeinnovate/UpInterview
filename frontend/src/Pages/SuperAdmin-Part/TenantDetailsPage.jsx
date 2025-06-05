@@ -21,6 +21,9 @@ import ReportsTab from "../../Components/SuperAdminComponents/TenantDetails/Repo
 import DocumentsTab from "../../Components/SuperAdminComponents/TenantDetails/DocumentsTab";
 import BillingPage from "../SuperAdmin-Part/BillingPage";
 
+import { config } from "../../config";
+import axios from "axios";
+
 function TenantDetailsPage() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
@@ -29,20 +32,25 @@ function TenantDetailsPage() {
 
   useEffect(() => {
     const getTenant = async () => {
-      setLoading(true);
-      const apiUrl = `http://localhost:3000/admin/organizations/${id}`;
-      const options = {
-        method: "GET",
-      };
-      const response = await fetch(apiUrl, options);
-      const data = await response.json();
-      if (response.ok) {
-        console.log("Tenant data: ", data);
-        setTenant(data.organization);
+      try {
+        setLoading(true);
+        const apiUrl = `${config.REACT_APP_API_URL}/Organization/${id}`;
+        const response = await axios.get(apiUrl);
+
+        if (response.status === 200) {
+          setTenant(response.data.organization);
+          console.log("Organization: ", response.data.organization);
+        }
+      } catch (error) {
+        console.error("Error fetching tenant data:", error);
+      } finally {
         setLoading(false);
       }
     };
-    getTenant();
+
+    if (id) {
+      getTenant();
+    }
   }, [id]);
 
   if (loading) {
@@ -68,16 +76,18 @@ function TenantDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-16 px-4">
       <div className="flex items-center">
         <Link to="/tenants" className="mr-4 p-2 hover:bg-gray-100 rounded-full">
           <AiOutlineLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tenant.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {tenant?.tenant.firstName || "Tenant"}
+          </h1>
           <div className="text-sm text-gray-500">
-            {tenant.company} • {tenant.userCount} Users • Created{" "}
-            {new Date(tenant.createdAt).toLocaleDateString()}
+            {tenant?.tenant?.company} • {tenant?.tenant?.userCount} Users • Created{" "}
+            {new Date(tenant?.createdAt).toLocaleDateString()}
           </div>
         </div>
       </div>
@@ -156,16 +166,16 @@ function TenantDetailsPage() {
 
         <div className="relative min-h-screen w-full pt-4">
           {activeTab === "overview" && <OverviewTab tenant={tenant?.tenant} />}
-          {activeTab === "candidates" && <CandidatesTab />}
-          {activeTab === "positions" && <PositionsTab />}
-          {activeTab === "interviews" && <InterviewsTab />}
+          {/* {activeTab === "candidates" && <CandidatesTab />} */}
+          {/* {activeTab === "positions" && <PositionsTab />} */}
+          {/* {activeTab === "interviews" && <InterviewsTab />} */}
           {activeTab === "users" && <UsersTab users={tenant?.users || []} />}
           {activeTab === "billing" && <BillingPage />}
           {activeTab === "integrations" && <IntegrationsTab />}
-          {activeTab === "webhooks" && <WebhooksTab />}
-          {activeTab === "audit" && <AuditLogsTab />}
-          {activeTab === "reports" && <ReportsTab />}
-          {activeTab === "documents" && <DocumentsTab />}
+          {/* {activeTab === "webhooks" && <WebhooksTab />} */}
+          {/* {activeTab === "audit" && <AuditLogsTab />} */}
+          {/* {activeTab === "reports" && <ReportsTab />} */}
+          {/* {activeTab === "documents" && <DocumentsTab />} */}
         </div>
       </div>
     </div>

@@ -141,74 +141,6 @@ function UsersTab({ users }) {
     setSelectedUser(null);
   };
 
-  // const columns = [
-  //   {
-  //     field: "name",
-  //     header: "Name",
-  //     render: (row) => (
-  //       <div>
-  //         <div className="font-medium text-gray-900">
-  //           {row?.firstName || row?.FirstName}
-  //         </div>
-  //         <div className="text-gray-500">{row?.email || row?.Email}</div>
-  //       </div>
-  //     ),
-  //   },
-  //   { field: "role", header: "Role" },
-  //   {
-  //     field: "lastLogin",
-  //     header: "Last Login",
-  //     render: (row) => new Date(row.lastLogin).toLocaleDateString(),
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => <StatusBadge status={row.status} />,
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           onClick={() => handleLogin(row)}
-  //           title="Login as user"
-  //         >
-  //           <AiOutlineUser size={18} />
-  //         </button>
-  //         <button
-  //           className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50"
-  //           title="Edit user"
-  //         >
-  //           <AiOutlineEdit size={18} />
-  //         </button>
-  //         <button
-  //           className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50"
-  //           title="Reset password"
-  //         >
-  //           <AiOutlineKey size={18} />
-  //         </button>
-  //         <button
-  //           className={`p-2 rounded-full ${
-  //             row.status === "Active"
-  //               ? "text-red-600 hover:text-red-900 hover:bg-red-50"
-  //               : "text-green-600 hover:text-green-900 hover:bg-green-50"
-  //           }`}
-  //           title={row.status === "Active" ? "Lock account" : "Unlock account"}
-  //         >
-  //           {row.status === "Active" ? (
-  //             <AiOutlineLock size={18} />
-  //           ) : (
-  //             <AiOutlineUnlock size={18} />
-  //           )}
-  //         </button>
-  //       </div>
-  //     ),
-  //   },
-  // ];
-
   const tableColumns = [
     {
       key: "name",
@@ -331,13 +263,16 @@ function UsersTab({ users }) {
   return (
     <div className="space-y-6">
       <div className="absolute md:mt-0 sm:mt-0 top-0 left-0 right-0 bg-background">
+        {/* <div className="px-4 pt-4">
+          <h1 className="text-lg font-semibold">Users({users?.length})</h1>
+        </div> */}
         <div className="flex justify-between items-center mb-4">
           {/* Header and Tool bar */}
           <div className="md:mt-4 sm:mt-4 w-full">
             <main className="px-4">
               <div className="sm:px-0">
                 <Header
-                  title="Tenants"
+                  title="Users"
                   onAddClick={() => navigate("/tenants/add")}
                   addButtonText="Add User"
                 />

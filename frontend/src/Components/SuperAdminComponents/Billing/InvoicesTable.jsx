@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
 
 import InvoiceDetailsModal from "./InvoiceDetailsModal";
@@ -12,12 +12,22 @@ import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../../config.js";
+import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
 
 function InvoicesTable() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectInvoiceView, setSelectInvoiceView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,16 +36,14 @@ function InvoicesTable() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    experience: { min: "", max: "" },
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
 
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [invoices] = useState([
+  const [invoices, setInvoices] = useState([
     {
       id: "INV-001",
       tenantId: "TENANT-001",
@@ -372,6 +380,82 @@ function InvoicesTable() {
     },
   ]);
 
+  // filters ----------------------------------------------------------------
+  const statusOptions = [
+    "paid",
+    "partially Paid",
+    "assigned",
+    "pending",
+    "overdue",
+    "cancelled",
+  ];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
+    setFilterPopupOpen(false);
+  };
+
+  // Invoices API Call
+  useEffect(() => {
+    const getInvoices = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/invoices`
+        );
+        setInvoices(response.data.invoices);
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInvoices();
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -379,17 +463,6 @@ function InvoicesTable() {
       setView("table");
     }
   }, [isTablet]);
-
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
-  };
 
   const dataToUse = invoices;
 
@@ -402,31 +475,19 @@ function InvoicesTable() {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((invoice) => {
-      const fieldsToSearch = [invoice.id].filter(
+      const fieldsToSearch = [invoice.id ? invoice.id : invoice._id].filter(
         (field) => field !== null && field !== undefined
       );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(invoice.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        invoice.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          invoice.CurrentExperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          invoice.CurrentExperience <= selectedFilters.experience.max);
+        selectedFilters.status.includes(invoice.status);
 
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
-      );
+      return matchesSearchQuery && matchesStatus;
     });
   };
 
@@ -486,7 +547,7 @@ function InvoicesTable() {
       key: "id",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row.id}</span>
+        <span className="font-mono text-sm">{row._id ? row._id : row.id}</span>
       ),
     },
     {
@@ -549,7 +610,7 @@ function InvoicesTable() {
     {
       key: "dueDate",
       header: "Due Date",
-      render: (value, row) => formatDate(row.dueDate),
+      render: (value, row) => formatDate(row.dueDate || "N/A"),
     },
   ];
 
@@ -559,13 +620,13 @@ function InvoicesTable() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
     },
     {
       key: "edit",
@@ -683,7 +744,7 @@ function InvoicesTable() {
               <div className="sm:px-0">
                 <Header
                   title="Invoices"
-                  onAddClick={() => navigate("/tenants/add")}
+                  onAddClick={() => navigate("new")}
                   addButtonText="Create Invoice"
                 />
                 <Toolbar
@@ -728,18 +789,13 @@ function InvoicesTable() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
+                        data={currentFilteredRows.map((invoice) => ({
                           ...invoices,
-                          id: candidate.id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
-                          }`,
-                          subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
-                            "N/A",
+                          id: invoice.id ? invoice.id : invoice._id,
+                          title: `${invoice._id || ""} ${invoice._id || ""}`,
+                          subtitle: "Invoice",
                           avatar: "",
-                          status: "active",
+                          status: invoice.status,
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
                         columns={kanbanColumns}
@@ -750,13 +806,63 @@ function InvoicesTable() {
                     </div>
                   )}
 
+                  {/* Render FilterPopup */}
                   <FilterPopup
                     isOpen={isFilterPopupOpen}
                     onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
+                    onApply={handleApplyFilters}
+                    onClearAll={handleClearAll}
                     filterIconRef={filterIconRef}
-                  />
+                  >
+                    <div className="space-y-3">
+                      {/* Current Status Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() =>
+                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                          }
+                        >
+                          <span className="font-medium text-gray-700">
+                            Current Status
+                          </span>
+                          {isCurrentStatusOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isCurrentStatusOpen && (
+                          <div className="mt-1 space-y-2 pl-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                  {statusOptions.map((status) => (
+                                    <label
+                                      key={status}
+                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedStatus.includes(
+                                          status
+                                        )}
+                                        onChange={() =>
+                                          handleCurrentStatusToggle(status)
+                                        }
+                                        className="accent-custom-blue"
+                                      />
+                                      <span>{status}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FilterPopup>
                 </div>
               </motion.div>
             )}
@@ -770,6 +876,20 @@ function InvoicesTable() {
           onClose={() => setSelectedInvoice(null)}
         />
       )}
+
+      {showAddForm && (
+        <AddInvoiceForm
+          isOpen={showAddForm}
+          onClose={() => {
+            setShowAddForm(false);
+            setSelectedInvoice(null);
+            setEditModeOn(false);
+          }}
+          selectedInvoice={selectedInvoice}
+          isEdit={editModeOn}
+        />
+      )}
+      <Outlet />
     </div>
   );
 }

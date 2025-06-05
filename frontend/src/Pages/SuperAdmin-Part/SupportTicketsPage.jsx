@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -9,12 +9,22 @@ import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../config.js";
+import AddSupportForm from "./Support/AddSupportForm.jsx";
 
 function SupportTicketsPage() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  const [selectedSupport, setSelectedSupport] = useState(null);
+  const [selectSupportView, setSelectSupportView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -23,8 +33,7 @@ function SupportTicketsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    experience: { min: "", max: "" },
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -192,6 +201,25 @@ function SupportTicketsPage() {
     },
   ]);
 
+  // Get Internal logs API
+  useEffect(() => {
+    const getSupportTickets = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/support-tickets`
+        );
+        setTickets(response.data.tickets);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getSupportTickets();
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -211,6 +239,65 @@ function SupportTicketsPage() {
     );
   };
 
+  // filters ----------------------------------------------------------------
+  const statusOptions = [
+    "Open",
+    "New",
+    "Assigned",
+    "pending",
+    "InProgress",
+    "Resolved",
+  ];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
+    setFilterPopupOpen(false);
+  };
+
+  // ----------------------------------------------------------
+
   const dataToUse = tickets;
 
   const handleFilterIconClick = () => {
@@ -221,25 +308,22 @@ function SupportTicketsPage() {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((support) => {
-      const fieldsToSearch = [support.tenant, support.id].filter(
-        (field) => field !== null && field !== undefined
-      );
+
+    return dataToUse?.filter((support) => {
+      const fieldsToSearch = [
+        support.tenant,
+        support.id ? support.id : support._id,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(support.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        support.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
+        selectedFilters.status.includes(support.status);
 
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus && matchesTech;
+      return matchesSearchQuery && matchesStatus;
     });
   };
 
@@ -310,13 +394,15 @@ function SupportTicketsPage() {
     {
       key: "id",
       header: "Ticket ID",
-      render: (value) => <span className="font-mono text-xs">{value}</span>,
+      render: (value, row) => (
+        <span className="font-mono text-xs">{row.id ? row.id : row._id}</span>
+      ),
     },
     {
       key: "subject",
       header: "Subject",
       render: (value, row) => (
-        <div className="font-medium text-gray-900">{row.subject}</div>
+        <div className="font-medium text-gray-900">{row.subject || "-"}</div>
       ),
     },
     {
@@ -331,33 +417,24 @@ function SupportTicketsPage() {
     {
       key: "priority",
       header: "Priority",
-      render: (row) => {
-        const priority = getPriorityDisplay(row.priority);
-        return <StatusBadge status={priority.status} text={priority.label} />;
-      },
+      render: (value, row) => <span>{row.priority}</span>,
     },
     {
       key: "status",
       header: "Status",
-      render: (row) => {
-        const status = getStatusDisplay(row.status);
-        return <StatusBadge status={status.status} text={status.label} />;
-      },
+      render: (value, row) => <span>{row.status}</span>,
     },
     {
       key: "assignee",
       header: "Assignee",
-      render: (row) =>
-        row?.assignee ? (
-          row?.assignee
-        ) : (
-          <span className="text-gray-400 italic">Unassigned</span>
-        ),
+      render: (value, row) => (
+        <span className="text-gray-400 italic">{row.assignedTo}</span>
+      ),
     },
     {
       key: "createdAt",
       header: "Created",
-      render: (row) => formatDate(row.createdAt),
+      render: (value, row) => formatDate(row.createdAt),
     },
   ];
 
@@ -367,13 +444,13 @@ function SupportTicketsPage() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/support-tickets/${row._id}`),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/support-tickets/${row._id}`),
     },
     {
       key: "edit",
@@ -485,7 +562,7 @@ function SupportTicketsPage() {
               <div className="sm:px-0">
                 <Header
                   title="Support Ticket"
-                  onAddClick={() => navigate("/tenants/add")}
+                  onAddClick={() => navigate("/support-tickets/new")}
                   addButtonText="New Ticket"
                 />
                 <Toolbar
@@ -532,7 +609,7 @@ function SupportTicketsPage() {
                       <KanbanView
                         data={currentFilteredRows.map((support) => ({
                           ...support,
-                          id: support.id,
+                          id: support.id ? support.id : support._id,
                           title: `${support.requester || ""} ${
                             support.LastName || ""
                           }`,
@@ -541,7 +618,7 @@ function SupportTicketsPage() {
                             support.CurrentExperience ||
                             "N/A",
                           avatar: "",
-                          status: "active",
+                          status: support.status,
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
                         columns={kanbanColumns}
@@ -562,9 +639,76 @@ function SupportTicketsPage() {
                 </div>
               </motion.div>
             )}
+
+            {/* Render FilterPopup */}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearAll}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                {/* Current Status Section */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+                  >
+                    <span className="font-medium text-gray-700">
+                      Current Status
+                    </span>
+                    {isCurrentStatusOpen ? (
+                      <ChevronUp className="text-xl text-gray-700" />
+                    ) : (
+                      <ChevronDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCurrentStatusOpen && (
+                    <div className="mt-1 space-y-2 pl-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-1">
+                          <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                            {statusOptions.map((status) => (
+                              <label
+                                key={status}
+                                className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStatus.includes(status)}
+                                  onChange={() =>
+                                    handleCurrentStatusToggle(status)
+                                  }
+                                  className="accent-custom-blue"
+                                />
+                                <span>{status}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </FilterPopup>
           </div>
         </main>
       </div>
+      {showAddForm && (
+        <AddSupportForm
+          isOpen={showAddForm}
+          onClose={() => {
+            setShowAddForm(false);
+            setSelectedSupport(null);
+            setEditModeOn(false);
+          }}
+          selectedSupport={selectedSupport}
+          isEdit={editModeOn}
+        />
+      )}
+      <Outlet />
     </div>
   );
 }

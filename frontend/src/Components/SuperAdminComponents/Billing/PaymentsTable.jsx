@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
 import PaymentDetailsModal from "./PaymentDetailsModal";
 
@@ -10,7 +10,16 @@ import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../../config.js";
 
 function PaymentsTable() {
   const [view, setView] = useState("table");
@@ -24,8 +33,7 @@ function PaymentsTable() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    experience: { min: "", max: "" },
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -33,7 +41,7 @@ function PaymentsTable() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [payments] = useState([
+  const [payments, setPayments] = useState([
     {
       id: "PAY-001",
       tenantId: "TENANT-001",
@@ -219,6 +227,75 @@ function PaymentsTable() {
     },
   ]);
 
+  // filters
+  const statusOptions = ["success", "pending", "captured", "charged"];
+
+  const handleCurrentStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setCurrentStatus(selectedFilters.currentStatus);
+      setIsCurrentStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      currentStatus: "",
+    };
+    setSelectedStatus([]);
+    setCurrentStatus("");
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      currentStatus: selectedCurrentStatus,
+    };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
+    setFilterPopupOpen(false);
+  };
+
+  // Invoices API Call
+  useEffect(() => {
+    const getPaymentsSummary = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/payments`
+        );
+        setPayments(response.data.payments);
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getPaymentsSummary();
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -226,17 +303,6 @@ function PaymentsTable() {
       setView("table");
     }
   }, [isTablet]);
-
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
-  };
 
   const dataToUse = payments;
 
@@ -249,31 +315,19 @@ function PaymentsTable() {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((payment) => {
-      const fieldsToSearch = [payment.id].filter(
+      const fieldsToSearch = [payment.id ? payment.id : payment._id].filter(
         (field) => field !== null && field !== undefined
       );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(payment.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        payment.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          payment.CurrentExperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          payment.CurrentExperience <= selectedFilters.experience.max);
+        selectedFilters.status.includes(payment.status);
 
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
-      );
+      return matchesSearchQuery && matchesStatus;
     });
   };
 
@@ -326,84 +380,12 @@ function PaymentsTable() {
     }
   };
 
-  // const columns = [
-  //   {
-  //     field: "id",
-  //     header: "Payment ID",
-  //     render: (row) => <span className="font-mono text-sm">{row.id}</span>,
-  //   },
-  //   {
-  //     field: "amount",
-  //     header: "Amount",
-  //     render: (row) => (
-  //       <div className="font-medium">
-  //         {formatCurrency(row.amount, row.currency)}
-  //         {row.isRecurring && (
-  //           <div className="text-xs text-gray-500">
-  //             Recurring • {row.billingCycle}
-  //           </div>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     field: "paymentMethod",
-  //     header: "Payment Method",
-  //     render: (row) => (
-  //       <div className="capitalize">{row.paymentMethod.replace("_", " ")}</div>
-  //     ),
-  //   },
-  //   {
-  //     field: "status",
-  //     header: "Status",
-  //     render: (row) => (
-  //       <StatusBadge
-  //         status={getStatusDisplay(row.status)}
-  //         text={row.status.toUpperCase()}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     field: "transactionDate",
-  //     header: "Transaction Date",
-  //     render: (row) => formatDate(row.transactionDate),
-  //   },
-  //   {
-  //     field: "paidAt",
-  //     header: "Paid At",
-  //     render: (row) => (row.paidAt ? formatDate(row.paidAt) : "-"),
-  //   },
-  //   {
-  //     field: "actions",
-  //     header: "Actions",
-  //     sortable: false,
-  //     render: (row) => (
-  //       <div className="flex space-x-2">
-  //         <button
-  //           className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-  //           onClick={() => setSelectedPayment(row)}
-  //         >
-  //           <AiOutlineEye size={18} />
-  //         </button>
-  //         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-  //           <AiOutlineDownload size={18} />
-  //         </button>
-  //         {row.status === "pending" && (
-  //           <button className="p-2 text-warning-600 hover:text-warning-900 rounded-full hover:bg-warning-50">
-  //             <AiOutlineSync size={18} />
-  //           </button>
-  //         )}
-  //       </div>
-  //     ),
-  //   },
-  // ];
-
   const tableColumns = [
     {
       key: "id",
       header: "Payment ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row.id}</span>
+        <span className="font-mono text-sm">{row.id ? row.id : row._id}</span>
       ),
     },
     {
@@ -421,10 +403,10 @@ function PaymentsTable() {
       ),
     },
     {
-      key: "paymentMethod",
+      key: "method",
       header: "Payment Method",
       render: (value, row) => (
-        <div className="capitalize">{row.paymentMethod.replace("_", " ")}</div>
+        <div className="capitalize">{row?.method?.replace("-", " ")}</div>
       ),
     },
     {
@@ -455,13 +437,13 @@ function PaymentsTable() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+      onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
     },
     {
       key: "edit",
@@ -539,7 +521,7 @@ function PaymentsTable() {
           <h2 className="text-lg font-medium text-gray-900">Payments</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Payments</div>
             <div className="text-xl font-semibold">{payments.length}</div>
@@ -604,18 +586,15 @@ function PaymentsTable() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
+                        data={currentFilteredRows.map((payment) => ({
                           ...payments,
-                          id: candidate.id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
-                          }`,
-                          subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
-                            "N/A",
+                          id: payment.id ? payment.id : payment._id,
+                          title: `${
+                            payment.id ? payment.id : payment._id || ""
+                          } ${""}`,
+                          subtitle: "N/A",
                           avatar: "",
-                          status: "active",
+                          status: payment.status,
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
                         columns={kanbanColumns}
@@ -626,13 +605,63 @@ function PaymentsTable() {
                     </div>
                   )}
 
+                  {/* Render FilterPopup */}
                   <FilterPopup
                     isOpen={isFilterPopupOpen}
                     onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
+                    onApply={handleApplyFilters}
+                    onClearAll={handleClearAll}
                     filterIconRef={filterIconRef}
-                  />
+                  >
+                    <div className="space-y-3">
+                      {/* Current Status Section */}
+                      <div>
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() =>
+                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                          }
+                        >
+                          <span className="font-medium text-gray-700">
+                            Current Status
+                          </span>
+                          {isCurrentStatusOpen ? (
+                            <ChevronUp className="text-xl text-gray-700" />
+                          ) : (
+                            <ChevronDown className="text-xl text-gray-700" />
+                          )}
+                        </div>
+                        {isCurrentStatusOpen && (
+                          <div className="mt-1 space-y-2 pl-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                  {statusOptions.map((status) => (
+                                    <label
+                                      key={status}
+                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedStatus.includes(
+                                          status
+                                        )}
+                                        onChange={() =>
+                                          handleCurrentStatusToggle(status)
+                                        }
+                                        className="accent-custom-blue"
+                                      />
+                                      <span>{status}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FilterPopup>
                 </div>
               </motion.div>
             )}
@@ -646,6 +675,7 @@ function PaymentsTable() {
           onClose={() => setSelectedPayment(null)}
         />
       )}
+      <Outlet />
     </div>
   );
 }

@@ -1,16 +1,14 @@
-const { Interview } = require('../models/Interview');
-const { InterviewRounds } = require('../models/InterviewRounds.js');
-const InterviewTemplate = require('../models/InterviewTemplate.js');
+const { Interview } = require("../models/Interview");
+const { InterviewRounds } = require("../models/InterviewRounds.js");
+const InterviewTemplate = require("../models/InterviewTemplate.js");
 
-
-const { Users } = require('../models/Users');
-const { Candidate } = require('../models/candidate');
-const { encrypt, generateOTP } = require('../utils/generateOtp');
-const sendEmail = require('../utils/sendEmail');
-const interviewQuestions = require('../models/interviewQuestions');
-const { Position } = require('../models/position.js');
+const { Users } = require("../models/Users");
+const { Candidate } = require("../models/candidate");
+const { encrypt, generateOTP } = require("../utils/generateOtp");
+const sendEmail = require("../utils/sendEmail");
+const interviewQuestions = require("../models/interviewQuestions");
+const { Position } = require("../models/position.js");
 const Assessment = require("../models/assessment");
-
 
 //shashank-[14/02/2025]
 //refinded version
@@ -124,7 +122,6 @@ const Assessment = require("../models/assessment");
 //                     const ecryptArg = { user: "host", details: { id: interviewer.id } };
 //                     const encryptedHost = encrypt(ecryptArg, 'meet');
 //                     round.meetLink = `http://localhost:3000/meetId/${teamId}?user=${encryptedHost}`;
-
 
 //                     try {
 //                         const user = await Users.findById(interviewer.id);
@@ -361,7 +358,6 @@ const Assessment = require("../models/assessment");
 //             console.log("interviewRounds", interviewRounds);
 //         }
 
-
 //         // Save interview data with updated meetLinks
 //         res.status(201).json(savedInterview);
 //     } catch (error) {
@@ -424,7 +420,6 @@ const Assessment = require("../models/assessment");
 //         res.status(500).json({ message: 'Internal server error', error });
 //     }
 // };
-
 
 //code before adding interview questions common logic
 // const createInterview = async (req, res) => {
@@ -499,8 +494,6 @@ const Assessment = require("../models/assessment");
 //                 sequence: index + 1, // Ensure sequential numbering
 //             }));
 
-
-
 //             if (roundsToSave.length > 0) {
 //                 if (interviewId) {
 //                     // if user is editing interviwe form selected new template then old rounds will be deleted and new will be add
@@ -559,119 +552,146 @@ const Assessment = require("../models/assessment");
 //     }
 // };
 const createInterview = async (req, res) => {
-    try {
-        const { candidateId, positionId, templateId, status, orgId, userId, interviewId, updatingInterviewStatus, completionReason } = req.body;
+  try {
+    const {
+      candidateId,
+      positionId,
+      templateId,
+      status,
+      orgId,
+      userId,
+      interviewId,
+      updatingInterviewStatus,
+      completionReason,
+    } = req.body;
 
-        let candidate = null;
+    let candidate = null;
 
-        // Validate candidate only if interviewId is not provided
-        if (!updatingInterviewStatus) {
-            candidate = await Candidate.findById(candidateId);
+    // Validate candidate only if interviewId is not provided
+    if (!updatingInterviewStatus) {
+      candidate = await Candidate.findById(candidateId);
 
-            if (!candidate) {
-                return res.status(404).json({ message: "Candidate not found" });
-            }
-        }
-
-        const template = await InterviewTemplate.findById(templateId);
-
-        // Check if the interview already exists (for editing)
-        let interview;
-        if (interviewId) {
-            interview = await Interview.findById(interviewId);
-            if (!interview) {
-                return res.status(404).json({ message: "Interview not found" });
-            }
-        }
-
-        // Prepare interview data
-        const interviewData = {
-            candidateId,
-            positionId,
-            templateId: template ? templateId : undefined, // Only include if template is selected
-            status, // Preserve status if editing
-            ownerId: userId,
-            tenantId: orgId || undefined,
-            completionReason
-        };
-
-        // Create or update interview
-        let savedInterview;
-        if (interviewId) {
-            interviewData.updatedById = userId;
-            savedInterview = await Interview.findByIdAndUpdate(interviewId, interviewData, { new: true });
-        } else {
-            interviewData.createdBy = userId;
-            const newInterview = new Interview(interviewData);
-            savedInterview = await newInterview.save();
-        }
-
-        // Only update rounds if interview status is NOT being updated
-        if (!updatingInterviewStatus) {
-            const position = await Position.findById(positionId);
-            let roundsToSave = [];
-
-            // Determine rounds to save based on template and position logic
-            if (position?.templateId?.toString() === templateId?.toString()) {
-                roundsToSave = position.rounds || [];
-            } else if (position?.templateId && position?.templateId.toString() !== templateId?.toString()) {
-                roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-            } else if (!position?.templateId && position?.rounds?.length > 0 && templateId) {
-                roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-            } else if (!position?.templateId && position?.rounds?.length > 0) {
-                roundsToSave = position.rounds;
-            } else if (templateId) {
-                roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-            }
-            console.log("rounds to save", roundsToSave);
-            // Ensure sequence numbers are properly assigned
-            roundsToSave = roundsToSave.map((round, index) => ({
-                ...round,
-                sequence: index + 1, // Ensure sequential numbering
-            }));
-
-            if (roundsToSave.length > 0) {
-                if (interviewId) {
-                    // Delete existing rounds and their questions if editing
-                    await InterviewRounds.deleteMany({ interviewId: savedInterview._id });
-                    await interviewQuestions.deleteMany({ interviewId: savedInterview._id });
-                }
-
-                // Insert new rounds
-                const insertedRounds = await InterviewRounds.insertMany(
-                    roundsToSave.map(round => ({
-                        interviewId: savedInterview._id,
-                        sequence: round.sequence,
-                        roundTitle: round.roundTitle,
-                        interviewMode: round.interviewMode,
-                        interviewType: round.interviewType,
-                        interviewerType: round.interviewerType,
-                        duration: round.duration,
-                        instructions: round.instructions,
-                        dateTime: round.dateTime,
-                        interviewers: round.interviewers || [],
-                        status: round.status || "Pending",
-                        questions: round.questions || [],
-                        meetingId: round.meetingId,
-                        meetLink: round.meetLink || [],
-                        assessmentId: round.assessmentId,
-                    }))
-                );
-
-                // Handle interview questions for the newly inserted rounds
-                for (const round of insertedRounds) {
-                    if (round.questions && round.questions.length > 0) {
-                        await handleInterviewQuestions(savedInterview._id, round._id, round.questions);
-                    }
-                }
-            }
-        }
-
-        res.status(201).json(savedInterview);
-    } catch (error) {
-        console.error("Error creating interview:", error);
-        res.status(500).json({ message: "Internal server error" });
+      if (!candidate) {
+        return res.status(404).json({ message: "Candidate not found" });
+      }
     }
+
+    const template = await InterviewTemplate.findById(templateId);
+
+    // Check if the interview already exists (for editing)
+    let interview;
+    if (interviewId) {
+      interview = await Interview.findById(interviewId);
+      if (!interview) {
+        return res.status(404).json({ message: "Interview not found" });
+      }
+    }
+
+    // Prepare interview data
+    const interviewData = {
+      candidateId,
+      positionId,
+      templateId: template ? templateId : undefined, // Only include if template is selected
+      status, // Preserve status if editing
+      ownerId: userId,
+      tenantId: orgId || undefined,
+      completionReason,
+    };
+
+    // Create or update interview
+    let savedInterview;
+    if (interviewId) {
+      interviewData.updatedById = userId;
+      savedInterview = await Interview.findByIdAndUpdate(
+        interviewId,
+        interviewData,
+        { new: true }
+      );
+    } else {
+      interviewData.createdBy = userId;
+      const newInterview = new Interview(interviewData);
+      savedInterview = await newInterview.save();
+    }
+
+    // Only update rounds if interview status is NOT being updated
+    if (!updatingInterviewStatus) {
+      const position = await Position.findById(positionId);
+      let roundsToSave = [];
+
+      // Determine rounds to save based on template and position logic
+      if (position?.templateId?.toString() === templateId?.toString()) {
+        roundsToSave = position.rounds || [];
+      } else if (
+        position?.templateId &&
+        position?.templateId.toString() !== templateId?.toString()
+      ) {
+        roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+      } else if (
+        !position?.templateId &&
+        position?.rounds?.length > 0 &&
+        templateId
+      ) {
+        roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+      } else if (!position?.templateId && position?.rounds?.length > 0) {
+        roundsToSave = position.rounds;
+      } else if (templateId) {
+        roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+      }
+      console.log("rounds to save", roundsToSave);
+      // Ensure sequence numbers are properly assigned
+      roundsToSave = roundsToSave.map((round, index) => ({
+        ...round,
+        sequence: index + 1, // Ensure sequential numbering
+      }));
+
+      if (roundsToSave.length > 0) {
+        if (interviewId) {
+          // Delete existing rounds and their questions if editing
+          await InterviewRounds.deleteMany({ interviewId: savedInterview._id });
+          await interviewQuestions.deleteMany({
+            interviewId: savedInterview._id,
+          });
+        }
+
+        // Insert new rounds
+        const insertedRounds = await InterviewRounds.insertMany(
+          roundsToSave.map((round) => ({
+            interviewId: savedInterview._id,
+            sequence: round.sequence,
+            roundTitle: round.roundTitle,
+            interviewMode: round.interviewMode,
+            interviewType: round.interviewType,
+            interviewerType: round.interviewerType,
+            duration: round.duration,
+            instructions: round.instructions,
+            dateTime: round.dateTime,
+            interviewers: round.interviewers || [],
+            status: round.status || "Pending",
+            questions: round.questions || [],
+            meetingId: round.meetingId,
+            meetLink: round.meetLink || [],
+            assessmentId: round.assessmentId,
+          }))
+        );
+
+        // Handle interview questions for the newly inserted rounds
+        for (const round of insertedRounds) {
+          if (round.questions && round.questions.length > 0) {
+            await handleInterviewQuestions(
+              savedInterview._id,
+              round._id,
+              round.questions
+            );
+          }
+        }
+      }
+    }
+
+    res.status(201).json(savedInterview);
+  } catch (error) {
+    console.error("Error creating interview:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 /**
@@ -679,305 +699,310 @@ const createInterview = async (req, res) => {
  * Used in both createInterview and saveInterviewRound functions.
  */
 async function handleInterviewQuestions(interviewId, roundId, questions) {
-    const existingQuestions = await interviewQuestions.find({ interviewId, roundId });
-    const existingQuestionIds = existingQuestions.map(q => q._id.toString());
-    const newQuestionIds = questions.map(q => q._id).filter(id => id); // Ignore new questions without _id
+  const existingQuestions = await interviewQuestions.find({
+    interviewId,
+    roundId,
+  });
+  const existingQuestionIds = existingQuestions.map((q) => q._id.toString());
+  const newQuestionIds = questions.map((q) => q._id).filter((id) => id); // Ignore new questions without _id
 
-    // **Delete questions that were removed**
-    const questionsToDelete = existingQuestionIds.filter(id => !newQuestionIds.includes(id));
-    if (questionsToDelete.length > 0) {
-        await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
-    }
+  // **Delete questions that were removed**
+  const questionsToDelete = existingQuestionIds.filter(
+    (id) => !newQuestionIds.includes(id)
+  );
+  if (questionsToDelete.length > 0) {
+    await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
+  }
 
-    // **Update or Insert Questions**
-    for (const q of questions) {
-        if (q._id) {
-            // **Update existing question**
-            await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
-        } else {
-            // **Insert new question**
-            await interviewQuestions.create({
-                interviewId,
-                roundId,
-                order: q.order,
-                customizations: q.customizations,
-                mandatory: q.mandatory,
-                tenantId: q.tenantId,
-                ownerId: q.ownerId,
-                questionId: q.questionId,
-                source: q.source,
-                snapshot: q.snapshot,
-                addedBy: q.addedBy
-            });
-        }
+  // **Update or Insert Questions**
+  for (const q of questions) {
+    if (q._id) {
+      // **Update existing question**
+      await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
+    } else {
+      // **Insert new question**
+      await interviewQuestions.create({
+        interviewId,
+        roundId,
+        order: q.order,
+        customizations: q.customizations,
+        mandatory: q.mandatory,
+        tenantId: q.tenantId,
+        ownerId: q.ownerId,
+        questionId: q.questionId,
+        source: q.source,
+        snapshot: q.snapshot,
+        addedBy: q.addedBy,
+      });
     }
+  }
 }
 
 const saveInterviewRound = async (req, res) => {
-    try {
+  try {
+    const { interviewId, round, roundId, questions } = req.body;
+    console.log("saveInterviewRound called with body:", req.body);
+    console.log("interviewId", interviewId);
 
-        const { interviewId, round, roundId, questions } = req.body;
-        console.log("saveInterviewRound called with body:", req.body);
-        console.log("interviewId", interviewId);
-        
-
-        if (!interviewId || !round) {
-            return res.status(400).json({ message: "Interview ID and round data are required." });
-        }
-
-        // let savedRound;
-
-        // if (roundId) {
-        //     // **Edit existing round**
-        //     let existingRound = await InterviewRounds.findById(roundId);
-
-        //     if (existingRound) {
-        //         Object.assign(existingRound, round); // Merge updated fields
-        //         savedRound = await existingRound.save();
-
-        //         // **Reorder all rounds based on sequence**
-        //         await reorderInterviewRounds(interviewId);
-
-        //         // **Handle Interview Questions when Editing**
-        //         if (questions && questions.length > 0) {
-        //             await handleInterviewQuestions(interviewId, roundId, questions);
-        //         }
-        //     } else {
-        //         return res.status(404).json({ message: "Round not found." });
-        //     }
-        // } else {
-        //     // **Create a new round**
-        //     let totalRounds = await InterviewRounds.countDocuments({ interviewId });
-        //     let newSequence = round.sequence || totalRounds + 1;
-
-        //     // **Shift existing rounds if inserting at a lower sequence**
-        //     await InterviewRounds.updateMany(
-        //         { interviewId, sequence: { $gte: newSequence } },
-        //         { $inc: { sequence: 1 } }
-        //     );
-
-        //     // **Save new round**
-        //     const newInterviewRound = new InterviewRounds({
-        //         interviewId,
-        //         ...round,
-        //         sequence: newSequence
-        //     });
-
-        //     savedRound = await newInterviewRound.save();
-
-        //     // **Reorder rounds after adding**
-        //     await reorderInterviewRounds(interviewId);
-
-        //     // **Handle Interview Questions when Creating a New Round**
-        //     if (questions && questions.length > 0) {
-        //         await handleInterviewQuestions(interviewId, savedRound._id, questions);
-        //     }
-        // }
-
-        let savedRound;
-
-        if (roundId) {
-            // **Edit existing round**
-            let existingRound = await InterviewRounds.findById(roundId);
-
-            if (existingRound) {
-                Object.assign(existingRound, round); // Merge updated fields
-                savedRound = await existingRound.save();
-
-                // **Reorder all rounds based on sequence**
-                await reorderInterviewRounds(interviewId);
-            } else {
-                return res.status(404).json({ message: "Round not found." });
-            }
-        } else {
-            // **Create a new round**
-            let totalRounds = await InterviewRounds.countDocuments({ interviewId });
-            let newSequence = round.sequence || totalRounds + 1;
-
-            // **Shift existing rounds if inserting at a lower sequence**
-            await InterviewRounds.updateMany(
-                { interviewId, sequence: { $gte: newSequence } },
-                { $inc: { sequence: 1 } }
-            );
-
-            // **Save new round**
-            const newInterviewRound = new InterviewRounds({
-                interviewId,
-                ...round,
-                sequence: newSequence
-            });
-
-            savedRound = await newInterviewRound.save();
-
-            // **Reorder rounds after adding**
-            await reorderInterviewRounds(interviewId);
-        }
-
-        // **Handle Interview Questions for the Round**
-        await handleInterviewQuestions(interviewId, savedRound._id, questions);
-
-        return res.status(200).json({
-            message: roundId ? "Round updated successfully." : "Interview round created successfully.",
-            savedRound
-        });
-
-        /**
-         * Handles creating, updating, and deleting interview questions for a round.
-         */
-        // async function handleInterviewQuestions(interviewId, roundId, questions) {
-        //     const existingQuestions = await interviewQuestions.find({ interviewId, roundId });
-        //     const existingQuestionIds = existingQuestions.map(q => q._id.toString());
-        //     const newQuestionIds = questions.map(q => q._id).filter(id => id); // Ignore new questions without _id
-
-        //     // **Delete questions that were removed**
-        //     const questionsToDelete = existingQuestionIds.filter(id => !newQuestionIds.includes(id));
-        //     if (questionsToDelete.length > 0) {
-        //         await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
-        //     }
-
-        //     // **Update or Insert Questions**
-        //     for (const q of questions) {
-        //         if (q._id) {
-        //             // **Update existing question**
-        //             await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
-        //         } else {
-        //             // **Insert new question**
-        //             await interviewQuestions.create({
-        //                 interviewId,
-        //                 roundId,
-        //                 order: q.order,
-        //                 customizations: q.customizations,
-        //                 mandatory: q.mandatory,
-        //                 tenantId: q.tenantId,
-        //                 ownerId: q.ownerId,
-        //                 questionId: q.questionId,
-        //                 source: q.source,
-        //                 snapshot: q.snapshot,
-        //                 addedBy: q.addedBy
-        //             });
-        //         }
-        //     }
-        // }
-
-        /**
-         * Reorders interview rounds based on sequence. 
-         */
-        async function reorderInterviewRounds(interviewId) {
-            let rounds = await InterviewRounds.find({ interviewId }).sort({ sequence: 1 });
-
-            for (let i = 0; i < rounds.length; i++) {
-                rounds[i].sequence = i + 1;
-                await rounds[i].save();
-            }
-        }
-
-
-        // Sending emails to interviewers
-        // const emailPromises = [];
-
-        // for (const interviewRounds of rounds) {
-        //     console.log("Processing Round:", JSON.stringify(round, null, 2));
-
-        //     if (round.mode === "Virtual" && Array.isArray(round.interviewers)) {
-        //         console.log("Virtual Round Detected:", round.round);
-
-        //         // Validate interviewers
-        //         if (!Array.isArray(round.interviewers) || round.interviewers.length === 0) {
-        //             console.error("Invalid interviewers data:", round);
-        //             continue;
-        //         }
-
-        //         // Generate meetLink for the round
-        //         const ecryptArgRound = { user: "host", details: { teamId, round: round.round } };
-
-        //         try {
-        //             console.log("Encrypting MeetLink Data:", JSON.stringify(ecryptArgRound, null, 2));
-        //             const encryptedMeetLink = encrypt(ecryptArgRound, 'meet');
-        //             console.log("Encrypted MeetLink:", encryptedMeetLink);
-
-        //             for (const interviewer of round.interviewers) {
-        //                 if (!interviewer._id) {
-        //                     console.error("Skipping invalid interviewer:", interviewer);
-        //                     continue;
-        //                 }
-
-        //                 const ecryptArg = {
-        //                     user: "host",
-        //                     details: { id: interviewer._id, candidateId, round: round.round }
-        //                 };
-        //                 console.log("Encrypting Host Data:", JSON.stringify(ecryptArg, null, 2));
-
-        //                 const encryptedHost = encrypt(ecryptArg, 'meet');
-        //                 console.log("Encrypted Host Data:", encryptedHost);
-
-        //                 round.meetLink = `http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedHost}`;
-        //                 console.log("Generated Meet Link:", round.meetLink);
-
-        //                 try {
-        //                     const user = await Users.findById(interviewer._id);
-        //                     if (user && user.Email) {
-        //                         console.log("Sending Email to:", user.Email);
-        //                         emailPromises.push(
-        //                             sendEmail(
-        //                                 user.Email,
-        //                                 "Interview Scheduled",
-        //                                 `Your scheduled interview can be accessed using this link: ${round.meetLink}`
-        //                             )
-        //                         );
-        //                     }
-        //                 } catch (err) {
-        //                     console.error(`Error fetching interviewer ${interviewer._id}:`, err);
-        //                 }
-        //             }
-        //         } catch (encryptionError) {
-        //             console.error("Encryption Error:", encryptionError);
-        //         }
-        //     }
-        // }
-
-        // // Generate and store OTP for candidate
-        // const otp = generateOTP(CandidateId);
-        // console.log("Generated OTP:", otp);
-
-        // const otpInstance = new TeamsOtpSchema({
-        //     teamId,
-        //     candidateId,
-        //     otp,
-        //     expiresAt: new Date(Date.now() + 90 * 1000), // 90 seconds expiration
-        // });
-
-        // console.log("OTP Instance:", otpInstance);
-        // await otpInstance.save();
-
-        // // Sending email to candidate
-        // if (candidate.Email) {
-        //     console.log("Sending email to candidate:", candidate.Email);
-
-        //     const ecryptArg = { user: "public", details: { id: candidateId } };
-        //     console.log("Encrypting Candidate Data:", JSON.stringify(ecryptArg, null, 2));
-
-        //     const encryptedUser = encrypt(ecryptArg, 'meet');
-        //     console.log("Encrypted Candidate Data:", encryptedUser);
-
-        //     emailPromises.push(
-        //         sendEmail(
-        //             candidate.Email,
-        //             "Interview Invitation",
-        //             `You are invited to attend a virtual interview with this link: http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedUser}. Your OTP is: ${otp}`
-        //         )
-        //     );
-        // }
-
-        // // Wait for all emails to be sent
-        // await Promise.all(emailPromises);
-    } catch (error) {
-        console.error("Error saving interview round:", error);
-        return res.status(500).json({ message: "Internal server error." });
+    if (!interviewId || !round) {
+      return res
+        .status(400)
+        .json({ message: "Interview ID and round data are required." });
     }
+
+    // let savedRound;
+
+    // if (roundId) {
+    //     // **Edit existing round**
+    //     let existingRound = await InterviewRounds.findById(roundId);
+
+    //     if (existingRound) {
+    //         Object.assign(existingRound, round); // Merge updated fields
+    //         savedRound = await existingRound.save();
+
+    //         // **Reorder all rounds based on sequence**
+    //         await reorderInterviewRounds(interviewId);
+
+    //         // **Handle Interview Questions when Editing**
+    //         if (questions && questions.length > 0) {
+    //             await handleInterviewQuestions(interviewId, roundId, questions);
+    //         }
+    //     } else {
+    //         return res.status(404).json({ message: "Round not found." });
+    //     }
+    // } else {
+    //     // **Create a new round**
+    //     let totalRounds = await InterviewRounds.countDocuments({ interviewId });
+    //     let newSequence = round.sequence || totalRounds + 1;
+
+    //     // **Shift existing rounds if inserting at a lower sequence**
+    //     await InterviewRounds.updateMany(
+    //         { interviewId, sequence: { $gte: newSequence } },
+    //         { $inc: { sequence: 1 } }
+    //     );
+
+    //     // **Save new round**
+    //     const newInterviewRound = new InterviewRounds({
+    //         interviewId,
+    //         ...round,
+    //         sequence: newSequence
+    //     });
+
+    //     savedRound = await newInterviewRound.save();
+
+    //     // **Reorder rounds after adding**
+    //     await reorderInterviewRounds(interviewId);
+
+    //     // **Handle Interview Questions when Creating a New Round**
+    //     if (questions && questions.length > 0) {
+    //         await handleInterviewQuestions(interviewId, savedRound._id, questions);
+    //     }
+    // }
+
+    let savedRound;
+
+    if (roundId) {
+      // **Edit existing round**
+      let existingRound = await InterviewRounds.findById(roundId);
+
+      if (existingRound) {
+        Object.assign(existingRound, round); // Merge updated fields
+        savedRound = await existingRound.save();
+
+        // **Reorder all rounds based on sequence**
+        await reorderInterviewRounds(interviewId);
+      } else {
+        return res.status(404).json({ message: "Round not found." });
+      }
+    } else {
+      // **Create a new round**
+      let totalRounds = await InterviewRounds.countDocuments({ interviewId });
+      let newSequence = round.sequence || totalRounds + 1;
+
+      // **Shift existing rounds if inserting at a lower sequence**
+      await InterviewRounds.updateMany(
+        { interviewId, sequence: { $gte: newSequence } },
+        { $inc: { sequence: 1 } }
+      );
+
+      // **Save new round**
+      const newInterviewRound = new InterviewRounds({
+        interviewId,
+        ...round,
+        sequence: newSequence,
+      });
+
+      savedRound = await newInterviewRound.save();
+
+      // **Reorder rounds after adding**
+      await reorderInterviewRounds(interviewId);
+    }
+
+    // **Handle Interview Questions for the Round**
+    await handleInterviewQuestions(interviewId, savedRound._id, questions);
+
+    return res.status(200).json({
+      message: roundId
+        ? "Round updated successfully."
+        : "Interview round created successfully.",
+      savedRound,
+    });
+
+    /**
+     * Handles creating, updating, and deleting interview questions for a round.
+     */
+    // async function handleInterviewQuestions(interviewId, roundId, questions) {
+    //     const existingQuestions = await interviewQuestions.find({ interviewId, roundId });
+    //     const existingQuestionIds = existingQuestions.map(q => q._id.toString());
+    //     const newQuestionIds = questions.map(q => q._id).filter(id => id); // Ignore new questions without _id
+
+    //     // **Delete questions that were removed**
+    //     const questionsToDelete = existingQuestionIds.filter(id => !newQuestionIds.includes(id));
+    //     if (questionsToDelete.length > 0) {
+    //         await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
+    //     }
+
+    //     // **Update or Insert Questions**
+    //     for (const q of questions) {
+    //         if (q._id) {
+    //             // **Update existing question**
+    //             await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
+    //         } else {
+    //             // **Insert new question**
+    //             await interviewQuestions.create({
+    //                 interviewId,
+    //                 roundId,
+    //                 order: q.order,
+    //                 customizations: q.customizations,
+    //                 mandatory: q.mandatory,
+    //                 tenantId: q.tenantId,
+    //                 ownerId: q.ownerId,
+    //                 questionId: q.questionId,
+    //                 source: q.source,
+    //                 snapshot: q.snapshot,
+    //                 addedBy: q.addedBy
+    //             });
+    //         }
+    //     }
+    // }
+
+    /**
+     * Reorders interview rounds based on sequence.
+     */
+    async function reorderInterviewRounds(interviewId) {
+      let rounds = await InterviewRounds.find({ interviewId }).sort({
+        sequence: 1,
+      });
+
+      for (let i = 0; i < rounds.length; i++) {
+        rounds[i].sequence = i + 1;
+        await rounds[i].save();
+      }
+    }
+
+    // Sending emails to interviewers
+    // const emailPromises = [];
+
+    // for (const interviewRounds of rounds) {
+    //     console.log("Processing Round:", JSON.stringify(round, null, 2));
+
+    //     if (round.mode === "Virtual" && Array.isArray(round.interviewers)) {
+    //         console.log("Virtual Round Detected:", round.round);
+
+    //         // Validate interviewers
+    //         if (!Array.isArray(round.interviewers) || round.interviewers.length === 0) {
+    //             console.error("Invalid interviewers data:", round);
+    //             continue;
+    //         }
+
+    //         // Generate meetLink for the round
+    //         const ecryptArgRound = { user: "host", details: { teamId, round: round.round } };
+
+    //         try {
+    //             console.log("Encrypting MeetLink Data:", JSON.stringify(ecryptArgRound, null, 2));
+    //             const encryptedMeetLink = encrypt(ecryptArgRound, 'meet');
+    //             console.log("Encrypted MeetLink:", encryptedMeetLink);
+
+    //             for (const interviewer of round.interviewers) {
+    //                 if (!interviewer._id) {
+    //                     console.error("Skipping invalid interviewer:", interviewer);
+    //                     continue;
+    //                 }
+
+    //                 const ecryptArg = {
+    //                     user: "host",
+    //                     details: { id: interviewer._id, candidateId, round: round.round }
+    //                 };
+    //                 console.log("Encrypting Host Data:", JSON.stringify(ecryptArg, null, 2));
+
+    //                 const encryptedHost = encrypt(ecryptArg, 'meet');
+    //                 console.log("Encrypted Host Data:", encryptedHost);
+
+    //                 round.meetLink = `http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedHost}`;
+    //                 console.log("Generated Meet Link:", round.meetLink);
+
+    //                 try {
+    //                     const user = await Users.findById(interviewer._id);
+    //                     if (user && user.Email) {
+    //                         console.log("Sending Email to:", user.Email);
+    //                         emailPromises.push(
+    //                             sendEmail(
+    //                                 user.Email,
+    //                                 "Interview Scheduled",
+    //                                 `Your scheduled interview can be accessed using this link: ${round.meetLink}`
+    //                             )
+    //                         );
+    //                     }
+    //                 } catch (err) {
+    //                     console.error(`Error fetching interviewer ${interviewer._id}:`, err);
+    //                 }
+    //             }
+    //         } catch (encryptionError) {
+    //             console.error("Encryption Error:", encryptionError);
+    //         }
+    //     }
+    // }
+
+    // // Generate and store OTP for candidate
+    // const otp = generateOTP(CandidateId);
+    // console.log("Generated OTP:", otp);
+
+    // const otpInstance = new TeamsOtpSchema({
+    //     teamId,
+    //     candidateId,
+    //     otp,
+    //     expiresAt: new Date(Date.now() + 90 * 1000), // 90 seconds expiration
+    // });
+
+    // console.log("OTP Instance:", otpInstance);
+    // await otpInstance.save();
+
+    // // Sending email to candidate
+    // if (candidate.Email) {
+    //     console.log("Sending email to candidate:", candidate.Email);
+
+    //     const ecryptArg = { user: "public", details: { id: candidateId } };
+    //     console.log("Encrypting Candidate Data:", JSON.stringify(ecryptArg, null, 2));
+
+    //     const encryptedUser = encrypt(ecryptArg, 'meet');
+    //     console.log("Encrypted Candidate Data:", encryptedUser);
+
+    //     emailPromises.push(
+    //         sendEmail(
+    //             candidate.Email,
+    //             "Interview Invitation",
+    //             `You are invited to attend a virtual interview with this link: http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedUser}. Your OTP is: ${otp}`
+    //         )
+    //     );
+    // }
+
+    // // Wait for all emails to be sent
+    // await Promise.all(emailPromises);
+  } catch (error) {
+    console.error("Error saving interview round:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
 };
-
-
-
 
 // const createInterview = async (req, res) => {
 //     try {
@@ -988,9 +1013,9 @@ const saveInterviewRound = async (req, res) => {
 
 //         rounds.forEach(async round=>{
 //             if (round.mode==="Virtual"){
-//                 const {interviewers}=round 
+//                 const {interviewers}=round
 //                 interviewers.forEach(async i=>{
-//                     const {id}=i 
+//                     const {id}=i
 //                     const user = await Users.findById(id)
 //                     console.log("user",user)
 //                     sendEmail(user.Email,"Interview Scheduled",`Your scheduled interview can be accessed using link :  http://localhost:3000/meetId=${meetId}&user=host`)
@@ -1038,7 +1063,7 @@ const saveInterviewRound = async (req, res) => {
 
 // const getInterviewBasedOnInterviewId = async(req,res)=>{
 //     try {
-//         const {id}=req.params 
+//         const {id}=req.params
 //         const interview = await Interview.findById(id)
 //             .populate({
 //                 path: 'rounds.interviewers.id', // Populating interviewers' `id` field
@@ -1059,9 +1084,9 @@ const saveInterviewRound = async (req, res) => {
 //     }
 // }
 
-const mongoose = require('mongoose'); // Import mongoose for ObjectId conversion
-const { data } = require('autoprefixer');
-const { log } = require('util');
+const mongoose = require("mongoose"); // Import mongoose for ObjectId conversion
+const { data } = require("autoprefixer");
+const { log } = require("util");
 
 // const getInterviewBasedOnInterviewId = async (req, res) => {
 //     try {
@@ -1108,8 +1133,6 @@ const { log } = require('util');
 //         res.status(500).json({ message: 'Error fetching interview', error });
 //     }
 // };
-
-
 
 // const getAllInterviews = async (req, res) => {
 //     try {
@@ -1164,7 +1187,6 @@ const { log } = require('util');
 //     }
 // };
 
-
 //home page code
 const getDateRanges = () => {
   const now = new Date();
@@ -1177,19 +1199,23 @@ const getDateRanges = () => {
 // Controller to fetch dashboard statistics
 const getDashboardStats = async (req, res) => {
   try {
-    const { isOrganization, tenantId, ownerId, period = 'monthly' } = req.query;
+    const { isOrganization, tenantId, ownerId, period = "monthly" } = req.query;
 
     // Validate inputs
     if (!tenantId && !ownerId) {
-      return res.status(400).json({ error: 'tenantId or ownerId is required' });
+      return res.status(400).json({ error: "tenantId or ownerId is required" });
     }
 
     // Define `now` for consistent date calculations
     const now = new Date();
-    const { startOfCurrentMonth, startOfLastMonth, endOfLastMonth } = getDateRanges(now);
+    const { startOfCurrentMonth, startOfLastMonth, endOfLastMonth } =
+      getDateRanges(now);
 
     // Build query based on organization or owner
-    const query = isOrganization === 'true' ? { tenantId: new mongoose.Types.ObjectId(tenantId) } : { ownerId: new mongoose.Types.ObjectId(ownerId) };
+    const query =
+      isOrganization === "true"
+        ? { tenantId: new mongoose.Types.ObjectId(tenantId) }
+        : { ownerId: new mongoose.Types.ObjectId(ownerId) };
 
     // 1. Total Interviews
     const totalInterviews = await Interview.countDocuments(query);
@@ -1205,47 +1231,63 @@ const getDashboardStats = async (req, res) => {
       createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
     });
 
-    let interviewChange = '0%';
-    let trendSymbol = '';
+    let interviewChange = "0%";
+    let trendSymbol = "";
     if (interviewsLastMonth > 0) {
-      const percentageChange = ((interviewsThisMonth - interviewsLastMonth) / interviewsLastMonth) * 100;
-      interviewChange = percentageChange >= 0 ? `+${percentageChange.toFixed(1)}%` : `${percentageChange.toFixed(1)}%`;
-      trendSymbol = percentageChange < 0 ? '↓' : '↑';
+      const percentageChange =
+        ((interviewsThisMonth - interviewsLastMonth) / interviewsLastMonth) *
+        100;
+      interviewChange =
+        percentageChange >= 0
+          ? `+${percentageChange.toFixed(1)}%`
+          : `${percentageChange.toFixed(1)}%`;
+      trendSymbol = percentageChange < 0 ? "↓" : "↑";
     } else if (interviewsThisMonth > 0) {
-      interviewChange = '+100%';
-      trendSymbol = '↑';
+      interviewChange = "+100%";
+      trendSymbol = "↑";
     }
 
     // 3. Success Rate (status: "selected")
     const selectedThisMonth = await Interview.countDocuments({
       ...query,
-      status: 'selected',
+      status: "selected",
       createdAt: { $gte: startOfCurrentMonth },
     });
 
     const selectedLastMonth = await Interview.countDocuments({
       ...query,
-      status: 'selected',
+      status: "selected",
       createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
     });
 
-    const successRateThisMonth = interviewsThisMonth > 0 ? ((selectedThisMonth / interviewsThisMonth) * 100).toFixed(1) : 0;
-    let successRateChange = '0%';
+    const successRateThisMonth =
+      interviewsThisMonth > 0
+        ? ((selectedThisMonth / interviewsThisMonth) * 100).toFixed(1)
+        : 0;
+    let successRateChange = "0%";
     if (selectedLastMonth > 0 && interviewsLastMonth > 0) {
-      const lastMonthSuccessRate = (selectedLastMonth / interviewsLastMonth) * 100;
+      const lastMonthSuccessRate =
+        (selectedLastMonth / interviewsLastMonth) * 100;
       const percentageChange = successRateThisMonth - lastMonthSuccessRate;
-      successRateChange = percentageChange >= 0 ? `+${percentageChange.toFixed(1)}%` : `${percentageChange.toFixed(1)}%`;
+      successRateChange =
+        percentageChange >= 0
+          ? `+${percentageChange.toFixed(1)}%`
+          : `${percentageChange.toFixed(1)}%`;
     } else if (selectedThisMonth > 0) {
-      successRateChange = '+100%';
+      successRateChange = "+100%";
     }
 
     // 4. Analytics Chart Data
     let chartData = [];
-    if (period === 'weekly') {
+    if (period === "weekly") {
       // Last 4 weeks
       const weeks = [];
       for (let i = 3; i >= 0; i--) {
-        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 7);
+        const weekStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - i * 7
+        );
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
         const count = await Interview.countDocuments({
@@ -1258,18 +1300,25 @@ const getDashboardStats = async (req, res) => {
         });
       }
       chartData = weeks;
-    } else if (period === 'yearly') {
+    } else if (period === "yearly") {
       // Last 12 months
       const months = [];
       for (let i = 11; i >= 0; i--) {
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+        const monthEnd = new Date(
+          monthStart.getFullYear(),
+          monthStart.getMonth() + 1,
+          0
+        );
         const count = await Interview.countDocuments({
           ...query,
           createdAt: { $gte: monthStart, $lte: monthEnd },
         });
         months.push({
-          name: monthStart.toLocaleString('default', { month: 'short', year: '2-digit' }),
+          name: monthStart.toLocaleString("default", {
+            month: "short",
+            year: "2-digit",
+          }),
           interviews: count,
         });
       }
@@ -1278,7 +1327,11 @@ const getDashboardStats = async (req, res) => {
       // Monthly (default): Last 30 days
       const days = [];
       for (let i = 29; i >= 0; i--) {
-        const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const dayStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - i
+        );
         const dayEnd = new Date(dayStart);
         dayEnd.setHours(23, 59, 59, 999);
         const count = await Interview.countDocuments({
@@ -1286,7 +1339,10 @@ const getDashboardStats = async (req, res) => {
           createdAt: { $gte: dayStart, $lte: dayEnd },
         });
         days.push({
-          name: dayStart.toLocaleString('default', { day: 'numeric', month: 'short' }),
+          name: dayStart.toLocaleString("default", {
+            day: "numeric",
+            month: "short",
+          }),
           interviews: count,
         });
       }
@@ -1302,8 +1358,61 @@ const getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-module.exports = { createInterview, saveInterviewRound,getDashboardStats };
+// SUPER ADMIN
+const getInterviews = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const totalInterviews = await Interview.countDocuments();
+
+    const interviewsThisMonth = await Interview.countDocuments({
+      createdAt: { $gte: startOfCurrentMonth, $lt: startOfNextMonth },
+    });
+
+    const interviewsLastMonth = await Interview.countDocuments({
+      createdAt: { $gte: startOfLastMonth, $lt: startOfCurrentMonth },
+    });
+
+    let trend = "neutral";
+    let trendValue = "0%";
+
+    if (interviewsLastMonth > 0) {
+      const change =
+        ((interviewsThisMonth - interviewsLastMonth) / interviewsLastMonth) *
+        100;
+      trend = change > 0 ? "up" : change < 0 ? "down" : "neutral";
+      trendValue = `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+    } else if (interviewsThisMonth > 0) {
+      trend = "up";
+      trendValue = "+100%";
+    }
+
+    res.json({
+      metric: {
+        title: "Total Interviews",
+        value: totalInterviews.toLocaleString(),
+        description: "Across all tenants",
+        trend,
+        trendValue,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+module.exports = {
+  createInterview,
+  saveInterviewRound,
+  getDashboardStats,
+  getInterviews,
+};

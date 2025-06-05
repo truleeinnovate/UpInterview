@@ -297,8 +297,14 @@ const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
 const SuperAdminDashboard = lazy(() =>
   import("./Pages/SuperAdmin-Part/Dashboard.jsx")
 );
+
+// tenants
 const TenantsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/TenantsPage.jsx")
+);
+
+const AddTenantForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx")
 );
 const TenantDetailsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
@@ -319,16 +325,23 @@ const OutsourceRequestsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
 );
 const OutsourceInterviewersPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/OutsourceInterviewersPage.jsx")
+  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
 );
 const InterviewerRequestsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InterviewerRequestsPage.jsx")
+  import("./Pages/Interview-Request/InterviewRequest.jsx")
 );
 const BillingPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/BillingPage.jsx")
 );
+const AddInvoiceForm = lazy(() =>
+  import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
+);
+
 const SupportTicketsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/SupportTicketsPage.jsx")
+);
+const AddSupportForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
 );
 const SettingsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
@@ -829,12 +842,21 @@ const App = () => {
                 path="/admin-dashboard"
                 element={<SuperAdminDashboard />}
               />
-              <Route path="tenants" element={<TenantsPage />} />
+              {/* Tenants */}
+              <Route path="/tenants" element={<TenantsPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<AddTenantForm mode="Create" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddTenantForm mode="Edit" />}
+                />
+              </Route>
               <Route path="tenants/:id" element={<TenantDetailsPage />} />
-              <Route path="candidates" element={<CandidatesPage />} />
-              <Route path="positions" element={<PositionsPage />} />
-              <Route path="interviews" element={<InterviewsPage />} />
-              <Route path="assessments" element={<AssessmentsPage />} />
+
+              {/* <Route path="candidates" element={<CandidatesPage />} /> */}
+              {/* <Route path="positions" element={<PositionsPage />} /> */}
+              {/* <Route path="interviews" element={<InterviewsPage />} /> */}
+              {/* <Route path="assessments" element={<AssessmentsPage />} /> */}
               <Route
                 path="outsource-requests"
                 element={<OutsourceRequestsPage />}
@@ -847,8 +869,32 @@ const App = () => {
                 path="interviewer-requests"
                 element={<InterviewerRequestsPage />}
               />
-              <Route path="admin-billing" element={<BillingPage />} />
-              <Route path="support-tickets" element={<SupportTicketsPage />} />
+
+              {/* Admin Billing */}
+              {/* <Route path="admin-billing" element={<BillingPage />} /> */}
+              <Route path="admin-billing" element={<BillingPage />}>
+                <Route index element={null} />
+                <Route
+                  path="new"
+                  element={<AddInvoiceForm mode="Create" />}
+                />
+                <Route
+                  path="edit/:id"
+                  element={<AddInvoiceForm mode="Edit" />}
+                />
+              </Route>
+
+              {/* support */}
+              <Route path="/support-tickets" element={<SupportTicketsPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<AddSupportForm mode="Create" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddSupportForm mode="Edit" />}
+                />
+              </Route>
+              <Route path="support/:id" element={<SupportDetails />} />
+
               <Route path="settings" element={<SettingsPage />} />
               <Route path="internal-logs" element={<InternalLogsPage />} />
               <Route path="integrations" element={<IntegrationsPage />} />

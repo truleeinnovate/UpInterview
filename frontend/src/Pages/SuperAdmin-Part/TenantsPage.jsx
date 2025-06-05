@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 
 import Header from "../../Components/Shared/Header/Header.jsx";
@@ -10,8 +10,18 @@ import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  Import,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { config } from "../../config.js";
+import AddTenantForm from "../SuperAdmin-Part/Tenant/AddTenantForm.jsx";
 
 function TenantsPage() {
   const [view, setView] = useState("table");
@@ -25,8 +35,7 @@ function TenantsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    tech: [],
-    currentStatus: [],
+    currentStatus: "",
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -182,6 +191,7 @@ function TenantsPage() {
 
   const [selectedType, setSelectedType] = useState("all");
 
+  // filters
   const statusOptions = ["active", "inactive", "pending", "inProgress"];
 
   const handleCurrentStatusToggle = (status) => {
@@ -194,14 +204,12 @@ function TenantsPage() {
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [selectedTech, setSelectedTech] = useState([]);
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
 
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
-      setSelectedTech(selectedFilters.tech);
       setCurrentStatus(selectedFilters.currentStatus);
       setIsCurrentStatusOpen(false);
     }
@@ -210,11 +218,9 @@ function TenantsPage() {
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-      tech: [],
       currentStatus: "",
     };
     setSelectedStatus([]);
-    setSelectedTech([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
@@ -225,12 +231,13 @@ function TenantsPage() {
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
-      tech: selectedTech,
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
-    setIsFilterActive(filters.status.length > 0 || filters.tech.length > 0);
+    setIsFilterActive(
+      filters.status.length > 0 || filters.currentStatus.length > 0
+    );
     setFilterPopupOpen(false);
   };
 
@@ -246,23 +253,24 @@ function TenantsPage() {
     }
   }, [isTablet]);
 
-  // useEffect(() => {
-  //   const getTenants = async () => {
-  //     setIsLoading(true);
-  //     const apiUrl = "http://localhost:3000/admin/organizations";
-  //     const options = {
-  //       method: "GET",
-  //     };
+  useEffect(() => {
+    const getTenants = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/Organization/all-organizations`
+        );
+        setTenants(response.data.organizations);
+        console.log("organizations: ", response.data.organizations);
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  //     const response = await fetch(apiUrl, options);
-  //     const data = await response.json();
-  //     if (response.ok) {
-  //       setTenants(data.organizations);
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   getTenants();
-  // }, []);
+    getTenants();
+  }, []);
 
   const dataToUse = tenants;
 
@@ -412,7 +420,7 @@ function TenantsPage() {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`/edit/${row._id}`),
+      onClick: (row) => navigate(`edit/${row._id}`),
     },
     {
       key: "resend-link",
@@ -453,7 +461,7 @@ function TenantsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/edit/${item._id}`);
+              navigate(`edit/${item._id}`);
             }}
             className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="Edit"
@@ -515,32 +523,27 @@ function TenantsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Total Tenants</div>
-                <div className="text-xl font-semibold">
-                  {filteredTenants.length}
-                </div>
+                <div className="text-xl font-semibold">{tenants.length}</div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Active</div>
                 <div className="text-xl font-semibold">
-                  {filteredTenants.filter((t) => t.status === "active").length}
+                  {tenants.filter((t) => t.status === "active").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Inactive</div>
                 <div className="text-xl font-semibold">
-                  {
-                    filteredTenants.filter((t) => t.status === "inactive")
-                      .length
-                  }
+                  {tenants.filter((t) => t.status === "inactive").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Pending</div>
                 <div className="text-xl font-semibold">
-                  {filteredTenants.filter((t) => t.status === "pending").length}
+                  {tenants.filter((t) => t.status === "pending").length}
                 </div>
               </div>
               {selectedType === "all" && (
@@ -568,7 +571,7 @@ function TenantsPage() {
             {/* Header */}
             <Header
               title="Tenants"
-              onAddClick={() => navigate("new")}
+              onAddClick={() => navigate("/tenants/new")}
               addButtonText="Add Tenant"
             />
 
@@ -701,6 +704,20 @@ function TenantsPage() {
           </main>
         </div>
       </div>
+
+      {showAddForm && (
+        <AddTenantForm
+          isOpen={showAddForm}
+          onClose={() => {
+            setShowAddForm(false);
+            setSelectedTenant(null);
+            setEditModeOn(false);
+          }}
+          selectedTenant={selectedTenant}
+          isEdit={editModeOn}
+        />
+      )}
+      <Outlet />
     </div>
   );
 }

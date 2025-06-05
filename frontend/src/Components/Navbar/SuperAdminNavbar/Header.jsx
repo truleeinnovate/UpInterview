@@ -51,11 +51,11 @@ function Header() {
   };
 
   return userType === "SuperAdmin" ? (
-    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16 bg-white shadow">
+    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 h-16 bg-white shadow">
       <div className="flex items-center flex-1">
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center flex-shrink-0 gap-2">
           <button
-            className="mr-2 lg:hidden xl:hidden 2xl:hidden"
+            className="lg:hidden xl:hidden 2xl:hidden"
             onClick={handleSidebarToggle}
           >
             <FaBars className="size-5 md:size-6" />
@@ -67,7 +67,7 @@ function Header() {
               src="https://ui-avatars.com/api/?name=IA&background=4f46e5&color=ffffff&size=40"
               alt="Interview Admin"
             />
-            <span className="ml-2 hidden lg:flex xl:flex 2xl:flex text-xl font-semibold text-gray-900">
+            <span className="ml-2 text-xl font-semibold text-gray-900 hidden lg:flex xl:flex 2xl:flex">
               Interview Admin
             </span>
           </div>
@@ -130,7 +130,7 @@ function Header() {
           </div>
         </nav>
 
-        <div className="md:hidden">
+        <div className="xl:hidden">
           {isSidebarOpen && (
             <Sidebar open={isSidebarOpen} onClose={handleSidebarToggle} />
           )}
