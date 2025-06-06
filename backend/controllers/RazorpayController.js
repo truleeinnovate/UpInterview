@@ -1306,6 +1306,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         
         // Set status to active if it wasn't already
         customerSubscription.status = 'active';
+        customerSubscription.nextBillingDate = subscription.next_billing_at;
         
         await customerSubscription.save();
         
