@@ -57,7 +57,7 @@ export const usePositions = () => {
       queryClient.invalidateQueries(['positions']);
     },
     onError: (error) => {
-      console.error('Error adding rounds:', error);
+      console.log('Error adding rounds:', error);
     },
   });
 

@@ -4,17 +4,24 @@ import { useCustomContext } from "../Context/Contextfetch";
 export const useInterviewerDetails = () => {
   const { groups, interviewers } = useCustomContext();
 
-  // console.log("interviewers", interviewers);
-
   const resolveInterviewerDetails = (interviewerIds) => {
+    // Handle invalid input cases
     if (!interviewerIds || !Array.isArray(interviewerIds)) return [];
- 
-   
+
     
-    return interviewerIds?.map(interviewer => {
-      // If interviewer is already a full object (from API response)
+    // If interviewers data isn't loaded yet, return array with loading state
+    if (!interviewers?.data) {
+      return interviewerIds.map(id => ({
+        _id: typeof id === 'object' ? id?.$oid || id?._id : id,
+        name: 'Loading...',
+        type: 'loading'
+      }));
+    }
+
+    return interviewerIds.map(interviewer => {
+      // Case 1: Interviewer is already a full object
+
       if (interviewer && typeof interviewer === 'object' && interviewer?.name) {
-        
         return {
           _id: interviewer?._id || interviewer?.$oid,
           name: interviewer?.name || 'Unknown Interviewer',
@@ -22,28 +29,34 @@ export const useInterviewerDetails = () => {
           type: 'individual'
         };
       }
-       console.log("interviewerIds", interviewer);
-      // Handle case where interviewer is just an ID object (like {$oid: "..."})
-      const id = interviewer?.$oid || interviewer?._id || interviewer;
-      
-      if (!id) return {
-        _id: 'unknown',
-        name: 'Unknown Interviewer',
-        type: 'unknown'
-      };
 
-      // Check teamsData first (individual interviewers)
-      const teamMember = interviewers?.data?.find(t => t?.contact?._id === id);
-      if (teamMember) {
+      // Extract ID from various possible formats
+      const id = interviewer?.$oid || interviewer?._id || interviewer;
+      if (!id) {
         return {
-          _id: teamMember.contact._id,
-          name:   (teamMember.contact.firstName || '') + " " + (teamMember.contact.lastName || '') || 'Unknown Interviewer',
-          email: teamMember.contact.email || '',
-          type: teamMember.contact.type || ""
+          _id: 'unknown',
+          name: 'Unknown Interviewer',
+          type: 'unknown'
         };
       }
 
-      // Check groups (interviewer groups)
+      // Search in interviewers (individuals)
+      const individualInterviewer = interviewers.data.find(t => t?.contact?._id === id);
+      if (individualInterviewer) {
+        const name = [
+          individualInterviewer.contact.firstName,
+          individualInterviewer.contact.lastName
+        ].filter(Boolean).join(' ') || 'Unknown Interviewer';
+        
+        return {
+          _id: individualInterviewer.contact._id,
+          name: name,
+          email: individualInterviewer.contact.email || '',
+          type: individualInterviewer.contact.type || 'individual'
+        };
+      }
+
+      // Search in groups
       const group = groups?.find(g => g._id === id);
       if (group) {
         return {
@@ -54,7 +67,7 @@ export const useInterviewerDetails = () => {
         };
       }
 
-      // Fallback for unknown IDs
+      // Final fallback
       return {
         _id: id,
         name: 'Unknown Interviewer',

@@ -6,12 +6,13 @@ const roundSchema = new mongoose.Schema(
     roundTitle: String,
     interviewMode: String,
     interviewerType: String, // internal or external
-    duration: String,
+    duration: Number,
     instructions: String,
     selectedInterviewersType: { type: String },
     interviewers: [
       mongoose.Schema.Types.ObjectId,
     ],
+    
     // interviewers: {type: String}, // mansoor : added this for accepting the numbers and texts.
     //  status: String, // draft - if accept - scheduled, if request sent then (request sent)
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },

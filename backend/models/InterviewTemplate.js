@@ -31,7 +31,7 @@ const InterviewTemplateSchema = new mongoose.Schema({
     //         mongoose.Schema.Types.ObjectId,
     //       ],
            interviewers: [
-        mongoose.Schema.Types.ObjectId,
+        { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
            
         ],
         // interviewers: [{

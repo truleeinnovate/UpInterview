@@ -53,11 +53,33 @@ exports.getAllTemplates = async (req, res) => {
       console.log('Filtering by ownerId:', ownerId);
     }
 
-    const templates = await InterviewTemplate.find(filter);
+    // const templates = await InterviewTemplate.find(filter).populate('rounds.interviewers');
+
+     // Only populate firstName and lastName of interviewers
+    // Populate only firstName and lastName for interviewers
+    const templates = await InterviewTemplate.find(filter).populate({
+      path: 'rounds.interviewers',
+      select: 'firstName lastName', // limit fields
+    });
+
+    // Transform output: map interviewers to a single "name" field
+    const transformedTemplates = templates.map(template => {
+      const templateObj = template.toObject();
+      templateObj.rounds = templateObj.rounds.map(round => {
+        if (Array.isArray(round.interviewers)) {
+          round.interviewers = round.interviewers.map(interviewer => ({
+             _id: interviewer._id,
+            name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
+          }));
+        }
+        return round;
+      });
+      return templateObj;
+    });
 
     return res.status(200).json({
       success: true,
-      data: templates,
+      data: transformedTemplates,
     });
   } catch (error) {
     console.error('Error fetching interview templates:', error.message, error.stack);
@@ -161,7 +183,7 @@ exports.updateTemplate = async (req, res) => {
                     // selectedInterviewerIds: round.selectedInterviewerIds || [],
                     interviewQuestionsList: round.interviewQuestionsList || [],
                     interviewers:round.interviewers || [],
-                    assessmentId: round.assessmentId || null,
+                    assessmentId:  round.assessmentId || null,
                     // interviewerGroupId: round.interviewerGroupId || null,
                     interviewers: round.interviewers || [],
                     // minimumInterviewers: round.minimumInterviewers || '1',
