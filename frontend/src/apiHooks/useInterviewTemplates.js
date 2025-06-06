@@ -44,7 +44,7 @@ export const useInterviewTemplates = () => {
                 const headers = { Authorization: `Bearer ${queryParams.authToken}` };
 
                 const response = await axios.get(apiUrl, { headers });
-                return response.data.data;
+                return response.data.data.reverse();
             } catch (err) {
                 console.error('Error fetching templates:', err);
                 throw err;

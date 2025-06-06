@@ -142,10 +142,10 @@ const MockSchedulelater = () => {
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.Experience || "",
         technology: contact.technologies?.[0] || "",
-        skills: contact.skills || [],
+        // skills: contact.skills || [],
       }));
-      setEntries(contact.skills || []);
-      setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
+      // setEntries(contact.skills || []);
+      // setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
   }, [singlecontact, id]);
 
@@ -181,11 +181,11 @@ const MockSchedulelater = () => {
             interviewType: MockEditData.rounds?.interviewType || "scheduled",
           },
         });
-        const updatedEntries = MockEditData?.skills.map((entry, index) =>
-          index === editingIndex ? { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel } : entry
-        );
-        setEntries(MockEditData?.skills || []);
-        setAllSelectedSkills(MockEditData.skills?.map(skill => skill.skill) || [])
+        // const updatedEntries = MockEditData?.skills.map((entry, index) =>
+        //   index === editingIndex ? { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel } : entry
+        // );
+        // setEntries(MockEditData?.skills || []);
+        // setAllSelectedSkills(MockEditData.skills?.map(skill => skill.skill) || [])
 
         setInterviewType(MockEditData.rounds?.interviewType || "scheduled");
         // Change: Parse and set dateTime for editing

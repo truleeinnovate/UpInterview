@@ -185,12 +185,13 @@ const SuggestedQuestionsComponent = ({
                 toast.success('Question added successfully!');
 
                 // 4. Show remaining questions count
-                const remaining = questionsLimit - (checkedCount + 1);
-                if (remaining > 0) {
-                    toast.info(`${remaining} questions remaining to reach the limit`);
-                } else {
-                    toast.success('You have reached the required number of questions!');
-                }
+                // const remaining = questionsLimit - (checkedCount + 1);
+                // if (remaining > 0) {
+                //     console.log(toast);
+                //     toast.error(`${remaining} questions remaining to reach the limit`);
+                // } else {
+                //     toast.success('You have reached the required number of questions!');
+                // }
 
             }
         } else {
