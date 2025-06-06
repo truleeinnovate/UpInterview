@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../CommonCode-AllTabs/ui/button.jsx';
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
 import Loading from '../../../../../Components/Loading.js';
 import { ChevronDown, X, User, Users, Trash2, ChevronUp } from 'lucide-react';
-import axios from "axios";
 import Cookies from "js-cookie";
-import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import InternalInterviews from '../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx';
-import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates.js';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
@@ -17,26 +14,16 @@ import LoadingButton from '../../../../../Components/LoadingButton';
 
 
 function RoundFormPosition() {
-  const {
-    loading,
-    sectionQuestions,
-    questionsLoading,
-    questionsError,
-    fetchQuestionsForAssessment,
-    setSectionQuestions,
-  } = useCustomContext();
-  const { assessmentData } = useAssessments();
 
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { positionData, isMutationLoading, addRounds } = usePositions();
 
-  const { positionData, isMutationLoading,addRounds } = usePositions();
-
-  const { resolveInterviewerDetails } = useInterviewerDetails();
   const { roundId, id } = useParams();
   const positionId = id;
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const tenantId = tokenPayload?.tenantId;
-  
+
   const isPositionContext = !!positionId;
   const contextId = isPositionContext && positionId;
 
@@ -65,11 +52,15 @@ function RoundFormPosition() {
     duration: 30
   });
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
-
+  const dropdownRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [errors, setErrors] = useState({ roundTitle: '', interviewMode: '' });
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [assessmentQuestionsLoading, setAssessmentQuestionsLoading] = useState(false);
+  const [filteredAssessments, setFilteredAssessments] = useState([]);
+  const [hasFiltered, setHasFiltered] = useState(false);
 
   const clearError = (fieldName) => {
     setErrors(prev => ({
@@ -115,11 +106,11 @@ function RoundFormPosition() {
         interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
           ? prev.interviewQuestionsList
 
-          : [...prev.interviewQuestionsList, 
-             {
-          ...question,
-          mandatory: "false" 
-        }
+          : [...prev.interviewQuestionsList,
+          {
+            ...question,
+            mandatory: "false"
+          }
 
           ]
       }));
@@ -144,43 +135,64 @@ function RoundFormPosition() {
 
 
   const handleRoundTitleChange = (e) => {
-    const selectedTitle = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      roundTitle: selectedTitle,
-      customRoundTitle: selectedTitle === "Other" ? "" : prev.customRoundTitle,
-      interviewMode: selectedTitle === "Assessment" ? "Virtual" : selectedTitle === "Other" ? "" : prev.interviewMode,
-      duration: 30,
-      interviewerType: "",
-      instructions: "",
+  const selectedTitle = e.target.value;
+  const isAssessment = selectedTitle === "Assessment";
+  const wasAssessment = formData.roundTitle === "Assessment";
+
+  setFormData((prev) => ({
+    ...prev,
+    roundTitle: selectedTitle,
+    customRoundTitle: selectedTitle === "Other" ? "" : prev.customRoundTitle,
+    // Reset fields that don't apply to Assessment
+    ...(isAssessment ? {
+      interviewMode: "Virtual", // Assessment is always virtual
+      interviewerType: null,
       interviewers: [],
+      instructions: '', // Clear instructions for Assessment
       interviewQuestionsList: [],
-      assessmentTemplate: [{ assessmentId: '', assessmentName: '' }]
-    }));
+    } : {
+      // When switching FROM Assessment to other types, clear assessment-related fields
+      ...(wasAssessment ? {
+        assessmentTemplate: { assessmentId: '', assessmentName: '' },
+        instructions: '' // Clear instructions when switching from Assessment
+      } : {}),
+      // For other transitions, keep existing instructions unless switching to Other
+      instructions: selectedTitle === "Other" ? "" : wasAssessment ? "" : prev.instructions
+    }),
+    // Preserve sequence in all cases
+    sequence: prev.sequence
+  }));
 
-    clearError('roundTitle');
-    clearError('customRoundTitle');
-    clearError('interviewMode');
-    clearError('duration');
-    clearError('instructions');
-    clearError('interviewerType');
-    clearError('interviewers');
-    clearError('questions');
-    clearError('assessmentTemplate');
-    clearError('assessmentQuestions');
-
+  if (isAssessment) {
     setSectionQuestions({});
     setExpandedSections({});
     setExpandedQuestions({});
-    setErrors({});
-    setShowDropdown(false);
-  };
+  }
+
+  // Clear all errors
+  setErrors({});
+  setShowDropdown(false);
+};
+
+
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
 
   // while editing
   const isEditing = !!roundId && roundId !== 'new';
   const roundEditData = isEditing && rounds?.find(r => r._id === roundId);
 
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setShowDropdown(false);
+        }
+      };
+  
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
 
 
   useEffect(() => {
@@ -199,7 +211,7 @@ function RoundFormPosition() {
 
             // Add fallback empty array for interviewers
             const interviewers = roundEditData.interviewers || [];
-            const internalInterviewers = resolveInterviewerDetails(interviewers);
+            const internalInterviewers = interviewers;
 
             setFormData(prev => ({
               ...prev,
@@ -209,8 +221,14 @@ function RoundFormPosition() {
                   assessmentName: assessmentData.find(a => a._id === roundEditData.assessmentId)?.AssessmentTitle || ''
                 }
                 : { assessmentId: '', assessmentName: '' },
-              roundTitle: roundEditData.roundTitle || '',
-              customRoundTitle: '',
+              // roundTitle: roundEditData.roundTitle || '',
+              // customRoundTitle: '',
+              roundTitle: ['Assessment', 'Technical', 'Final', 'HR Interview'].includes(roundEditData.roundTitle)
+                  ? roundEditData.roundTitle
+                  : 'Other',
+                customRoundTitle: !['Assessment', 'Technical', 'Final', 'HR Interview'].includes(roundEditData.roundTitle)
+                  ? roundEditData.roundTitle.trim('')
+                  : '',
               interviewMode: roundEditData.interviewMode || '',
               selectedQuestions: [],
               instructions: roundEditData.instructions || '',
@@ -230,8 +248,22 @@ function RoundFormPosition() {
                 assessmentId: roundEditData.assessmentId,
                 assessmentName: assessmentData.find(a => a._id === roundEditData.assessmentId)?.AssessmentTitle || ''
               };
-              setAssessmentTemplate(assessmentDataForTemplate);
-              fetchQuestionsForAssessment(roundEditData.assessmentId);
+              // setAssessmentTemplate(assessmentDataForTemplate);
+              // fetchQuestionsForAssessment(roundEditData.assessmentId);
+              if (roundEditData?.assessmentId) {
+                setAssessmentQuestionsLoading(true)
+                fetchAssessmentQuestions(roundEditData?.assessmentId).then(({ data, error }) => {
+                  if (data) {
+                    setAssessmentQuestionsLoading(false)
+                    setSectionQuestions(data?.sections);
+
+                  } else {
+                    setAssessmentQuestionsLoading(false)
+                    console.error('Error fetching assessment questions:', error);
+
+                  }
+                });
+              }
             }
           } else {
             // For new round, set the sequence to be after the last round
@@ -252,6 +284,38 @@ function RoundFormPosition() {
     }
   }, [isPositionContext, positionId, isEditing, roundId, tenantId, assessmentData]); // Removed problematic dependencies
 
+
+
+  useEffect(() => {
+    const filterAssessmentsWithQuestions = async () => {
+      if (hasFiltered || !position) return;
+
+      const results = await Promise.all(
+        assessmentData.map(async (assessment) => {
+          if (!assessment?._id) return null;
+
+          const { data } = await fetchAssessmentQuestions(assessment._id);
+
+          if (Array.isArray(data?.sections) && data.sections.length > 0) {
+            return assessment;
+          }
+
+          return null;
+        })
+      );
+
+      setFilteredAssessments(results.filter(Boolean));
+      setHasFiltered(true);
+    };
+
+    if (position && assessmentData?.length) {
+      filterAssessmentsWithQuestions();
+    }
+  }, [position, assessmentData, fetchAssessmentQuestions]);
+
+
+
+
   const toggleSection = async (sectionId) => {
 
     // Close all questions in this section when collapsing
@@ -269,9 +333,9 @@ function RoundFormPosition() {
     }));
 
     // Fetch questions if the section is being expanded and questions are not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
-      await fetchQuestionsForAssessment(formData.assessmentTemplate[0].assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
+    //   await fetchQuestionsForAssessment(formData.assessmentTemplate[0].assessmentId);
+    // }
   };
 
   const handleInternalInterviewerSelect = (interviewers) => {
@@ -280,15 +344,15 @@ function RoundFormPosition() {
       return;
     }
     // Add name property by combining firstName and lastName
-  const interviewersWithFullName = interviewers.map(interviewer => ({
-    ...interviewer,
-    name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
-  }));
+    const interviewersWithFullName = interviewers.map(interviewer => ({
+      ...interviewer,
+      name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
+    }));
 
     setFormData(prev => ({
       ...prev,
       interviewerType: "Internal",
-      interviewers:interviewersWithFullName
+      interviewers: interviewersWithFullName
     }));
   };
 
@@ -436,7 +500,7 @@ function RoundFormPosition() {
       interviewMode: formData.interviewMode,
       duration: formData.duration,
       // interviewType: formData.interviewType,
-      interviewerType: formData.roundTitle === "Assessment" ?  "" : formData.interviewerType,
+      interviewerType: formData.roundTitle === "Assessment" ? "" : formData.interviewerType,
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
@@ -451,7 +515,7 @@ function RoundFormPosition() {
           questions: []
         }
 
-        : 
+        :
         // {
         //   questions: formData.interviewQuestionsList.map(q => ({
         //    questionId: q.questionId,
@@ -460,28 +524,28 @@ function RoundFormPosition() {
         //      mandatory: q.snapshot.mandatory || "false"
         //   }
         // })) || []
-         { 
-         questions:  formData.interviewQuestionsList || []
-        
+        {
+          questions: formData.interviewQuestionsList || []
+
 
         }),
       instructions: formData.instructions,
     };
 
 
-  try {
-    // Include roundId only if editing
-    const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData };
+    try {
+      // Include roundId only if editing
+      const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData };
 
- console.log('roundData after roundData', payload);
-    await addRounds(payload);
-    
-    navigate(`/position/view-details/${positionId}`);
-  } catch (err) {
-     console.log('err ', err);
-    console.error('Error submitting round:', err);
-  }
-};
+      console.log('roundData after roundData', payload);
+      await addRounds(payload);
+
+      navigate(`/position/view-details/${positionId}`);
+    } catch (err) {
+      console.log('err ', err);
+      console.error('Error submitting round:', err);
+    }
+  };
 
   if (!rounds) {
     return <div><Loading /></div>;
@@ -525,7 +589,10 @@ function RoundFormPosition() {
       assessmentId: assessment._id,
       assessmentName: assessment.AssessmentTitle
     };
-    setAssessmentTemplate(assessmentData); // Update state directly
+    // setAssessmentTemplate(assessmentData); // Update state directly
+
+    console.log("duration", assessment);
+
     setFormData(prev => ({
       ...prev,
       assessmentTemplate: assessmentData,
@@ -538,7 +605,20 @@ function RoundFormPosition() {
     clearError('assessmentQuestions');
     setExpandedSections({});
     setSectionQuestions({});
-    fetchQuestionsForAssessment(assessment._id);
+    // fetchQuestionsForAssessment(assessment._id);
+    if (assessment._id) {
+      setAssessmentQuestionsLoading(true)
+      fetchAssessmentQuestions(assessment._id).then(({ data, error }) => {
+        if (data) {
+          setAssessmentQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setAssessmentQuestionsLoading(false)
+        }
+      });
+    }
     setShowDropdown(false);
   };
 
@@ -593,7 +673,12 @@ function RoundFormPosition() {
                           }}
                           onBlur={() => {
                             if (!formData.customRoundTitle.trim()) {
-                              setFormData(prev => ({ ...prev, customRoundTitle: "" }));
+                              setFormData(prev => ({
+                                ...prev,
+                                roundTitle: "",           // 👈 Show dropdown again
+                                customRoundTitle: ""      // 👈 Clear the input
+                              }));
+                              clearError('roundTitle');
                             }
                           }}
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
@@ -733,11 +818,9 @@ function RoundFormPosition() {
                             </div>
                             {showDropdown && (
                               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                {loading ? (
-                                  <div className="px-3 py-2 text-gray-500"><Loading /></div>
-                                ) : (
-                                  assessmentData.length > 0 ? (
-                                    assessmentData.map((assessment, index) => (
+                                {
+                                  filteredAssessments.length > 0 ? (
+                                    filteredAssessments.map((assessment, index) => (
                                       <div
                                         key={index}
                                         className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
@@ -753,7 +836,7 @@ function RoundFormPosition() {
                                   ) : (
                                     <div className="px-3 py-2 text-gray-500">No assessments found</div>
                                   )
-                                )}
+                                }
                               </div>
 
                             )}
@@ -775,15 +858,12 @@ function RoundFormPosition() {
                           <h4 htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
                             Assessment Questions
                           </h4>
-                          {questionsError && (
-                            <div className="text-red-600 font-medium mt-2">
-                              {questionsError}
-                            </div>
-                          )}
+
 
                           {/* {errors.assessmentQuestions && <p className="text-red-500 text-xs">{errors.assessmentQuestions}</p>} */}
-                          {questionsLoading ? (
-                            <p className="text-gray-500">Loading assessment data...</p>
+                          {assessmentQuestionsLoading ? (
+                            <div className="border rounded-md shadow-sm p-4 animate-pulse">
+                            </div>
                           ) :
                             (
                               <div className="space-y-4">
@@ -970,256 +1050,234 @@ function RoundFormPosition() {
                   )}
 
 
- {formData.roundTitle !== 'Assessment' && (
-                                     <>
- 
-                    {/* Select Interviewers */}
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-medium text-gray-700">Interviewers</label>
-                        <div className="flex space-x-2">
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setInternalInterviews(true);
-                              clearError('interviewerType');
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className={`${isExternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={isExternalSelected}
-                            title={isExternalSelected ? "Clear external interviewers first" : ""}
-                          >
-                            <User className="h-4 w-4 mr-1 text-blue-600" />
-                            Select Internal
-                          </Button>
- 
-                          <Button
-                            type="button"
-                            // onClick={handleExternalInterviewerSelect}
-                            onClick={() => {
-                              handleExternalInterviewerSelect();
-                              clearError('interviewerType');
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className={`${isInternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={isInternalSelected}
-                            title={isInternalSelected ? "Clear internal interviewers first" : ""}
-                          >
-                            <User className="h-4 w-4 mr-1 text-orange-600" />
-                            Select Outsourced
-                          </Button>
+                  {formData.roundTitle !== 'Assessment' && (
+                    <>
+
+                      {/* Select Interviewers */}
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-sm font-medium text-gray-700">Interviewers</label>
+                          <div className="flex space-x-2">
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                setInternalInterviews(true);
+                                clearError('interviewerType');
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className={`${isExternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
+                              disabled={isExternalSelected}
+                              title={isExternalSelected ? "Clear external interviewers first" : ""}
+                            >
+                              <User className="h-4 w-4 mr-1 text-blue-600" />
+                              Select Internal
+                            </Button>
+
+                            <Button
+                              type="button"
+                              // onClick={handleExternalInterviewerSelect}
+                              onClick={() => {
+                                handleExternalInterviewerSelect();
+                                clearError('interviewerType');
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className={`${isInternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
+                              disabled={isInternalSelected}
+                              title={isInternalSelected ? "Clear internal interviewers first" : ""}
+                            >
+                              <User className="h-4 w-4 mr-1 text-orange-600" />
+                              Select Outsourced
+                            </Button>
+                          </div>
                         </div>
-                      </div>
- 
-                      {/* Selected Interviewers Summary */}
-                      <div className=" p-4 bg-gray-50 rounded-md border border-gray-200">
-                        {!formData.interviewerType ? (
-                          <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
-                        ) : (
-                          <div>
-                            <div className="flex items-center justify-between ">
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700">
-                                  {isInternalSelected
-                                    ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? "s" : ""}`
-                                    : "Outsourced interviewers"} selected
-                                  {isInternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                      Internal
-                                    </span>
-                                  )}
- 
-                                  {isExternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
-                                      Outsourced
-                                    </span>
-                                  )}
-                                </span>
+
+                        {/* Selected Interviewers Summary */}
+                        <div className=" p-4 bg-gray-50 rounded-md border border-gray-200">
+                          {!formData.interviewerType ? (
+                            <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                          ) : (
+                            <div>
+                              <div className="flex items-center justify-between ">
+                                <div className="flex items-center">
+                                  <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                  <span className="text-sm text-gray-700">
+                                    {isInternalSelected
+                                      ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? "s" : ""}`
+                                      : "Outsourced interviewers"} selected
+                                    {isInternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                        Internal
+                                      </span>
+                                    )}
+
+                                    {isExternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                        Outsourced
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                {(isExternalSelected || isInternalSelected) && (
+                                  <button
+                                    type="button"
+                                    onClick={handleClearAllInterviewers}
+                                    className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Clear All
+                                  </button>
+                                )}
                               </div>
-                              {(isExternalSelected || isInternalSelected) && (
-                                <button
-                                  type="button"
-                                  onClick={handleClearAllInterviewers}
-                                  className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Clear All
-                                </button>
+
+                              {/* Internal Interviewers */}
+                              {isInternalSelected && (
+                                <div className="mb-1">
+                                  <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
+                                  <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                    {console.log('formData.interviewers', formData.interviewers)}
+                                    {formData.interviewers.map((interviewer, index) => (
+                                      <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
+                                        <div className="flex items-center">
+                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName + " " + interviewer?.lastName || ""}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
+                                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                                          title="Remove interviewer"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
-                            </div>
- 
-                            {/* Internal Interviewers */}
-                            {isInternalSelected && (
-                              <div className="mb-1">
-                                <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
-                                <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                  {console.log('formData.interviewers', formData.interviewers)}
-                                  {formData.interviewers.map((interviewer, index) => (
-                                    <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
+
+                              {/* External Interviewers */}
+                              {isExternalSelected && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-gray-500 mb-1">Outsourced Interviewers</h4>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {/* {externalInterviewers.map((interviewer) => ( */}
+                                    <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.name || ""}</span>
+                                        <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
                                       </div>
                                       <button
                                         type="button"
-                                        onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                                        onClick={handleClearAllInterviewers}
+                                        className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                         title="Remove interviewer"
                                       >
                                         <X className="h-4 w-4" />
                                       </button>
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
- 
-                            {/* External Interviewers */}
-                            {isExternalSelected && (
-                              <div>
-                                <h4 className="text-xs font-medium text-gray-500 mb-1">Outsourced Interviewers</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {/* {externalInterviewers.map((interviewer) => ( */}
-                                  <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
-                                    <div className="flex items-center">
-                                      <span className="ml-2 text-sm text-orange-800 truncate">Outsourced will be selected at interview schdedule time. (Outsourced)</span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={handleClearAllInterviewers}
-                                      className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                      title="Remove interviewer"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </button>
+                                    {/* ))} */}
                                   </div>
-                                  {/* ))} */}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {errors.interviewerType && (
-                        <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
-                      )}
- 
-                    </div>
- 
-                    {/* interview Questions List */}
-                    <div className="mt-4">
-                      <div className="py-3 mx-auto rounded-md">
-                        {/* Header with Title and Add Button */}
-                        <div className="flex items-center justify-end mb-2">
-                          <button
-                            className="text-custom-blue font-semibold hover:underline"
-                            onClick={() => {
-                              handlePopupToggle();
-                              clearError('questions');
-                            }}
-                            type="button"
-                          >
-                            + Add Question
-                          </button>
-                        </div>
-                        <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
-                          {/* Display Added Questions */}
-                          {formData.interviewQuestionsList.length > 0 ? (
-                            <ul className="mt-2 space-y-2">
-                              {formData.interviewQuestionsList.map((question, qIndex) => {
-                                // const isMandatory = question?.mandatory === "true";
-                                const isMandatory = question?.snapshot?.mandatory === "true";
-                                const questionText = question?.snapshot?.questionText || 'No Question Text Available';
-                                return (
-                                  <li
-                                    key={qIndex}
-                                    className={`flex justify-between items-center p-3 border rounded-md
-                                        ${isMandatory ? "border-red-500" : "border-gray-300"
-                                      }`}
-                                  >
-                                    <span className="text-gray-900 font-medium">
-                                      {qIndex + 1}. {questionText}
-                                    </span>
-                                    <button onClick={() => handleRemoveQuestion(question.questionId)}>
-                                      <span className="text-red-500 text-xl font-bold">&times;</span>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          ) : (
-                            <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
-                          )}
- 
-                        </div>
-                        {errors.questions && (
-                          <p className="mt-1 text-xs text-red-500">{errors.questions}</p>
-                        )}
-                        {/* Question Popup */}
-                        {isInterviewQuestionPopup && (
-                          <div
-                            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
-                            onClick={() => setIsInterviewQuestionPopup(false)}
-                          >
-                            <div
-                              className="bg-white rounded-md w-[95%] h-[90%]"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="py-3 px-4  flex items-center justify-between">
-                                <h2 className="text-xl text-custom-blue  font-semibold">Add Interview Question</h2>
-                                <button>
-                                  <X
-                                    className="text-2xl text-red-500"
-                                    onClick={() => handlePopupToggle()}
-                                  />
-                                </button>
-                              </div>
- 
- 
-                              {isInterviewQuestionPopup &&
-                                <QuestionBank
-                                  // assessmentId={formData.assessmentTemplate?.assessmentId || ''}
-                                  // sectionName=""
-                                  // updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
-                                  type="interviewerSection"
-                                  // closeQuestionBank={handlePopupToggle}
-                                  // questionBankPopupVisibility={isInterviewQuestionPopup}
-                                  // setQuestionBankPopupVisibility={setIsInterviewQuestionPopup}
-                                  // addedSections={[]}
-                                  // questionsLimit={0}
-                                  // checkedCount={formData.interviewQuestionsList.length}
-                                  interviewQuestionsLists={formData.interviewQuestionsList}
-                                  // setInterviewQuestionsList={(questions) =>
-                                  //   setFormData((prev) => ({ ...prev, interviewQuestionsList: questions }))
-                                  // }
-                                  fromScheduleLater={true}
-                                  // interviewQuestionsLists={formData.interviewQuestionsList}
-                                  onAddQuestion={handleAddQuestionToRound}
-                                  // setInterviewQuestionsList={(question) =>
-                                  //   setFormData((prev) => ({
-                                  //     ...prev,
-                                  //     interviewQuestionsList: prev.interviewQuestionsList.some(q => q.questionId === question.questionId)
-                                  //       ? prev.interviewQuestionsList
-                                  //       : [...prev.interviewQuestionsList, question]
-                                  //   }))
-                                  // }
- 
-                                  handleRemoveQuestion={handleRemoveQuestion}
-                                  handleToggleMandatory={handleToggleMandatory}
- 
-                                />
- 
-                              }
+                              )}
                             </div>
-                          </div>
+                          )}
+                        </div>
+                        {errors.interviewerType && (
+                          <p className="mt-1 text-xs text-red-500">{errors.interviewerType}</p>
                         )}
+
                       </div>
-                    </div>
-                  </>
- 
-)}
+
+                      {/* interview Questions List */}
+                      <div className="mt-4">
+                        <div className="py-3 mx-auto rounded-md">
+                          {/* Header with Title and Add Button */}
+                          <div className="flex items-center justify-end mb-2">
+                            <button
+                              className="text-custom-blue font-semibold hover:underline"
+                              onClick={() => {
+                                handlePopupToggle();
+                                clearError('questions');
+                              }}
+                              type="button"
+                            >
+                              + Add Question
+                            </button>
+                          </div>
+                          <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
+                            {/* Display Added Questions */}
+                            {formData.interviewQuestionsList.length > 0 ? (
+                              <ul className="mt-2 space-y-2">
+                                {formData.interviewQuestionsList.map((question, qIndex) => {
+                                  // const isMandatory = question?.mandatory === "true";
+                                  const isMandatory = question?.snapshot?.mandatory === "true";
+                                  const questionText = question?.snapshot?.questionText || 'No Question Text Available';
+                                  return (
+                                    <li
+                                      key={qIndex}
+                                      className={`flex justify-between items-center p-3 border rounded-md
+                                        ${isMandatory ? "border-red-500" : "border-gray-300"
+                                        }`}
+                                    >
+                                      <span className="text-gray-900 font-medium">
+                                        {qIndex + 1}. {questionText}
+                                      </span>
+                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
+                                        <span className="text-red-500 text-xl font-bold">&times;</span>
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            ) : (
+                              <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                            )}
+
+                          </div>
+                          {errors.questions && (
+                            <p className="mt-1 text-xs text-red-500">{errors.questions}</p>
+                          )}
+                          {/* Question Popup */}
+                          {isInterviewQuestionPopup && (
+                            <div
+                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                              onClick={() => setIsInterviewQuestionPopup(false)}
+                            >
+                              <div
+                                className="bg-white rounded-md w-[95%] h-[90%]"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="py-3 px-4  flex items-center justify-between">
+                                  <h2 className="text-xl text-custom-blue  font-semibold">Add Interview Question</h2>
+                                  <button>
+                                    <X
+                                      className="text-2xl text-red-500"
+                                      onClick={() => handlePopupToggle()}
+                                    />
+                                  </button>
+                                </div>
+
+
+                                {isInterviewQuestionPopup &&
+                                  <QuestionBank
+                                    type="interviewerSection"
+                                    interviewQuestionsLists={formData.interviewQuestionsList}
+                                    fromScheduleLater={true}
+                                    onAddQuestion={handleAddQuestionToRound}
+                                    handleRemoveQuestion={handleRemoveQuestion}
+                                    handleToggleMandatory={handleToggleMandatory}
+                                    removedQuestionIds={removedQuestionIds}
+                                  />
+
+                                }
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+
+                  )}
 
 
 
@@ -1294,7 +1352,7 @@ function RoundFormPosition() {
             </div>
           </div>
         </div>
-        
+
       </main>
 
       {/* External Interviews Modal */}

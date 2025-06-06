@@ -429,6 +429,8 @@ app.get('/api/:model', async (req, res) => {
   try {
     let query = DataModel.find(tenantId ? { tenantId } : { ownerId });
 
+    
+    
     // Handle specific models with additional population
     switch (model.toLowerCase()) {
       // case 'team':
@@ -529,11 +531,12 @@ app.get('/api/:model', async (req, res) => {
         return res.status(200).json(groupedQuestions);
 
       case 'position':
+        console.log("query",query);
         query = query
           .populate({
             path: 'rounds.interviewers',
             model: 'Contacts',
-            select: 'name email',
+          select: 'firstName lastName email',
           })
 
         // .populate({
@@ -566,7 +569,7 @@ app.get('/api/:model', async (req, res) => {
           .populate({
             path: "interviewers",
             model: "Contacts",
-            select: "name email",
+            select: "firstName lastName email",
           })
         // .populate({ 
         //   path: "assessmentId",

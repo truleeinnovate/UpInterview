@@ -154,7 +154,7 @@ const fetchAssessmentResults = async (assessmentId) => {
     upsertQuestionsError: upsertAssessmentQuestions.error,
     addOrUpdateAssessment: addOrUpdateAssessment.mutateAsync,
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
-    fetchAssessmentQuestions,
+    fetchAssessmentQuestions, // assessment questions getting 
     fetchAssessmentResults
   };
 };
