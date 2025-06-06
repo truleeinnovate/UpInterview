@@ -16,7 +16,7 @@ const CustomProvider = ({ children }) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
-  const [userRole, setuserRole] = useState("SuperAdmin");
+  const [userRole, setuserRole] = useState("Admin");
 
 
 

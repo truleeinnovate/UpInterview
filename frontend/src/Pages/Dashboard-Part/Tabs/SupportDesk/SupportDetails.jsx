@@ -190,7 +190,7 @@ function SupportDetails() {
             {userRole === 'SuperAdmin' && (
               <button
                 onClick={toggleStatusModal}
-                className="p-2 bg-custom-blue text-white hover:text-custom-blue/90 rounded-md transition-colors"
+                className="p-2 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
                 title="Change Status"
               >
                 Change Status
@@ -227,7 +227,7 @@ function SupportDetails() {
         </div>
 
         <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">Ticket #{ticketId}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">{currentTicket.ticketCode}</h3>
           <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${statusClass}`}>
             {currentTicket.status}
           </span>

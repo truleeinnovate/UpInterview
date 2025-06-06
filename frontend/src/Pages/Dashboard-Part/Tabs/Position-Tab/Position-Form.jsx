@@ -1248,12 +1248,16 @@ const PositionForm = ({ mode }) => {
 
                     {/* skills */}
                     <div>
-              <p className='text-lg font-semibold col-span-2'>Skills Details</p>
 
               <SkillsField
                 entries={entries}
                 errors={errors}
-                onAddSkill={() => {
+                onAddSkill={(setEditingIndex) => {
+                  setEntries((prevEntries) => {
+                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
+                    setEditingIndex(newEntries.length - 1);
+                    return newEntries;
+                  });
                   setSelectedSkill("");
                   setSelectedExp("");
                   setSelectedLevel("");

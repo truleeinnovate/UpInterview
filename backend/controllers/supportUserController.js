@@ -10,7 +10,19 @@ exports.createTicket = async(req,res)=>{
         if (!description){
             return res.status(400).send({message:"Description is required"})
         }
-        const ticket = await SupportUser.create({issueType,description,status,contact,priority,ownerId,tenantId,organization,createdByUserId})
+        const lastTicket = await SupportUser.findOne({})
+                        .sort({ createdAt: -1 })
+                        .select('ticketCode')
+                        .lean();
+        let nextNumber = 1;
+            if (lastTicket && lastTicket.ticketCode) {
+                const match = lastTicket.ticketCode.match(/SPT-(\d+)/);
+                if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1;
+                }
+            }
+        const ticketCode = `SPT-${String(nextNumber).padStart(5, '0')}`;
+        const ticket = await SupportUser.create({issueType,description,status,contact,priority,ownerId,tenantId,organization,createdByUserId,ticketCode})
         return res.status(201).send({
             message:"Ticket created successfully",
             success:true,

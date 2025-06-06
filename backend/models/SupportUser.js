@@ -10,6 +10,7 @@ const StatusHistorySchema = new mongoose.Schema({
 
 const TicketSchema = new mongoose.Schema(
   {
+    ticketCode:{type:String,unique:true},
     contact: { type: String, required: true },
     organization: { type: String, required: true },
     issueType: { type: String, required: true },
