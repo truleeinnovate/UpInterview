@@ -9,6 +9,8 @@ import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArro
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { useRef } from "react";
 
 const SuggestedQuestionsComponent = ({
     sectionName,
@@ -40,6 +42,9 @@ const SuggestedQuestionsComponent = ({
     const [filteredTags, setFilteredTags] = useState(["html"]);
     const [currentPage, setCurrentPage] = useState(1);
     const [dropdownOpen, setDropdownOpen] = useState(null);
+    const [questionInput, setQuestionInput] = useState("");
+    const filterIconRef = useRef(null);
+
     const [filtrationData, setFiltrationData] = useState([
         {
             id: 1,
@@ -61,14 +66,9 @@ const SuggestedQuestionsComponent = ({
                 { level: "Medium", isChecked: false },
                 { level: "Hard", isChecked: false },
             ],
-        },
-        {
-            id: 3,
-            isOpen: false,
-            filterType: "Experiences",
-            options: { min: 0, max: 0 },
-        },
+        }
     ]);
+
     const [experienceRange, setExperienceRange] = useState({
         min: "",
         max: "",
@@ -259,10 +259,6 @@ const SuggestedQuestionsComponent = ({
         }
     }, [skillInput]);
 
-    useEffect(() => {
-        filterQuestions();
-    }, [selectedSkills, questionTypeFilterItems, difficultyLevelFilterItems]);
-
     const filterTagsData = () => {
         const allTags = new Set();
         suggestedQuestions.forEach((question) => {
@@ -278,13 +274,21 @@ const SuggestedQuestionsComponent = ({
 
     const filterQuestions = () => {
         const filtered = suggestedQuestions.filter((question) => {
+            // Filter by tags (skills) using selectedSkills or skillInput
             const matchesTags =
-                selectedSkills.length === 0 ||
+                (selectedSkills.length === 0 && !skillInput) ||
                 question.tags.some((tag) =>
                     selectedSkills.some((skill) =>
                         tag.toLowerCase().includes(skill.toLowerCase())
-                    )
+                    ) ||
+                    (skillInput && tag.toLowerCase().includes(skillInput.toLowerCase()))
                 );
+
+            // Filter by question text
+            const matchesQuestionText =
+                !questionInput ||
+                question.questionText.toLowerCase().includes(questionInput.toLowerCase());
+
             const matchesType =
                 questionTypeFilterItems.length === 0 ||
                 questionTypeFilterItems.includes(question.questionType.toLowerCase());
@@ -294,10 +298,14 @@ const SuggestedQuestionsComponent = ({
                 difficultyLevelFilterItems.includes(
                     question.difficultyLevel.toLowerCase()
                 );
-            return matchesTags && matchesType && matchesDifficultyLevel;
+            return matchesTags && matchesQuestionText && matchesType && matchesDifficultyLevel;
         });
         setSuggestedQuestionsFilteredData(filtered);
     };
+
+    useEffect(() => {
+        filterQuestions();
+    }, [selectedSkills, skillInput, questionTypeFilterItems, difficultyLevelFilterItems, questionInput]);
 
     const onClickDropdownSkill = (tag) => {
         if (!selectedSkills.includes(tag)) {
@@ -481,125 +489,247 @@ const SuggestedQuestionsComponent = ({
         }
     };
 
-    const FilterSection = (closeFilter) => {
-        return (
-            <>
-                <div className="flex justify-between items-center p-2 border-b-[1px] border-[gray]">
-                    <h3 className="font-medium">Filters</h3>
-                    <button onClick={() => closeFilter()}>
-                        <XCircle />
+    // const FilterSection = (closeFilter) => {
+    //     return (
+    //         <>
+    //             {/* <div className="flex justify-between items-center p-2 border-b-[1px] border-[gray]">
+    //                 <h3 className="font-medium">Filters</h3>
+    //                 <button onClick={() => closeFilter()}>
+    //                     <XCircle />
+    //                 </button>
+    //             </div> */}
+    //             {/* filter by question type */}
+    //             <div className="p-2">
+    //                 <div
+    //                     className="flex justify-between items-center cursor-pointer"
+    //                     onClick={() => onClickFilterQuestionItem(1)}
+    //                 >
+    //                     <h3 className="font-medium">Question Type</h3>
+    //                     <button>
+    //                         {filtrationData[0].isOpen ? <ChevronUp /> : <ChevronDown />}
+    //                     </button>
+    //                 </div>
+    //                 {filtrationData[0].isOpen && (
+    //                     <div>
+    //                         <ul className="flex flex-col gap-2 pt-2">
+    //                             {filtrationData[0].options.map((type, index) => (
+    //                                 <li key={index} className="flex gap-2 cursor-pointer">
+    //                                     <input
+    //                                         checked={type.isChecked}
+    //                                         className="w-4 cursor-pointer"
+    //                                         value={type.type.toLowerCase()}
+    //                                         id={`question-type-${type.type}`}
+    //                                         type="checkbox"
+    //                                         onChange={(e) =>
+    //                                             onChangeCheckboxInQuestionType(e, 1, index)
+    //                                         }
+    //                                     />
+    //                                     <label htmlFor={`question-type-${type.type}`}>
+    //                                         {type.type}
+    //                                     </label>
+    //                                 </li>
+    //                             ))}
+    //                         </ul>
+    //                     </div>
+    //                 )}
+    //             </div>
+    //             {/* filter by difficulty level */}
+    //             <div className="p-2">
+    //                 <div
+    //                     className="flex justify-between items-center cursor-pointer"
+    //                     onClick={() => onClickFilterQuestionItem(2)}
+    //                 >
+    //                     <h3 className="font-medium">Difficulty Level</h3>
+    //                     <button>
+    //                         {filtrationData[1].isOpen ? <ChevronUp /> : <ChevronDown />}
+    //                     </button>
+    //                 </div>
+    //                 {filtrationData[1].isOpen && (
+    //                     <div>
+    //                         <ul className="flex flex-col gap-2 pt-2">
+    //                             {filtrationData[1].options.map((type, index) => (
+    //                                 <li key={index} className="flex gap-2 cursor-pointer">
+    //                                     <input
+    //                                         checked={type.isChecked}
+    //                                         className="w-4 cursor-pointer"
+    //                                         value={type.level.toLowerCase()}
+    //                                         id={`question-type-${type.level}`}
+    //                                         type="checkbox"
+    //                                         onChange={(e) =>
+    //                                             onChangeCheckboxInDifficultyLevel(e, 2, index)
+    //                                         }
+    //                                     />
+    //                                     <label htmlFor={`question-type-${type.level}`}>
+    //                                         {type.level}
+    //                                     </label>
+    //                                 </li>
+    //                             ))}
+    //                         </ul>
+    //                     </div>
+    //                 )}
+    //             </div>
+    //             {/* filter by experience */}
+    //             <div className="p-2">
+    //                 <div
+    //                     className="flex justify-between items-center cursor-pointer"
+    //                     onClick={() => onClickFilterQuestionItem(3)}
+    //                 >
+    //                     <h3 className="font-medium">Experiences</h3>
+    //                     <button>
+    //                         {filtrationData[2].isOpen ? <ChevronUp /> : <ChevronDown />}
+    //                     </button>
+    //                 </div>
+    //                 {filtrationData[2].isOpen && (
+    //                     <div className="flex gap-3 pt-2">
+    //                         <div className="flex gap-3 items-center">
+    //                             <label htmlFor="min-exp">Min</label>
+    //                             <input
+    //                                 value={experienceRange.min}
+    //                                 id="min-exp"
+    //                                 type="number"
+    //                                 className="w-[80px]  border-b-[1px] border-[#808080b0] outline-none"
+    //                                 onChange={onChangeMinExp}
+    //                             />
+    //                         </div>
+    //                         <div className="flex gap-3 items-center">
+    //                             <label id="max-exp">Max</label>
+    //                             <input
+    //                                 value={experienceRange.max}
+    //                                 htmlFor="max-exp"
+    //                                 type="number"
+    //                                 className="w-[80px]  border-b-[1px] border-[#80808092] outline-none"
+    //                                 onChange={onChangeMaxExp}
+    //                             />
+    //                         </div>
+    //                     </div>
+    //                 )}
+    //             </div>
+    //         </>
+    //     );
+    // };
+
+    const [tempFiltrationData, setTempFiltrationData] = useState(JSON.parse(JSON.stringify(filtrationData)));
+
+    const FilterSection = (closeFilter) => (
+        <div style={{ maxHeight: 340, minWidth: 260, overflowY: "auto" }}>
+            {/* Filter by question type */}
+            <div className="p-2">
+                <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() =>
+                        setTempFiltrationData(prev =>
+                            prev.map(item =>
+                                item.id === 1 ? { ...item, isOpen: !item.isOpen } : item
+                            )
+                        )
+                    }
+                >
+                    <h3 className="font-medium">Question Type</h3>
+                    <button>
+                        {tempFiltrationData[0].isOpen ? <ChevronUp /> : <ChevronDown />}
                     </button>
                 </div>
-                {/* filter by question type */}
-                <div className="p-2">
-                    <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => onClickFilterQuestionItem(1)}
-                    >
-                        <h3 className="font-medium">Question Type</h3>
-                        <button>
-                            {filtrationData[0].isOpen ? <ChevronUp /> : <ChevronDown />}
-                        </button>
+                {tempFiltrationData[0].isOpen && (
+                    <div>
+                        <ul className="flex flex-col gap-2 pt-2">
+                            {tempFiltrationData[0].options.map((type, index) => (
+                                <li key={index} className="flex gap-2 cursor-pointer">
+                                    <input
+                                        checked={tempQuestionTypeFilterItems.includes(type.type.toLowerCase())}
+                                        className="w-4 cursor-pointer"
+                                        value={type.type.toLowerCase()}
+                                        id={`question-type-${type.type}`}
+                                        type="checkbox"
+                                        onChange={e => {
+                                            const value = e.target.value;
+                                            const checked = e.target.checked;
+                                            setTempQuestionTypeFilterItems(prev =>
+                                                checked
+                                                    ? prev.includes(value)
+                                                        ? prev
+                                                        : [...prev, value]
+                                                    : prev.filter(item => item !== value)
+                                            );
+                                        }}
+                                    />
+                                    <label htmlFor={`question-type-${type.type}`}>
+                                        {type.type}
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    {filtrationData[0].isOpen && (
-                        <div>
-                            <ul className="flex flex-col gap-2 pt-2">
-                                {filtrationData[0].options.map((type, index) => (
-                                    <li key={index} className="flex gap-2 cursor-pointer">
-                                        <input
-                                            checked={type.isChecked}
-                                            className="w-4 cursor-pointer"
-                                            value={type.type.toLowerCase()}
-                                            id={`question-type-${type.type}`}
-                                            type="checkbox"
-                                            onChange={(e) =>
-                                                onChangeCheckboxInQuestionType(e, 1, index)
-                                            }
-                                        />
-                                        <label htmlFor={`question-type-${type.type}`}>
-                                            {type.type}
-                                        </label>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                )}
+            </div>
+            {/* Filter by difficulty level */}
+            <div className="p-2">
+                <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() =>
+                        setTempFiltrationData(prev =>
+                            prev.map(item =>
+                                item.id === 2 ? { ...item, isOpen: !item.isOpen } : item
+                            )
+                        )
+                    }
+                >
+                    <h3 className="font-medium">Difficulty Level</h3>
+                    <button>
+                        {tempFiltrationData[1].isOpen ? <ChevronUp /> : <ChevronDown />}
+                    </button>
                 </div>
-                {/* filter by difficulty level */}
-                <div className="p-2">
-                    <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => onClickFilterQuestionItem(2)}
-                    >
-                        <h3 className="font-medium">Difficulty Level</h3>
-                        <button>
-                            {filtrationData[1].isOpen ? <ChevronUp /> : <ChevronDown />}
-                        </button>
+                {tempFiltrationData[1].isOpen && (
+                    <div>
+                        <ul className="flex flex-col gap-2 pt-2">
+                            {tempFiltrationData[1].options.map((type, index) => (
+                                <li key={index} className="flex gap-2 cursor-pointer">
+                                    <input
+                                        checked={tempDifficultyLevelFilterItems.includes(type.level.toLowerCase())}
+                                        className="w-4 cursor-pointer"
+                                        value={type.level.toLowerCase()}
+                                        id={`question-type-${type.level}`}
+                                        type="checkbox"
+                                        onChange={e => {
+                                            const value = e.target.value;
+                                            const checked = e.target.checked;
+                                            setTempDifficultyLevelFilterItems(prev =>
+                                                checked
+                                                    ? prev.includes(value)
+                                                        ? prev
+                                                        : [...prev, value]
+                                                    : prev.filter(item => item !== value)
+                                            );
+                                        }}
+                                    />
+                                    <label htmlFor={`question-type-${type.level}`}>
+                                        {type.level}
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    {filtrationData[1].isOpen && (
-                        <div>
-                            <ul className="flex flex-col gap-2 pt-2">
-                                {filtrationData[1].options.map((type, index) => (
-                                    <li key={index} className="flex gap-2 cursor-pointer">
-                                        <input
-                                            checked={type.isChecked}
-                                            className="w-4 cursor-pointer"
-                                            value={type.level.toLowerCase()}
-                                            id={`question-type-${type.level}`}
-                                            type="checkbox"
-                                            onChange={(e) =>
-                                                onChangeCheckboxInDifficultyLevel(e, 2, index)
-                                            }
-                                        />
-                                        <label htmlFor={`question-type-${type.level}`}>
-                                            {type.level}
-                                        </label>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-                {/* filter by experience */}
-                <div className="p-2">
-                    <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => onClickFilterQuestionItem(3)}
-                    >
-                        <h3 className="font-medium">Experiences</h3>
-                        <button>
-                            {filtrationData[2].isOpen ? <ChevronUp /> : <ChevronDown />}
-                        </button>
-                    </div>
-                    {filtrationData[2].isOpen && (
-                        <div className="flex gap-3 pt-2">
-                            <div className="flex gap-3 items-center">
-                                <label htmlFor="min-exp">Min</label>
-                                <input
-                                    value={experienceRange.min}
-                                    id="min-exp"
-                                    type="number"
-                                    className="w-[80px]  border-b-[1px] border-[#808080b0] outline-none"
-                                    onChange={onChangeMinExp}
-                                />
-                            </div>
-                            <div className="flex gap-3 items-center">
-                                <label id="max-exp">Max</label>
-                                <input
-                                    value={experienceRange.max}
-                                    htmlFor="max-exp"
-                                    type="number"
-                                    className="w-[80px]  border-b-[1px] border-[#80808092] outline-none"
-                                    onChange={onChangeMaxExp}
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </>
-        );
-    };
+                )}
+            </div>
+        </div>
+    );
+
+
     const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [tempQuestionTypeFilterItems, setTempQuestionTypeFilterItems] = useState([]);
+    const [tempDifficultyLevelFilterItems, setTempDifficultyLevelFilterItems] = useState([]);
+    const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
+    const [tempSkillInput, setTempSkillInput] = useState("");
+    const [tempExperienceRange, setTempExperienceRange] = useState({ min: "", max: "" });
+
+    const openFilterPopup = () => {
+        setTempQuestionTypeFilterItems(questionTypeFilterItems);
+        setTempDifficultyLevelFilterItems(difficultyLevelFilterItems);
+        setTempSelectedSkills(selectedSkills);
+        setTempSkillInput(skillInput);
+        setTempExperienceRange(experienceRange);
+        setTempFiltrationData(JSON.parse(JSON.stringify(filtrationData))); // <-- add this
+        setIsPopupOpen(true);
+    };
 
     const ReturnSearchFilterSection = () => {
         return (
@@ -614,7 +744,7 @@ const SuggestedQuestionsComponent = ({
                             value={skillInput}
                             type="search"
                             placeholder="Search by skills"
-                            className="w-[85%] rounded-md"
+                            className="w-[85%] rounded-md focus:outline-none pr-2"
                         />
                     </div>
                 </div>
@@ -626,15 +756,12 @@ const SuggestedQuestionsComponent = ({
                         <input
                             type="search"
                             placeholder="Search by Questions"
-                            className={`w-[85%] rounded-md`}
+                            className="w-[85%] rounded-md focus:outline-none pr-2"
+                            value={questionInput}
+                            onChange={(e) => setQuestionInput(e.target.value)}
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* <div className="flex items-center">
-                            <p className="text-custom-blue whitespace-nowrap">
-                                {suggestedQuestionsFilteredData.length} Questions{" "}
-                            </p>
-                        </div> */}
                         <div className="flex items-center">
                             <p>
                                 {currentPage}/{totalPages}
@@ -659,7 +786,7 @@ const SuggestedQuestionsComponent = ({
                                 </span>
                             </Tooltip>
                         </div>
-                        <div>
+                        {/* <div>
                             <Popup
                                 responsive={true}
                                 trigger={
@@ -678,12 +805,117 @@ const SuggestedQuestionsComponent = ({
                                 onClose={() => setIsPopupOpen(false)}
                             >
                                 {(closeFilter) => (
-                                    <div className="absolute top-3 right-0 rounded-md bg-white border-[2px] border-[#80808086]">
+                                    <div className="absolute top-3 w-64 h-72 right-0 rounded-md bg-white border-[2px] border-[#80808086]">
                                         {FilterSection(closeFilter)}
                                     </div>
                                 )}
                             </Popup>
+                        </div> */}
+
+                        <div>
+                            <div
+                                ref={filterIconRef}
+                                onClick={openFilterPopup}
+                                className="border p-2 text-xl rounded-md cursor-pointer"
+                            >
+                                {isPopupOpen ? (
+                                    <LuFilterX className="text-custom-blue" />
+                                ) : (
+                                    <FiFilter className="text-custom-blue" />
+                                )}
+                            </div>
+                            <FilterPopup
+                                isOpen={isPopupOpen}
+                                onClose={() => setIsPopupOpen(false)}
+                                onApply={() => {
+                                    setQuestionTypeFilterItems(tempQuestionTypeFilterItems);
+                                    setDifficultyLevelFilterItems(tempDifficultyLevelFilterItems);
+                                    setSelectedSkills(tempSelectedSkills);
+                                    setSkillInput(tempSkillInput);
+                                    setExperienceRange(tempExperienceRange);
+                                    setFiltrationData(tempFiltrationData);
+                                    setIsPopupOpen(false);
+                                }}
+                                onClearAll={() => {
+                                    // Clear temp filter states
+                                    setTempQuestionTypeFilterItems([]);
+                                    setTempDifficultyLevelFilterItems([]);
+                                    setTempSelectedSkills([]);
+                                    setTempSkillInput("");
+                                    setTempExperienceRange({ min: "", max: "" });
+                                    setTempFiltrationData([
+                                        {
+                                            id: 1,
+                                            filterType: "QuestionType",
+                                            isOpen: false,
+                                            options: [
+                                                { type: "Interview Question", isChecked: false },
+                                                { type: "MCQ", isChecked: false },
+                                                { type: "Short Text", isChecked: false },
+                                                { type: "Long Text", isChecked: false },
+                                            ],
+                                        },
+                                        {
+                                            isOpen: false,
+                                            id: 2,
+                                            filterType: "Difficulty Level",
+                                            options: [
+                                                { level: "Easy", isChecked: false },
+                                                { level: "Medium", isChecked: false },
+                                                { level: "Hard", isChecked: false },
+                                            ],
+                                        },
+                                        {
+                                            id: 3,
+                                            isOpen: false,
+                                            filterType: "Experiences",
+                                            options: { min: 0, max: 0 },
+                                        },
+                                    ]);
+                                    // Clear main filter states
+                                    setQuestionTypeFilterItems([]);
+                                    setDifficultyLevelFilterItems([]);
+                                    setSelectedSkills([]);
+                                    setSkillInput("");
+                                    setExperienceRange({ min: "", max: "" });
+                                    setFiltrationData([
+                                        {
+                                            id: 1,
+                                            filterType: "QuestionType",
+                                            isOpen: false,
+                                            options: [
+                                                { type: "Interview Question", isChecked: false },
+                                                { type: "MCQ", isChecked: false },
+                                                { type: "Short Text", isChecked: false },
+                                                { type: "Long Text", isChecked: false },
+                                            ],
+                                        },
+                                        {
+                                            isOpen: false,
+                                            id: 2,
+                                            filterType: "Difficulty Level",
+                                            options: [
+                                                { level: "Easy", isChecked: false },
+                                                { level: "Medium", isChecked: false },
+                                                { level: "Hard", isChecked: false },
+                                            ],
+                                        },
+                                        {
+                                            id: 3,
+                                            isOpen: false,
+                                            filterType: "Experiences",
+                                            options: { min: 0, max: 0 },
+                                        },
+                                    ]);
+                                    // Close popup
+                                    setIsPopupOpen(false);
+                                }}
+                                filterIconRef={filterIconRef}
+                            >
+                                {FilterSection(() => setIsPopupOpen(false))}
+                            </FilterPopup>
                         </div>
+
                     </div>
                 </div>
             </div >
@@ -744,7 +976,7 @@ const SuggestedQuestionsComponent = ({
                         )}
 
                         {[...questionTypeFilterItems, ...difficultyLevelFilterItems].length > 0 && (
-                            <div className="flex items-center flex-wrap px-4 pt-2">
+                            <div className="flex items-center flex-wrap px-4 pt-2 mb-3">
                                 <h3 className="font-medium text-gray-700 text-sm">Filters applied:</h3>
                                 <ul className="flex gap-2 flex-wrap">
                                     {[...questionTypeFilterItems, ...difficultyLevelFilterItems].map(
@@ -876,7 +1108,7 @@ const SuggestedQuestionsComponent = ({
                                                             className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
                                                             onClick={() => toggleDropdown(item._id)}
                                                         >
-                                                           Add to list
+                                                            Add to list
                                                         </button>
                                                         {dropdownOpen === item._id && (
                                                             <MyQuestionList
