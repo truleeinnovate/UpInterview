@@ -18,7 +18,7 @@ console.log('Razorpay initialized with key_id:', razorpay.key_id);
 
 const updateSubscriptionPlan = async (req, res) => {
   console.log('Request body:', req.body);
-  const { userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
+  const { tenantId, ownerId, userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
 
   // Simple validation - essential fields
   if (!razorpaySubscriptionId) {
@@ -180,8 +180,8 @@ const updateSubscriptionPlan = async (req, res) => {
       
       // Create invoice with all required fields
       const newInvoice = new Invoice({
-        tenantId: customerSubscription.tenantId,
-        ownerId: userId || customerSubscription.ownerId,
+        tenantId: tenantId,
+        ownerId: ownerId,
         customerSubscriptionId: customerSubscription._id,
         planName: newPlan.planName || 'Updated Plan',
         membershipType: membershipType,

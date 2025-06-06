@@ -250,6 +250,8 @@ const Subscription = () => {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/subscription-update/update-subscription-plan`,
         {
+          tenantId: user.tenantId,
+          ownerId: user.ownerId,
           userId: userId,
           razorpaySubscriptionId: subscriptionData.razorpaySubscriptionId,
           newPlanId: plan.planId,

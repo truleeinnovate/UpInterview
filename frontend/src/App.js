@@ -272,6 +272,7 @@ const App = () => {
 
               {/*Wallet */}
               <Route path="/wallet-transcations" element={<Wallet />}></Route>
+              
 
               {/* Account Settings Routes */}
               <Route path="/account-settings" element={<AccountSettingsSidebar />}>

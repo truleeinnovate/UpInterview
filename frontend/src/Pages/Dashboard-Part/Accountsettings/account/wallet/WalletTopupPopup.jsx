@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { SidePopup } from '../../common/SidePopup'
+import Modal from 'react-modal'
+import classNames from 'classnames';
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
+import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 
 export function WalletTopupPopup({ onClose, onTopup }) {
+  const navigate = useNavigate();
+  const [isFullScreen, setIsFullScreen] = useState(false)
   const [amount, setAmount] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
@@ -177,98 +182,137 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
   const predefinedAmounts = [100, 500, 1000, 5000]
 
+  const handleClose = () => {
+    navigate('/account-settings/wallet');
+  };
+
+  const modalClass = classNames(
+    'fixed bg-white shadow-2xl border-l border-gray-200',
+    {
+      'inset-0': isFullScreen,
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+    }
+  );
+
   return (
-    <SidePopup
-      title="Top Up Wallet"
-      onClose={onClose}
-      position="right"
-      size="medium"
-      
+    <Modal
+      isOpen={true}
+      onRequestClose={handleClose}
+      className={modalClass}
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Amount
-          </label>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            {predefinedAmounts.map((presetAmount) => (
+      <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+        <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
+          <h2 className="text-lg sm:text-2xl font-bold">Wallet Top-up</h2>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="p-2 text-gray-600 hover:text-gray-800"
+            >
+              {isFullScreen ? (
+                <ArrowsPointingInIcon className="h-5 w-5" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-5 w-5" />
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-600 hover:text-gray-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Amount
+              </label>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {predefinedAmounts.map((presetAmount) => (
+                  <button
+                    key={presetAmount}
+                    type="button"
+                    onClick={() => setAmount(presetAmount.toString())}
+                    className={`p-4 text-center border rounded-lg hover:border-blue-500 ${
+                      amount === presetAmount.toString() ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                    }`}
+                  >
+                    ${presetAmount.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Custom Amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Enter amount"
+                    min="1"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment Method
+              </label>
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <div className="flex items-center">
+                  <div className="h-4 w-4 text-blue-600 bg-blue-600 rounded-full"></div>
+                  <span className="ml-3">Credit Card</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  Top up your wallet securely using your credit card
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                  {error}
+                </div>
+              )}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Amount</span>
+                  <span className="font-medium">${parseFloat(amount || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Processing Fee</span>
+                  <span className="font-medium">$0.00</span>
+                </div>
+                <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
+                  <span>Total</span>
+                  <span>${parseFloat(amount || 0).toLocaleString()}</span>
+                </div>
+              </div>
+            
+            </div>
+            <div className="flex justify-end items-center">
               <button
-                key={presetAmount}
-                type="button"
-                onClick={() => setAmount(presetAmount.toString())}
-                className={`p-4 text-center border rounded-lg hover:border-blue-500 ${
-                  amount === presetAmount.toString() ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                }`}
+                type="submit"
+                disabled={!amount || isProcessing}
+                className="w-32 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                ${presetAmount.toLocaleString()}
+                {isProcessing ? 'Processing...' : 'Top Up Now'}
               </button>
-            ))}
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Custom Amount
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Enter amount"
-                min="1"
-                step="0.01"
-                required
-              />
             </div>
-          </div>
+          </form>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Payment Method
-          </label>
-          <div className="p-4 border rounded-lg bg-gray-50">
-            <div className="flex items-center">
-              <div className="h-4 w-4 text-blue-600 bg-blue-600 rounded-full"></div>
-              <span className="ml-3">Credit Card</span>
-            </div>
-            <p className="mt-2 text-sm text-gray-500">
-              Top up your wallet securely using your credit card
-            </p>
-          </div>
-        </div>
-
-        <div className="border-t pt-4">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-          <div className="mb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Amount</span>
-              <span className="font-medium">${parseFloat(amount || 0).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Processing Fee</span>
-              <span className="font-medium">$0.00</span>
-            </div>
-            <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
-              <span>Total</span>
-              <span>${parseFloat(amount || 0).toLocaleString()}</span>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!amount || isProcessing}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? 'Processing...' : 'Top Up Now'}
-          </button>
-        </div>
-      </form>
-    </SidePopup>
+      </div>
+      
+    </Modal>
   )
 }

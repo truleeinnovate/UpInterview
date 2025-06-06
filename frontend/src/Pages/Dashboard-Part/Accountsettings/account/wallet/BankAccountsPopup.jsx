@@ -1,7 +1,12 @@
 import { useState } from 'react'
-import { SidePopup } from '../../common/SidePopup'
+import Modal from 'react-modal'
+import classNames from 'classnames';
+import { useNavigate } from 'react-router-dom'
+import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
 
 export function BankAccountsPopup({ onClose, onSave }) {
+  const navigate = useNavigate();
+  const [isFullScreen, setIsFullScreen] = useState(false)
   const [accounts, setAccounts] = useState([])
   const [isAddingAccount, setIsAddingAccount] = useState(false)
   const [newAccount, setNewAccount] = useState({
@@ -214,32 +219,70 @@ export function BankAccountsPopup({ onClose, onSave }) {
           </div>
         </div>
       ))}
-
+    <div className="flex justify-end items-center">
       <button
         onClick={() => setIsAddingAccount(true)}
-        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="w-44 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
       >
         Add Bank Account
       </button>
+      </div>
     </div>
   )
 
-  return (
-    <SidePopup
-      title="Bank Accounts"
-      onClose={onClose}
-      position="right"
-      size="medium"
-    >
-      <div className="space-y-6">
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-          <p className="text-sm text-blue-700">
-            Add your bank account details to receive payments for completed interviews. Payments are processed within 2-3 business days.
-          </p>
-        </div>
+  const handleClose = () => {
+      navigate('/account-settings/wallet');
+    };
+  
+    const modalClass = classNames(
+      'fixed bg-white shadow-2xl border-l border-gray-200',
+      {
+        'inset-0': isFullScreen,
+        'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      }
+    );
 
-        {isAddingAccount ? renderAccountForm() : renderAccountsList()}
+  return (
+    <Modal
+      isOpen={true}
+      onRequestClose={handleClose}
+      className={modalClass}
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+    >
+      <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}> 
+        <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
+          <h2 className="text-lg sm:text-2xl font-bold">Wallet Top-up</h2>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="p-2 text-gray-600 hover:text-gray-800"
+            >
+              {isFullScreen ? (
+                <ArrowsPointingInIcon className="h-5 w-5" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-5 w-5" />
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-600 hover:text-gray-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
+          <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+              <p className="text-sm text-blue-700">
+                Add your bank account details to receive payments for completed interviews. Payments are processed within 2-3 business days.
+              </p>
+            </div>
+
+            {isAddingAccount ? renderAccountForm() : renderAccountsList()}
+          </div>
+        </div>
       </div>
-    </SidePopup>
+    </Modal>
   )
 }
