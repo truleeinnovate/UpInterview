@@ -478,7 +478,7 @@ const Subscription = () => {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 w-[350px] sm:w-full md:w-[250px] ${
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 w-full 2xl:w-[350px] xl:w-[350px] lg:w-[225px] sm:w-full md:w-[225px] ${
                 isHighlighted(plan)
                   ? "-translate-y-6 z-10 bg-[#217989] text-white"
                   : "bg-white text-[#217989]"
