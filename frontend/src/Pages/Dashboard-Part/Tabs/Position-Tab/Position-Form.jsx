@@ -12,6 +12,7 @@ import SkillsField from '../CommonCode-AllTabs/SkillsInput.jsx';
 import { usePositions } from '../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../Components/LoadingButton';
 import { useMasterData } from '../../../../apiHooks/useMasterData';
+import { useInterviewTemplates } from '../../../../apiHooks/useInterviewTemplates.js';
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -246,6 +247,13 @@ const CustomDropdown = ({
 const PositionForm = ({ mode }) => {
   const { positionData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdatePosition } = usePositions();
 
+  const { templatesData } = useInterviewTemplates();
+    const {
+    companies,
+    locations,
+    skills,
+  } = useMasterData();
+
   const { id, } = useParams();
   const location = useLocation();
   // Get user token information
@@ -258,12 +266,7 @@ const PositionForm = ({ mode }) => {
   const fromPath = location.state?.from || '/position';
 
   // position details states
-  const {
-    companies,
-    locations,
-    templates,
-    skills,
-  } = useMasterData();
+
 
 
 
@@ -449,7 +452,7 @@ const PositionForm = ({ mode }) => {
 
       const selectedPosition = positionData.find(pos => pos._id === id);
       setIsEdit(true)
-      const matchingTemplate = templates.find(
+      const matchingTemplate = templatesData.find(
         (template) => template.templateName === selectedPosition?.selectedTemplete
       );
       setPositionId(id);
@@ -1301,9 +1304,9 @@ const PositionForm = ({ mode }) => {
                         label="Select Template"
                         name="template"
                         value={formData.template?.templateName || ""}
-                        options={templates}
+                        options={templatesData}
                         onChange={(e) => {
-                          const selectedTemplate = templates.find(t => t._id === e.target.value);
+                          const selectedTemplate = templatesData.find(t => t._id === e.target.value);
                           setFormData({ ...formData, template: selectedTemplate });
                         }}
                         disabledError={false}
