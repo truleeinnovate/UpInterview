@@ -120,7 +120,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+      className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
     >
       <div className="h-full w-full">
         <motion.div 
@@ -137,7 +137,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
             {tickets?.length} Tickets
           </motion.span>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full pb-20">
           {currentTickets.map((ticket, index) => (
             <motion.div
               key={ticket._id}
@@ -174,7 +174,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                       }
                     }}
                   >
-                    Ticket #{ticket._id.slice(-5, -1)}
+                    Ticket #{ticket.ticketCode}
                   </h4>
                   <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
                 </motion.div>
