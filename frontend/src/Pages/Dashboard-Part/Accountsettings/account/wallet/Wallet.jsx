@@ -210,14 +210,14 @@ const Wallet = () => {
         <div className="flex space-x-3">
           <button
             onClick={() => setIsBankAccountsOpen(true)}
-            className="px-4 py-2 border border-blue-600 text-blue-600 text-sm hover:bg-blue-50 rounded-lg"
+            className="px-4 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
           >
             Withdraw
           </button>
           <button
             ref={topUpButtonRef}
             onClick={() => setIsTopupOpen(true)}
-            className={`px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 ${animateTopUp ? 'top-up-button-animation pulse-glow' : ''}`}
+            className={`px-4 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90 ${animateTopUp ? 'top-up-button-animation pulse-glow' : ''}`}
           >
             Top Up
           </button>

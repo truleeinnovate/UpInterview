@@ -150,6 +150,7 @@ const SkillsField = ({
                     type="button"
                     onClick={handleCancelSelection}
                     className="text-red-600 hover:text-red-800 p-1"
+                    title='Cancel'
                   >
                     <FaTimes className="w-5 h-5" />
                   </button>
@@ -161,6 +162,7 @@ const SkillsField = ({
                     }}
                     className={`text-green-600 hover:text-green-800 p-1 ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!isNextEnabled()}
+                    title='Add'
                   >
                     <FaPlus className="w-5 h-5" />{/* {editingIndex !== null ? <FaPlus /> : <FaPlus />} */}
                   </button>
@@ -185,15 +187,17 @@ const SkillsField = ({
                     type="button"
                     onClick={() => handleEdit(index)}
                     className="text-custom-blue text-md"
+                    title='Edit'
                   >
-                    <FaEdit />
+                    <FaEdit className="w-5 h-5"/>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(index)}
                     className="text-md"
+                    title='Delete'
                   >
-                    <FaTrash fill="red" />
+                    <FaTrash className="w-5 h-5" fill="red" />
                   </button>
                 </div>
               </>

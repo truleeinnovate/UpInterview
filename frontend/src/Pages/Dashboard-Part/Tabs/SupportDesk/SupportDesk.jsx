@@ -161,7 +161,7 @@ function SupportDesk() {
             navigate(path, { state: { ticketData: row } });
           }}
         >
-          #{value || "N/A"}
+          {value || "N/A"}
         </div>
       ),
     },
