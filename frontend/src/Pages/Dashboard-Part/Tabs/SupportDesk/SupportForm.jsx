@@ -168,7 +168,7 @@ const SupportForm = () => {
     } catch (error) {
       // Error is already handled in mutation's onError
     }
-  }, [formState, editMode, initialTicketData, submitTicket, navigate]);
+  }, [validateForm, createFormData, submitTicket, editMode, initialTicketData?._id, initialFormState, navigate]);
 
   const renderIssueOptions = useCallback(() => (
     issuesData.map(each => (
