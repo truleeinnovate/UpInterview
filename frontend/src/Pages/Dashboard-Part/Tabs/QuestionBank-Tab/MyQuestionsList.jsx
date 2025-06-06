@@ -22,11 +22,11 @@ import Cookies from 'js-cookie';
 import { XCircle, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { config } from "../../../../config.js";
 import Loading from "../../../../Components/Loading.js";
-import { Pencil,  } from 'lucide-react';
+import { Pencil, } from 'lucide-react';
 
 
 const removeQuestionFromChild = (questionId, myQuestionsList) => {
-   const updatedList = {};
+  const updatedList = {};
 
   Object.keys(myQuestionsList).forEach(listName => {
     updatedList[listName] = myQuestionsList[listName].map(question =>
@@ -55,12 +55,12 @@ const MyQuestionsList = ({
   handleRemoveQuestion,
   removedQuestionIds = []
 }) => {
-const { 
-  fetchMyQuestionsData,
-  myQuestionsList,
-  setMyQuestionsList,
-  setInterviewerSectionData
-} = useCustomContext();
+  const {
+    fetchMyQuestionsData,
+    myQuestionsList,
+    setMyQuestionsList,
+    setInterviewerSectionData
+  } = useCustomContext();
   // const { objectPermissionscontext } = usePermissions();
   // const objectPermissions = useMemo(
   //   () => objectPermissionscontext.questionBank || {},
@@ -68,7 +68,7 @@ const {
   // );
 
   // console.log("removedQuestionIds", removedQuestionIds);
-  
+
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -77,7 +77,7 @@ const {
     useState(false);
   const [isFilterByDifficultyOpen, setIsFilterByDifficultyOpen] =
     useState(false);
- 
+
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
       myQuestionsListRef.current.openPopup();
@@ -122,36 +122,36 @@ const {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [sidebarOpen, handleOutsideClick]);
-const handleLabelChange = (label) => {
-  // Find the listId for this label from the existing data
-  const allQuestions = Object.values(myQuestionsList).flat();
-  const matchingQuestion = allQuestions.find(q => q.label === label);
-  
-  if (matchingQuestion) {
-    // Store the listId in cookies
-    Cookies.set('lastSelectedListId', matchingQuestion.listId);
-    setSelectedLabel(label);
-  }
-  setIsDropdownOpen(false);
-};
+  const handleLabelChange = (label) => {
+    // Find the listId for this label from the existing data
+    const allQuestions = Object.values(myQuestionsList).flat();
+    const matchingQuestion = allQuestions.find(q => q.label === label);
+
+    if (matchingQuestion) {
+      // Store the listId in cookies
+      Cookies.set('lastSelectedListId', matchingQuestion.listId);
+      setSelectedLabel(label);
+    }
+    setIsDropdownOpen(false);
+  };
   // Load last selected label from localStorage on mount
   useEffect(() => {
-  const lastSelectedListId = Cookies.get('lastSelectedListId');
-  if (lastSelectedListId && myQuestionsList) {
-    const allQuestions = Object.values(myQuestionsList).flat();
-    const matchingQuestion = allQuestions.find(q => 
-      q.listId === lastSelectedListId
-    );
-    if (matchingQuestion) {
-      setSelectedLabel(matchingQuestion.label);
+    const lastSelectedListId = Cookies.get('lastSelectedListId');
+    if (lastSelectedListId && myQuestionsList) {
+      const allQuestions = Object.values(myQuestionsList).flat();
+      const matchingQuestion = allQuestions.find(q =>
+        q.listId === lastSelectedListId
+      );
+      if (matchingQuestion) {
+        setSelectedLabel(matchingQuestion.label);
+      }
     }
-  }
-}, [myQuestionsList]);
+  }, [myQuestionsList]);
 
-// Keep your existing fetch call
-useEffect(() => {
-  fetchMyQuestionsData();
-}, [fetchMyQuestionsData]);
+  // Keep your existing fetch call
+  useEffect(() => {
+    fetchMyQuestionsData();
+  }, [fetchMyQuestionsData]);
 
   //    useEffect(() => {
   //   if (removedQuestionIds && removedQuestionIds.length > 0) {
@@ -164,23 +164,23 @@ useEffect(() => {
 
   useEffect(() => {
     if (removedQuestionIds && removedQuestionIds.length > 0) {
-     setMyQuestionsList(prev => {
-      let updatedList = { ...prev };
-      removedQuestionIds.forEach(questionId => {
-        updatedList = removeQuestionFromChild(questionId, updatedList);
+      setMyQuestionsList(prev => {
+        let updatedList = { ...prev };
+        removedQuestionIds.forEach(questionId => {
+          updatedList = removeQuestionFromChild(questionId, updatedList);
+        });
+        return updatedList;
       });
-      return updatedList;
-    });
       // const requiredArray = myQuestionsList;
       // console.log("myQuestionsList", requiredArray);
-      
-    // const requiredObj = requiredArray.map((item) =>
-    //   item._id === question._id ? { ...item, isAdded: false } : item
-    // );
-    //     setMyQuestionsList((prev) => ({
-    //   ...prev,
-    //   [listName]: requiredObj,
-    // }));
+
+      // const requiredObj = requiredArray.map((item) =>
+      //   item._id === question._id ? { ...item, isAdded: false } : item
+      // );
+      //     setMyQuestionsList((prev) => ({
+      //   ...prev,
+      //   [listName]: requiredObj,
+      // }));
     }
   }, [removedQuestionIds, setMyQuestionsList]);
 
@@ -306,13 +306,13 @@ useEffect(() => {
   };
   const toggleDropdown = (questionId) => {
     setDropdownOpen(dropdownOpen === questionId ? null : questionId);
-     setActionViewMoreSection({})
+    setActionViewMoreSection({})
   };
 
   const handleEditClick = (question) => {
     setShowNewCandidateContent(question);
     setDropdownOpen(null);
-      
+
   };
   const handleclose = () => {
     setShowNewCandidateContent(false);
@@ -461,31 +461,31 @@ useEffect(() => {
         handleRemoveQuestion(question._id)
 
       }
-    const requiredArray = myQuestionsList[listName];
-    const requiredObj = requiredArray.map((item) =>
-      item._id === question._id ? { ...item, isAdded: false } : item
-    );
-    setMyQuestionsList((prev) => ({
-      ...prev,
-      [listName]: requiredObj,
-    }));
+      const requiredArray = myQuestionsList[listName];
+      const requiredObj = requiredArray.map((item) =>
+        item._id === question._id ? { ...item, isAdded: false } : item
+      );
+      setMyQuestionsList((prev) => ({
+        ...prev,
+        [listName]: requiredObj,
+      }));
 
-        toast.error("Question removed successfully!");
-    }else{
+      toast.error("Question removed successfully!");
+    } else {
 
-    try {
-      const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
-      const response = await axios.delete(url);
-      // alert(response.data.message);
+      try {
+        const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+        const response = await axios.delete(url);
+        // alert(response.data.message);
         toast.error("Question removed successfully!");
-      // getInterviewerQuestions()
-      const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
-      const response2 = await axios.get(addedQuestionUrl);
-      setInterviewerSectionData((prev) => [...prev, response2.data.question]);
-    } catch (error) {
-      console.log("error in deleting question", error);
+        // getInterviewerQuestions()
+        const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+        const response2 = await axios.get(addedQuestionUrl);
+        setInterviewerSectionData((prev) => [...prev, response2.data.question]);
+      } catch (error) {
+        console.log("error in deleting question", error);
+      }
     }
-  }
   };
 
   // const groupedQuestions = myQuestionsList;
@@ -621,7 +621,6 @@ useEffect(() => {
         snapshot: question,
         order: "",
         customizations: "",
-        // mandatory: mandatoryStatus[item._id] ? "true" : "false",
       };
 
 
@@ -639,79 +638,70 @@ useEffect(() => {
   // MyQuestionListMain component (UI improvements only)
   return (
 
-      
-    <div className="bg-white z-50 w-full px-4 py-2 min-h-[calc(100vh-200px)]">
+
+    <div className="bg-white z-50 w-full px-4 py-2 min-h-[calc(100vh-200px)] mt-12">
       {/* Add Question Button (UI improvement) */}
 
-      <div
-        className={`relative `}
-      >
+      <div className={`relative`}>
         <button
-
-          className="text-md absolute  right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
-
+          className="text-md absolute right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
           onClick={toggleSidebar}
         >
           <Plus /> Add Question
         </button>
       </div>
 
-      <div
-        className={`${type === "interviewerSection mt-2"
-          }`}
-      >
+      <div className={`${type === "interviewerSection mt-2" }`} >
         {/* List Selection and Filter Section (UI improvement) */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-4 items-center">
 
-         <div className="relative inline-block w-48">
-  <button
-    className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-  >
-    <span className="truncate">
-      {selectedLabel || "Select a label"}
-    </span>
-    <svg
-      className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
-        isDropdownOpen ? "rotate-180" : "rotate-0"
-      }`}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 9l-7 7-7-7"
-      />
-    </svg>
-  </button>
-  {isDropdownOpen && (
-    <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-      {Object.keys(groupedQuestions).map((listName, idx) => (
-        <div
-          key={idx}
-          className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-            selectedLabel === listName
-              ? "bg-blue-50 text-custom-blue font-semibold"
-              : ""
-          }`}
-          onClick={() => handleLabelChange(listName)}
-        >
-          <div className="flex justify-between items-center">
-            <span className="truncate">{listName}</span>
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {groupedQuestions[listName].length}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+            <div className="relative inline-block w-48">
+              <button
+                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className="truncate">
+                  {selectedLabel || "Select a label"}
+                </span>
+                <svg
+                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                  {Object.keys(groupedQuestions).map((listName, idx) => (
+                    <div
+                      key={idx}
+                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
+                          ? "bg-blue-50 text-custom-blue font-semibold"
+                          : ""
+                        }`}
+                      onClick={() => handleLabelChange(listName)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="truncate">{listName}</span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          {groupedQuestions[listName].length}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={openListPopup}
@@ -744,35 +734,35 @@ useEffect(() => {
         </div>
 
         {/* Empty State (UI improvement) */}
-     {!selectedLabel && (
-  <div className="flex flex-col items-center justify-center min-h-[400px]">
-    <div className="text-center max-w-md">
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-        fill="none" 
-        viewBox="0 0 24 24" 
-        stroke="currentColor"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={1.5} 
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
-        />
-      </svg>
-      <h3 className="text-lg font-medium text-gray-500 mb-2">
-        No Label Selected
-      </h3>
-      <p className="text-gray-400">
-        Please select a label from the dropdown to view questions
-      </p>
-    </div>
-  </div>
-)}
+        {!selectedLabel && (
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <div className="text-center max-w-md">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-500 mb-2">
+                No Label Selected
+              </h3>
+              <p className="text-gray-400">
+                Please select a label from the dropdown to view questions
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Grouped Questions (UI improvement) */}
-      {/* Grouped Questions (UI improvement) */}
+        {/* Grouped Questions (UI improvement) */}
         {Object.entries(groupedQuestions || myQuestionsList).map(
           ([listName, items]) => {
             return (
@@ -792,13 +782,13 @@ useEffect(() => {
                     <div className="flex items-center">
                       <div className="relative">
                         <div className="flex items-center">
-                           {isOpen[listName] && <button
+                          {isOpen[listName] && <button
                             onClick={() => toggleActionSection(listName)}
                             className="p-1 rounded-full transition-colors"
                           >
                             <MdMoreVert className="text-xl" />
                           </button>
-          }
+                          }
                           <button
                             onClick={() => toggleSection(listName)}
                             className=" p-1 rounded-full ml-2 transition-colors"
@@ -820,7 +810,7 @@ useEffect(() => {
                                 });
                               }}
                             >
-                               <Pencil className="w-4 h-4 text-blue-600" /> Edit List
+                              <Pencil className="w-4 h-4 text-blue-600" /> Edit List
                             </p>
                           </div>
                         )}
@@ -952,13 +942,13 @@ useEffect(() => {
                                     <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                                       <p
                                         className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                        onClick={() => 
+                                        onClick={() =>
                                           handleEditClick(question)
-                                       
-                                        
+
+
                                         }
                                       >
-                                      <Pencil className="w-4 h-4 text-blue-600" />  Edit
+                                        <Pencil className="w-4 h-4 text-blue-600" />  Edit
                                       </p>
                                     </div>
                                   )}
@@ -1032,34 +1022,34 @@ useEffect(() => {
 
           setActionViewMoreSection={setActionViewMoreSection}
         />
-      
 
 
-      {/* Modals */}
-      {showNewCandidateContent && (
-        <Editassesmentquestion
-          type={type}
-          questionBankPopupVisibility={questionBankPopupVisibility}
-          onClose={handleclose}
-          question={showNewCandidateContent}
-          isEdit={true}
-        />
-      )}
 
-      {sidebarOpen && (
-        <Sidebar
-          sectionName={sectionName}
-          assessmentId={assessmentId}
-          updateQuestionsInAddedSectionFromQuestionBank={
-            updateQuestionsInAddedSectionFromQuestionBank
-          }
-          type={type}
-          questionBankPopupVisibility={questionBankPopupVisibility}
-          onClose={closeSidebar}
-          onOutsideClick={handleOutsideClick}
-        />
-      )}
-       </div>
+        {/* Modals */}
+        {showNewCandidateContent && (
+          <Editassesmentquestion
+            type={type}
+            questionBankPopupVisibility={questionBankPopupVisibility}
+            onClose={handleclose}
+            question={showNewCandidateContent}
+            isEdit={true}
+          />
+        )}
+
+        {sidebarOpen && (
+          <Sidebar
+            sectionName={sectionName}
+            assessmentId={assessmentId}
+            updateQuestionsInAddedSectionFromQuestionBank={
+              updateQuestionsInAddedSectionFromQuestionBank
+            }
+            type={type}
+            questionBankPopupVisibility={questionBankPopupVisibility}
+            onClose={closeSidebar}
+            onOutsideClick={handleOutsideClick}
+          />
+        )}
+      </div>
     </div>
   );
 };

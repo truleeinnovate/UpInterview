@@ -1,5 +1,4 @@
 // utils/CandidateValidation.js
-
 const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
@@ -40,7 +39,6 @@ const getErrorMessage = (field, value, formData) => {
         return messages.invalidPhone;
     }
 
-    // Add validation for Relevant Experience
     if (field === "RelevantExperience" && formData && formData.CurrentExperience) {
         const currentExp = parseInt(formData.CurrentExperience);
         const relevantExp = parseInt(value);
@@ -52,14 +50,12 @@ const getErrorMessage = (field, value, formData) => {
     return "";
 };
 
-// Update the validateCandidateForm function to pass formData to getErrorMessage:
 const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
-    // console.log("formData", formData);
     let formIsValid = true;
     const newErrors = { ...errors };
 
     Object.keys(formData).forEach((field) => {
-        const errorMessage = getErrorMessage(field, formData[field], formData);  // Pass formData here
+        const errorMessage = getErrorMessage(field, formData[field], formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
             formIsValid = false;
@@ -78,16 +74,11 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
 
     return { formIsValid, newErrors };
 };
- const countryCodes = [
+
+const countryCodes = [
     { value: '+1', label: '🇺🇸 +1 (USA)' },
     { value: '+44', label: '🇬🇧 +44 (UK)' },
     { value: '+91', label: '🇮🇳 +91 (India)' },
-    // Add more countries as needed
-  ];
-  
+];
 
-module.exports = {
-    validateCandidateForm,
-    getErrorMessage,
-    countryCodes
-};
+export { validateCandidateForm, getErrorMessage, countryCodes };

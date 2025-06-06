@@ -52,7 +52,7 @@ return (
     </div>
 
     {/* Tab Navigation - keep this outside the scrollable area */}
-    <div className={`fixed bg-white px-5 h-[180px] pt-16 ${type === "interviewerSection" || type === "assessment" ? "w-full px-4" : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0"}`}>
+    <div className={`fixed bg-white px-5 ${activeTab === "SuggesstedQuestions" ? "h-[180px]" : "" }  pt-16 ${type === "interviewerSection" || type === "assessment" ? "w-full px-4" : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0"}`}>
       <div className="flex">
         <button
           className={`px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
