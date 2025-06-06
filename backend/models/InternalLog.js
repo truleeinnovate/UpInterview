@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const internalLogSchema = new mongoose.Schema({
     timeStamp: { type: Date, default: Date.now }, // Log creation timestamp
     logId: { type: String, required: true },      // Unique identifier for the log
-    status: {
+    status: { 
         type: String, 
         enum: ['success', 'error', 'warning'], 
         required: true 

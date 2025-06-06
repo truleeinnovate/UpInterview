@@ -939,3 +939,11 @@ app.use('/subscription-update', subscriptionUpdateRoutes);
 
 const interviewRoundsRoutes = require('./routes/interviewRoundsRoutes.js');
 app.use('/interviewRounds', interviewRoundsRoutes);
+
+// internal logs
+const internalLogRoutes = require('./routes/internalLogRoutes');
+app.use('/internal-logs', internalLogRoutes);
+
+// integration logs
+const integrationLogRoutes = require('./routes/integrationLogRoutes');
+app.use('/api/integration-logs', integrationLogRoutes);
