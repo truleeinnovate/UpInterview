@@ -19,7 +19,7 @@ const InterviewTemplateSchema = new mongoose.Schema({
         //     questionId: { type: String },
         //     snapshot: [{ type: mongoose.Schema.Types.Mixed, required: true }]
         // }],
-        interviewDuration: { type: String }, // Changed to String and made optional
+        duration: { type: String }, // Changed to String and made optional
         instructions: { type: String }, // Special notes for the round
         interviewMode: { type: String }, // Made optional
         minimumInterviewers: { type: String }, // Changed to String and made optional

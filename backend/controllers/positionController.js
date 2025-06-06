@@ -252,13 +252,13 @@ const createPosition = async (req, res) => {
         roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
         interviewerType: round.interviewerType || "",
-        duration: round.interviewDuration ? round.interviewDuration.toString() : "",
+        duration: round.duration ? round.duration.toString() : "",
         instructions: round.instructions || "",
         selectedInterviewersType: round.selectedInterviewersType || "",
         interviewers: round.interviewers || [],
         assessmentId: round.assessmentId || null,
         sequence: round.sequence || 0,
-        questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
+        questions: round.questions ? round.questions.map(q => ({
           questionId: q.questionId || null,
           snapshot: q.snapshot || null
         })) : []
@@ -363,13 +363,13 @@ const updatePosition = async (req, res) => {
         roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
         interviewerType: round.interviewerType || "",
-        duration: round.interviewDuration ? round.interviewDuration.toString() : "",
+        duration: round.duration ? round.duration.toString() : "",
         instructions: round.instructions || "",
         selectedInterviewersType: round.selectedInterviewersType || "",
         interviewers: round.interviewers || [],
         assessmentId: round.assessmentId || null,
         sequence: round.sequence || 0,
-        questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
+        questions: round.questions ? round.questions.map(q => ({
           questionId: q.questionId || null,
           snapshot: q.snapshot || null
         })) : []
