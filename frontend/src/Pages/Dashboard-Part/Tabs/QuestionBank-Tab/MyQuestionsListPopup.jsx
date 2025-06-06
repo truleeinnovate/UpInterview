@@ -17,6 +17,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         fetchLists,
     } = useCustomContext();
     const [selectedListIds, setSelectedListIds] = useState([]);
+    console.log("selectedListIds ", selectedListIds);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
     const [newListName, setNewListName] = useState("");
     const [newListNameForName, setNewListNameForName] = useState("");
@@ -127,6 +128,8 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
         setShowNewListPopup(true);
     };
     const handleAddToList = async (listIds, questionId) => {
+        console.log("listIds", listIds);
+        console.log("questionId", questionId);
         const questionData = {
             tenantListId: listIds,
             suggestedQuestionId: questionId,
@@ -168,6 +171,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
     useEffect(() => {
         onSelectList(selectedCandidates.map(candidate => candidate._id));
     }, [selectedCandidates]);
+
     return (
         <div>
             {!fromcreate && !fromform && (
@@ -223,8 +227,6 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                     </div>
                 </div>
             )}
-
-            {/* ...Keep fromform block unchanged (or improve it later)... */}
 
             {/* New List Modal */}
             {showNewListPopup && (

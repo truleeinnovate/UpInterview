@@ -583,7 +583,7 @@ style={{
                 <IoArrowBack className="text-2xl" />
               </button>
               <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-semibold text-custom-blue">Add Question  
+              <h2 className="text-2xl font-semibold text-custom-blue">Add Question
               </h2>
               <span>
                  {!isEdit && (

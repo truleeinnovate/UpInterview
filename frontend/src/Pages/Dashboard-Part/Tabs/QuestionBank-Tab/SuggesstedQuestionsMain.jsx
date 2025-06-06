@@ -30,6 +30,8 @@ const SuggestedQuestionsComponent = ({
     removedQuestionIds = []
     // -->
 }) => {
+
+    console.log('type from the suggested questions : ', type);
     const [tab, setTab] = useState(1);
     const {
         suggestedQuestions,
@@ -734,7 +736,7 @@ const SuggestedQuestionsComponent = ({
 
     const ReturnSearchFilterSection = () => {
         return (
-            <div className="fixed top-32 left-5 right-5 flex items-center justify-between">
+            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"}`}>
                 <div>
                     <div className="relative flex items-center rounded-md border">
                         <span className="text-custom-blue p-2">
@@ -950,7 +952,7 @@ const SuggestedQuestionsComponent = ({
                 <div className="h-full flex flex-col">
                     {/* Fixed Tab Navigation is in parent (QuestionBank.jsx) */}
                     {/* Fixed Search/Filter Bar */}
-                    <div className="z-50 bg-white fixed left-0 right-0">
+                    <div className="z-50">
                         {ReturnSearchFilterSection()}
                     </div>
 

@@ -12,30 +12,30 @@ exports.newQuestion = async (req, res) => {
     const newquestion = new TenantQuestions(req.body);
     await newquestion.save();
     // Generate feed
-    res.locals.feedData = {
-      tenantId,
-      feedType: 'info',
-      action: {
-        name: 'question_created',
-        description: `Question was created`,
-      },
-      ownerId,
-      parentId: newquestion._id,
-      parentObject: 'TenantQuestion',
-      metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
-      message: `Question was created successfully`,
-    };
+    // res.locals.feedData = {
+    //   tenantId,
+    //   feedType: 'info',
+    //   action: {
+    //     name: 'question_created',
+    //     description: `Question was created`,
+    //   },
+    //   ownerId,
+    //   parentId: newquestion._id,
+    //   parentObject: 'TenantQuestion',
+    //   metadata: req.body,
+    //   severity: res.statusCode >= 500 ? 'high' : 'low',
+    //   message: `Question was created successfully`,
+    // };
     // Generate logs
-    res.locals.logData = {
-      tenantId,
-      ownerId,
-      processName: 'Create question',
-      requestBody: req.body,
-      status: 'success',
-      message: 'New question created successfully',
-      responseBody: newquestion,
-    };
+    // res.locals.logData = {
+    //   tenantId,
+    //   ownerId,
+    //   processName: 'Create question',
+    //   requestBody: req.body,
+    //   status: 'success',
+    //   message: 'New question created successfully',
+    //   responseBody: newquestion,
+    // };
 
     // Send response
     res.status(201).json({
@@ -44,14 +44,14 @@ exports.newQuestion = async (req, res) => {
     });
   } catch (error) {
     // Handle errors
-    res.locals.logData = {
-      tenantId: req.body.tenantId,
-      ownerId: req.body.ownerId,
-      processName: 'Create question',
-      requestBody: req.body,
-      message: error.message,
-      status: 'error',
-    };
+    // res.locals.logData = {
+    //   tenantId: req.body.tenantId,
+    //   ownerId: req.body.ownerId,
+    //   processName: 'Create question',
+    //   requestBody: req.body,
+    //   message: error.message,
+    //   status: 'error',
+    // };
 
     res.status(500).json({
       status: 'error',
