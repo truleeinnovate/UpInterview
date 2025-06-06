@@ -57,10 +57,10 @@ function RoundFormPosition() {
     instructions: '',
     sequence: 1,
     interviewQuestionsList: [],
-    selectedInterviewType: null,
+    interviewType: '',
     interviewers: [],
     // internalInterviewers: [],
-    interviewType: 'instant',
+    interviewerType: '',
     scheduledDate: '',
     duration: 30
   });
@@ -216,10 +216,10 @@ function RoundFormPosition() {
               instructions: roundEditData.instructions || '',
               sequence: roundEditData.sequence || 1,
               interviewQuestionsList: roundEditData.questions || [],
-              selectedInterviewType: roundEditData.interviewerType || null,
+              // selectedInterviewType: roundEditData.interviewerType || null,
               interviewers: internalInterviewers || [],
               // internalInterviewers:internalInterviewers || [],
-              interviewType: roundEditData.interviewType || 'instant',
+              interviewerType: roundEditData.interviewerType || '',
               scheduledDate: '',
               duration: roundEditData.duration || 30
             }));
@@ -275,7 +275,7 @@ function RoundFormPosition() {
   };
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    if (formData.selectedInterviewType === "External") {
+    if (formData.interviewerType === "External") {
       alert("You need to clear external interviewers before selecting internal interviewers.");
       return;
     }
@@ -287,20 +287,20 @@ function RoundFormPosition() {
 
     setFormData(prev => ({
       ...prev,
-      selectedInterviewType: "Internal",
+      interviewerType: "Internal",
       interviewers:interviewersWithFullName
     }));
   };
 
   const handleExternalInterviewerSelect = () => {
 
-    if (formData.selectedInterviewType === "Internal") {
+    if (formData.interviewerType === "Internal") {
       alert("You need to clear internal interviewers before selecting outsourced interviewers.");
       return;
     }
     setFormData(prev => ({
       ...prev,
-      selectedInterviewType: "External",
+      interviewerType: "External",
     }));
 
   };
@@ -312,7 +312,7 @@ function RoundFormPosition() {
         interviewer => interviewer._id !== interviewerId
       ),
 
-      interviewerType: prev.interviewers.length === 1 ? '' : prev.selectedInterviewType
+      interviewerType: prev.interviewers.length === 1 ? '' : prev.interviewerType
     }));
 
   };
@@ -321,16 +321,16 @@ function RoundFormPosition() {
     setFormData(prev => ({
       ...prev,
       interviewers: [],
-      selectedInterviewType: null
+      interviewerType: ''
     }));
 
   };
 
-  const selectedInterviewers = formData.selectedInterviewType === "Internal"
+  const selectedInterviewers = formData.interviewerType === "Internal"
     ? formData.interviewers
-    : (formData.selectedInterviewType === "External" && []);
-  const isInternalSelected = formData.selectedInterviewType === "Internal";
-  const isExternalSelected = formData.selectedInterviewType === "External";
+    : (formData.interviewerType === "External" && []);
+  const isInternalSelected = formData.interviewerType === "Internal";
+  const isExternalSelected = formData.interviewerType === "External";
   const selectedInterviewersData = isInternalSelected && Array.isArray(selectedInterviewers)
     ? selectedInterviewers.map(interviewer => interviewer?._id).filter(Boolean)
     : [];
@@ -386,7 +386,7 @@ function RoundFormPosition() {
       } else if (formData.instructions.length > 1000) {
         newErrors.instructions = 'Instructions cannot exceed 1000 characters';
       }
-      if (!formData.selectedInterviewType) {
+      if (!formData.interviewerType) {
         newErrors.interviewerType = 'Interviewer type is required';
       }
       if (formData.interviewQuestionsList.length === 0) {
@@ -435,14 +435,14 @@ function RoundFormPosition() {
       roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
       interviewMode: formData.interviewMode,
       duration: formData.duration,
-      interviewType: formData.interviewType,
-      interviewerType: formData.roundTitle === "Assessment" ?  "" : formData.selectedInterviewType,
+      // interviewType: formData.interviewType,
+      interviewerType: formData.roundTitle === "Assessment" ?  "" : formData.interviewerType,
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
         interviewers: formData.roundTitle === "Assessment" ? [] :
-          formData.selectedInterviewType === "Internal"
-            ? formData.interviewers.map(interviewer => interviewer._id)
+          formData.interviewerType === "Internal"
+            ? formData.interviewers.map((interviewer) => interviewer._id)
             : [], // If outsource, send empty array
       }),
       ...(formData.roundTitle === "Assessment" && formData.assessmentTemplate.assessmentId
@@ -473,11 +473,12 @@ function RoundFormPosition() {
     // Include roundId only if editing
     const payload = isEditing ? { positionId, round: roundData, roundId } : { positionId, round: roundData };
 
-
+ console.log('roundData after roundData', payload);
     await addRounds(payload);
     
     navigate(`/position/view-details/${positionId}`);
   } catch (err) {
+     console.log('err ', err);
     console.error('Error submitting round:', err);
   }
 };
@@ -1014,7 +1015,7 @@ function RoundFormPosition() {
  
                       {/* Selected Interviewers Summary */}
                       <div className=" p-4 bg-gray-50 rounded-md border border-gray-200">
-                        {!formData.interviewType ? (
+                        {!formData.interviewerType ? (
                           <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                         ) : (
                           <div>
@@ -1055,11 +1056,11 @@ function RoundFormPosition() {
                               <div className="mb-1">
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                 <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                  {console.log('formData.internalInterviewers', formData.internalInterviewers)}
-                                  {formData.internalInterviewers.map((interviewer, index) => (
+                                  {console.log('formData.interviewers', formData.interviewers)}
+                                  {formData.interviewers.map((interviewer, index) => (
                                     <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName} {interviewer?.lastName}</span>
+                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.name || ""}</span>
                                       </div>
                                       <button
                                         type="button"

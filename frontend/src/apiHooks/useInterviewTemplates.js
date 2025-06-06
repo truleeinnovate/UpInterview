@@ -131,14 +131,14 @@ export const useInterviewTemplates = () => {
             initialLoad.current = false;
             return;
         }
-        console.log('useInterviewTemplates state update:', {
-            templatesCount: templatesData.length,
-            isLoading,
-            isQueryLoading,
-            isMutationLoading,
-            saveTemplateState: saveTemplate,
-            addOrUpdateRoundState: addOrUpdateRound,
-        });
+        // console.log('useInterviewTemplates state update:', {
+        //     templatesCount: templatesData.length,
+        //     isLoading,
+        //     isQueryLoading,
+        //     isMutationLoading,
+        //     saveTemplateState: saveTemplate,
+        //     addOrUpdateRoundState: addOrUpdateRound,
+        // });
     }, [templatesData.length, isLoading, isQueryLoading, isMutationLoading, saveTemplate, addOrUpdateRound]);
 
     return {

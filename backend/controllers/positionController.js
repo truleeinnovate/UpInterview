@@ -1,3 +1,4 @@
+const { mongoose } = require('mongoose');
 const { Position } = require('../models/position.js');
 
 // const createPosition = async (req, res) => {
@@ -481,6 +482,9 @@ const saveInterviewRoundPosition = async (req, res) => {
       return res.status(404).json({ message: "Position not found." });
     }
 
+    
+
+
     if (roundId) {
       // **Edit an existing round**
       const roundIndex = position.rounds.findIndex(r => r._id.toString() === roundId);
@@ -488,15 +492,25 @@ const saveInterviewRoundPosition = async (req, res) => {
         return res.status(404).json({ message: "Round not found." });
       }
 
+      // if (round.interviewers && Array.isArray(round.interviewers)) {
+      //   round.interviewers = round.interviewers
+      //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
+      //     .map(id => new mongoose.Types.ObjectId(id));
+      // } else {
+      //   round.interviewers = [];
+      // }
+
+
+
       // Update the existing round with new data
       position.rounds[roundIndex] = { ...position.rounds[roundIndex], ...round };
-      await position.save();
 
       // **Reorder all rounds based on sequence**
       await reorderInterviewRounds(position);
 
-      console.log("Position rounds", position.rounds[roundIndex]);
+      console.log("Position rounds 508", positionId, round, roundId);
 
+      await position.save();
 
       return res.status(200).json({
         message: "Round updated successfully.",
@@ -514,6 +528,21 @@ const saveInterviewRoundPosition = async (req, res) => {
           r.sequence += 1;
         }
       });
+
+
+      // if (round.interviewers && Array.isArray(round.interviewers)) {
+      //   round.interviewers = round.interviewers
+      //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
+      //     .map(id => new mongoose.Types.ObjectId(id));
+      // } else {
+      //   round.interviewers = [];
+      // }
+
+
+
+      console.log("Position rounds 540", positionId, round, roundId);
+
+
       // **Add the new round**
       const newRound = {
         ...round,
@@ -525,13 +554,15 @@ const saveInterviewRoundPosition = async (req, res) => {
       // **Reorder rounds after adding**
       await reorderInterviewRounds(position);
 
+      await position.save();
+
       return res.status(201).json({ message: "Interview round created successfully.", data: position.rounds[position.rounds.length - 1], });
     }
 
     /**
      * Reorders interview rounds based on sequence. 
      */
-    async function reorderInterviewRounds(positionId) {
+    function reorderInterviewRounds(positionId) {
       position.rounds.sort((a, b) => a.sequence - b.sequence);
 
       // Reassign sequence numbers starting from 1
@@ -539,7 +570,7 @@ const saveInterviewRoundPosition = async (req, res) => {
         round.sequence = index + 1;
       });
 
-      await position.save();
+
     }
 
 
@@ -668,8 +699,8 @@ const saveInterviewRoundPosition = async (req, res) => {
 //       tenantId: tenantId, // Filter by tenant
 //     }).lean(); // Convert to plain JS object for performance
 
-    
-    
+
+
 //     if (!position) {
 //       return res.status(404).json({
 //         success: false,

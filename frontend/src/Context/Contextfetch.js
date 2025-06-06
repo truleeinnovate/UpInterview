@@ -555,7 +555,7 @@ const CustomProvider = ({ children }) => {
       );
       const assessmentQuestions = response.data;
       const sections = assessmentQuestions.sections || [];
-
+console.log("sections",sections);
       // Check for empty sections or questions
       if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
         setSectionQuestions({ noQuestions: true });
@@ -772,18 +772,25 @@ const CustomProvider = ({ children }) => {
 
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
   const [interviewers, setInterviewers] = useState([]);
-  useEffect(() => {
-    const fetchInterviewers = async () => {
+  const [loadingInterviewer , setLoadingInterviewer] = useState(false)
+   const fetchInterviewers = async () => {
       try {
+        setLoadingInterviewer(true);
         const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
-
+        
+setLoadingInterviewer(false);
         setInterviewers(response.data);
+      
       } catch (err) {
         console.error(err.message);
       } finally {
-        setLoading(false);
+        setLoadingInterviewer(false);
       }
     }
+  
+  
+  useEffect(() => {
+   
     fetchInterviewers();
   }, [tenantId]);
 
@@ -1149,6 +1156,9 @@ const CustomProvider = ({ children }) => {
         // fetchContacts,
 
         interviewers,
+        loadingInterviewer,
+        setLoadingInterviewer,
+        fetchInterviewers,
 
         tickets,
         userRole,

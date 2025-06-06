@@ -20,13 +20,14 @@ function RoundFormTemplates() {
     questionsLoading,
     fetchQuestionsForAssessment,
     setSectionQuestions,
+    interviewers
   } = useCustomContext();
 
   const { templatesData,isMutationLoading,addOrUpdateRound } = useInterviewTemplates();
   const { assessmentData } = useAssessments();
 
 
-  const { resolveInterviewerDetails } = useInterviewerDetails();
+  const { resolveInterviewerDetails  } = useInterviewerDetails();
   const { id } = useParams();
   const dropdownRef = useRef(null);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -91,13 +92,12 @@ function RoundFormTemplates() {
             if (round) {
 
               // Then resolve interviewer details
-              // const internalInterviewers = resolveInterviewerDetails(round.interviewers || []);
+             
+              //  const interviewers = round?.interviewers  || []
 
-               const interviewers = round?.interviewers  || []
+              // const internalInterviewers =  resolveInterviewerDetails(interviewers) || [],
 
-              const internalInterviewers = resolveInterviewerDetails(interviewers);
-
-              // console.log("internal Interviewers", internalInterviewers);
+              console.log("internal Interviewers", interviewers,round);
 
 
               setFormData({
@@ -110,7 +110,7 @@ function RoundFormTemplates() {
                 instructions: round.instructions || '',
                 // minimumInterviewers: round.minimumInterviewers?.toString() || '1',
                 questions: round.questions || [],
-                interviewers: internalInterviewers || [],
+                interviewers: round?.interviewers  || [],
                 assessmentTemplate: round?.roundTitle === "Assessment" && round?.assessmentId
                   ? {
                     assessmentId: round.assessmentId,
@@ -139,7 +139,7 @@ function RoundFormTemplates() {
       }
     };
     fetchData();
-  }, [id, roundId]);
+  }, [id, roundId,interviewers]);
 
 
   const handleInternalInterviewerSelect = (interviewers) => {
@@ -164,7 +164,6 @@ function RoundFormTemplates() {
     setErrors((prev) => ({ ...prev, interviewerType: '', interviewers: '' }));
   };
 
-  console.log("from data",formData.interviewers);
   
 
   const handleExternalInterviewerSelect = () => {
@@ -541,10 +540,10 @@ function RoundFormTemplates() {
             sequence: formData.sequence,
             interviewDuration: formData.duration,
             instructions: formData.instructions,
-            interviewerType: formData.selectedInterviewType,
+            interviewerType: formData.interviewerType,
             interviewers:
-                formData.selectedInterviewType === 'internal'
-                    ? formData.internalInterviewers.map((interviewer) => interviewer._id).filter(Boolean)
+                formData.interviewerType === 'Internal'|| formData.roundTitle !== 'Assessment' 
+                    ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
                     : [],
             questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
                 .map(q => ({
@@ -554,12 +553,28 @@ function RoundFormTemplates() {
                         mandatory: q.snapshot.mandatory || "false"
                     }
                 })) || [],
-            ...(formData.roundTitle === 'Assessment' && {
-                assessmentId: formData.assessmentTemplate.assessmentId,
-            }),
+  //                 ...(formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId && {
+  //   assessmentId: formData.assessmentTemplate.assessmentId
+  // })
+            // ...(formData.roundTitle === 'Assessment' && {
+            //     assessmentId: formData.roundTitle === 'Assessment' ? formData.assessmentTemplate.assessmentId :"",
+            // }),
+         
+             
         };
 
-        console.log("Prepared roundData:", roundData);
+        console.log("roundData",roundData);
+        
+
+         // Only add assessmentId for Assessment rounds
+        if (formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId) {
+            roundData.assessmentId = formData.assessmentTemplate.assessmentId;
+        } else {
+            // Explicitly set to null/undefined for non-Assessment rounds
+            roundData.assessmentId = null;
+        }
+
+
 
         await addOrUpdateRound({ id, roundData, roundId, template });
 
@@ -986,10 +1001,10 @@ function RoundFormTemplates() {
 
 
                             
-                            {formData.interviewers.map((interviewer) => (
+                            {formData.interviewers.map((interviewer,index) => (
 
                               <div
-                                key={interviewer._id}
+                                key={`${interviewer._id} - ${index} `}
                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
                               >
 

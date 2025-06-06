@@ -45,9 +45,10 @@ const RoundCard = ({
   const [expandedQuestions, setExpandedQuestions] = useState({});
   // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
-  const { resolveInterviewerDetails } = useInterviewerDetails();
+  // const { resolveInterviewerDetails } = useInterviewerDetails();
 
-
+console.log("round",round);
+console.log("sectionQuestions",sectionQuestions);
 
   useEffect(() => {
    
@@ -168,12 +169,12 @@ const RoundCard = ({
                               <User className="h-3 w-3 mr-1" />
                               <span>
                                 {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                                {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
                               </span>
                             </div>
                             {showInterviewers && round.interviewers && (
                               <div className="flex flex-wrap gap-2">
-                                {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                                {round?.interviewers.map((interviewer, index) => (
                                   <div key={index} className="flex items-center">
                                     <InterviewerAvatar interviewer={interviewer} size="sm" />
                                     <span className="ml-1 text-xs text-gray-600">
