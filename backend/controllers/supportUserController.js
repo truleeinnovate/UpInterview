@@ -3,14 +3,26 @@ const SupportUser = require("../models/SupportUser")
 exports.createTicket = async(req,res)=>{
     try {
         console.log(req.body)
-        const {issueType,description,status,contact,priority,ownerId,tenantId}=req.body 
+        const {issueType,description,status,contact,priority,ownerId,tenantId,organization,createdByUserId}=req.body 
         if (!issueType){
             return res.status(400).send({message:"Issue type is required"})
         }
         if (!description){
             return res.status(400).send({message:"Description is required"})
         }
-        const ticket = await SupportUser.create({issueType,description,status,contact,priority,ownerId,tenantId})
+        const lastTicket = await SupportUser.findOne({})
+                        .sort({ createdAt: -1 })
+                        .select('ticketCode')
+                        .lean();
+        let nextNumber = 1;
+            if (lastTicket && lastTicket.ticketCode) {
+                const match = lastTicket.ticketCode.match(/SPT-(\d+)/);
+                if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1;
+                }
+            }
+        const ticketCode = `SPT-${String(nextNumber).padStart(5, '0')}`;
+        const ticket = await SupportUser.create({issueType,description,status,contact,priority,ownerId,tenantId,organization,createdByUserId,ticketCode})
         return res.status(201).send({
             message:"Ticket created successfully",
             success:true,
@@ -28,7 +40,7 @@ exports.createTicket = async(req,res)=>{
 
 exports.getTicket = async (req, res) => {
   try {
-    const tickets = await SupportUser.find(); // Fetch all tickets with no filter
+    const tickets = await SupportUser.find().sort({ updatedAt: -1, createdAt: -1 }); // Fetch all tickets with no filter
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
@@ -94,7 +106,7 @@ exports.updateTicketById = async(req,res)=>{
 exports.updateSupportTicket = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, comment, user } = req.body;
+        const { status, comment, user,updatedByUserId,notifyUser } = req.body;
 
         if (!status) {
             return res.status(400).json({ error: 'Status is required' });
@@ -107,11 +119,11 @@ exports.updateSupportTicket = async (req, res) => {
 
         // Update ticket fields
         ticket.status = status;
-        ticket.modifiedBy = user || 'Unknown';
-        ticket.modifiedDate = new Date();
+        ticket.updatedByUserId = updatedByUserId;
 
         // Add to status history
         ticket.statusHistory.unshift({
+            notifyUser,
             status,
             date: new Date(),
             user: user || 'Unknown',

@@ -382,11 +382,11 @@ const Subscription = () => {
 
   return (
     <>
-    <div className="space-y-6">
+    <div className="space-y-6 sm:mt-10 md:mt-20">
       {/* Hidden element for Razorpay */}
       <div id="razorpay-card-update" style={{ display: 'none' }}></div>
       
-      
+      <div className="flex-1">
       <div className="flex justify-between items-center">
       <h2 className="text-2xl font-bold">Subscription</h2>
       {subscriptionData && subscriptionData.status === 'active' && (
@@ -423,6 +423,7 @@ const Subscription = () => {
             {/* Update Card Details
           </button>
         )} */} 
+      </div>
       </div>
       {/* Current Plan */}
       <div className="lg:p-7 md:p-4 bg-white rounded-xl relative">
@@ -472,11 +473,12 @@ const Subscription = () => {
           </p>
         </div>
       {/* Plans Section */}
+      <div className="flex-1">
         <div className="grid grid-cols-3 sm:grid-cols-1 sm:space-y-7 gap-4 sm:mb-5 pt-5">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 w-[350px] ${
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 w-[350px] sm:w-full md:w-[250px] ${
                 isHighlighted(plan)
                   ? "-translate-y-6 z-10 bg-[#217989] text-white"
                   : "bg-white text-[#217989]"
@@ -561,6 +563,7 @@ const Subscription = () => {
               
             </div>
           ))}
+        </div>
         </div>
      
     </div>

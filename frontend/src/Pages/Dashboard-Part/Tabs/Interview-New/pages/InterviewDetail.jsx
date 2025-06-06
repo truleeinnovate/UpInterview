@@ -15,8 +15,6 @@ import {
   ExternalLink,
   Users
 } from 'lucide-react';
-
-
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
 import InterviewProgress from '../components/InterviewProgress';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
@@ -24,30 +22,20 @@ import FinalFeedbackModal from '../components/FinalFeedbackModal';
 import CompletionReasonModal from '../components/CompletionReasonModal';
 import SingleRoundView from '../components/SingleRoundView';
 import VerticalRoundsView from '../components/VerticalRoundsView';
-import EntityDetailsModal from '../components/EntityDetailsModal';
-import EntityDetailsSidebar from '../components/EntityDetailsSidebar';
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
-import axios from "axios";
-// import CandidateDetails from '../../Candidate-Tab/CandidateDetails.jsx';
 import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
-import { config } from '../../../../../config.js';
+import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
+import Loading from '../../../../../Components/Loading.js';
 
 
 const InterviewDetail = () => {
   const { id } = useParams();
   const {
-    interviewData,
-    fetchInterviewData,
+  interviewData,
+  updateInterviewStatus,
+} = useInterviews();
 
-  } = useCustomContext();
-  useEffect(() => {
-    fetchInterviewData();
-  }, [fetchInterviewData]);
 
   const interview = interviewData?.find(interview => interview._id === id);
-
-  const [loading, setLoading] = useState(true);
-
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -112,7 +100,7 @@ const InterviewDetail = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!interview) {
-    return <div className='flex justify-center items-center h-screen'>No interview found</div>;
+    return <Loading />;
   }
 
   if (!interview) {
@@ -175,34 +163,42 @@ const InterviewDetail = () => {
     }
   };
 
-  const updateInterviewStatus = async (newStatus, reason = null) => {
-    if (rounds) {
-      const interviewData = {
-        status: newStatus,
-        ...(reason && { completionReason: reason }) // Add reason only if provided
-      };
+  // const updateInterviewStatus = async (newStatus, reason = null) => {
+  //   if (rounds) {
+  //     const interviewData = {
+  //       status: newStatus,
+  //       ...(reason && { completionReason: reason }) // Add reason only if provided
+  //     };
 
-      try {
-        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-          ...interviewData,
-          interviewId: id,
-          updatingInterviewStatus: true
-        });
-      } catch (error) {
-        console.error("Error updating interview status:", error);
-      }
-    }
-  };
+  //     try {
+  //       await axios.post(`${config.REACT_APP_API_URL}/interview`, {
+  //         ...interviewData,
+  //         interviewId: id,
+  //         updatingInterviewStatus: true
+  //       });
+  //     } catch (error) {
+  //       console.error("Error updating interview status:", error);
+  //     }
+  //   }
+  // };
+
+  const handleUpdateStatus = async (newStatus, reason = null) => {
+  try {
+    await updateInterviewStatus({ interviewId: id, status: newStatus, reason });
+  } catch (error) {
+    console.error("Failed to update interview status:", error);
+  }
+};
 
   // Call this function for completion with a reason
   const handleCompleteWithReason = (reason) => {
-    updateInterviewStatus("Completed", reason);
+    handleUpdateStatus("Completed", reason);
     setShowCompletionModal(false);
   };
 
   // Call this function for cancellation
   const confirmCancel = () => {
-    updateInterviewStatus("Cancelled");
+    handleUpdateStatus("Cancelled");
     setIsModalOpen(false);
   };
 

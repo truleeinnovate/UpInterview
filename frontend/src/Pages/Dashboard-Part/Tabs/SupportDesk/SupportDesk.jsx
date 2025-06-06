@@ -1,15 +1,11 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import axios from "axios";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { FaSearch } from "react-icons/fa";
 import { Eye, Pencil, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { config } from "../../../../config";
 import { parseISO, isValid, format } from "date-fns"; // Import date-fns functions
-import Loading from "../../../../Components/Loading";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
@@ -18,20 +14,22 @@ import KanbanView from "./KanbanView.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { useCustomContext } from '../../../../Context/Contextfetch';
+import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 
 function SupportDesk() {
+  const { 
+  tickets,
+  isLoading
+} = useSupportTickets();
 
-  const { tickets, userRole } = useCustomContext();
+  const { userRole } = useCustomContext();
   console.log('userRole from main', userRole)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const currentUserId = tokenPayload?.userId;
-  const currentOrganizationId = tokenPayload?.tenantId;
 
   const [searchQuery, setSearchQuery] = useState("");
-  // const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -40,49 +38,9 @@ function SupportDesk() {
     status: [],
   });
   const [viewMode, setViewMode] = useState("table");
-  // const [userRole, setUserRole] = useState("Admin"); // Adjust based on your auth logic
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
-
-  // const getTickets = useCallback(async () => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
-  //     let filteredTickets = response.data.tickets || [];
-
-  //     if (userRole === "SuperAdmin" || userRole === "Support Team") {
-  //       setTickets(filteredTickets);
-  //     } else if (userRole === "Admin" && currentOrganizationId) {
-  //       filteredTickets = filteredTickets.filter(
-  //         (ticket) => ticket.tenantId === currentOrganizationId
-  //       );
-  //       setTickets(filteredTickets);
-  //     } else if (userRole === "Individual" && currentUserId) {
-  //       filteredTickets = filteredTickets.filter(
-  //         (ticket) => ticket.ownerId === currentUserId
-  //       );
-  //       setTickets(filteredTickets);
-  //     } else if (currentUserId) { 
-  //       filteredTickets = filteredTickets.filter(
-  //         (ticket) => ticket.assignedToId === currentUserId
-  //       );
-  //       setTickets(filteredTickets);
-  //     } else {
-  //       setTickets([]);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching tickets:", error);
-  //     // Set an error state to display in the UI
-  //     // setError("Failed to fetch tickets. Please try again later.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [userRole, currentUserId, currentOrganizationId]);
-
-  //   useEffect(() => {
-  //     getTickets();
-  //   }, [getTickets]);
-
+  
   useEffect(() => {
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
@@ -191,7 +149,7 @@ function SupportDesk() {
 
   const tableColumns = [
     {
-      key: "_id",
+      key: "ticketCode",
       header: "Ticket ID",
       render: (value, row) => (
         <div
@@ -203,7 +161,7 @@ function SupportDesk() {
             navigate(path, { state: { ticketData: row } });
           }}
         >
-          #{value?.slice(-5, -1) || "N/A"}
+          #{value || "N/A"}
         </div>
       ),
     },
@@ -319,15 +277,30 @@ function SupportDesk() {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
+          {userRole === "SuperAdmin" && (
+            <motion.div
+            className="flex justify-between items-center py-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <h1 className="text-2xl font-semibold text-custom-blue">
+                Support Desk
+            </h1>
+            {/* No Add Invoice button as per requirement */}
+        </motion.div>
+          )}
+          {userRole === "Admin" && (
             <Header
               title="Support Desk"
               onAddClick={() => userRole === "Admin" && navigate("/support-desk/new-ticket")}
               addButtonText="Create Ticket"
             />
+          )}
             <Toolbar
               view={viewMode}
               setView={setViewMode}
@@ -355,15 +328,17 @@ function SupportDesk() {
                 data={currentFilteredRows}
                 columns={tableColumns}
                 actions={tableActions}
-                loading={loading}
+                loading={isLoading}
                 emptyState="No tickets found."
                 className="table-fixed w-full"
               />
             ) : (
+            
               <KanbanView
                 currentTickets={currentFilteredRows}
                 tickets={tickets}
                 userRole={userRole}
+                loading={isLoading}
                 currentUserId={currentUserId}
               />
             )}

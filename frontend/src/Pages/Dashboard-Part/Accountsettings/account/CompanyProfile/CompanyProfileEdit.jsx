@@ -10,6 +10,8 @@ import { validateCompanyProfile } from '../../../../../utils/AccountSettingOrgan
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { config } from '../../../../../config';
+import { useMasterData } from '../../../../../apiHooks/useMasterData';
+
 Modal.setAppElement('#root');
 
 export const companySizes = ['1-10', '11-50', '51-200', '201-500', '501+'];
@@ -18,10 +20,14 @@ export const companySizes = ['1-10', '11-50', '51-200', '201-500', '501+'];
 const CompanyEditProfile = () => {
 
     const {
-        locations,
-        industries,
         addOrUpdateOrganization,
     } = useCustomContext();
+
+  const {
+        locations,
+        industries,
+} = useMasterData();
+
     const { id } = useParams();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({

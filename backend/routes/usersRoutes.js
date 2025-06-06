@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
 
-const { getUsers,getInterviewers,UpdateUser,getUsersByTenant } = require('../controllers/usersController.js');
+const { getUsers,getInterviewers,UpdateUser,getUsersByTenant,getUniqueUserByOwnerId } = require('../controllers/usersController.js');
 
 
 // Define the route for fetching users
 router.get('/', getUsers);
 
+// Get user by ownerId
+router.get('/:ownerId', getUniqueUserByOwnerId);
+
 router.get('/:tenantId', getUsersByTenant);
+
 
 
 // Route to fetch interviewers

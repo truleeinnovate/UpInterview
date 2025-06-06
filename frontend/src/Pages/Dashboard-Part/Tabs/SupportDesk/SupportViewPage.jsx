@@ -89,7 +89,7 @@ const SupportViewPage = () => {
         </div>
 
         <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">Ticket #{ticketData._id.slice(-5, -1)}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">Ticket #{ticketData.ticketCode}</h3>
           <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${ticketData.status === "Open" ? "bg-green-100 text-green-800" :
               ticketData.status === "In Progress" ? "bg-blue-100 text-blue-800" :
                 ticketData.status === "Resolved" ? "bg-gray-100 text-gray-800" :

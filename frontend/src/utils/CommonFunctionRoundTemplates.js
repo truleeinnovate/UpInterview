@@ -7,6 +7,7 @@ export const useInterviewerDetails = () => {
   const resolveInterviewerDetails = (interviewerIds) => {
     // Handle invalid input cases
     if (!interviewerIds || !Array.isArray(interviewerIds)) return [];
+
     
     // If interviewers data isn't loaded yet, return array with loading state
     if (!interviewers?.data) {
@@ -19,6 +20,7 @@ export const useInterviewerDetails = () => {
 
     return interviewerIds.map(interviewer => {
       // Case 1: Interviewer is already a full object
+
       if (interviewer && typeof interviewer === 'object' && interviewer?.name) {
         return {
           _id: interviewer?._id || interviewer?.$oid,

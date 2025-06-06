@@ -15,6 +15,7 @@ import { Outlet } from 'react-router-dom';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useCandidates } from '../../../../apiHooks/useCandidates';
+import { useMasterData } from '../../../../apiHooks/useMasterData';
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [view, setView] = useState('table');
@@ -37,8 +38,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
   const [experience, setExperience] = useState({ min: '', max: '' });
+  const {
+  skills,
+  qualifications,
+} = useMasterData();
 
-  const { skills, qualification } = useCustomContext();
+
+
+
 
   const { candidateData, isLoading } = useCandidates();
   
@@ -435,8 +442,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       </div>
                       {isQualificationOpen && (
                         <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                          {qualification?.length > 0 ? (
-                            qualification.map((q) => (
+                          {qualifications?.length > 0 ? (
+                            qualifications.map((q) => (
                               <label
                                 key={q.QualificationName}
                                 className="flex items-center space-x-2"

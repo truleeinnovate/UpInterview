@@ -16,7 +16,7 @@ const CustomProvider = ({ children }) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
-  const [userRole, setuserRole] = useState("SuperAdmin");
+  const [userRole, setuserRole] = useState("Admin");
 
 
 
@@ -38,7 +38,7 @@ const CustomProvider = ({ children }) => {
   const [createdLists, setCreatedLists] = useState([]);
 
 
-  const [interviewerSectionData, setInterviewerSectionData] = useState([]);
+  // const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
     skills: true,
@@ -48,16 +48,16 @@ const CustomProvider = ({ children }) => {
   const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
   const [myQuestionsList, setMyQuestionsList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [locations, setLocations] = useState([]);
-  const [industries, setIndustries] = useState([]);
-  const [currentRole, setCurrentRole] = useState([]);
+  // const [locations, setLocations] = useState([]);
+  // const [industries, setIndustries] = useState([]);
+  // const [currentRole, setCurrentRole] = useState([]);
 
   // master data fetch
-  const [skills, setSkills] = useState([]);
-  const [qualification, setQualification] = useState([]);
-  const [college, setCollege] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [technologies, setTechnology] = useState([]);
+  // const [skills, setSkills] = useState([]);
+  // const [qualification, setQualification] = useState([]);
+  // const [college, setCollege] = useState([]);
+  // const [companies, setCompanies] = useState([]);
+  // const [technologies, setTechnology] = useState([]);
 
   // users data
   const [userProfile, setUserProfile] = useState(null);
@@ -78,62 +78,62 @@ const CustomProvider = ({ children }) => {
   }, [userId]);
 
   // Fetch master data
-  useEffect(() => {
-    const fetchMasterData = async () => {
-      try {
-        const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
-          axios.get(`${config.REACT_APP_API_URL}/locations`),
-          axios.get(`${config.REACT_APP_API_URL}/industries`),
-          axios.get(`${config.REACT_APP_API_URL}/roles`),
-          axios.get(`${config.REACT_APP_API_URL}/skills`),
-          axios.get(`${config.REACT_APP_API_URL}/technology`),
-          axios.get(`${config.REACT_APP_API_URL}/qualification`),
-          axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
-          axios.get(`${config.REACT_APP_API_URL}/company`),
-        ]);
+  // useEffect(() => {
+  //   const fetchMasterData = async () => {
+  //     try {
+  //       const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
+  //         axios.get(`${config.REACT_APP_API_URL}/locations`),
+  //         axios.get(`${config.REACT_APP_API_URL}/industries`),
+  //         axios.get(`${config.REACT_APP_API_URL}/roles`),
+  //         axios.get(`${config.REACT_APP_API_URL}/skills`),
+  //         axios.get(`${config.REACT_APP_API_URL}/technology`),
+  //         axios.get(`${config.REACT_APP_API_URL}/qualification`),
+  //         axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
+  //         axios.get(`${config.REACT_APP_API_URL}/company`),
+  //       ]);
 
-        setLocations(locationsRes.data);
-        setIndustries(industriesRes.data);
-        setCurrentRole(rolesRes.data);
-        setSkills(skillsRes.data);
-        setTechnology(TechnologyRes.data);
-        setQualification(QualificationRes.data);
-        setCollege(CollegeRes.data);
-        setCompanies(CompanyRes.data);
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setLocations(locationsRes.data);
+  //       setIndustries(industriesRes.data);
+  //       setCurrentRole(rolesRes.data);
+  //       setSkills(skillsRes.data);
+  //       setTechnology(TechnologyRes.data);
+  //       setQualification(QualificationRes.data);
+  //       setCollege(CollegeRes.data);
+  //       setCompanies(CompanyRes.data);
+  //     } catch (error) {
+  //       console.error('Error fetching master data:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchMasterData();
-  }, []);
+  //   fetchMasterData();
+  // }, []);
 
   // Fetch Interviewer Questions
-  const getInterviewerQuestions = useCallback(async () => {
-    try {
-      const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
-      const response = await axios.get(url);
+  // const getInterviewerQuestions = useCallback(async () => {
+  //   try {
+  //     const url = `${config.REACT_APP_API_URL}/interview-questions/get-questions`;
+  //     const response = await axios.get(url);
 
-      const formattedList = response.data.questions.map((question) => ({
-        id: question._id,
-        question: question.snapshot.questionText,
-        answer: question.snapshot.correctAnswer,
-        note: '',
-        notesBool: false,
-        isLiked: false,
-      }));
+  //     const formattedList = response.data.questions.map((question) => ({
+  //       id: question._id,
+  //       question: question.snapshot.questionText,
+  //       answer: question.snapshot.correctAnswer,
+  //       note: '',
+  //       notesBool: false,
+  //       isLiked: false,
+  //     }));
 
-      setInterviewerSectionData(formattedList);
-    } catch (error) {
-      console.error('Error fetching interviewer questions:', error);
-    }
-  }, []);
+  //     setInterviewerSectionData(formattedList);
+  //   } catch (error) {
+  //     console.error('Error fetching interviewer questions:', error);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    getInterviewerQuestions();
-  }, [getInterviewerQuestions]);
+  // useEffect(() => {
+  //   getInterviewerQuestions();
+  // }, [getInterviewerQuestions]);
 
   // Fetch My Questions Data
   const fetchMyQuestionsData = useCallback(async () => {
@@ -192,94 +192,94 @@ const CustomProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
 
-  // Mockinterview
-  const sharingPermissionsMock = useMemo(
-    () => sharingPermissionscontext.mockInterviews || {},
-    [sharingPermissionscontext]
-  );
+  // // Mockinterview
+  // const sharingPermissionsMock = useMemo(
+  //   () => sharingPermissionscontext.mockInterviews || {},
+  //   [sharingPermissionscontext]
+  // );
 
-  // Query for fetching mock interviews
-  const {
-    data: mockinterviewData = [],
-    isLoading: mockInterviewsLoading,
-    refetch: refetchMockInterviews
-  } = useQuery({
-    queryKey: ['mockinterviews', sharingPermissionsMock],
-    queryFn: async () => {
-      const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
-      return filteredInterviews.reverse(); // Show most recent first
-    },
-    enabled: !!sharingPermissionsMock,
-  });
+  // // Query for fetching mock interviews
+  // const {
+  //   data: mockinterviewData = [],
+  //   isLoading: mockInterviewsLoading,
+  //   refetch: refetchMockInterviews
+  // } = useQuery({
+  //   queryKey: ['mockinterviews', sharingPermissionsMock],
+  //   queryFn: async () => {
+  //     const filteredInterviews = await fetchFilterData('mockinterview', sharingPermissionsMock);
+  //     return filteredInterviews.reverse(); // Show most recent first
+  //   },
+  //   enabled: !!sharingPermissionsMock,
+  // });
 
-  // Mutation for creating/updating mock interviews
-  const addOrUpdateMockInterview = useMutation({
-    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
-      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+  // // Mutation for creating/updating mock interviews
+  // const addOrUpdateMockInterview = useMutation({
+  //   mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+  //     const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
 
-      const payload = {
-        skills: formData.entries?.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        Role: formData.Role,
-        candidateName: formData.candidateName,
-        higherQualification: formData.higherQualification,
-        currentExperience: formData.currentExperience,
-        technology: formData.technology,
-        jobDescription: formData.jobDescription,
-        rounds: {
-          ...formData.rounds,
-          dateTime: formData.combinedDateTime, // Expecting combinedDateTime in formData
-          status: status,
-        },
-        createdById: userId,
-        lastModifiedById: userId,
-        ownerId: userId,
-        tenantId: organizationId,
-      };
+  //     const payload = {
+  //       skills: formData.entries?.map((entry) => ({
+  //         skill: entry.skill,
+  //         experience: entry.experience,
+  //         expertise: entry.expertise,
+  //       })),
+  //       Role: formData.Role,
+  //       candidateName: formData.candidateName,
+  //       higherQualification: formData.higherQualification,
+  //       currentExperience: formData.currentExperience,
+  //       technology: formData.technology,
+  //       jobDescription: formData.jobDescription,
+  //       rounds: {
+  //         ...formData.rounds,
+  //         dateTime: formData.combinedDateTime, // Expecting combinedDateTime in formData
+  //         status: status,
+  //       },
+  //       createdById: userId,
+  //       lastModifiedById: userId,
+  //       ownerId: userId,
+  //       tenantId: organizationId,
+  //     };
 
-      const url = isEdit
-        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${config.REACT_APP_API_URL}/mockinterview`;
+  //     const url = isEdit
+  //       ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+  //       : `${config.REACT_APP_API_URL}/mockinterview`;
 
-      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+  //     const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
 
-      // Handle interviewer requests if any
-      if (formData.rounds.interviewers?.length > 0) {
-        await Promise.all(
-          formData.rounds.interviewers.map(async (interviewer) => {
-            const outsourceRequestData = {
-              tenantId: organizationId,
-              ownerId: userId,
-              scheduledInterviewId: interviewer,
-              id: interviewer._id,
-              dateTime: formData.combinedDateTime,
-              duration: formData.rounds.duration,
-              candidateId: formData.candidate?._id,
-              roundId: response.data.savedRound._id,
-              requestMessage: "Outsource interview request",
-              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            };
-            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
-          })
-        );
-      }
+  //     // Handle interviewer requests if any
+  //     if (formData.rounds.interviewers?.length > 0) {
+  //       await Promise.all(
+  //         formData.rounds.interviewers.map(async (interviewer) => {
+  //           const outsourceRequestData = {
+  //             tenantId: organizationId,
+  //             ownerId: userId,
+  //             scheduledInterviewId: interviewer,
+  //             id: interviewer._id,
+  //             dateTime: formData.combinedDateTime,
+  //             duration: formData.rounds.duration,
+  //             candidateId: formData.candidate?._id,
+  //             roundId: response.data.savedRound._id,
+  //             requestMessage: "Outsource interview request",
+  //             expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  //           };
+  //           await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+  //         })
+  //       );
+  //     }
 
-      return response.data;
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['mockinterviews']); // Refresh the list
-      // You can add navigation here if needed
-      // variables.navigate('/mockinterview');
-    },
-    onError: (error) => {
-      console.error("Mock interview error:", error);
-      // You can add toast notifications here
-      // toast.error(error.message);
-    }
-  });
+  //     return response.data;
+  //   },
+  //   onSuccess: (data, variables) => {
+  //     queryClient.invalidateQueries(['mockinterviews']); // Refresh the list
+  //     // You can add navigation here if needed
+  //     // variables.navigate('/mockinterview');
+  //   },
+  //   onError: (error) => {
+  //     console.error("Mock interview error:", error);
+  //     // You can add toast notifications here
+  //     // toast.error(error.message);
+  //   }
+  // });
 
   // const fetchMockInterviewData = useCallback(async () => {
   //   setLoading(true);
@@ -347,58 +347,6 @@ const CustomProvider = ({ children }) => {
   //   fetchTeamsData();
   // }, [fetchTeamsData]);
 
-  // interview
-  const sharingPermissionsInterview = useMemo(
-    () => sharingPermissionscontext.interviews || {},
-    [sharingPermissionscontext]
-  );
-
-  const [interviewData, setInterviewData] = useState([]);
-
-  const fetchInterviewData = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      const filteredInterviews = await fetchFilterData('interview', sharingPermissionsInterview);
-      const interviewsWithCandidates = await Promise.all(
-        filteredInterviews.map(async (interview) => {
-          if (!interview.CandidateId) {
-            return {
-              ...interview,
-              candidate: null,
-            };
-          }
-          try {
-            const candidateResponse = await axios.get(`${config.REACT_APP_API_URL}/candidate/${interview.CandidateId}`);
-            const candidate = candidateResponse.data;
-            if (candidate.ImageData && candidate.ImageData.filename) {
-              candidate.imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
-            }
-            return {
-              ...interview,
-              candidate,
-            };
-          } catch (error) {
-            // console.error(error);
-            return {
-              ...interview,
-              candidate: null,
-            };
-          }
-        })
-      );
-      const reversedData = interviewsWithCandidates.reverse();
-      setInterviewData(reversedData);
-    } catch (error) {
-      // console.error('Error fetching InterviewData:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sharingPermissionsInterview]);
-
-  useEffect(() => {
-    fetchInterviewData();
-  }, [fetchInterviewData]);
 
   // outsource interviewers
   const [Outsourceinterviewers, setOutsourceInterviewers] = useState([]);
@@ -536,146 +484,92 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     fetchUsersData();
   }, []);
+  //assesment questions (ranjith)
+  // const [sectionQuestions, setSectionQuestions] = useState({});
+  // const [questionsLoading, setQuestionsLoading] = useState(false);
+  // const [questionsError, setQuestionsError] = useState(null);
 
-  const [sectionQuestions, setSectionQuestions] = useState({});
-  const [questionsLoading, setQuestionsLoading] = useState(false);
-  const [questionsError, setQuestionsError] = useState(null);
-
-  const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
-    if (!assessmentId) {
-      return null;
-    }
-
-    setQuestionsLoading(true);
-    setQuestionsError(null);
-
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
-      );
-      const assessmentQuestions = response.data;
-      const sections = assessmentQuestions.sections || [];
-console.log("sections",sections);
-      // Check for empty sections or questions
-      if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-        setSectionQuestions({ noQuestions: true });
-        return { noQuestions: true };
-      }
-
-      // Create section questions mapping
-      const newSectionQuestions = {};
-
-      sections.forEach((section) => {
-        if (!section._id) {
-          console.warn('Section missing _id:', section);
-          return;
-        }
-
-        newSectionQuestions[section._id] = {
-          sectionName: section?.sectionName,
-          passScore: Number(section.passScore || 0),
-          totalScore: Number(section.totalScore || 0),
-          questions: (section.questions || []).map(q => ({
-            _id: q._id,
-            questionId: q.questionId,
-            source: q.source || 'system',
-            score: Number(q.score || q.snapshot?.score || 0),
-            order: q.order || 0,
-            customizations: q.customizations || null,
-            snapshot: {
-              questionText: q.snapshot?.questionText || '',
-              questionType: q.snapshot?.questionType || '',
-              score: Number(q.snapshot?.score || q.score || 0),
-              options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-              correctAnswer: q.snapshot?.correctAnswer || '',
-              difficultyLevel: q.snapshot?.difficultyLevel || '',
-              hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-              skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-              tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-              technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-              questionNo: q.snapshot?.questionNo || ''
-            }
-          }))
-        };
-      });
-
-      // Verify questions exist
-      const hasQuestions = Object.values(newSectionQuestions).some(
-        section => section.questions.length > 0
-      );
-
-      if (!hasQuestions) {
-        setSectionQuestions({ noQuestions: true });
-        return { noQuestions: true };
-      }
-
-      setSectionQuestions(newSectionQuestions);
-      return newSectionQuestions;
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      setQuestionsError('Failed to load questions');
-      return { error: 'Failed to load questions' };
-    } finally {
-      setQuestionsLoading(false);
-    }
-  }, []);
-
-  // interview template
-  const { data: templates = [], isLoading: templatesLoading, error } = useQuery({
-    queryKey: ['interviewTemplates', tenantId, userId],
-    queryFn: async () => {
-      try {
-        let queryString = '';
-        if (organization) {
-          queryString = `tenantId=${tenantId}&organization=true`;
-        } else {
-          queryString = `ownerId=${userId}&organization=false`;
-        }
-        const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-        const headers = { Authorization: `Bearer ${authToken}` };
-        const response = await axios.get(apiUrl, { headers });
-        const templatesData = response.data.data;
-
-        return templatesData;
-      } catch (err) {
-        console.error('Error fetching templates:', err);
-        throw err; // Let react-query handle the error
-      }
-    },
-    enabled: !!authToken,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  // Log error if it occurs
-  if (error) {
-    console.error('useQuery error:', error.message);
-  }
+  // const fetchQuestionsForAssessment = useCallback(async (assessmentId) => {
+  //   if (!assessmentId) {
+  //     return null;
+  //   }
 
 
-  // Mutation for creating/updating templates
-  const saveTemplateMutation = useMutation({
-    mutationFn: async ({ id, templateData, isEditMode }) => {
-      let response;
-      if (isEditMode) {
-        response = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-          tenantId,
-          ownerId: userId,
-          templateData,
-        });
-      } else {
-        response = await axios.post(`${config.REACT_APP_API_URL}/interviewTemplates`, {
-          ...templateData,
-          tenantId,
-          ownerId: userId,
-        });
-      }
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['interviewTemplates']); // Refresh templates list
-    },
-  });
+  //   setQuestionsLoading(true);
+  //   setQuestionsError(null);
+
+
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/assessment-questions/${assessmentId}`
+  //     );
+  //     const assessmentQuestions = response.data;
+  //     const sections = assessmentQuestions.sections || [];
+
+  //     // Check for empty sections or questions
+  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
+  //       setSectionQuestions({ noQuestions: true });
+  //       return { noQuestions: true };
+  //     }
+
+  //     // Create section questions mapping
+  //     const newSectionQuestions = {};
+
+  //     sections.forEach((section) => {
+  //       if (!section._id) {
+  //         console.warn('Section missing _id:', section);
+  //         return;
+  //       }
+
+  //       newSectionQuestions[section._id] = {
+  //         sectionName: section?.sectionName,
+  //         passScore: Number(section.passScore || 0),
+  //         totalScore: Number(section.totalScore || 0),
+  //         questions: (section.questions || []).map(q => ({
+  //           _id: q._id,
+  //           questionId: q.questionId,
+  //           source: q.source || 'system',
+  //           score: Number(q.score || q.snapshot?.score || 0),
+  //           order: q.order || 0,
+  //           customizations: q.customizations || null,
+  //           snapshot: {
+  //             questionText: q.snapshot?.questionText || '',
+  //             questionType: q.snapshot?.questionType || '',
+  //             score: Number(q.snapshot?.score || q.score || 0),
+  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
+  //             correctAnswer: q.snapshot?.correctAnswer || '',
+  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
+  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
+  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
+  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
+  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
+  //             questionNo: q.snapshot?.questionNo || ''
+  //           }
+  //         }))
+  //       };
+  //     });
+
+  //     // Verify questions exist
+  //     const hasQuestions = Object.values(newSectionQuestions).some(
+  //       section => section.questions.length > 0
+  //     );
+
+  //     if (!hasQuestions) {
+  //       setSectionQuestions({ noQuestions: true });
+  //       return { noQuestions: true };
+  //     }
+
+  //     setSectionQuestions(newSectionQuestions);
+  //     return newSectionQuestions;
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //     setQuestionsError('Failed to load questions');
+  //     return { error: 'Failed to load questions' };
+  //   } finally {
+  //     setQuestionsLoading(false);
+  //   }
+  // }, []);
+
 
   // organization code
   const { data: organizationData, isLoading: organizationsLoading, error: organizationError } = useQuery({
@@ -754,9 +648,6 @@ console.log("sections",sections);
   useEffect(() => {
     const fetchContacts = async (usersId = null) => {
       try {
-
-
-
         const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
         setsingleContact(res.data);
       } catch (err) {
@@ -1041,7 +932,7 @@ setLoadingInterviewer(false);
   return (
     <CustomContext.Provider
       value={{
-        getInterviewerQuestions,
+        // getInterviewerQuestions,
         fetchMyQuestionsData,
         myQuestionsList,
         setMyQuestionsList,
@@ -1060,8 +951,8 @@ setLoadingInterviewer(false);
         setFeedbackTabError,
         page,
         setPage,
-        interviewerSectionData,
-        setInterviewerSectionData,
+        // interviewerSectionData,
+        // setInterviewerSectionData,
         isOpen,
         setIsopen,
         iter,
@@ -1091,10 +982,6 @@ setLoadingInterviewer(false);
         // addOrUpdateCandidate,
 
 
-        // mockinterview
-        mockinterviewData,
-        mockInterviewsLoading,
-        addOrUpdateMockInterview,
 
         // teams
         // teamsData,
@@ -1107,19 +994,16 @@ setLoadingInterviewer(false);
 
 
         // master data
-        skills,
-        qualification,
-        college,
-        companies,
-        technologies,
-        locations,
-        industries,
-        currentRole,
+        // skills,
+        // qualification,
+        // college,
+        // companies,
+        // technologies,
+        // locations,
+        // industries,
+        // currentRole,
         // notifications
         notificationsData,
-        // interview
-        interviewData,
-        fetchInterviewData,
         // user
         userProfile,
 
@@ -1132,16 +1016,12 @@ setLoadingInterviewer(false);
         fetchUsersData,
 
         // assessment questions
-        sectionQuestions,
-        questionsLoading,
-        questionsError,
-        fetchQuestionsForAssessment,
-        setSectionQuestions,
+        // sectionQuestions,
+        // questionsLoading,
+        // questionsError,
+        // fetchQuestionsForAssessment,
+        // setSectionQuestions,
 
-        // interview templates
-        templates,
-        saveTemplateMutation,
-        templatesLoading,
 
         // organization
         organizationData,

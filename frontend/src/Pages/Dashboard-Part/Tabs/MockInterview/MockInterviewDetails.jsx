@@ -9,32 +9,23 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-
 import axios from "axios";
-
-import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import StatusBadge from '../CommonCode-AllTabs/StatusBadge.jsx';
 import Breadcrumb from '../CommonCode-AllTabs/Breadcrumb.jsx';
 import MoockRoundCard from './MockInterviewRoundCard.jsx';
 import MockCandidateDetails from './MockinterviewCandidate.jsx';
 import { config } from '../../../../config.js';
+import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
 
-  const {
-    mockinterviewData,
-    // fetchMockInterviewData
-  } = useCustomContext();
+    const {
+        mockinterviewData,
+    } = useMockInterviews();
 
   const mockinterview = mockinterviewData.find((data) => data._id === id);
-
- 
-
-  // useEffect(() => {
-  //   fetchMockInterviewData();
-  // }, [fetchMockInterviewData]);
 
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);

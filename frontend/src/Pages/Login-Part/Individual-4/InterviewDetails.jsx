@@ -5,6 +5,9 @@ import { User } from 'lucide-react';
 import { Trash2, X } from 'lucide-react';
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import InfoBox from './InfoBox.jsx';
+import { useMasterData } from '../../../apiHooks/useMasterData.js';
+
+
 
 const InterviewDetails = ({
     errors,
@@ -22,10 +25,12 @@ const InterviewDetails = ({
     setIsMockInterviewSelected,
 }) => {
 
-    const {
-        skills,
-        technologies
-    } = useCustomContext();
+  const {
+  skills,
+  technologies,
+} = useMasterData();
+
+
 
     const [showTechPopup, setTechpopup] = useState(false);
     // const [previousInterviewExperience, setpreviousInterviewExperience] = useState('');

@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
-import axios from "axios";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
 import { useCandidates } from '../../../../../apiHooks/useCandidates';
-import { config } from "../../../../../config.js";
-
+import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
+import LoadingButton from '../../../../../Components/LoadingButton';
+import { useInterviewTemplates } from '../../../../../apiHooks/useInterviewTemplates.js';
+import { usePositions } from '../../../../../apiHooks/usePositions.js';
 // Reusable Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onProceed, message }) => {
   if (!isOpen) return null;
@@ -46,13 +46,18 @@ const InterviewForm = () => {
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { interviewData, positions, templates } = useCustomContext();
-  const {  candidateData } = useCandidates();
+  const { positionData } = usePositions();
+  const { templatesData } = useInterviewTemplates();
+  const {
+    interviewData,
+    isMutationLoading,
+    createInterview,
+  } = useInterviews();
+  const { candidateData } = useCandidates();
 
   const [candidateId, setCandidateId] = useState('');
   const [positionId, setPositionId] = useState('');
   const [templateId, setTemplateId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [candidateError, setCandidateError] = useState('');
@@ -71,7 +76,7 @@ const InterviewForm = () => {
 
   useEffect(() => {
     if (positionId) {
-      const selectedPosition = positions.find(pos => pos._id === positionId);
+      const selectedPosition = positionData.find(pos => pos._id === positionId);
       if (selectedPosition) {
         if (selectedPosition.templateId) {
           setTemplateId(selectedPosition.templateId);
@@ -91,7 +96,7 @@ const InterviewForm = () => {
       return;
     }
 
-    const selectedPosition = positions.find(pos => pos._id === positionId);
+    const selectedPosition = positionData.find(pos => pos._id === positionId);
 
     if (selectedPosition) {
       if ((selectedPosition.rounds && selectedPosition.rounds.length > 0) || selectedPosition.templateId) {
@@ -113,66 +118,51 @@ const InterviewForm = () => {
     setShowModal(false);
   };
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setSubmitting(true);
-    setError(null);
+const handleSubmit = async (e) => {
+  if (e) e.preventDefault();
+  setError(null);
 
-    // Reset errors
-    setCandidateError('');
-    setPositionError('');
+  // Reset errors
+  setCandidateError('');
+  setPositionError('');
 
-    let hasError = false;
+  let hasError = false;
 
-    if (!candidateId) {
-      setCandidateError('Candidate is required');
-      hasError = true;
+  if (!candidateId) {
+    setCandidateError('Candidate is required');
+    hasError = true;
+  }
+
+  if (!positionId) {
+    setPositionError('Position is required');
+    hasError = true;
+  }
+
+  if (hasError) {
+    return;
+  }
+
+  try {
+    const selectedTemplate = templateId ? templatesData.find(template => template._id === templateId) : null;
+
+    if (templateId && !selectedTemplate) {
+      throw new Error('Selected template not found');
     }
 
-    if (!positionId) {
-      setPositionError('Position is required');
-      hasError = true;
-    }
-
-    if (hasError) {
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      const selectedTemplate = templateId ? templates.find(template => template._id === templateId) : null;
-
-      if (templateId && !selectedTemplate) {
-        throw new Error('Selected template not found');
-      }
-
-      const interviewData = {
-        candidateId,
-        positionId,
-        orgId,
-        userId,
-        ...(templateId && { templateId }),
-        status: "Draft",
-      };
-
-      let response;
-      response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-        ...interviewData,
-        interviewId: id
-      });
-
-      await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
-        candidateId,
-        positionId,
-        interviewId: response.data._id,
-      });
-      navigate(`/interviews/${response.data._id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    // Use createInterview mutation from useInterviews hook
+    await createInterview({
+      candidateId,
+      positionId,
+      orgId,
+      userId,
+      templateId,
+      id, // interviewId
+    });
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An unknown error occurred');
+  } finally {
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -210,9 +200,8 @@ const InterviewForm = () => {
                         setCandidateId(e.target.value);
                         setCandidateError('');
                       }}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                        candidateError ? 'border-red-500' : 'border-gray-300'
-                      } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${candidateError ? 'border-red-500' : 'border-gray-300'
+                        } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
                       <option value="">Select a candidate</option>
                       {(candidateData ?? []).map(candidate => (
@@ -231,12 +220,11 @@ const InterviewForm = () => {
                         setPositionId(e.target.value);
                         setPositionError('');
                       }}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                        positionError ? 'border-red-500' : 'border-gray-300'
-                      } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${positionError ? 'border-red-500' : 'border-gray-300'
+                        } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
                       <option value="">Select a position</option>
-                      {(positions ?? []).map(position => (
+                      {(positionData ?? []).map(position => (
                         <option key={position._id} value={position._id}>{position.title}</option>
                       ))}
                     </select>
@@ -249,7 +237,7 @@ const InterviewForm = () => {
                       disabled={!positionId}
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                       <option value="">Select a template</option>
-                      {(templates ?? []).map((template) => (
+                      {(templatesData ?? []).map((template) => (
                         <option key={template._id} value={template._id}>{template.templateName}</option>
                       ))}
                     </select>
@@ -260,10 +248,18 @@ const InterviewForm = () => {
                       className="px-4 py-2 border border-custom-blue rounded-md text-gray-700 bg-white hover:bg-gray-50">
                       Cancel
                     </button>
-                    <button type="submit" disabled={submitting}
+                    {/* <button type="submit" disabled={submitting}
                       className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90">
                       {submitting ? 'Saving...' : isEditing ? 'Update Interview' : 'Create Interview'}
-                    </button>
+                    </button> */}
+
+                    <LoadingButton
+                      onClick={handleSubmit}
+                      isLoading={isMutationLoading}
+                      loadingText={isEditing ? "Updating..." : "Saving..."}
+                    >
+                      {isEditing ? "Update Interview" : "Create Interview"}
+                    </LoadingButton>
                   </div>
                 </div>
               </form>

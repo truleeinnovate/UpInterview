@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronUp, ChevronDown, Calendar, ExternalLink, Eye, Pencil, ArrowRight } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 import { motion } from 'framer-motion';
 import { Tooltip } from '@mantine/core';
 import Loading from '../../../../../Components/Loading.js';
@@ -13,10 +12,13 @@ import { FilterPopup } from '../../../../../Components/Shared/FilterPopup/Filter
 import KanbanBoard from '../components/KanbanBoard.jsx';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
+import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
 
 function InterviewList() {
-  const { interviewData, loading, skills, qualification } = useCustomContext();
-  console.log('interviewdata from interviews', interviewData)
+  const {
+    interviewData,
+    isLoading,
+  } = useInterviews();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -412,17 +414,14 @@ function InterviewList() {
             <div className="relative w-full">
               {viewMode === 'kanban' ? (
                 <div className="w-full">
-                  {loading ? (
-                    <div className="py-10">
-                      <Loading />
-                    </div>
-                  ) : (
+                  {
                     <KanbanBoard
                       interviews={currentFilteredRows}
                       onView={handleView}
+                      loading={isLoading}
                       onViewPosition={handleViewPosition}
                     />
-                  )}
+                  }
                 </div>
               ) : (
                 <>
@@ -432,7 +431,7 @@ function InterviewList() {
                       data={currentFilteredRows}
                       columns={tableColumns}
                       actions={tableActions}
-                      loading={loading}
+                      loading={isLoading}
                       emptyState="No interviews found."
                       className="table-fixed w-full"
                     />
@@ -440,11 +439,46 @@ function InterviewList() {
 
                   {/* Mobile Card View */}
                   <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
-                    {loading ? (
-                      <div className="py-10">
-                        <Loading />
-                      </div>
+                    {isLoading ? (
+                      // Render placeholder cards with animate-pulse when loading
+                      Array(3).fill(0).map((_, index) => (
+                        <motion.div
+                          key={`placeholder-${index}`}
+                          className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-pulse"
+                          initial={false}
+                          animate={{ height: 'auto' }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200"></div>
+                              <div className="ml-3 space-y-2">
+                                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                                <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                              </div>
+                            </div>
+                            <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                              </div>
+                              <div className="h-3 w-64 bg-gray-200 rounded mt-1"></div>
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                                <div className="h-3 w-24 bg-gray-200 rounded"></div>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2"></div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
                     ) : (
+                      // Render actual cards when not loading
                       currentFilteredRows.map((interview) => {
                         const candidate = interview.candidateId;
                         const position = interview.positionId;

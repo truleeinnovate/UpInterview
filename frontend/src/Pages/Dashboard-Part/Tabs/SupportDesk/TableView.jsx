@@ -128,7 +128,7 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                             }
                           }}
                         >
-                          #{ticket._id.slice(-5, -1)}
+                          #{ticket.ticketCode}
                         </td>
 
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{ticket.contact || 'N/A'}</td>

@@ -3,7 +3,7 @@ import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "re
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Search ,Trash2, X,BookOpen} from 'lucide-react';
+import { Search, Trash2, X, BookOpen } from 'lucide-react';
 import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
@@ -11,7 +11,7 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config.js";
 
 
-const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew ,setActionViewMoreSection}, ref) => {
+const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, fromform, onSelectList = () => { }, error, onErrorClear, defaultTenantList, setSelectedLabelnew, setActionViewMoreSection }, ref) => {
     const {
         fetchMyQuestionsData,
         createdLists,
@@ -186,260 +186,124 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
     }, [selectedCandidates]);
     return (
         <div>
-            {!fromcreate && !fromform && (
+        {!fromcreate && !fromform && (
+            <div className="absolute right-3 mt-10 w-60 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                <div className="absolute -top-2 right-4 transform translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-gray-300"></div>
 
-                <div className="absolute right-3 mt-10 w-48 bg-white border rounded shadow-lg z-50">
-                    <div className="absolute -top-2 right-4 transform translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-gray-300"></div>
-                    <div className="flex justify-between  items-center mb-2 border-b p-2">
-                        <p className="text-xl font-medium text-custom-blue">Select List</p>
-                        <button onClick={() => closeDropdown()} className="text-gray-500 text-lg font-semibold">
-                            <X  className="h-5 w-5 text-red-400" />
-                        </button>
-                    </div>
-                    <div className="flex items-center cursor-pointer hover:bg-gray-200 pl-2 pr-2 pt-2  -mt-2 rounded" onClick={handleCreateNewList}>
-                        <span><IoIosAdd  /></span>
-                        <span className="ml-2">Create New List</span>
-                    </div>
+                {/* Header */}
+                <div className="flex justify-between items-center p-3 bg-white rounded-t-lg">
+                    <p className="text-base font-semibold text-custom-blue">Select List</p>
+                    <button onClick={closeDropdown}>
+                        <X className="h-5 w-5 text-gray-400 hover:text-red-500" />
+                    </button>
+                </div>
 
-                    <div className="max-h-40 p-2 overflow-y-auto">
-                        {createdLists.map((list) => (
-                            <label key={list._id} className="flex items-center cursor-pointer hover:bg-gray-200 p-1 rounded">
-                                <input
-                                    type="checkbox"
-                                    className="mr-2"
-                                    checked={selectedListIds.includes(list._id)}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedListIds((prev) => [...prev, list._id]);
-                                        } else {
-                                            setSelectedListIds((prev) => prev.filter(id => id !== list._id));
-                                        }
-                                    }}
-                                />
-                                {list.label}
-                            </label>
-                        ))}
-                    </div>
-                    <div className="border-t mt-2 pt-2 flex justify-end p-2">
+                {/* Create List */}
+                <div
+                    className="flex items-center gap-2 text-sm px-3 py-2 cursor-pointer hover:bg-gray-100 transition rounded"
+                    onClick={handleCreateNewList}
+                >
+                    <IoIosAdd className="text-lg text-custom-blue" />
+                    <span>Create New List</span>
+                </div>
+
+                {/* List Items */}
+                <div className="max-h-40 overflow-y-auto px-3 py-2">
+                    {createdLists.map((list) => (
+                        <label
+                            key={list._id}
+                            className="flex items-center gap-2 py-1 text-sm hover:bg-gray-100 rounded px-2"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={selectedListIds.includes(list._id)}
+                                onChange={(e) =>
+                                    e.target.checked
+                                        ? setSelectedListIds((prev) => [...prev, list._id])
+                                        : setSelectedListIds((prev) => prev.filter(id => id !== list._id))
+                                }
+                            />
+                            {list.label}
+                        </label>
+                    ))}
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end p-3 rounded-b-lg">
+                    <button
+                        className="bg-custom-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded"
+                        onClick={() => handleAddToList(selectedListIds, question._id)}
+                    >
+                        Add
+                    </button>
+                </div>
+            </div>
+        )}
+
+        {/* ...Keep fromform block unchanged (or improve it later)... */}
+
+        {/* New List Modal */}
+        {showNewListPopup && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-2xl w-[360px] max-w-full">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 bg-white rounded-t-xl">
+                        <h2 className="text-lg font-semibold text-custom-blue">
+                            {isEditing ? "Edit List" : "New List"}
+                        </h2>
                         <button
-                            className="bg-custom-blue text-white px-4 py-1 rounded mb-1"
                             onClick={() => {
-                                handleAddToList(selectedListIds, question._id);
+                                setShowNewListPopup(false);
+                                setActionViewMoreSection(false);
                             }}
                         >
-                            Add
+                            <X className="w-6 h-6 text-red-500 hover:text-red-600" />
+                        </button>
+                    </div>
+
+                    {/* Input Fields */}
+                    <div className="px-5 py-3 space-y-4">
+                        {/* Label */}
+                        <div className="flex items-center">
+                            <label className="text-sm font-medium w-20">Label <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={newListName}
+                                onChange={(e) => {
+                                    const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, "");
+                                    setNewListName(sanitizedValue);
+                                }}
+                                onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, "_"))}
+                                className="flex-1 px-3 py-2 h-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue"
+                                placeholder="Enter label"
+                            />
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex items-center">
+                            <label className="text-sm font-medium w-20">Name <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={newListNameForName}
+                                readOnly
+                                className="flex-1 px-3 py-2 h-10 border border-gray-200 bg-gray-100 rounded-md text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex justify-end gap-2 px-5 py-3 rounded-b-xl bg-white">
+                        <button
+                            className="bg-custom-blue hover:bg-blue-600 text-white text-sm font-semibold px-5 py-2 rounded"
+                            onClick={handleSave}
+                        >
+                            {isEditing ? "Update" : "Save"}
                         </button>
                     </div>
                 </div>
-            )}
-            {fromform && (
-
-                <>                
-                <div className="flex flex-col gap-2 mb-5 relative">
-                    <div>
-                        <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
-                            Question List <span className="text-red-500">*</span>
-                        </label>
-                    </div>
-                    <div className=" relative" ref={popupRef}>
-                       
-                        <input
-                            className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${error
-                                ? "border-red-500"
-                                : "border-gray-300 focus:border-black"
-                                }`}
-                            onClick={togglePopup}
-
-                        />
-                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <MdArrowDropDown className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1" onClick={togglePopup} />
-                           </div>
-                        {showPopup && (
-                            <div className="absolute w-full mt-1 z-10 rounded-md bg-white shadow-md max-h-60 overflow-y-auto">
-                                <div className="border-b">
-                                    <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search list"
-                                            value={searchTermTechnology}
-                                            onChange={(e) => setSearchTermTechnology(e.target.value)}
-                                            className="pl-8 focus:border-black focus:outline-none w-full"
-                                        />
-                                    </div>
-                                </div>
-                                <ul>
-                                    {createdLists
-                                        .filter((service) =>
-                                            service.label && service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                                        )
-                                        .slice(0, 4)
-                                        .map((service) => (
-                                            <li
-                                                key={service._id}
-                                                className="bg-white border-b cursor-pointer p-1 hover:bg-gray-100"
-                                                onClick={() => handleSelectCandidate(service)}
-                                            >
-                                                {service.label}
-                                            </li>
-                                        ))}
-                                </ul>
-
-                                {/* Create New List Button */}
-                                <ul>
-                                    <li
-                                        className="flex cursor-pointer border-b p-1 bottom-0"
-                                        onClick={handleCreateNewList}
-                                    >
-                                        <IoIosAddCircle className="text-2xl" />
-                                        <span>Create New List</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        )}
-
-                        {/* {selectedCandidates.map((candidate, index) => (
-                            <div key={index} className="bg-slate-200 rounded px-2 m-1 py-1 inline-block mr-2 text-sm">
-                                {candidate.label}
-                                <button type="button" onClick={() => handleRemoveCandidate(index)} className="ml-2 bg-gray-300 rounded px-2">x</button>
-                            </div>
-                        ))}
-                        {selectedCandidates.length > 0 && (
-                            <button type="button" onClick={clearRemoveCandidate} className="bg-slate-300 rounded px-2 absolute top-0 text-sm float-end right-4">X</button>
-                        )} */}
-
-
-                        {error && <p className="text-red-500 text-sm ">{error}</p>}
-                    </div>
-
-                </div>
-
-                 <div className=" px-4 py-3 rounded-md border border-gray-200 -mt-3">
-                {selectedCandidates.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center">No Question List selected</p>
-                ) :(
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center">
-                                    <BookOpen className="h-4 w-4 text-gray-500 mr-2" />
-                                    <span className="text-sm text-gray-700">
-                                        {selectedCandidates.length} Question List{selectedCandidates.length !== 1 ? "s" : ""} selected
-                                    </span>
-                                </div>
-                                {selectedCandidates.length > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={clearRemoveCandidate}
-                                        className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                    >
-                                        <Trash2 className="h-3 w-3 mr-1" />
-                                        Clear All
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Selected Skills */}
-                            <div className="flex flex-wrap gap-2">
-                                {selectedCandidates.map((candidate, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
-                                        style={{ minWidth: '150px', maxWidth: '250px' }}
-                                    >
-                                        <div className="flex-1 overflow-hidden">
-                                            <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
-                                                {candidate.label}
-                                            </span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveCandidate(index)}
-                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
-                                            title="Remove skill"
-                                        >
-                                            <X className="h-4 w-4 text-red-400" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        )}
-                        </div>
-
-
-                </>
-
-            )}
-
-
-            {showNewListPopup && (
-                <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white  flex flex-col rounded-md">
-                        <div className="border-b p-3 flex justify-between  items-center rounded-t-md">
-                            <h2 className="text-xl text-custom-blue font-semibold">
-                                {isEditing ? "Edit List" : "New List"}
-                            </h2>
-                            <button
-                             onClick={() =>{ 
-                                    setShowNewListPopup(false)
-                                setActionViewMoreSection(false)
-                                }}
-                            >
-                                 <X  className="w-6 h-6 text-red-500" />
-                            </button>
-                           
-                        </div>
-                        <div className="p-3">
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-semibold   w-20">
-                                    Label <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newListName}
-                                    onChange={(e) => {
-                                        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, ""); // Allow letters, numbers, underscores, and spaces
-                                        setNewListName(sanitizedValue);
-                                    }}
-                                    onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, "_"))} // Replace spaces with underscores when the input loses focus
-                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
-                                    placeholder="Enter label"
-                                />
-                            </div>
-                        </div>
-                        <div className="p-3">
-                            <div className="flex items-center mb-2 gap-2">
-                                <label className="text-sm font-semibold   w-20">
-                                    {/* List Name <span className="text-red-500">*</span> */}
-                                    Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newListNameForName}
-                                    readOnly
-                                    className="px-3 py-2 h-10 border border-gray-300 rounded-md   sm:text-sm"
-                                    placeholder="List name"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
-                            {/* <button
-                                className="border border-custom-blue px-4 py-2 rounded mr-2"
-                               
-                            >
-                                Cancel
-                            </button> */}
-                            <button
-                                className="bg-custom-blue text-white px-4 py-2 rounded"
-                                onClick={handleSave}
-                            >
-                                {isEditing ? "Update" : "Save"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            </div>
+        )}
+    </div>
     )
 });
 

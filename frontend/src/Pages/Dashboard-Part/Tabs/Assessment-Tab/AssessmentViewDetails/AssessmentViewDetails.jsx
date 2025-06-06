@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Tab } from '@headlessui/react';
-import {Minimize,Expand,ChevronDown,X} from 'lucide-react';
+import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import AssessmentsTab from './Assessment-View-AssessmentTab.jsx';
 import AssessmentResultsTab from './AssessmentResultTab.jsx';
 import DetailsTab from './AssessmentDetailTab.jsx';
@@ -11,11 +10,8 @@ import QuestionsTab from './AsseessmentQuestionsTab.jsx';
 import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
-import { config } from '../../../../../config.js';
-
 function AssessmentView() {
-const { assessmentData, isLoading } = useAssessments();
-
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,32 +32,32 @@ const { assessmentData, isLoading } = useAssessments();
   useEffect(() => {
     const loadData = async () => {
       const foundAssessment = assessmentData?.find((a) => a._id === id);
-
       if (foundAssessment) {
         setAssessment(foundAssessment);
         setIsModalOpen(true);
       }
     };
-
     loadData();
   }, [id, assessmentData]);
 
   useEffect(() => {
     if (assessment) {
-      axios
-        .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`)
-        .then((response) => {
-          if (response.data.success) {
-            const data = response.data.data;
-            setAssessmentQuestions(data);
-            setToggleStates(new Array(data.sections.length).fill(false));
-          }
-        })
-        .catch((error) => {
+      fetchAssessmentQuestions(assessment._id).then(({ data, error }) => {
+        if (data) {
+          setAssessmentQuestions(data);
+          // Only initialize toggleStates if it's empty or length doesn't match sections
+          setToggleStates((prev) => {
+            if (prev.length !== data.sections.length) {
+              return new Array(data.sections.length).fill(false);
+            }
+            return prev; // Preserve existing toggle states
+          });
+        } else {
           console.error('Error fetching assessment questions:', error);
-        });
+        }
+      });
     }
-  }, [assessment]);
+  }, [assessment, fetchAssessmentQuestions]);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -144,10 +140,10 @@ const { assessmentData, isLoading } = useAssessments();
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >
                       {isFullscreen ? (
-                    <Minimize className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <Expand className="w-5 h-5 text-gray-500" />
-                  )}
+                        <Minimize className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Expand className="w-5 h-5 text-gray-500" />
+                      )}
                     </button>
                     <button
                       onClick={handleCloseModal}
