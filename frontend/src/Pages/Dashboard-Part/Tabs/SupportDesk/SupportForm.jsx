@@ -50,7 +50,7 @@ const SupportForm = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/${ownerId}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`);
         setContact(response.data.data);
 
         const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`);
