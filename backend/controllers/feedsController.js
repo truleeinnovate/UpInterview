@@ -13,7 +13,7 @@ exports.createFeed = async (feedDetails) => {
         const savedFeed = await feed.save();
         return savedFeed;
     } catch (error) { 
-        console.error('Error in createFeed:', error);
+        console.error('Error in create  Feed:', error);
         console.error('Stack trace:', error.stack);
         throw error;
     }

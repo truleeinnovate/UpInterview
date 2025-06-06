@@ -53,7 +53,8 @@ const MyQuestionsList = ({
   interviewQuestionsLists,
   onAddQuestion,
   handleRemoveQuestion,
-  removedQuestionIds = []
+  removedQuestionIds = [],
+  activeTab
 }) => {
   const {
     fetchMyQuestionsData,
@@ -625,10 +626,9 @@ const MyQuestionsList = ({
 
 
       if (onAddQuestion) {
-        onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+        onAddQuestion(questionToAdd,);
       }
       toast.success("Question added successfully");
-      //   }
     } catch (error) {
       toast.error("Failed to add question");
       console.error("Error adding question:", error);
@@ -637,101 +637,101 @@ const MyQuestionsList = ({
 
   // MyQuestionListMain component (UI improvements only)
   return (
+    <div className="z-50 w-full px-4 py-2 mt-10 bg-white">
+      {/* my question list - tool bar */}
+      <div className="flex items-center justify-between fixed left-12 right-12 z-50">
+        {/* left side */}
+        <div className="flex items-center gap-2">
+          {/* List Selection */}
+          <div className="relative inline-block w-48">
+            <button
+              className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <span className="truncate">
+                {selectedLabel || "Select a label"}
+              </span>
+              <svg
+                className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                {Object.keys(groupedQuestions).map((listName, idx) => (
+                  <div
+                    key={idx}
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
+                      ? "bg-blue-50 text-custom-blue font-semibold"
+                      : ""
+                      }`}
+                    onClick={() => handleLabelChange(listName)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="truncate">{listName}</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {groupedQuestions[listName].length}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Create New List */}
+          <button
+            className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
+            onClick={openListPopup}
+          >
+            <Plus size={14} /> Create New List
+          </button>
+        </div>
 
-
-    <div className="bg-white z-50 w-full px-4 py-2 min-h-[calc(100vh-200px)] mt-12">
-      {/* Add Question Button (UI improvement) */}
-
-      <div className={`relative`}>
-        <button
-          className="text-md absolute right-12 bg-custom-blue text-white px-4 py-2 rounded-md  transition-colors flex items-center gap-2"
-          onClick={toggleSidebar}
-        >
-          <Plus /> Add Question
-        </button>
+        {/* right side */}
+        <div className="flex items-center gap-2">
+          {/* Add Question */}
+          <button
+            className="text-md bg-custom-blue text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+            onClick={toggleSidebar}
+          >
+            <Plus /> Add Question
+          </button>
+          {/* Filter */}
+          <Popup
+            responsive={true}
+            trigger={
+              <button className="border border-gray-300 rounded-md p-2 hover:border-gray-400 transition-colors">
+                {filterIsOpen ? (
+                  <LuFilterX className="text-custom-blue" />
+                ) : (
+                  <FiFilter className="text-custom-blue" />
+                )}
+              </button>
+            }
+            onOpen={() => SetFilterIsOpen(true)}
+            onClose={() => SetFilterIsOpen(false)}
+          >
+            {(closeFilter) => (
+              <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-2 border-gray-300 shadow-lg">
+                {FilterSection(closeFilter)}
+              </div>
+            )}
+          </Popup>
+        </div>
       </div>
 
-      <div className={`${type === "interviewerSection mt-2" }`} >
-        {/* List Selection and Filter Section (UI improvement) */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-4 items-center">
-
-            <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <span className="truncate">
-                  {selectedLabel || "Select a label"}
-                </span>
-                <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                    }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {isDropdownOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  {Object.keys(groupedQuestions).map((listName, idx) => (
-                    <div
-                      key={idx}
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                          ? "bg-blue-50 text-custom-blue font-semibold"
-                          : ""
-                        }`}
-                      onClick={() => handleLabelChange(listName)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate">{listName}</span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {groupedQuestions[listName].length}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <button
-              className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
-              onClick={openListPopup}
-            >
-              <Plus size={14} /> Create New List
-            </button>
-          </div>
-          <div className="relative">
-            <Popup
-              responsive={true}
-              trigger={
-                <button className="border border-gray-300 rounded-md p-2 hover:border-gray-400 transition-colors">
-                  {filterIsOpen ? (
-                    <LuFilterX className="text-custom-blue" />
-                  ) : (
-                    <FiFilter className="text-custom-blue" />
-                  )}
-                </button>
-              }
-              onOpen={() => SetFilterIsOpen(true)}
-              onClose={() => SetFilterIsOpen(false)}
-            >
-              {(closeFilter) => (
-                <div className="absolute top-3 right-0 w-[300px] rounded-md bg-white border-2 border-gray-300 shadow-lg">
-                  {FilterSection(closeFilter)}
-                </div>
-              )}
-            </Popup>
-          </div>
-        </div>
+      <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "mt-[60px]" : ""}`}>
 
         {/* Empty State (UI improvement) */}
         {!selectedLabel && (
@@ -761,8 +761,6 @@ const MyQuestionsList = ({
           </div>
         )}
 
-        {/* Grouped Questions (UI improvement) */}
-        {/* Grouped Questions (UI improvement) */}
         {Object.entries(groupedQuestions || myQuestionsList).map(
           ([listName, items]) => {
             return (
@@ -1015,6 +1013,7 @@ const MyQuestionsList = ({
             );
           }
         )}
+
         <MyQuestionList
           ref={myQuestionsListRef}
           fromcreate={true}
@@ -1022,8 +1021,6 @@ const MyQuestionsList = ({
 
           setActionViewMoreSection={setActionViewMoreSection}
         />
-
-
 
         {/* Modals */}
         {showNewCandidateContent && (
