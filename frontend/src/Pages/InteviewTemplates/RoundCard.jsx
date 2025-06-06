@@ -152,7 +152,7 @@ const RoundCard = ({
 
               <div className="flex items-center text-sm text-gray-500">
                 <Clock className="h-4 w-4 mr-1" />
-                <span>Duration: {round?.interviewDuration} minutes</span>
+                <span>Duration: {round?.duration} minutes</span>
               </div>
 
 

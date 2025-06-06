@@ -1304,7 +1304,8 @@ const PositionForm = ({ mode }) => {
                         label="Select Template"
                         name="template"
                         value={formData.template?.templateName || ""}
-                        options={templatesData}
+                        // options={templatesData}
+                        options={templatesData.filter(template => template.rounds && template.rounds.length > 0)}
                         onChange={(e) => {
                           const selectedTemplate = templatesData.find(t => t._id === e.target.value);
                           setFormData({ ...formData, template: selectedTemplate });

@@ -175,7 +175,7 @@ exports.updateTemplate = async (req, res) => {
                 return {
                     roundTitle: round.roundTitle || `Round ${index + 1}`,
                     sequence,
-                    interviewDuration: round.interviewDuration || 60,
+                    duration: round.duration || 60,
                     instructions: round.instructions || '',
                     interviewMode: round.interviewMode || 'virtual',
                     interviewerType: round.interviewerType || '',

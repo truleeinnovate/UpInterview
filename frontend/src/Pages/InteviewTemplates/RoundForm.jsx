@@ -105,7 +105,7 @@ function RoundFormTemplates() {
                 // roundTitle: round.roundTitle || '',
                 sequence: round.sequence || 1,
                 interviewMode: round.interviewMode || '',
-                duration: round.interviewDuration?.toString() || '',
+                duration: round.duration?.toString() || '',
                 interviewerType: round.interviewerType || '',
                 selectedInterviewersType: round.selectedInterviewersType || 'Individual',
                 instructions: round.instructions || '',
@@ -357,7 +357,8 @@ useEffect(() => {
 
   const handleRoundTitleChange = (e) => {
   const selectedTitle = e.target.value;
-  const isAssessment = selectedTitle === "Assessment";
+const isAssessment = selectedTitle === "Assessment";
+  const wasAssessment = formData.roundTitle === "Assessment";
   
   setFormData((prev) => ({
     ...prev,
@@ -372,8 +373,12 @@ useEffect(() => {
       interviewQuestionsList: [],
     } : {
       // Reset assessment-related fields when switching from Assessment
-      assessmentTemplate: { assessmentId: '', assessmentName: '' },
-       instructions : ''
+       ...(wasAssessment ? {
+        assessmentTemplate: { assessmentId: '', assessmentName: '' },
+        instructions: '' // Clear instructions when switching from Assessment
+      } : {}),
+      // For other transitions, keep existing instructions unless switching to Other
+      instructions: selectedTitle === "Other" ? "" : wasAssessment ? "" : prev.instructions
     }),
     // Preserve sequence in all cases
     sequence: prev.sequence
@@ -638,7 +643,7 @@ useEffect(() => {
         roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
         interviewMode: formData.interviewMode,
         sequence: formData.sequence,
-        interviewDuration: formData.duration,
+        duration: formData.duration,
         instructions: formData.instructions,
         interviewerType: formData.interviewerType,
         interviewers:

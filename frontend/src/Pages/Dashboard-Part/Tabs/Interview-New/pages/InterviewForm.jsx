@@ -237,7 +237,8 @@ const handleSubmit = async (e) => {
                       disabled={!positionId}
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                       <option value="">Select a template</option>
-                      {(templatesData ?? []).map((template) => (
+                      {(templatesData ?? []).filter(template => template.rounds && template.rounds.length > 0)
+                      .map((template) => (
                         <option key={template._id} value={template._id}>{template.templateName}</option>
                       ))}
                     </select>
