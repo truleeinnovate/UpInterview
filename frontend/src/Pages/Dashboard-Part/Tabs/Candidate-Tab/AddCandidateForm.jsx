@@ -138,7 +138,7 @@ console.log('currentRoles:', currentRoles);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
 
-  const { candidateData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdateCandidate } = useCandidates();
+  const { candidateData, isLoading: _isLoading, isQueryLoading: _isQueryLoading, isMutationLoading, isError: _isError, error: _error, addOrUpdateCandidate } = useCandidates();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -924,12 +924,15 @@ console.log('currentRoles:', currentRoles);
 
               </div>
               <div>
-              <p className='text-lg font-semibold col-span-2'>Skills Details</p>
-
               <SkillsField
                 entries={entries}
                 errors={errors}
-                onAddSkill={() => {
+                onAddSkill={(setEditingIndex) => {
+                  setEntries((prevEntries) => {
+                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
+                    setEditingIndex(newEntries.length - 1);
+                    return newEntries;
+                  });
                   setSelectedSkill("");
                   setSelectedExp("");
                   setSelectedLevel("");

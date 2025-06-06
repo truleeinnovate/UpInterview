@@ -149,7 +149,7 @@ function SupportDesk() {
 
   const tableColumns = [
     {
-      key: "_id",
+      key: "ticketCode",
       header: "Ticket ID",
       render: (value, row) => (
         <div
@@ -161,7 +161,7 @@ function SupportDesk() {
             navigate(path, { state: { ticketData: row } });
           }}
         >
-          #{value?.slice(-5, -1) || "N/A"}
+          #{value || "N/A"}
         </div>
       ),
     },
@@ -333,6 +333,7 @@ function SupportDesk() {
                 className="table-fixed w-full"
               />
             ) : (
+            
               <KanbanView
                 currentTickets={currentFilteredRows}
                 tickets={tickets}
