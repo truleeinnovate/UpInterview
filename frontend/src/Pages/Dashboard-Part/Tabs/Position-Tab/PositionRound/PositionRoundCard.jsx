@@ -24,6 +24,7 @@ import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates';
 import { config } from '../../../../../config';
+import { useAssessments } from '../../../../../apiHooks/useAssessments';
 
 const PositionRoundCard = ({
   round,
@@ -34,13 +35,14 @@ const PositionRoundCard = ({
   hideHeader = false
 }) => {
 
-  const {
-    sectionQuestions,
-    fetchQuestionsForAssessment,
-    questionsLoading,
-    questionsError,
-    setSectionQuestions,
-  } = useCustomContext();
+  // const {
+  //   sectionQuestions,
+  //   fetchQuestionsForAssessment,
+  //   questionsLoading,
+  //   questionsError,
+  //   setSectionQuestions,
+  // } = useCustomContext();
+  const {fetchAssessmentQuestions} = useAssessments()
 
   const { resolveInterviewerDetails } = useInterviewerDetails();
   const [showQuestions, setShowQuestions] = useState(false);
@@ -54,9 +56,39 @@ const PositionRoundCard = ({
 
   const interview = interviewData;
 
+  // useEffect(() => {
+  //   fetchQuestionsForAssessment(round.assessmentId)
+  // }, [round.assessmentId])
+
+    const [sectionQuestions, setSectionQuestions] = useState({});
+    const [questionsLoading, setQuestionsLoading] = useState(false);
+
   useEffect(() => {
-    fetchQuestionsForAssessment(round.assessmentId)
-  }, [round.assessmentId])
+      if (showQuestions && round?.assessmentId) {
+        // const data = fetchAssessmentQuestions(round.assessmentId);
+        // setSectionQuestions(data)
+        setQuestionsLoading(true)
+        fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+          if (data) {
+            setQuestionsLoading(false)
+            setSectionQuestions(data?.sections);
+            // Only initialize toggleStates if it's empty or length doesn't match sections
+            // setToggleStates((prev) => {
+            //   if (prev.length !== data.sections.length) {
+            //     return new Array(data.sections.length).fill(false);
+            //   }
+            //   return prev; // Preserve existing toggle states
+            // });
+          } else {
+            console.error('Error fetching assessment questions:', error);
+            setQuestionsLoading(false)
+          }
+        });
+      }
+    }, [showQuestions, round?.assessmentId]);
+
+
+console.log("round",round);
 
 
 
@@ -82,9 +114,9 @@ const PositionRoundCard = ({
     }));
 
     // Fetch questions if expanding and not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-      await fetchQuestionsForAssessment(round?.assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
+    //   await fetchQuestionsForAssessment(round?.assessmentId);
+    // }
   };
 
 
@@ -261,16 +293,16 @@ const PositionRoundCard = ({
                               <User className="h-3 w-3 mr-1" />
                               <span>
                                 {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                                {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
                               </span>
                             </div>
                             {showInterviewers && round.interviewers && (
                               <div className="flex flex-wrap gap-2">
-                                {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
+                                {round?.interviewers.map((interviewer, index) => (
                                   <div key={index} className="flex items-center">
                                     <InterviewerAvatar interviewer={interviewer} size="sm" />
                                     <span className="ml-1 text-xs text-gray-600">
-                                      {interviewer.name}
+                                      {interviewer?.firstName + " " + interviewer?.lastName}
                                     </span>
                                
                                   </div>

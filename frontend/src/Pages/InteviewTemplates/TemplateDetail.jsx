@@ -126,6 +126,7 @@ const TemplateDetail = () => {
       </div>
     );
   }
+console.log("template", template);
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
@@ -248,6 +249,14 @@ const TemplateDetail = () => {
                     </div>
                   )}
               </div>
+              {template.rounds?.length === 0 &&
+              <div>
+                <span className='bg-yellow-400 text-white text-xs px-2 py-1 rounded-md'>
+                  Not Recomnded Due to no Rounds
+                </span>
+
+              </div>
+}
             </div>
 
             {template.rounds.length > 0 && (

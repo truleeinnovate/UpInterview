@@ -10,7 +10,8 @@ const roundSchema = new mongoose.Schema(
     instructions: String,
     selectedInterviewersType: { type: String },
     interviewers: [
-      mongoose.Schema.Types.ObjectId,
+        { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
+      // mongoose.Schema.Types.ObjectId,
     ],
     
     // interviewers: {type: String}, // mansoor : added this for accepting the numbers and texts.

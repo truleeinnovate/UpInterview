@@ -65,7 +65,7 @@ const PositionSlideDetails = () => {
       }
     };
     fetchPosition();
-  }, [id]);
+  }, [id,positionData]);
 
   const handleAddRound = () => {
     navigate(`/position/view-details/${id}/rounds/new`);

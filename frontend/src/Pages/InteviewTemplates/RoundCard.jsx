@@ -21,6 +21,7 @@ import InterviewerAvatar from './InterviewerAvatar';
 import { useCustomContext } from '../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../utils/CommonFunctionRoundTemplates';
 import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
+import { useAssessments } from '../../apiHooks/useAssessments';
 
 const RoundCard = ({
   round,
@@ -31,32 +32,46 @@ const RoundCard = ({
 
   const {
 
-    sectionQuestions,
-    questionsLoading,
-    questionsError,
-    fetchQuestionsForAssessment,
-    setSectionQuestions,
-  } = useCustomContext();
+    fetchAssessmentQuestions
+  } = useAssessments();
 
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
 
 
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  // const [sectionQuestions, setSectionQuestions] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
-  // const { resolveInterviewerDetails } = useInterviewerDetails();
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
 
-console.log("round",round);
-console.log("sectionQuestions",sectionQuestions);
+
 
   useEffect(() => {
-   
-    fetchQuestionsForAssessment(round?.assessmentId)
-  }, [round.assessmentId])
+    if (showQuestions && round?.assessmentId) {
+      // const data = fetchAssessmentQuestions(round.assessmentId);
+      // setSectionQuestions(data)
+      setQuestionsLoading(true)
+      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        if (data) {
+          setQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+          // Only initialize toggleStates if it's empty or length doesn't match sections
+          // setToggleStates((prev) => {
+          //   if (prev.length !== data.sections.length) {
+          //     return new Array(data.sections.length).fill(false);
+          //   }
+          //   return prev; // Preserve existing toggle states
+          // });
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setQuestionsLoading(false)
+        }
+      });
+    }
+  }, [showQuestions, round?.assessmentId]);
 
 
-    // Get interviewers based on interviewerType
+  // Get interviewers based on interviewerType
   const internalInterviewers =
     round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
@@ -89,9 +104,9 @@ console.log("sectionQuestions",sectionQuestions);
     }));
 
     // Fetch questions if expanding and not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-      await fetchQuestionsForAssessment(round?.assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
+    //   await fetchAssessmentQuestions(round?.assessmentId);
+    // }
   };
 
   const toggleShowQuestions = () => {
@@ -109,7 +124,7 @@ console.log("sectionQuestions",sectionQuestions);
     <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-custom-blue' : ''}`}>
       <div className="p-5">
 
-        
+
 
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left Column */}
@@ -161,60 +176,60 @@ console.log("sectionQuestions",sectionQuestions);
                   </button>
                 </div>
 
-                  {showInterviewers && round?.interviewers && (
-                      <div className="space-y-2">
-                        {internalInterviewers.length > 0 && (
-                          <div>
-                            <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
-                              <User className="h-3 w-3 mr-1" />
-                              <span>
-                                {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            {showInterviewers && round.interviewers && (
-                              <div className="flex flex-wrap gap-2">
-                                {round?.interviewers.map((interviewer, index) => (
-                                  <div key={index} className="flex items-center">
-                                    <InterviewerAvatar interviewer={interviewer} size="sm" />
-                                    <span className="ml-1 text-xs text-gray-600">
-                                      {interviewer.name}
-                                    </span>
-                               
-                                  </div>
-                                ))}
+                {showInterviewers && round?.interviewers && (
+                  <div className="space-y-2">
+                    {internalInterviewers.length > 0 && (
+                      <div>
+                        <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
+                          <User className="h-3 w-3 mr-1" />
+                          <span>
+                            {/* Internal ({round?.interviewers.length}) */}
+                            {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        {showInterviewers && round.interviewers && (
+                          <div className="flex flex-wrap gap-2">
+                            {round?.interviewers.map((interviewer, index) => (
+                              <div key={index} className="flex items-center">
+                                <InterviewerAvatar interviewer={interviewer} size="sm" />
+                                <span className="ml-1 text-xs text-gray-600">
+                                  {interviewer.name}
+                                </span>
+
                               </div>
-                            )}
+                            ))}
                           </div>
                         )}
-
-                        {externalInterviewers.length > 0 && (
-                          <div>
-                            <div className="flex items-center text-xs text-gray-500 mb-1">
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              <span>External ({externalInterviewers.length})</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {externalInterviewers.map(interviewer => (
-                                <div key={interviewer._id} className="flex items-center">
-                                  <InterviewerAvatar interviewer={interviewer} size="sm" />
-                                  <span className="ml-1 text-xs text-gray-600">
-                                    {interviewer.name}
-                                  </span>
-                               
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                        )
-                      }
-
-                      {externalInterviewers.length === 0 &&  round?.interviewerType === "External" &&
-                      <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
-                      }
                       </div>
                     )}
+
+                    {externalInterviewers.length > 0 && (
+                      <div>
+                        <div className="flex items-center text-xs text-gray-500 mb-1">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          <span>External ({externalInterviewers.length})</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {externalInterviewers.map(interviewer => (
+                            <div key={interviewer._id} className="flex items-center">
+                              <InterviewerAvatar interviewer={interviewer} size="sm" />
+                              <span className="ml-1 text-xs text-gray-600">
+                                {interviewer.name}
+                              </span>
+
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    )
+                    }
+
+                    {externalInterviewers.length === 0 && round?.interviewerType === "External" &&
+                      <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
+                    }
+                  </div>
+                )}
 
               </>
             )}
@@ -280,7 +295,7 @@ console.log("sectionQuestions",sectionQuestions);
             {showQuestions && (
               <div className="space-y-4">
                 {questionsLoading ? (
-                  <div className="text-center py-4">
+                  <div className="text-center py-4 animate-pulse border rounded-md shadow-sm">
                     <span className="text-gray-600">Loading questions...</span>
                   </div>
                 ) :
@@ -449,16 +464,16 @@ console.log("sectionQuestions",sectionQuestions);
       </div>
 
       <div className="m-4 flex justify-end space-x-3">
-          <Button
-            onClick={onEdit}
-            variant="outline"
-            size="sm"
-            className="flex items-center"
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Edit Round
-          </Button>
-        </div>
+        <Button
+          onClick={onEdit}
+          variant="outline"
+          size="sm"
+          className="flex items-center"
+        >
+          <Edit className="h-4 w-4 mr-1" />
+          Edit Round
+        </Button>
+      </div>
     </div>
   );
 };
