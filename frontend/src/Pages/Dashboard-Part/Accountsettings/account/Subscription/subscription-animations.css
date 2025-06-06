@@ -19,20 +19,20 @@
 /* Subtle gradient animation */
 @keyframes gradientShift {
   0% {
-    background: linear-gradient(45deg, #FFD700, #FFFFFF) !important;
+    background: linear-gradient(45deg, #546540, #FFFFFF) !important;
   }
   50% {
-    background: linear-gradient(45deg, #FFFFFF, #FFD700) !important;
+    background: linear-gradient(45deg, #FFFFFF, #546540) !important;
   }
   100% {
-    background: linear-gradient(45deg, #FFD700, #FFFFFF) !important;
+    background: linear-gradient(45deg, #546540, #FFFFFF) !important;
   }
 }
 
 /* Apply animation to upgrade buttons */
 .upgrade-button-animation {
   animation: upgradeGlow 2s infinite, gradientShift 3s infinite alternate;
-  background: linear-gradient(45deg, #FFD700, #e0ebce) !important;
+  background: linear-gradient(45deg, #546540, #e0ebce) !important;
   color: white !important;
   font-weight: 600 !important;
   letter-spacing: 0.5px;
