@@ -23,13 +23,13 @@ export function SidePopup({ title, onClose, children, position = 'right', size =
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 ">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
       <div 
         className={`fixed ${isFullScreen ? 'inset-0' : positionClasses[position]} bg-white shadow-xl 
-          ${!isFullScreen && sizeClasses[size]} h-full overflow-y-auto transition-all duration-300 top-12`}
+          ${!isFullScreen && sizeClasses[size]} h-screen overflow-y-auto transition-all duration-300`}
       >
-        <div className="p-4 sm:p-6">
-          <div className="flex justify-between items-center mb-6 sticky  bg-white z-10 pb-4 border-b">
+        <div className="flex flex-col h-screen">
+          <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
             <h2 className="text-lg sm:text-2xl font-bold">{title}</h2>
             <div className="flex items-center space-x-2">
               <button
@@ -50,7 +50,7 @@ export function SidePopup({ title, onClose, children, position = 'right', size =
               </button>
             </div>
           </div>
-          <div className="space-y-6">
+          <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
             {children}
           </div>
         </div>
