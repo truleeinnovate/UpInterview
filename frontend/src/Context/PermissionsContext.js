@@ -67,6 +67,7 @@ export const PermissionsProvider = ({ children }) => {
             technologyMaster: getObjectPermissions(profileResponse.data[0], 'TechnologyMaster'),
             roleMAster: getObjectPermissions(profileResponse.data[0], 'RoleMAster'),
             industries: getObjectPermissions(profileResponse.data[0], 'Industries'),
+            interviewGroup: getObjectPermissions(profileResponse.data[0], 'InterviewGroups'),
           };
           setObjectPermissions(newObjectPermissions);
 
@@ -80,6 +81,7 @@ export const PermissionsProvider = ({ children }) => {
             mockInterviews: getTabPermissions(profileResponse.data[0], 'MockInterviews'),
             interviews: getTabPermissions(profileResponse.data[0], 'Interviews'),
             analytics: getTabPermissions(profileResponse.data[0], 'Analytics'),
+            interviewGroup: getTabPermissions(profileResponse.data[0], 'InterviewGroups'),
           };
           setTabPermissions(newTabPermissions);
 
@@ -97,6 +99,7 @@ export const PermissionsProvider = ({ children }) => {
             technologyMaster: getSharingPermissions(sharesetting, 'TechnologyMaster'),
             roleMAster: getSharingPermissions(sharesetting, 'RoleMAster'),
             industries: getSharingPermissions(sharesetting, 'Industries'),
+            interviewGroup: getSharingPermissions(sharesetting, 'InterviewGroups'),
           };
           setSharingPermissions(newSharingPermissions);
         }
