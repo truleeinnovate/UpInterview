@@ -895,13 +895,9 @@ app.get('/check-email', async (req, res) => {
 // });
 
 const historyFeedsRoutes = require('./routes/feedsRoutes');
-const InvoiceRouter = require('./routes/InvoiceRoutes.js');
 const WalletRouter = require('./routes/WalletRoutes.js');
 app.use('/feeds', historyFeedsRoutes);
 
-
-
-app.use('/get-invoice-id', InvoiceRouter);
 
 app.use('/wallet', WalletRouter)
 
@@ -950,3 +946,7 @@ app.use('/internal-logs', internalLogRoutes);
 // integration logs
 const integrationLogRoutes = require('./routes/integrationLogRoutes');
 app.use('/api/integration-logs', integrationLogRoutes);
+
+// Invoice
+const InvoiceRoutes = require('./routes/InvoiceRoutes.js');
+app.use('/invoices', InvoiceRoutes);

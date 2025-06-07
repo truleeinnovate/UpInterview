@@ -41,12 +41,14 @@ export const useSupportTickets = () => {
 
     const mutation = useMutation({
         mutationFn: async ({ data, editMode, ticketId }) => {
+            console.log("Frontend sending data:", data);
             const url = editMode
                 ? `${config.REACT_APP_API_URL}/update-ticket/${ticketId}`
                 : `${config.REACT_APP_API_URL}/create-ticket`;
 
             const method = editMode ? 'patch' : 'post';
             const response = await axios[method](url, data);
+            console.log("Frontend received response:", response.data);
             return response.data;
         },
         onSuccess: (data) => {
