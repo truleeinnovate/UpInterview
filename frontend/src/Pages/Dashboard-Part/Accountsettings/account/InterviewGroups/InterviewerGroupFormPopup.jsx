@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { SidePopup } from '../../common/SidePopup'
-import { teamMembers } from '../../mockData/teamData'
 import { useNavigate, useParams } from 'react-router-dom';
 import classNames from 'classnames';
 import Modal from 'react-modal';
@@ -43,12 +41,12 @@ const InterviewerGroupFormPopup = () => {
         const group = groups.find(group => group._id === id);
         console.log('InterviewerGroupFormPopup group:', group);
 
-        if (group) {
+      if (group) {
           // Map the API data to our form structure
-          setFormData({
-            name: group.name || '',
-            description: group.description || '',
-            status: group.status || 'active',
+        setFormData({
+          name: group.name || '',
+          description: group.description || '',
+          status: group.status || 'active',
             members: group.userIds || [] // Changed from userIds to members
           });
         }

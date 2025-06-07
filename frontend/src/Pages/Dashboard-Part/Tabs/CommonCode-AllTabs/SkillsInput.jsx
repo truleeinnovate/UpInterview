@@ -146,16 +146,7 @@ const SkillsField = ({
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={handleCancelSelection}
-                    className="text-red-600 hover:text-red-800 p-1"
-                    title='Cancel'
-                  >
-                    <FaTimes className="w-5 h-5" />
-                  </button>
-
-                  <button
+                <button
                     type="button"
                     onClick={() => {
                       handleAddEntry();
@@ -165,6 +156,14 @@ const SkillsField = ({
                     title='Add'
                   >
                     <FaPlus className="w-5 h-5" />{/* {editingIndex !== null ? <FaPlus /> : <FaPlus />} */}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelSelection}
+                    className="text-red-600 hover:text-red-800 p-1"
+                    title='Cancel'
+                  >
+                    <FaTimes className="w-5 h-5" />
                   </button>
                 </div>
               </>

@@ -7,7 +7,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
-export const InterviewGroupDetails = () => {
+const InterviewGroupDetails = () => {
     const {  groups } = useCustomContext();
     const { id } = useParams();
         const navigate = useNavigate();
@@ -151,3 +151,5 @@ export const InterviewGroupDetails = () => {
    
   )
 }
+
+export default InterviewGroupDetails
