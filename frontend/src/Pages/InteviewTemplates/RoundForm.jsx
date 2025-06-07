@@ -45,6 +45,9 @@ function RoundFormTemplates() {
     interviewQuestionsList: [],
   });
 
+  console.log("formData.interviewQuestionsList",formData.interviewQuestionsList);
+  
+
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
   const [errors, setErrors] = useState({});
   const [expandedSections, setExpandedSections] = useState({});

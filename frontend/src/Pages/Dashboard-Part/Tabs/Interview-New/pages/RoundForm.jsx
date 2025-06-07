@@ -26,15 +26,15 @@ const RoundFormInterviews = () => {
     isMutationLoading,
     saveInterviewRound,
   } = useInterviews();
-  const { assessmentData } = useAssessments();
+  const { assessmentData,fetchAssessmentQuestions } = useAssessments();
 
-  const {
-    sectionQuestions,
-    questionsLoading,
-    questionsError,
-    fetchQuestionsForAssessment,
-    setSectionQuestions,
-  } = useCustomContext();
+  // const {
+  //   sectionQuestions,
+  //   questionsLoading,
+  //   questionsError,
+  //   fetchQuestionsForAssessment,
+  //   setSectionQuestions,
+  // } = useCustomContext();
 
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
@@ -54,6 +54,9 @@ const RoundFormInterviews = () => {
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const [template, setTemplate] = useState(null);
+    const [sectionQuestions, setSectionQuestions] = useState({});
+    const [questionsLoading, setQuestionsLoading] = useState(false);
+  
 
   useEffect(() => {
     if (interviewData) {
@@ -74,7 +77,8 @@ const RoundFormInterviews = () => {
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
-
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
+console.log("interviewQuestionsList",interviewQuestionsList);
 
   const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
   const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
@@ -154,6 +158,7 @@ const RoundFormInterviews = () => {
         return [...prevList,
         {
           ...question,
+          
           mandatory: "false" // Default to false when adding a new question
         }
 
@@ -171,7 +176,7 @@ const RoundFormInterviews = () => {
     }
   }
 
-  const handleToggleMandatory = (questionId, mandatory) => {
+  const handleToggleMandatory = (questionId) => {
     setInterviewQuestionsList(prev =>
       prev.map((question) =>
         question.questionId === questionId
@@ -188,10 +193,14 @@ const RoundFormInterviews = () => {
   };
 
 
-  const handleRemoveQuestion = (questionId,) => {
+  const handleRemoveQuestion = (questionId,e) => {
+     e?.preventDefault(); // Prevent default behavior if event is provided
+  e?.stopPropagation(); // Stop event bubbling if event is provided
+
     setInterviewQuestionsList(prev =>
       prev.filter((question) => question.questionId !== questionId)
     );
+    setRemovedQuestionIds(prev => [...prev, questionId]);
   };
 
   const handleRoundTitleChange = (e) => {
@@ -283,8 +292,8 @@ const RoundFormInterviews = () => {
   const handleInternalInterviewerSelect = (interviewers) => {
     console.log("Interviewers passed to parent:", interviewers); // Debugging
 
-    if (selectedInterviewType === "external") {
-      alert("You need to clear external interviewers before selecting internal interviewers.");
+    if (selectedInterviewType === "External") {
+      alert("You need to clear external interviewers before selecting Internal interviewers.");
       return;
     }
 
@@ -297,14 +306,14 @@ const RoundFormInterviews = () => {
     // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
     // console.log("contactIds", contactIds);
 
-    setSelectedInterviewType("internal");
+    setSelectedInterviewType("Internal");
     console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
     setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]); // Append new interviewers
   };
 
   const handleExternalInterviewerSelect = (interviewers) => {
-    if (selectedInterviewType === "internal") {
-      alert("You need to clear internal interviewers before selecting outsourced interviewers.");
+    if (selectedInterviewType === "Internal") {
+      alert("You need to clear Internal interviewers before selecting outsourced interviewers.");
       return;
     }
     console.log("interviewersselcetd:", interviewers);
@@ -314,7 +323,7 @@ const RoundFormInterviews = () => {
       (newInterviewer) => !externalInterviewers.some((i) => i.id === newInterviewer.id)
     );
 
-    setSelectedInterviewType("external");
+    setSelectedInterviewType("External");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
   };
   const handleRemoveInternalInterviewer = (interviewerId) => {
@@ -349,10 +358,10 @@ const RoundFormInterviews = () => {
     setSelectedInterviewType(null);
   };
 
-  const selectedInterviewers = selectedInterviewType === "internal" ? internalInterviewers : externalInterviewers;
+  const selectedInterviewers = selectedInterviewType === "Internal" ? internalInterviewers : externalInterviewers;
   console.log("selectedInterviewers", selectedInterviewers);
-  const isInternalSelected = selectedInterviewType === "internal";
-  const isExternalSelected = selectedInterviewType === "external";
+  const isInternalSelected = selectedInterviewType === "Internal";
+  const isExternalSelected = selectedInterviewType === "External";
 
   const selectedInterviewersData = selectedInterviewers.map((interviewer) => {
     // if (isInternalSelected) {
@@ -429,13 +438,14 @@ const RoundFormInterviews = () => {
       if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
         const normalizedInterviewers = roundEditData.interviewers.map((interviewer) => ({
           _id: interviewer._id, // Directly use _id as contactId
-          name: interviewer.name,
+          firstName: interviewer.firstName,
+          lastName: interviewer.lastName,
           email: interviewer.email,
         }));
 
-        if (roundEditData.interviewerType === "internal") {
+        if (roundEditData.interviewerType === "Internal") {
           setInternalInterviewers(normalizedInterviewers);
-        } else if (roundEditData.interviewerType === "external") {
+        } else if (roundEditData.interviewerType === "External") {
           setExternalInterviewers(normalizedInterviewers); // Reuse the same structure
         }
       }
@@ -445,7 +455,23 @@ const RoundFormInterviews = () => {
           assessmentId: roundEditData.assessmentId,
           assessmentName: assessmentData.find((a) => a._id === roundEditData.assessmentId)?.AssessmentTitle || '',
         });
-        fetchQuestionsForAssessment(roundEditData.assessmentId);
+
+          if (roundEditData?.assessmentId) {
+                setQuestionsLoading(true)
+                fetchAssessmentQuestions(roundEditData?.assessmentId).then(({ data, error }) => {
+                  if (data) {
+                    setQuestionsLoading(false)
+                    setSectionQuestions(data?.sections);
+
+                  } else {
+                    console.error('Error fetching assessment questions:', error);
+                    setQuestionsLoading(false)
+                  }
+                });
+              }
+
+
+        // fetchQuestionsForAssessment(roundEditData.assessmentId);
       }
 
     } else {
@@ -522,7 +548,7 @@ const RoundFormInterviews = () => {
 
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
-        const isInternal = selectedInterviewType === "internal";
+        const isInternal = selectedInterviewType === "Internal";
         console.log(`Sending ${selectedInterviewers.length} outsource requests`);
         for (const interviewer of selectedInterviewers) {
           const outsourceRequestData = {
@@ -620,7 +646,23 @@ const RoundFormInterviews = () => {
     setInstructions(assessment.Instructions);
     setExpandedSections({});
     setSectionQuestions({});
-    fetchQuestionsForAssessment(assessment._id);
+
+    if (assessment._id) {
+      setQuestionsLoading(true)
+      fetchAssessmentQuestions(assessment._id).then(({ data, error }) => {
+        if (data) {
+          setQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setQuestionsLoading(false)
+        }
+      });
+    }
+
+
+    // fetchQuestionsForAssessment(assessment._id);
     setShowDropdown(false);
   };
   const toggleSection = async (sectionId, e) => {
@@ -642,9 +684,9 @@ const RoundFormInterviews = () => {
     }));
 
     // Fetch questions if the section is being expanded and questions are not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
-      await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
+    //   await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
+    // }
   };
 
   // const fetchQuestionsForSection = async (sectionId) => {
@@ -881,13 +923,11 @@ const RoundFormInterviews = () => {
                             {assessmentTemplate.assessmentName && (
                               <div>
                                 <label htmlFor="assessmentQuestions" className="block text-sm font-medium text-gray-700 mb-1 mt-1">
-                                  Assessment
+                                  Assessment Questions
                                 </label>
-                                {questionsError && (
-                                  <div className="text-red-600 font-medium mt-2">
-                                    {questionsError}
-                                  </div>
-                                )}
+                                {errors.assessmentQuestions && (
+                    <p className="text-red-500 text-sm">{errors.assessmentQuestions}</p>
+                  )}
 
                                 {/* {errors.assessmentQuestions && <p className="text-red-500 text-xs">{errors.assessmentQuestions}</p>} */}
                                 {questionsLoading ? (
@@ -1343,7 +1383,7 @@ const RoundFormInterviews = () => {
                                       <span className="text-gray-900 font-medium">
                                         {qIndex + 1}. {question?.snapshot?.questionText || "No Question Text"}
                                       </span>
-                                      <button onClick={() => handleRemoveQuestion(question.questionId)}>
+                                      <button onClick={(e) => handleRemoveQuestion(question.questionId,e)}>
                                         <span className="text-red-500 text-xl font-bold">&times;</span>
                                       </button>
                                     </li>
@@ -1378,12 +1418,13 @@ const RoundFormInterviews = () => {
 
                                 {isInterviewQuestionPopup &&
                                   <QuestionBank
-                                    type="interviewerSection"
                                     interviewQuestionsLists={interviewQuestionsList}
+                                    type="interviewerSection"
                                     fromScheduleLater={true}
                                     onAddQuestion={handleAddQuestionToRound}
                                     handleRemoveQuestion={handleRemoveQuestion}
                                     handleToggleMandatory={handleToggleMandatory}
+                                     removedQuestionIds={removedQuestionIds}
                                   />
 
                                 }

@@ -23,6 +23,7 @@ import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { config } from '../../../../../config';
+import { useAssessments } from '../../../../../apiHooks/useAssessments';
 
 const RoundCard = ({
   round,
@@ -33,26 +34,63 @@ const RoundCard = ({
   hideHeader = false
 }) => {
 
-  const {
-    assessmentData,
-    sectionQuestions,
-    fetchQuestionsForAssessment,
-    questionsLoading,
-    questionsError,
-    setSectionQuestions,
-  } = useCustomContext();
+  // const {
+  //   assessmentData,
+  //   sectionQuestions,
+  //   fetchQuestionsForAssessment,
+  //   questionsLoading,
+  //   questionsError,
+  //   setSectionQuestions,
+  // } = useCustomContext();
+    const {fetchAssessmentQuestions} = useAssessments()
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
+   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [showInterviewers, setShowInterviewers] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+
+
+  // useEffect(() => {
+  //   if (round.assessmentId) {
+  //     fetchQuestionsForAssessment(round.assessmentId)
+  //   }
+
+  // }, [round.assessmentId])
+
+      const [sectionQuestions, setSectionQuestions] = useState({});
+      const [questionsLoading, setQuestionsLoading] = useState(false);
   
-
-
-
-  useEffect(() => {
-    if (round.assessmentId) {
-      fetchQuestionsForAssessment(round.assessmentId)
-    }
-
-  }, [round.assessmentId])
+    useEffect(() => {
+        if (showQuestions && round?.assessmentId) {
+          // const data = fetchAssessmentQuestions(round.assessmentId);
+          // setSectionQuestions(data)
+          setQuestionsLoading(true)
+          fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+            if (data) {
+              setQuestionsLoading(false)
+              setSectionQuestions(data?.sections);
+              // Only initialize toggleStates if it's empty or length doesn't match sections
+              // setToggleStates((prev) => {
+              //   if (prev.length !== data.sections.length) {
+              //     return new Array(data.sections.length).fill(false);
+              //   }
+              //   return prev; // Preserve existing toggle states
+              // });
+            } else {
+              console.error('Error fetching assessment questions:', error);
+              setQuestionsLoading(false)
+            }
+          });
+        }
+      }, [showQuestions, round?.assessmentId]);
+  
+  
+  console.log("round",round);
 
   const toggleSection = async (sectionId) => {
 
@@ -74,9 +112,9 @@ const RoundCard = ({
     }));
 
     // Fetch questions if the section is being expanded and questions are not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
-      await fetchQuestionsForAssessment(round?.assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
+    //   await fetchQuestionsForAssessment(round?.assessmentId);
+    // }
   };
 
     const toggleShowQuestions = () => {
@@ -113,13 +151,7 @@ const RoundCard = ({
   //   }
   // };
 
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showQuestions, setShowQuestions] = useState(false);
-  const [showInterviewers, setShowInterviewers] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
-  const [confirmAction, setConfirmAction] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+ 
 
 
   const interview = interviewData;
@@ -185,10 +217,10 @@ const RoundCard = ({
 
   // Get interviewers based on interviewerType
   const internalInterviewers =
-    round?.interviewerType === "internal" ? round?.interviewers || [] : [];
+    round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
   const externalInterviewers =
-    round?.interviewerType === "external" ? round?.interviewers || [] : [];
+    round?.interviewerType === "External" ? round?.interviewers || [] : [];
 
   // Get questions
   const questions = round?.questions || [];
@@ -272,8 +304,11 @@ const RoundCard = ({
                 </div>
 
                 <div>
+                  {round.roundTitle !== "Assessment" &&
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+                    <h4 className="text-sm font-medium text-gray-700">{
+                      showInterviewers && round?.interviewerType
+                      } Interviewers</h4>
                     <button
                       onClick={() => setShowInterviewers(!showInterviewers)}
                       className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
@@ -282,6 +317,7 @@ const RoundCard = ({
                       {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
                     </button>
                   </div>
+}
 
                   {showInterviewers && (
                     <div className="space-y-2">
@@ -296,7 +332,7 @@ const RoundCard = ({
                               <div key={interviewer._id} className="flex items-center">
                                 <InterviewerAvatar interviewer={interviewer} size="sm" />
                                 <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer.name}
+                                {interviewer?.firstName || "" + interviewer.lastName || ""}
                                 </span>
                                 {/* {isRoundActive && canEdit && (
                                   <button
@@ -367,7 +403,54 @@ const RoundCard = ({
                   )}
                 </div>
               )} */}
-              {(questions?.length > 0 || round.assessmentId) && (
+{
+  questions?.length > 0  && 
+  <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
+                    <button
+                      onClick={toggleShowQuestions}
+                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                    >
+                      {showQuestions ? 'Hide' : 'Show'}
+                      {showQuestions ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                    </button>
+                  </div>
+
+                  {showQuestions && round.questions && (
+                    <div className="space-y-2">
+                      {round?.questions.length > 0 ? (
+                        <ul className="mt-2 space-y-1">
+                          {round.questions.map((question, qIndex) => {
+                            // const isMandatory = question?.mandatory === "true";
+                            const questionText = question?.snapshot?.questionText || 'No Question Text Available';
+                            return (
+                              <li
+                                key={qIndex}
+                                className="text-gray-600 font-sm"
+
+                              >
+                                <span >
+                                  {/* {qIndex + 1}. */}
+                                  • {questionText || "No question text available"}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                      )}
+
+                    </div>
+                  )}
+
+
+
+                </div>
+}
+
+              {( round.assessmentId) && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">Assessment Questions</h4>

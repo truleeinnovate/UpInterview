@@ -531,7 +531,7 @@ app.get('/api/:model', async (req, res) => {
         return res.status(200).json(groupedQuestions);
 
       case 'position':
-        console.log("query",query);
+        // console.log("query",query);
         query = query
           .populate({
             path: 'rounds.interviewers',

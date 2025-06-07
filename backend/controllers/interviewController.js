@@ -177,7 +177,7 @@
 //     }
 
 //     const processedInterviewers = [];
-    
+
 //     for (const interviewer of interviewers) {
 //         try {
 //             if (mongoose.Types.ObjectId.isValid(interviewer) && !Array.isArray(interviewer)) {
@@ -186,7 +186,7 @@
 //             }
 //             if (interviewer.email) {
 //                 let contact = await Contacts.findOne({ email: interviewer.email });
-                
+
 //                 if (!contact) {
 //                     contact = new Contacts({
 //                         firstName: interviewer.name?.split(' ')[0] || 'Unknown',
@@ -199,7 +199,7 @@
 //                     });
 //                     await contact.save();
 //                 }
-                
+
 //                 if (contact._id) {
 //                     processedInterviewers.push(contact._id);
 //                 }
@@ -208,7 +208,7 @@
 //             console.error('Error processing interviewer:', error);
 //         }
 //     }
-    
+
 //     return processedInterviewers;
 // }
 
@@ -217,11 +217,11 @@
 //         const { interviewId, round, roundId, questions } = req.body;
 //         console.log("saveInterviewRound called with body:", req.body);
 //         console.log("interviewId", interviewId);
-        
+
 //         if (!interviewId || !round) {
 //             return res.status(400).json({ message: "Interview ID and round data are required." });
 //         }
-        
+
 //         if (round.interviewers) {
 //             round.interviewers = await processInterviewers(round.interviewers);
 //         }
@@ -448,6 +448,8 @@ const createInterview = async (req, res) => {
             }
         }
 
+        console.log("roundsToSave", candidateId, positionId, templateId, status, orgId, userId, interviewId, updatingInterviewStatus, completionReason);
+
         const template = await InterviewTemplate.findById(templateId);
 
         let interview;
@@ -493,6 +495,7 @@ const createInterview = async (req, res) => {
         if (!updatingInterviewStatus) {
             const position = await Position.findById(positionId);
             let roundsToSave = [];
+            
             if (position?.templateId?.toString() === templateId?.toString()) {
                 roundsToSave = position.rounds || [];
             } else if (position?.templateId && position?.templateId.toString() !== templateId?.toString()) {
@@ -504,10 +507,8 @@ const createInterview = async (req, res) => {
             } else if (templateId) {
                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
             }
-            roundsToSave = roundsToSave.map((round, index) => ({
-                ...round,
-                sequence: index + 1,
-            }));
+
+            console.log("roundsToSave", roundsToSave);
 
             if (roundsToSave.length > 0) {
                 if (isUpdate) {
@@ -515,29 +516,60 @@ const createInterview = async (req, res) => {
                     await interviewQuestions.deleteMany({ interviewId: interview._id });
                 }
 
-                const insertedRounds = await InterviewRounds.insertMany(
-                    roundsToSave.map(round => ({
+                // Process each round with proper field mapping
+                for (let index = 0; index < roundsToSave.length; index++) {
+                    const round = roundsToSave[index];
+                    
+                    // Create round document with proper field mapping
+                    const roundDoc = new InterviewRounds({
                         interviewId: interview._id,
-                        sequence: round.sequence,
-                        roundTitle: round.roundTitle,
-                        interviewMode: round.interviewMode,
-                        interviewType: round.interviewType,
-                        interviewerType: round.interviewerType,
-                        duration: round.duration,
-                        instructions: round.instructions,
-                        dateTime: round.dateTime,
-                        interviewers: round.interviewers || [],
+                        sequence: index + 1, // Use index-based sequence
+                        roundTitle: round.roundTitle || '',
+                        interviewMode: round.interviewMode || '',
+                        interviewType: round.interviewType || '', // This field was missing in your mapping
+                        interviewerType: round.interviewerType || '',
+                        selectedInterviewersType: round.selectedInterviewersType || '', // This field doesn't exist in schema
+                        duration: round.duration || '', // Map interviewDuration to duration
+                        instructions: round.instructions || '',
+                        dateTime: round.dateTime || '',
+                        interviewers: round.interviewers || [], // This should be ObjectId array
                         status: round.status || "Pending",
-                        questions: round.questions || [],
-                        meetingId: round.meetingId,
                         meetLink: round.meetLink || [],
-                        assessmentId: round.assessmentId,
-                    }))
-                );
+                        meetingId: round.meetingId || '',
+                        assessmentId: round.assessmentId || null,
+                        questions: [], // Initialize as empty array
+                        rejectionReason: round.rejectionReason || '',
+                        minimumInterviewers: round.minimumInterviewers || '', // This field doesn't exist in schema
+                        interviewerGroupId: round.interviewerGroupId || null // This field doesn't exist in schema
+                    });
 
-                for (const round of insertedRounds) {
-                    if (round.questions && round.questions.length > 0) {
-                        await handleInterviewQuestions(interview._id, round._id, round.questions);
+                    // Save the round document
+                    const savedRound = await roundDoc.save();
+                    console.log("Saved roundDoc:", JSON.stringify(savedRound, null, 2));
+
+                    // Handle questions if they exist and are valid
+                    if (round.questions && Array.isArray(round.questions) && round.questions.length > 0) {
+                        try {
+                            // Validate questions structure
+                            const validQuestions = round.questions.every(q => 
+                                q && (q.questionId || q._id) && (q.snapshot || q.question)
+                            );
+                            
+                            if (validQuestions) {
+                                // Transform questions to match expected format
+                                const transformedQuestions = round.questions.map(q => ({
+                                    questionId: q.questionId || q._id,
+                                    snapshot: q.snapshot || q
+                                }));
+                                
+                                await handleInterviewQuestions(interview._id, savedRound._id, transformedQuestions);
+                                console.log(`Questions saved for round ${savedRound._id}`);
+                            } else {
+                                console.warn(`Invalid questions structure for round ${savedRound._id}, skipping questions.`);
+                            }
+                        } catch (questionError) {
+                            console.error(`Error saving questions for round ${savedRound._id}:`, questionError);
+                        }
                     }
                 }
             }
@@ -546,9 +578,194 @@ const createInterview = async (req, res) => {
         res.status(201).json(interview);
     } catch (error) {
         console.error("Error creating interview:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
+
+// const createInterview = async (req, res) => {
+//     try {
+//         const { candidateId, positionId, templateId, status, orgId, userId, interviewId, updatingInterviewStatus, completionReason } = req.body;
+//         let candidate = null;
+
+//         if (!updatingInterviewStatus) {
+//             candidate = await Candidate.findById(candidateId);
+//             if (!candidate) {
+//                 return res.status(404).json({ message: "Candidate not found" });
+//             }
+//         }
+//         console.log("roundsToSave", candidateId, positionId, templateId, status, orgId, userId, interviewId, updatingInterviewStatus, completionReason);
+
+
+//         const template = await InterviewTemplate.findById(templateId);
+
+//         //   console.log("template",template);
+
+
+//         let interview;
+//         let isUpdate = Boolean(interviewId);
+//         let interviewData = {
+//             candidateId,
+//             positionId,
+//             templateId: template ? templateId : undefined,
+//             ownerId: userId,
+//             tenantId: orgId || undefined,
+//             completionReason,
+//             status
+//         };
+
+//         if (isUpdate) {
+//             interviewData.updatedBy = userId;
+//             interview = await Interview.findByIdAndUpdate(interviewId, interviewData, { new: true });
+//             if (!interview) {
+//                 return res.status(404).json({ message: "Interview not found" });
+//             }
+//         } else {
+//             // Generate interviewCode for new interview
+//             const lastInterview = await Interview.findOne({})
+//                 .sort({ createdAt: -1 })
+//                 .select('interviewCode')
+//                 .lean();
+
+//             let nextNumber = 1;
+//             if (lastInterview && lastInterview.interviewCode) {
+//                 const match = lastInterview.interviewCode.match(/INV-(\d+)/);
+//                 if (match) {
+//                     nextNumber = parseInt(match[1], 10) + 1;
+//                 }
+//             }
+//             interviewData.interviewCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+//             interviewData.createdBy = userId;
+
+//             interview = new Interview(interviewData);
+//             await interview.save();
+//         }
+
+//         // Handle rounds and questions if not just updating status
+//         if (!updatingInterviewStatus) {
+//             const position = await Position.findById(positionId);
+//             let roundsToSave = [];
+//             if (position?.templateId?.toString() === templateId?.toString()) {
+//                 roundsToSave = position.rounds || [];
+//             } else if (position?.templateId && position?.templateId.toString() !== templateId?.toString()) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             } else if (!position?.templateId && position?.rounds?.length > 0 && templateId) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             } else if (!position?.templateId && position?.rounds?.length > 0) {
+//                 roundsToSave = position.rounds;
+//             } else if (templateId) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             }
+
+//             console.log("roundsToSave", roundsToSave);
+
+//             roundsToSave = roundsToSave.map((round, index) => ({
+//                 ...round,
+//                 sequence: index + 1,
+//             }));
+
+//             // // Map and transform the rounds data to match your database schema
+//             // const transformedRounds = roundsToSave.map((round, index) => ({
+//             //     interviewId: interview._id,
+//             //     sequence: round.sequence || index + 1,
+//             //     roundTitle: round.roundTitle,
+//             //     interviewMode: round.interviewMode,
+//             //     interviewerType: round.interviewerType,
+//             //     selectedInterviewersType: round.selectedInterviewersType,
+//             //     duration: round.duration, // map interviewDuration to duration
+//             //     instructions: round.instructions,
+//             //     interviewers: round.internalInterviewers || round.interviewers || [], // handle both possible fields
+//             //     status: round.status || "Pending", // default status
+//             //     questions: round.questions || [],
+//             //     assessmentId: round.assessmentId,
+//             //     minimumInterviewers: round.minimumInterviewers || "1",
+//             //     interviewerGroupId: round.interviewerGroupId || null
+//             // }));
+
+
+//             if (roundsToSave.length > 0) {
+//                 if (isUpdate) {
+//                     await InterviewRounds.deleteMany({ interviewId: interview._id });
+//                     await interviewQuestions.deleteMany({ interviewId: interview._id });
+//                 }
+
+//                 // const insertedRounds = await InterviewRounds.insertMany(
+//                 //     roundsToSave.map(round => ({
+//                 //         interviewId: interview._id,
+//                 //         sequence: round.sequence,
+//                 //         roundTitle: round.roundTitle,
+//                 //         interviewMode: round.interviewMode,
+//                 //         interviewType: round.interviewType,
+//                 //         interviewerType: round.interviewerType,
+//                 //         duration: round.duration,
+//                 //         instructions: round.instructions,
+//                 //         dateTime: round.dateTime,
+//                 //         interviewers: round.interviewers || [],
+//                 //         status: round.status || "Pending",
+//                 //         questions: round.questions || [],
+//                 //         meetingId: round.meetingId,
+//                 //         meetLink: round.meetLink || [],
+//                 //         assessmentId: round.assessmentId,
+//                 //     }))
+//                 // );
+
+//                 // const insertedRounds = await InterviewRounds.insertMany(transformedRounds);
+//                 // console.log("insertedRounds", insertedRounds);
+
+//                 // for (const round of insertedRounds) {
+//                 //     if (round.questions && round.questions.length > 0) {
+//                 //         await handleInterviewQuestions(interview._id, round._id, round.questions);
+//                 //     }
+//                 // }
+
+//                     for (const round of roundsToSave) {
+//                     const roundDoc = new InterviewRounds({
+//                         interviewId: interview._id,
+//                         sequence: round.sequence,
+//                         roundTitle: round.roundTitle,
+//                         interviewMode: round.interviewMode,
+//                         interviewType: round.interviewType,
+//                         interviewerType: round.interviewerType,
+//                         selectedInterviewersType: round.selectedInterviewersType,
+//                         duration: round.duration,
+//                         instructions: round.instructions,
+//                         dateTime: round.dateTime,
+//                         interviewers: round.interviewers,
+//                         status: round.status,
+//                         meetLink: round.meetLink,
+//                         meetingId: round.meetingId,
+//                         assessmentId: round.assessmentId,
+//                         questions: [],
+//                         rejectionReason: round.rejectionReason,
+//                         minimumInterviewers: round.minimumInterviewers,
+//                         interviewerGroupId: round.interviewerGroupId
+//                     });
+
+//                     await roundDoc.save();
+
+//                     if (round.questions ) {
+//                         const validQuestions = round.questions.every(q => q.questionId && q.snapshot);
+//                         if (validQuestions) {
+//                             await handleInterviewQuestions(interview._id, roundDoc._id, round.questions);
+//                         } else {
+//                             console.warn(`Invalid questions for round ${roundDoc._id}, skipping.`);
+//                         }
+//                     }
+
+//                     console.log("Saved roundDoc:", JSON.stringify(roundDoc, null, 2));
+//                 }
+//             }
+
+
+//             // res.status(201).json(interview);
+//         }
+
+//         res.status(201).json(interview);
+//     } catch (error) {
+//         console.error("Error creating interview:", error);
+//         res.status(500).json({ message: "Internal server error" });
+//     }
+// };
 
 async function handleInterviewQuestions(interviewId, roundId, questions) {
     const existingQuestions = await interviewQuestions.find({ interviewId, roundId });

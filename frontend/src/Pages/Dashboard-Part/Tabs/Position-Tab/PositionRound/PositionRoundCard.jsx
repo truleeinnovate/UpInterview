@@ -44,7 +44,6 @@ const PositionRoundCard = ({
   // } = useCustomContext();
   const {fetchAssessmentQuestions} = useAssessments()
 
-  const { resolveInterviewerDetails } = useInterviewerDetails();
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
@@ -201,7 +200,7 @@ console.log("round",round);
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  console.log("internalInterviewers", internalInterviewers, round);
+  // console.log("internalInterviewers", internalInterviewers, round);
 
 
   return (

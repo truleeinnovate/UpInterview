@@ -93,6 +93,7 @@ const InterviewForm = () => {
 
     if (!positionId) {
       toast.error("Please select a position first.", { autoClose: 3000 });
+      e.target.value = ''; 
       return;
     }
 
@@ -106,6 +107,8 @@ const InterviewForm = () => {
         setTemplateId(newTemplateId);
       }
     }
+
+    
   };
 
   const handleProceed = () => {
@@ -114,7 +117,7 @@ const InterviewForm = () => {
   };
 
   const handleCancel = () => {
-    setTemplateId(null);
+    setTemplateId('');
     setShowModal(false);
   };
 

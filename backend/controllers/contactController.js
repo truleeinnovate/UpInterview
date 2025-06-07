@@ -15,7 +15,7 @@ const fetchContacts = async (req, res) => {
             }
         }).lean();
 
-         console.log("contact",contacts);
+        //  console.log("contact",contacts);
 
         //  const transformedContacts = contacts.map(contact => {
 
