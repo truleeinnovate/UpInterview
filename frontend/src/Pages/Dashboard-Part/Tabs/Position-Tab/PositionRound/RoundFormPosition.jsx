@@ -340,7 +340,7 @@ function RoundFormPosition() {
 
   const handleInternalInterviewerSelect = (interviewers) => {
     if (formData.interviewerType === "External") {
-      alert("You need to clear external interviewers before selecting internal interviewers.");
+      alert("You need to clear external interviewers before selecting Internal interviewers.");
       return;
     }
     // Add name property by combining firstName and lastName
@@ -531,6 +531,10 @@ function RoundFormPosition() {
         }),
       instructions: formData.instructions,
     };
+console.log("formData.duration",formData.duration);
+
+    console.log("round data",roundData);
+    
 
 
     try {
@@ -1085,7 +1089,7 @@ function RoundFormPosition() {
                               size="sm"
                               className={`${isInternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
                               disabled={isInternalSelected}
-                              title={isInternalSelected ? "Clear internal interviewers first" : ""}
+                              title={isInternalSelected ? "Clear Internal interviewers first" : ""}
                             >
                               <User className="h-4 w-4 mr-1 text-orange-600" />
                               Select Outsourced
