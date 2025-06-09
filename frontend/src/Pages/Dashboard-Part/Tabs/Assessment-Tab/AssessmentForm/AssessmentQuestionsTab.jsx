@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from 'react';
 import Popup from "reactjs-popup";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
 import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
@@ -12,6 +12,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -50,6 +51,8 @@ const AssessmentQuestionsTab = ({
   isPassScoreSubmitted,
   setIsQuestionLimitErrorPopupOpen
 }) => {
+  const [isQuestionPopup, setIsQuestionPopup] = useState(false);
+
   // Toggle action menu for sections and questions
   const toggleActionMenu = (type, sectionIndex, questionIndex = null) => {
     if (
@@ -74,6 +77,11 @@ const AssessmentQuestionsTab = ({
     0
   );
   const questionScoreOverall = totalScore && totalQuestions ? (Number(totalScore) / totalQuestions).toFixed(2) : 0;
+
+
+  const handlePopupToggle = (index) => {
+    setIsQuestionPopup(!isQuestionPopup);
+  };
 
   return (
     <div className="">
@@ -203,7 +211,54 @@ const AssessmentQuestionsTab = ({
                       <h3 className="font-semibold text-gray-800">{section.SectionName}</h3>
                     </div>
 
-                    <Popup
+                    <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    onClick={handlePopupToggle}>
+                      <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110"
+                         />
+                      Add Questions
+                    </button>
+
+                    {/* Question Popup */}
+                    {isQuestionPopup && (
+                      <div
+                        className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                        onClick={() => setIsQuestionPopup(false)}
+                      >
+                        <div
+                          className="bg-white rounded-md w-[95%] h-[90%]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="py-3 px-4  flex items-center justify-between">
+                            <h2 className="text-xl text-custom-blue font-semibold">Add Assessment Questions</h2>
+                            <button>
+                              <X
+                                className="text-2xl text-red-500"
+                                onClick={() => handlePopupToggle()}
+                              />
+                            </button>
+                          </div>
+
+
+                          {isQuestionPopup &&
+                            <QuestionBank
+                              assessmentId={assessmentId}
+                              sectionName={section.SectionName}
+                              updateQuestionsInAddedSectionFromQuestionBank={
+                                updateQuestionsInAddedSectionFromQuestionBank
+                              }
+                              addedSections={addedSections}
+                              questionsLimit={questionsLimit}
+                              checkedCount={checkedCount}
+                              type="assessment"
+                            />
+
+                          }
+
+                        </div>
+                      </div>
+                    )}
+
+                    {/* <Popup
                       trigger={
                         <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                           <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
@@ -229,7 +284,9 @@ const AssessmentQuestionsTab = ({
                       }}
                     >
                       {(close) => (
-                        <div className="w-full h-full">
+                        <div className="">
+
+
                           <QuestionBank
                             assessmentId={assessmentId}
                             sectionName={section.SectionName}
@@ -244,7 +301,7 @@ const AssessmentQuestionsTab = ({
                           />
                         </div>
                       )}
-                    </Popup>
+                    </Popup> */}
                   </div>
 
                   <div className="flex items-center space-x-4">
