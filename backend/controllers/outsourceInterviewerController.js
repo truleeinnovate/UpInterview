@@ -78,7 +78,7 @@ exports.updateInterviewerFeedback = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 exports.getAllOutsourceInterviewers = async (req, res) => {
   try {
     const now = new Date();

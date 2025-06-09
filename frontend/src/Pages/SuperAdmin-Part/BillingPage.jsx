@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
 import { AiOutlineDollar, AiOutlineFileText } from "react-icons/ai";
 import PaymentsTable from "../../Components/SuperAdminComponents/Billing/PaymentsTable";
 import ReceiptsTable from "../../Components/SuperAdminComponents/Billing/ReceiptsTable";
 import InvoicesTable from "../../Components/SuperAdminComponents/Billing/InvoicesTable";
+// import axios from "axios";
+// import { config } from "../../config";
 
-function BillingPage() {
+function BillingPage({ organizationId }) {
   const [activeTab, setActiveTab] = useState("invoices");
+
+  useEffect(() => {
+    document.title = "Billing | Admin Portal";
+  }, []);
 
   return (
     <div className="space-y-6">
-      <div className="absolute md:mt-4 sm:mt-4 lg:mt-2 xl:mt-2 2xl:mt-2 top-16 left-0 right-0 bg-background">
+      <div
+        className={`absolute py-3 left-0 right-0 bg-background ${
+          organizationId ? "top-0" : "top-16"
+        }`}
+      >
         <div className="flex justify-between items-center px-4 mb-4">
           <h1 className="text-2xl font-bold text-custom-blue">Billing</h1>
         </div>
@@ -40,9 +50,15 @@ function BillingPage() {
           </div>
 
           <div className="relative min-h-screen w-full">
-            {activeTab === "invoices" && <InvoicesTable />}
-            {activeTab === "payments" && <PaymentsTable />}
-            {activeTab === "receipts" && <ReceiptsTable />}
+            {activeTab === "invoices" && (
+              <InvoicesTable organizationId={organizationId} />
+            )}
+            {activeTab === "payments" && (
+              <PaymentsTable organizationId={organizationId} />
+            )}
+            {activeTab === "receipts" && (
+              <ReceiptsTable organizationId={organizationId} />
+            )}
           </div>
         </div>
       </div>

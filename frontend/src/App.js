@@ -292,7 +292,7 @@ const Task = lazy(() =>
   import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
 );
 
-// ------  SUPER ADMIN ---------
+// <------  SUPER ADMIN -------------------------------------------------
 const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
 const SuperAdminDashboard = lazy(() =>
   import("./Pages/SuperAdmin-Part/Dashboard.jsx")
@@ -337,8 +337,12 @@ const AddInvoiceForm = lazy(() =>
   import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
 );
 
+// const SupportTicketsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/SupportTicketsPage.jsx")
+// );
+
 const SupportTicketsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/SupportTicketsPage.jsx")
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
 );
 const AddSupportForm = lazy(() =>
   import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
@@ -358,7 +362,7 @@ const InternalLogsPage = lazy(() =>
 const IntegrationsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
 );
-// ---------------------------------------------------
+// ---------------------------------------------------------->
 
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
@@ -814,7 +818,7 @@ const App = () => {
             {/* task */}
             <Route path="/task" element={<Task />} />
 
-            {/* ----------------- SUPER ADMIN --------------- */}
+            {/* <----------------- SUPER ADMIN --------------- */}
 
             <Route
               path="/login"
@@ -874,10 +878,7 @@ const App = () => {
               {/* <Route path="admin-billing" element={<BillingPage />} /> */}
               <Route path="admin-billing" element={<BillingPage />}>
                 <Route index element={null} />
-                <Route
-                  path="new"
-                  element={<AddInvoiceForm mode="Create" />}
-                />
+                <Route path="new" element={<AddInvoiceForm mode="Create" />} />
                 <Route
                   path="edit/:id"
                   element={<AddInvoiceForm mode="Edit" />}
@@ -899,6 +900,7 @@ const App = () => {
               <Route path="internal-logs" element={<InternalLogsPage />} />
               <Route path="integrations" element={<IntegrationsPage />} />
             </Route>
+            {/* ------------------------------------------------------------------------> */}
 
             <Route path="*" element={<NotFoundPage />} />
           </Route>

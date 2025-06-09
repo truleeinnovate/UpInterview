@@ -6,7 +6,6 @@ const mongoose = require("mongoose");
 const getInvoiceById = async (req, res) => {
   try {
     const { ownerId } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(ownerId)) {
       return res.status(400).json({ error: "Invalid ownerId format" });
     }
@@ -35,6 +34,7 @@ const getInvoiceById = async (req, res) => {
   }
 };
 
+// SUPER ADMIN added by Ashok
 const getInvoices = async (req, res) => {
   try {
     const invoices = await Invoice.find();

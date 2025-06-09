@@ -24,7 +24,7 @@ import axios from "axios";
 import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
 
-function InvoicesTable() {
+function InvoicesTable({ organizationId }) {
   const [view, setView] = useState("table");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectInvoiceView, setSelectInvoiceView] = useState(false);
@@ -43,341 +43,351 @@ function InvoicesTable() {
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
 
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [invoices, setInvoices] = useState([
-    {
-      id: "INV-001",
-      tenantId: "TENANT-001",
-      type: "subscription",
-      price: 2000,
-      discount: 500,
-      totalAmount: 1500,
-      amountPaid: 1500,
-      outstandingAmount: 0,
-      status: "paid",
-      dueDate: "2025-07-01T00:00:00Z",
-      startDate: "2025-06-01T00:00:00Z",
-      endDate: "2025-07-01T00:00:00Z",
-      lineItems: [
-        {
-          description: "Monthly Subscription - Enterprise Plan",
-          amount: 2000,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-002",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-003",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-004",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-005",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-006",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-007",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-008",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-009",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-0010",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-0011",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-0012",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
-    {
-      id: "INV-0013",
-      tenantId: "TENANT-002",
-      type: "custom",
-      price: 3000,
-      discount: 0,
-      totalAmount: 3000,
-      amountPaid: 1500,
-      outstandingAmount: 1500,
-      status: "partially_paid",
-      dueDate: "2025-07-15T00:00:00Z",
-      lineItems: [
-        {
-          description: "Custom Development Services",
-          amount: 2000,
-          quantity: 1,
-          tax: 200,
-        },
-        {
-          description: "Support Hours",
-          amount: 800,
-          quantity: 1,
-          tax: 0,
-        },
-      ],
-    },
+    // {
+    //   id: "INV-001",
+    //   tenantId: "TENANT-001",
+    //   type: "subscription",
+    //   price: 2000,
+    //   discount: 500,
+    //   totalAmount: 1500,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 0,
+    //   status: "paid",
+    //   dueDate: "2025-07-01T00:00:00Z",
+    //   startDate: "2025-06-01T00:00:00Z",
+    //   endDate: "2025-07-01T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Monthly Subscription - Enterprise Plan",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-003",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-004",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-005",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-006",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-007",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-008",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-009",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-0010",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-0011",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-0012",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: "INV-0013",
+    //   tenantId: "TENANT-002",
+    //   type: "custom",
+    //   price: 3000,
+    //   discount: 0,
+    //   totalAmount: 3000,
+    //   amountPaid: 1500,
+    //   outstandingAmount: 1500,
+    //   status: "partially_paid",
+    //   dueDate: "2025-07-15T00:00:00Z",
+    //   lineItems: [
+    //     {
+    //       description: "Custom Development Services",
+    //       amount: 2000,
+    //       quantity: 1,
+    //       tax: 200,
+    //     },
+    //     {
+    //       description: "Support Hours",
+    //       amount: 800,
+    //       quantity: 1,
+    //       tax: 0,
+    //     },
+    //   ],
+    // },
   ]);
 
   // filters ----------------------------------------------------------------
@@ -442,19 +452,21 @@ function InvoicesTable() {
     const getInvoices = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/invoices`
-        );
+        const endpoint = organizationId
+          ? `${config.REACT_APP_API_URL}/invoices/${organizationId}`
+          : `${config.REACT_APP_API_URL}/invoices`;
+
+        const response = await axios.get(endpoint);
         setInvoices(response.data.invoices);
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        console.error("Error fetching invoices:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     getInvoices();
-  }, []);
+  }, [organizationId]);
 
   useEffect(() => {
     if (isTablet) {
@@ -699,11 +711,14 @@ function InvoicesTable() {
 
   return (
     <div className="space-y-6 min-h-screen">
-      <div className="fixe md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+      <div className="absolute md:mt-2 sm:mt-4 top-2 left-0 right-0 bg-background">
+        <div className="flex justify-between items-center px-4 mb-4">
+          <h2 className="text-lg font-medium text-custom-blue">Invoices</h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Invoices</div>
-            <div className="text-xl font-semibold">{invoices.length}</div>
+            <div className="text-xl font-semibold">{invoices?.length || 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Amount</div>
@@ -724,11 +739,13 @@ function InvoicesTable() {
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Collection Rate</div>
             <div className="text-xl font-semibold">
-              {(
-                (invoices.reduce((sum, i) => sum + i.amountPaid, 0) /
-                  invoices.reduce((sum, i) => sum + i.totalAmount, 0)) *
-                100
-              ).toFixed(1)}
+              {invoices.length !== 0
+                ? (
+                    (invoices.reduce((sum, i) => sum + i.amountPaid, 0) /
+                      invoices.reduce((sum, i) => sum + i.totalAmount, 0)) *
+                    100
+                  ).toFixed(1)
+                : 0}
               %
             </div>
           </div>
@@ -738,11 +755,11 @@ function InvoicesTable() {
           <div className="md:mt-2 sm:mt-4 w-full">
             <main className="px-4">
               <div className="sm:px-0">
-                <Header
+                {/* <Header
                   title="Invoices"
                   onAddClick={() => navigate("new")}
                   addButtonText="Create Invoice"
-                />
+                /> */}
                 <Toolbar
                   view={view}
                   setView={setView}
@@ -766,101 +783,95 @@ function InvoicesTable() {
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            {invoices.length === 0 ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={tableActions}
-                        emptyState="No invoices found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((invoice) => ({
-                          ...invoices,
-                          id: invoice.id ? invoice.id : invoice._id,
-                          title: `${invoice._id || ""} ${invoice._id || ""}`,
-                          subtitle: "Invoice",
-                          avatar: "",
-                          status: invoice.status,
-                          isAssessmentView: <p>Is assignment view</p>,
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No invoices found."
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState="No invoices found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((invoice) => ({
+                        ...invoices,
+                        id: invoice.id ? invoice.id : invoice._id,
+                        title: `${invoice._id || ""} ${invoice._id || ""}`,
+                        subtitle: "Invoice",
+                        avatar: "",
+                        status: invoice.status,
+                        isAssessmentView: <p>Is assignment view</p>,
+                      }))}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No invoices found."
+                    />
+                  </div>
+                )}
 
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    <div className="space-y-3">
-                      {/* Current Status Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() =>
-                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                          }
-                        >
-                          <span className="font-medium text-gray-700">
-                            Current Status
-                          </span>
-                          {isCurrentStatusOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
-                          ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
-                          )}
-                        </div>
-                        {isCurrentStatusOpen && (
-                          <div className="mt-1 space-y-2 pl-2">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                                  {statusOptions.map((status) => (
-                                    <label
-                                      key={status}
-                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedStatus.includes(
-                                          status
-                                        )}
-                                        onChange={() =>
-                                          handleCurrentStatusToggle(status)
-                                        }
-                                        className="accent-custom-blue"
-                                      />
-                                      <span>{status}</span>
-                                    </label>
-                                  ))}
-                                </div>
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  <div className="space-y-3">
+                    {/* Current Status Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() =>
+                          setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                        }
+                      >
+                        <span className="font-medium text-gray-700">
+                          Current Status
+                        </span>
+                        {isCurrentStatusOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isCurrentStatusOpen && (
+                        <div className="mt-1 space-y-2 pl-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                {statusOptions.map((status) => (
+                                  <label
+                                    key={status}
+                                    className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedStatus.includes(status)}
+                                      onChange={() =>
+                                        handleCurrentStatusToggle(status)
+                                      }
+                                      className="accent-custom-blue"
+                                    />
+                                    <span>{status}</span>
+                                  </label>
+                                ))}
                               </div>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </FilterPopup>
-                </div>
-              </motion.div>
-            )}
+                  </div>
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

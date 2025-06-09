@@ -150,10 +150,6 @@ const mongoose = require('mongoose');
 // }
 
 
-
-
-
-
 exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
   try {
     const {id}= req.params 

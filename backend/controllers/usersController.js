@@ -490,7 +490,7 @@ const getUsersByTenant = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 const getPlatformUsers = async (req, res) => {
   try {
     const now = new Date();

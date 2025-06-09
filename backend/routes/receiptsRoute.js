@@ -3,7 +3,7 @@ const ReceiptRouter = express.Router();
 
 const { getReceiptsSummary } = require("../controllers/receiptsController");
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 ReceiptRouter.get("/", getReceiptsSummary);
 
 module.exports = ReceiptRouter;

@@ -1362,7 +1362,7 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok 
 const getInterviews = async (req, res) => {
   try {
     const now = new Date();

@@ -62,14 +62,14 @@ function LogDetailsPopup({ log, onClose }) {
                     <span className={`text-sm font-medium ${
                       log.status === 'success' ? 'text-green-600' :
                       log.status === 'error' ? 'text-red-600' : 'text-yellow-600'
-                    }`}>{log.status.toUpperCase()}</span>
+                    }`}>{log?.status?.toUpperCase()}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                     <span className="text-sm text-gray-600">Severity:</span>
                     <span className={`text-sm font-medium ${
                       log.severity === 'high' ? 'text-red-600' :
                       log.severity === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                    }`}>{log.severity.toUpperCase()}</span>
+                    }`}>{log?.severity?.toUpperCase()}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                     <span className="text-sm text-gray-600">Server:</span>

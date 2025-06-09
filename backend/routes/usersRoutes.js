@@ -9,7 +9,7 @@ const {
   getPlatformUsers,
 } = require("../controllers/usersController.js");
 
-//  SUPER ADMIN
+//  SUPER ADMIN added by Ashok
 router.get("/platform-users", getPlatformUsers);
 
 // Define the route for fetching users

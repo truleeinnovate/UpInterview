@@ -21,7 +21,7 @@ import {
 import axios from "axios";
 import { config } from "../../../config.js";
 
-function PaymentsTable() {
+function PaymentsTable({ organizationId }) {
   const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -277,23 +277,36 @@ function PaymentsTable() {
     setFilterPopupOpen(false);
   };
 
-  // Invoices API Call
+  // Payments API Call
   useEffect(() => {
     const getPaymentsSummary = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/payments`
-        );
+
+        const endpoint = organizationId
+          ? `${config.REACT_APP_API_URL}/payments/${organizationId}`
+          : `${config.REACT_APP_API_URL}/payments`;
+
+        const response = await axios.get(endpoint);
         setPayments(response.data.payments);
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        console.error("Error fetching payments:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     getPaymentsSummary();
+  }, [organizationId]);
+
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -524,24 +537,24 @@ function PaymentsTable() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Payments</div>
-            <div className="text-xl font-semibold">{payments.length}</div>
+            <div className="text-xl font-semibold">{payments?.length || 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Successful</div>
             <div className="text-xl font-semibold text-success-600">
-              {payments.filter((p) => p.status === "captured").length}
+              {payments?.filter((p) => p.status === "captured").length || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Pending</div>
             <div className="text-xl font-semibold text-warning-600">
-              {payments.filter((p) => p.status === "pending").length}
+              {payments?.filter((p) => p.status === "pending").length || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Failed</div>
             <div className="text-xl font-semibold text-error-600">
-              {payments.filter((p) => p.status === "failed").length}
+              {payments?.filter((p) => p.status === "failed").length || 0}
             </div>
           </div>
         </div>
@@ -568,7 +581,7 @@ function PaymentsTable() {
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            {payments.length === 0 ? (
+            {payments?.length === 0 ? (
               <Loading />
             ) : (
               <motion.div className="bg-white">

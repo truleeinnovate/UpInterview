@@ -897,7 +897,7 @@ const ReceiptsRoute = require("./routes/receiptsRoute.js");
 const WalletRouter = require("./routes/WalletRoutes.js");
 app.use("/feeds", historyFeedsRoutes);
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 // invoices
 app.use("/invoices", InvoiceRouter);
 
@@ -941,6 +941,11 @@ app.use("/interview", InterviewRoutes);
 const candidatePositionRoutes = require("./routes/candidatePositionRoutes.js");
 app.use("/candidateposition", candidatePositionRoutes);
 
-// SUPER ADMIN internal logs route
+// SUPER ADMIN internal logs route added by Ashok
 const internalLogRoutes = require("./routes/internalLogsRoutes.js");
-app.use("/internal-log", internalLogRoutes);
+app.use("/internal-logs", internalLogRoutes);
+
+// integration logs Added by Ashok
+const integrationLogRoutes = require("./routes/integrationLogRoutes");
+// app.use("/api/integration-logs", integrationLogRoutes); // original one
+app.use("/integration-logs", integrationLogRoutes); // added by Ashok

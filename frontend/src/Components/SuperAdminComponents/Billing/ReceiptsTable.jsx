@@ -21,7 +21,7 @@ import {
 import axios from "axios";
 import { config } from "../../../config.js";
 
-function ReceiptsTable() {
+function ReceiptsTable({ organizationId }) {
   const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -42,162 +42,162 @@ function ReceiptsTable() {
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [receipts, setReceipts] = useState([
-    {
-      id: "RCP-001",
-      invoiceId: "INV-001",
-      tenantId: "TENANT-001",
-      amount: 1500,
-      price: 2000,
-      discount: 500,
-      paymentMethod: "card",
-      transactionId: "TXN-001",
-      status: "success",
-      paymentDate: "2025-06-01T10:00:00Z",
-    },
-    {
-      id: "RCP-002",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-003",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-004",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-005",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-006",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-007",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-008",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-009",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-0010",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-0011",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-0012",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
-    {
-      id: "RCP-0013",
-      invoiceId: "INV-002",
-      tenantId: "TENANT-002",
-      amount: 2000,
-      price: 2000,
-      discount: 0,
-      paymentMethod: "bank_transfer",
-      transactionId: "TXN-002",
-      status: "pending",
-      paymentDate: "2025-06-02T09:00:00Z",
-    },
+    // {
+    //   id: "RCP-001",
+    //   invoiceId: "INV-001",
+    //   tenantId: "TENANT-001",
+    //   amount: 1500,
+    //   price: 2000,
+    //   discount: 500,
+    //   paymentMethod: "card",
+    //   transactionId: "TXN-001",
+    //   status: "success",
+    //   paymentDate: "2025-06-01T10:00:00Z",
+    // },
+    // {
+    //   id: "RCP-002",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-003",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-004",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-005",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-006",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-007",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-008",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-009",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-0010",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-0011",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-0012",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
+    // {
+    //   id: "RCP-0013",
+    //   invoiceId: "INV-002",
+    //   tenantId: "TENANT-002",
+    //   amount: 2000,
+    //   price: 2000,
+    //   discount: 0,
+    //   paymentMethod: "bank_transfer",
+    //   transactionId: "TXN-002",
+    //   status: "pending",
+    //   paymentDate: "2025-06-02T09:00:00Z",
+    // },
   ]);
 
   // filters
@@ -255,9 +255,12 @@ function ReceiptsTable() {
     const getReceiptsSummary = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/receipts`
-        );
+
+        const endpoint = organizationId
+          ? `${config.REACT_APP_API_URL}/receipts/${organizationId}`
+          : `${config.REACT_APP_API_URL}/receipts`;
+
+        const response = await axios.get(endpoint);
         setReceipts(response.data.receipts);
       } catch (error) {
         console.error("Error fetching receipts:", error);
@@ -267,6 +270,16 @@ function ReceiptsTable() {
     };
 
     getReceiptsSummary();
+  }, [organizationId]);
+
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -490,28 +503,34 @@ function ReceiptsTable() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Receipts</div>
-            <div className="text-xl font-semibold">{receipts.length}</div>
+            <div className="text-xl font-semibold">{receipts?.length || 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Amount</div>
             <div className="text-xl font-semibold">
-              {formatCurrency(receipts.reduce((sum, r) => sum + r.amount, 0))}
+              {formatCurrency(
+                receipts?.reduce((sum, r) => sum + r.amount, 0)
+              ) || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Discounts</div>
             <div className="text-xl font-semibold text-success-600">
-              {formatCurrency(receipts.reduce((sum, r) => sum + r.discount, 0))}
+              {formatCurrency(
+                receipts?.reduce((sum, r) => sum + r.discount, 0)
+              ) || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success Rate</div>
             <div className="text-xl font-semibold">
-              {(
-                (receipts.filter((r) => r.status === "success").length /
-                  receipts.length) *
-                100
-              ).toFixed(1)}
+              {receipts.length !== 0
+                ? (
+                    (receipts.filter((r) => r.status === "success").length /
+                      receipts.length) *
+                    100
+                  ).toFixed(1)
+                : 0}
               %
             </div>
           </div>
@@ -540,106 +559,98 @@ function ReceiptsTable() {
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            {receipts.length === 0 ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={tableActions}
-                        emptyState="No receipts found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((receipt) => ({
-                          ...receipts,
-                          id: receipt.id ? receipts.id : receipt._id,
-                          title: `${receipt._id || ""} ${
-                            receipt.LastName || ""
-                          }`,
-                          subtitle:
-                            receipt.CurrentRole ||
-                            receipt.CurrentExperience ||
-                            "N/A",
-                          avatar: "",
-                          status: receipt.status,
-                          isAssessmentView: <p>Is assignment view</p>,
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No receipts found."
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState="No receipts found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((receipt) => ({
+                        ...receipts,
+                        id: receipt.id ? receipts.id : receipt._id,
+                        title: `${receipt._id || ""} ${receipt.LastName || ""}`,
+                        subtitle:
+                          receipt.CurrentRole ||
+                          receipt.CurrentExperience ||
+                          "N/A",
+                        avatar: "",
+                        status: receipt.status,
+                        isAssessmentView: <p>Is assignment view</p>,
+                      }))}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No receipts found."
+                    />
+                  </div>
+                )}
 
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    <div className="space-y-3">
-                      {/* Current Status Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() =>
-                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                          }
-                        >
-                          <span className="font-medium text-gray-700">
-                            Current Status
-                          </span>
-                          {isCurrentStatusOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
-                          ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
-                          )}
-                        </div>
-                        {isCurrentStatusOpen && (
-                          <div className="mt-1 space-y-2 pl-2">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                                  {statusOptions.map((status) => (
-                                    <label
-                                      key={status}
-                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedStatus.includes(
-                                          status
-                                        )}
-                                        onChange={() =>
-                                          handleCurrentStatusToggle(status)
-                                        }
-                                        className="accent-custom-blue"
-                                      />
-                                      <span>{status}</span>
-                                    </label>
-                                  ))}
-                                </div>
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  <div className="space-y-3">
+                    {/* Current Status Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() =>
+                          setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                        }
+                      >
+                        <span className="font-medium text-gray-700">
+                          Current Status
+                        </span>
+                        {isCurrentStatusOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isCurrentStatusOpen && (
+                        <div className="mt-1 space-y-2 pl-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                {statusOptions.map((status) => (
+                                  <label
+                                    key={status}
+                                    className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedStatus.includes(status)}
+                                      onChange={() =>
+                                        handleCurrentStatusToggle(status)
+                                      }
+                                      className="accent-custom-blue"
+                                    />
+                                    <span>{status}</span>
+                                  </label>
+                                ))}
                               </div>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </FilterPopup>
-                </div>
-              </motion.div>
-            )}
+                  </div>
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

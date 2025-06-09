@@ -24,11 +24,10 @@ import { config } from "../../config.js";
 
 function InternalLogsPage() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  // const [editModeOn, setEditModeOn] = useState(false);
+  // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -46,6 +45,7 @@ function InternalLogsPage() {
   }, []);
 
   const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedLogId, setSelectedLogId] = useState(null);
   const [logs, setLogs] = useState([
     {
       timeStamp: "2025-06-02T10:15:00Z",
@@ -330,7 +330,7 @@ function InternalLogsPage() {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/internal-log`
+          `${config.REACT_APP_API_URL}/internal-logs`
         );
         setLogs(response.data.logs);
       } catch (error) {
@@ -343,6 +343,37 @@ function InternalLogsPage() {
     getInternalLogs();
   }, []);
 
+  // Get Internal log by ID API
+  useEffect(() => {
+    const getInternalLogById = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/internal-logs/${selectedLogId}`
+        );
+        setSelectedLog(response.data.data);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (selectedLogId) {
+      getInternalLogById();
+    }
+  }, [selectedLogId]);
+
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -351,16 +382,16 @@ function InternalLogsPage() {
     }
   }, [isTablet]);
 
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
-  };
+  // const handleFilterChange = (filters) => {
+  //   setSelectedFilters(filters);
+  //   setCurrentPage(0);
+  //   setIsFilterActive(
+  //     filters.status.length > 0 ||
+  //       filters.tech.length > 0 ||
+  //       filters.experience.min ||
+  //       filters.experience.max
+  //   );
+  // };
 
   const dataToUse = logs;
 
@@ -460,11 +491,6 @@ function InternalLogsPage() {
 
   const tableColumns = [
     {
-      key: "timestamp",
-      header: "Timestamp",
-      render: (vale, row) => formatDate(row.timeStamp),
-    },
-    {
       key: "logId",
       header: "Log ID",
       render: (value, row) => (
@@ -505,6 +531,11 @@ function InternalLogsPage() {
       key: "executionTime",
       header: "Execution Time",
     },
+    {
+      key: "timestamp",
+      header: "Timestamp",
+      render: (vale, row) => formatDate(row.timeStamp),
+    },
   ];
 
   // Table Actions Configuration
@@ -513,25 +544,13 @@ function InternalLogsPage() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/internal-log/${row._id}`),
+      onClick: (row) => setSelectedLogId(row.logId),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/internal-log/${row._id}`),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
+      onClick: (row) => setSelectedLogId(row.logId),
     },
   ];
 
@@ -544,7 +563,7 @@ function InternalLogsPage() {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setSelectedLogId(item.logId);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -595,12 +614,12 @@ function InternalLogsPage() {
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4 mt-4">
           <h1 className="text-2xl font-bold text-custom-blue">Internal Logs</h1>
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <button className="flex items-center btn-secondary border border-gray-200 rounded-md py-1 px-2">
               <AiOutlineDownload className="mr-2" />
               Export
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">

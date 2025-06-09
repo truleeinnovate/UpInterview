@@ -23,7 +23,6 @@ function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const mainNavItems = [
-    { path: "/admin-dashboard", label: "Dashboard" },
     { path: "/tenants", label: "Tenants" },
     {
       path: "/interviewer-requests",

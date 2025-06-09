@@ -147,7 +147,7 @@ exports.updateSupportTicket = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// <------ SUPER ADMIN ------------------------
 exports.getAllTickets = async (req, res) => {
   try {
     const now = new Date();
@@ -234,3 +234,5 @@ exports.getTicketSummary = async (req, res) => {
     });
   }
 };
+// -------------------------------------------->
+

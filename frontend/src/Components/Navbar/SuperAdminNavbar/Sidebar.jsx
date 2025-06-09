@@ -251,7 +251,7 @@ function Sidebar({ open, onClose }) {
       href: "/support-tickets",
       icon: AiOutlineCustomerService,
     },
-    { href: "/billing", name: "Billing", icon: AiOutlineDollar },
+    { href: "/admin-billing", name: "Billing", icon: AiOutlineDollar },
   ];
 
   const moreNavItems = [

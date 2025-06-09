@@ -46,232 +46,233 @@ function IntegrationsPage() {
   }, []);
 
   const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedLogId, setSelectedLogId] = useState(null);
   const [integrations, setIntegrations] = useState([
-    {
-      timeStamp: "2025-06-02T10:15:00Z",
-      logId: "LOG-001",
-      status: "success",
-      code: "200",
-      message: "Interview completed successfully",
-      serverName: "interview-service-01",
-      severity: "low",
-      processName: "InterviewRecording",
-      executionTime: "125ms",
-      requestEndPoint: "/api/v1/interviews/complete",
-      requestMethod: "POST",
-      requestBody: { interviewId: "12345", duration: 3600 },
-      responseStatusCode: "200",
-      responseMessage: "Interview marked as complete",
-      responseBody: { success: true },
-      ownerId: "USER-001",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:10:00Z",
-      logId: "LOG-002",
-      status: "error",
-      code: "500",
-      message: "Database connection failed",
-      serverName: "assessment-service-02",
-      severity: "high",
-      processName: "AssessmentScoring",
-      executionTime: "2500ms",
-      requestEndPoint: "/api/v1/assessments/score",
-      requestMethod: "POST",
-      requestBody: { assessmentId: "67890" },
-      responseStatusCode: "500",
-      responseError: "Internal Server Error",
-      responseMessage: "Failed to connect to database",
-      ownerId: "USER-002",
-      tenantId: "TENANT-002",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-003",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0004",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0005",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0006",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0007",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0008",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0009",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0010",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0011",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0012",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0013",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
+    // {
+    //   timeStamp: "2025-06-02T10:15:00Z",
+    //   logId: "LOG-001",
+    //   status: "success",
+    //   code: "200",
+    //   message: "Interview completed successfully",
+    //   serverName: "interview-service-01",
+    //   severity: "low",
+    //   processName: "InterviewRecording",
+    //   executionTime: "125ms",
+    //   requestEndPoint: "/api/v1/interviews/complete",
+    //   requestMethod: "POST",
+    //   requestBody: { interviewId: "12345", duration: 3600 },
+    //   responseStatusCode: "200",
+    //   responseMessage: "Interview marked as complete",
+    //   responseBody: { success: true },
+    //   ownerId: "USER-001",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:10:00Z",
+    //   logId: "LOG-002",
+    //   status: "error",
+    //   code: "500",
+    //   message: "Database connection failed",
+    //   serverName: "assessment-service-02",
+    //   severity: "high",
+    //   processName: "AssessmentScoring",
+    //   executionTime: "2500ms",
+    //   requestEndPoint: "/api/v1/assessments/score",
+    //   requestMethod: "POST",
+    //   requestBody: { assessmentId: "67890" },
+    //   responseStatusCode: "500",
+    //   responseError: "Internal Server Error",
+    //   responseMessage: "Failed to connect to database",
+    //   ownerId: "USER-002",
+    //   tenantId: "TENANT-002",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-003",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0004",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0005",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0006",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0007",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0008",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0009",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0010",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0011",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0012",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
+    // {
+    //   timeStamp: "2025-06-02T10:05:00Z",
+    //   logId: "LOG-0013",
+    //   status: "warning",
+    //   code: "429",
+    //   message: "Rate limit approaching",
+    //   serverName: "api-gateway-01",
+    //   severity: "medium",
+    //   processName: "RateLimiter",
+    //   executionTime: "5ms",
+    //   requestEndPoint: "/api/v1/candidates",
+    //   requestMethod: "GET",
+    //   responseStatusCode: "200",
+    //   responseMessage: "Rate limit warning",
+    //   ownerId: "USER-003",
+    //   tenantId: "TENANT-001",
+    // },
   ]);
 
   // filters
@@ -330,9 +331,9 @@ function IntegrationsPage() {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/internal-log`
+          `${config.REACT_APP_API_URL}/integration-logs/all`
         );
-        setIntegrations(response.data.logs);
+        setIntegrations(response.data.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -340,7 +341,39 @@ function IntegrationsPage() {
       }
     };
 
-    // getIntegrations();
+    getIntegrations();
+  }, []);
+
+  // Get Internal log by ID API
+  useEffect(() => {
+    const getIntegrationLogById = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/integration-logs/${selectedLogId}`
+        );
+        console.log("SELECTED LOG INT ================", response.data.data);
+        setSelectedLog(response.data.data);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (selectedLogId) {
+      getIntegrationLogById();
+    }
+  }, [selectedLogId]);
+
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -452,11 +485,6 @@ function IntegrationsPage() {
 
   const tableColumns = [
     {
-      key: "timestamp",
-      header: "Timestamp",
-      render: (vale, row) => formatDate(row.timeStamp),
-    },
-    {
       key: "logId",
       header: "Log ID",
       render: (value, row) => (
@@ -471,7 +499,7 @@ function IntegrationsPage() {
       render: (value, row) => (
         <StatusBadge
           status={getStatusDisplay(row.status)}
-          text={row.status.toUpperCase()}
+          text={row?.status?.toUpperCase()}
         />
       ),
     },
@@ -481,7 +509,7 @@ function IntegrationsPage() {
       render: (value, row) => (
         <StatusBadge
           status={getSeverityDisplay(row.severity)}
-          text={row.severity.toUpperCase()}
+          text={row?.severity?.toUpperCase()}
         />
       ),
     },
@@ -497,6 +525,11 @@ function IntegrationsPage() {
       key: "executionTime",
       header: "Execution Time",
     },
+    {
+      key: "timestamp",
+      header: "Timestamp",
+      render: (vale, row) => formatDate(row.timeStamp),
+    },
   ];
 
   // Table Actions Configuration
@@ -505,13 +538,13 @@ function IntegrationsPage() {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/integrations/${row._id}`),
+      onClick: (row) => setSelectedLogId(row._id),
     },
     {
       key: "360-view",
       label: "360° View",
       icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/integrations/${row._id}`),
+      onClick: (row) => setSelectedLogId(row._id),
     },
     {
       key: "edit",
@@ -536,7 +569,7 @@ function IntegrationsPage() {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setSelectedLogId(item._id);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -548,7 +581,7 @@ function IntegrationsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              item?._id && navigate(`/integrations/${item._id}`);
+              setSelectedLogId(item._id);
             }}
             className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="360° View"
@@ -587,35 +620,35 @@ function IntegrationsPage() {
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4 mt-4">
           <h1 className="text-2xl font-bold text-custom-blue">Integrations</h1>
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <button className="flex items-center btn-secondary border border-gray-200 rounded-md py-1 px-2">
               <AiOutlineDownload className="mr-2" />
               Export
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
-            <div className="text-xl font-semibold">{integrations.length}</div>
+            <div className="text-xl font-semibold">{integrations?.length}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Errors</div>
             <div className="text-xl font-semibold text-error-600">
-              {integrations.filter((log) => log.status === "error").length}
+              {integrations?.filter((log) => log.status === "error").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Warnings</div>
             <div className="text-xl font-semibold text-warning-600">
-              {integrations.filter((log) => log.status === "warning").length}
+              {integrations?.filter((log) => log.status === "warning").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success</div>
             <div className="text-xl font-semibold text-success-600">
-              {integrations.filter((log) => log.status === "success").length}
+              {integrations?.filter((log) => log.status === "success").length}
             </div>
           </div>
         </div>
@@ -643,106 +676,100 @@ function IntegrationsPage() {
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            {integrations.length === 0 ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={tableActions}
-                        emptyState="No logs found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((integration) => ({
-                          ...integration,
-                          id: integration.id ? integration.id : integration._id,
-                          title: `${integration.FirstName || ""} ${
-                            integration.LastName || ""
-                          }`,
-                          subtitle:
-                            integration.CurrentRole ||
-                            integration.CurrentExperience ||
-                            "N/A",
-                          avatar: "",
-                          status: "active",
-                          isAssessmentView: <p>Is assignment view</p>,
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No logs found."
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState="No logs found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((integration) => ({
+                        ...integration,
+                        id: integration.id ? integration.id : integration._id,
+                        title: `${integration.FirstName || ""} ${
+                          integration.LastName || ""
+                        }`,
+                        subtitle:
+                          integration.CurrentRole ||
+                          integration.CurrentExperience ||
+                          "N/A",
+                        avatar: "",
+                        status: "active",
+                        isAssessmentView: <p>Is assignment view</p>,
+                      }))}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No logs found."
+                    />
+                  </div>
+                )}
 
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    <div className="space-y-3">
-                      {/* Current Status Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() =>
-                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                          }
-                        >
-                          <span className="font-medium text-gray-700">
-                            Current Status
-                          </span>
-                          {isCurrentStatusOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
-                          ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
-                          )}
-                        </div>
-                        {isCurrentStatusOpen && (
-                          <div className="mt-1 space-y-2 pl-2">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                                  {statusOptions.map((status) => (
-                                    <label
-                                      key={status}
-                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedStatus.includes(
-                                          status
-                                        )}
-                                        onChange={() =>
-                                          handleCurrentStatusToggle(status)
-                                        }
-                                        className="accent-custom-blue"
-                                      />
-                                      <span>{status}</span>
-                                    </label>
-                                  ))}
-                                </div>
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  <div className="space-y-3">
+                    {/* Current Status Section */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() =>
+                          setIsCurrentStatusOpen(!isCurrentStatusOpen)
+                        }
+                      >
+                        <span className="font-medium text-gray-700">
+                          Current Status
+                        </span>
+                        {isCurrentStatusOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isCurrentStatusOpen && (
+                        <div className="mt-1 space-y-2 pl-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                                {statusOptions.map((status) => (
+                                  <label
+                                    key={status}
+                                    className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedStatus.includes(status)}
+                                      onChange={() =>
+                                        handleCurrentStatusToggle(status)
+                                      }
+                                      className="accent-custom-blue"
+                                    />
+                                    <span>{status}</span>
+                                  </label>
+                                ))}
                               </div>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </FilterPopup>
-                </div>
-              </motion.div>
-            )}
+                  </div>
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

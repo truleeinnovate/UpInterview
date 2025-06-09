@@ -6,9 +6,9 @@ const {
   getInvoices,
 } = require("../controllers/InvoiceControllers");
 
-// SUPER ADMIN
-InvoiceRouter.get("/", getInvoices);
-
 InvoiceRouter.get("/:ownerId", getInvoiceById);
+
+// SUPER ADMIN added by Ashok
+InvoiceRouter.get("/", getInvoices);
 
 module.exports = InvoiceRouter;

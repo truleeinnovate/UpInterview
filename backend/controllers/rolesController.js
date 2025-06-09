@@ -22,6 +22,7 @@ const Role = require('../models/RolesData');
 //       res.status(500).json({ message: 'Error saving role', error: error.message });
 //   }
 //   };
+
 const saveRole = async (req, res) => {
   try {
     console.log('Received role data:', req.body);

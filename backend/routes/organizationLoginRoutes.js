@@ -14,12 +14,13 @@ const {
   deactivateSubdomain,
   updateBasedIdOrganizations,
 
-  getAllOrganizations, // SUPER ADMIN
+  getAllOrganizations,
   getOrganizationById,
 } = require("../controllers/organizationLoginController");
 
-// SUPER ADMIN
+// SUPER ADMIN all-organizations added by Ashok
 router.get("/all-organizations", getAllOrganizations);
+
 router.get("/:id", getOrganizationById);
 
 router.post("/Signup", registerOrganization);

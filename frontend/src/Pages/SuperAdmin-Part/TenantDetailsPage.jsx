@@ -86,8 +86,8 @@ function TenantDetailsPage() {
             {tenant?.tenant.firstName || "Tenant"}
           </h1>
           <div className="text-sm text-gray-500">
-            {tenant?.tenant?.company} • {tenant?.tenant?.userCount} Users • Created{" "}
-            {new Date(tenant?.createdAt).toLocaleDateString()}
+            {tenant?.tenant?.company} • {tenant?.tenant?.userCount} Users •
+            Created {new Date(tenant?.createdAt).toLocaleDateString()}
           </div>
         </div>
       </div>
@@ -170,7 +170,7 @@ function TenantDetailsPage() {
           {/* {activeTab === "positions" && <PositionsTab />} */}
           {/* {activeTab === "interviews" && <InterviewsTab />} */}
           {activeTab === "users" && <UsersTab users={tenant?.users || []} />}
-          {activeTab === "billing" && <BillingPage />}
+          {activeTab === "billing" && <BillingPage organizationId={id} />}
           {activeTab === "integrations" && <IntegrationsTab />}
           {/* {activeTab === "webhooks" && <WebhooksTab />} */}
           {/* {activeTab === "audit" && <AuditLogsTab />} */}

@@ -530,7 +530,7 @@ const getBasedIdOrganizations = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 const getAllOrganizations = async (req, res) => {
   try {
     const userCounts = await Users.aggregate([

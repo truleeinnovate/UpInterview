@@ -1,3 +1,5 @@
+// SUPER ADMIN added by Ashok
+
 const Receipts = require("../models/Receiptmodels");
 
 const getReceiptsSummary = async (req, res) => {

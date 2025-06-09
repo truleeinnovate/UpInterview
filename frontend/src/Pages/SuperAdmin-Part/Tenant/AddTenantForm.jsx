@@ -12,10 +12,10 @@ import { ReactComponent as FaPlus } from "../../../icons/FaPlus.svg";
 import { useCustomContext } from "../../../Context/Contextfetch";
 import CustomDatePicker from "../../../utils/CustomDatePicker";
 import {
-  validateCandidateForm,
+  validateTenantForm,
   getErrorMessage,
   countryCodes,
-} from "../../../utils/CandidateValidation";
+} from "../../../utils/tenantValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import { Minimize, Expand, ChevronDown, X } from "lucide-react";
@@ -154,8 +154,6 @@ const AddTenantForm = ({ mode }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  console.log("=============== Tenant ID: =================", id);
-
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
   const currentRoleDropdownRef = useRef(null);
@@ -182,7 +180,7 @@ const AddTenantForm = ({ mode }) => {
   const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
 
   const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
-  const genderOptions = ["Male", "Female"];
+  const statusOptions = ["Active", "Inactive", "Pending"];
   const experienceOptions = [
     "0-1 Years",
     "1-2 years",
@@ -200,19 +198,26 @@ const AddTenantForm = ({ mode }) => {
   const [formData, setFormData] = useState({
     FirstName: "",
     LastName: "",
+    UserName: "",
     Email: "",
     Phone: "",
-    Date_Of_Birth: "",
-    Gender: "",
-    HigherQualification: "",
-    UniversityCollege: "",
-    CurrentExperience: "",
-    RelevantExperience: "",
-    CountryCode: "+91",
-    skills: [],
-    resume: null,
-    CurrentRole: "",
+    Country: "",
+    // Date_Of_Birth: "",
+    // Gender: "",
+    // HigherQualification: "",
+    // UniversityCollege: "",
+    // CurrentExperience: "",
+    // RelevantExperience: "",
+    // CountryCode: "+91",
+    // skills: [],
+    // resume: null,
+    // CurrentRole: "",
+    Company: "",
+    Employees: "",
+    JobTitle: "",
+    Status: "",
   });
+
   const [errors, setErrors] = useState({});
 
   // const authToken = Cookies.get("authToken");
@@ -232,49 +237,52 @@ const AddTenantForm = ({ mode }) => {
         LastName: selectedCandidate.LastName || "",
         Email: selectedCandidate.Email || "",
         Phone: selectedCandidate.Phone || "",
-        Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
-        Gender: selectedCandidate.Gender || "",
-        HigherQualification: selectedCandidate.HigherQualification || "",
-        UniversityCollege: selectedCandidate.UniversityCollege || "",
-        CurrentExperience: selectedCandidate.CurrentExperience || "",
-        RelevantExperience: selectedCandidate.RelevantExperience || "",
-        skills: selectedCandidate.skills || [],
-        ImageData: selectedCandidate.imageUrl || null,
-        resume: selectedCandidate.resume || null,
-        CurrentRole: selectedCandidate.CurrentRole || "",
+        Country: selectedCandidate.Country || "",
+        // Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
+        // Gender: selectedCandidate.Gender || "",
+        // HigherQualification: selectedCandidate.HigherQualification || "",
+        // UniversityCollege: selectedCandidate.UniversityCollege || "",
+        // CurrentExperience: selectedCandidate.CurrentExperience || "",
+        // RelevantExperience: selectedCandidate.RelevantExperience || "",
+        // skills: selectedCandidate.skills || [],
+        // ImageData: selectedCandidate.imageUrl || null,
+        // resume: selectedCandidate.resume || null,
+        // CurrentRole: selectedCandidate.CurrentRole || "",
         CountryCode: selectedCandidate.CountryCode || "",
+        Company: selectedCandidate.Company || "",
+        Status: selectedCandidate.Status || "",
       });
 
-      if (selectedCandidate.resume?.filename) {
-        setSelectedResume({
-          url: `/Uploads/${selectedCandidate.resume.filename}`,
-          name: selectedCandidate.resume.filename,
-        });
-      } else {
-        setSelectedResume(null);
-      }
+      // if (selectedCandidate.resume?.filename) {
+      //   setSelectedResume({
+      //     url: `/Uploads/${selectedCandidate.resume.filename}`,
+      //     name: selectedCandidate.resume.filename,
+      //   });
+      // } else {
+      //   setSelectedResume(null);
+      // }
 
-      setEntries(selectedCandidate.skills || []);
-      // Initialize allSelectedSkills with the skills from the candidate being edited
-      setAllSelectedSkills(
-        selectedCandidate.skills?.map((skill) => skill.skill) || []
-      );
+      // setEntries(selectedCandidate.skills || []);
+      // // Initialize allSelectedSkills with the skills from the candidate being edited
+      // setAllSelectedSkills(
+      //   selectedCandidate.skills?.map((skill) => skill.skill) || []
+      // );
     }
   }, [id, candidateData]);
 
-  const toggleCurrentRole = () => {
-    setShowDropdownCurrentRole(!showDropdownCurrentRole);
-  };
+  // const toggleCurrentRole = () => {
+  //   setShowDropdownCurrentRole(!showDropdownCurrentRole);
+  // };
 
-  const handleRoleSelect = (role) => {
-    setFormData((prev) => ({ ...prev, CurrentRole: role }));
-    setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole(""); // Clear the search term
-  };
+  // const handleRoleSelect = (role) => {
+  //   setFormData((prev) => ({ ...prev, CurrentRole: role }));
+  //   setShowDropdownCurrentRole(false);
+  //   setSearchTermCurrentRole(""); // Clear the search term
+  // };
 
-  const filteredCurrentRoles = currentRole?.filter((role) =>
-    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  );
+  // const filteredCurrentRoles = currentRole?.filter((role) =>
+  //   role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
+  // );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -292,177 +300,177 @@ const AddTenantForm = ({ mode }) => {
     };
   }, []);
 
-  const handleDelete = (index) => {
-    setDeleteIndex(index);
-  };
+  // const handleDelete = (index) => {
+  //   setDeleteIndex(index);
+  // };
 
-  const confirmDelete = () => {
-    if (deleteIndex !== null) {
-      const entry = entries[deleteIndex];
-      setAllSelectedSkills(
-        allSelectedSkills.filter((skill) => skill !== entry.skill)
-      );
-      setEntries(entries.filter((_, i) => i !== deleteIndex));
-      setDeleteIndex(null);
-    }
-  };
+  // const confirmDelete = () => {
+  //   if (deleteIndex !== null) {
+  //     const entry = entries[deleteIndex];
+  //     setAllSelectedSkills(
+  //       allSelectedSkills.filter((skill) => skill !== entry.skill)
+  //     );
+  //     setEntries(entries.filter((_, i) => i !== deleteIndex));
+  //     setDeleteIndex(null);
+  //   }
+  // };
 
-  const cancelDelete = () => {
-    setDeleteIndex(null);
-  };
+  // const cancelDelete = () => {
+  //   setDeleteIndex(null);
+  // };
 
-  const skillpopupcancelbutton = () => {
-    setIsModalOpen(false);
-    setSearchTerm("");
-    setSelectedSkill("");
-  };
+  // const skillpopupcancelbutton = () => {
+  //   setIsModalOpen(false);
+  //   setSearchTerm("");
+  //   setSelectedSkill("");
+  // };
 
-  const filteredSkills = skills.filter((skill) =>
-    skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredSkills = skills.filter((skill) =>
+  //   skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
-  const handleAddEntry = () => {
-    if (editingIndex !== null) {
-      const oldSkill = entries[editingIndex].skill;
-      const updatedEntries = entries.map((entry, index) =>
-        index === editingIndex
-          ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
-          : entry
-      );
-      setEntries(updatedEntries);
-      setEditingIndex(null);
-      setAllSelectedSkills((prev) => {
-        const newSkills = prev.filter((skill) => skill !== oldSkill);
-        newSkills.push(selectedSkill);
-        return newSkills;
-      });
+  // const handleAddEntry = () => {
+  //   if (editingIndex !== null) {
+  //     const oldSkill = entries[editingIndex].skill;
+  //     const updatedEntries = entries.map((entry, index) =>
+  //       index === editingIndex
+  //         ? {
+  //             skill: selectedSkill,
+  //             experience: selectedExp,
+  //             expertise: selectedLevel,
+  //           }
+  //         : entry
+  //     );
+  //     setEntries(updatedEntries);
+  //     setEditingIndex(null);
+  //     setAllSelectedSkills((prev) => {
+  //       const newSkills = prev.filter((skill) => skill !== oldSkill);
+  //       newSkills.push(selectedSkill);
+  //       return newSkills;
+  //     });
 
-      setEditingIndex(null);
+  //     setEditingIndex(null);
 
-      // setAllSelectedSkills([selectedSkill]);
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        skills: updatedEntries,
-      }));
-    } else {
-      const newEntry = {
-        skill: selectedSkill,
-        experience: selectedExp,
-        expertise: selectedLevel,
-      };
+  //     // setAllSelectedSkills([selectedSkill]);
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       skills: updatedEntries,
+  //     }));
+  //   } else {
+  //     const newEntry = {
+  //       skill: selectedSkill,
+  //       experience: selectedExp,
+  //       expertise: selectedLevel,
+  //     };
 
-      const updatedEntries = [...entries, newEntry];
+  //     const updatedEntries = [...entries, newEntry];
 
-      setEntries(updatedEntries);
-      setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+  //     setEntries(updatedEntries);
+  //     setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
 
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        skills: updatedEntries,
-      }));
-    }
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       skills: updatedEntries,
+  //     }));
+  //   }
 
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      skills: "",
-    }));
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     skills: "",
+  //   }));
 
-    resetForm();
-  };
+  //   resetForm();
+  // };
 
-  const handleEdit = (index) => {
-    const entry = entries[index];
-    // setSelectedSkill(entry.skill);
-    setSelectedSkill(entry.skill || "");
-    setSelectedExp(entry.experience);
-    setSelectedLevel(entry.expertise);
-    setEditingIndex(index);
-    setIsModalOpen(true);
-  };
+  // const handleEdit = (index) => {
+  //   const entry = entries[index];
+  //   // setSelectedSkill(entry.skill);
+  //   setSelectedSkill(entry.skill || "");
+  //   setSelectedExp(entry.experience);
+  //   setSelectedLevel(entry.expertise);
+  //   setEditingIndex(index);
+  //   setIsModalOpen(true);
+  // };
 
-  const resetForm = () => {
-    setSelectedSkill("");
-    setSelectedExp("");
-    setSelectedLevel("");
-    setCurrentStep(0);
-    setIsModalOpen(false);
-  };
+  // const resetForm = () => {
+  //   setSelectedSkill("");
+  //   setSelectedExp("");
+  //   setSelectedLevel("");
+  //   setCurrentStep(0);
+  //   setIsModalOpen(false);
+  // };
 
-  const isNextEnabled = () => {
-    if (currentStep === 0) {
-      if (editingIndex !== null) {
-        const currentSkill = entries[editingIndex]?.skill;
-        return (
-          selectedSkill !== "" &&
-          (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill))
-        );
-      } else {
-        return (
-          selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
-        );
-      }
-    } else if (currentStep === 1) {
-      return selectedExp !== "";
-    } else if (currentStep === 2) {
-      return selectedLevel !== "";
-    }
-    return false;
-  };
+  // const isNextEnabled = () => {
+  //   if (currentStep === 0) {
+  //     if (editingIndex !== null) {
+  //       const currentSkill = entries[editingIndex]?.skill;
+  //       return (
+  //         selectedSkill !== "" &&
+  //         (selectedSkill === currentSkill ||
+  //           !allSelectedSkills.includes(selectedSkill))
+  //       );
+  //     } else {
+  //       return (
+  //         selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
+  //       );
+  //     }
+  //   } else if (currentStep === 1) {
+  //     return selectedExp !== "";
+  //   } else if (currentStep === 2) {
+  //     return selectedLevel !== "";
+  //   }
+  //   return false;
+  // };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFile(file);
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setIsImageUploaded(true);
-    }
-  };
+  // const handleImageChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setFile(file);
+  //     setImageFile(file);
+  //     setImagePreview(URL.createObjectURL(file));
+  //     setIsImageUploaded(true);
+  //   }
+  // };
 
-  const handleResumeChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setResumeFile(file);
-      setSelectedResume(file);
-    }
-  };
+  // const handleResumeChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setResumeFile(file);
+  //     setSelectedResume(file);
+  //   }
+  // };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-  };
+  // const removeImage = () => {
+  //   setImageFile(null);
+  //   setImagePreview(null);
+  // };
 
-  const removeResume = () => {
-    setResumeFile(null);
-    setSelectedResume(null);
-  };
+  // const removeResume = () => {
+  //   setResumeFile(null);
+  //   setSelectedResume(null);
+  // };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     let errorMessage = getErrorMessage(name, value);
 
-    if (name === "CurrentExperience" || name === "RelevantExperience") {
-      if (!/^\d*$/.test(value)) {
-        return;
-      }
-    }
+    // if (name === "CurrentExperience" || name === "RelevantExperience") {
+    //   if (!/^\d*$/.test(value)) {
+    //     return;
+    //   }
+    // }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   };
 
-  const handleDateChange = (date) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      Date_Of_Birth: date ? new Date(date).toISOString() : "",
-    }));
-  };
+  // const handleDateChange = (date) => {
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     Date_Of_Birth: date ? new Date(date).toISOString() : "",
+  //   }));
+  // };
 
   const handleClose = () => {
     resetFormData();
@@ -485,7 +493,7 @@ const AddTenantForm = ({ mode }) => {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    console.log("Starting add candidate process...");
+    console.log("Starting add tenant process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -500,7 +508,7 @@ const AddTenantForm = ({ mode }) => {
     console.log("User info:", { userId, userName, orgId });
 
     // Validate form data
-    const { formIsValid, newErrors } = validateCandidateForm(
+    const { formIsValid, newErrors } = validateTenantForm(
       formData,
       entries || [],
       errors || {}
@@ -519,49 +527,54 @@ const AddTenantForm = ({ mode }) => {
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
+      UserName: formData.UserName,
       Email: formData.Email,
       Phone: formData.Phone,
-      CountryCode: formData.CountryCode,
-      CurrentExperience: formData.CurrentExperience,
-      RelevantExperience: formData.RelevantExperience,
-      HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      resume: null,
-      CurrentRole: formData.CurrentRole,
-      CreatedBy: `${userName} at ${currentDateTime}`,
-      LastModifiedById: `${userName} at ${currentDateTime}`,
-      ownerId: userId,
-      tenantId: orgId,
+      Country: formData.Country,
+      // CountryCode: formData.CountryCode,
+      // CurrentExperience: formData.CurrentExperience,
+      // RelevantExperience: formData.RelevantExperience,
+      // HigherQualification: formData.HigherQualification,
+      // Gender: formData.Gender,
+      // UniversityCollege: formData.UniversityCollege,
+      // Date_Of_Birth: formData.Date_Of_Birth,
+      // skills: entries.map((entry) => ({
+      //   skill: entry.skill,
+      //   experience: entry.experience,
+      //   expertise: entry.expertise,
+      // })),
+      // resume: null,
+      // CurrentRole: formData.CurrentRole,
+      // CreatedBy: `${userName} at ${currentDateTime}`,
+      // LastModifiedById: `${userName} at ${currentDateTime}`,
+      // ownerId: userId,
+      // tenantId: orgId,
+      Company: formData.Company,
+      Employees: formData.Employees,
+      JobTitle: formData.JobTitle,
     };
 
-    console.log("Submitting candidate data:", data);
+    console.log("Submitting tenant data:", data);
 
-    try {
-      // getting the API from the apihooks for add or update candidate (post or patch)
-      await addOrUpdateCandidate.mutateAsync({ id, data, file });
-      // Reset form and close
-      resetFormData();
-      console.log("Form reset completed");
+    // try {
+    //   // getting the API from the apihooks for add or update candidate (post or patch)
+    //   await addOrUpdateCandidate.mutateAsync({ id, data, file });
+    //   // Reset form and close
+    //   resetFormData();
+    //   console.log("Form reset completed");
 
-      console.log("Navigation to candidate list completed");
-    } catch (error) {
-      console.error("Failed to add candidate:", error);
-      if (error.response) {
-        console.error("Server response:", error.response.data);
-      }
-    }
+    //   console.log("Navigation to candidate list completed");
+    // } catch (error) {
+    //   console.error("Failed to add candidate:", error);
+    //   if (error.response) {
+    //     console.error("Server response:", error.response.data);
+    //   }
+    // }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Starting submit process...");
+    console.log("Starting tenant process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -570,7 +583,7 @@ const AddTenantForm = ({ mode }) => {
     const orgId = tokenPayload?.tenantId;
 
     // Validate form data
-    const { formIsValid, newErrors } = validateCandidateForm(
+    const { formIsValid, newErrors } = validateTenantForm(
       formData,
       entries || [],
       errors || {}
@@ -589,68 +602,80 @@ const AddTenantForm = ({ mode }) => {
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
+      UserName: formData.UserName,
       Email: formData.Email,
       Phone: formData.Phone,
-      CountryCode: formData.CountryCode,
-      CurrentExperience: formData.CurrentExperience,
-      RelevantExperience: formData.RelevantExperience,
-      HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      resume: null,
-      CurrentRole: formData.CurrentRole,
-      ownerId: userId,
-      tenantId: orgId,
+      Country: formData.Country,
+      // CountryCode: formData.CountryCode,
+      // CurrentExperience: formData.CurrentExperience,
+      // RelevantExperience: formData.RelevantExperience,
+      // HigherQualification: formData.HigherQualification,
+      // Gender: formData.Gender,
+      // UniversityCollege: formData.UniversityCollege,
+      // Date_Of_Birth: formData.Date_Of_Birth,
+      // skills: entries.map((entry) => ({
+      //   skill: entry.skill,
+      //   experience: entry.experience,
+      //   expertise: entry.expertise,
+      // })),
+      // resume: null,
+      // CurrentRole: formData.CurrentRole,
+      // ownerId: userId,
+      // tenantId: orgId,
+      Company: formData.Company,
+      Employees: formData.Employees,
+      JobTitle: formData.JobTitle,
+      Status: formData.Status,
     };
 
-    console.log("Submitting candidate data:", data);
+    console.log("Submitting tenant data:", data);
 
-    try {
-      let candidateId;
-      // getting the API from the apihooks for add or update candidate (post or patch)
+    // try {
+    //   let candidateId;
+    //   // getting the API from the apihooks for add or update candidate (post or patch)
 
-      await addOrUpdateCandidate.mutateAsync({ id, data, file });
+    //   await addOrUpdateCandidate.mutateAsync({ id, data, file });
 
-      // Handle navigation based on mode
-      switch (mode) {
-        case "Edit":
-          navigate(`/candidate`);
-          break;
-        case "Candidate Edit":
-          navigate(`/candidate/${id || candidateId}`);
+    //   // Handle navigation based on mode
+    //   switch (mode) {
+    //     case "Edit":
+    //       navigate(`/tenants`);
+    //       break;
+    //     case "Tenant Edit":
+    //       navigate(`/tenants/${id || candidateId}`);
 
-          break;
-        default: // Create mode
-          navigate("/candidate");
-      }
+    //       break;
+    //     default: // Create mode
+    //       navigate("/tenants");
+    //   }
 
-      resetFormData();
-    } catch (error) {
-      console.error("Error adding candidate:", error);
-    }
+    //   resetFormData();
+    // } catch (error) {
+    //   console.error("Error adding tenant:", error);
+    // }
   };
 
   const resetFormData = () => {
     setFormData({
       FirstName: "",
       LastName: "",
+      UserName: "",
       Email: "",
       Phone: "",
-      Date_Of_Birth: "",
-      Gender: "",
-      HigherQualification: "",
-      UniversityCollege: "",
-      CurrentExperience: "",
-      RelevantExperience: "",
-      skills: [],
-      CurrentRole: "",
-      CountryCode: "",
+      Country: "",
+      // Date_Of_Birth: "",
+      // Gender: "",
+      // HigherQualification: "",
+      // UniversityCollege: "",
+      // CurrentExperience: "",
+      // RelevantExperience: "",
+      // skills: [],
+      // CurrentRole: "",
+      // CountryCode: "",
+      Company: "",
+      Employees: "",
+      JobTitle: "",
+      Status: "",
     });
 
     setErrors({});
@@ -660,8 +685,8 @@ const AddTenantForm = ({ mode }) => {
     setSelectedLevel("");
     setEditingIndex(null);
     setCurrentStep(0);
-    removeImage();
-    removeResume();
+    // removeImage();
+    // removeResume();
     setAllSelectedSkills([]);
   };
 
@@ -714,8 +739,8 @@ const AddTenantForm = ({ mode }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
-              {/* Profile Image Upload */}
+            {/* Photo and resume upload */}
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
               <div className="flex flex-col items-center">
                 <div
                   onClick={() => imageInputRef.current?.click()}
@@ -742,7 +767,7 @@ const AddTenantForm = ({ mode }) => {
                       </>
                     )}
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                      {/* Icon placeholder */}
+         
                     </div>
                   </div>
                   <input
@@ -761,7 +786,6 @@ const AddTenantForm = ({ mode }) => {
                       }}
                       className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
-                      {/* Icon placeholder */}
                     </button>
                   )}
                 </div>
@@ -771,7 +795,7 @@ const AddTenantForm = ({ mode }) => {
                 <p className="text-xs text-gray-500">Click to upload</p>
               </div>
 
-              {/* Resume Upload */}
+   
               <div className="flex flex-col items-center">
                 <div
                   onClick={() => resumeInputRef.current?.click()}
@@ -796,7 +820,7 @@ const AddTenantForm = ({ mode }) => {
                       </>
                     )}
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
-                      {/* Icon placeholder */}
+             
                     </div>
                   </div>
                   <input
@@ -815,14 +839,14 @@ const AddTenantForm = ({ mode }) => {
                       }}
                       className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
-                      {/* Icon placeholder */}
+            
                     </button>
                   )}
                 </div>
                 <p className="mt-2 text-sm font-medium text-gray-700">Resume</p>
                 <p className="text-xs text-gray-500">Maximum file size: 10MB</p>
               </div>
-            </div>
+            </div> */}
 
             <form className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
@@ -864,8 +888,29 @@ const AddTenantForm = ({ mode }) => {
                     </p>
                   )}
                 </div>
-                {/* Date of Birth */}
+                {/* User Name */}
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="UserName"
+                    value={formData.UserName}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.UserName && "border-red-500"
+                    }`}
+                    placeholder="Enter User Name"
+                  />
+                  {errors.UserName && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.UserName}
+                    </p>
+                  )}
+                </div>
+                {/* Date of Birth */}
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Date of Birth
                   </label>
@@ -878,10 +923,10 @@ const AddTenantForm = ({ mode }) => {
                     onChange={handleDateChange}
                     placeholder="Select date of birth"
                   />
-                </div>
-                {/* Gender */}
+                </div> */}
 
-                <CustomDropdown
+                {/* Gender */}
+                {/* <CustomDropdown
                   label="Gender"
                   name="Gender"
                   value={formData.Gender}
@@ -890,7 +935,7 @@ const AddTenantForm = ({ mode }) => {
                   error={errors.Gender}
                   placeholder="Select Gender"
                   disableSearch={true}
-                />
+                /> */}
                 <p className="text-lg font-semibold col-span-2">
                   Contact Details
                 </p>
@@ -914,6 +959,7 @@ const AddTenantForm = ({ mode }) => {
                     <p className="text-red-500 text-xs pt-1">{errors.Email}</p>
                   )}
                 </div>
+
                 {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -961,12 +1007,35 @@ const AddTenantForm = ({ mode }) => {
                     </div>
                   </div>
                 </div>
-                <p className="text-lg font-semibold col-span-2">
+
+                {/* Country */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="name"
+                    name="Country"
+                    value={formData.Country}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.Country && "border-red-500"
+                    }`}
+                    placeholder="Enter Company"
+                  />
+                  {errors.Country && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.Country}
+                    </p>
+                  )}
+                </div>
+
+                {/* <p className="text-lg font-semibold col-span-2">
                   Education Details
-                </p>
+                </p> */}
 
                 {/* higher qualification */}
-                <CustomDropdown
+                {/* <CustomDropdown
                   label="Higher Qualification"
                   name="HigherQualification"
                   value={formData.HigherQualification}
@@ -976,10 +1045,10 @@ const AddTenantForm = ({ mode }) => {
                   placeholder="Select Higher Qualification"
                   optionKey="QualificationName"
                   optionValue="QualificationName"
-                />
+                /> */}
 
                 {/* University/College */}
-                <CustomDropdown
+                {/* <CustomDropdown
                   label="University College"
                   name="UniversityCollege"
                   value={formData.UniversityCollege}
@@ -989,12 +1058,12 @@ const AddTenantForm = ({ mode }) => {
                   placeholder="Select University College"
                   optionKey="University_CollegeName"
                   optionValue="University_CollegeName"
-                />
-                <p className="text-lg font-semibold col-span-2">
+                /> */}
+                {/* <p className="text-lg font-semibold col-span-2">
                   Experience Details
-                </p>
+                </p> */}
                 {/* current experience */}
-                <div>
+                {/* <div>
                   <label
                     htmlFor="CurrentExperience"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -1021,9 +1090,9 @@ const AddTenantForm = ({ mode }) => {
                       {errors.CurrentExperience}
                     </p>
                   )}
-                </div>
+                </div> */}
                 {/* Relevant Experience */}
-                <div>
+                {/* <div>
                   <label
                     htmlFor="CurrentExperience"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -1050,11 +1119,11 @@ const AddTenantForm = ({ mode }) => {
                       {errors.RelevantExperience}
                     </p>
                   )}
-                </div>
+                </div> */}
 
                 {/* Current Role */}
 
-                <div ref={currentRoleDropdownRef}>
+                {/* <div ref={currentRoleDropdownRef}>
                   <label
                     htmlFor="CurrentRole"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -1123,11 +1192,93 @@ const AddTenantForm = ({ mode }) => {
                       {errors.CurrentRole}
                     </p>
                   )}
-                </div>
-              </div>
-              <p className="text-lg font-semibold col-span-2">Skills Details</p>
+                </div> */}
 
-              <div>
+                <p className="text-lg font-semibold col-span-2">
+                  Organization Details
+                </p>
+
+                {/* Company */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="Company"
+                    value={formData.Company}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.Company && "border-red-500"
+                    }`}
+                    placeholder="Enter Company"
+                  />
+                  {errors.Company && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.Company}
+                    </p>
+                  )}
+                </div>
+
+                {/* Employees */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Employees <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="Employees"
+                    value={formData.Employees}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.Employees && "border-red-500"
+                    }`}
+                    placeholder="Enter Employees"
+                  />
+                  {errors.Employees && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.Employees}
+                    </p>
+                  )}
+                </div>
+
+                {/* Job Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="JobTitle"
+                    value={formData.JobTitle}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.JobTitle && "border-red-500"
+                    }`}
+                    placeholder="Enter JobTitle"
+                  />
+                  {errors.JobTitle && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.JobTitle}
+                    </p>
+                  )}
+                </div>
+
+                {/* status */}
+                <CustomDropdown
+                  label="Status"
+                  name="Status"
+                  value={formData.Status}
+                  options={statusOptions}
+                  onChange={handleChange}
+                  error={errors.Status}
+                  placeholder="Select Status"
+                  disableSearch={true}
+                />
+              </div>
+              {/* <p className="text-lg font-semibold col-span-2">Skills Details</p> */}
+
+              {/* <div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center mb-2">
                     <label
@@ -1216,7 +1367,7 @@ const AddTenantForm = ({ mode }) => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex justify-end gap-3 pt-6">
                 <button
@@ -1246,7 +1397,7 @@ const AddTenantForm = ({ mode }) => {
             </form>
           </div>
         </div>
-        {isModalOpen && (
+        {/* {isModalOpen && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-end items-center right-0 pr-44 z-50">
             <div className="bg-white rounded-lg shadow-lg w-80 relative">
               <header className="flex justify-between items-center w-full border-b py-3 px-4">
@@ -1407,7 +1558,7 @@ const AddTenantForm = ({ mode }) => {
               </footer>
             </div>
           </div>
-        )}
+        )} */}
       </Modal>
     </>
   );

@@ -11,9 +11,10 @@ const {
 
 const router = express.Router();
 
-// SUPER ADMIN
+// <---------- SUPER ADMIN ---------------------
 router.get("/all-tickets", getAllTickets);
 router.get("/support-tickets", getTicketSummary);
+// -------------------------------------------->
 
 router.post("/create-ticket", createTicket);
 router.get("/get-tickets", getTicket);

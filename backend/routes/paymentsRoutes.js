@@ -1,9 +1,14 @@
 const express = require("express");
 const PaymentsRouter = express.Router();
 
-const { getPaymentsSummary } = require("../controllers/paymentsController");
+const {
+  getPaymentsSummary,
+  getPaymentById,
+} = require("../controllers/paymentsController");
 
-// SUPER ADMIN
+PaymentsRouter.get("/:id", getPaymentById);
+
+// SUPER ADMIN added by Ashok
 PaymentsRouter.get("/", getPaymentsSummary);
 
 module.exports = PaymentsRouter;

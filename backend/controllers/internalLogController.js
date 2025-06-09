@@ -102,7 +102,7 @@ exports.deleteLog = async (req, res) => {
   }
 };
 
-// SUPER ADMIN
+// SUPER ADMIN added by Ashok
 exports.getLogsSummary = async (req, res) => {
   try {
     const logs = await InternalLog.find();
