@@ -106,6 +106,10 @@ export const validateForm = (formData, entries, rounds) => {
     errors.skills = "At least one skill must be selected";
     formIsValid = false;
   }
+  else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
+    errors.skills = "All skills must have a value in the skill, experience and expertise fields";
+    formIsValid = false;
+  }
 
     // Add salary validation
     if (formData.minSalary && formData.maxSalary) {

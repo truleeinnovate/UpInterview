@@ -522,7 +522,7 @@ const InterviewDetail = () => {
 
 
 
-                      {console.log('canAddRound', canAddRound)}
+                      {/* {console.log('canAddRound', canAddRound)} */}
                       {canAddRound() && (
                         <button
                           onClick={handleAddRound}

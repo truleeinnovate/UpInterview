@@ -54,6 +54,8 @@ const MockSchedulelater = () => {
   } = useMasterData();
   
 
+  console.log("qualification", qualifications);
+
   const {
     mockinterviewData,
     addOrUpdateMockInterview,
@@ -84,8 +86,8 @@ const MockSchedulelater = () => {
       status: "Pending",
       dateTime: "",
     },
-    // status: 'Pending',
-  });
+    // status: 'Pending',  
+    });
   console.log("formData", formData);
 
 
@@ -98,6 +100,18 @@ const MockSchedulelater = () => {
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
   const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
+
+  useEffect(() => {
+    if (singlecontact[0]?.skills) {
+      const initialSkills = singlecontact[0].skills;
+      setEntries(initialSkills.map(skill => ({
+        skill,
+        experience: "",
+        expertise: ""
+      })));
+      console.log("Skills initialized from singlecontact", initialSkills);
+    }
+  }, [singlecontact]);
 
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
@@ -146,8 +160,10 @@ const MockSchedulelater = () => {
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.Experience || "",
         technology: contact.technologies?.[0] || "",
-        // skills: contact.skills || [],
+        Role: contact.currentRole || "",
+        skills: contact.skills|| [],
       }));
+      console.log("contact contact", contact);
       // setEntries(contact.skills || []);
       // setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
@@ -294,33 +310,53 @@ const MockSchedulelater = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-
+  
+    // Validate form
     const { formIsValid, newErrors } = validatemockForm(formData, entries, errors);
     setErrors(newErrors);
-
+  
     if (!formIsValid) {
       console.log("Form is not valid:", newErrors);
       return;
     }
-
+  
+    // Extract interviewer IDs and validate
+    const interviewerIds = externalInterviewers
+      .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
+      .map(interviewer => interviewer._id);
+  
+    // Optional: Add validation for interviewers
+    if (interviewerIds.length === 0 && selectedInterviewType === "external") {
+      setErrors(prev => ({
+        ...prev,
+        interviewers: "At least one interviewer must be selected",
+      }));
+      return;
+    }
+  
+    // Update formData with interviewer IDs
+    const updatedFormData = {
+      ...formData,
+      rounds: {
+        ...formData.rounds,
+        interviewers: interviewerIds,
+      },
+      entries,
+      combinedDateTime,
+    };
+  
+    console.log("Submitting form with data:", updatedFormData); // Debug log
+  
     // Call the mutation
     addOrUpdateMockInterview({
-      formData: {
-        ...formData,
-        entries,
-        combinedDateTime, // Make sure this is included
-      },
+      formData: updatedFormData,
       id: mockEdit ? id : undefined,
       isEdit: mockEdit,
       userId,
       organizationId
     }, {
       onSuccess: () => {
-        // Reset form if needed
         navigate('/mockinterview');
-
-        // Reset form data
         setFormData({
           skills: [],
           candidateName: "",
@@ -334,15 +370,23 @@ const MockSchedulelater = () => {
             interviewMode: "",
             duration: "30",
             instructions: "",
-            interviewType: "",
+            interviewType: "scheduled",
             interviewers: [],
             status: "Pending",
             dateTime: "",
           },
-        })
+        });
+        setExternalInterviewers([]);
+        setSelectedInterviewType(null);
+      },
+      onError: (error) => {
+        console.error("Error saving mock interview:", error);
+        setErrors(prev => ({
+          ...prev,
+          submit: "Failed to save interview. Please try again.",
+        }));
       }
     });
-
   };
 
   //for skills
@@ -719,9 +763,11 @@ const MockSchedulelater = () => {
   // Add state for external interviewers only
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  console.log("externalInterviewers", externalInterviewers);
 
   // Handler for selecting external interviewers
   const handleExternalInterviewerSelect = (interviewers) => {
+    console.log("interviewers", interviewers);
     setSelectedInterviewType("external");
     setExternalInterviewers(interviewers);
   };
@@ -743,6 +789,7 @@ const MockSchedulelater = () => {
   };
 
   const selectedInterviewers = selectedInterviewType === "external" ? externalInterviewers : [];
+  console.log("selectedInterviewers", selectedInterviewers);
 
   return (
     <div className="flex items-center justify-center">
@@ -988,7 +1035,8 @@ const MockSchedulelater = () => {
                 errors={errors}
                 onAddSkill={(setEditingIndex) => {
                   setEntries((prevEntries) => {
-                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
+                    const newEntries = [...prevEntries, { skill: '', experience: "", expertise: "" }];
+                    console.log("New entries after add:", newEntries);
                     setEditingIndex(newEntries.length - 1);
                     return newEntries;
                   });
@@ -1368,10 +1416,11 @@ const MockSchedulelater = () => {
                             <div className="mb-3">
                               <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
                               <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                {console.log("externalInterviewers in MockSchedulelater", externalInterviewers)}
                                 {externalInterviewers.map((interviewer) => (
                                   <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                     <div className="flex items-center">
-                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
+                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.contact.Name}</span>
                                     </div>
                                     <button
                                       type="button"
@@ -1459,6 +1508,7 @@ const MockSchedulelater = () => {
                         : "border-gray-300 focus:border-black"
                         }`}
                          placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+
                     ></textarea>
                     {errors.instructions && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1581,6 +1631,8 @@ const MockSchedulelater = () => {
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           onProceed={handleExternalInterviewerSelect}
+          skills={formData.skills}
+          navigatedfrom="mock-interview"
         />
       )}
 

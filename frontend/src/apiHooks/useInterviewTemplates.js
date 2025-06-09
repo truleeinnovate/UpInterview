@@ -71,7 +71,7 @@ export const useInterviewTemplates = () => {
                     },
                     { headers }
                 );
-                return response.data;
+                return response.data.data;;
             } else {
                 const response = await axios.post(
                     `${config.REACT_APP_API_URL}/interviewTemplates`,

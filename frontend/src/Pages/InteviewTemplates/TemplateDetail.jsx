@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 
-import {  Plus, ArrowLeft, Calendar, Layers, Edit2, LayoutGrid, LayoutList } from 'lucide-react';
+import { Plus, ArrowLeft, Calendar, Layers, LayoutGrid, LayoutList } from 'lucide-react';
 import { useParams, useNavigate, Outlet } from 'react-router-dom';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import SingleRoundView from './SingleRoundView';
 import VerticalRoundsView from './VerticalRoundsView';
 import InterviewProgress from './InterviewProgress';
 import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
-
+import { Switch } from '@headlessui/react';
 
 const TemplateDetail = () => {
-    const { templatesData} = useInterviewTemplates();
-  
+  const { templatesData, saveTemplate } = useInterviewTemplates();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
@@ -20,16 +20,21 @@ const TemplateDetail = () => {
   const [roundsViewMode, setRoundsViewMode] = useState('vertical');
   const [activeRound, setActiveRound] = useState(null);
 
+  const [isActive, setIsActive] = useState(template?.status === 'active');
+
   useEffect(() => {
     const foundTemplate = templatesData.find(tem => tem._id === id)
     console.log("foundTemplate", foundTemplate);
-    setIsLoading(true)
+    // setIsLoading(true)
     if (foundTemplate && foundTemplate) {
       setTemplate(foundTemplate);
       // Set the first round as active by default
       if (foundTemplate.rounds?.length > 0) {
         setActiveRound(foundTemplate?.rounds[0]._id);
       }
+
+      setIsActive(foundTemplate.status === 'active'); // ✅ Sync here
+      setIsLoading(false);
       // setEditedTemplate({
       //   templateName: foundTemplate?.templateName || '',
       //   description: foundTemplate?.description || '',
@@ -43,6 +48,35 @@ const TemplateDetail = () => {
     }
 
   }, [id, templatesData]);
+
+
+  const handleStatusChange = async (newToggleValue) => {
+    try {
+      const newStatus = newToggleValue ? 'active' : 'inactive';
+
+      const templateData = { status: newStatus };
+      const isEditMode = true;
+
+      const updatedTemplate = await saveTemplate({
+        id,
+        templateData,
+        isEditMode,
+      });
+
+      console.log("UpdatedTemplate", updatedTemplate);
+
+      // ✅ Reflect changes locally
+      setIsActive(newToggleValue);
+      setTemplate(prev => ({
+        ...prev,
+        status: newStatus,
+      }));
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      setIsActive(prev => !prev); // ✅ Revert toggle on error
+    }
+  };
+
 
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';
@@ -126,7 +160,7 @@ const TemplateDetail = () => {
       </div>
     );
   }
-console.log("template", template);
+  console.log("template", template, template?.status);
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
@@ -154,6 +188,42 @@ console.log("template", template);
           </div>
 
           <Breadcrumb items={breadcrumbItems} />
+          {/* <div>
+
+               {template.rounds?.length === 0 &&
+                  <div className='flex justify-end'>
+                    <div className=' w-full  flex-col items-center flex gap-2 bg-slate-100 justify-center mt-2 pt-1 pb-1'>
+                    <span className='bg-amber-50 text-amber-700 border border-amber-200/60 h-6 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium '>{template.status === 'draft' && "Draft"} </span>
+                    <span className='bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-md border-amber-200/60'>
+                     Note: Not Recomnded Due to no Rounds
+                    </span>
+</div>
+                  </div>
+                }
+          </div> */}
+
+
+          {template.status === 'draft' 
+          // && template.rounds?.length === 0  
+          && (
+            <div className="mb-1 sm:mb-4 rounded-xl border mt-2 border-yellow-300 bg-yellow-50 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-4 h-5 rounded-full  text-yellow-700">
+                    ⚠️
+                  </span>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-medium text-yellow-800">This template is currently in <strong>Draft</strong> status.</h4>
+                    <p className="text-xs sm:text-sm text-yellow-700 mt-1">
+                      Add at least one interview round to make this template usable. Templates without rounds are not recommended.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 mt-4">
             <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
@@ -182,14 +252,45 @@ console.log("template", template);
                   </div>
                 </div>
               </div>
-              <span className={`inline-flex h-8 items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium ${template.status === 'active'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                : template.status === 'draft'
-                  ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                  : 'bg-slate-50 text-slate-700 border border-slate-200/60'
-                }`}>
-                {template.status.charAt(0).toUpperCase() + template.status.slice(1)}
-              </span>
+
+
+              <div className="flex flex-col items-center gap-2">
+
+                <span className={`inline-flex h-6 items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium 
+ ${(template.status === 'active' && 'bg-emerald-50 text-emerald-700 border border-emerald-200/60') ||
+                  (template.status === 'inactive' && 'bg-red-400 text-white border border-slate-200/60') ||
+                  ''
+                  }`}
+
+
+                >
+                  {
+                    (template.status === 'active' && "Active") ||
+                    (template.status === 'inactive' && "In Active")
+                  }
+
+                </span>
+
+
+                {template.status !== 'draft' && (
+                  <Switch
+                    checked={isActive}
+                    onChange={handleStatusChange}
+                    className={`${isActive ? 'bg-custom-blue' : 'bg-red-400'}
+        relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+        `}
+                  >
+                    <span
+                      className={`${isActive ? 'translate-x-6' : 'translate-x-1'}
+          inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                    />
+                  </Switch>
+                )}
+
+
+
+              </div>
+
             </div>
           </div>
 
@@ -249,14 +350,7 @@ console.log("template", template);
                     </div>
                   )}
               </div>
-              {template.rounds?.length === 0 &&
-              <div>
-                <span className='bg-yellow-400 text-white text-xs px-2 py-1 rounded-md'>
-                  Not Recomnded Due to no Rounds
-                </span>
 
-              </div>
-}
             </div>
 
             {template.rounds.length > 0 && (
@@ -306,7 +400,7 @@ console.log("template", template);
 
       </div>
 
-    
+
       <Outlet />
     </div>
   );

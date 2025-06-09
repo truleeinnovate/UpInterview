@@ -22,8 +22,9 @@ function SupportDesk() {
   isLoading
 } = useSupportTickets();
 
+console.log("tickets", tickets);
+
   const { userRole } = useCustomContext();
-  console.log('userRole from main', userRole)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -99,6 +100,7 @@ function SupportDesk() {
   const totalPages = Math.ceil(FilteredData().length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
   const currentFilteredRows = FilteredData().slice(startIndex, startIndex + itemsPerPage);
+  console.log("currentFilteredRows", currentFilteredRows);
 
   const nextPage = () => {
     if (currentPage < totalPages - 1) {

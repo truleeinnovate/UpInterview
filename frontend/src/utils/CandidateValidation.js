@@ -11,6 +11,7 @@ const validatePhoneNumber = (phone) => {
 
 
 const getErrorMessage = (field, value, formData) => {
+// const getErrorMessage = (field, value, entries, formData) => {
     const messages = {
         LastName: "Last Name is required",
         Email: "Email is required",
@@ -56,7 +57,7 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     const newErrors = { ...errors };
 
     Object.keys(formData).forEach((field) => {
-        const errorMessage = getErrorMessage(field, formData[field], formData);
+        const errorMessage = getErrorMessage(field, formData[field], entries, formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
             formIsValid = false;
@@ -64,12 +65,15 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     });
 
     if (!selectedPosition || selectedPosition.length === 0) {
-        newErrors.Position = getErrorMessage("Position", null, formData);
+        newErrors.Position = getErrorMessage("Position", null, entries, formData);
         formIsValid = false;
     }
     
     if (entries.length === 0) {
-        newErrors.skills = getErrorMessage("skills", entries.length, formData);
+        newErrors.skills = getErrorMessage("skills", entries.length, entries, formData);
+        formIsValid = false;
+    } else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
+        newErrors.skills = "All skills must have a value in the skill, experience and expertise fields";
         formIsValid = false;
     }
 

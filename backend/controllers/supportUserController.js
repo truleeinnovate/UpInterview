@@ -46,7 +46,7 @@ exports.createTicket = async(req,res)=>{
 
 exports.getTicket = async (req, res) => {
   try {
-    const tickets = await SupportUser.find().sort({ updatedAt: -1, createdAt: -1 }); // Fetch all tickets with no filter
+    const tickets = await SupportUser.find();
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
@@ -61,6 +61,7 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
+
 exports.getTicketBasedonId  =async(req,res)=>{
     try {
         const {id}=req.params 
