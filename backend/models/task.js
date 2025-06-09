@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
+
 const taskSchema = new mongoose.Schema({
+  taskCode:{type:String,unique:true},
   title: { type: String},
   assignedTo: { type: String },
   priority: { type: String },
