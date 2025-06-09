@@ -359,7 +359,7 @@ const Navbar = () => {
                         {[
                           { to: "/interview-templates", label: "Interview Templates" },
                           { to: "/interviewList", label: "Interviews" },
-                          ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+                          ...(organization ? [] : [{ to: "/mockinterview", label: "Mock Interviews" }]),
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}

@@ -41,7 +41,6 @@ export const useMasterData = () => {
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
         ]);
-        console.log('rolesRes', rolesRes.data);
 
         return {
           locations: locationsRes.data,
@@ -61,6 +60,7 @@ export const useMasterData = () => {
     staleTime: 1000 * 60 * 60, // 1 hour cache
     retry: 1,
   });
+   
 
   return {
     masterData,

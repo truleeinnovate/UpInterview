@@ -1,346 +1,178 @@
-import { useState, useEffect, useCallback } from "react";
-import Tooltip from "@mui/material/Tooltip";
-import TaskForm from "../TaskTab/Task_form.jsx";
-import axios from "axios";
-import maleImage from "../../Images/man.png";
-import femaleImage from "../../Images/woman.png";
-import genderlessImage from "../../Images/transgender.png";
-import TaskProfileDetails from "../TaskTab/TaskProfileDetails.jsx";
-import { fetchMasterData } from '../../../../utils/fetchMasterData.js'
-
-import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
-import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as IoMdSearch } from '../../../../icons/IoMdSearch.svg';
-import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
-import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
-import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
-import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Eye, Pencil, ChevronUp, ChevronDown, CheckCircle, XCircle, Info, Trash } from 'lucide-react';
 import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
-import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
-import { config } from "../../../../config.js";
+import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
 
 
-const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
-  const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [isTechDropdownOpen, setTechDropdownOpen] = useState(false);
-  const [isStatusMainChecked, setStatusMainChecked] = useState(false);
-  const [isTechMainChecked, setTechMainChecked] = useState(false);
-  const [selectedStatusOptions, setSelectedStatusOptions] = useState([]);
-  const [selectedTechOptions, setSelectedTechOptions] = useState([]);
-  const isAnyOptionSelected = selectedStatusOptions.length > 0 || selectedTechOptions.length > 0;
-  const handleUnselectAll = () => {
-    setSelectedStatusOptions([]);
-    setSelectedTechOptions([]);
-    setStatusMainChecked(false);
-    setTechMainChecked(false);
-    setMinExperience('');
-    setMaxExperience('');
-    onFilterChange({ status: [], tech: [], experience: { min: '', max: '' } });
-  };
-  useEffect(() => {
-    if (!isStatusMainChecked) setSelectedStatusOptions([]);
-    if (!isTechMainChecked) setSelectedTechOptions([]);
-  }, [isStatusMainChecked, isTechMainChecked]);
-  const handleStatusMainToggle = () => {
-    const newStatusMainChecked = !isStatusMainChecked;
-    setStatusMainChecked(newStatusMainChecked);
-    const newSelectedStatus = newStatusMainChecked ? qualification.map(q => q.QualificationName) : [];
-    setSelectedStatusOptions(newSelectedStatus);
-
-  };
-  const handleTechMainToggle = () => {
-    const newTechMainChecked = !isTechMainChecked;
-    setTechMainChecked(newTechMainChecked);
-    const newSelectedTech = newTechMainChecked ? skills.map(s => s.SkillName) : [];
-    setSelectedTechOptions(newSelectedTech);
-
-  };
-  const handleStatusOptionToggle = (option) => {
-    const selectedIndex = selectedStatusOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedStatusOptions, option]
-      : selectedStatusOptions.filter((_, index) => index !== selectedIndex);
-
-    setSelectedStatusOptions(updatedOptions);
-  };
-  const handleTechOptionToggle = (option) => {
-    const selectedIndex = selectedTechOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedTechOptions, option]
-      : selectedTechOptions.filter((_, index) => index !== selectedIndex);
-
-    setSelectedTechOptions(updatedOptions);
-  };
-  const [skills, setSkills] = useState([]);
-  const [qualification, setQualification] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const skillsData = await fetchMasterData('skills');
-        setSkills(skillsData);
-        const qualificationData = await fetchMasterData('qualification');
-        setQualification(qualificationData);
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const [minExperience, setMinExperience] = useState('');
-  const [maxExperience, setMaxExperience] = useState('');
-
-  const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, e.target.value));
-    if (type === 'min') {
-      setMinExperience(value);
-    } else {
-      setMaxExperience(value);
-    }
-
-  };
-  const Apply = () => {
-    onFilterChange({
-      status: selectedStatusOptions,
-      tech: selectedTechOptions,
-      experience: { min: minExperience, max: maxExperience },
-    });
-    if (window.innerWidth < 1023) {
-      closeOffcanvas();
-    }
-  }
-  return (
-    <div
-      className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
-      style={{
-        visibility: isOpen ? "visible" : "hidden",
-        transform: isOpen ? "" : "translateX(50%)",
-      }}
-    >
-      <div className="relative h-full flex flex-col">
-        <div className="absolute w-72 sm:w-full md:w-full border-b flex justify-between p-2 items-center bg-white z-10">
-          <div>
-            <h2 className="text-lg font-bold ">Filters</h2>
-          </div>
-          {/* Unselect All Option */}
-          <div>
-            {(isAnyOptionSelected || minExperience || maxExperience) && (
-              <div>
-                <button onClick={handleUnselectAll} className="font-bold text-md">
-                  Clear Filters
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
-          {/* Higher Qualification */}
-          <div className="flex justify-between">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-4 w-4"
-                  checked={isStatusMainChecked}
-                  onChange={handleStatusMainToggle}
-                />
-                <span className="ml-3 font-bold">Higher Qualification</span>
-              </label>
-            </div>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
-            >
-              {isStatusDropdownOpen ? (
-                <MdKeyboardArrowUp />
-              ) : (
-                <MdKeyboardArrowDown />
-              )}
-            </div>
-          </div>
-          {isStatusDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {qualification.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedStatusOptions.includes(option.QualificationName)}
-                    onChange={() => handleStatusOptionToggle(option.QualificationName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.QualificationName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          {/* Skill/Technology */}
-          <div className="flex mt-2 justify-between">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-4 w-4"
-                  checked={isTechMainChecked}
-                  onChange={handleTechMainToggle}
-                />
-                <span className="ml-3 font-bold">Skill/Technology</span>
-              </label>
-            </div>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
-            >
-              {isTechDropdownOpen ? (
-                <MdKeyboardArrowUp />
-              ) : (
-                <MdKeyboardArrowDown />
-              )}
-            </div>
-          </div>
-          {isTechDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {skills.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedTechOptions.includes(option.SkillName)}
-                    onChange={() => handleTechOptionToggle(option.SkillName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.SkillName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-between mt-2 ml-5">
-            <div className="cursor-pointer">
-              <label className="inline-flex items-center">
-                <span className="ml-3 font-bold">Experience</span>
-              </label>
-            </div>
-          </div>
-          <div className="bg-white py-2 mt-1">
-            <div className="flex items-center ml-10">
-              <input
-                type="number"
-                placeholder="Min"
-                value={minExperience}
-                min="0"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'min')}
-                className="border-b form-input w-20"
-              />
-              <span className="mx-3">to</span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={maxExperience}
-                min="1"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'max')}
-                className="border-b form-input w-20"
-              />
-            </div>
-          </div>
-        </div>
-        {/* Footer */}
-        <div className="fixed bottom-0 w-72 sm:w-full md:w-full bg-white space-x-3 flex justify-end border-t p-2">
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={closeOffcanvas}
-          >
-            Close
-          </button>
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={Apply}
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useCustomContext } from '../../../../Context/Contextfetch';
+import Header from '../../../../Components/Shared/Header/Header';
+import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
+import TableView from '../../../../Components/Shared/Table/TableView';
+import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
+import Loading from '../../../../Components/Loading';
+import toast from 'react-hot-toast';
+import maleImage from '../../Images/man.png';
+import femaleImage from '../../Images/woman.png';
+import genderlessImage from '../../Images/transgender.png';
+import TaskForm from './Task_form.jsx';
+import TaskProfileDetails from './TaskProfileDetails.jsx';
+import axios from 'axios';
+import { config } from '../../../../config.js';
+import TaskKanban from './TaskKanban.jsx';
 
 const Task = () => {
-  const [viewMode, setViewMode] = useState("list");
-  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [view, setView] = useState('table');
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [taskData, setTaskData] = useState([]);
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const [actionViewMore, setActionViewMore] = useState(null);
-  const [tableVisible, setTableVisible] = useState(true);
-  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-
-  // Define missing functions
-  const handleListViewClick = () => setViewMode("list");
-  const handleKanbanViewClick = () => setViewMode("kanban");
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(0);
-  };
-  const prevPage = () => {
-    if (currentPage > 0) setCurrentPage(currentPage - 1);
-  };
-  const nextPage = () => {
-    if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
-  };
-  const toggleMenu = () => setMenuOpen(!isMenuOpen);
-  const toggleAction = (id) =>
-    setActionViewMore(actionViewMore === id ? null : id);
-
-  const handleFilterChange = useCallback((filters) => {
-    setSelectedFilters(filters);
-  }, []);
-
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    priority: [],
   });
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [taskData, setTaskData] = useState([]);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [actionViewMore, setActionViewMore] = useState(null);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [newState, setNewState] = useState(null); // Added state declaration
+  const filterIconRef = useRef(null);
 
+  // Set view based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setView('kanban');
+      } else {
+        setView('table');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Reset filters when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setIsStatusOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
+      setTaskData(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]); // Run only once on mount
+
+  // Filter handling
+  const handleStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const handleClearAll = () => {
+    const clearedFilters = { status: [] };
+    setSelectedStatus([]);
+    setSelectedFilters(clearedFilters);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
+
+  const handleApplyFilters = () => {
+    const filters = { status: selectedStatus };
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(filters.status.length > 0);
+    setFilterPopupOpen(false);
+  };
+
+  const handleFilterIconClick = () => {
+    if (taskData?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(0);
+  };
+
+  // Unique statuses for filter options
+  const uniqueStatuses = [
+    ...new Set(taskData?.map((task) => task.status).filter(Boolean)),
+  ];
+
+  // Filtered data
   const FilteredData = () => {
     if (!Array.isArray(taskData)) return [];
     return taskData.filter((task) => {
       const fieldsToSearch = [
-        task.title, // Assuming tasks have a title field
-        task.description, // Assuming tasks have a description field
-        task.assigned, // Assuming tasks have an assigned field
+        task.title,
+        task.description,
+        task.assigned,
+        task._id,
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters.status.length === 0 ||
         selectedFilters.status.includes(task.status);
-      const matchesPriority =
-        selectedFilters.priority.length === 0 ||
-        selectedFilters.priority.includes(task.priority);
-
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus && matchesPriority;
+      return matchesSearchQuery && matchesStatus;
     });
   };
+
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  const nextPage = () => {
+    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
-  const currentFilteredRows = FilteredData()
-    .slice(startIndex, endIndex)
-    .reverse();
+  // Action logic
+  const handleTaskClick = (task) => {
+    setSelectedTask(task);
+  };
 
-  const noResults = currentFilteredRows.length === 0 && searchQuery !== "";
+  const handleCloseTask = () => {
+    setSelectedTask(null);
+  };
 
   const handleAddTaskClick = () => {
+    setEditingTaskId(null); 
     setIsTaskFormOpen(true);
   };
 
@@ -348,458 +180,224 @@ const Task = () => {
     setIsTaskFormOpen(false);
   };
 
-  // Function to handle opening the TaskForm
-  const handleOpenTaskForm = () => {
+  const handleTaskAdded = () => {
+    fetchTasks();
+  };
+
+  // Kanban Columns Configuration
+  // const kanbanColumns = [
+
+  // ];
+
+  // Render actions for Kanban cards
+  const renderKanbanActions = (task) => (
+    <div className="flex space-x-2">
+      <button 
+        onClick={() => handleTaskClick(task)}
+      >
+        <Eye className="w-4 h-4 text-blue-600" />
+      </button>
+      <button onClick={() => handleEditTask(task._id)}>
+        <Pencil className="w-4 h-4 text-green-600" />
+      </button>
+    </div>
+  );
+
+  // Table Columns Configuration
+  const tableColumns = [
+    {
+      key: 'taskCode',
+      header: 'Task ID',
+      render: (value) => value ? value : 'N/A',
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      render: (value, row) => (
+        <div className="flex items-center">
+          <div className="h-8 w-8 flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+              {value ? value.charAt(0).toUpperCase() : 'N/A'}
+            </div>
+          </div>
+          <div className="ml-3">
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer"
+              onClick={() => handleTaskClick(row)}
+            >
+              {value || 'Untitled Task'}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'relatedTo', header: 'Related To', render: (value) => value?.objectName || 'N/A' },
+    { key: 'priority', header: 'Priority', render: (value) => value || 'N/A' },
+    { key: 'status', header: 'Status', render: (value) => value || 'N/A' },
+    { key: 'dueDate', header: 'Due Date', render: (value) => new Date(value).toLocaleDateString() || 'N/A' },
+  ];
+
+  // Table Actions Configuration
+  const tableActions = [
+    {
+      key: 'view',
+      label: 'View Details',
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => handleTaskClick(row),
+    },
+    {
+      key: 'edit',
+      label: 'Edit',
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => handleEditTask(row._id),
+    }
+  ];
+
+  const handleEditTask = (taskId) => {
+    setEditingTaskId(taskId);
     setIsTaskFormOpen(true);
   };
 
-  // Function to handle closing the TaskForm
-  const handleCloseTaskForm = () => {
-    setIsTaskFormOpen(false);
-  };
-  const [selectedTask, setSelectedTask] = useState(null);
-
-  const handleTaskClick = (task) => {
-    setSelectedTask(task);
-  };
-  const handleCloseTask = () => {
-    setSelectedTask(null);
-  };
-
-  // Fetch tasks from the backend
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/tasks`
-      );
-      setTaskData(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  const handleDataAdded = () => {
-    fetchTasks();
-  };
-
-  const handleTaskAdded = (newTask) => {
-    setTaskData((prevTasks) => [...prevTasks, newTask]);
-    setIsTaskFormOpen(false);
-  };
-
-    // Detect screen size and set view mode to "kanban" for sm
-    useEffect(() => {
-      const handleResize = () => {
-        if (window.innerWidth < 1024) {
-          setViewMode("kanban");
-        } else {
-          setViewMode("list");
-        }
-      };
-      handleResize();
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }, []);
-
-  const [isFilterActive, setIsFilterActive] = useState(false);
-  const handleFilterIconClick = () => {
-    if (taskData.length !== 0) {
-      setIsFilterActive((prev) => !prev);
-      toggleMenu();
-    }
-  };
-
   return (
-    <>
-      {/* <div className={`fixed top-24 left-0 right-0 ${isTaskFormOpen ? 'bg-gray-200 bg-opacity-50' : ''}`}> */}
-      <div className="fixed top-24 left-0 right-0">
-        <div className="flex justify-between p-4">
-          <div>
-            <span className="text-lg font-semibold">Tasks</span>
-          </div>
-
-          <div onClick={handleOpenTaskForm} className="">
-            <span className="p-2 bg-custom-blue text-md sm:text-sm md:text-sm text-white font-semibold border shadow rounded">
-              Add
-            </span>
-          </div>
+    <div className="h-screen fixed w-full flex">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-full overflow-y-auto">
+        <div className="fixed top-16 right-0 left-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+          {/* Header and Toolbar */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Header
+              title="Tasks"
+              onAddClick={handleAddTaskClick}
+              addButtonText="Add Task"
+            />
+          </motion.div>
+          <Toolbar
+            view={view}
+            setView={setView}
+            searchQuery={searchQuery}
+            onSearch={handleSearch}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            onFilterClick={handleFilterIconClick}
+            isFilterPopupOpen={isFilterPopupOpen}
+            isFilterActive={isFilterActive}
+            dataLength={taskData?.length}
+            searchPlaceholder="Search by Task ID, Title, Assigned To..."
+            filterIconRef={filterIconRef}
+          />
         </div>
       </div>
-
-      {/* Main content */}
-
-      {/* <div className={`fixed top-36 left-0 right-0 ${isTaskFormOpen ? 'bg-gray-200 bg-opacity-50' : ''}`}> */}
-      <div className="fixed top-36 left-0 right-0">
-        <div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between md:float-end sm:float-end p-4">
-          <div className="flex items-center sm:hidden md:hidden">
-            <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
-              <span onClick={handleListViewClick}>
-                <FaList
-                  className={`text-xl mr-4 ${
-                    viewMode === "list" ? "text-custom-blue" : ""
-                  }`}
-                />
-              </span>
-            </Tooltip>
-            <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-              <span onClick={handleKanbanViewClick}>
-                <TbLayoutGridRemove
-                  className={`text-xl ${
-                    viewMode === "kanban" ? "text-custom-blue" : ""
-                  }`}
-                />
-              </span>
-            </Tooltip>
-          </div>
-          <div className="flex items-center">
-            <div className="relative">
-              <div className="searchintabs border rounded-md relative">
-                <div className="absolute inset-y-0 left-0 flex items-center">
-                  <button type="submit" className="p-2">
-                    <IoMdSearch className="text-custom-blue" />
-                  </button>
+      <div className="fixed top-48 xl:top-56 lg:top-56 right-0 left-0 bg-background">
+          <motion.div className="bg-white">
+            <div className="relative w-full">
+              {view === 'table' ? (
+                <div className="w-full">
+                  <TableView
+                    data={currentFilteredRows}
+                    columns={tableColumns}
+                    loading={loading}
+                    actions={tableActions}
+                    emptyState="No tasks found."
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search by Task ID ,Title, Assigned To."
-                  value={searchQuery}
-                  onChange={handleSearchInputChange}
-                  className="rounded-full border h-8 "
-                />
-              </div>
-            </div>
-            <div>
-              <span className="p-2 text-xl sm:text-sm md:text-sm">
-                {currentPage + 1}/{totalPages}
-              </span>
-            </div>
-            <div className="flex">
-              <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                <span
-                  className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md ${
-                    currentPage === 0 ? " cursor-not-allowed" : ""
-                  }`}
-                  onClick={prevPage}
-                >
-                  <IoIosArrowBack className="text-custom-blue" />
-                </span>
-              </Tooltip>
-              <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                <span
-                  className={`border p-2 text-xl sm:text-md md:text-md rounded-md ${
-                    currentPage === totalPages - 1 ? " cursor-not-allowed" : ""
-                  }`}
-                  onClick={nextPage}
-                >
-                  <IoIosArrowForward className="text-custom-blue" />
-                </span>
-              </Tooltip>
-            </div>
-                    <div className="ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                  <span
-                    onClick={handleFilterIconClick}
-                    style={{
-                      opacity: taskData.length === 0 ? 0.2 : 1,
-                      pointerEvents: taskData.length === 0 ? "none" : "auto",
-                    }}
-                  >
-                    {isFilterActive ? (
-                      <LuFilterX className="text-custom-blue" />
-                    ) : (
-                      <FiFilter className="text-custom-blue" />
-                    )}
-                  </span>
-                </Tooltip>
-              </div>
-          </div>
-        </div>
-      </div>
+              ) : (
+              
+                <div className="w-full">
+                  <TaskKanban
+                    data={currentFilteredRows.map(task => ({
+                      ...task,
+                      id: task.id,
+                      title: task.title,
+                      Email: task.assignedTo || 'None',
+                      Phone: task.relatedTo?.objectName || 'N/A',
+                      HigherQualification: task.priority || 'N/A',
+                      UniversityCollege: task.status || 'N/A',
+                      interviews: new Date(task.dueDate).toLocaleString()
 
-      <div className="fixed left-0 right-0 mx-auto z-10 sm:top-48 md:top-56 lg:top-56 xl:top-56 2xl:top-56">
-        {tableVisible && (
-          <div>
-            {viewMode === "list" ? (
-              <div className="sm:hidden md:hidden lg:flex xl:flex 2xl:flex">
-                <div
-                  className="flex-grow"
-                  style={{ marginRight: isMenuOpen ? "290px" : "0" }}
-                >
-                  <div className="relative h-[calc(100vh-200px)] flex flex-col">
-                    <div className="flex-grow overflow-y-auto pb-4">
-                      <table className="text-left w-full border-collapse border-gray-300 mb-14">
-                        <thead className="bg-custom-bg sticky top-0 z-10 text-xs">
-                          <tr>
-                            <th scope="col" className="py-3 px-6">
-                              Task ID
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Title
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Assigned To
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Priority
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Status
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Due Date
-                            </th>
-                            <th scope="col" className="py-3 px-6">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {loading ? (
-                            <tr>
-                              <td colSpan="7" className="py-28 text-center">
-                                <div className="wrapper12">
-                                  <div className="circle12"></div>
-                                  <div className="circle12"></div>
-                                  <div className="circle12"></div>
-                                  <div className="shadow12"></div>
-                                  <div className="shadow12"></div>
-                                  <div className="shadow12"></div>
-                                </div>
-                              </td>
-                            </tr>
-                          ) : taskData.length === 0 ? (
-                            <tr>
-                              <td colSpan="7" className="py-10 text-center">
-                                <div className="flex flex-col items-center justify-center p-5">
-                                  <p className="text-9xl rotate-180 text-blue-500">
-                                    <CgInfo />
-                                  </p>
-                                  <p className="text-center text-lg font-normal">
-                                    You don't have tasks yet. Create a new task.
-                                  </p>
-                                  {/* <p onClick={toggleSidebar} className="mt-3 cursor-pointer text-white bg-blue-400 px-4 py-1 rounded-md">Add Task</p> */}
-                                </div>
-                              </td>
-                            </tr>
-                          ) : currentFilteredRows.length === 0 ? (
-                            <tr>
-                              <td colSpan="7" className="py-10 text-center">
-                                <p className="text-lg font-normal">
-                                  No data found.
-                                </p>
-                              </td>
-                            </tr>
-                          ) : (
-                            currentFilteredRows.map((task) => (
-                              <tr
-                                key={task._id}
-                                className="bg-white border-b cursor-pointer text-xs"
-                              >
-                                <td className="py-2 px-6 text-custom-blue">
-                                  <div
-                                    className="flex items-center gap-3"
-                                    onClick={() => handleTaskClick(task)}
-                                  >
-                                     <img
-                                      src={
-                                        task.imageUrl ||
-                                        (task.Gender === "Male"
-                                          ? maleImage
-                                          : task.Gender === "Female"
-                                          ? femaleImage
-                                          : genderlessImage)
-                                      }
-                                      alt="Task"
-                                      className="w-7 h-7 rounded-full object-cover"
-                                    />
-                                    {task.title}
-                                  </div>
-                                </td>
-                                <td className="py-2 px-6">{task.assigned}</td>
-                                <td className="py-2 px-6">{task.priority}</td>
-                                <td className="py-2 px-6">{task.status}</td>
-                                <td className="py-2 px-6">{task.dueDate}</td>
-                                <td className="py-2 px-6">
-                                  {task.description}
-                                </td>
-                                <td className="py-2 px-6 relative">
-                                  <button
-                                    onClick={() => toggleAction(task._id)}
-                                  >
-                                    <FiMoreHorizontal className="text-3xl" />
-                                    </button>
-                                  {actionViewMore === task._id && (
-                                    <div className="absolute z-10 w-36 rounded-md shadow-lg bg-white ring-1 p-4 ring-black ring-opacity-5 right-2 popup">
-                                      <div className="space-y-1">
-                                        <p
-                                          className="hover:bg-gray-200 p-1 rounded pl-3"
-                                          onClick={() => handleTaskClick(task)}
-                                        >
-                                          View
-                                        </p>
-                                        <p className="hover:bg-gray-200 p-1 rounded pl-3">
-                                          Edit
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                    }))}
+                    //columns={kanbanColumns}
+                    loading={loading}
+                    renderActions={renderKanbanActions}
+                    emptyState="No tasks found."
+
+                  />
                 </div>
-                <OffcanvasMenu
-                  isOpen={isMenuOpen}
-                  closeOffcanvas={handleFilterIconClick}
-                  onFilterChange={handleFilterChange}
-                />
-              </div>
-            ) : (
-              // Kanban view
-
-              <div className="flex">
-                <div
-                  className="flex-grow"
-                  style={{ marginRight: isMenuOpen ? "290px" : "0" }}
-                >
-                  <div className="flex-grow h-[calc(100vh-200px)] overflow-y-auto pb-10 right-0 sm:mt-10 md:mt-10">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 px-4">
-                      {loading ? (
-                        <div className="py-10 text-center">
-                          <div className="wrapper12">
-                            <div className="circle12"></div>
-                            <div className="circle12"></div>
-                            <div className="circle12"></div>
-                            <div className="shadow12"></div>
-                            <div className="shadow12"></div>
-                            <div className="shadow12"></div>
-                          </div>
-                        </div>
-                      ) : taskData.length === 0 ? (
-                        <div className="py-10 text-center">
-                          <div className="flex flex-col items-center justify-center p-5">
-                            <p className="text-9xl rotate-180 text-blue-500">
-                              <CgInfo />
-                            </p>
-                            <p className="text-center text-lg font-normal">
-                              You don't have tasks yet. Create a new task.
-                            </p>
-                            {/* <p onClick={toggleSidebar} className="mt-3 cursor-pointer text-white bg-blue-400 px-4 py-1 rounded-md">Add Task</p> */}
-                          </div>
-                        </div>
-                      ) : currentFilteredRows.length === 0 ? (
-                        <div className="col-span-3 py-10 text-center">
-                          <p className="text-lg font-normal">No data found.</p>
-                        </div>
+              )}
+              <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={handleApplyFilters}
+                onClearAll={handleClearAll}
+                filterIconRef={filterIconRef}
+              >
+                <div className="space-y-3">
+                  {/* Status Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsStatusOpen(!isStatusOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Status</span>
+                      {isStatusOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
                       ) : (
-                        currentFilteredRows.map((task) => (
-                          <div
-                            key={task._id}
-                            className="bg-white border border-custom-blue shadow-md p-2 rounded"
-                          >
-                            <div className="relative">
-                              <div className="float-right">
-                                <button onClick={() => toggleAction(task._id)}>
-                                  <MdMoreVert className="text-3xl mt-1" />
-                                </button>
-                                {actionViewMore === task._id && (
-                                  <div className="absolute z-10 w-36 rounded-md shadow-lg bg-white ring-1 p-4 ring-black ring-opacity-5 right-2 popup">
-                                    <div className="space-y-1">
-                                      <p className="hover:bg-gray-200 p-1 rounded pl-3">
-                                        View
-                                      </p>
-                                      <p className="hover:bg-gray-200 p-1 rounded pl-3">
-                                        Edit
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex">
-                              <div className="w-16 h-16 mt-3 ml-1 mr-3 overflow-hidden cursor-pointer">
-                                <img
-                                  src={
-                                    task.imageUrl ||
-                                    (task.Gender === "Male"
-                                      ? maleImage
-                                      : task.Gender === "Female"
-                                      ? femaleImage
-                                      : genderlessImage)
-                                  }
-                                  alt="Task"
-                                  className="w-16 h-16 rounded-full object-cover"
-                                />
-                              </div>
-                              <div className="flex flex-col">
-                              <div
-                                  className="text-custom-blue text-lg cursor-pointer break-words"
-                                  onClick={() =>
-                                    handleTaskClick(task)
-                                  }
-                                >
-                                  {task.title}
-                                </div>
-                              <div className="text-xs grid grid-cols-2 gap-1 items-start">
-                                <div className="text-gray-400">Assigned To</div>
-                                <div>{task.assigned}</div>
-                                <div className="text-gray-400">Priority</div>
-                                <div>{task.priority}</div>
-                                <div className="text-gray-400">Status</div>
-                                <div>{task.status}</div>
-                                <div className="text-gray-400">Due Date</div>
-                                <div>{task.dueDate}</div>
-                              </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))
+                        <ChevronDown className="text-xl text-gray-700" />
                       )}
                     </div>
+                    {isStatusOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {uniqueStatuses.length > 0 ? (
+                          uniqueStatuses.map((status) => (
+                            <label key={status} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedStatus.includes(status)}
+                                onChange={() => handleStatusToggle(status)}
+                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{status}</span>
+                            </label>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">No statuses available</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <OffcanvasMenu
-                  isOpen={isMenuOpen}
-                  closeOffcanvas={handleFilterIconClick}
-                  onFilterChange={handleFilterChange}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              </FilterPopup>
+            </div>
+          </motion.div>
+        </div>
 
       {/* Task Form as a sidebar */}
       {isTaskFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-15 z-50">
           <div className="fixed inset-y-0 right-0 z-50 sm:w-full md:w-3/4 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
             <TaskForm
+              isOpen={isTaskFormOpen}
               onClose={handleTaskFormClose}
               onTaskAdded={handleTaskAdded}
-              onDataAdded={handleDataAdded}
+              taskId={editingTaskId}
             />
           </div>
         </div>
       )}
-        {selectedTask && (
+
+      {/* Task Details */}
+      {selectedTask && (
         <TaskProfileDetails
           task={selectedTask}
           onClosetask={handleCloseTask}
         />
       )}
-    </>
+    </div>
   );
 };
 

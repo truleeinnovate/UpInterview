@@ -47,11 +47,12 @@ const MockSchedulelater = () => {
     singlecontact
   } = useCustomContext();
   const {
-    qualification,
+    qualifications,
     technologies,
     skills,
     currentRoles,
   } = useMasterData();
+  
 
   const {
     mockinterviewData,
@@ -811,7 +812,7 @@ const MockSchedulelater = () => {
 
                           {showDropdownQualification && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {qualification.map((qualification, index) => (
+                              {qualifications.map((qualification, index) => (
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
