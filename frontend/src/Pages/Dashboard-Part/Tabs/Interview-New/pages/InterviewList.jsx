@@ -202,8 +202,20 @@ function InterviewList() {
   const tableColumns = [
     {
       key: 'order',
-      header: "Order",
-      render: (value, row) => row.interviewCode || '-',
+      header: "Interview ID",
+      // render: (value, row) => (row.interviewCode ? row.interviewCode : '-') || row.interviewCode || '-',
+      render: (value, row) => (
+        <div className="flex items-center">
+          <div className="ml-3">
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer"
+              onClick={() => navigate(`/interviews/${row._id}`)}
+            >
+              {(row.interviewCode || '')}
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
       key: 'candidateName',
