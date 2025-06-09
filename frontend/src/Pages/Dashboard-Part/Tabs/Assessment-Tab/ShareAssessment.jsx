@@ -408,7 +408,7 @@ const ShareAssessment = ({
               </button>
               <button
                 onClick={handleShareClick}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                className="px-6 py-2 bg-custom-blue hover:bg-custom-blue/90 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                 disabled={isLoading || selectedCandidates.length === 0}
               >
                 {isLoading ? (

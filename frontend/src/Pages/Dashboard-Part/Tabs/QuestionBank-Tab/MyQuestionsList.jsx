@@ -357,8 +357,8 @@ const MyQuestionsList = ({
   );
 
   return (
-    <div className="z-50 w-full px-4 py-2 mt-10 bg-white">
-      <div className={`flex items-center justify-between fixed z-50 ${type === "interviewerSection" || type === "assessment" ? "left-12 right-12" : "left-7 right-7"}`}>
+    <div className="w-full px-4 py-2 mt-10 bg-white">
+      <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? "left-12 right-12" : "left-7 right-7"}`}>
         <div className="flex items-center gap-2">
           <div className="relative inline-block w-48">
             <button
@@ -487,15 +487,15 @@ const MyQuestionsList = ({
               selectedLabel === listName && (
                 <div key={listName} className="mt-4">
                   <div
-                    className={`flex justify-between items-center bg-custom-blue text-white p-3 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
+                    className={`flex justify-between items-center bg-custom-blue text-white p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
                       }`}
                   >
-                     <div className="flex items-baseline gap-2">
-            <h3 className="font-semibold text-white truncate max-w-xs">{listName}</h3>
-            <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
-              {items.length} questions
-            </span>
-          </div>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="font-semibold text-white truncate max-w-xs">{listName}</h3>
+                      <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                        {items.length} questions
+                      </span>
+                    </div>
                     <div className="flex items-center">
                       <div className="relative">
                         <div className="flex items-center">

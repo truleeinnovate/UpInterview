@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { config } from '../config.js';
 import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
+import Loading from '../Components/Loading.js';
 
 const LinkedInCallback = () => {
-  console.log('linked in call back')
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,15 +34,11 @@ const LinkedInCallback = () => {
         const { userInfo, existingUser, token, isProfileCompleted, roleName } = response.data;
 
         if (existingUser) {
-          // Store JWT in cookies if token exists
           if (token) {
             setAuthCookies(token);
           }
-          
-          // Handle navigation based on profile completion status
-          if (typeof isProfileCompleted === 'undefined') {
-            navigate('/home');
-          } else if (isProfileCompleted === true) {
+
+          if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
             navigate('/home');
           } else if (isProfileCompleted === false && roleName) {
             navigate('/complete-profile', {
@@ -90,15 +86,9 @@ const LinkedInCallback = () => {
   return (
     <div className="linkedin-callback">
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Processing LinkedIn login...</p>
-        </div>
+        <Loading message="Processing LinkedIn login..." />
       ) : error ? (
-        <div className="error-container">
-          <p>Error: {error}</p>
-          <p>Redirecting to login page...</p>
-        </div>
+        <Loading message={`Error: ${error}. Redirecting to login page...`} />
       ) : null}
     </div>
   );
