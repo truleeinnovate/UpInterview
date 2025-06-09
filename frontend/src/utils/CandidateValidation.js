@@ -5,9 +5,10 @@ const validateEmail = (email) => {
 };
 
 const validatePhoneNumber = (phone) => {
-    const re = /^[0-9]+$/;
+    const re = /^[0-9]{10}$/; // ✅ Exactly 10 digits
     return re.test(String(phone));
 };
+
 
 const getErrorMessage = (field, value, formData) => {
     const messages = {

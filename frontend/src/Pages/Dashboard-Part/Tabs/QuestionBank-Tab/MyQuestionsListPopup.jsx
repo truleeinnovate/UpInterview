@@ -344,11 +344,10 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                             .filter((service) =>
                                                 service.label && service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
                                             )
-                                            .slice(0, 4)
                                             .map((service) => (
                                                 <li
                                                     key={service._id}
-                                                    className="bg-white border-b cursor-pointer p-1 hover:bg-gray-100"
+                                                    className="bg-white p-2 cursor-pointer hover:bg-gray-100"
                                                     onClick={() => handleSelectCandidate(service)}
                                                 >
                                                     {service.label}
@@ -359,7 +358,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
                                     {/* Create New List Button */}
                                     <ul>
                                         <li
-                                            className="flex cursor-pointer border-b p-1 bottom-0"
+                                            className="flex cursor-pointer border-b border-t p-1 bottom-0"
                                             onClick={handleCreateNewList}
                                         >
                                             <IoIosAddCircle className="text-2xl" />
