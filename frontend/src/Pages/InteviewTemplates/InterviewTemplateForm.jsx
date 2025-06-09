@@ -6,11 +6,14 @@ import { Minimize, Expand, X } from 'lucide-react';
 import Switch from "react-switch";
 import { validateInterviewTemplate } from '../../utils/InterviewTemplateValidation';
 import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
+import { useQueryClient } from '@tanstack/react-query';
+import LoadingButton from '../../Components/LoadingButton';
+import { ReactComponent as FaPlus } from '../../icons/FaPlus.svg';
 
 
 const InterviewSlideover = ({ mode }) => {
-    const { templatesData, saveTemplate } = useInterviewTemplates();
-
+    const { templatesData, saveTemplate, isMutationLoading } = useInterviewTemplates();
+    const queryClient = useQueryClient();
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -20,12 +23,13 @@ const InterviewSlideover = ({ mode }) => {
         templateTitle: '',
         label: '',
         description: '',
-        status: 'active',
+        status: 'draft',
         rounds: []
     });
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isCreatingRound, setIsCreatingRound] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -36,7 +40,7 @@ const InterviewSlideover = ({ mode }) => {
                     templateTitle: foundTemplate.templateName || '',
                     label: foundTemplate.label || '',
                     description: foundTemplate.description || '',
-                    status: foundTemplate.status || 'active',
+                    status: foundTemplate.status || 'draft',
                     rounds: foundTemplate.rounds || []
                 });
             }
@@ -46,7 +50,7 @@ const InterviewSlideover = ({ mode }) => {
                 templateTitle: '',
                 label: '',
                 description: '',
-                status: 'active',
+                status: 'draft',
                 rounds: []
             });
         }
@@ -59,7 +63,7 @@ const InterviewSlideover = ({ mode }) => {
             description: newTemplate.description,
             rounds: newTemplate.rounds
         };
-        
+
         const { errors: validationErrors } = validateInterviewTemplate(templateForValidation);
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
@@ -69,13 +73,13 @@ const InterviewSlideover = ({ mode }) => {
         const value = e.target.value;
         const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, '');
         const label = sanitizedValue.trim().replace(/\s+/g, '_');
-        
+
         setNewTemplate(prev => ({
             ...prev,
             templateTitle: sanitizedValue,
             label,
         }));
-        
+
         // Clear errors when user starts typing
         if (isSubmitted) {
             setErrors(prev => ({
@@ -92,7 +96,7 @@ const InterviewSlideover = ({ mode }) => {
             ...prev,
             description: value,
         }));
-        
+
         // Clear error when user starts typing
         if (isSubmitted && errors.description) {
             setErrors(prev => ({
@@ -107,17 +111,17 @@ const InterviewSlideover = ({ mode }) => {
             ...prev,
             [field]: true
         }));
-        
+
         // Only validate if the form has been submitted
         if (isSubmitted) {
             validateForm();
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e, isTemplate = false) => {
         e.preventDefault();
         setIsSubmitted(true);
-        
+
         // Mark all fields as touched
         const allFieldsTouched = {
             name: true,
@@ -126,15 +130,15 @@ const InterviewSlideover = ({ mode }) => {
             rounds: true
         };
         setTouched(allFieldsTouched);
-        
+
         // Validate the form
         const isValid = validateForm();
-        
+
         if (!isValid) {
             // Find the first field with an error and scroll to it
             const errorField = Object.keys(errors)[0];
             const firstErrorElement = document.querySelector(`[name="${errorField}"], [data-field="${errorField}"]`);
-            
+
             if (firstErrorElement) {
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstErrorElement.focus({ preventScroll: true });
@@ -149,31 +153,68 @@ const InterviewSlideover = ({ mode }) => {
                 description: newTemplate.description,
                 status: newTemplate.status,
             };
-            console.log('Template Data:', templateData);
+            // console.log('Template Data:', templateData);
 
-            await saveTemplate({
+            const savedTemplate = await saveTemplate({
                 id,
                 templateData,
                 isEditMode
             });
-            
-            
-            onClose();
+
+            // ✅ REFRESH TEMPLATE LIST TO GET LATEST DATA
+            // await queryClient.invalidateQueries(['interviewTemplates']);
+
+            // console.log("savedTemplate", savedTemplate);
+
+
+            // const newTemplateId = isEditMode ? id : savedTemplate?._id || savedTemplate?.data?._id;
+
+            // if (!isEditMode && isCreatingRound) {
+            //     // Navigate to add round page after creating template
+            //     console.log("Navigating to round creation:", newTemplateId);
+
+            //     navigate(`/interview-templates/${newTemplateId}/round/new`);
+            // } else {
+            //     console.log("Navigating to round creation: table veiw");
+
+            // }
+            if (isTemplate) {
+                const newTemplateId = isEditMode ? id : savedTemplate?._id || savedTemplate?.data?._id;
+                if (!newTemplateId) {
+                    console.error("New template ID not found after saving");
+                    return;
+                }
+                // Navigate directly
+                navigate(`/interview-templates/${newTemplateId}/round/new`);
+
+            } else {
+                onClose();
+            }
+
         } catch (error) {
             console.error('Error saving template:', error);
             alert(error.response?.data?.message || 'Failed to save template. Please try again.');
         }
     };
 
+
+
+
+
+
     const onClose = () => {
-        if (mode === 'Edit') {
+        if (mode === 'Edit' || mode === 'Create') {
             navigate(`/interview-templates`);
         } else if (mode === 'Template Edit') {
             navigate(`/interview-templates/${id}`);
-        } else {
-            navigate('/interview-templates');
         }
+
+        // else if (!isCreatingRound){
+        //     navigate('/interview-templates');
+        // }
     };
+
+
 
     const modalClass = classNames(
         'fixed bg-white shadow-2xl border-l border-gray-200 z-50',
@@ -227,9 +268,8 @@ const InterviewSlideover = ({ mode }) => {
                                         value={newTemplate.templateTitle}
                                         onChange={handleTitleChange}
                                         onBlur={() => handleBlur('name')}
-                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                                            touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
-                                        } focus:outline-none focus:ring-1`}
+                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                            } focus:outline-none focus:ring-1`}
                                     />
                                     {touched.name && errors.name && (
                                         <p className="mt-1 text-sm text-red-500">{errors.name}</p>
@@ -247,9 +287,8 @@ const InterviewSlideover = ({ mode }) => {
                                         value={newTemplate.label}
                                         readOnly
                                         onFocus={() => handleBlur('label')}
-                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                                            touched.label && errors.label ? 'border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
-                                        } focus:outline-none focus:ring-1`}
+                                        className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${touched.label && errors.label ? 'border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                            } focus:outline-none focus:ring-1`}
                                     />
                                     {touched.label && errors.label && (
                                         <p className="mt-1 text-sm text-red-500">{errors.label}</p>
@@ -269,16 +308,27 @@ const InterviewSlideover = ({ mode }) => {
                                         onBlur={() => handleBlur('description')}
                                         rows={4}
                                         maxLength={300}
-                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none ${
-                                            touched.description && errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
-                                        } focus:ring-1`}
+                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none ${touched.description && errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
+                                            } focus:ring-1`}
                                     />
-                                    {touched.description && errors.description && (
+                                    {/* {touched.description && errors.description && (
                                         <p className="mt-1 text-sm text-red-500">{errors.description}</p>
-                                    )}
+                                    )} */}
+                                    <div className="flex justify-between items-center ">
+                                        <span className="text-sm text-gray-500">
+                                            {errors.description ? (
+                                                <p className="text-red-500 text-xs ">{errors.description}</p>
+                                            ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
+                                                <p className="text-gray-500 text-xs">
+                                                    Minimum {20 - newTemplate.description.length} more characters needed
+                                                </p>
+                                            ) : null}
+                                        </span>
+                                        <p className="text-sm text-gray-500">{newTemplate.description.length}/20</p>
+                                    </div>
                                 </div>
 
-                                <div>
+                                {/* <div>
                                     <label className="block text-sm font-medium text-gray-700">
                                         Template Status
                                     </label>
@@ -305,12 +355,12 @@ const InterviewSlideover = ({ mode }) => {
                                             {newTemplate.status}
                                         </span>
                                     </div>
-                                </div>
+                                </div> */}
 
                             </div>
                         </div>
 
-                        <div className="flex-shrink-0 px-4 py-4 flex justify-end gap-3">
+                        <div className="flex-shrink-0 px-4 py-4 flex justify-end items-end gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
@@ -318,13 +368,48 @@ const InterviewSlideover = ({ mode }) => {
                             >
                                 Cancel
                             </button>
-                            <button
+                            {/* <button
                                 type="submit"
                                 form="new-template-form"
                                 className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
                             >
                                 {isEditMode ? 'Update' : 'Create'}
+                            </button> */}
+
+                            {/* {!isEditMode &&
+                            <button
+                                type="button"
+                                onClick={handleAddRound}
+                                // onClick={handleSubmit}
+                                className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
+                            // isLoading={isMutationLoading}
+                            // loadingText={isEditing ? "Updating..." : "Saving..."}
+                            >
+                                Add new Round
+                                {isEditing ? "Update Interview" : "Create Interview"}
                             </button>
+                            } */}
+
+                            <LoadingButton
+                                onClick={handleSubmit}
+                                isLoading={isMutationLoading}
+                                loadingText={id ? "Updating..." : "Saving..."}
+                            >
+                                {isEditMode ? "Update" : "Save"}
+                            </LoadingButton>
+
+                            {!isEditMode && (
+                                <LoadingButton
+                                    onClick={(e) => handleSubmit(e, true)}
+                                    isLoading={isMutationLoading}
+                                    loadingText="Adding..."
+                                >
+                                    <FaPlus className="w-5 h-5 mr-1" /> Add Round
+                                </LoadingButton>
+                            )}
+
+
+
                         </div>
                     </form>
                 </div>

@@ -388,7 +388,7 @@ const CustomProvider = ({ children }) => {
     enabled: !!tenantId,
   });
 
-  // console.log("usersRes", usersRes);
+  console.log("usersRes", usersRes);
 
 
   // Mutation for creating/updating users

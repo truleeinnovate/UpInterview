@@ -17,31 +17,31 @@ const getUsers = async (req, res) => {
 };
 
 // GET /api/users/owner/:ownerId
-const getUniqueUserByOwnerId = async (req, res) => {
-  try {
-    const { ownerId } = req.params;
-    // Find user by ownerId
-    const user = await Users.findOne({ _id: ownerId });
+// const getUniqueUserByOwnerId = async (req, res) => {
+//   try {
+//     const { ownerId } = req.params;
+//     // Find user by ownerId
+//     const user = await Users.findOne({ _id: ownerId });
     
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found for the given ownerId'
-      });
-    }
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found for the given ownerId'
+//       });
+//     }
     
-    res.status(200).json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    console.error('❌ [getUniqueUserByOwnerId] Error:', error.message, error.stack);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       data: user
+//     });
+//   } catch (error) {
+//     console.error('❌ [getUniqueUserByOwnerId] Error:', error.message, error.stack);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error'
+//     });
+//   }
+// };
 
 
     
@@ -575,4 +575,6 @@ const getUsersByTenant = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant, getUniqueUserByOwnerId };
+module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant, 
+  // getUniqueUserByOwnerId 
+};
