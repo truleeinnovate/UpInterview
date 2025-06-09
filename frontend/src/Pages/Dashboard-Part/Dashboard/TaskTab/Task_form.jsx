@@ -8,7 +8,8 @@ import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import {useCandidates} from "../../../../apiHooks/useCandidates.js";
+import {usePositions} from "../../../../apiHooks/usePositions.js";
 import "react-datepicker/dist/react-datepicker.css";
 
 const TaskForm = ({
@@ -18,9 +19,9 @@ const TaskForm = ({
   taskId, // Add taskId prop for editing
   initialData // Add initial data for pre-filling form
 }) => {
-    const context = useCustomContext();
-    const candidateData = context?.candidateData || [];
-    const positions = context?.positions || [];
+  const { candidateData } = useCandidates();
+  const {positionData} = usePositions();
+   
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
@@ -35,16 +36,13 @@ const TaskForm = ({
   });
   const navigate = useNavigate();
   const [selectedPriority, setSelectedPriority] = useState("");
-  const [showDropdownPriority, setShowDropdownPriority] = useState(false);
   const priorities = ['High', 'Medium', 'Low','Normal'];
 
   const [selectedStatus, setSelectedStatus] = useState("New");
-  const [showDropdownStatus, setShowDropdownStatus] = useState(false);
   const statuses = ["New", "In Progress", "Completed", "No Response"];
   const [isFullScreen, setIsFullScreen] = useState(false)
 
   const [errors, setErrors] = useState({});
-  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [error, setError] = useState(null); // Add error state
 
   // Add state and handlers for Related To dropdowns
@@ -60,9 +58,7 @@ const TaskForm = ({
   //   Candidate: ["60d21b4667d0d8992e610c85", "60d21b4967d0d8992e610c86"], // Example ObjectIds
   //   Position: ["60d21b4b67d0d8992e610c87", "60d21b4d67d0d8992e610c88"], // Example ObjectIds
   // };
-  const toggleDropdownPriority = () => {
-    setShowDropdownPriority(!showDropdownPriority);
-  };
+  
 
   const handlePriorityChange = (e) => {
     const priority = e.target.value;
@@ -74,9 +70,7 @@ const TaskForm = ({
     }));
   };
 
-  const toggleDropdownStatus = () => {
-    setShowDropdownStatus(!showDropdownStatus);
-  };
+ 
 
   const handleStatusChange = (e) => {
     const status = e.target.value;
@@ -93,7 +87,7 @@ const TaskForm = ({
   };
 
 
-  const [teams] = useState([]);
+  //const [teams] = useState([]);
   // const [assessments, setAssessments] = useState([]);
   // const [questionBanks, setQuestionBanks] = useState([]);
   const [interviews] = useState([]);
@@ -157,15 +151,15 @@ const TaskForm = ({
           id: candidate._id,
         }));
       case "Position":
-        return positions.map((position) => ({
+        return positionData.map((position) => ({
           name: position.title || position.name || "Unnamed Position",
           id: position._id,
         }));
-      case "Team":
-        return teams.map((team) => ({ 
-          name: team.name || team.LastName || "Unnamed Team", 
-          id: team._id 
-        }));
+      // case "Team":
+      //   return teams.map((team) => ({ 
+      //     name: team.name || team.LastName || "Unnamed Team", 
+      //     id: team._id 
+      //   }));
       case "Interview":
         return interviews.map((interview) => ({
           name: interview.title || interview.name || "Unnamed Interview",
