@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
-import Popup from "reactjs-popup";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { Tooltip } from "@mui/material";
 import { XCircle, ChevronUp, ChevronDown, Search, X, Plus } from "lucide-react";
@@ -11,7 +10,6 @@ import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
-
 
 const SuggestedQuestionsComponent = ({
   sectionName,

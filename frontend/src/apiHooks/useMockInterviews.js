@@ -9,7 +9,7 @@ export const useMockInterviews = () => {
   const queryClient = useQueryClient();
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const initialLoad = useRef(true);
-  
+
   // Use simple assignment instead of memo if issues persist
   const mockInterviewPermissions = sharingPermissionscontext?.mockInterviews || {};
 
@@ -37,69 +37,71 @@ export const useMockInterviews = () => {
 
 
   // Add/Update mock interview mutation
-  const addOrUpdateMockInterview = useMutation({
-    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
-      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+ // Add/Update mock interview mutation
+// Add/Update mock interview mutation
+const addOrUpdateMockInterview = useMutation({
+  mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+    const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
 
-      const payload = {
-        skills: formData.entries?.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
-        })),
-        Role: formData.Role,
-        candidateName: formData.candidateName,
-        higherQualification: formData.higherQualification,
-        currentExperience: formData.currentExperience,
-        technology: formData.technology,
-        jobDescription: formData.jobDescription,
-        rounds: {
-          ...formData.rounds,
-          dateTime: formData.combinedDateTime,
-          status: status,
-        },
-        createdById: userId,
-        lastModifiedById: userId,
-        ownerId: userId,
-        tenantId: organizationId,
-      };
+    const payload = {
+      skills: formData.entries?.map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      })),
+      Role: formData.Role,
+      candidateName: formData.candidateName,
+      higherQualification: formData.higherQualification,
+      currentExperience: formData.currentExperience,
+      technology: formData.technology,
+      jobDescription: formData.jobDescription,
+      rounds: {
+        ...formData.rounds,
+        dateTime: formData.combinedDateTime,
+        status: status,
+      },
+      createdById: userId,
+      lastModifiedById: userId,
+      ownerId: userId,
+      tenantId: organizationId,
+    };
 
-      const url = isEdit
-        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${config.REACT_APP_API_URL}/mockinterview`;
+    const url = isEdit
+      ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+      : `${config.REACT_APP_API_URL}/mockinterview`;
 
-      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+    const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
 
-      // Handle interviewer requests if any
-      if (formData.rounds.interviewers?.length > 0) {
-        await Promise.all(
-          formData.rounds.interviewers.map(async (interviewer) => {
-            const outsourceRequestData = {
-              tenantId: organizationId,
-              ownerId: userId,
-              scheduledInterviewId: interviewer,
-              id: interviewer._id,
-              dateTime: formData.combinedDateTime,
-              duration: formData.rounds.duration,
-              candidateId: formData.candidate?._id,
-              roundId: response.data.savedRound._id,
-              requestMessage: "Outsource interview request",
-              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            };
-            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
-          })
-        );
-      }
-
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['mockinterviews']);
-    },
-    onError: (error) => {
-      console.error("Mock interview error:", error);
+    // Handle interviewer requests if any
+    if (formData.rounds.interviewers?.length > 0 && response.data.savedRound?._id) {
+      await Promise.all(
+        formData.rounds.interviewers.map(async (interviewerId) => {
+          const outsourceRequestData = {
+            tenantId: organizationId,
+            ownerId: userId,
+            scheduledInterviewId: interviewerId,
+            id: interviewerId,
+            dateTime: formData.combinedDateTime,
+            duration: formData.rounds.duration,
+            candidateId: formData.candidate?._id || null, // Fallback to null if candidate._id is undefined
+            roundId: response.data.savedRound._id,
+            requestMessage: "Outsource interview request",
+            expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          };
+          await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+        })
+      );
     }
-  });
+
+    return response.data;
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(['mockinterviews']);
+  },
+  onError: (error) => {
+    console.error("Mock interview error:", error);
+  }
+});
 
   // Calculate loading states
   const isMutationLoading = addOrUpdateMockInterview.isPending;
