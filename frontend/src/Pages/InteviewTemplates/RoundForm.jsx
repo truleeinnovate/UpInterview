@@ -11,13 +11,13 @@ import QuestionBank from '../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.j
 import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
 import { useAssessments } from '../../apiHooks/useAssessments.js';
 import LoadingButton from '../../Components/LoadingButton';
-
+import { ReactComponent as FaPlus } from '../../icons/FaPlus.svg';
 function RoundFormTemplates() {
 
 
-  const { templatesData, isMutationLoading, addOrUpdateRound } = useInterviewTemplates();
+  const { templatesData, isMutationLoading, addOrUpdateRound, saveTemplate } = useInterviewTemplates();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
-// console.log("assessmentData",assessmentData);
+  // console.log("assessmentData",assessmentData);
 
 
   // const { resolveInterviewerDetails } = useInterviewerDetails();
@@ -45,8 +45,8 @@ function RoundFormTemplates() {
     interviewQuestionsList: [],
   });
 
-  console.log("formData.interviewQuestionsList",formData.interviewQuestionsList);
-  
+  console.log("formData.interviewQuestionsList", formData.interviewQuestionsList);
+
 
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
   const [errors, setErrors] = useState({});
@@ -82,6 +82,8 @@ function RoundFormTemplates() {
         const response = templatesData.find(
           (template) => template._id === id
         );
+        console.log("response", response);
+
 
         if (response && response) {
           const rounds_res = response
@@ -156,42 +158,42 @@ function RoundFormTemplates() {
       }
     };
     fetchData();
-  }, [id, roundId]);
+  }, [id, roundId, templatesData]);
 
-const [filteredAssessments, setFilteredAssessments] = useState([]);
-const [hasFiltered, setHasFiltered] = useState(false);
+  const [filteredAssessments, setFilteredAssessments] = useState([]);
+  const [hasFiltered, setHasFiltered] = useState(false);
 
-useEffect(() => {
-  const filterAssessmentsWithQuestions = async () => {
-    if (hasFiltered || !template) return;
+  useEffect(() => {
+    const filterAssessmentsWithQuestions = async () => {
+      if (hasFiltered || !template) return;
 
-    const results = await Promise.all(
-      assessmentData.map(async (assessment) => {
-        if (!assessment?._id) return null;
+      const results = await Promise.all(
+        assessmentData.map(async (assessment) => {
+          if (!assessment?._id) return null;
 
-        const { data } = await fetchAssessmentQuestions(assessment._id);
+          const { data } = await fetchAssessmentQuestions(assessment._id);
 
-        if (Array.isArray(data?.sections) && data.sections.length > 0) {
-          return assessment;
-        }
+          if (Array.isArray(data?.sections) && data.sections.length > 0) {
+            return assessment;
+          }
 
-        return null;
-      })
-    );
+          return null;
+        })
+      );
 
-    setFilteredAssessments(results.filter(Boolean));
-    setHasFiltered(true);
-  };
+      setFilteredAssessments(results.filter(Boolean));
+      setHasFiltered(true);
+    };
 
-  if (template && assessmentData?.length) {
-    filterAssessmentsWithQuestions();
-  }
-}, [template, assessmentData,fetchAssessmentQuestions]);
+    if (template && assessmentData?.length) {
+      filterAssessmentsWithQuestions();
+    }
+  }, [template, assessmentData, fetchAssessmentQuestions, id]);
 
 
-// console.log("assessmentData",assessmentData);
+  // console.log("assessmentData",assessmentData);
 
-  
+
 
   const handleInternalInterviewerSelect = (interviewers) => {
     if (formData.interviewerType === 'External') {
@@ -359,45 +361,45 @@ useEffect(() => {
 
 
   const handleRoundTitleChange = (e) => {
-  const selectedTitle = e.target.value;
-const isAssessment = selectedTitle === "Assessment";
-  const wasAssessment = formData.roundTitle === "Assessment";
-  
-  setFormData((prev) => ({
-    ...prev,
-    roundTitle: selectedTitle,
-    customRoundTitle: selectedTitle === "Other" ? "" : prev.customRoundTitle,
-    // Reset fields that don't apply to Assessment
-    ...(isAssessment ? {
-      interviewMode: "Virtual", // Assessment is always virtual
-      interviewerType: null,
-      interviewers: [],
-      instructions: '',
-      interviewQuestionsList: [],
-    } : {
-      // Reset assessment-related fields when switching from Assessment
-       ...(wasAssessment ? {
-        assessmentTemplate: { assessmentId: '', assessmentName: '' },
-        instructions: '' // Clear instructions when switching from Assessment
-      } : {}),
-      // For other transitions, keep existing instructions unless switching to Other
-      instructions: selectedTitle === "Other" ? "" : wasAssessment ? "" : prev.instructions
-    }),
-    // Preserve sequence in all cases
-    sequence: prev.sequence
-    
-  }));
+    const selectedTitle = e.target.value;
+    const isAssessment = selectedTitle === "Assessment";
+    const wasAssessment = formData.roundTitle === "Assessment";
 
-  // Clear related state
-  if (isAssessment) {
-    setSectionQuestions({});
-    setExpandedSections({});
-    setExpandedQuestions({});
-  
-  }
-  setErrors({});
-  setShowDropdown(false);
-};
+    setFormData((prev) => ({
+      ...prev,
+      roundTitle: selectedTitle,
+      customRoundTitle: selectedTitle === "Other" ? "" : prev.customRoundTitle,
+      // Reset fields that don't apply to Assessment
+      ...(isAssessment ? {
+        interviewMode: "Virtual", // Assessment is always virtual
+        interviewerType: null,
+        interviewers: [],
+        instructions: '',
+        interviewQuestionsList: [],
+      } : {
+        // Reset assessment-related fields when switching from Assessment
+        ...(wasAssessment ? {
+          assessmentTemplate: { assessmentId: '', assessmentName: '' },
+          instructions: '' // Clear instructions when switching from Assessment
+        } : {}),
+        // For other transitions, keep existing instructions unless switching to Other
+        instructions: selectedTitle === "Other" ? "" : wasAssessment ? "" : prev.instructions
+      }),
+      // Preserve sequence in all cases
+      sequence: prev.sequence
+
+    }));
+
+    // Clear related state
+    if (isAssessment) {
+      setSectionQuestions({});
+      setExpandedSections({});
+      setExpandedQuestions({});
+
+    }
+    setErrors({});
+    setShowDropdown(false);
+  };
 
 
 
@@ -572,7 +574,7 @@ const isAssessment = selectedTitle === "Assessment";
   //   }
   // };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isAddNewRound = false) => {
     e.preventDefault();
 
     // console.log("Submitting round form...");
@@ -586,60 +588,7 @@ const isAssessment = selectedTitle === "Assessment";
 
     try {
 
-      //       const roundData = {
-      //         tenantId,
-      //         roundTitle: formData.roundTitle === 'Other' ? formData.customRoundTitle : formData.roundTitle,
-      //         interviewMode: formData.interviewMode,
-      //         sequence: formData.sequence,
-      //         interviewDuration: formData.duration,
-      //         instructions: formData.instructions,
-      //         //  interviewerType: formData.interviewerType, 
-      //         interviewerType: formData.roundTitle === 'Assessment' ? "" : formData.interviewerType,
-      //         interviewers:
-      //           formData.interviewerType === 'Internal'
-      //             ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
-      //             : [],
-      //         questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
-      //           .map(q => ({
-      //             questionId: q.questionId,
-      //             snapshot: {
-      //               ...q.snapshot,
-      //               mandatory: q.snapshot.mandatory || "false"
-      //             }
-      //           })) || [],
-      //         ...(formData.roundTitle === 'Assessment' && formData.assessmentTemplate?.assessmentId && {
-      //         assessmentId: formData.assessmentTemplate.assessmentId
-      //         }),
-      //       };
 
-      //       console.log("Prepared roundData:", roundData);
-
-      //       if (roundId) {
-      //         console.log("Editing existing round with roundId:", roundId);
-      //         const updatedRounds = template.rounds.map((round) =>
-      //           round._id === roundId ? { ...round, ...roundData } : round
-      //         );
-      //         console.log("Updated rounds array for PATCH:", updatedRounds);
-
-      //         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-      //           tenantId,
-      //           rounds: updatedRounds,
-      //         });
-      //         // console.log("PATCH response for edit:", patchRes.data);
-      //       } else {
-      //         console.log("Adding new round...");
-      //         const updatedRounds = [...(template.rounds || []), roundData];
-      //         // console.log("Updated rounds array for PATCH:", updatedRounds);
-
-      //         const patchRes = await axios.patch(`${config.REACT_APP_API_URL}/interviewTemplates/${id}`, {
-      //           tenantId,
-      //           rounds: updatedRounds,
-      //         });
-      //         console.log("PATCH response for add:", patchRes.data);
-      //       }
-
-      //       console.log("Navigation to template detail page...");
-      //       navigate(`/interview-templates/${id}`);
 
       const roundData = {
         tenantId,
@@ -684,10 +633,59 @@ const isAssessment = selectedTitle === "Assessment";
 
 
 
-      await addOrUpdateRound({ id, roundData, roundId, template });
+      const res = await addOrUpdateRound({ id, roundData, roundId, template });
 
-      console.log("Navigation to template detail page...");
-      navigate(`/interview-templates/${id}`);
+      console.log("Navigation to template detail page...", res);
+      if (res.status === 'success') {
+        //   if(!isAddRound){
+
+
+        // navigate(`/interview-templates/${id}`);
+        //     }
+
+
+        const templateData = { status: 'active' };
+        const isEditMode = true;
+        const UpdatedTemplate = await saveTemplate({
+          id,
+          templateData,
+          isEditMode
+        });
+        console.log("UpdatedTemplate", UpdatedTemplate);
+
+
+
+        if (isAddNewRound) {
+          // Reset form for new round with incremented sequence
+          const maxSequence = template?.rounds?.length > 0
+            ? Math.max(...template.rounds.map(r => r.sequence))
+            : 0;
+
+          setFormData({
+            roundTitle: '',
+            interviewMode: '',
+            sequence: maxSequence + 1,
+            duration: 30,
+            selectedInterviewType: null,
+            interviewers: [],
+            interviewerType: '',
+            instructions: '',
+            assessmentTemplate: { assessmentId: '', assessmentName: '' },
+            interviewQuestionsList: [],
+          });
+
+          // Reset other states
+          setSectionQuestions({});
+          setExpandedSections({});
+          setExpandedQuestions({});
+          setErrors({});
+          setRemovedQuestionIds([]);
+        } else {
+          navigate(`/interview-templates/${id}`);
+        }
+
+      }
+
 
 
     } catch (error) {
@@ -744,8 +742,8 @@ const isAssessment = selectedTitle === "Assessment";
                       if (!formData.customRoundTitle.trim()) {
                         setFormData(prev => ({
                           ...prev,
-                          roundTitle: "",          
-                          customRoundTitle: ""     
+                          roundTitle: "",
+                          customRoundTitle: ""
                         }));
                         clearError('roundTitle');
                       }
@@ -909,8 +907,8 @@ const isAssessment = selectedTitle === "Assessment";
                     <p className="text-red-500 text-sm">{errors.assessmentQuestions}</p>
                   )}
                   {questionsLoading ? (
-                    <div  className="border rounded-md shadow-sm p-4 animate-pulse">
-                      </div>
+                    <div className="border rounded-md shadow-sm p-4 animate-pulse">
+                    </div>
                     // <p className="text-gray-500">Loading assessment data...</p>
                   ) : (
                     <div className="space-y-4">
@@ -1310,6 +1308,16 @@ const isAssessment = selectedTitle === "Assessment";
               >
                 {roundId ? 'Update Round' : 'Save Round'}
               </LoadingButton>
+{!id && 
+              <LoadingButton
+                onClick={(e) => handleSubmit(e, true)}
+                isLoading={isMutationLoading}
+                loadingText="Adding..."
+                variant="outline"
+              >
+                <FaPlus className="w-5 h-5 mr-1" /> Add new Round
+              </LoadingButton>
+}
 
             </div>
             {errors.submit && <p className="text-red-500 text-sm mt-4 text-center">{errors.submit}</p>}
