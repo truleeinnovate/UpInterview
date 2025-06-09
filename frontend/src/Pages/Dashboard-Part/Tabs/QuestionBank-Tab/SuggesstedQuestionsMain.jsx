@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import Popup from "reactjs-popup";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { Tooltip } from "@mui/material";
-import { XCircle, ChevronUp, ChevronDown, Search, X, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, X } from 'lucide-react';
 import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBack.svg";
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
