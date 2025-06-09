@@ -502,9 +502,6 @@ const QuestionBankForm = ({
       'overflow-y-auto': !isModalOpen,
       'overflow-hidden': isModalOpen,
       'inset-0': isFullScreen,
-      //   [`${section === "interviewerSection" || section === "assessment" ? 
-      // "right-20 top-0 bottom-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 h-[95%] my-auto" : 
-      // "right-0 top-0 bottom-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2"}`]: !isFullScreen
       ' top-0 bottom-0  md:w-1/2   h-screen inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
     }
   );
@@ -514,7 +511,6 @@ const QuestionBankForm = ({
     <>
       <Modal
         isOpen={true}
-        // onRequestClose={onClose}
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[1000]"
       >
@@ -584,20 +580,6 @@ const QuestionBankForm = ({
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />
-                  {/* <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg> */}
                 </button>
               </div>
               {/* </div> */}
@@ -695,36 +677,12 @@ const QuestionBankForm = ({
                       onClick={toggleSkillsPopup}
 
 
-                    //  {Array.isArray(selectedSkill) && selectedSkill.map((skillName, index) => (
-                    //   <div key={index} className="bg-slate-200 rounded px-2 m-1 py-1 inline-block mr-2 text-sm">
-                    //     {skillName}
-                    //     <button
-                    //       type="button"
-                    //       onClick={() => handleRemoveSkill(index)}
-                    //       className="ml-2 bg-gray-300 rounded px-2"
-                    //     >
-                    //       x
-                    //     </button>
-                    //   </div>
-                    // ))}
-
-                    // {selectedSkill.length > 0 && (
-                    //   <button
-                    //     type="button"
-                    //     onClick={clearSkills}
-                    //     className="bg-slate-300 rounded px-2 absolute top-0 text-sm float-end right-4"
-                    //   >
-                    //     X
-                    //   </button>
-                    // )} 
-
-
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                       <MdArrowDropDown className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1" onClick={toggleSkillsPopup} />
                     </div>
                     {showSkillsPopup && (
-                      <div className="absolute bg-white shadow rounded border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10">
+                      <div className="absolute bg-white shadow rounded border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-sm">
                         <div className="">
                           <div className="flex items-center border rounded px-2 py-1 m-2">
                             <Search className="absolute ml-1 text-gray-500" />
