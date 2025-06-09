@@ -32,7 +32,7 @@ const QuestionBank = ({ assessmentId,
   return (
     <div className={`sm:pt-10 md:pt-10 lg:pt-3 xl:pt-3 2xl:pt-3 ${type === "interviewerSection" || type === "assessment" ? "h-[95%] bg-white rounded-lg flex flex-col" : ""}`}>
       {/* Header Section */}
-      <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
+      {/* <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
       ${type === "interviewerSection" ? 'hidden' : ""}`}>
         {(type === "interviewerSection" || type === "assessment") && (
           <div className={`flex justify-between items-center p-4 ${type === "interviewerSection" || type === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
@@ -49,7 +49,7 @@ const QuestionBank = ({ assessmentId,
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Tab Navigation - keep this outside the scrollable area */}
       <div
