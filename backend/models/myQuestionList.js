@@ -49,11 +49,10 @@ const TenantQuestionsSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    createdBy: String,
-    modifiedDate: Date,
-    modifiedBy: String,
-    tenantId: String,
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     ownerId: String,
+    tenantId: String,
 });
 
 TenantQuestionsSchema.pre('save', function (next) {
