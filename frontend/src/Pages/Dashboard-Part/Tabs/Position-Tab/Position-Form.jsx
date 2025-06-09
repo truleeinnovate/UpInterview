@@ -342,6 +342,8 @@ const PositionForm = ({ mode }) => {
   }, [currentStage]);
 
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
+  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
   const experienceOptions = [
     "0-1 Years",
     "1-2 years",
@@ -361,12 +363,28 @@ const PositionForm = ({ mode }) => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" &&
+        const currentExp = entries[editingIndex]?.experience;
+        const currentLevel = entries[editingIndex]?.expertise;
+
+        return (
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill));
+            !allSelectedSkills.includes(selectedSkill)) &&
+          (selectedExp === currentExp ||
+            !allSelectedExperiences.includes(selectedExp)) &&
+          (selectedLevel === currentLevel ||
+            !allSelectedExpertises.includes(selectedLevel))
+        );
       } else {
         return (
-          selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
+          !allSelectedSkills.includes(selectedSkill) &&
+          !allSelectedExperiences.includes(selectedExp) &&
+          !allSelectedExpertises.includes(selectedLevel)
         );
       }
     } else if (currentStep === 1) {
@@ -376,7 +394,6 @@ const PositionForm = ({ mode }) => {
     }
     return false;
   };
-
 
   const expertiseOptions = ["Basic", "Medium", "Expert"];
 
@@ -486,9 +503,11 @@ const PositionForm = ({ mode }) => {
       setEntries(formattedSkills);
       // setAllSelectedSkills(formattedSkills)
       setAllSelectedSkills(selectedPosition.skills?.map(skill => skill.skill) || []);
+      setAllSelectedExperiences(selectedPosition.skills?.map(skill => skill.experience) || []);
+      setAllSelectedExpertises(selectedPosition.skills?.map(skill => skill.expertise) || []);
     }
 
-  }, [isEdit, id, positionData]);
+  }, [isEdit, id, positionData, templatesData]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
@@ -524,7 +543,6 @@ const PositionForm = ({ mode }) => {
 
     setErrors({});
 
-    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
 
     let basicdetails = {
       ...dataToSubmit,
@@ -605,58 +623,58 @@ const PositionForm = ({ mode }) => {
   };
 
   const [isRoundModalOpen, setIsRoundModalOpen] = useState(false);
-  const [insertIndex, setInsertIndex] = useState(-1);
+  // const [insertIndex, setInsertIndex] = useState(-1);
   const [showAssessment, setShowAssessment] = useState(false);
   const [selectedInterviewType, setSelectedInterviewType] = useState('');
   const [rounds, setRounds] = useState([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(-1);
-  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, roundIndex: -1 });
-  const [hoveredRound, setHoveredRound] = useState(-1);
-  const [hasRounds, setHasRounds] = useState(false);
+  // const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, roundIndex: -1 });
+  // const [hoveredRound, setHoveredRound] = useState(-1);
+  // const [hasRounds, setHasRounds] = useState(false);
 
   // if (!isOpen) return null;
-  const maxRounds = 5;
-  const handleSave = (e) => {
-    e.preventDefault();
-    // onSubmit();
-  };
+  // const maxRounds = 5;
+  // const handleSave = (e) => {
+  //   e.preventDefault();
+  //   // onSubmit();
+  // };
 
-  const handleRoundNext = (interviewType, roundData) => {
-    setHasRounds(true);
-    setSelectedInterviewType(interviewType);
+  // const handleRoundNext = (interviewType, roundData) => {
+  //   setHasRounds(true);
+  //   setSelectedInterviewType(interviewType);
 
-    if (insertIndex !== -1) {
-      // Insert at specific position
-      const newRounds = [...rounds];
-      newRounds.splice(insertIndex, 0, roundData);
+  //   if (insertIndex !== -1) {
+  //     // Insert at specific position
+  //     const newRounds = [...rounds];
+  //     newRounds.splice(insertIndex, 0, roundData);
 
-      // Update round numbers in the titles
-      newRounds.forEach((round, idx) => {
-        round.roundName = round.roundName.replace(/Round \d+/, `Round ${idx + 1}`);
-      });
+  //     // Update round numbers in the titles
+  //     newRounds.forEach((round, idx) => {
+  //       round.roundName = round.roundName.replace(/Round \d+/, `Round ${idx + 1}`);
+  //     });
 
-      setRounds(newRounds);
-      setCurrentRoundIndex(insertIndex);
-    } else {
-      // Add at the end
-      setRounds(prev => [...prev, roundData]);
-      setCurrentRoundIndex(rounds.length);
-    }
+  //     setRounds(newRounds);
+  //     setCurrentRoundIndex(insertIndex);
+  //   } else {
+  //     // Add at the end
+  //     setRounds(prev => [...prev, roundData]);
+  //     setCurrentRoundIndex(rounds.length);
+  //   }
 
-    setShowAssessment(true);
-    setIsRoundModalOpen(false);
-    setCurrentStage(insertIndex !== -1 ? `round${insertIndex + 1}` : `round${rounds.length + 1}`);
-    setInsertIndex(-1);
-  };
+  //   setShowAssessment(true);
+  //   setIsRoundModalOpen(false);
+  //   setCurrentStage(insertIndex !== -1 ? `round${insertIndex + 1}` : `round${rounds.length + 1}`);
+  //   setInsertIndex(-1);
+  // };
 
-  const handleAddRoundAtIndex = (index) => {
-    setInsertIndex(index);
-    setIsRoundModalOpen(true);
-  };
+  // const handleAddRoundAtIndex = (index) => {
+  //   setInsertIndex(index);
+  //   setIsRoundModalOpen(true);
+  // };
 
-  const handleRoundDelete = (index) => {
-    setDeleteConfirmation({ isOpen: true, roundIndex: index });
-  };
+  // const handleRoundDelete = (index) => {
+  //   setDeleteConfirmation({ isOpen: true, roundIndex: index });
+  // };
 
   // const confirmDelete = () => {
   //   if (deleteIndex !== null) {
@@ -667,16 +685,16 @@ const PositionForm = ({ mode }) => {
   //   }
   // };
 
-  const confirmDelete = () => {
-    if (deleteIndex !== null) {
-      const entry = entries[deleteIndex];
-      setAllSelectedSkills(
-        allSelectedSkills.filter((skill) => skill !== entry.skill)
-      );
-      setEntries(entries.filter((_, i) => i !== deleteIndex));
-      setDeleteIndex(null);
-    }
-  };
+  // const confirmDelete = () => {
+  //   if (deleteIndex !== null) {
+  //     const entry = entries[deleteIndex];
+  //     setAllSelectedSkills(
+  //       allSelectedSkills.filter((skill) => skill !== entry.skill)
+  //     );
+  //     setEntries(entries.filter((_, i) => i !== deleteIndex));
+  //     setDeleteIndex(null);
+  //   }
+  // };
 
 
 
@@ -728,8 +746,8 @@ const PositionForm = ({ mode }) => {
   const renderStageIndicator = () => {
 
     // Update flag when moving to rounds
-    const isBasicStage = currentStage === 'basic';
-    const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
+    //const isBasicStage = currentStage === 'basic';
+   // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
 
     return (
       <div className="flex items-center justify-center mb-4 mt-1 w-full overflow-x-auto py-2">

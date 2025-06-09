@@ -251,7 +251,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
     >
       <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}> 
         <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
-          <h2 className="text-lg sm:text-2xl font-bold">Wallet Top-up</h2>
+          <h2 className="text-lg sm:text-2xl font-bold">Bank Accounts</h2>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}

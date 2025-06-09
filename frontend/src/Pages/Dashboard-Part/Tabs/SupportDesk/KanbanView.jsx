@@ -174,7 +174,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                       }
                     }}
                   >
-                    Ticket #{ticket.ticketCode}
+                    {ticket.ticketCode}
                   </h4>
                   <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
                 </motion.div>

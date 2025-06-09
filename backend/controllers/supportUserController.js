@@ -2,13 +2,19 @@ const SupportUser = require("../models/SupportUser")
 
 exports.createTicket = async(req,res)=>{
     try {
-        console.log(req.body)
+        console.log("Received ticket creation request body:", req.body);
         const {issueType,description,status,contact,priority,ownerId,tenantId,organization,createdByUserId}=req.body 
         if (!issueType){
             return res.status(400).send({message:"Issue type is required"})
         }
         if (!description){
             return res.status(400).send({message:"Description is required"})
+        }
+        if (!contact) {
+            return res.status(400).send({ message: "Contact is required" });
+        }
+        if (!organization) {
+            return res.status(400).send({ message: "Organization is required" });
         }
         const lastTicket = await SupportUser.findOne({})
                         .sort({ createdAt: -1 })
@@ -29,18 +35,18 @@ exports.createTicket = async(req,res)=>{
             ticket
         })
     } catch (error) {
-        console.log(error)
+        console.error("Error creating ticket:", error);
         return res.status(500).send({
             message:"Failed to create ticket",
             success:false,
-            error
+            error: error.message // Sending error.message for better debugging
         })
     }
 }
 
 exports.getTicket = async (req, res) => {
   try {
-    const tickets = await SupportUser.find().sort({ updatedAt: -1, createdAt: -1 }); // Fetch all tickets with no filter
+    const tickets = await SupportUser.find();
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",
@@ -55,6 +61,7 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
+
 exports.getTicketBasedonId  =async(req,res)=>{
     try {
         const {id}=req.params 

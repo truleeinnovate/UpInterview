@@ -177,7 +177,7 @@ const Navbar = () => {
   );
 
   const profileDropdownContent = (
-    <div className="absolute top-10 border border-custom-blue w-40 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-50">
+    <div className="absolute top-10 border border-custom-blue w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-50">
       <div className="p-2 flex items-center">
         <p className="font-medium text-custom-blue" onClick={toggleProfileDropdown}>
           {profileImage ? (
@@ -359,7 +359,7 @@ const Navbar = () => {
                         {[
                           { to: "/interview-templates", label: "Interview Templates" },
                           { to: "/interviewList", label: "Interviews" },
-                          ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+                          ...(organization ? [] : [{ to: "/mockinterview", label: "Mock Interviews" }]),
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
@@ -578,7 +578,7 @@ const Navbar = () => {
                     <div className="mt-1 ml-4 space-y-1">
                       {[
                         { to: "/analytics", label: "Analytics" },
-                        { to: "/support-desk", label: "Support Desk" },
+                        { to: "/support-desk", label: "Support Desk"},
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}

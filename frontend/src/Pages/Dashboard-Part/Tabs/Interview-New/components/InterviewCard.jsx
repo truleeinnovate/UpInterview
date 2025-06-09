@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Briefcase, Clock, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
-import EntityDetailsModal from './EntityDetailsModal';
-import EntityDetailsSidebar from './EntityDetailsSidebar';
 import { Card, CardContent, CardFooter } from '../../CommonCode-AllTabs/ui/card';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 import { formatDate } from '../lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 function InterviewCard({ interview, onView, onViewPosition }) {
+  const navigate = useNavigate();
 
 
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [template, setTemplate] = useState(null);
-  console.log("candidate", candidate);
 
 
   useEffect(() => {
@@ -89,7 +87,15 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center truncate">
+                      <p className='text-sm font-medium text-custom-blue cursor-pointer'
+                        onClick={() => navigate(`/interviews/${interview._id}`)}
+                      >{interview?.interviewCode || ''}</p>
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
+
                     <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
                       {candidate?.LastName || 'Unknown Candidate'}
                     </h3>

@@ -11,8 +11,8 @@ export const validateGroupForm = (formData) => {
       errors.description = 'Description is required.';
     }
   
-    if (!formData.members || formData.members.length <= 1) {
-      errors.members = 'Please select at least more than one member.';
+    if (!formData.members || formData.members.length === 0) {
+      errors.members = 'Please select at least one member.';
     }
   
     return errors;

@@ -47,11 +47,14 @@ const MockSchedulelater = () => {
     singlecontact
   } = useCustomContext();
   const {
-    qualification,
+    qualifications,
     technologies,
     skills,
     currentRoles,
   } = useMasterData();
+  
+
+  console.log("qualification", qualifications);
 
   const {
     mockinterviewData,
@@ -95,6 +98,9 @@ const MockSchedulelater = () => {
   const [mockEdit, setmockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
+  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
+
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -144,6 +150,7 @@ const MockSchedulelater = () => {
         technology: contact.technologies?.[0] || "",
         // skills: contact.skills || [],
       }));
+      console.log("contact contact", contact);
       // setEntries(contact.skills || []);
       // setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
@@ -208,7 +215,7 @@ const MockSchedulelater = () => {
 
 
 
-  }, [mockEdit, id]);
+  }, [mockEdit, id, mockinterviewData, formData.rounds.duration]);
 
 
   // useEffect(() => {
@@ -290,33 +297,53 @@ const MockSchedulelater = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-
+  
+    // Validate form
     const { formIsValid, newErrors } = validatemockForm(formData, entries, errors);
     setErrors(newErrors);
-
+  
     if (!formIsValid) {
       console.log("Form is not valid:", newErrors);
       return;
     }
-
+  
+    // Extract interviewer IDs and validate
+    const interviewerIds = externalInterviewers
+      .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
+      .map(interviewer => interviewer._id);
+  
+    // Optional: Add validation for interviewers
+    if (interviewerIds.length === 0 && selectedInterviewType === "external") {
+      setErrors(prev => ({
+        ...prev,
+        interviewers: "At least one interviewer must be selected",
+      }));
+      return;
+    }
+  
+    // Update formData with interviewer IDs
+    const updatedFormData = {
+      ...formData,
+      rounds: {
+        ...formData.rounds,
+        interviewers: interviewerIds,
+      },
+      entries,
+      combinedDateTime,
+    };
+  
+    console.log("Submitting form with data:", updatedFormData); // Debug log
+  
     // Call the mutation
     addOrUpdateMockInterview({
-      formData: {
-        ...formData,
-        entries,
-        combinedDateTime, // Make sure this is included
-      },
+      formData: updatedFormData,
       id: mockEdit ? id : undefined,
       isEdit: mockEdit,
       userId,
       organizationId
     }, {
       onSuccess: () => {
-        // Reset form if needed
         navigate('/mockinterview');
-
-        // Reset form data
         setFormData({
           skills: [],
           candidateName: "",
@@ -330,15 +357,23 @@ const MockSchedulelater = () => {
             interviewMode: "",
             duration: "30",
             instructions: "",
-            interviewType: "",
+            interviewType: "scheduled",
             interviewers: [],
             status: "Pending",
             dateTime: "",
           },
-        })
+        });
+        setExternalInterviewers([]);
+        setSelectedInterviewType(null);
+      },
+      onError: (error) => {
+        console.error("Error saving mock interview:", error);
+        setErrors(prev => ({
+          ...prev,
+          submit: "Failed to save interview. Please try again.",
+        }));
       }
     });
-
   };
 
   //for skills
@@ -440,6 +475,8 @@ const MockSchedulelater = () => {
 
       setEntries(updatedEntries);
       setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+      setAllSelectedExperiences([...allSelectedExperiences, selectedExp]);
+      setAllSelectedExpertises([...allSelectedExpertises, selectedLevel]);
 
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -469,12 +506,28 @@ const MockSchedulelater = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" &&
+        const currentExp = entries[editingIndex]?.experience;
+        const currentLevel = entries[editingIndex]?.expertise;
+
+        return (
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill));
+            !allSelectedSkills.includes(selectedSkill)) &&
+          (selectedExp === currentExp ||
+            !allSelectedExperiences.includes(selectedExp)) &&
+          (selectedLevel === currentLevel ||
+            !allSelectedExpertises.includes(selectedLevel))
+        );
       } else {
         return (
-          selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
+          !allSelectedSkills.includes(selectedSkill) &&
+          !allSelectedExperiences.includes(selectedExp) &&
+          !allSelectedExpertises.includes(selectedLevel)
         );
       }
     } else if (currentStep === 1) {
@@ -697,9 +750,11 @@ const MockSchedulelater = () => {
   // Add state for external interviewers only
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  console.log("externalInterviewers", externalInterviewers);
 
   // Handler for selecting external interviewers
   const handleExternalInterviewerSelect = (interviewers) => {
+    console.log("interviewers", interviewers);
     setSelectedInterviewType("external");
     setExternalInterviewers(interviewers);
   };
@@ -721,6 +776,7 @@ const MockSchedulelater = () => {
   };
 
   const selectedInterviewers = selectedInterviewType === "external" ? externalInterviewers : [];
+  console.log("selectedInterviewers", selectedInterviewers);
 
   return (
     <div className="flex items-center justify-center">
@@ -811,7 +867,7 @@ const MockSchedulelater = () => {
 
                           {showDropdownQualification && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {qualification.map((qualification, index) => (
+                              {qualifications.map((qualification, index) => (
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
@@ -1346,10 +1402,11 @@ const MockSchedulelater = () => {
                             <div className="mb-3">
                               <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
                               <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                {console.log("externalInterviewers in MockSchedulelater", externalInterviewers)}
                                 {externalInterviewers.map((interviewer) => (
                                   <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                     <div className="flex items-center">
-                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
+                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.contact.Name}</span>
                                     </div>
                                     <button
                                       type="button"
@@ -1559,6 +1616,8 @@ const MockSchedulelater = () => {
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           onProceed={handleExternalInterviewerSelect}
+          skills={formData.skills}
+          navigatedfrom="mock-interview"
         />
       )}
 

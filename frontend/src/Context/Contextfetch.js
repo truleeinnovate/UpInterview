@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { fetchFilterData } from '../utils/dataUtils.js';
-import { usePermissions } from './PermissionsContext.js';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
@@ -14,28 +12,23 @@ const CustomProvider = ({ children }) => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-  const organization = tokenPayload?.organization;
 
   const [userRole, setuserRole] = useState("Admin");
 
+  // const { sharingPermissionscontext = {} } = usePermissions() || {};
+  // const sharingPermissions = useMemo(
+  //   () => sharingPermissionscontext.questionBank || {},
+  //   [sharingPermissionscontext]
+  // );
 
-
-
-
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
-  const sharingPermissions = useMemo(
-    () => sharingPermissionscontext.questionBank || {},
-    [sharingPermissionscontext]
-  );
-
-  const [pagination, setPagination] = useState(6);
-  const [iter] = useState(6);
-  const [searchText, setSearchText] = useState('');
-  const [isOpen, setIsopen] = useState(false);
+  // const [pagination, setPagination] = useState(6);
+  // const [iter] = useState(6);
+  // const [searchText, setSearchText] = useState('');
+  // const [isOpen, setIsopen] = useState(false);
   const [page, setPage] = useState('Home');
-  const [popupVisibility, setPopupVisibility] = useState(false);
-  const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
-  const [createdLists, setCreatedLists] = useState([]);
+  // const [popupVisibility, setPopupVisibility] = useState(false);
+  // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
+  // const [createdLists, setCreatedLists] = useState([]);
 
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -44,9 +37,9 @@ const CustomProvider = ({ children }) => {
     skills: true,
     overallImpression: true,
   });
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
-  const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
-  const [myQuestionsList, setMyQuestionsList] = useState([]);
+  // const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  // const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
+  // const [myQuestionsList, setMyQuestionsList] = useState([]);
   const [loading, setLoading] = useState(true);
   // const [locations, setLocations] = useState([]);
   // const [industries, setIndustries] = useState([]);
@@ -77,94 +70,62 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
-  // Fetch master data
-  // useEffect(() => {
-  //   const fetchMasterData = async () => {
-  //     try {
-  //       const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
-  //         axios.get(`${config.REACT_APP_API_URL}/locations`),
-  //         axios.get(`${config.REACT_APP_API_URL}/industries`),
-  //         axios.get(`${config.REACT_APP_API_URL}/roles`),
-  //         axios.get(`${config.REACT_APP_API_URL}/skills`),
-  //         axios.get(`${config.REACT_APP_API_URL}/technology`),
-  //         axios.get(`${config.REACT_APP_API_URL}/qualification`),
-  //         axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
-  //         axios.get(`${config.REACT_APP_API_URL}/company`),
-  //       ]);
-
-  //       setLocations(locationsRes.data);
-  //       setIndustries(industriesRes.data);
-  //       setCurrentRole(rolesRes.data);
-  //       setSkills(skillsRes.data);
-  //       setTechnology(TechnologyRes.data);
-  //       setQualification(QualificationRes.data);
-  //       setCollege(CollegeRes.data);
-  //       setCompanies(CompanyRes.data);
-  //     } catch (error) {
-  //       console.error('Error fetching master data:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchMasterData();
-  // }, []);
 
 
 
   // Fetch My Questions Data
-  const fetchMyQuestionsData = useCallback(async () => {
-    try {
-      const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
+  // const fetchMyQuestionsData = useCallback(async () => {
+  //   try {
+  //     const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
 
-      const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
-        acc[key] = Array.isArray(filteredPositions[key])
-          ? filteredPositions[key].map((each) => ({ ...each, isAdded: false }))
-          : [];
-        return acc;
-      }, {});
+  //     const newObject = Object.keys(filteredPositions).reduce((acc, key) => {
+  //       acc[key] = Array.isArray(filteredPositions[key])
+  //         ? filteredPositions[key].map((each) => ({ ...each, isAdded: false }))
+  //         : [];
+  //       return acc;
+  //     }, {});
 
-      setMyQuestionsList(newObject);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sharingPermissions]);
+  //     setMyQuestionsList(newObject);
+  //   } catch (error) {
+  //     console.error('Error fetching questions:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [sharingPermissions]);
 
-  // Fetch Created Lists
-  const fetchLists = useCallback(async () => {
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
-      setCreatedLists(response.data.reverse());
-    } catch (error) {
-      // console.error('Error fetching lists:', error);
-    }
-  }, [userId]);
+  // // Fetch Created Lists
+  // const fetchLists = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`);
+  //     setCreatedLists(response.data.reverse());
+  //   } catch (error) {
+  //     // console.error('Error fetching lists:', error);
+  //   }
+  // }, [userId]);
 
-  useEffect(() => {
-    fetchMyQuestionsData();
-    fetchLists();
-  }, [fetchMyQuestionsData, fetchLists]);
+  // useEffect(() => {
+  //   fetchMyQuestionsData();
+  //   fetchLists();
+  // }, [fetchMyQuestionsData, fetchLists]);
 
   // Fetch Suggested Questions
-  useEffect(() => {
-    const getQuestions = async () => {
-      try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
+  // useEffect(() => {
+  //   const getQuestions = async () => {
+  //     try {
+  //       const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
 
-        if (response.data.success) {
-          const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
-          setSuggestedQuestions(newList);
-          setSuggestedQuestionsFilteredData(newList);
-        }
-      } catch (error) {
-        console.error('Error fetching suggested questions:', error);
-      }
-    };
+  //       if (response.data.success) {
+  //         const newList = response.data.questions.map((question) => ({ ...question, isAdded: false }));
+  //         setSuggestedQuestions(newList);
+  //         // setSuggestedQuestionsFilteredData(newList);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching suggested questions:', error);
+  //     }
+  //   };
 
-    getQuestions();
-  }, []);
+  //   getQuestions();
+  // }, []);
 
   const queryClient = useQueryClient();
 
@@ -608,31 +569,35 @@ const CustomProvider = ({ children }) => {
     <CustomContext.Provider
       value={{
         // getInterviewerQuestions,
-        fetchMyQuestionsData,
-        myQuestionsList,
-        setMyQuestionsList,
-        createdLists,
-        setCreatedLists,
-        fetchLists,
-        suggestedQuestions,
-        setSuggestedQuestions,
-        suggestedQuestionsFilteredData,
-        setSuggestedQuestionsFilteredData,
-        feedbackCloseFlag,
-        setFeedbackCloseFlag,
-        popupVisibility,
-        setPopupVisibility,
-        feedbackTabErrors,
-        setFeedbackTabError,
+
+        
+        // fetchMyQuestionsData,
+        // myQuestionsList,
+        // setMyQuestionsList,
+        // createdLists,
+        // // setCreatedLists,
+        // fetchLists,
+        // suggestedQuestions,
+        // setSuggestedQuestions,
+        // suggestedQuestionsFilteredData,
+        // setSuggestedQuestionsFilteredData,
+        // feedbackCloseFlag,
+        // setFeedbackCloseFlag,
+        // popupVisibility,
+        // setPopupVisibility,
+        // feedbackTabErrors,
+        // setFeedbackTabError,
         page,
         setPage,
-        isOpen,
-        setIsopen,
-        iter,
-        searchText,
-        setSearchText,
-        setPagination,
-        pagination,
+        // isOpen,
+        // setIsopen,
+        // iter,
+        // searchText,
+        // setSearchText,
+        // setPagination,
+        // pagination,
+
+
         loading,
 
         // users

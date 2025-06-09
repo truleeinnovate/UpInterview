@@ -28,14 +28,6 @@ const RoundFormInterviews = () => {
   } = useInterviews();
   const { assessmentData,fetchAssessmentQuestions } = useAssessments();
 
-  // const {
-  //   sectionQuestions,
-  //   questionsLoading,
-  //   questionsError,
-  //   fetchQuestionsForAssessment,
-  //   setSectionQuestions,
-  // } = useCustomContext();
-
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -1493,7 +1485,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
         <OutsourceOption
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
-          candidateData1={candidate}
+          positionData={position}
           onProceed={handleExternalInterviewerSelect}
         />
       )}

@@ -29,7 +29,7 @@ const InvoiceTab = () => {
         try {
             // Determine the ID and query parameter based on organization flag
             const id = organization ? tenantId : ownerId;
-            const endpoint = `${config.REACT_APP_API_URL}/get-invoice/${id}?isOrganization=${organization}`;
+            const endpoint = `${config.REACT_APP_API_URL}/invoices/get-invoice/${id}?isOrganization=${organization}`;
 
             // Fetch invoice data from API
             const Invoice_res = await axios.get(endpoint, {
@@ -50,11 +50,7 @@ const InvoiceTab = () => {
                         name: invoice.ownerId.Name || `${invoice.ownerId.Firstname} ${invoice.ownerId.Lastname || ''}`.trim(),
                         userId: invoice.ownerId.UserId
                     } : null,
-                    plan: invoice.planId ? {
-                        id: invoice.planId._id,
-                        name: invoice.planName,
-                        description: invoice.planId.description
-                    } : null,
+                    plan: invoice.planName,
                     amount: {
                         total: invoice.totalAmount,
                         paid: invoice.amountPaid,
@@ -209,7 +205,7 @@ const InvoiceTab = () => {
         {
             key: 'plan',
             header: 'Plan',
-            render: (value) => (value && value.name) || 'N/A',
+            render: (value) => value || 'N/A',
         },
         {
             key: 'amount',

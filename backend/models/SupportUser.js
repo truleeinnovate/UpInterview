@@ -28,6 +28,8 @@ const TicketSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
+// Add indexes for createdAt and updatedAt
+TicketSchema.index({ createdAt: 1 }); // Index for ascending order
+TicketSchema.index({ updatedAt: 1 }); // Index for ascending order
 
 module.exports = mongoose.model("SupportUser", TicketSchema)
