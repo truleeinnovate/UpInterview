@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { fetchFilterData } from '../utils/dataUtils.js';
-import { usePermissions } from './PermissionsContext.js';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
@@ -14,28 +12,23 @@ const CustomProvider = ({ children }) => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-  const organization = tokenPayload?.organization;
 
   const [userRole, setuserRole] = useState("Admin");
 
+  // const { sharingPermissionscontext = {} } = usePermissions() || {};
+  // const sharingPermissions = useMemo(
+  //   () => sharingPermissionscontext.questionBank || {},
+  //   [sharingPermissionscontext]
+  // );
 
-
-
-
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
-  const sharingPermissions = useMemo(
-    () => sharingPermissionscontext.questionBank || {},
-    [sharingPermissionscontext]
-  );
-
-  const [pagination, setPagination] = useState(6);
-  const [iter] = useState(6);
-  const [searchText, setSearchText] = useState('');
-  const [isOpen, setIsopen] = useState(false);
+  // const [pagination, setPagination] = useState(6);
+  // const [iter] = useState(6);
+  // const [searchText, setSearchText] = useState('');
+  // const [isOpen, setIsopen] = useState(false);
   const [page, setPage] = useState('Home');
-  const [popupVisibility, setPopupVisibility] = useState(false);
-  const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
-  const [createdLists, setCreatedLists] = useState([]);
+  // const [popupVisibility, setPopupVisibility] = useState(false);
+  // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
+  // const [createdLists, setCreatedLists] = useState([]);
 
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -44,9 +37,9 @@ const CustomProvider = ({ children }) => {
     skills: true,
     overallImpression: true,
   });
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
-  const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
-  const [myQuestionsList, setMyQuestionsList] = useState([]);
+  // const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  // const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
+  // const [myQuestionsList, setMyQuestionsList] = useState([]);
   const [loading, setLoading] = useState(true);
   // const [locations, setLocations] = useState([]);
   // const [industries, setIndustries] = useState([]);
@@ -77,38 +70,6 @@ const CustomProvider = ({ children }) => {
     }
   }, [userId]);
 
-  // Fetch master data
-  // useEffect(() => {
-  //   const fetchMasterData = async () => {
-  //     try {
-  //       const [locationsRes, industriesRes, rolesRes, skillsRes, TechnologyRes, QualificationRes, CollegeRes, CompanyRes] = await Promise.all([
-  //         axios.get(`${config.REACT_APP_API_URL}/locations`),
-  //         axios.get(`${config.REACT_APP_API_URL}/industries`),
-  //         axios.get(`${config.REACT_APP_API_URL}/roles`),
-  //         axios.get(`${config.REACT_APP_API_URL}/skills`),
-  //         axios.get(`${config.REACT_APP_API_URL}/technology`),
-  //         axios.get(`${config.REACT_APP_API_URL}/qualification`),
-  //         axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
-  //         axios.get(`${config.REACT_APP_API_URL}/company`),
-  //       ]);
-
-  //       setLocations(locationsRes.data);
-  //       setIndustries(industriesRes.data);
-  //       setCurrentRole(rolesRes.data);
-  //       setSkills(skillsRes.data);
-  //       setTechnology(TechnologyRes.data);
-  //       setQualification(QualificationRes.data);
-  //       setCollege(CollegeRes.data);
-  //       setCompanies(CompanyRes.data);
-  //     } catch (error) {
-  //       console.error('Error fetching master data:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchMasterData();
-  // }, []);
 
 
 
