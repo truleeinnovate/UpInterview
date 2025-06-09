@@ -445,6 +445,8 @@ const PositionForm = ({ mode }) => {
     setErrors((prevErrors) => ({
       ...prevErrors,
       skills: "",
+      experience: "",
+      expertise: "",
     }));
 
     resetSkillForm();

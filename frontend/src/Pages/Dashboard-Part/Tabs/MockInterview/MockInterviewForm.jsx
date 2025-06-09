@@ -86,8 +86,8 @@ const MockSchedulelater = () => {
       status: "Pending",
       dateTime: "",
     },
-    // status: 'Pending',
-  });
+    // status: 'Pending',  
+    });
   console.log("formData", formData);
 
 
@@ -100,6 +100,18 @@ const MockSchedulelater = () => {
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
   const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
+
+  useEffect(() => {
+    if (singlecontact[0]?.skills) {
+      const initialSkills = singlecontact[0].skills;
+      setEntries(initialSkills.map(skill => ({
+        skill,
+        experience: "",
+        expertise: ""
+      })));
+      console.log("Skills initialized from singlecontact", initialSkills);
+    }
+  }, [singlecontact]);
 
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
@@ -148,7 +160,8 @@ const MockSchedulelater = () => {
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.Experience || "",
         technology: contact.technologies?.[0] || "",
-        // skills: contact.skills || [],
+        Role: contact.currentRole || "",
+        skills: contact.skills|| [],
       }));
       console.log("contact contact", contact);
       // setEntries(contact.skills || []);
@@ -1022,7 +1035,8 @@ const MockSchedulelater = () => {
                 errors={errors}
                 onAddSkill={(setEditingIndex) => {
                   setEntries((prevEntries) => {
-                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
+                    const newEntries = [...prevEntries, { skill: '', experience: "", expertise: "" }];
+                    console.log("New entries after add:", newEntries);
                     setEditingIndex(newEntries.length - 1);
                     return newEntries;
                   });
@@ -1494,6 +1508,7 @@ const MockSchedulelater = () => {
                         : "border-gray-300 focus:border-black"
                         }`}
                          placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+
                     ></textarea>
                     {errors.instructions && (
                       <p className="text-red-500 text-sm mt-1">

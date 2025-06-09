@@ -9,7 +9,8 @@ const taskSchema = new mongoose.Schema({
   status: { type: String},
   relatedTo: {
     objectName: { type: String },
-    recordId: { type: mongoose.Schema.Types.ObjectId }
+    recordId: { type: mongoose.Schema.Types.ObjectId },
+    recordName: { type: String },
     // recordId: { type: String } 
   },
   dueDate: { type: Date },

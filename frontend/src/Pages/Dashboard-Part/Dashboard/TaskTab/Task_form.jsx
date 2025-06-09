@@ -20,6 +20,8 @@ const TaskForm = ({
   initialData // Add initial data for pre-filling form
 }) => {
   const { candidateData } = useCandidates();
+
+  console.log("candidateData in task form", candidateData);
   const {positionData} = usePositions();
    
   const [formData, setFormData] = useState({
@@ -30,6 +32,7 @@ const TaskForm = ({
     relatedTo: {
       objectName: "",
       recordId: "",
+      recordName: ""
     },
     dueDate: "",
     comments: "",
@@ -45,20 +48,14 @@ const TaskForm = ({
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null); // Add error state
 
-  // Add state and handlers for Related To dropdowns
-  const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] =
-    useState("");
-  const [showDropdownCategoryRelatedTo, setShowDropdownCategoryRelatedTo] =
-    useState(false);
-
+  // State for storing selections
+  const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] = useState("");
   const [selectedOptionRelatedTo, setSelectedOptionRelatedTo] = useState("");
-  const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] =
-    useState(false);
-  // const optionsRelatedTo = {
-  //   Candidate: ["60d21b4667d0d8992e610c85", "60d21b4967d0d8992e610c86"], // Example ObjectIds
-  //   Position: ["60d21b4b67d0d8992e610c87", "60d21b4d67d0d8992e610c88"], // Example ObjectIds
-  // };
-  
+  const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] = useState("");
+  const [selectedOptionName, setSelectedOptionName] = useState("");
+
+  const [showDropdownCategoryRelatedTo, setShowDropdownCategoryRelatedTo] = useState(false);
+  const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] = useState(false);
 
   const handlePriorityChange = (e) => {
     const priority = e.target.value;
@@ -86,51 +83,42 @@ const TaskForm = ({
     setShowDropdownCategoryRelatedTo(!showDropdownCategoryRelatedTo);
   };
 
-
-  //const [teams] = useState([]);
-  // const [assessments, setAssessments] = useState([]);
-  // const [questionBanks, setQuestionBanks] = useState([]);
   const [interviews] = useState([]);
   const [mockInterviews] = useState([]);
-  // const [analytics, setAnalytics] = useState([]);
+  const handleCategorySelectRelatedTo = (category) => {
+    setSelectedCategoryRelatedTo(category);
+    setSelectedOptionRelatedTo(""); // Reset option when category changes
+    setShowDropdownCategoryRelatedTo(false);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      relatedTo: {
+        ...prevFormData.relatedTo,
+        objectName: category, // Update objectName in formData
+      },
+    }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      relatedToCategory: "", // Clear the error for the category
+    }));
+  };
 
-  // useEffect(() => {
-  //   if (selectedCategoryRelatedTo === "Candidates") {
-  //     setLoading(true);
-  //     fetchFilterData("candidate", sharingPermissions.candidate)
-  //       .then((data) => setCandidates(data))
-  //       .catch((error) => console.error("Error fetching candidates:", error))
-  //       .finally(() => setLoading(false));
-  //   }
-  // }, [selectedCategoryRelatedTo, sharingPermissions.candidate]);
-
-  // useEffect(() => {
-  //   if (selectedCategoryRelatedTo === "Positions") {
-  //     setLoading(true);
-  //     fetchFilterData("position", sharingPermissions.position)
-  //       .then((data) => setPositions(data))
-  //       .catch((error) => console.error("Error fetching positions:", error))
-  //       .finally(() => setLoading(false));
-  //   }
-  // }, [selectedCategoryRelatedTo, sharingPermissions.position]);
-
-  // useEffect(() => {
-  //   if (selectedCategoryRelatedTo === "Teams") {
-  //     setLoading(true);
-  //     fetchFilterData("team", sharingPermissions.team)
-  //       .then((data) => setTeams(data))
-  //       .catch((error) => console.error("Error fetching teams:", error))
-  //       .finally(() => setLoading(false));
-  //   }
-  // }, [selectedCategoryRelatedTo, sharingPermissions.team]);
-
-  // Repeat similar useEffect hooks for other categories like assessments, questionBanks, etc.
-
-  // const handleCategorySelectRelatedTo = (category) => {
-  //   setSelectedCategoryRelatedTo(category);
-  //   setSelectedOptionRelatedTo(""); // Reset option when category changes
-  //   setShowDropdownCategoryRelatedTo(false);
-  // };
+  const handleOptionSelectRelatedTo = (name, id) => {
+    setSelectedOptionName(name);
+    setSelectedOptionIdRelatedTo(id);
+    setShowDropdownOptionRelatedTo(false);
+    setFormData(prev => ({
+      ...prev,
+      relatedTo: {
+        ...prev.relatedTo,
+        recordId: id,
+        recordName: name // Store name for backend
+      }
+    }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      relatedToOption: "", // Clear the error for the option
+    }));
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
@@ -145,12 +133,12 @@ const TaskForm = ({
 
   const getOptionsForSelectedCategory = () => {
     switch (selectedCategoryRelatedTo) {
-      case "Candidate":
+      case "Candidates":
         return candidateData.map((candidate) => ({
-          name: candidate.LastName || candidate.name || "Unnamed Candidate",
+          name: `${candidate.FirstName} ${candidate.LastName}` || "Unnamed Candidate",
           id: candidate._id,
         }));
-      case "Position":
+      case "Positions":
         return positionData.map((position) => ({
           name: position.title || position.name || "Unnamed Position",
           id: position._id,
@@ -160,12 +148,12 @@ const TaskForm = ({
       //     name: team.name || team.LastName || "Unnamed Team", 
       //     id: team._id 
       //   }));
-      case "Interview":
+      case "Interviews":
         return interviews.map((interview) => ({
           name: interview.title || interview.name || "Unnamed Interview",
           id: interview._id,
         }));
-      case "MockInterview":
+      case "MockInterviews":
         return mockInterviews.map((mock) => ({
           name: mock.title || mock.name || "Unnamed Mock Interview",
           id: mock._id,
@@ -175,53 +163,24 @@ const TaskForm = ({
     }
   };
 
-  // const toggleDropdownOptionRelatedTo = () => {
-  //   setShowDropdownOptionRelatedTo(!showDropdownOptionRelatedTo);
-  // };
-  // const [selectedOptionId, setSelectedOptionId] = useState("");
-  const handleOptionSelectRelatedTo = (optionName, optionId) => {
-    setSelectedOptionRelatedTo(optionName);
-    setShowDropdownOptionRelatedTo(false);
-    setFormData({
-      ...formData,
-      relatedTo: {
-        ...formData.relatedTo,
-        objectName: optionName,
-        recordId: optionId
-      }
-    });
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      relatedToOption: "", // Clear the error for the option
-    }));
+  const getNameFromId = (id) => {
+    const option = getOptionsForSelectedCategory().find(opt => opt.id === id);
+    return option ? option.name : id;
   };
 
-  // const handleClose = () => {
-  //   const isFormEmpty =
-  //     !formData.title &&
-  //     !formData.assignedTo &&
-  //     !selectedPriority &&
-  //     !selectedStatus &&
-  //     !formData.relatedTo &&
-  //     !formData.dueDate &&
-  //     !formData.comments;
-
-  //   if (!isFormEmpty) {
-  //     setShowConfirmationPopup(true);
-  //   } else {
-  //     onClose();
-  //   }
-  // };
-
+  const displayName = selectedOptionIdRelatedTo 
+    ? getNameFromId(selectedOptionIdRelatedTo) 
+    : "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    
+
     const newErrors = validateTaskForm(
       formData,
       selectedPriority,
-      selectedStatus
+      selectedStatus,
+      selectedOptionRelatedTo
     );
 
     if (Object.keys(newErrors).length > 0) {
@@ -281,7 +240,7 @@ const TaskForm = ({
           setSelectedPriority(taskData.priority);
           setSelectedStatus(taskData.status);
           setSelectedCategoryRelatedTo(taskData.relatedTo.objectName);
-          
+          setSelectedOptionName(taskData.relatedTo.recordName);
           console.log(taskData);
         } catch (error) {
           console.error("Error fetching task data:", error);
@@ -296,23 +255,6 @@ const TaskForm = ({
       setSelectedStatus(initialData.status);
     }
   }, [taskId, initialData]);
-
-  const handleCategorySelectRelatedTo = (category) => {
-    setSelectedCategoryRelatedTo(category);
-    setSelectedOptionRelatedTo(""); // Reset option when category changes
-    setShowDropdownCategoryRelatedTo(false);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      relatedTo: {
-        ...prevFormData.relatedTo,
-        objectName: category, // Update objectName in formData
-      },
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      relatedToCategory: "", // Clear the error for the category
-    }));
-  };
 
   const handleClose = () => {
       navigate('/task');
@@ -442,7 +384,7 @@ const TaskForm = ({
                     onClick={toggleDropdownCategoryRelatedTo}
                   />
                   {showDropdownCategoryRelatedTo && (
-                    <div className="absolute top-full -mt-4 w-full rounded-md bg-white shadow-lg z-50">
+                    <div className="absolute top-16 -mt-4 w-full rounded-md bg-white shadow-lg z-50">
                       {categoriesRelatedTo.map((category) => (
                         <div
                           key={category}
@@ -461,13 +403,15 @@ const TaskForm = ({
                 <div className="relative w-1/2">
                   <input
                     type="text"
-                    value={selectedOptionRelatedTo}
+                    value={taskId ? formData.relatedTo.recordName : displayName}
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
                         !showDropdownOptionRelatedTo
+                        
                       )
                     }
                     readOnly
+                    placeholder="Select option"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <MdArrowDropDown
@@ -479,7 +423,7 @@ const TaskForm = ({
                     }
                   />
                   {showDropdownOptionRelatedTo && (
-                    <div className="absolute top-full -mt-4 w-full rounded-md bg-white shadow-lg z-50">
+                    <div className="absolute top-16 -mt-4 w-full rounded-md bg-white shadow-lg z-50">
                       {getOptionsForSelectedCategory().map((option) => (
                         <div
                           key={option.id} // Use the ID as the key
