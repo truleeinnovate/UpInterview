@@ -157,6 +157,8 @@ console.log('currentRoles:', currentRoles);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
+  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -241,6 +243,8 @@ console.log('currentRoles:', currentRoles);
       setEntries(selectedCandidate.skills || []);
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(selectedCandidate.skills?.map(skill => skill.skill) || []);
+      setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
+      setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
   }, [id, candidateData]);
 
@@ -358,12 +362,28 @@ console.log('currentRoles:', currentRoles);
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" &&
+        const currentExp = entries[editingIndex]?.experience;
+        const currentLevel = entries[editingIndex]?.expertise;
+
+        return (
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill));
+            !allSelectedSkills.includes(selectedSkill)) &&
+          (selectedExp === currentExp ||
+            !allSelectedExperiences.includes(selectedExp)) &&
+          (selectedLevel === currentLevel ||
+            !allSelectedExpertises.includes(selectedLevel))
+        );
       } else {
         return (
-          selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
+          !allSelectedSkills.includes(selectedSkill) &&
+          !allSelectedExperiences.includes(selectedExp) &&
+          !allSelectedExpertises.includes(selectedLevel)
         );
       }
     } else if (currentStep === 1) {

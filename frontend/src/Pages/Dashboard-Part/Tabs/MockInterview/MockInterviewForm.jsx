@@ -96,6 +96,9 @@ const MockSchedulelater = () => {
   const [mockEdit, setmockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
+  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
+
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -209,7 +212,7 @@ const MockSchedulelater = () => {
 
 
 
-  }, [mockEdit, id]);
+  }, [mockEdit, id, mockinterviewData, formData.rounds.duration]);
 
 
   // useEffect(() => {
@@ -441,6 +444,8 @@ const MockSchedulelater = () => {
 
       setEntries(updatedEntries);
       setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+      setAllSelectedExperiences([...allSelectedExperiences, selectedExp]);
+      setAllSelectedExpertises([...allSelectedExpertises, selectedLevel]);
 
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -470,12 +475,28 @@ const MockSchedulelater = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        return selectedSkill !== "" &&
+        const currentExp = entries[editingIndex]?.experience;
+        const currentLevel = entries[editingIndex]?.expertise;
+
+        return (
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill));
+            !allSelectedSkills.includes(selectedSkill)) &&
+          (selectedExp === currentExp ||
+            !allSelectedExperiences.includes(selectedExp)) &&
+          (selectedLevel === currentLevel ||
+            !allSelectedExpertises.includes(selectedLevel))
+        );
       } else {
         return (
-          selectedSkill !== "" && !allSelectedSkills.includes(selectedSkill)
+          selectedSkill !== "" &&
+          selectedExp !== "" &&
+          selectedLevel !== "" &&
+          !allSelectedSkills.includes(selectedSkill) &&
+          !allSelectedExperiences.includes(selectedExp) &&
+          !allSelectedExpertises.includes(selectedLevel)
         );
       }
     } else if (currentStep === 1) {

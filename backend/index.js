@@ -950,3 +950,14 @@ app.use('/api/integration-logs', integrationLogRoutes);
 // Invoice
 const InvoiceRoutes = require('./routes/InvoiceRoutes.js');
 app.use('/invoices', InvoiceRoutes);
+
+const SharingRulesObject = require('./models/SharingRulesObject.js');
+//sharing rule object name ftech
+app.get('/sharing-rules-objects', async (req, res) => {
+  try {
+    const sharingRulesObjects = await SharingRulesObject.find();
+    res.status(200).json(sharingRulesObjects);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching sharing rules objects', error: error.message });
+  }
+});
