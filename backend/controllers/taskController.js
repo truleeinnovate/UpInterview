@@ -25,10 +25,11 @@ nextNumber = parseInt(match[1], 10) + 1;
 }
 }
 const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
-    const { title, assignedTo, priority, status, relatedTo, dueDate, comments } = req.body;
+    const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
     const task = new Task({
       title,
       assignedTo,
+      assignedToId,
       priority,
       status,
       relatedTo,
@@ -67,12 +68,13 @@ const getTaskById = async (req, res) => {
 // Update a task
 const updateTask = async (req, res) => {
     const { id } = req.params;
-    const { title, assignedTo, priority, status, relatedTo, dueDate, comments } = req.body;
+    const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
 
     try {
       const updatedTask = await Task.findByIdAndUpdate(id, {
         title,
         assignedTo,
+        assignedToId,
         priority,
         status,
         relatedTo,

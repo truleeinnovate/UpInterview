@@ -13,6 +13,7 @@ const CustomProvider = ({ children }) => {
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
 
+
   const [userRole, setuserRole] = useState("Admin");
 
   // const { sharingPermissionscontext = {} } = usePermissions() || {};
@@ -331,9 +332,7 @@ const CustomProvider = ({ children }) => {
   } = useQuery({
     queryKey: ['users', tenantId],
     queryFn: async () => {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/users/${tenantId}`
-      );
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users/${tenantId}`) 
 
       // Process image URLs and reverse the array (newest first)
       return response.data

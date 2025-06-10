@@ -5,6 +5,7 @@ const taskSchema = new mongoose.Schema({
   taskCode:{type:String,unique:true},
   title: { type: String},
   assignedTo: { type: String },
+  assignedToId: { type: String },
   priority: { type: String },
   status: { type: String},
   relatedTo: {

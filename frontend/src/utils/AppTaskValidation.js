@@ -3,7 +3,7 @@ export const validateTaskForm = (formData, selectedPriority, selectedStatus) => 
     const errors = {};
 
     if (!formData.title) errors.title = "Title is required";
-    if (!formData.assignedTo) errors.assignedTo = "Assigned To is required";
+    if (!formData.assignedTo || formData.assignedTo === "") errors.assignedTo = "Assigned To is required";
     if (!selectedPriority) errors.priority = "Priority is required";
     if (!selectedStatus) errors.status = "Status is required";
 
