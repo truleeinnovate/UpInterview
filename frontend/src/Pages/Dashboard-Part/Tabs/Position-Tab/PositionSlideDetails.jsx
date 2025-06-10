@@ -147,6 +147,27 @@ const PositionSlideDetails = () => {
                 <p className="text-gray-600 mt-1">{position.title || 'position'}</p>
               </div>
 
+               {position.rounds?.length === 0   
+          // && template.rounds?.length === 0  
+          && (
+            <div className="mb-1 sm:mb-4 rounded-xl border mt-2 border-yellow-300 bg-yellow-50 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-4 h-5 rounded-full  text-yellow-700">
+                    ⚠️
+                  </span>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-medium text-yellow-800">This Position is currently in <strong>Draft</strong> status.</h4>
+                    <p className="text-xs sm:text-sm text-yellow-700 mt-1">
+                      Add at least one interview round to make this Position usable. Position without rounds are not recommended.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-800">Job Details</h4>
                 <div className="grid grid-cols-2 gap-4">
