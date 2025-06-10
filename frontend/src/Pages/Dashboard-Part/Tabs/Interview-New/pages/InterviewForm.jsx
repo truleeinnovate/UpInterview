@@ -227,7 +227,8 @@ const handleSubmit = async (e) => {
                         } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
                       <option value="">Select a position</option>
-                      {(positionData ?? []).map(position => (
+                      {(positionData ?? []).filter(position => Array.isArray(position.rounds) && position.rounds.length > 0)
+                      .map(position => (
                         <option key={position._id} value={position._id}>{position.title}</option>
                       ))}
                     </select>
