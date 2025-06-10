@@ -179,8 +179,8 @@ const SubscriptionPlan = () => {
       console.log(organization, plan.name, "organization");
       if ((organization === "false" || !organization) && plan.name === "Base") {
         await axios.post(`${config.REACT_APP_API_URL}/emails/subscriptions/free`, {
-          ownerId: Cookies.get("userId"),
-          tenantId: Cookies.get("organizationId"),
+          ownerId: user.ownerId,
+          tenantId: user.tenantId,
         });
 
         // If upgrading, navigate to a specific page; otherwise, go to home

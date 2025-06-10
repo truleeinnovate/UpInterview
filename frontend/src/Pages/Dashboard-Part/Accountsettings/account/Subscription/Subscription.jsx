@@ -355,8 +355,8 @@ const Subscription = () => {
       // For Base plan with no organization, send the free subscription email
       if ((organization === "false" || !organization) && plan.name === "Base") {
         await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscriptions/free`, {
-          ownerId: Cookies.get("userId"),
-          tenantId: Cookies.get("organizationId"),
+          ownerId: user.ownerId,
+          tenantId: user.tenantId,
         });
       }
       

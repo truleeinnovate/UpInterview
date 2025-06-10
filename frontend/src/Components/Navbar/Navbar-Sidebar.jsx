@@ -15,14 +15,16 @@ import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
 import { config } from "../../config.js";
-import { clearAllCookies } from "../../utils/AuthCookieManager/AuthCookieManager";
+import { logout } from "../../utils/AuthCookieManager/AuthCookieManager";
+import { useCustomContext } from "../../Context/Contextfetch.js";
 
 const Navbar = () => {
   const location = useLocation();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-  const userName = tokenPayload?.userName;
+  // const userName = tokenPayload?.userName;
+    const { userProfile } = useCustomContext();
   const organization = tokenPayload?.organization;
   // const { logout } = useAuth0();
   const navigate = useNavigate();
@@ -56,8 +58,8 @@ const Navbar = () => {
   const profileRef = useRef(null);
 
   // Utility function to close all dropdowns
-  const closeAllDropdowns = (openDropdown = null) => {
-    setDropdownState({
+  const closeAllDropdowns = React.useCallback((openDropdown = null) => {
+    setDropdownState(prevState => ({
       assessmentDropdown: openDropdown === "assessmentDropdown",
       interviewDropdown: openDropdown === "interviewDropdown",
       moreDropdown: openDropdown === "moreDropdown",
@@ -71,9 +73,9 @@ const Navbar = () => {
       isContactDropdownOpen: false,
       isAdditionalDropdownOpen: false,
       isLegalDropdownOpen: false,
-      isSidebarOpen: dropdownState.isSidebarOpen,
-    });
-  };
+      isSidebarOpen: prevState.isSidebarOpen,
+    }));
+  }, []);
 
   // Toggle functions
   const toggleAssessmentDropdown = () => closeAllDropdowns(dropdownState.assessmentDropdown ? null : "assessmentDropdown");
@@ -122,7 +124,7 @@ const Navbar = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [closeAllDropdowns]);
 
   const handleSettingsClick = () => {
     closeAllDropdowns();
@@ -186,7 +188,7 @@ const Navbar = () => {
             <CgProfile className="text-custom-blue text-xl" />
           )}
         </p>
-        <span className="font-medium ml-1">{userName}</span>
+        <span className="font-medium ml-1">{userProfile?.firstName} {userProfile?.lastName}</span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
         <button
@@ -202,7 +204,7 @@ const Navbar = () => {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-            clearAllCookies();
+            logout();
             navigate("/");
           }}
         >

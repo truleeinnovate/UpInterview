@@ -63,6 +63,7 @@ exports.individualLogin = async (req, res) => {
       userId: savedUser._id.toString(),
       organization: false,
       timestamp: new Date().toISOString(),
+      freelancer: userData.isFreelancer
     };
     const token = generateToken(payload);
 
