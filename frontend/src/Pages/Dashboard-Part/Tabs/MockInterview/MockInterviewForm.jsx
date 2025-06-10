@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
-import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
-import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
-import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
+// import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
+// import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
+// import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
+// import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
@@ -52,7 +52,6 @@ const MockSchedulelater = () => {
     skills,
     currentRoles,
   } = useMasterData();
-  
 
   console.log("qualification", qualifications);
 
