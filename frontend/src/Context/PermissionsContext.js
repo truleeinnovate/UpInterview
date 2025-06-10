@@ -7,7 +7,7 @@ const PermissionsContext = createContext();
 
 export const PermissionsProvider = ({ children }) => {
   const [organization, setOrganization] = useState(false);
-  const [freelancer, setFreelancer] = useState(false);
+  // const [freelancer, setFreelancer] = useState(false);
   const [objectPermissionscontext, setObjectPermissions] = useState({});
   const [tabPermissions, setTabPermissions] = useState({});
   const [sharingPermissionscontext, setSharingPermissions] = useState({});
@@ -34,11 +34,11 @@ export const PermissionsProvider = ({ children }) => {
         //   setOrganization(false);
         //   Cookies.set("organization", "false");
         // }
-        if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
-          setFreelancer(true);
-        } else {
-          setFreelancer(false);
-        }
+        // if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
+        //   setFreelancer(true);
+        // } else {
+        //   setFreelancer(false);
+        // }
         if (matchedUser.data) {
           if (!organization) {
             profileResponse = await axios.get(`${config.REACT_APP_API_URL}/profiles/individualProfile`);
@@ -122,8 +122,8 @@ export const PermissionsProvider = ({ children }) => {
       // setSharingSettings,
       organization,
       setOrganization,
-      freelancer,
-      setFreelancer,
+      // freelancer,
+      // setFreelancer,
       objectPermissionscontext,
       // setObjectPermissions,
       tabPermissions,

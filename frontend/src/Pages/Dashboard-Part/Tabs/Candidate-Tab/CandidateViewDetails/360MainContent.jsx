@@ -4,14 +4,13 @@ import AppliedPositions from './AppliedPositions';
 import Timeline from './Timeline'; 
 import PositionDetails from './PositionDetails';
 import InterviewDetails from './InterviewDetails';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import Sidebar from './Sidebar';
 import { Outlet, useParams } from 'react-router-dom';
 import axios from 'axios';
 import AddCandidateForm from '../AddCandidateForm';
 import { User, } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
 import Documents from './Documents';
 import Loading from '../../../../../Components/Loading';
 import Activity from '../../CommonCode-AllTabs/Activity';
@@ -37,9 +36,14 @@ const MainContent = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
-  const {
-    interviewData
-  } = useCustomContext();
+  
+  // const {
+  //   interviewData
+  // } = useCustomContext();
+
+    const {
+      interviewData,
+    } = useInterviews();
 
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
 
