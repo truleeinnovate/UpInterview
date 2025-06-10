@@ -136,12 +136,12 @@ const Home = () => {
           </motion.div>
         </div>
       </main>
-
-      {showOutsourcePopup && (
+      {showOutsourcePopup && !freelancer && (
         <OutsourceOption onClose={() => setShowOutsourcePopup(false)} navigatedfrom="dashboard" />
       )}
 
-      {isInternalInterviews && (
+
+      {isInternalInterviews && !freelancer && (
         <InternalInterviews onClose={() => setInternalInterviews(false)} navigatedfrom="dashboard" />
       )}
     </div>
