@@ -71,6 +71,9 @@ const InterviewSlideover = ({ mode }) => {
 
     const handleTitleChange = (e) => {
         const value = e.target.value;
+         // Less restrictive filtering - allow most characters but still create a safe label
+    // const sanitizedValue = value; // Remove filtering or make it less restrictive
+    // const label = value.trim().replace(/[^a-zA-Z0-9_]/g, '_').replace(/\s+/g, '_');
         const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, '');
         const label = sanitizedValue.trim().replace(/\s+/g, '_');
 
@@ -262,7 +265,7 @@ const InterviewSlideover = ({ mode }) => {
                                     </label>
                                     <input
                                         type="text"
-                                        id="title"
+                                        id="templateTitle"
                                         name="templateTitle"
                                         placeholder="e.g., Senior Frontend Developer"
                                         value={newTemplate.templateTitle}
@@ -270,6 +273,7 @@ const InterviewSlideover = ({ mode }) => {
                                         onBlur={() => handleBlur('templateTitle')}
                                         className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
                                             } focus:outline-none focus:ring-1`}
+                                             autoComplete="off"
                                     />
                                     {touched.name && errors.name && (
                                         <p className="mt-1 text-sm text-red-500">{errors.name}</p>
