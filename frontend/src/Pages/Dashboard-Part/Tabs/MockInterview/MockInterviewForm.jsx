@@ -66,7 +66,6 @@ const MockSchedulelater = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-
   const [formData, setFormData] = useState({
     skills: [],
     candidateName: "",
