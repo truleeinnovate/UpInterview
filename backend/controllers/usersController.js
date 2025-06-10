@@ -574,7 +574,76 @@ const getUsersByTenant = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+const getUniqueUserByOwnerId = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+
+    if (!ownerId) {
+      return res.status(400).json({ message: 'Invalid owner ID' });
+    }
+
+    // Fetch users with minimal fields
+    const users = await Users.findOne({ _id: ownerId }, '_id roleId label status').lean();
+    console.log("users -------------------", users);
+
+    if (!users) {
+      return res.status(200).json({});
+    }
+
+    // Fetch contacts and roles in parallel
+    const [contact] = await Promise.all([
+      Contacts.findOne({ ownerId: ownerId })
+        .populate({ path: 'availability', model: 'Interviewavailability', select: 'days -_id' })
+        .lean(),
+    ]);
+
+    // Combine user data, pulling most fields from Contacts
+    const combinedUser = {
+      _id: users._id,
+      contactId: contact._id || 'N/A',
+      firstName: contact.firstName || 'N/A',
+      lastName: contact.lastName || 'N/A',
+      email: contact.email || 'N/A',
+      countryCode: contact.countryCode || 'N/A',
+      gender: contact.gender || 'N/A',
+      phone: contact.phone || 'N/A',
+      imageData: contact.imageData || null,
+      createdAt: users.createdAt || contact.createdAt,
+      status: users.status || 'N/A',
+      updatedAt: users.updatedAt || contact.updatedAt,
+      profileId: contact.profileId || 'N/A',
+      linkedinUrl: contact.linkedinUrl || 'N/A',
+      portfolioUrl: contact.portfolioUrl || 'N/A',
+      hourlyRate: contact.hourlyRate || 'N/A',
+      currentRole: contact.currentRole || 'N/A',
+      industry: contact.industry || 'N/A',
+      experienceYears: contact.experienceYears || 'N/A',
+      location: contact.location || 'N/A',
+      resumePdf: contact.resumePdf || 'N/A',
+      coverLetter: contact.coverLetter || 'N/A',
+      coverLetterDescription: contact.coverLetterdescription || 'N/A',
+      professionalTitle: contact.professionalTitle || 'N/A',
+      bio: contact.bio || 'N/A',
+      interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+      noShowPolicy: contact.NoShowPolicy || 'N/A',
+      previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || 'N/A',
+      previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || 'N/A',
+      expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || 'N/A',
+      technologies: contact.technologies || [],
+      skills: contact.skills || [],
+      timeZone: contact.timeZone || 'N/A',
+      preferredDuration: contact.preferredDuration || 'N/A',
+      availability: contact.availability || [],
+      dateOfBirth: contact.dateOfBirth || 'N/A',
+    };
+
+    res.status(200).json(combinedUser);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant, 
-  // getUniqueUserByOwnerId 
+  getUniqueUserByOwnerId 
 };

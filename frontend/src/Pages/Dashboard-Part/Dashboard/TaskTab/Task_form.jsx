@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,11 @@ import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
 import {useCandidates} from "../../../../apiHooks/useCandidates.js";
 import {usePositions} from "../../../../apiHooks/usePositions.js";
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+
+
 import "react-datepicker/dist/react-datepicker.css";
 
 const TaskForm = ({
@@ -19,14 +24,41 @@ const TaskForm = ({
   taskId, // Add taskId prop for editing
   initialData // Add initial data for pre-filling form
 }) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const ownerId = tokenPayload?.userId
+  const organization = tokenPayload?.organization;
   const { candidateData } = useCandidates();
-
-  console.log("candidateData in task form", candidateData);
   const {positionData} = usePositions();
+  const {usersRes} = useCustomContext();
+
+  useEffect(() => {
+    const fetchOwnerData = async () => {
+      if (!organization) {
+        try {
+          const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
+          const ownerData = response.data;
+          
+          // Prefill form with owner's name
+          setFormData(prev => ({
+            ...prev,
+            assignedTo: `${ownerData.firstName} ${ownerData.lastName}`,
+            assignedToId: ownerData._id
+          }));
+        } catch (error) {
+          console.error('Error fetching owner data:', error);
+        }
+      }
+    };
+    
+    fetchOwnerData();
+  }, [organization, ownerId]);
+
    
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
+    assignedToId: "",
     priority: "",
     status: "New",
     relatedTo: {
@@ -175,7 +207,6 @@ const TaskForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-
     const newErrors = validateTaskForm(
       formData,
       selectedPriority,
@@ -190,25 +221,24 @@ const TaskForm = ({
     }
     
     try {
+      const taskData = {
+        ...formData,
+        priority: selectedPriority,
+        status: selectedStatus,
+        assignedToId: formData.assignedToId // Always send assignedToId
+      };
+
       if (taskId) {
-        await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, {
-          ...formData,
-          priority: selectedPriority,
-          status: selectedStatus
-        });
+        await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, taskData);
       } else {
-        await axios.post(`${config.REACT_APP_API_URL}/tasks`, {
-          ...formData,
-          priority: selectedPriority,
-          status: selectedStatus
-        });
+        await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
       }
       
       onTaskAdded();
       handleClose();
     } catch (error) {
       console.error("Error saving task:", error);
-      setError(error.message); // Set error state
+      setError(error.message);
     }
   };
 
@@ -268,6 +298,8 @@ const TaskForm = ({
       }
     );
 
+
+
   return (
     <Modal
       isOpen={true}
@@ -310,26 +342,43 @@ const TaskForm = ({
               />
               {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
-
-            {/* Assigned To */}
-            <div className="space-y-1">
+            {/* individual assigned to*/}
+            {organization ? (
+              <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Assigned To</label>
               <div className="relative">
                 <select
-                  value={formData.assignedTo}
+                  value={formData.assignedTo ? formData.assignedTo : ''}
                   onChange={(e) => handleInputChange('assignedTo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Assign to</option>
-                  {candidateData?.map(candidate => (
-                    <option key={candidate._id} value={candidate._id}>
-                      {candidate.name}
+                  
+                  <option value="" hidden>Select User</option>
+                  {usersRes.map((user) => (
+                    <option className='font-medium text-gray-500 text-sm' key={user._id} value={user._id} onClick={() => handleInputChange('assignedToId', user._id)}>
+                      {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
                     </option>
-                  )) || null}
+                  ))}
                 </select>
                 {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
               </div>
             </div>
+            ) : (
+              <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+              <input
+                type="text"
+                value={formData.assignedTo}
+                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+            </div>
+            )}
+            
+
+            
+            
 
             {/* Priority */}
             <div className="space-y-1">
@@ -340,7 +389,7 @@ const TaskForm = ({
                   onChange={handlePriorityChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select Priority</option>
+                  <option value="" hidden>Select Priority</option>
                   {Array.isArray(priorities) && priorities.map((priority) => (
                     <option key={priority} value={priority}>{priority}</option>
                   ))}
@@ -358,7 +407,7 @@ const TaskForm = ({
                   onChange={handleStatusChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select Status</option>
+                  <option value="" hidden>Select Status</option>
                   {statuses.map((status) => (
                     <option key={status} value={status}>{status}</option>
                   ))}
