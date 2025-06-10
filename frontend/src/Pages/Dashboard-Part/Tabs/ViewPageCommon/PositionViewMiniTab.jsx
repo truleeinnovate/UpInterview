@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import axios from "axios";
 import Cookies from "js-cookie";
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -6,12 +6,14 @@ import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCirc
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
 import { ReactComponent as HiArrowsUpDown } from '../../../../icons/HiArrowsUpDown.svg';
 import { config } from '../../../../config';
-
-const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
-    const [positionData, setPositionData] = useState(setPositionData1);
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+const PositionViewMiniTab = ({ setPositionData1, fromcandidate }) => {
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const [positionData] = useState(setPositionData1);
     const [showDropdownuser, setShowDropdownuser] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(true);
+    const [errors] = useState({});
+    // const [loading, setLoading] = useState(true);
     const [showDropdown, setShowDropdown] = useState(false);
     const candidateRef = useRef(null);
     const [selectedCandidate, setSelectedCandidate] = useState("");
@@ -54,10 +56,10 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
     };
 
     const [userData, setUserData] = useState([]);
-    const organizationId = Cookies.get("organizationId");
+    const organizationId = tokenPayload?.tenantId;
     useEffect(() => {
         const fetchUserData = async () => {
-            setLoading(true);
+            // setLoading(true);
             try {
                 const response = await axios.get(
                     `${config.REACT_APP_API_URL}/api/users/organization/${organizationId}`
@@ -66,19 +68,14 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
             } catch (error) {
                 console.error("Error fetching users data:", error);
             }
-            setLoading(false);
+            // setLoading(false);
         };
         fetchUserData();
     }, [organizationId]);
 
-    useEffect(() => {
-        if (positionData?.ownerId) {
-            fetchUserData();
-        }
-    }, [positionData?.ownerId]);
-// this fetch used to display owner name using ownerid
-    const fetchUserData = async () => {
-        setLoading(true);
+    // this fetch used to display owner name using ownerid
+    const fetchUserData = useCallback(async () => {
+        // setLoading(true);
         try {
             const matchedUser = await axios.get(
                 `${config.REACT_APP_API_URL}/auth/users/${positionData.ownerId}`
@@ -87,8 +84,14 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
         } catch (error) {
             console.error("Error fetching users data:", error);
         }
-        setLoading(false);
-    };
+        // setLoading(false);
+    }, [positionData.ownerId]);
+
+    useEffect(() => {
+        if (positionData?.ownerId) {
+            fetchUserData();
+        }
+    }, [fetchUserData, positionData?.ownerId]);
 
     const togglePopup = () => {
         setShowDropdownuser(!showDropdownuser);
@@ -156,14 +159,14 @@ const PositionViewMiniTab = ({ setPositionData1,fromcandidate }) => {
                                             </p>
                                             {fromcandidate && (
                                                 <button
-                                                className="ml-14 relative"
-                                                type="button"
-                                                onClick={togglePopup}
-                                            >
-                                                <HiArrowsUpDown className="text-custom-blue" />
-                                            </button> 
+                                                    className="ml-14 relative"
+                                                    type="button"
+                                                    onClick={togglePopup}
+                                                >
+                                                    <HiArrowsUpDown className="text-custom-blue" />
+                                                </button>
                                             )}
-                                           
+
 
                                             {/* Dropdown */}
                                             {showDropdownuser && (

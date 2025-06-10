@@ -52,7 +52,6 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
     if (matchedUser.data && matchedUser.data.organizationId) {
       setOrganization(true);
       Cookies.set("organization", "true");
-      console.log("organization", Cookies.get("organization"));
     } else {
       setOrganization(false);
       Cookies.set("organization", "false");
@@ -70,7 +69,7 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
       // const roleResponse = await axios.get(`${config.REACT_APP_API_URL}/api/roles/${matchedUser.data.RoleId}`);
       // setUserRole(roleResponse.data);
 
-      const organizationId = Cookies.get('organizationId');
+      const organizationId = tokenPayload?.tenantId;
       const sharingResponse = await axios.get(`${config.REACT_APP_API_URL}/api/sharing-settings`);
       const sharesetting = sharingResponse.data.filter(profile => profile.organizationId === organizationId);
       setSharingSettings(sharesetting);

@@ -10,7 +10,7 @@ const WelcomeSection = () => {
   const { userProfile } = useCustomContext();
   
 
-      const tokenPayload = decodeJwt(Cookies.get('authToken'));
+      // const tokenPayload = decodeJwt(Cookies.get('authToken'));
       
       // const userName = tokenPayload?.userName;
   return (

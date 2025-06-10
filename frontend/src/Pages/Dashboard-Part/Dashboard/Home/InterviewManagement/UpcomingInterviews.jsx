@@ -8,7 +8,6 @@ const InterviewerSchedule = () => {
   const navigate = useNavigate();
   const { interviewRounds } = useCustomContext();
   const [upcomingRounds, setUpcomingRounds] = useState([]);
-  console.log('upcomingRounds', upcomingRounds)
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {

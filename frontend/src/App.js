@@ -1,9 +1,8 @@
-import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
+import React, { lazy, Suspense, useMemo } from 'react';
 import { Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
-import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
 import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
@@ -15,9 +14,8 @@ import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billi
 import UserInvoiceDetails from './Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx';
 import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
 import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx';
-
+import TokenExpirationHandler from './utils/TokenExpirationHandler';
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
-
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -99,17 +97,17 @@ const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/Supp
 const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
 const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
 
-
-
-
-
 // Custom Suspense component to track loading state
-const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
+const SuspenseWithLoading = ({
+  fallback,
+  children
+  // onLoadingChange
+}) => {
 
-  useEffect(() => {
-    onLoadingChange(true);
-    return () => onLoadingChange(false);
-  }, [onLoadingChange]);
+  // useEffect(() => {
+  // onLoadingChange(true);
+  // return () => onLoadingChange(false);
+  // }, [onLoadingChange]);
 
   return <Suspense fallback={fallback}>{children}</Suspense>;
 };
@@ -120,20 +118,20 @@ const App = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   // Define paths for conditional rendering
-  const noNavbarPaths = useMemo(() => [
-    '/',
-    '/select-user-type',
-    '/select-profession',
-    '/complete-profile',
-    '/organization-login',
-    '/organization-signup',
-    '/subscription-plans',
-    '/payment-details',
-    '/callback',
-  ], []);
+  // const noNavbarPaths = useMemo(() => [
+  //   '/',
+  //   '/select-user-type',
+  //   '/select-profession',
+  //   '/complete-profile',
+  //   '/organization-login',
+  //   '/organization-signup',
+  //   '/subscription-plans',
+  //   '/payment-details',
+  //   '/callback',
+  // ], []);
 
   const showLogoPaths = useMemo(() => [
     '/organization-signup',
@@ -145,46 +143,32 @@ const App = () => {
     '/payment-details',
   ], []);
 
-  const settingsSidebarPaths = useMemo(() => [
-    '/account-settings/profile',
-    '/account-settings/my-profile',
-    '/account-settings/wallet',
-    '/account-settings/interviewer-groups',
-    '/account-settings/users',
-    '/account-settings/email-settings',
-    '/account-settings/billing',
-    '/account-settings/subscription',
-    '/account-settings/security',
-    '/account-settings/notifications',
-    '/account-settings/usage',
-    '/account-settings/roles',
-    '/account-settings/sharing',
-    '/account-settings/sub-domain',
-    '/account-settings/webhooks',
-    '/account-settings/hrms-ats',
-  ], []);
+  // const settingsSidebarPaths = useMemo(() => [
+  //   '/account-settings/profile',
+  //   '/account-settings/my-profile',
+  //   '/account-settings/wallet',
+  //   '/account-settings/interviewer-groups',
+  //   '/account-settings/users',
+  //   '/account-settings/email-settings',
+  //   '/account-settings/billing',
+  //   '/account-settings/subscription',
+  //   '/account-settings/security',
+  //   '/account-settings/notifications',
+  //   '/account-settings/usage',
+  //   '/account-settings/roles',
+  //   '/account-settings/sharing',
+  //   '/account-settings/sub-domain',
+  //   '/account-settings/webhooks',
+  //   '/account-settings/hrms-ats',
+  // ], []);
 
-  const appSettingsPaths = useMemo(() => [
-    '/connected_apps',
-    '/access_token',
-    '/auth_token',
-    '/apis',
-  ], []);
-
-  const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
-  const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
 
   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
 
   return (
     <ErrorBoundary>
-      <SuspenseWithLoading
-        fallback={<div><Loading /></div>}
-        onLoadingChange={setIsLoading}
-      >
-        {shouldRenderNavbar && <Navbar />}
-        {showSettingsSidebar && <Settingssidebar />}
+      <SuspenseWithLoading fallback={<div><Loading /></div>}>
         {showLogo && <Logo />}
         <div>
           <Routes>
@@ -198,7 +182,7 @@ const App = () => {
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<CardDetails />} />
-            <Route path="/subscription-payment-details" element={<SubscriptionCardDetails/>} />
+            <Route path="/subscription-payment-details" element={<SubscriptionCardDetails />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />
@@ -210,13 +194,14 @@ const App = () => {
                   <PermissionsProvider>
                     <CustomProvider>
                       <PageSetter />
+                      {shouldRenderNavbar && <Navbar />}
                       <Outlet />
                     </CustomProvider>
                   </PermissionsProvider>
                 </ProtectedRoute>
               }
             >
-              {/* Protected Routes */} 
+              {/* Protected Routes */}
               <Route path="/home" element={<Home />} />
               <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
               <Route path="/outsource-interview-request" element={<InterviewRequest />} />
@@ -272,7 +257,7 @@ const App = () => {
 
               {/*Wallet */}
               <Route path="/wallet-transcations" element={<Wallet />}></Route>
-              
+
 
               {/* Account Settings Routes */}
               <Route path="/account-settings" element={<AccountSettingsSidebar />}>
@@ -292,16 +277,16 @@ const App = () => {
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
-               
-               {/* my-profile */}
+
+                {/* my-profile */}
                 <Route path="my-profile" element={<MyProfile />}>
                   <Route index element={<Navigate to="basic" replace />} />
                   <Route path="basic" element={<BasicDetails />} />
                   <Route path="advanced" element={<AdvancedDetails />} />
                   <Route path="interview" element={<InterviewUserDetails />} />
                   <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage  from="my-profile"/>} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails   from="my-profile"/>} />
+                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="my-profile" />} />
+                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
                   <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
                   <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
                 </Route>
@@ -310,10 +295,10 @@ const App = () => {
                   <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
                   <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
                 </Route>
-                
+
                 {organization && (
                   <Route path="interviewer-groups" element={<InterviewerGroups />}>
-                      <Route index element={null} />
+                    <Route index element={null} />
                     <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
                     <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
@@ -322,24 +307,24 @@ const App = () => {
                 {organization && (
 
                   <Route path="users" element={<UsersLayout />}>
-                     {/* <Route index element={null } /> */}
-                   
+                    {/* <Route index element={null } /> */}
+
                     <Route path="new" element={<UserForm mode="create" />} />
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
                     <Route path="details/:id" element={<UserProfileDetails />} />
-                     {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
+                    {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
                     {/* <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} /> */}
-                     
-                     {/* <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} /> */}
-                      {/* <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} /> */}
+
+                    {/* <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} /> */}
+                    {/* <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} /> */}
                     {/* <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} /> */}
-                      {/* <Route path="basic" element={<BasicDetails />} /> */} 
+                    {/* <Route path="basic" element={<BasicDetails />} /> */}
                   </Route>
                 )}
 
                 <Route path="email-settings" element={<EmailTemplate />} />
-                
-                
+
+
                 {/* BillingSubtabs */}
                 {/* <Route path="billing-details" element={<BillingSubtabs />} >
                    <Route index element={<Navigate to="billing" replace />} />
@@ -350,8 +335,8 @@ const App = () => {
 
                 </Route> */}
                 <Route path="billing-details" element={<BillingSubtabs />} >
-                 <Route index element={null} />
-                    <Route path="details/:id" element={<UserInvoiceDetails />} />
+                  <Route index element={null} />
+                  <Route path="details/:id" element={<UserInvoiceDetails />} />
                 </Route>
 
 
@@ -375,7 +360,7 @@ const App = () => {
                 )}
               </Route>
 
-                            {/* {organization && (
+              {/* {organization && (
 
                   <Route path="/account-settings/users/details/:id" element={<UsersLayout ><UserProfileDetails /></UsersLayout>} />
                   
@@ -383,11 +368,11 @@ const App = () => {
                 )} */}
 
               {/* Billing invoice  */}
-               <Route path="/billing" element={<InvoiceTab />} >
+              <Route path="/billing" element={<InvoiceTab />} >
                 <Route index element={null} />
                 <Route path="details/:id" element={<UserInvoiceDetails />} />
 
-               </Route>
+              </Route>
 
               {/* Interview Templates */}
               <Route path="/interview-templates" element={<InterviewTemplates />}>

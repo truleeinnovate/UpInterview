@@ -105,60 +105,6 @@ const Wallet = () => {
     
     return () => clearTimeout(animationTimer);
   }, []);
-
-  console.log("walletBalance ", walletBalance);
-  
-  // const [isLoading, setIsLoading] = useState(true);
-
-  // const userId = Cookies.get("userId");
-  // console.log("user", userId);
-  // // /get-top-up/:ownerId
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const wallet_res = await axios.get(`${config.REACT_APP_API_URL}/get-top-up/${userId}`);
-  //       // Find user based on userId
-
-  //       const walletDetailsArray = wallet_res.data.walletDetials;
-
-  //       console.log("walletDetailsArray", walletDetailsArray);
-
-
-  //       const walletDetails = Array.isArray(walletDetailsArray) && walletDetailsArray.length > 0
-  //         ? walletDetailsArray[0]
-  //         : {};
-
-  //       // const walletDetails = wallet_res.data;  
-
-  //       // const user = allUsers_data.find(user => user._id === "67d77741a9e3fc000cbf61fd");
-
-  //       console.log("walletDetails", walletDetails);
-
-
-  //       if (userId) {
-  //         setWalletBalance(walletDetails);
-
-  //       }
-
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   if (userId) {
-  //     fetchData();
-  //   }
-  // }, [userId]);
-
-
-  // if (!walletBalance) {
-  //   return <div className='flex justify-center items-center w-full h-full'>Loading wallet data...</div>;
-  // }
-
  
   const pendingBalance = calculatePendingBalance(walletBalance);
 

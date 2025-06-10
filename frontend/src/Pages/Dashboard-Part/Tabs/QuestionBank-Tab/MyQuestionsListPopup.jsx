@@ -148,7 +148,7 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
 
 
     useEffect(() => {
-        const savedLabel = Cookies.get("lastSelectedLabel");
+        const savedLabel = Cookies.get("lastSelectedLabel")
 
         if (savedLabel && typeof setSelectedLabelnew === "function") {
             setSelectedLabelnew(savedLabel); // Call only if the function exists

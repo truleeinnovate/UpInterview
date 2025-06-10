@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Cookies from 'js-cookie';
-import { usePermissions } from '../../Context/PermissionsContext.js';
 import Tooltip from "@mui/material/Tooltip";
 import { ReactComponent as FaList } from '../../icons/FaList.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../icons/TbLayoutGridRemove.svg';
@@ -10,12 +9,12 @@ import { ReactComponent as IoIosArrowForward } from '../../icons/IoIosArrowForwa
 import { fetchMasterData } from '../../utils/fetchMasterData.js';
 import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
-
 import { ReactComponent as FiFilter } from '../../icons/FiFilter.svg';
 import { ReactComponent as FiMoreHorizontal } from '../../icons/FiMoreHorizontal.svg';
 import { ReactComponent as LuFilterX } from '../../icons/LuFilterX.svg';
 import axios from 'axios';
 import { config } from '../../config.js';
+import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
     const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -91,6 +90,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
             closeOffcanvas();
         }
     }
+
     return (
         <div
             className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
@@ -218,29 +218,22 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 };
 
 const InternalRequest = () => {
-    const { objectPermissionscontext } = usePermissions();
-    const objectPermissions = useMemo(() => objectPermissionscontext.team || {}, [objectPermissionscontext]);
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const ownerId = tokenPayload?.userId;
+    const tenantId = tokenPayload?.tenantId;
+    const Organization = tokenPayload?.organization;
+
     const [searchQuery, setSearchQuery] = useState("");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    // const toggleLookup = () => {
-    //     setSidebarOpen(true);
-    // };
-
     const [teamsData, setTeamsData] = useState('');
-
-    console.log('teamsDatafdgjf :', teamsData)
-    const [loading, setLoading] = useState('');
+    const [loading] = useState('');
 
     const fetchInterviewRequests = useCallback(async () => {
-        const ownerId = Cookies.get("userId");
-        const tenantId = Cookies.get("organizationId");
-        const OrgId = Cookies.get("organization");
-
         try {
             const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest`);
             let filteredRequests = [];
 
-            if (OrgId === "true") {
+            if (Organization === "true") {
                 filteredRequests = response.data.filter(request =>
                     request.ownerId === ownerId && request.tenantId === tenantId
                 );
@@ -255,7 +248,7 @@ const InternalRequest = () => {
         } catch (error) {
             console.error("Error fetching interview requests:", error);
         }
-    }, []);
+    }, [Organization, ownerId, tenantId]);
 
     useEffect(() => {
         fetchInterviewRequests();
@@ -356,8 +349,6 @@ const InternalRequest = () => {
     const [activeArrow, setActiveArrow] = useState(null);
 
     const [tableVisible] = useState(true);
-
-    const Organization = Cookies.get('organization');
 
     const [actionViewMore, setActionViewMore] = useState(null);
 
