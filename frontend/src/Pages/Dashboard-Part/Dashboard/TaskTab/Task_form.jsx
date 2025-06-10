@@ -2,7 +2,7 @@ import React, { useState, useEffect} from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
-import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
+import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -28,7 +28,7 @@ const TaskForm = ({
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId
   const organization = tokenPayload?.organization;
-  const { candidateData } = useCandidates();
+  const { candidateData, isMutationLoading } = useCandidates();
   const {positionData} = usePositions();
   const {usersRes} = useCustomContext();
 
@@ -302,35 +302,44 @@ const TaskForm = ({
 
   return (
     <Modal
-      isOpen={true}
-      onRequestClose={handleClose}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
-        <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
-          <h2 className="text-lg sm:text-2xl font-bold">{taskId ? 'Update Task' : 'Create Task'}</h2>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 text-gray-600 hover:text-gray-800"
-            >
-              {isFullScreen ? (
-                <ArrowsPointingInIcon className="h-5 w-5" />
-              ) : (
-                <ArrowsPointingOutIcon className="h-5 w-5" />
-              )}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            isOpen={true}
+            // onRequestClose={onClose}
+            className={modalClass}
+            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
+            scroll={true}
+            style={{ overflow: 'auto' }}
+          >
+          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+    
+                  <h2 className="text-2xl font-semibold text-custom-blue">
+                    {taskId ? "Update Task" : "Add New Task"}
+    
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                    >
+                      {isFullScreen ? (
+                        <Minimize className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Expand className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+    
+                <div className="grid grid-cols-1 gap-6 mb-6">
+          
+          <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Title */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Title</label>
@@ -338,7 +347,7 @@ const TaskForm = ({
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
               />
               {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
@@ -350,7 +359,7 @@ const TaskForm = ({
                 <select
                   value={formData.assignedTo ? formData.assignedTo : ''}
                   onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
                 >
                   
                   <option value="" hidden>Select User</option>
@@ -370,16 +379,17 @@ const TaskForm = ({
                 type="text"
                 value={formData.assignedTo}
                 onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
               />
               {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
             </div>
             )}
             
+          </div>  
 
             
             
-
+            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Priority */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Priority</label>
@@ -387,7 +397,7 @@ const TaskForm = ({
                 <select
                   value={selectedPriority}
                   onChange={handlePriorityChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
                 >
                   <option value="" hidden>Select Priority</option>
                   {Array.isArray(priorities) && priorities.map((priority) => (
@@ -405,7 +415,7 @@ const TaskForm = ({
                 <select
                   value={selectedStatus}
                   onChange={handleStatusChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
                 >
                   <option value="" hidden>Select Status</option>
                   {statuses.map((status) => (
@@ -415,7 +425,7 @@ const TaskForm = ({
                 {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
               </div>
             </div>
-
+            </div>
             {/* Related To */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Related To</label>
@@ -426,10 +436,11 @@ const TaskForm = ({
                     value={selectedCategoryRelatedTo}
                     onClick={toggleDropdownCategoryRelatedTo}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedTo && 'border-red-500'}`}
                   />
                   <MdArrowDropDown
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
                     onClick={toggleDropdownCategoryRelatedTo}
                   />
                   {showDropdownCategoryRelatedTo && (
@@ -461,10 +472,11 @@ const TaskForm = ({
                     }
                     readOnly
                     placeholder="Select option"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedToOption && 'border-red-500'}`}
                   />
                   <MdArrowDropDown
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 cursor-pointer -mt-2"
+                     size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
                         !showDropdownOptionRelatedTo
@@ -502,7 +514,7 @@ const TaskForm = ({
                 value={formData.dueDate ? new Date(formData.dueDate).toISOString().slice(0, 16) : ''}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
                 min={today}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.dueDate && 'border-red-500'}`}
               />
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
             </div>
@@ -514,8 +526,8 @@ const TaskForm = ({
                 value={formData.comments}
                 onChange={(e) => setFormData({...formData, comments: e.target.value})}
                 placeholder="Add comments"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows="2"
+                className={`w-full px-3 py-2 h-40 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.comments && 'border-red-500'}`}
+                rows="5"
               />
             </div>
           </div>
@@ -536,9 +548,10 @@ const TaskForm = ({
           </div>
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
         </div>
-      </div>
-      
-    </Modal>
+              
+          </div>
+        </Modal>
+   
   );
 }
 

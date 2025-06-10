@@ -288,12 +288,12 @@ const Task = () => {
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
             dataLength={taskData?.length}
-            searchPlaceholder="Search by Task ID, Title, Assigned To..."
+            searchPlaceholder="Search by Title..."
             filterIconRef={filterIconRef}
           />
         </div>
       </div>
-      <div className="fixed top-48 xl:top-56 lg:top-56 right-0 left-0 bg-background">
+      <div className="fixed top-48 xl:top-50 lg:top-50 right-0 left-0 bg-background">
           <motion.div className="bg-white">
             <div className="relative w-full">
               {view === 'table' ? (
