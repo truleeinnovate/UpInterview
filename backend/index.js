@@ -901,7 +901,7 @@ app.use("/feeds", historyFeedsRoutes);
 // invoices
 app.use("/invoices", InvoiceRouter);
 
-app.use("/get-invoice-id", InvoiceRouter);
+// app.use("/get-invoice-id", InvoiceRouter);
 
 // payments
 app.use("/payments", PaymentsRoute);

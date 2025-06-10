@@ -79,4 +79,23 @@ const getInvoices = async (req, res) => {
   }
 };
 
-module.exports = { getInvoiceById, getInvoices };
+const getSingleInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoice = await Invoice.findById(id);
+
+    res.status(200).json(invoice);
+  } catch (error) {
+    console.error("Detailed error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = { getInvoiceById, getInvoices, getSingleInvoice };

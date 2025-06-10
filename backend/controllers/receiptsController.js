@@ -2,6 +2,17 @@
 
 const Receipts = require("../models/Receiptmodels");
 
+const getReceiptById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const receipt = await Receipts.findById(id);
+    res.status(200).json(receipt);
+  } catch (error) {
+    console.error("Error fetching receipt by id: ", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const getReceiptsSummary = async (req, res) => {
   try {
     const receipts = await Receipts.find();
@@ -34,4 +45,4 @@ const getReceiptsSummary = async (req, res) => {
   }
 };
 
-module.exports = { getReceiptsSummary };
+module.exports = { getReceiptsSummary, getReceiptById };

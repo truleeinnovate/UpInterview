@@ -2,6 +2,7 @@
 const Payments = require("../models/Payments");
 const mongoose = require("mongoose");
 
+// SUPER ADMIN added by Ashok
 const getPaymentsSummary = async (req, res) => {
   try {
     const payments = await Payments.find();
@@ -53,4 +54,25 @@ const getPaymentById = async (req, res) => {
   }
 };
 
-module.exports = { getPaymentsSummary, getPaymentById };
+// SUPER ADMIN added by Ashok
+const getSinglePaymentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const payment = await Payments.findById(id);
+
+    res.status(200).json(payment);
+  } catch (error) {
+    console.error("Detailed error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = { getPaymentsSummary, getPaymentById, getSinglePaymentById };

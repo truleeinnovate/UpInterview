@@ -41,6 +41,7 @@ function ReceiptsTable({ organizationId }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedReceiptId, setSelectedReceiptId] = useState(null);
   const [receipts, setReceipts] = useState([
     // {
     //   id: "RCP-001",
@@ -272,6 +273,26 @@ function ReceiptsTable({ organizationId }) {
     getReceiptsSummary();
   }, [organizationId]);
 
+  // Get Receipt by ID
+  useEffect(() => {
+    const getPaymentById = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/receipts/${selectedReceiptId}`
+        );
+        setSelectedReceipt(response.data);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (selectedReceiptId) {
+      getPaymentById();
+    }
+  }, [selectedReceiptId]);
+
   // Kanban view setter
   useEffect(() => {
     const handleResize = () => {
@@ -416,26 +437,26 @@ function ReceiptsTable({ organizationId }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => setSelectedReceiptId(row._id),
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -447,7 +468,7 @@ function ReceiptsTable({ organizationId }) {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setSelectedReceiptId(item._id);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -654,12 +675,14 @@ function ReceiptsTable({ organizationId }) {
           </div>
         </main>
       </div>
-      {selectedReceipt && (
-        <ReceiptDetailsModal
-          receipt={selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-        />
-      )}
+      <div>
+        {selectedReceipt && (
+          <ReceiptDetailsModal
+            receipt={selectedReceipt}
+            onClose={() => setSelectedReceipt(null)}
+          />
+        )}
+      </div>
       <Outlet />
     </div>
   );

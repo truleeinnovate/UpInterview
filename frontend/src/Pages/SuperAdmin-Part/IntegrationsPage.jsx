@@ -22,13 +22,14 @@ import {
 import axios from "axios";
 import { config } from "../../config.js";
 
+
 function IntegrationsPage() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  // const [selectedCandidate, setSelectedCandidate] = useState(null);
+  // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  // const [editModeOn, setEditModeOn] = useState(false);
+  // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -352,7 +353,6 @@ function IntegrationsPage() {
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/integration-logs/${selectedLogId}`
         );
-        console.log("SELECTED LOG INT ================", response.data.data);
         setSelectedLog(response.data.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
@@ -774,12 +774,14 @@ function IntegrationsPage() {
         </main>
       </div>
 
-      {selectedLog && (
-        <LogDetailsPopup
-          log={selectedLog}
-          onClose={() => setSelectedLog(null)}
-        />
-      )}
+      <div>
+        {selectedLog && (
+          <LogDetailsPopup
+            log={selectedLog}
+            onClose={() => setSelectedLog(null)}
+          />
+        )}
+      </div>
     </div>
   );
 }

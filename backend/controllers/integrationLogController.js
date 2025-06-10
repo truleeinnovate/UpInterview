@@ -1,10 +1,75 @@
 const IntegrationLog = require("../models/IntegrationLogs");
 
 // Create a new integration log entry
+// exports.createIntegrationLog = async (req, res) => {
+//   try {
+//     const {
+//       logId,
+//       status,
+//       errorCode,
+//       message,
+//       serverName,
+//       severity,
+//       processName,
+//       duration,
+//       requestEndPoint,
+//       requestMethod,
+//       requestBody,
+//       responseStatusCode,
+//       responseError,
+//       responseMessage,
+//       integrationName,
+//       flowType,
+//       dateTime,
+//       responseBody,
+//     } = req.body;
+
+//     const log = new IntegrationLog({
+//       logId,
+//       status,
+//       errorCode,
+//       message,
+//       serverName,
+//       severity,
+//       processName,
+//       duration,
+//       requestEndPoint,
+//       requestMethod,
+//       requestBody,
+//       responseStatusCode,
+//       responseError,
+//       responseMessage,
+//       integrationName,
+//       flowType,
+//       dateTime,
+//       responseBody,
+//     });
+
+//     await log.save();
+
+//     res.status(201).json({
+//       success: true,
+//       data: log,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Error creating integration log",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// SUPER ADMIN added By Ashok
 exports.createIntegrationLog = async (req, res) => {
   try {
+    // Get total count of existing logs
+    const count = await IntegrationLog.countDocuments();
+
+    // Generate logId in the format 00001, 00002, etc.
+    const generatedLogId = "LOG_" + String(count + 1).padStart(5, "0");
+
     const {
-      logId,
       status,
       errorCode,
       message,
@@ -25,7 +90,7 @@ exports.createIntegrationLog = async (req, res) => {
     } = req.body;
 
     const log = new IntegrationLog({
-      logId,
+      logId: generatedLogId,
       status,
       errorCode,
       message,
@@ -123,7 +188,41 @@ exports.getAllIntegrationLogs = async (req, res) => {
   }
 };
 
+// this controller gives log id as LOG_0001, LOG_0002 for testing
+// exports.getAllIntegrationLogs = async (req, res) => {
+//   try {
+//     const logs = await IntegrationLog.find();
+
+//     const data = logs.map((doc, idx) => {
+//       const log = doc.toObject(); // convert Mongoose doc to plain JS
+//       let id = log.logId;
+
+//       if (!/^LOG_\d{5}$/.test(id)) {
+//         const n = parseInt(id, 10);
+//         id = !Number.isNaN(n)
+//           ? `LOG_${String(n).padStart(5, "0")}`
+//           : `LOG_${String(logs.length - idx).padStart(5, "0")}`;
+//       }
+
+//       log.logId = id; // overwrite / add the corrected id
+//       return log;
+//     });
+
+//     res.status(200).json({ success: true, data });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({
+//         success: false,
+//         message: "Error fetching integration logs",
+//         error: error.message,
+//       });
+//   }
+// };
+
 // Get integration log by ID
+
+
 exports.getIntegrationLogById = async (req, res) => {
   try {
     const log = await IntegrationLog.findOne({ logId: req.params.id });

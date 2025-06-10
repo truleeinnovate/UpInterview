@@ -4,11 +4,11 @@ import StatusBadge from "../common/StatusBadge.jsx";
 
 import InvoiceDetailsModal from "./InvoiceDetailsModal";
 
-import Header from "../../Shared/Header/Header.jsx";
+// import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../Loading/Loading.jsx";
+// import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/Shared/Kanban/KanbanView.jsx";
@@ -26,8 +26,8 @@ import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
 
 function InvoicesTable({ organizationId }) {
   const [view, setView] = useState("table");
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectInvoiceView, setSelectInvoiceView] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState();
+  // const [selectInvoiceView, setSelectInvoiceView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -43,16 +43,7 @@ function InvoicesTable({ organizationId }) {
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
 
-  // Kanban view setter
-  useEffect(() => {
-    const handleResize = () => {
-      setView(window.innerWidth < 1024 ? "kanban" : "table");
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [invoices, setInvoices] = useState([
     // {
     //   id: "INV-001",
@@ -390,6 +381,16 @@ function InvoicesTable({ organizationId }) {
     // },
   ]);
 
+  // Kanban view setter
+  useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // filters ----------------------------------------------------------------
   const statusOptions = [
     "paid",
@@ -467,6 +468,26 @@ function InvoicesTable({ organizationId }) {
 
     getInvoices();
   }, [organizationId]);
+
+  // Get invoice by ID
+  useEffect(() => {
+    const getInvoice = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/invoices/${selectedInvoiceId}`
+        );
+        setSelectedInvoice(response.data);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (selectedInvoiceId) {
+      getInvoice();
+    }
+  }, [selectedInvoiceId]);
 
   useEffect(() => {
     if (isTablet) {
@@ -632,26 +653,26 @@ function InvoicesTable({ organizationId }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
+      onClick: (row) => setSelectedInvoiceId(row._id),
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -876,12 +897,14 @@ function InvoicesTable({ organizationId }) {
         </main>
       </div>
 
-      {selectedInvoice && (
-        <InvoiceDetailsModal
-          invoice={selectedInvoice}
-          onClose={() => setSelectedInvoice(null)}
-        />
-      )}
+      <div>
+        {selectedInvoice && (
+          <InvoiceDetailsModal
+            invoice={selectedInvoice}
+            onClose={() => setSelectedInvoice(null)}
+          />
+        )}
+      </div>
 
       {showAddForm && (
         <AddInvoiceForm
@@ -895,6 +918,7 @@ function InvoicesTable({ organizationId }) {
           isEdit={editModeOn}
         />
       )}
+
       <Outlet />
     </div>
   );

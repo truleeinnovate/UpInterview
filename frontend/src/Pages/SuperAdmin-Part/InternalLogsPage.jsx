@@ -610,7 +610,7 @@ function InternalLogsPage() {
   );
 
   return (
-    <div className="space-y-6 min-h-screen">
+    <div className="space-y-6">
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4 mt-4">
           <h1 className="text-2xl font-bold text-custom-blue">Internal Logs</h1>
@@ -690,7 +690,7 @@ function InternalLogsPage() {
                       <KanbanView
                         data={currentFilteredRows.map((log) => ({
                           ...logs,
-                          id: log.id ? log.id : log._id,
+                          id: log.lodId ? log.logId : log._id,
                           title: `${log.id ? log.id : log._id || ""} ${""}`,
                           subtitle:
                             log.CurrentRole || log.CurrentExperience || "N/A",
@@ -770,12 +770,14 @@ function InternalLogsPage() {
         </main>
       </div>
 
-      {selectedLog && (
-        <LogDetailsPopup
-          log={selectedLog}
-          onClose={() => setSelectedLog(null)}
-        />
-      )}
+      <div>
+        {selectedLog && (
+          <LogDetailsPopup
+            log={selectedLog}
+            onClose={() => setSelectedLog(null)}
+          />
+        )}
+      </div>
     </div>
   );
 }

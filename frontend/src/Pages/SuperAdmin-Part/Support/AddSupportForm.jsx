@@ -679,7 +679,7 @@ const AddSupportForm = ({ mode }) => {
         isOpen={true}
         // onRequestClose={onClose}
         className={modalClass}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50"
       >
         <div
           className={classNames("h-full", {

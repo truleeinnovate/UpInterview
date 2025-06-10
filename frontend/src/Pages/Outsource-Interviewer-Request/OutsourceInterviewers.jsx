@@ -1,26 +1,30 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
-import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { BsThreeDotsVertical } from 'react-icons/bs';
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FaSearch,
+  FaFilter,
+  FaChevronDown,
+  FaChevronUp,
+  FaTimes,
+} from "react-icons/fa";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import maleImage from "../Dashboard-Part/Images/man.png";
-import { ReactComponent as FaList } from '../../icons/FaList.svg';
-import axios from 'axios';
-import { ReactComponent as IoMdSearch } from '../../icons/IoMdSearch.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as FiFilter } from '../../icons/FiFilter.svg';
+import { ReactComponent as FaList } from "../../icons/FaList.svg";
+import axios from "axios";
+import { ReactComponent as IoMdSearch } from "../../icons/IoMdSearch.svg";
+import { ReactComponent as TbLayoutGridRemove } from "../../icons/TbLayoutGridRemove.svg";
+import { ReactComponent as FiFilter } from "../../icons/FiFilter.svg";
 import Tooltip from "@mui/material/Tooltip";
-import InterviewerDetails from './InterviewerDetails'
-import { ReactComponent as LuFilterX } from '../../icons/LuFilterX.svg';
+import InterviewerDetails from "./InterviewerDetails";
+import { ReactComponent as LuFilterX } from "../../icons/LuFilterX.svg";
 import { useCustomContext } from "../../Context/Contextfetch.js";
-import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
-import { ReactComponent as CgInfo } from '../../icons/CgInfo.svg';
+import { ReactComponent as MdKeyboardArrowUp } from "../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArrowDown.svg";
+import { ReactComponent as CgInfo } from "../../icons/CgInfo.svg";
 
 const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
-  const {
-    skills,
-  } = useCustomContext();
+  const { skills } = useCustomContext();
   const [isTechDropdownOpen, setTechDropdownOpen] = useState(false);
   const [isStatusMainChecked, setStatusMainChecked] = useState(false);
   const [isTechMainChecked, setTechMainChecked] = useState(false);
@@ -30,9 +34,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
     setSelectedTechOptions([]);
     setStatusMainChecked(false);
     setTechMainChecked(false);
-    setMinExperience('');
-    setMaxExperience('');
-    onFilterChange({ tech: [], experience: { min: '', max: '' } });
+    setMinExperience("");
+    setMaxExperience("");
+    onFilterChange({ tech: [], experience: { min: "", max: "" } });
   };
   useEffect(() => {
     if (!isTechMainChecked) setSelectedTechOptions([]);
@@ -41,30 +45,31 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   const handleTechMainToggle = () => {
     const newTechMainChecked = !isTechMainChecked;
     setTechMainChecked(newTechMainChecked);
-    const newSelectedTech = newTechMainChecked ? skills.map(s => s.SkillName) : [];
+    const newSelectedTech = newTechMainChecked
+      ? skills.map((s) => s.SkillName)
+      : [];
     setSelectedTechOptions(newSelectedTech);
-
   };
 
   const handleTechOptionToggle = (option) => {
     const selectedIndex = selectedTechOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedTechOptions, option]
-      : selectedTechOptions.filter((_, index) => index !== selectedIndex);
+    const updatedOptions =
+      selectedIndex === -1
+        ? [...selectedTechOptions, option]
+        : selectedTechOptions.filter((_, index) => index !== selectedIndex);
 
     setSelectedTechOptions(updatedOptions);
   };
-  const [minExperience, setMinExperience] = useState('');
-  const [maxExperience, setMaxExperience] = useState('');
+  const [minExperience, setMinExperience] = useState("");
+  const [maxExperience, setMaxExperience] = useState("");
 
   const handleExperienceChange = (e, type) => {
     const value = Math.max(0, Math.min(15, e.target.value));
-    if (type === 'min') {
+    if (type === "min") {
       setMinExperience(value);
     } else {
       setMaxExperience(value);
     }
-
   };
   const Apply = () => {
     onFilterChange({
@@ -74,7 +79,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
     if (window.innerWidth < 1023) {
       closeOffcanvas();
     }
-  }
+  };
   return (
     <div
       className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
@@ -92,7 +97,10 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
           <div>
             {(isAnyOptionSelected || minExperience || maxExperience) && (
               <div>
-                <button onClick={handleUnselectAll} className="font-bold text-md">
+                <button
+                  onClick={handleUnselectAll}
+                  className="font-bold text-md"
+                >
                   Clear Filters
                 </button>
               </div>
@@ -134,7 +142,9 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
                     checked={selectedTechOptions.includes(option.SkillName)}
                     onChange={() => handleTechOptionToggle(option.SkillName)}
                   />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.SkillName}</span>
+                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">
+                    {option.SkillName}
+                  </span>
                 </label>
               ))}
             </div>
@@ -154,7 +164,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
                 value={minExperience}
                 min="0"
                 max="15"
-                onChange={(e) => handleExperienceChange(e, 'min')}
+                onChange={(e) => handleExperienceChange(e, "min")}
                 className="border-b form-input w-20"
               />
               <span className="mx-3">to</span>
@@ -164,7 +174,7 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
                 value={maxExperience}
                 min="1"
                 max="15"
-                onChange={(e) => handleExperienceChange(e, 'max')}
+                onChange={(e) => handleExperienceChange(e, "max")}
                 className="border-b form-input w-20"
               />
             </div>
@@ -192,13 +202,11 @@ const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
   );
 };
 
-const OutsourceInterviewers = () => {
-  const {
-    Outsourceinterviewers,
-    loading,
-  } = useCustomContext();
 
-  const [searchTerm] = useState('');
+const OutsourceInterviewers = () => {
+  const { Outsourceinterviewers, loading } = useCustomContext();
+
+  const [searchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
   const [activeArrow, setActiveArrow] = useState(null);
@@ -206,8 +214,8 @@ const OutsourceInterviewers = () => {
   const [filters] = useState({
     skills: [],
     experience: [],
-    'Price/Hour': [],
-    status: []
+    "Price/Hour": [],
+    status: [],
   });
 
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
@@ -216,40 +224,52 @@ const OutsourceInterviewers = () => {
     setSelectedInterviewer(interviewer);
   };
 
-  const filteredInterviewers = Outsourceinterviewers.filter(interviewer => {
-    const matchesSearch = (interviewer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredInterviewers = Outsourceinterviewers.filter((interviewer) => {
+    const matchesSearch = (interviewer?.name || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
 
     // Apply filters
-    const matchesSkills = filters.skills.length === 0 ||
-      filters.skills.includes(interviewer?.skills || '');
+    const matchesSkills =
+      filters.skills.length === 0 ||
+      filters.skills.includes(interviewer?.skills || "");
 
-    const experience = interviewer?.experience || '0 Year';
-    const matchesExperience = filters.experience.length === 0 ||
-      filters.experience.some(range => {
-        const years = parseInt(experience.split(' ')[0], 10) || 0;
-        if (range === '0 Year') return years === 0;
-        if (range === '10+ Years') return years >= 10;
-        const rangeYears = parseInt(range.split(' ')[0], 10);
+    const experience = interviewer?.experience || "0 Year";
+    const matchesExperience =
+      filters.experience.length === 0 ||
+      filters.experience.some((range) => {
+        const years = parseInt(experience.split(" ")[0], 10) || 0;
+        if (range === "0 Year") return years === 0;
+        if (range === "10+ Years") return years >= 10;
+        const rangeYears = parseInt(range.split(" ")[0], 10);
         return years === rangeYears;
       });
 
     // Price per hour filter
-    const price = parseInt(interviewer?.pricePerHour?.replace(/\D/g, '') || 0);
-    const matchesPricePerHour = filters['Price/Hour'].length === 0 ||
-      filters['Price/Hour'].some(range => {
-        if (range === '$0-$20') return price <= 20;
-        if (range === '$21-$40') return price > 20 && price <= 40;
-        if (range === '$41-$60') return price > 40 && price <= 60;
-        if (range === '$61-$80') return price > 60 && price <= 80;
-        if (range === '$81-$100') return price > 80 && price <= 100;
+    const price = parseInt(interviewer?.pricePerHour?.replace(/\D/g, "") || 0);
+    const matchesPricePerHour =
+      filters["Price/Hour"].length === 0 ||
+      filters["Price/Hour"].some((range) => {
+        if (range === "$0-$20") return price <= 20;
+        if (range === "$21-$40") return price > 20 && price <= 40;
+        if (range === "$41-$60") return price > 40 && price <= 60;
+        if (range === "$61-$80") return price > 60 && price <= 80;
+        if (range === "$81-$100") return price > 80 && price <= 100;
         return price > 100;
       });
 
     // Status filter
-    const matchesStatus = filters.status.length === 0 ||
-      filters.status.includes(interviewer?.statusText || '');
+    const matchesStatus =
+      filters.status.length === 0 ||
+      filters.status.includes(interviewer?.statusText || "");
 
-    return matchesSearch && matchesSkills && matchesExperience && matchesPricePerHour && matchesStatus;
+    return (
+      matchesSearch &&
+      matchesSkills &&
+      matchesExperience &&
+      matchesPricePerHour &&
+      matchesStatus
+    );
   });
 
   const [tableVisible] = useState(true);
@@ -257,51 +277,62 @@ const OutsourceInterviewers = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("list");
+  
   const FilteredData = () => {
     if (!Array.isArray(Outsourceinterviewers)) {
       console.log("Interviewers is not an array", Outsourceinterviewers);
       return [];
     }
+
     return Outsourceinterviewers.filter((user) => {
       const contact = user.contactId || {};
-      const fieldsToSearch = [
-        contact.Name,
-      ].filter((field) => field !== null && field !== undefined);
+      const fieldsToSearch = [contact.Name].filter(
+        (field) => field !== null && field !== undefined
+      );
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
       return matchesSearchQuery;
     });
   };
+
+  // Pagination
   const totalPages = Math.ceil(filteredInterviewers.length / rowsPerPage);
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+
   const handleListViewClick = () => {
     setViewMode("list");
   };
+
   const handleKanbanViewClick = () => {
     setViewMode("kanban");
   };
+
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(0);
   };
+
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
       setActiveArrow("prev");
     }
   };
+
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
       setCurrentPage(currentPage + 1);
       setActiveArrow("next");
     }
   };
+
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
+  
   const handleFilterIconClick = () => {
     if (Outsourceinterviewers.length !== 0) {
       setIsFilterActive((prev) => !prev);
@@ -316,7 +347,9 @@ const OutsourceInterviewers = () => {
           <div className="fixed top-16 sm:top-20 md:top-24 left-0 right-0">
             <div className="flex justify-between p-4">
               <div>
-                <span className="text-lg font-semibold">Outsource Interviewers</span>
+                <span className="text-lg font-semibold text-custom-blue">
+                  Outsource Interviewers
+                </span>
               </div>
             </div>
           </div>
@@ -326,16 +359,18 @@ const OutsourceInterviewers = () => {
                 <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
                   <span onClick={handleListViewClick}>
                     <FaList
-                      className={`text-xl mr-4 ${viewMode === "list" ? "text-custom-blue" : ""
-                        }`}
+                      className={`text-xl mr-4 ${
+                        viewMode === "list" ? "text-custom-blue" : ""
+                      }`}
                     />
                   </span>
                 </Tooltip>
                 <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
                   <span onClick={handleKanbanViewClick}>
                     <TbLayoutGridRemove
-                      className={`text-xl ${viewMode === "kanban" ? "text-custom-blue" : ""
-                        }`}
+                      className={`text-xl ${
+                        viewMode === "kanban" ? "text-custom-blue" : ""
+                      }`}
                     />
                   </span>
                 </Tooltip>
@@ -363,10 +398,16 @@ const OutsourceInterviewers = () => {
                   </span>
                 </div>
                 <div className="flex">
-                  <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+                  <Tooltip
+                    title="Previous"
+                    enterDelay={300}
+                    leaveDelay={100}
+                    arrow
+                  >
                     <span
-                      className={`border p-2 mr-2 text-xl sm:text-md md:text-md  rounded-md ${currentPage === 0 ? " cursor-not-allowed" : ""
-                        } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
+                      className={`border p-2 mr-2 text-xl sm:text-md md:text-md  rounded-md ${
+                        currentPage === 0 ? " cursor-not-allowed" : ""
+                      } ${activeArrow === "prev" ? "text-blue-500" : ""}`}
                       onClick={prevPage}
                     >
                       <IoIosArrowBack className="text-custom-blue" />
@@ -375,22 +416,30 @@ const OutsourceInterviewers = () => {
 
                   <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
                     <span
-                      className={`border p-2 text-xl sm:text-md md:text-md  rounded-md ${currentPage === totalPages - 1 ? " cursor-not-allowed" : ""
-                        } ${activeArrow === "next" ? "text-blue-500" : ""}`}
+                      className={`border p-2 text-xl sm:text-md md:text-md  rounded-md ${
+                        currentPage === totalPages - 1
+                          ? " cursor-not-allowed"
+                          : ""
+                      } ${activeArrow === "next" ? "text-blue-500" : ""}`}
                       onClick={nextPage}
                     >
                       <IoIosArrowForward className="text-custom-blue" />
-
                     </span>
                   </Tooltip>
                 </div>
                 <div className="ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                  <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+                  <Tooltip
+                    title="Filter"
+                    enterDelay={300}
+                    leaveDelay={100}
+                    arrow
+                  >
                     <span
                       onClick={handleFilterIconClick}
                       style={{
                         opacity: Outsourceinterviewers.length === 0 ? 0.2 : 1,
-                        pointerEvents: Outsourceinterviewers.length === 0 ? "none" : "auto",
+                        pointerEvents:
+                          Outsourceinterviewers.length === 0 ? "none" : "auto",
                       }}
                     >
                       {isFilterActive ? (
@@ -442,7 +491,7 @@ const OutsourceInterviewers = () => {
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className='bg-white divide-y divide-gray-200'>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {loading ? (
                                 <tr>
                                   <td colSpan="7" className="py-28 text-center">
@@ -464,8 +513,8 @@ const OutsourceInterviewers = () => {
                                         <CgInfo />
                                       </p>
                                       <p className="text-center text-lg font-normal">
-                                        You don't have interviewer yet. Create new
-                                        interviewer.
+                                        You don't have interviewer yet. Create
+                                        new interviewer.
                                       </p>
                                     </div>
                                   </td>
@@ -480,9 +529,17 @@ const OutsourceInterviewers = () => {
                                 </tr>
                               ) : (
                                 currentFilteredRows.map((interviewer) => (
-                                  <tr key={interviewer._id} className="bg-white border-b cursor-pointer text-xs">
+                                  <tr
+                                    key={interviewer._id}
+                                    className="bg-white border-b cursor-pointer text-xs"
+                                  >
                                     <td className="py-2 px-6">
-                                      <div className="flex items-center gap-3" onClick={() => handleNameClick(interviewer)}>
+                                      <div
+                                        className="flex items-center gap-3"
+                                        onClick={() =>
+                                          handleNameClick(interviewer)
+                                        }
+                                      >
                                         <img
                                           src={interviewer.image || maleImage}
                                           alt={interviewer.Name}
@@ -499,12 +556,24 @@ const OutsourceInterviewers = () => {
 
                                     {/* Skills */}
                                     <td className="py-2 px-6">
-                                      {interviewer?.contactId?.Skills?.length ? interviewer?.contactId?.Skills.join(", ") : "N/A"}
+                                      {interviewer?.contactId?.Skills?.length
+                                        ? interviewer?.contactId?.Skills.join(
+                                            ", "
+                                          )
+                                        : "N/A"}
                                     </td>
-                                    <td className="py-2 px-6">{interviewer?.contactId?.Experience}</td>
-                                    <td className="py-2 px-6">{interviewer.rating}</td>
-                                    <td className="py-2 px-6">{interviewer.pricePerHour}</td>
-                                    <td className="py-2 px-6">{interviewer.status}</td>
+                                    <td className="py-2 px-6">
+                                      {interviewer?.contactId?.Experience}
+                                    </td>
+                                    <td className="py-2 px-6">
+                                      {interviewer.rating}
+                                    </td>
+                                    <td className="py-2 px-6">
+                                      {interviewer.pricePerHour}
+                                    </td>
+                                    <td className="py-2 px-6">
+                                      {interviewer.status}
+                                    </td>
                                     <td className="py-2 px-6">
                                       <button className="text-gray-700 hover:text-gray-600">
                                         <BsThreeDotsVertical />
@@ -513,7 +582,6 @@ const OutsourceInterviewers = () => {
                                   </tr>
                                 ))
                               )}
-
                             </tbody>
                           </table>
                         </div>
@@ -527,16 +595,25 @@ const OutsourceInterviewers = () => {
                 ) : (
                   // kanban view
                   <div className="flex">
-                    <div className={`flex-grow transition-all duration-300 ${isMenuOpen ? 'lg:mr-[18rem]' : 'mr-0'}`}>
+                    <div
+                      className={`flex-grow transition-all duration-300 ${
+                        isMenuOpen ? "lg:mr-[18rem]" : "mr-0"
+                      }`}
+                    >
                       <div className="h-[calc(100vh-200px)] overflow-y-auto pb-10">
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 px-4">
                           {loading ? (
                             <div className="py-10 text-center">Loading...</div>
                           ) : currentFilteredRows.length === 0 ? (
-                            <div className="col-span-3 py-10 text-center">No data found.</div>
+                            <div className="col-span-3 py-10 text-center">
+                              No data found.
+                            </div>
                           ) : (
                             currentFilteredRows.map((interviewer) => (
-                              <div key={interviewer._id} className="bg-white border shadow-md p-2 rounded">
+                              <div
+                                key={interviewer._id}
+                                className="bg-white border shadow-md p-2 rounded"
+                              >
                                 <div className="relative">
                                   <div className="float-right">
                                     <button className="text-gray-700 hover:text-gray-600">
@@ -555,16 +632,38 @@ const OutsourceInterviewers = () => {
                                       {interviewer?.contactId?.Name}
                                     </div>
                                     <div className="text-xs grid grid-cols-2 gap-2">
-                                      <div className="text-gray-400">Skills</div>
-                                      <div className='ml-5'>{interviewer?.contactId?.Skills?.join(", ") || "N/A"}</div>
-                                      <div className="text-gray-400">Experience</div>
-                                      <div className='ml-5'>{interviewer?.contactId?.Experience}</div>
-                                      <div className="text-gray-400">Rating</div>
-                                      <div className='ml-5'>{interviewer.rating}</div>
-                                      <div className="text-gray-400">Price/Hour</div>
-                                      <div className='ml-5'>{interviewer.pricePerHour}</div>
-                                      <div className="text-gray-400">Status</div>
-                                      <div className='ml-5'>{interviewer.status}</div>
+                                      <div className="text-gray-400">
+                                        Skills
+                                      </div>
+                                      <div className="ml-5">
+                                        {interviewer?.contactId?.Skills?.join(
+                                          ", "
+                                        ) || "N/A"}
+                                      </div>
+                                      <div className="text-gray-400">
+                                        Experience
+                                      </div>
+                                      <div className="ml-5">
+                                        {interviewer?.contactId?.Experience}
+                                      </div>
+                                      <div className="text-gray-400">
+                                        Rating
+                                      </div>
+                                      <div className="ml-5">
+                                        {interviewer.rating}
+                                      </div>
+                                      <div className="text-gray-400">
+                                        Price/Hour
+                                      </div>
+                                      <div className="ml-5">
+                                        {interviewer.pricePerHour}
+                                      </div>
+                                      <div className="text-gray-400">
+                                        Status
+                                      </div>
+                                      <div className="ml-5">
+                                        {interviewer.status}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -574,7 +673,10 @@ const OutsourceInterviewers = () => {
                         </div>
                       </div>
                     </div>
-                    <OffcanvasMenu isOpen={isMenuOpen} closeOffcanvas={handleFilterIconClick} />
+                    <OffcanvasMenu
+                      isOpen={isMenuOpen}
+                      closeOffcanvas={handleFilterIconClick}
+                    />
                   </div>
                 )}
               </div>

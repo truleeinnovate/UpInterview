@@ -1,13 +1,11 @@
 import { useState } from "react";
 import {
-  AiOutlineClose,
   AiOutlineDownload,
   AiOutlineMail,
   AiOutlineEdit,
-  AiOutlineExpandAlt,
-  AiOutlineShrink,
 } from "react-icons/ai";
 import StatusBadge from "../common/StatusBadge";
+import { Minimize, Expand, X } from "lucide-react";
 
 function InvoiceDetailsModal({ invoice, onClose }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -24,7 +22,7 @@ function InvoiceDetailsModal({ invoice, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
+    <div className="fixed inset-0 bg-black backdrop-blur-sm bg-opacity-50 flex justify-end z-50">
       <div
         className={`bg-white h-screen overflow-y-auto transition-all duration-300 ${
           isExpanded ? "w-full" : "w-1/2"
@@ -41,19 +39,15 @@ function InvoiceDetailsModal({ invoice, onClose }) {
             <div className="flex space-x-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-white/50"
+                className="p-2 text-gray-500 hover:text-gray-500 rounded-full hover:bg-white/50"
               >
-                {isExpanded ? (
-                  <AiOutlineShrink size={20} />
-                ) : (
-                  <AiOutlineExpandAlt size={20} />
-                )}
+                {isExpanded ? <Minimize size={20} /> : <Expand size={20} />}
               </button>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-white/50"
+                className="p-2 text-gray-500 hover:text-gray-500 rounded-full hover:bg-white/50"
               >
-                <AiOutlineClose size={20} />
+                <X size={20} />
               </button>
             </div>
           </div>
@@ -70,7 +64,7 @@ function InvoiceDetailsModal({ invoice, onClose }) {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Type</span>
                     <span className="capitalize">
-                      {invoice.type.replace("_", " ")}
+                      {invoice?.type?.replace("_", " ")}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -85,7 +79,7 @@ function InvoiceDetailsModal({ invoice, onClose }) {
                           ? "error"
                           : "warning"
                       }
-                      text={invoice.status.replace("_", " ").toUpperCase()}
+                      text={invoice?.status?.replace("_", " ").toUpperCase()}
                     />
                   </div>
                   <div className="flex justify-between">
@@ -171,7 +165,7 @@ function InvoiceDetailsModal({ invoice, onClose }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {invoice.lineItems.map((item, index) => (
+                  {invoice?.lineItems?.map((item, index) => (
                     <tr key={index}>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {item.description}

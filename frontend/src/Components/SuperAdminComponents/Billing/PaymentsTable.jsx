@@ -23,11 +23,8 @@ import { config } from "../../../config.js";
 
 function PaymentsTable({ organizationId }) {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -40,7 +37,9 @@ function PaymentsTable({ organizationId }) {
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
 
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
+
   const [payments, setPayments] = useState([
     {
       id: "PAY-001",
@@ -299,6 +298,26 @@ function PaymentsTable({ organizationId }) {
     getPaymentsSummary();
   }, [organizationId]);
 
+  // Get payment by ID
+  useEffect(() => {
+    const getPaymentById = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/payments/${selectedPaymentId}`
+        );
+        setSelectedPayment(response.data);
+      } catch (error) {
+        console.error("Error fetching internal logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (selectedPaymentId) {
+      getPaymentById();
+    }
+  }, [selectedPaymentId]);
+
   // Kanban view setter
   useEffect(() => {
     const handleResize = () => {
@@ -450,26 +469,26 @@ function PaymentsTable({ organizationId }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
+      onClick: (row) => setSelectedPaymentId(row._id),
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -481,7 +500,7 @@ function PaymentsTable({ organizationId }) {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setSelectedPaymentId(item._id);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -682,12 +701,14 @@ function PaymentsTable({ organizationId }) {
         </main>
       </div>
 
-      {selectedPayment && (
-        <PaymentDetailsModal
-          payment={selectedPayment}
-          onClose={() => setSelectedPayment(null)}
-        />
-      )}
+      <div>
+        {selectedPayment && (
+          <PaymentDetailsModal
+            payment={selectedPayment}
+            onClose={() => setSelectedPayment(null)}
+          />
+        )}
+      </div>
       <Outlet />
     </div>
   );

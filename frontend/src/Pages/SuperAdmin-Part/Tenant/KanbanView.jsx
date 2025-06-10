@@ -111,12 +111,13 @@ const KanbanView = ({ userRole, currentTenants, tenants, currentUserId }) => {
                       }
                     }}
                   >
-                    {tenant.firstName}
+                    {tenant.username}
                   </h4>
                   <p className="text-sm text-gray-500">
                     {formatDate(tenant.updatedAt || "N/A")}
                   </p>
                 </div>
+
                 {/* Actions */}
                 <div className="flex gap-1 flex-shrink-0">
                   {hasActionAccess(tenant) && (
@@ -138,12 +139,9 @@ const KanbanView = ({ userRole, currentTenants, tenants, currentUserId }) => {
                       {userRole === "Admin" && (
                         <button
                           onClick={() =>
-                            navigate(
-                              `edit/${tenant._id}`,
-                              {
-                                state: { ticketData: tenant },
-                              }
-                            )
+                            navigate(`edit/${tenant._id}`, {
+                              state: { ticketData: tenant },
+                            })
                           }
                           title="Edit Ticket"
                           className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
@@ -155,21 +153,39 @@ const KanbanView = ({ userRole, currentTenants, tenants, currentUserId }) => {
                   )}
                 </div>
               </div>
+
               <div className="mt-auto space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5 text-gray-600">
-                    <span className="text-gray-500">Email</span>
-                    <span className="truncate">{tenant.Email || "N/A"}</span>
+                <div className="">
+                  <div className="grid grid-cols-2 items-center text-gray-600">
+                    <span className="text-gray-500">First Name</span>
+                    <span className="truncate font-semibold">
+                      {tenant.firstName || "N/A"}
+                    </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5">
+                <div className="">
+                  <div className="grid grid-cols-2 items-center text-gray-600">
+                    <span className="text-gray-500">Last Name</span>
+                    <span className="truncate font-semibold">
+                      {tenant.lastName || "N/A"}
+                    </span>
+                  </div>
+                </div>
+                <div className="">
+                  <div className="grid grid-cols-2 items-center text-gray-600">
+                    <span className="text-gray-500">Email</span>
+                    <span className="truncate font-semibold">
+                      {tenant.Email || "N/A"}
+                    </span>
+                  </div>
+                </div>
+                <div className="">
+                  <div className="grid grid-cols-2 items-center flex-end">
+                    <span className="text-gray-500 font-semibold">Country</span>
                     <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                        tenant.status
-                      )}`}
+                      className={`py-1 inline-flex text-xs font-semibold rounded-full`}
                     >
-                      {tenant.status || "N/A"}
+                      {tenant.country || "N/A"}
                     </span>
                   </div>
                 </div>
