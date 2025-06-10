@@ -50,8 +50,16 @@ const getErrorMessage = (field, value) => {
       newErrors.skills = getErrorMessage("skills", entries.length);
       formIsValid = false;
     }
-    else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
-      newErrors.skills = "All skills must have a value in the skill, experience and expertise fields";
+    else if (entries.some((entry) => !entry.skill)) {
+      newErrors.skills = "skills must have a value in the skill fields";
+      formIsValid = false;
+    }
+    else if (entries.some((entry) => !entry.experience )) {
+      newErrors.skills = "experience must have a value in the experience fields";
+      formIsValid = false;
+    }
+    else if (entries.some((entry) => !entry.expertise )) {
+      newErrors.skills = "expertise must have a value in the expertise fields";
       formIsValid = false;
     }
   

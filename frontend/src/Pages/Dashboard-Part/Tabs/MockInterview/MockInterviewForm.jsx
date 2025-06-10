@@ -66,6 +66,7 @@ const MockSchedulelater = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+
   const [formData, setFormData] = useState({
     skills: [],
     candidateName: "",
@@ -180,6 +181,7 @@ const MockSchedulelater = () => {
 
       if (MockEditData) {
         setmockEdit(true)
+        console.log("MockEditData MockEditData", MockEditData.skills)
         setFormData({
           skills: MockEditData.skills || [],
           candidateName: MockEditData.candidateName || "",
