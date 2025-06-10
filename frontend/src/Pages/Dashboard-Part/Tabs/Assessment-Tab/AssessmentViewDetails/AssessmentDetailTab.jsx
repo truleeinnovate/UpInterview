@@ -1,23 +1,30 @@
 // src/components/DetailsTab.jsx
 import { format } from 'date-fns';
+import { usePositions } from '../../../../../apiHooks/usePositions';
+
+
 
 function DetailsTab({ assessment, assessmentQuestions }) {
+  const { positionData } = usePositions();
+
+  const matchedPosition = positionData.find((pos) => pos._id === assessment.Position);
+
   if (!assessment) return <div>Loading assessment details...</div>;
 
   const isEachSection = assessment.passScoreBy === 'Each Section';
   const scoringData = isEachSection
     ? assessmentQuestions.sections?.map((section, idx) => ({
-        sectionName: `Section ${idx + 1}: ${section.sectionName}`,
-        totalScore: section.totalScore || '-',
-        passScore: section.passScore || '-',
-      })) || []
+      sectionName: `Section ${idx + 1}: ${section.sectionName}`,
+      totalScore: section.totalScore || '-',
+      passScore: section.passScore || '-',
+    })) || []
     : [
-        {
-          sectionName: 'Overall',
-          totalScore: assessment.totalScore || '-',
-          passScore: assessment.passScore || '-',
-        },
-      ];
+      {
+        sectionName: 'Overall',
+        totalScore: assessment.totalScore || '-',
+        passScore: assessment.passScore || '-',
+      },
+    ];
 
   return (
     <div className="space-y-6">
@@ -27,7 +34,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
           <dl className="space-y-2">
             <div>
               <dt className="text-sm font-medium text-gray-500">Position</dt>
-              <dd className="text-sm text-gray-900">{assessment.Position}</dd>
+             <dd className="text-sm text-gray-900">{matchedPosition?.title || '-'}</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Duration</dt>

@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import AssessmentDetails from './AssessmentType';
 import TechnicalType from './TechnicalType';
 import Cookies from 'js-cookie';
-import { format } from 'date-fns';
 import { validateForm, } from "../../../../utils/PositionValidation.js";
 import { ChevronDown, Search } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -245,7 +244,7 @@ const CustomDropdown = ({
 // };
 
 const PositionForm = ({ mode }) => {
-  const { positionData, isLoading, isQueryLoading, isMutationLoading, isError, error, addOrUpdatePosition } = usePositions();
+  const { positionData, isMutationLoading, addOrUpdatePosition } = usePositions();
 
   const { templatesData } = useInterviewTemplates();
     const {
@@ -256,16 +255,10 @@ const PositionForm = ({ mode }) => {
 
   const { id, } = useParams();
   const location = useLocation();
-  // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
-  console.log('User info:', { userId, orgId });
-
-  // Get the previous path from navigation state
   const fromPath = location.state?.from || '/position';
-
-  // position details states
 
 
 
@@ -977,6 +970,9 @@ const PositionForm = ({ mode }) => {
                           options={companies}
                           onChange={(e) => {
                             setFormData({ ...formData, companyName: e.target.value });
+                            if (errors.companyname) {
+                              setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }));
+                            }
                           }}
                           error={errors.companyname}
                           disabledError={true}
