@@ -224,13 +224,214 @@ const MyQuestionsList = ({
     setShowNewCandidateContent(false);
   };
 
-  const onClickAddButton = async (question, listName, idx) => {
-    // ... (unchanged, keep existing implementation)
+
+   //    useEffect(() => {
+  //   if (removedQuestionIds && removedQuestionIds.length > 0) {
+  //     // Update the local state to mark these questions as not added
+  //     removedQuestionIds.forEach(questionId => {
+  //       setMyQuestionsList(prev => removeQuestionFromChild(questionId, prev));
+  //     });
+  //   }
+  // }, [removedQuestionIds, setMyQuestionsList]);
+
+  // useEffect(() => {
+  //   if (removedQuestionIds && removedQuestionIds.length > 0) {
+  //     setMyQuestionsList(prev => {
+  //       let updatedList = { ...prev };
+  //       removedQuestionIds.forEach(questionId => {
+  //         updatedList = removeQuestionFromChild(questionId, updatedList);
+  //       });
+  //       return updatedList;
+  //     });
+      // const requiredArray = myQuestionsList;
+      // console.log("myQuestionsList", requiredArray);
+
+      // const requiredObj = requiredArray.map((item) =>
+      //   item._id === question._id ? { ...item, isAdded: false } : item
+      // );
+      //     setMyQuestionsList((prev) => ({
+      //   ...prev,
+      //   [listName]: requiredObj,
+      // }));
+    // }
+  // }, [removedQuestionIds, setMyQuestionsList]);
+
+  // const onClickAddButton = async (question, listName, idx) => {
+  //   // ... (unchanged, keep existing implementation)
+  // };
+
+     const onClickAddButton = async (question, listName, indx) => {
+    console.log("question", question);
+    console.log("type", type)
+    if (type === "assessment") {
+      const isDuplicate = addedSections.some(section =>
+        section.Questions.some(q => q.questionId === question._id)
+      );
+
+      if (isDuplicate) {
+        toast.error('This question has already been added to the assessment');
+        return;
+      }
+
+
+      if (checkedCount >= questionsLimit) {
+        toast.error(`You've reached the maximum limit of ${questionsLimit} questions`);
+        return;
+      }
+      if (question) {
+        // Prepare the question data according to your schema
+        const questionToAdd = {
+          questionId: question._id,
+          source: "system", // or "custom"
+          snapshot: {
+            autoAssessment: question.autoAssessment,
+            correctAnswer: question.correctAnswer,
+            difficultyLevel: question.difficultyLevel,
+            hints: question.hints,
+            isActive: question.isActive,
+            isAdded: question.isAdded,
+            isAutoAssessment: question.isAutoAssessment,
+            isInterviewQuestionOnly: question.isInterviewQuestionOnly,
+            options: question.options,
+            programming: question.programming,
+            questionNo: question.questionNo,
+            questionText: question.questionText,
+            questionType: question.questionType,
+            skill: question.skill,
+            tags: question.tags,
+            technology: question.technology,
+          },
+          order: question.order || 0,
+          customizations: null
+        };
+
+        updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
+        toast.success('Question added successfully!');
+
+        // 4. Show remaining questions count
+        const remaining = questionsLimit - (checkedCount + 1);
+        if (remaining > 0) {
+          toast.info(`${remaining} questions remaining to reach the limit`);
+        } else {
+          toast.success('You have reached the required number of questions!');
+        }
+      }
+    } else {
+
+      try {
+
+        console.log("question", question);
+
+        const questionToAdd = {
+          questionId: question._id,
+          source: "system",
+          snapshot: question,
+          order: "",
+          customizations: "",
+          // mandatory: mandatoryStatus[item._id] ? "true" : "false",
+        };
+
+        console.log("questionToAdd", questionToAdd);
+
+        if (onAddQuestion) {
+          onAddQuestion(questionToAdd,); // Pass the question and index to the parent
+        }
+
+        const requiredArray = myQuestionsList[listName];
+        const requiredObj = requiredArray.map((item, index) =>
+          index === indx ? { ...item, isAdded: true } : item
+        );
+        // setMyQuestionsList((prev) => ({
+        //   ...prev,
+        //   [listName]: requiredObj,
+        // }));
+
+
+        toast.success("Question added successfully");
+        //   }
+      } catch (error) {
+        toast.error("Failed to add question");
+        console.error("Error adding question:", error);
+      }
+
+
+
+    }
+    // else if (section === "interviewSection") {
+    //   const requiredArray = myQuestionsList[listName];
+    //   const requiredObj = requiredArray.map((item, index) =>
+    //     index === indx ? { ...item, isAdded: true } : item
+    //   );
+    //   setMyQuestionsList((prev) => ({
+    //     ...prev,
+    //     [listName]: requiredObj,
+    //   }));
+
+    //   const url = `${config.REACT_APP_API_URL}/interview-questions/add-question`;
+
+    //   const questionToAdd = {
+    //     // id: interviewerSectionData.length + 1,
+    //     tenantId: "tenantId1",
+    //     ownerId: "ownerId1",
+    //     questionId: question._id,
+    //     source: "system",
+    //     addedBy: "interviewer",
+    //     snapshot: {
+    //       questionText: question.questionText,
+    //       correctAnswer: question.correctAnswer,
+    //       options: question.options,
+    //       skillTags: question.skill,
+    //     },
+    //   };
+    //   const response = await axios.post(url, questionToAdd);
+    //   if (response.data.success) {
+    //     getInterviewerQuestions();
+    //   }
+    //   console.log("response from myquestions list question ", response);
+    // }
   };
 
-  const onClickRemoveQuestion = async (question, listName, idx) => {
-    // ... (unchanged, keep existing implementation)
+  // const onClickRemoveQuestion = async (question, listName, idx) => {
+  //   // ... (unchanged, keep existing implementation)
+  // };
+
+
+    const onClickRemoveQuestion = async (question, listName, indx) => {
+
+    if (type === 'interviewerSection') {
+      if (handleRemoveQuestion) {
+        handleRemoveQuestion(question._id)
+
+      }
+      const requiredArray = myQuestionsList[listName];
+      const requiredObj = requiredArray.map((item) =>
+        item._id === question._id ? { ...item, isAdded: false } : item
+      );
+      // setMyQuestionsList((prev) => ({
+      //   ...prev,
+      //   [listName]: requiredObj,
+      // }));
+
+      toast.error("Question removed successfully!");
+    } 
+    
+    // else {
+
+    //   try {
+    //     const url = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+    //     const response = await axios.delete(url);
+    //     // alert(response.data.message);
+    //     toast.error("Question removed successfully!");
+    //     // getInterviewerQuestions()
+    //     const addedQuestionUrl = `${config.REACT_APP_API_URL}/interview-questions/question/${question._id}`;
+    //     const response2 = await axios.get(addedQuestionUrl);
+    //     setInterviewerSectionData((prev) => [...prev, response2.data.question]);
+    //   } catch (error) {
+    //     console.log("error in deleting question", error);
+    //   }
+    // }
   };
+
 
   const onClickForSchedulelater = async (question) => {
     // ... (unchanged, keep existing implementation)
@@ -571,6 +772,7 @@ const MyQuestionsList = ({
                                 <div>
                                   {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
                                     <button
+                                     type="button"
                                       onClick={() => onClickRemoveQuestion(question, listName, index)}
                                       className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
                                     >
@@ -578,6 +780,7 @@ const MyQuestionsList = ({
                                     </button>
                                   ) : (
                                     <button
+                                     type="button"
                                       className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
                                       onClick={() => onClickAddButton(question, listName, index)}
                                     >

@@ -1308,7 +1308,7 @@ function RoundFormTemplates() {
               >
                 {roundId ? 'Update Round' : 'Save Round'}
               </LoadingButton>
-{!id && 
+{!roundId && 
               <LoadingButton
                 onClick={(e) => handleSubmit(e, true)}
                 isLoading={isMutationLoading}

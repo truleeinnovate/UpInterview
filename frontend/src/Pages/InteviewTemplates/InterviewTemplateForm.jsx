@@ -263,11 +263,11 @@ const InterviewSlideover = ({ mode }) => {
                                     <input
                                         type="text"
                                         id="title"
-                                        name="name"
+                                        name="templateTitle"
                                         placeholder="e.g., Senior Frontend Developer"
                                         value={newTemplate.templateTitle}
                                         onChange={handleTitleChange}
-                                        onBlur={() => handleBlur('name')}
+                                        onBlur={() => handleBlur('templateTitle')}
                                         className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
                                             } focus:outline-none focus:ring-1`}
                                     />
