@@ -116,22 +116,22 @@ function InvoiceDetailsModal({ invoice, onClose }) {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Amount</span>
-                    <span>{formatCurrency(invoice.totalAmount)}</span>
+                    <span>{formatCurrency(invoice?.totalAmount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount Paid</span>
-                    <span>{formatCurrency(invoice.amountPaid)}</span>
+                    <span>{formatCurrency(invoice?.amountPaid)}</span>
                   </div>
-                  {invoice.outstandingAmount > 0 && (
+                  {invoice?.outstandingAmount > 0 && (
                     <div className="flex justify-between text-error-600 font-medium">
                       <span>Outstanding Amount</span>
-                      <span>{formatCurrency(invoice.outstandingAmount)}</span>
+                      <span>{formatCurrency(invoice?.outstandingAmount)}</span>
                     </div>
                   )}
-                  {invoice.discount > 0 && (
+                  {invoice?.discount > 0 && (
                     <div className="flex justify-between text-success-600">
                       <span>Discount Applied</span>
-                      <span>-{formatCurrency(invoice.discount)}</span>
+                      <span>-{formatCurrency(invoice?.discount)}</span>
                     </div>
                   )}
                 </div>

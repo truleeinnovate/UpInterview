@@ -324,11 +324,14 @@ const AssessmentsPage = lazy(() =>
 const OutsourceRequestsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
 );
-const OutsourceInterviewersPage = lazy(() =>
-  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+const OutsourceInterviewersPage = lazy(
+  () =>
+    import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+  // import("./Pages/SuperAdmin-Part/OutsourceInterviewersPage.jsx") // super admin part
 );
 const InterviewerRequestsPage = lazy(() =>
   import("./Pages/Interview-Request/InterviewRequest.jsx")
+  // import("./Pages/SuperAdmin-Part/InterviewerRequestsPage.jsx") // super admin part
 );
 const BillingPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/BillingPage.jsx")
@@ -856,11 +859,6 @@ const App = () => {
                 />
               </Route>
               <Route path="tenants/:id" element={<TenantDetailsPage />} />
-
-              {/* <Route path="candidates" element={<CandidatesPage />} /> */}
-              {/* <Route path="positions" element={<PositionsPage />} /> */}
-              {/* <Route path="interviews" element={<InterviewsPage />} /> */}
-              {/* <Route path="assessments" element={<AssessmentsPage />} /> */}
               <Route
                 path="outsource-requests"
                 element={<OutsourceRequestsPage />}

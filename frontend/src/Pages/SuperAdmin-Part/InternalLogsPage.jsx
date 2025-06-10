@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import LogDetailsPopup from "../../Components/SuperAdminComponents/InternalLogs/LogDetailsPopup";
-import { AiOutlineDownload } from "react-icons/ai";
+// import { AiOutlineDownload } from "react-icons/ai";
 
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { config } from "../../config.js";
+import Popup from "../../Components/SuperAdminComponents/Popup/Popup.jsx";
 
 function InternalLogsPage() {
   const [view, setView] = useState("table");
@@ -609,6 +610,181 @@ function InternalLogsPage() {
     </div>
   );
 
+  // Render Popup content
+  const renderPopupContent = (content) => {
+    return (
+      <>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Basic Information
+              </h3>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Timestamp:</span>
+                  <span className="text-sm font-medium">
+                    {new Date(content?.timeStamp).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Status:</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      content?.status === "success"
+                        ? "text-green-600"
+                        : content?.status === "error"
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {content?.status?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Severity:</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      content.severity === "high"
+                        ? "text-red-600"
+                        : content.severity === "medium"
+                        ? "text-yellow-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {content?.severity?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Server:</span>
+                  <span className="text-sm font-medium">
+                    {content?.serverName}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Process Information
+              </h3>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Process Name:</span>
+                  <span className="text-sm font-medium">
+                    {content?.processName}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Execution Time:</span>
+                  <span className="text-sm font-medium">
+                    {content?.executionTime}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Request Details
+              </h3>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Endpoint:</span>
+                  <span className="text-sm font-medium break-all">
+                    {content?.requestEndPoint}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Method:</span>
+                  <span className="text-sm font-medium">
+                    {content?.requestMethod}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Response Code:</span>
+                  <span className="text-sm font-medium">
+                    {content?.responseStatusCode}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Additional Information
+              </h3>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Owner ID:</span>
+                  <span className="text-sm font-medium">
+                    {content?.ownerId}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-sm text-gray-600">Tenant ID:</span>
+                  <span className="text-sm font-medium">
+                    {content?.tenantId}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Message</h3>
+            <p className="text-sm text-gray-900 whitespace-pre-wrap">
+              {content.message}
+            </p>
+          </div>
+
+          {content.requestBody && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Request Body
+              </h3>
+              <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                {JSON.stringify(content.requestBody, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {content.responseBody && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Response Body
+              </h3>
+              <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                {JSON.stringify(content.responseBody, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {content.responseError && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-3">
+                Error Details
+              </h3>
+              <p className="text-sm text-red-600">{content.responseError}</p>
+              {content.responseMessage && (
+                <p className="mt-2 text-sm text-gray-600">
+                  {content.responseMessage}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  };
+
+  // Popup content
+  const popupContent = selectedLog && renderPopupContent(selectedLog);
+
   return (
     <div className="space-y-6">
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
@@ -772,8 +948,10 @@ function InternalLogsPage() {
 
       <div>
         {selectedLog && (
-          <LogDetailsPopup
-            log={selectedLog}
+          <Popup
+            title="Internal Log Details"
+            subTitle="ID 00001"
+            children={popupContent}
             onClose={() => setSelectedLog(null)}
           />
         )}
