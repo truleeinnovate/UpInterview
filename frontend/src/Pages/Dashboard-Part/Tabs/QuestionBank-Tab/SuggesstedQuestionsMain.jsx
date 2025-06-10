@@ -378,7 +378,7 @@ const SuggestedQuestionsComponent = ({
 
     if (!suggestedQuestions || suggestedQuestions.length === 0) {
         return (
-            <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8">
+            <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
                 <div className="text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -619,7 +619,7 @@ const SuggestedQuestionsComponent = ({
                                     </div>
                                 ))
                             ) : (
-                                <div className="h-full flex flex-col gap-4 justify-center items-center text-center">
+                                <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
                                     <div className="text-gray-400">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
