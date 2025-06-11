@@ -100,17 +100,49 @@ const MockSchedulelater = () => {
   const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
   const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
 
+  // Load skills from either singlecontact (for new records) or mockinterviewData (for edit)
   useEffect(() => {
-    if (singlecontact[0]?.skills) {
-      const initialSkills = singlecontact[0].skills;
-      setEntries(initialSkills.map(skill => ({
+    if (id && mockinterviewData?.length > 0) {
+      // Edit mode - load from mockinterviewData
+      const mockData = mockinterviewData.find(moc => moc._id === id);
+      if (mockData?.skills?.length > 0) {
+        const skillEntries = mockData.skills.map(skill => ({
+          skill: skill.skill || '',
+          experience: skill.experience || '',
+          expertise: skill.expertise || ''
+        }));
+        setEntries(skillEntries);
+        setFormData(prev => ({
+          ...prev,
+          skills: skillEntries
+        }));
+        setEditingIndex('all');
+        console.log("Skills loaded from mockinterviewData:", skillEntries);
+      }
+    } else if (singlecontact[0]?.skills?.length > 0) {
+      // New record - load from singlecontact
+      const initialSkills = Array.isArray(singlecontact[0].skills) 
+        ? singlecontact[0].skills 
+        : [singlecontact[0].skills];
+      
+      const newEntries = initialSkills.map(skill => ({
         skill,
         experience: "",
         expertise: ""
-      })));
+      }));
+      
+      setEntries(newEntries);
+      setFormData(prev => ({
+        ...prev,
+        skills: newEntries
+      }));
+      
+      // Set all skills to be in edit mode by default
+      setEditingIndex('all');
+      
       console.log("Skills initialized from singlecontact", initialSkills);
     }
-  }, [singlecontact]);
+  }, [singlecontact, id, mockinterviewData]);
 
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
