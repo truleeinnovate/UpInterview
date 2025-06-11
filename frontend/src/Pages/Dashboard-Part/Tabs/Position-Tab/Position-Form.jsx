@@ -356,28 +356,20 @@ const PositionForm = ({ mode }) => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        const currentExp = entries[editingIndex]?.experience;
-        const currentLevel = entries[editingIndex]?.expertise;
 
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill)) &&
-          (selectedExp === currentExp ||
-            !allSelectedExperiences.includes(selectedExp)) &&
-          (selectedLevel === currentLevel ||
-            !allSelectedExpertises.includes(selectedLevel))
+            !allSelectedSkills.includes(selectedSkill))
         );
       } else {
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
-          !allSelectedSkills.includes(selectedSkill) &&
-          !allSelectedExperiences.includes(selectedExp) &&
-          !allSelectedExpertises.includes(selectedLevel)
+          !allSelectedSkills.includes(selectedSkill)
         );
       }
     } else if (currentStep === 1) {
@@ -502,7 +494,8 @@ const PositionForm = ({ mode }) => {
       setAllSelectedExpertises(selectedPosition.skills?.map(skill => skill.expertise) || []);
     }
 
-  }, [isEdit, id, positionData, templatesData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionData, id]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
@@ -710,32 +703,27 @@ const PositionForm = ({ mode }) => {
   };
 
   const handleSaveRound = (roundData, actionType) => {
-
     setFormData((prevData) => {
       let updatedRounds = [...(prevData.rounds || [])];
-
+  
       if (actionType === "RoundDetailsSave&AddRound") {
-        // Add new round
         updatedRounds.push(roundData);
       } else if (actionType === "RoundDetailsSave&Next") {
-        // Update the current round instead of adding a new one
         updatedRounds[currentRoundIndex] = roundData;
       } else if (actionType === "RoundDetailsSave") {
-        // Save current round and close
         updatedRounds[currentRoundIndex] = roundData;
       }
-
-      const updatedFormData = {
+  
+      return {
         ...prevData,
         rounds: updatedRounds,
       };
-
-
-      // Call handleSubmit with updated data
-      handleSubmit(null, actionType, true, updatedFormData);
-
-      return updatedFormData;
     });
+  
+    // Call handleSubmit after the state has been updated
+    setTimeout(() => {
+      handleSubmit(null, actionType, true);
+    }, 0);
   };
 
   const renderStageIndicator = () => {
