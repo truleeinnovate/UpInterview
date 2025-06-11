@@ -100,7 +100,7 @@ const AvailabilityDetails = ({
           Preferred Interview Duration <span className="text-red-500">*</span>
         </label>
         <div className="border border-gray-500 text-sm p-3 rounded-lg w-full">
-          <ul className="flex sm:flex-wrap sm:gap-2 text-xs font-medium space-x-3">
+          <ul className="flex sm:flex-wrap sm:gap-2 text-xs font-medium sm:space-x-0 space-x-3">
             {['30', '45', '60', '90'].map((duration) => (
               <li
                 key={duration}

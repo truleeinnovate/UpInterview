@@ -408,15 +408,6 @@ export const Organization = () => {
                 {errors.jobTitle && <p className="text-red-500 text-xs mt-1">{errors.jobTitle}</p>}
               </div>
               <div className="relative">
-                {/* <input
-                  type="email"
-                  id="Email"
-                  className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                  placeholder=" "
-                  value={selectedEmail}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  onBlur={(e) => handleBlur('email', e.target.value)}
-                /> */}
                 <input
                   type="email"
                   id="Email"
@@ -442,13 +433,12 @@ export const Organization = () => {
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                 <div className="flex gap-2">
                   {/* Country Code Dropdown */}
                   <div className="relative w-1/4" ref={countryCodeDropdownRef}>
                     <div
                       className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } bg-white px-3 py-2 h-12 cursor-pointer`}
+                        } bg-white px-3 h-12 cursor-pointer`}
                       onClick={toggleDropdownCountryCode}
                     >
                       <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
@@ -459,7 +449,7 @@ export const Organization = () => {
                         {countryCodeOptions.map((option) => (
                           <div
                             key={option.code}
-                            className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
+                            className="py-1 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
                             onClick={() => handleCountryCodeSelect(option.code)}
                           >
                             {option.code}
@@ -471,28 +461,30 @@ export const Organization = () => {
 
                   {/* Phone Number Input */}
                   <div className="relative w-3/4">
-                    <input
-                      type="tel"
-                      id="Phone"
-                      className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer h-12`}
-                      placeholder=" "
-                      value={selectedPhone}
-                      onChange={(e) => {
-                        // Allow only numbers
-                        const value = e.target.value.replace(/\D/g, '');
-                        handleChange('phone', value);
-                      }}
-                      maxLength={selectedCountryCode === '+91' ? 10 : 11}
-                      inputMode="numeric"
-                      autoComplete="tel"
-                    />
-                    <label
-                      htmlFor="Phone"
-                      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 bg-white px-1"
-                    >
-                      Phone Number
-                    </label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        id="Phone"
+                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                          } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                        placeholder=" "
+                        value={selectedPhone}
+                        onChange={(e) => {
+                          // Allow only numbers
+                          const value = e.target.value.replace(/\D/g, '');
+                          handleChange('phone', value);
+                        }}
+                        maxLength={selectedCountryCode === '+91' ? 10 : 11}
+                        inputMode="numeric"
+                        autoComplete="tel"
+                      />
+                      <label
+                        htmlFor="Phone"
+                        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+                      >
+                        Phone Number
+                      </label>
+                    </div>
                   </div>
                 </div>
                 {errors.phone && (
