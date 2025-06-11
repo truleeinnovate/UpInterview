@@ -45,11 +45,11 @@ const SkillsField = ({
 
   const handleEdit = (index) => {
     const entry = entries[index];
-    onEditSkill(index);
+    setSelectedSkill(entry.skill || '');
+    setSelectedExp(entry.experience || '');
+    setSelectedLevel(entry.expertise || '');
     setEditingIndex(index);
-    setSelectedSkill(entry.skill);
-    setSelectedExp(entry.experience);
-    setSelectedLevel(entry.expertise);
+    onEditSkill(index);
   };
 
   const handleAddClick = () => {
@@ -98,7 +98,7 @@ const SkillsField = ({
       <div className="space-y-2 mb-4 mt-5">
         {entries.map((entry, index) => (
           <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
-            {editingIndex === index ? (
+            { editingIndex === index || editingIndex === 'all' ? (
               // EDIT MODE
               <>
                 <div className="flex justify-between border bg-white rounded w-full p-2 mr-3">

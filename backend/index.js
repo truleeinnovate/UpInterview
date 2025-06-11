@@ -322,7 +322,7 @@ const { MockInterview } = require('./models/mockinterview.js');
 const { Users } = require("./models/Users.js")
 const Role = require('./models/RolesData.js');
 const Profile = require('./models/Profile.js');
-const { TenantQuestions } = require('./models/myQuestionList.js');
+const { TenantQuestions } = require('./models/tenantQuestions.js');
 const SharingRule = require('./models/SharingRules.js');
 
 app.post('/api/sharing-rules', async (req, res) => {
@@ -409,7 +409,7 @@ const modelMapping = {
 };
 
 const { InterviewRounds } = require('./models/InterviewRounds.js');
-const TenantQuestionsListNames = require('./models/questionbankFavList.js');
+const TenantQuestionsListNames = require('./models/tenantQuestionsListNames.js');
 
 app.get('/api/:model', async (req, res) => {
   const { model } = req.params;
@@ -433,56 +433,7 @@ app.get('/api/:model', async (req, res) => {
     
     // Handle specific models with additional population
     switch (model.toLowerCase()) {
-      // case 'team':
-      //   query = query
-      //     .populate('contactId')
-      //     .populate({
-      //       path: 'contactId',
-      //       populate: {
-      //         path: 'availability',
-      //         model: 'Interviewavailability',
-      //       },
-      //     });
-      //   break;
-
-      // case 'tenentquestions':
-      //   const questions = await TenantQuestions.find()
-      //     .populate({
-      //       path: 'suggestedQuestionId',
-      //       model: 'suggestedQuestions',
-      //     })
-      //     .populate({
-      //       path: 'tenantListId',
-      //       model: 'TenantQuestionsListNames',
-      //       select: 'label name ownerId tenantId',
-      //     })
-      //     .exec();
-
-      //   // Group questions by label
-      //   const groupedQuestions = questions.reduce((acc, question) => {
-      //     const questionData = question.isCustom
-      //       ? question // Use the question data directly if custom
-      //       : question.suggestedQuestionId;
-
-      //     if (!questionData) return acc;
-
-      //     question.tenantListId.forEach((list) => {
-      //       const label = list.label;
-      //       if (!acc[label]) {
-      //         acc[label] = [];
-      //       }
-      //       acc[label].push({
-      //         ...questionData._doc,
-      //         label,
-      //         listId: list._id,
-      //       });
-      //     });
-
-      //     return acc;
-      //   }, {});
-
-      //   return res.status(200).json(groupedQuestions);
-
+    
       case 'tenentquestions':
         // First fetch all list names for this tenant/owner
         const lists = await TenantQuestionsListNames.find(tenantId ? { tenantId } : { ownerId });
@@ -698,7 +649,7 @@ app.use('/suggested-questions', suggestedQuestionRouter)
 const interviewQuestionsRoute = require('./routes/interviewQuestionsRoutes.js')
 app.use('/interview-questions', interviewQuestionsRoute)
 
-const TenentQuestionsListNamesRoute = require('./routes/TenentQuestionsListNames.js')
+const TenentQuestionsListNamesRoute = require('./routes/TenentQuestionsListNamesRoute.js')
 app.use('/tenant-list', TenentQuestionsListNamesRoute);
 
 const interviewTemplateRoutes = require('./routes/interviewTemplateRoutes');
@@ -840,7 +791,7 @@ const supportUserRoutes = require('./routes/supportUserRoutes')
 app.use('/', supportUserRoutes);
 
 // question bank
-const MyQuestionListRoutes = require('./routes/MyQuestionListRoutes.js');
+const MyQuestionListRoutes = require('./routes/tenantQuestionsRoute.js');
 app.use('/', MyQuestionListRoutes);
 
 const razorpayRoutes = require('./routes/RazorpayRoutes.js');

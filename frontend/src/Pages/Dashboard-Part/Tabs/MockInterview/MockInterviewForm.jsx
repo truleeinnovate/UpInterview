@@ -116,7 +116,8 @@ const MockSchedulelater = () => {
           ...prev,
           skills: skillEntries
         }));
-        setEditingIndex('all');
+        // Set to view mode by default
+        setEditingIndex(null);
         console.log("Skills loaded from mockinterviewData:", skillEntries);
       }
     } else if (singlecontact[0]?.skills?.length > 0) {
@@ -137,9 +138,27 @@ const MockSchedulelater = () => {
         skills: newEntries
       }));
       
-      // Set all skills to be in edit mode by default
-      setEditingIndex('all');
+      // For new records, show first skill in edit mode
+      if (newEntries.length > 0) {
+        setEditingIndex(0);
+        setSelectedSkill(newEntries[0].skill);
+        setSelectedExp(newEntries[0].experience);
+        setSelectedLevel(newEntries[0].expertise);
+      }
       
+      // if (newEntries.length > 0) {
+      //   setEditingIndex('all');
+
+      //   // Create parallel arrays for skill / exp / level
+      //   const skillsArr = newEntries.map(e => e.skill || '');
+      //   const expArr    = newEntries.map(e => e.experience || '');
+      //   const levelArr  = newEntries.map(e => e.expertise || '');
+
+      //   setSelectedSkill(skillsArr);
+      //   setSelectedExp(expArr);
+      //   setSelectedLevel(levelArr);
+      // }
+
       console.log("Skills initialized from singlecontact", initialSkills);
     }
   }, [singlecontact, id, mockinterviewData]);
@@ -551,28 +570,20 @@ const MockSchedulelater = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        const currentExp = entries[editingIndex]?.experience;
-        const currentLevel = entries[editingIndex]?.expertise;
 
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill)) &&
-          (selectedExp === currentExp ||
-            !allSelectedExperiences.includes(selectedExp)) &&
-          (selectedLevel === currentLevel ||
-            !allSelectedExpertises.includes(selectedLevel))
+            !allSelectedSkills.includes(selectedSkill))
         );
       } else {
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
-          !allSelectedSkills.includes(selectedSkill) &&
-          !allSelectedExperiences.includes(selectedExp) &&
-          !allSelectedExpertises.includes(selectedLevel)
+          !allSelectedSkills.includes(selectedSkill)
         );
       }
     } else if (currentStep === 1) {
