@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
@@ -90,6 +90,10 @@ const TaskForm = ({
 
   const [showDropdownCategoryRelatedTo, setShowDropdownCategoryRelatedTo] = useState(false);
   const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] = useState(false);
+  const [showDropdownAssignedTo, setShowDropdownAssignedTo] = useState(false);
+  const [showDropdownPriority, setShowDropdownPriority] = useState(false);
+
+  const formRef = useRef(null);
 
   const handlePriorityChange = (e) => {
     const priority = e.target.value;
@@ -115,7 +119,40 @@ const TaskForm = ({
 
   const toggleDropdownCategoryRelatedTo = () => {
     setShowDropdownCategoryRelatedTo(!showDropdownCategoryRelatedTo);
+    setShowDropdownPriority(false);
+    setShowDropdownOptionRelatedTo(false);
+    setShowDropdownAssignedTo(false);
   };
+
+  const toggleDropdownAssignedTo = () => {
+    setShowDropdownAssignedTo(!showDropdownAssignedTo);
+    setShowDropdownCategoryRelatedTo(false);
+    setShowDropdownPriority(false);
+    setShowDropdownOptionRelatedTo(false);
+  };
+
+  const toggleDropdownPriority = () => {
+    setShowDropdownPriority(!showDropdownPriority);
+    setShowDropdownAssignedTo(false);
+    setShowDropdownCategoryRelatedTo(false);
+    setShowDropdownOptionRelatedTo(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        setShowDropdownCategoryRelatedTo(false);
+        setShowDropdownOptionRelatedTo(false);
+        setShowDropdownAssignedTo(false);
+        setShowDropdownPriority(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const [interviews] = useState([]);
   const [mockInterviews] = useState([]);
@@ -340,6 +377,7 @@ const TaskForm = ({
                   </div>
                 </div>
     
+                <form ref={formRef} onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto px-4 py-2">
                 <div className="grid grid-cols-1 gap-6 mb-6">
           
           <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
@@ -383,6 +421,11 @@ const TaskForm = ({
                     </option>
                   ))}
                 </select>
+                <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={toggleDropdownAssignedTo}
+                  />
                 {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
               </div>
             </div>
@@ -418,6 +461,11 @@ const TaskForm = ({
                     <option key={priority} value={priority}>{priority}</option>
                   ))}
                 </select>
+                <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={toggleDropdownPriority}
+                  />
                 {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
               </div>
             </div>
@@ -565,6 +613,7 @@ const TaskForm = ({
             </button>
           </div>
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
+        </form>
         </div>
               
           </div>
