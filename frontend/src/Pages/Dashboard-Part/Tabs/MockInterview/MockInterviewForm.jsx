@@ -551,28 +551,20 @@ const MockSchedulelater = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-        const currentExp = entries[editingIndex]?.experience;
-        const currentLevel = entries[editingIndex]?.expertise;
 
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
           (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill)) &&
-          (selectedExp === currentExp ||
-            !allSelectedExperiences.includes(selectedExp)) &&
-          (selectedLevel === currentLevel ||
-            !allSelectedExpertises.includes(selectedLevel))
+            !allSelectedSkills.includes(selectedSkill))
         );
       } else {
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
           selectedLevel !== "" &&
-          !allSelectedSkills.includes(selectedSkill) &&
-          !allSelectedExperiences.includes(selectedExp) &&
-          !allSelectedExpertises.includes(selectedLevel)
+          !allSelectedSkills.includes(selectedSkill)
         );
       }
     } else if (currentStep === 1) {
