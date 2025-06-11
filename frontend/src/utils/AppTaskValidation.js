@@ -1,11 +1,12 @@
 // utils/AppTaskValidation.js
-export const validateTaskForm = (formData, selectedPriority, selectedStatus) => {
+export const validateTaskForm = (formData, selectedPriority, selectedStatus, scheduledDate) => {
     const errors = {};
 
     if (!formData.title) errors.title = "Title is required";
     if (!formData.assignedTo || formData.assignedTo === "") errors.assignedTo = "Assigned To is required";
     if (!selectedPriority) errors.priority = "Priority is required";
     if (!selectedStatus) errors.status = "Status is required";
+    if (!scheduledDate) errors.dueDate = "Due Date is required";
 
     // Check for the category in "Related To"
     if (!formData.relatedTo.objectName) {
@@ -19,7 +20,6 @@ export const validateTaskForm = (formData, selectedPriority, selectedStatus) => 
         errors.relatedToOption = "Invalid recordId format";
     }
 
-    if (!formData.dueDate) errors.dueDate = "Due Date is required";
 
     return errors;
 };
