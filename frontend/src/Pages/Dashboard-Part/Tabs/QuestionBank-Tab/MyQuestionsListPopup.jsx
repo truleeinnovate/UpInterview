@@ -19,6 +19,8 @@ const MyQuestionsList1 = forwardRef(({ question, fromcreate, closeDropdown, from
     // } = useCustomContext();
 
     const { createdLists, addQuestionToList, saveOrUpdateList, saveOrUpdateListLoading, addQuestionToListLoading } = useQuestions();
+    console.log("createdLists:", createdLists);
+    
 
     const [selectedListIds, setSelectedListIds] = useState([]);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
