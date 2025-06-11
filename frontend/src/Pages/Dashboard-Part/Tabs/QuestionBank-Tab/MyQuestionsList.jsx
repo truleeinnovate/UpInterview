@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
-import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
-import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
+import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
+import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
@@ -723,9 +723,9 @@ const selectedLabelId = useMemo(() => {
                               className="p-1 rounded-full ml-2"
                             >
                               {isOpen[listName] ? (
-                                <IoIosArrowUp className="text-xl" />
+                                <IoIosArrowUp className="text-2xl" />
                               ) : (
-                                <IoIosArrowDown className="text-xl" />
+                                <IoIosArrowDown className="text-2xl" />
                               )}
                             </button>
                           )}

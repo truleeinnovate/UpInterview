@@ -45,21 +45,10 @@ const TenantQuestionsSchema = new mongoose.Schema({
         ]
     },
     isActive: Boolean,
-    createdDate: {
-        type: Date,
-        default: Date.now
-    },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     ownerId: String,
     tenantId: String,
-});
-
-TenantQuestionsSchema.pre('save', function (next) {
-    if (this.isNew) {
-        this.CreatedDate = Date.now();
-    }
-    next();
 });
 
 const TenantQuestions  = mongoose.model("tenantQuestions", TenantQuestionsSchema);

@@ -1,9 +1,20 @@
-const QuestionbankFavList = require("../models/questionbankFavList.js");
+const QuestionbankFavList = require("../models/tenantQuestionsListNames.js");
 const getList = async (req, res) => {
   const { userId } = req.params;
+  const { tenantId, organization } = req.query; // Get these from query parameters
 
   try {
-    const lists = await QuestionbankFavList.find({ ownerId: userId });
+    let query = {};
+    
+    if (organization === 'true') {
+      // If organization is true, filter by tenantId
+      query = { tenantId: tenantId };
+    } else {
+      // If organization is false, filter by ownerId (userId)
+      query = { ownerId: userId };
+    }
+    
+    const lists = await QuestionbankFavList.find(query);
     res.status(200).json(lists);
   } catch (error) {
     console.error('Error fetching lists:', error);
