@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { XCircle, ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
+import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/IoIosArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/IoIosArrowUp.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -10,7 +10,6 @@ import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
-import Loading from "../../../../Components/Loading.js";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 
@@ -41,6 +40,8 @@ const MyQuestionsList = ({
   activeTab,
 }) => {
   const { myQuestionsList, isLoading } = useQuestions();
+  console.log("myQuestionsList:", myQuestionsList);
+  
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const filterIconRef = useRef(null);
@@ -525,6 +526,14 @@ const MyQuestionsList = ({
     setIsPopupOpen(false);
   };
 
+  // Find the listId for the selectedLabel
+const selectedLabelId = useMemo(() => {
+  if (!selectedLabel || !myQuestionsList) return null;
+  const allQuestions = Object.values(myQuestionsList).flat();
+  const matchingQuestion = allQuestions.find((q) => q.label === selectedLabel);
+  return matchingQuestion ? matchingQuestion.listId : null;
+}, [selectedLabel, myQuestionsList]);
+
   const groupedQuestions = filteredMyQuestionsList;
 
   // Skeleton Loader Component
@@ -688,11 +697,11 @@ const MyQuestionsList = ({
               selectedLabel === listName && (
                 <div key={listName} className="mt-4">
                   <div
-                    className={`flex justify-between items-center bg-custom-blue text-white p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
+                    className={`flex justify-between items-center bg-blue-200  p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
                       }`}
                   >
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="font-semibold text-white truncate max-w-xs">{listName}</h3>
+                    <div className="flex items-baseline gap-3">
+                      <h3 className="font-semibold truncate max-w-xs ml-1">{listName}</h3>
                       <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
                         {items.length} questions
                       </span>
@@ -703,7 +712,7 @@ const MyQuestionsList = ({
                           {isOpen[listName] && items.length > 0 && (
                             <button
                               onClick={() => toggleActionSection(listName)}
-                              className="p-1 rounded-full transition-colors"
+                              className="p-1 rounded-full"
                             >
                               <MdMoreVert className="text-xl" />
                             </button>
@@ -711,7 +720,7 @@ const MyQuestionsList = ({
                           {items.length > 0 && (
                             <button
                               onClick={() => toggleSection(listName)}
-                              className="p-1 rounded-full ml-2 transition-colors"
+                              className="p-1 rounded-full ml-2"
                             >
                               {isOpen[listName] ? (
                                 <IoIosArrowUp className="text-xl" />
@@ -741,7 +750,7 @@ const MyQuestionsList = ({
 
                   {isOpen[listName] && items.length > 0 && (
                     <div
-                      className={`p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
+                      className={`p-4  rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
                         } overflow-y-auto`}
                     >
                       {items.map((question, index) => (
@@ -897,6 +906,7 @@ const MyQuestionsList = ({
             questionBankPopupVisibility={questionBankPopupVisibility}
             onClose={closeSidebar}
             onOutsideClick={handleOutsideClick}
+            selectedLabelId={selectedLabelId}
           />
         )}
       </div>

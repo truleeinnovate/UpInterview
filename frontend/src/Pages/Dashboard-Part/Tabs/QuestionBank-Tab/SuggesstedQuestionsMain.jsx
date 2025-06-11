@@ -8,6 +8,7 @@ import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
+import MyQuestionList from "./MyQuestionsListPopup.jsx";
 
 const SuggestedQuestionsComponent = ({
     sectionName,
@@ -32,6 +33,7 @@ const SuggestedQuestionsComponent = ({
     const filterIconRef = useRef(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const itemsPerPage = 10;
+        const [dropdownOpen, setDropdownOpen] = useState(null);
 
     const [filtrationData, setFiltrationData] = useState([
         {
@@ -326,6 +328,13 @@ const SuggestedQuestionsComponent = ({
             default:
                 return "";
         }
+        
+    };
+        const toggleDropdown = (questionId) => {
+        setDropdownOpen(dropdownOpen === questionId ? null : questionId);
+    };
+        const closeDropdown = () => {
+        setDropdownOpen(null);
     };
 
     const openFilterPopup = () => {
@@ -606,6 +615,24 @@ const SuggestedQuestionsComponent = ({
                                                     )}
                                                 </div>
                                             )}
+
+                                            {!type && !fromScheduleLater && (
+                                                    <div className="w-[10%] flex justify-center relative">
+                                                        <button
+                                                            type="button"
+                                                            className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                                                            onClick={() => toggleDropdown(item._id)}
+                                                        >
+                                                            Add to list
+                                                        </button>
+                                                        {dropdownOpen === item._id && (
+                                                            <MyQuestionList
+                                                                question={item}
+                                                                closeDropdown={closeDropdown}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
                                         </div>
                                         <div className="px-4 py-2">
                                             <p className="text-gray-600 mb-2">

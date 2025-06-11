@@ -38,12 +38,23 @@ const QuestionBankForm = ({
   isEdit = false,
   updateQuestionsInAddedSectionFromQuestionBank,
   question = {},
+  selectedLabelId
 }) => {
 
-  const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading } = useQuestions();
-  console.log("saveOrUpdateQuestionLoading", saveOrUpdateQuestionLoading);
+  const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading,createdLists } = useQuestions();
+  console.log("selectedLabelId", selectedLabelId);
   
-
+useEffect(() => {
+  if (!isEdit && selectedLabelId && createdLists?.length > 0) {
+    // Find the matching label in createdLists
+    const matchedLabel = createdLists.find(list => list._id === selectedLabelId);
+    console.log("matchedLabel", matchedLabel);
+    if (matchedLabel) {
+      setSelectedListId([matchedLabel._id]); // Set the ID for form submission
+      setSelectedLabels([matchedLabel.label]); // Set the label name for display
+    }
+  }
+}, [isEdit, selectedLabelId, createdLists]);
 
   const questionTypeOptions = [
     "Interview Questions",

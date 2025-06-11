@@ -227,7 +227,6 @@ exports.FeedsMiddleware = async (req, res, next) => {
         if (feedData) {
             try {
                 const feedLog = await historyFeedsController.createFeed(feedData);
-                console.log('Feed created successfully:', feedLog);
             } catch (error) {
                 console.error('Error creating feed:', error.message);
             }
