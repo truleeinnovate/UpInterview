@@ -414,8 +414,6 @@ const MultiStepForm = () => {
                     filePreview={filePreview}
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
-                    // checkProfileIdExists={checkProfileIdExists}
-                    // checkEmailExists={checkEmailExists}
                   />
                 )}
 
@@ -438,7 +436,6 @@ const MultiStepForm = () => {
                         setSelectedTechnologyies={setSelectedCandidates}
                         interviewDetailsData={interviewDetailsData}
                         setInterviewDetailsData={setInterviewDetailsData}
-
                         selectedSkills={selectedSkills}
                         setSelectedSkills={setSelectedSkills}
                         previousInterviewExperience={previousInterviewExperience}

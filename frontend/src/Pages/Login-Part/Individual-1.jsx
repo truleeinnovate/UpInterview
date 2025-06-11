@@ -1,26 +1,33 @@
-import React from 'react'
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Login_1 = () => {
-	console.log('landing page')
-	const navigate = useNavigate()
+const Login = () => {
+	const navigate = useNavigate();
 
-	const Login = () => {
+	const handleLogin = () => {
 		navigate("/select-user-type", { state: { from: "login" } });
 	};
-	
+
 	return (
 		<React.Fragment>
-			<div className='container mx-auto mt-12'>
-				<div className='flex float-end'>
-					<div className='border rounded text-white bg-custom-blue mr-12 p-2 w-32 text-center cursor-pointer' onClick={Login}>
-						Login
+			<div className="min-h-screen bg-custom-bg">
+				<div className="sm:pr-6 md:pr-7 lg:pr-7 xl:pr-7 2xl:pr-7">
+					<div className="flex justify-end pt-7">
+						<button
+							onClick={handleLogin}
+							className="py-2 text-center bg-custom-blue text-white rounded-md 
+                                 hover:bg-opacity-90 active:bg-opacity-80 transition-colors duration-200
+                                 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-opacity-50
+                                 text-sm sm:text-base w-28"
+							aria-label="Login"
+						>
+							Login
+						</button>
 					</div>
 				</div>
 			</div>
 		</React.Fragment>
-	)
-}
+	);
+};
 
-export default Login_1
-
+export default Login;

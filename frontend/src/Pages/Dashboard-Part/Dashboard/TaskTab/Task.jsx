@@ -208,7 +208,7 @@ const Task = () => {
     {
       key: 'taskCode',
       header: 'Task ID',
-      render: (value) => value ? value : 'N/A',
+      render: (value) => value ? value : 'not available',
     },
     {
       key: 'title',

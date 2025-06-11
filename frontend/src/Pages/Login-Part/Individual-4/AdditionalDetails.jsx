@@ -10,7 +10,7 @@ const AdditionalDetails = ({
     additionalDetailsData,
     setAdditionalDetailsData,
 }) => {
-      const {
+    const {
         locations,
         industries,
         currentRoles
@@ -185,10 +185,9 @@ const AdditionalDetails = ({
     }, []);
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
-
+        <>
             {/* Info Box */}
-            <div className="mb-3 col-span-2">
+            <div className="mb-8">
                 <InfoBox
                     title="Professional Background"
                     description="Tell us more about your education, experience, and skills."
@@ -199,11 +198,10 @@ const AdditionalDetails = ({
                     }
                 />
             </div>
-
-            <div className="sm:col-span-6 col-span-1 space-y-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-8">
 
                 {/* current role */}
-                <div ref={currentRoleDropdownRef}>
+                <div className="sm:col-span-2 col-span-1" ref={currentRoleDropdownRef}>
                     <label htmlFor="currentRole" className="block text-sm font-medium text-gray-700 mb-1">
                         Current Role <span className="text-red-500">*</span>
                     </label>
@@ -255,106 +253,8 @@ const AdditionalDetails = ({
                     {errors.currentRole && <p className="text-red-500 text-sm sm:text-xs">{errors.currentRole}</p>}
                 </div>
 
-                {/* Experience */}
-                <div>
-                    <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">
-                        Years of Experience <span className="text-red-500">*</span>
-                    </label>
-                    <div>
-                        <input
-                            type="number"
-                            name="yearsOfExperience"
-                            autoComplete="off"
-                            value={additionalDetailsData.yearsOfExperience}
-                            placeholder="5 years"
-                            onChange={handleChange}
-                            id="yearsOfExperience" min="1" max="15"
-                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.yearsOfExperience ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {errors.yearsOfExperience && <p className="text-red-500 text-sm sm:text-xs">{errors.yearsOfExperience}</p>}
-                    </div>
-                </div>
-
-                {/* Resume Section */}
-                <div>
-                    <div>
-                        <label htmlFor="Resume" className="block text-sm font-medium text-gray-700 mb-1">
-                            Resume
-                        </label>
-                        <div className="relative flex">
-                            <input
-                                ref={resumeInputRef}
-                                type="file"
-                                name="Resume"
-                                id="Resume"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => handleFileUpload(e, 'Resume')}
-                            />
-                            <div
-                                className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
-                                onClick={() => resumeInputRef.current.click()}  // Trigger file input click
-                            >
-                                {resumeName ? 'Uploaded' : 'Upload File'}
-                            </div>
-                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
-                        </div>
-                    </div>
-                    {resumeName && (
-                        <div className="border mt-2 inline-flex items-center gap-2">
-                            <span className="text-gray-600">{resumeName}</span>
-                            <button
-                                className="text-red-500"
-                                onClick={() => handleRemoveFile('Resume')}
-                            >
-                                <span className="text-xl">×</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Cover Letter Section */}
-                <div>
-                    <div>
-                        <label htmlFor="CoverLetter" className="block text-sm font-medium text-gray-700 mb-1">
-                            Cover Letter
-                        </label>
-                        <div className="relative flex">
-                            <input
-                                ref={coverLetterInputRef}
-                                type="file"
-                                name="CoverLetter"
-                                id="CoverLetter"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => handleCoverLetterUpload(e, 'CoverLetter')}
-                            />
-                            <div
-                                className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
-                                onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
-                            >
-                                {coverLetterName ? 'Uploaded' : 'Upload File'}
-                            </div>
-                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
-                        </div>
-                    </div>
-                    {coverLetterName && (
-                        <div className="border mt-2 inline-flex items-center gap-2">
-                            <span className="text-gray-600">{coverLetterName}</span>
-                            <button
-                                className="text-red-500"
-                                onClick={handleRemoveCoverLetter}
-                            >
-                                <span className="text-xl">×</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-            </div>
-
-            <div className="sm:col-span-6 col-span-1 space-y-4">
-
                 {/* Industry */}
-                <div ref={industryDropdownRef}>
+                <div className="sm:col-span-2 col-span-1" ref={industryDropdownRef}>
                     <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
                         Industry <span className="text-red-500">*</span>
                     </label>
@@ -410,8 +310,28 @@ const AdditionalDetails = ({
                     {errors.industry && <p className="text-red-500 text-sm sm:text-xs">{errors.industry}</p>}
                 </div>
 
+                {/* Experience */}
+                <div className="sm:col-span-2 col-span-1">
+                    <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                        Years of Experience <span className="text-red-500">*</span>
+                    </label>
+                    <div>
+                        <input
+                            type="number"
+                            name="yearsOfExperience"
+                            autoComplete="off"
+                            value={additionalDetailsData.yearsOfExperience}
+                            placeholder="5 years"
+                            onChange={handleChange}
+                            id="yearsOfExperience" min="1" max="15"
+                            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.yearsOfExperience ? 'border-red-500' : 'border-gray-300'}`}
+                        />
+                        {errors.yearsOfExperience && <p className="text-red-500 text-sm sm:text-xs">{errors.yearsOfExperience}</p>}
+                    </div>
+                </div>
+
                 {/* Location */}
-                <div ref={locationDropdownRef}>
+                <div className="sm:col-span-2 col-span-1" ref={locationDropdownRef}>
                     <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                         Location <span className="text-red-500">*</span>
                     </label>
@@ -470,29 +390,105 @@ const AdditionalDetails = ({
                     {errors.location && <p className="text-red-500 text-sm sm:text-xs">{errors.location}</p>}
                 </div>
 
-            </div>
+                {/* </div> */}
 
-            {/* coverLetterdescription */}
-            <div className="col-span-2 sm:col-span-6">
-                <p className="flex justify-center mb-3">(OR)</p>
-                <div>
-                    <textarea
-                        name="coverLetterdescription"
-                        type="text"
-                        rows={5}
-                        id="coverLetterdescription"
-                        value={additionalDetailsData.coverLetterdescription}
-                        onChange={(e) => handleInputChangeintro(e, 'coverLetterdescription')}
-                        placeholder="I am a technical interviewer..."
-                        autoComplete="off"
-                        className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
-                    />
-                    <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
-                        {additionalDetailsData.coverLetterdescription?.length}/2000
-                    </p>
+                {/* Resume Section */}
+                <div className="sm:col-span-2 col-span-1">
+                    <div>
+                        <label htmlFor="Resume" className="block text-sm font-medium text-gray-700 mb-1">
+                            Resume
+                        </label>
+                        <div className="relative flex">
+                            <input
+                                ref={resumeInputRef}
+                                type="file"
+                                name="Resume"
+                                id="Resume"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => handleFileUpload(e, 'Resume')}
+                            />
+                            <div
+                                className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                                onClick={() => resumeInputRef.current.click()}  // Trigger file input click
+                            >
+                                {resumeName ? 'Uploaded' : 'Upload File'}
+                            </div>
+                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
+                        </div>
+                    </div>
+                    {resumeName && (
+                        <div className="border mt-2 inline-flex items-center gap-2">
+                            <span className="text-gray-600">{resumeName}</span>
+                            <button
+                                className="text-red-500"
+                                onClick={() => handleRemoveFile('Resume')}
+                            >
+                                <span className="text-xl">×</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
+
+                {/* Cover Letter Section */}
+                <div className="sm:col-span-2 col-span-1">
+                    <div>
+                        <label htmlFor="CoverLetter" className="block text-sm font-medium text-gray-700 mb-1">
+                            Cover Letter
+                        </label>
+                        <div className="relative flex">
+                            <input
+                                ref={coverLetterInputRef}
+                                type="file"
+                                name="CoverLetter"
+                                id="CoverLetter"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => handleCoverLetterUpload(e, 'CoverLetter')}
+                            />
+                            <div
+                                className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                                onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
+                            >
+                                {coverLetterName ? 'Uploaded' : 'Upload File'}
+                            </div>
+                            <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">Upload PDF only. 4 MB max</p>
+                        </div>
+                    </div>
+                    {coverLetterName && (
+                        <div className="border mt-2 inline-flex items-center gap-2">
+                            <span className="text-gray-600">{coverLetterName}</span>
+                            <button
+                                className="text-red-500"
+                                onClick={handleRemoveCoverLetter}
+                            >
+                                <span className="text-xl">×</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* coverLetterdescription */}
+                <div className="col-span-2 sm:col-span-2">
+                    <p className="flex justify-center mb-3">(OR)</p>
+                    <div>
+                        <textarea
+                            name="coverLetterdescription"
+                            type="text"
+                            rows={5}
+                            id="coverLetterdescription"
+                            value={additionalDetailsData.coverLetterdescription}
+                            onChange={(e) => handleInputChangeintro(e, 'coverLetterdescription')}
+                            placeholder="I am a technical interviewer..."
+                            autoComplete="off"
+                            className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
+                        />
+                        <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
+                            {additionalDetailsData.coverLetterdescription?.length}/2000
+                        </p>
+                    </div>
+                </div>
+
             </div>
-        </div>
+        </>
     );
 };
 

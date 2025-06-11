@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
@@ -8,8 +9,8 @@ import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
-import {useCandidates} from "../../../../apiHooks/useCandidates.js";
-import {usePositions} from "../../../../apiHooks/usePositions.js";
+import { useCandidates } from "../../../../apiHooks/useCandidates.js";
+import { usePositions } from "../../../../apiHooks/usePositions.js";
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -30,8 +31,8 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const organization = tokenPayload?.organization;
   const { candidateData, isMutationLoading } = useCandidates();
-  const {positionData} = usePositions();
-  const {usersRes} = useCustomContext();
+  const { positionData } = usePositions();
+  const { usersRes } = useCustomContext();
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -39,7 +40,7 @@ const TaskForm = ({
         try {
           const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
           const ownerData = response.data;
-          
+
           // Prefill form with owner's name
           setFormData(prev => ({
             ...prev,
@@ -51,11 +52,11 @@ const TaskForm = ({
         }
       }
     };
-    
+
     fetchOwnerData();
   }, [organization, ownerId]);
 
-   
+
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
@@ -72,7 +73,7 @@ const TaskForm = ({
   });
   const navigate = useNavigate();
   const [selectedPriority, setSelectedPriority] = useState("");
-  const priorities = ['High', 'Medium', 'Low','Normal'];
+  const priorities = ['High', 'Medium', 'Low', 'Normal'];
 
   const [selectedStatus, setSelectedStatus] = useState("New");
   const statuses = ["New", "In Progress", "Completed", "No Response"];
@@ -105,7 +106,7 @@ const TaskForm = ({
     }));
   };
 
- 
+
 
   const handleStatusChange = (e) => {
     const status = e.target.value;
@@ -239,13 +240,13 @@ const TaskForm = ({
     return option ? option.name : id;
   };
 
-  const displayName = selectedOptionIdRelatedTo 
-    ? getNameFromId(selectedOptionIdRelatedTo) 
+  const displayName = selectedOptionIdRelatedTo
+    ? getNameFromId(selectedOptionIdRelatedTo)
     : "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateTaskForm(
       formData,
       selectedPriority,
@@ -258,7 +259,7 @@ const TaskForm = ({
       console.log("Form validation failed:", newErrors);
       return;
     }
-    
+
     try {
       const taskData = {
         ...formData,
@@ -274,7 +275,7 @@ const TaskForm = ({
       } else {
         await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
       }
-      
+
       onTaskAdded();
       handleClose();
     } catch (error) {
@@ -306,7 +307,7 @@ const TaskForm = ({
         try {
           const response = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
           const taskData = response.data;
-          
+
           setFormData(taskData);
           setSelectedPriority(taskData.priority);
           setSelectedStatus(taskData.status);
@@ -317,7 +318,7 @@ const TaskForm = ({
           console.error("Error fetching task data:", error);
         }
       };
-      
+
       fetchTaskData();
     } else if (initialData) {
       // Use initialData if provided
@@ -328,16 +329,16 @@ const TaskForm = ({
   }, [taskId, initialData]);
 
   const handleClose = () => {
-      navigate('/task');
-    };
-  
-    const modalClass = classNames(
-      'fixed bg-white shadow-2xl border-l border-gray-200',
-      {
-        'inset-0': isFullScreen,
-        'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-      }
-    );
+    navigate('/task');
+  };
+
+  const modalClass = classNames(
+    'fixed bg-white shadow-2xl border-l border-gray-200',
+    {
+      'inset-0': isFullScreen,
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+    }
+  );
 
 
 
@@ -393,8 +394,12 @@ const TaskForm = ({
               />
               {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
-            {/* individual assigned to*/}
-            {organization ? (
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mb-6">
+
+            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+              {/* Title */}
               <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Assigned To</label>
               <div className="relative">
@@ -429,24 +434,55 @@ const TaskForm = ({
                   />
                 {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
               </div>
-            </div>
-            ) : (
-              <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-              <input
-                type="text"
-                value={formData.assignedTo}
-                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-              />
-              {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
-            </div>
-            )}
-            
-          </div>  
+              {/* individual assigned to*/}
+              {organization ? (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+                  <div className="relative">
+                    <select
+                      value={formData.assignedToId || ''}
+                      onChange={(e) => {
+                        const selectedUserId = e.target.value;
+                        const selectedUser = usersRes.find(user => user._id === selectedUserId);
+                        setFormData(prev => ({
+                          ...prev,
+                          assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
+                          assignedToId: selectedUserId
+                        }));
+                      }}
+                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
+                    >
+                      <option value="" hidden>Select User</option>
+                      {usersRes.map((user) => (
+                        <option
+                          className='font-medium text-gray-500 text-sm'
+                          key={user._id}
+                          value={user._id}
+                        >
+                          {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+                  <input
+                    type="text"
+                    value={formData.assignedTo}
+                    onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
+                  />
+                  {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+                </div>
+              )}
 
-            
-            
+            </div>
+
+
+
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Priority */}
             <div className="space-y-1">
@@ -469,25 +505,24 @@ const TaskForm = ({
                   />
                 {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
               </div>
-            </div>
 
-            {/* Status */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <div className="relative">
-                <select
-                  value={selectedStatus}
-                  onChange={handleStatusChange}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select Status</option>
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+              {/* Status */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <div className="relative">
+                  <select
+                    value={selectedStatus}
+                    onChange={handleStatusChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
+                  >
+                    <option value="" hidden>Select Status</option>
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+                </div>
               </div>
-            </div>
             </div>
             {/* Related To */}
             <div className="space-y-1">
@@ -530,7 +565,7 @@ const TaskForm = ({
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
                         !showDropdownOptionRelatedTo
-                        
+
                       )
                     }
                     readOnly
@@ -538,7 +573,7 @@ const TaskForm = ({
                     className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedToOption && 'border-red-500'}`}
                   />
                   <MdArrowDropDown
-                     size={20}
+                    size={20}
                     className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
@@ -571,6 +606,7 @@ const TaskForm = ({
 
             {/* Due Date */}
             <div className="space-y-1">
+
             <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
              Due Date
             </label>
@@ -591,7 +627,7 @@ const TaskForm = ({
               <label className="block text-sm font-medium text-gray-700">Comments</label>
               <textarea
                 value={formData.comments}
-                onChange={(e) => setFormData({...formData, comments: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                 placeholder="Add comments"
                 className={`w-full px-3 py-2 h-40 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.comments && 'border-red-500'}`}
                 rows="5"
@@ -619,7 +655,6 @@ const TaskForm = ({
               
           </div>
     </Modal>
-   
   );
 }
 

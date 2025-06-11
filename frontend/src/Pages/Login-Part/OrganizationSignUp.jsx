@@ -319,22 +319,35 @@ export const Organization = () => {
     setIsCheckingProfileId(false);
   };
 
+  const handleEmailInput = (e) => {
+    const email = e.target.value;
+    setSelectedEmail(email);
+    setErrors((prev) => ({ ...prev, email: '' }));
+
+    // Generate profile ID when email changes
+    if (email && !selectedProfileId) {
+      const generatedProfileId = generateProfileId(email);
+      setSelectedProfileId(generatedProfileId);
+    }
+  };
+
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-1">
-        <div>
-          <Slideshow />
-        </div>
-        <div className="flex flex-col items-center justify-center sm:px-4 px-6 md:px-8">
-          <div className="max-h-[532px] overflow-y-scroll">
-            <style>
-              {`
-          ::-webkit-scrollbar {
-            display: none;
-          }
-        `}
-            </style>
-            <p className="text-xl font-medium mb-6 mt-4 text-center">Sign Up</p>
+      <div className="
+        md:left-0 md:right-0 md:w-full md:h-[calc(100vh-48px)]
+        lg:fixed lg:left-0 lg:right-0 lg:w-[50%] lg:h-[calc(100vh-48px)]
+        xl:fixed xl:left-0 xl:right-0 xl:w-[50%] xl:h-[calc(100vh-48px)]
+        2xl:fixed 2xl:left-0 2xl:right-0 2xl:w-[50%] 2xl:h-[calc(100vh-48px)]
+        ">
+        <Slideshow />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-1">
+        {/* <---------dont remove this div */}
+        <div></div>
+        {/* dont remove this div ----------> */}
+        <div className="flex items-center justify-center py-8 sm:px-4 px-6 md:px-8 lg:px-8 xl:px-8 2xl:px-8">
+          <div className="overflow-y-auto">
+            <p className="text-xl font-medium mb-6 text-center">Sign Up</p>
             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
@@ -395,7 +408,7 @@ export const Organization = () => {
                 {errors.jobTitle && <p className="text-red-500 text-xs mt-1">{errors.jobTitle}</p>}
               </div>
               <div className="relative">
-                <input
+                {/* <input
                   type="email"
                   id="Email"
                   className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
@@ -403,6 +416,17 @@ export const Organization = () => {
                   value={selectedEmail}
                   onChange={(e) => handleChange('email', e.target.value)}
                   onBlur={(e) => handleBlur('email', e.target.value)}
+                /> */}
+                <input
+                  type="email"
+                  id="Email"
+                  className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'
+                    } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                  placeholder=" "
+                  value={selectedEmail}
+                  onInput={handleEmailInput}  // Changed from onChange to onInput
+                  onBlur={(e) => handleBlur('email', e.target.value)}
+                  autoComplete="email"  // Ensure browser can suggest emails
                 />
                 <label
                   htmlFor="Email"
@@ -417,66 +441,63 @@ export const Organization = () => {
                 )}
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
-              <div className="relative flex gap-2">
-                <div className="relative w-1/4" ref={countryCodeDropdownRef}>
-                  <input
-                    type="text"
-                    id="country_code"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                    placeholder=" "
-                    value={selectedCountryCode}
-                    onClick={toggleDropdownCountryCode}
-                    readOnly
-                    autoComplete="off"
-                    spellCheck="false"
-                  />
-                  <label
-                    htmlFor="country_code"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                  >
-                    Code
-                  </label>
-                  <div
-                    className="absolute right-0 top-0"
-                    onClick={toggleDropdownCountryCode}
-                  >
-                    <MdArrowDropDown className="text-lg text-gray-500 mt-[14px] mr-3 cursor-pointer" />
-                  </div>
-                  {showDropdownCountryCode && (
-                    <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0">
-                      {countryCodeOptions.map((option) => (
-                        <div
-                          key={option.code}
-                          className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleCountryCodeSelect(option.code)}
-                        >
-                          {option.code}
-                        </div>
-                      ))}
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <div className="flex gap-2">
+                  {/* Country Code Dropdown */}
+                  <div className="relative w-1/4" ref={countryCodeDropdownRef}>
+                    <div
+                      className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                        } bg-white px-3 py-2 h-12 cursor-pointer`}
+                      onClick={toggleDropdownCountryCode}
+                    >
+                      <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
+                      <MdArrowDropDown className="text-gray-500 text-xl" />
                     </div>
-                  )}
+                    {showDropdownCountryCode && (
+                      <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 max-h-60 overflow-y-auto">
+                        {countryCodeOptions.map((option) => (
+                          <div
+                            key={option.code}
+                            className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
+                            onClick={() => handleCountryCodeSelect(option.code)}
+                          >
+                            {option.code}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone Number Input */}
+                  <div className="relative w-3/4">
+                    <input
+                      type="tel"
+                      id="Phone"
+                      className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                        } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer h-12`}
+                      placeholder=" "
+                      value={selectedPhone}
+                      onChange={(e) => {
+                        // Allow only numbers
+                        const value = e.target.value.replace(/\D/g, '');
+                        handleChange('phone', value);
+                      }}
+                      maxLength={selectedCountryCode === '+91' ? 10 : 11}
+                      inputMode="numeric"
+                      autoComplete="tel"
+                    />
+                    <label
+                      htmlFor="Phone"
+                      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 bg-white px-1"
+                    >
+                      Phone Number
+                    </label>
+                  </div>
                 </div>
-                <div className="relative w-3/4">
-                  <input
-                    type="text"
-                    id="Phone"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                    placeholder=" "
-                    value={selectedPhone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    maxLength={selectedCountryCode === '+91' ? 10 : 11}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    spellCheck="false"
-                  />
-                  <label
-                    htmlFor="Phone"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                  >
-                    Phone
-                  </label>
-                  {errors.phone && <p className="text-red-500 text-xs mt-1 w-44">{errors.phone}</p>}
-                </div>
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
               </div>
               <div className="relative">
                 <input
@@ -627,21 +648,20 @@ export const Organization = () => {
               <div className="relative">
                 <div className="relative">
                   <input
-                    type="text"
+                    type={showPassword ? "text" : "password"}  // Toggle between text and password
                     id="create_password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer ${!showPassword ? 'password-mask' : ''
-                      }`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? "border-red-500" : "border-gray-300"
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={selectedPassword}
-                    onChange={(e) => handleChange('password', e.target.value)}
-                    onBlur={(e) => handleBlur('password', e.target.value)}
+                    onChange={(e) => handleChange("password", e.target.value)}
+                    onBlur={(e) => handleBlur("password", e.target.value)}
                     autoComplete="new-password"
                     spellCheck="false"
                   />
                   <label
                     htmlFor="create_password"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-3"
+                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                   >
                     Create Password
                   </label>
@@ -656,24 +676,24 @@ export const Organization = () => {
                 </div>
                 {errors.password && <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>}
               </div>
+
               <div className="relative">
                 <div className="relative">
                   <input
-                    type="text"
+                    type={showConfirmPassword ? "text" : "password"}  // Toggle between text and password
                     id="confirm_password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer ${!showConfirmPassword ? 'password-mask' : ''
-                      }`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={selectedConfirmPassword}
-                    onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                    onBlur={(e) => handleBlur('confirmPassword', e.target.value)}
+                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                    onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
                     autoComplete="new-password"
                     spellCheck="false"
                   />
                   <label
                     htmlFor="confirm_password"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-3"
+                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
                   >
                     Confirm Password
                   </label>
@@ -694,12 +714,6 @@ export const Organization = () => {
                 </div>
               </div>
               <div className="flex justify-center mb-5">
-                {/* <button
-                  type="submit"
-                  className="px-8 py-2 bg-custom-blue text-white rounded-3xl"
-                >
-                  Save
-                </button> */}
                 <button
                   type="submit"
                   className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300"
