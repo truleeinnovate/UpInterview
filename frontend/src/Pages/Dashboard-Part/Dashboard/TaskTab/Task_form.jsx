@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
+import { Minimize, Expand, X } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -91,10 +90,6 @@ const TaskForm = ({
 
   const [showDropdownCategoryRelatedTo, setShowDropdownCategoryRelatedTo] = useState(false);
   const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] = useState(false);
-  const [showDropdownAssignedTo, setShowDropdownAssignedTo] = useState(false);
-  const [showDropdownPriority, setShowDropdownPriority] = useState(false);
-
-  const formRef = useRef(null);
 
   const handlePriorityChange = (e) => {
     const priority = e.target.value;
@@ -120,40 +115,7 @@ const TaskForm = ({
 
   const toggleDropdownCategoryRelatedTo = () => {
     setShowDropdownCategoryRelatedTo(!showDropdownCategoryRelatedTo);
-    setShowDropdownPriority(false);
-    setShowDropdownOptionRelatedTo(false);
-    setShowDropdownAssignedTo(false);
   };
-
-  const toggleDropdownAssignedTo = () => {
-    setShowDropdownAssignedTo(!showDropdownAssignedTo);
-    setShowDropdownCategoryRelatedTo(false);
-    setShowDropdownPriority(false);
-    setShowDropdownOptionRelatedTo(false);
-  };
-
-  const toggleDropdownPriority = () => {
-    setShowDropdownPriority(!showDropdownPriority);
-    setShowDropdownAssignedTo(false);
-    setShowDropdownCategoryRelatedTo(false);
-    setShowDropdownOptionRelatedTo(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (formRef.current && !formRef.current.contains(event.target)) {
-        setShowDropdownCategoryRelatedTo(false);
-        setShowDropdownOptionRelatedTo(false);
-        setShowDropdownAssignedTo(false);
-        setShowDropdownPriority(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const [interviews] = useState([]);
   const [mockInterviews] = useState([]);
@@ -251,7 +213,7 @@ const TaskForm = ({
       formData,
       selectedPriority,
       selectedStatus,
-      scheduledDate
+      selectedOptionRelatedTo
     );
 
     if (Object.keys(newErrors).length > 0) {
@@ -263,7 +225,6 @@ const TaskForm = ({
     try {
       const taskData = {
         ...formData,
-        dueDate: scheduledDate,
         priority: selectedPriority,
         status: selectedStatus,
         assignedTo: formData.assignedTo,
@@ -344,55 +305,46 @@ const TaskForm = ({
 
   return (
     <Modal
-            isOpen={true}
-            // onRequestClose={onClose}
-            className={modalClass}
-            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
-            scroll={true}
-            style={{ overflow: 'auto' }}
-          >
-          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-    
-                  <h2 className="text-2xl font-semibold text-custom-blue">
-                    {taskId ? "Update Task" : "Add New Task"}
-    
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsFullScreen(!isFullScreen)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-                    >
-                      {isFullScreen ? (
-                        <Minimize className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <Expand className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-                    <button
-                      onClick={handleClose}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-    
-                <form ref={formRef} onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto px-4 py-2">
-                <div className="grid grid-cols-1 gap-6 mb-6">
-          
-          <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-            {/* Title */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
-              />
-              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+      isOpen={true}
+      className={modalClass}
+      overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
+      style={{
+        overlay: {
+          zIndex: 50
+        }
+      }}
+    >
+      <div className={classNames('h-full overflow-auto',
+        {
+          'max-w-6xl mx-auto px-6': isFullScreen,
+          'hide-scrollbar': true // { Mansoor: this is a class name where i used this in the index.css file in the line 198 - 207}
+        },
+        { 'opacity-50': isMutationLoading }
+      )}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+
+            <h2 className="text-2xl font-semibold text-custom-blue">
+              {taskId ? "Update Task" : "Add New Task"}
+
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+              >
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+              <button
+                onClick={handleClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -401,38 +353,14 @@ const TaskForm = ({
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
               {/* Title */}
               <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-              <div className="relative">
-                <select
-                  value={formData.assignedToId || ''}
-                  onChange={(e) => {
-                    const selectedUserId = e.target.value;
-                    const selectedUser = usersRes.find(user => user._id === selectedUserId);
-                    setFormData(prev => ({
-                      ...prev,
-                      assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
-                      assignedToId: selectedUserId
-                    }));
-                  }}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select User</option>
-                  {usersRes.map((user) => (
-                    <option 
-                      className='font-medium text-gray-500 text-sm' 
-                      key={user._id} 
-                      value={user._id}
-                    >
-                      {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
-                    </option>
-                  ))}
-                </select>
-                <MdArrowDropDown
-                    size={20}
-                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                    onClick={toggleDropdownAssignedTo}
-                  />
-                {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+                <label className="block text-sm font-medium text-gray-700">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
+                />
+                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
               </div>
               {/* individual assigned to*/}
               {organization ? (
@@ -484,26 +412,22 @@ const TaskForm = ({
 
 
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-            {/* Priority */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Priority</label>
-              <div className="relative">
-                <select
-                  value={selectedPriority}
-                  onChange={handlePriorityChange}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select Priority</option>
-                  {Array.isArray(priorities) && priorities.map((priority) => (
-                    <option key={priority} value={priority}>{priority}</option>
-                  ))}
-                </select>
-                <MdArrowDropDown
-                    size={20}
-                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                    onClick={toggleDropdownPriority}
-                  />
-                {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
+              {/* Priority */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <div className="relative">
+                  <select
+                    value={selectedPriority}
+                    onChange={handlePriorityChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
+                  >
+                    <option value="" hidden>Select Priority</option>
+                    {Array.isArray(priorities) && priorities.map((priority) => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    ))}
+                  </select>
+                  {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
+                </div>
               </div>
 
               {/* Status */}
@@ -606,19 +530,18 @@ const TaskForm = ({
 
             {/* Due Date */}
             <div className="space-y-1">
-
-            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
-             Due Date
-            </label>
-            <input
-              type="datetime-local"
-              id="scheduledDate"
-              name="scheduledDate"
-              value={taskId && formData.dueDate && !isNaN(new Date(formData.dueDate).getTime()) ? new Date(formData.dueDate).toISOString().slice(0, 16) : scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 16)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />         
+              <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+                Due Date
+              </label>
+              <input
+                type="datetime-local"
+                id="scheduledDate"
+                name="scheduledDate"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
             </div>
 
@@ -649,12 +572,12 @@ const TaskForm = ({
               {taskId ? 'Update Task' : 'Create Task'}
             </button>
           </div>
-          {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
-        </form>
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
-              
-          </div>
+
+      </div>
     </Modal>
+
   );
 }
 
