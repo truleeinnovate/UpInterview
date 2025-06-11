@@ -225,6 +225,7 @@ const TaskForm = ({
         ...formData,
         priority: selectedPriority,
         status: selectedStatus,
+        assignedTo: formData.assignedTo,
         assignedToId: formData.assignedToId // Always send assignedToId
       };
 
@@ -357,14 +358,25 @@ const TaskForm = ({
               <label className="block text-sm font-medium text-gray-700">Assigned To</label>
               <div className="relative">
                 <select
-                  value={formData.assignedTo ? formData.assignedTo : ''}
-                  onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                  value={formData.assignedToId || ''}
+                  onChange={(e) => {
+                    const selectedUserId = e.target.value;
+                    const selectedUser = usersRes.find(user => user._id === selectedUserId);
+                    setFormData(prev => ({
+                      ...prev,
+                      assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
+                      assignedToId: selectedUserId
+                    }));
+                  }}
                   className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
                 >
-                  
                   <option value="" hidden>Select User</option>
                   {usersRes.map((user) => (
-                    <option className='font-medium text-gray-500 text-sm' key={user._id} value={user._id} onClick={() => handleInputChange('assignedToId', user._id)}>
+                    <option 
+                      className='font-medium text-gray-500 text-sm' 
+                      key={user._id} 
+                      value={user._id}
+                    >
                       {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
                     </option>
                   ))}
@@ -444,7 +456,7 @@ const TaskForm = ({
                     onClick={toggleDropdownCategoryRelatedTo}
                   />
                   {showDropdownCategoryRelatedTo && (
-                    <div className="absolute top-16 -mt-4 w-full rounded-md bg-white shadow-lg z-50">
+                    <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
                       {categoriesRelatedTo.map((category) => (
                         <div
                           key={category}
@@ -484,7 +496,7 @@ const TaskForm = ({
                     }
                   />
                   {showDropdownOptionRelatedTo && (
-                    <div className="absolute top-16 -mt-4 w-full rounded-md bg-white shadow-lg z-50">
+                    <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
                       {getOptionsForSelectedCategory().map((option) => (
                         <div
                           key={option.id} // Use the ID as the key
