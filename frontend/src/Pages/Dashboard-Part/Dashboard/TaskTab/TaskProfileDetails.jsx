@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from 'react-modal';
 import classNames from 'classnames';
-import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
+import { Minimize, Expand, X } from 'lucide-react';
+import {useCandidates} from "../../../../apiHooks/useCandidates.js";
 
 const TaskProfileDetails = ({ task, onClosetask }) => {
+  const { isMutationLoading } = useCandidates();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
   const [showMainContent] = useState(true);
@@ -30,35 +32,42 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   return (
     <>
       <Modal
-        isOpen={true}
-        onRequestClose={handleClose}
-        className={modalClass}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      >
-        <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}> 
-          <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
-            <h2 className="text-lg sm:text-2xl font-bold">Task Profile Details</h2>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 text-gray-600 hover:text-gray-800"
-              >
-                {isFullScreen ? (
-                  <ArrowsPointingInIcon className="h-5 w-5" />
-                ) : (
-                  <ArrowsPointingOutIcon className="h-5 w-5" />
-                )}
-              </button>
-              <button
-                onClick={handleClose}
-                className="p-2 text-gray-600 hover:text-gray-800"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-          
-          {showMainContent && (
+            isOpen={true}
+            // onRequestClose={onClose}
+            className={modalClass}
+            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
+            scroll={true}
+            style={{ overflow: 'auto' }}
+          >
+          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+    
+                  <h2 className="text-2xl font-semibold text-custom-blue">
+                    Task Profile Details / {task.taskCode}
+    
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                    >
+                      {isFullScreen ? (
+                        <Minimize className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Expand className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+    
+                {showMainContent && (
             <div className="flex-1 overflow-y-auto p-6">
               {/* Profile Image Section - Placeholder for tasks */}
               <div className="flex items-center justify-center mb-4">
@@ -173,7 +182,10 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
             </div>
           )}
         </div>
-      </Modal>
+              
+          </div>
+    </Modal>
+      
     </>
   );
 };
