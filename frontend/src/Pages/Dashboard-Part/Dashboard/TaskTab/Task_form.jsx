@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
@@ -8,8 +8,8 @@ import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
-import {useCandidates} from "../../../../apiHooks/useCandidates.js";
-import {usePositions} from "../../../../apiHooks/usePositions.js";
+import { useCandidates } from "../../../../apiHooks/useCandidates.js";
+import { usePositions } from "../../../../apiHooks/usePositions.js";
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -30,8 +30,8 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const organization = tokenPayload?.organization;
   const { candidateData, isMutationLoading } = useCandidates();
-  const {positionData} = usePositions();
-  const {usersRes} = useCustomContext();
+  const { positionData } = usePositions();
+  const { usersRes } = useCustomContext();
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -39,7 +39,7 @@ const TaskForm = ({
         try {
           const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
           const ownerData = response.data;
-          
+
           // Prefill form with owner's name
           setFormData(prev => ({
             ...prev,
@@ -51,11 +51,11 @@ const TaskForm = ({
         }
       }
     };
-    
+
     fetchOwnerData();
   }, [organization, ownerId]);
 
-   
+
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
@@ -72,7 +72,7 @@ const TaskForm = ({
   });
   const navigate = useNavigate();
   const [selectedPriority, setSelectedPriority] = useState("");
-  const priorities = ['High', 'Medium', 'Low','Normal'];
+  const priorities = ['High', 'Medium', 'Low', 'Normal'];
 
   const [selectedStatus, setSelectedStatus] = useState("New");
   const statuses = ["New", "In Progress", "Completed", "No Response"];
@@ -101,7 +101,7 @@ const TaskForm = ({
     }));
   };
 
- 
+
 
   const handleStatusChange = (e) => {
     const status = e.target.value;
@@ -202,13 +202,13 @@ const TaskForm = ({
     return option ? option.name : id;
   };
 
-  const displayName = selectedOptionIdRelatedTo 
-    ? getNameFromId(selectedOptionIdRelatedTo) 
+  const displayName = selectedOptionIdRelatedTo
+    ? getNameFromId(selectedOptionIdRelatedTo)
     : "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateTaskForm(
       formData,
       selectedPriority,
@@ -221,7 +221,7 @@ const TaskForm = ({
       console.log("Form validation failed:", newErrors);
       return;
     }
-    
+
     try {
       const taskData = {
         ...formData,
@@ -236,7 +236,7 @@ const TaskForm = ({
       } else {
         await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
       }
-      
+
       onTaskAdded();
       handleClose();
     } catch (error) {
@@ -268,7 +268,7 @@ const TaskForm = ({
         try {
           const response = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
           const taskData = response.data;
-          
+
           setFormData(taskData);
           setSelectedPriority(taskData.priority);
           setSelectedStatus(taskData.status);
@@ -279,7 +279,7 @@ const TaskForm = ({
           console.error("Error fetching task data:", error);
         }
       };
-      
+
       fetchTaskData();
     } else if (initialData) {
       // Use initialData if provided
@@ -290,155 +290,163 @@ const TaskForm = ({
   }, [taskId, initialData]);
 
   const handleClose = () => {
-      navigate('/task');
-    };
-  
-    const modalClass = classNames(
-      'fixed bg-white shadow-2xl border-l border-gray-200',
-      {
-        'inset-0': isFullScreen,
-        'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-      }
-    );
+    navigate('/task');
+  };
+
+  const modalClass = classNames(
+    'fixed bg-white shadow-2xl border-l border-gray-200',
+    {
+      'inset-0': isFullScreen,
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+    }
+  );
 
 
 
   return (
     <Modal
-            isOpen={true}
-            // onRequestClose={onClose}
-            className={modalClass}
-            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
-            scroll={true}
-            style={{ overflow: 'auto' }}
-          >
-          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-    
-                  <h2 className="text-2xl font-semibold text-custom-blue">
-                    {taskId ? "Update Task" : "Add New Task"}
-    
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsFullScreen(!isFullScreen)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+      isOpen={true}
+      className={modalClass}
+      overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
+      style={{
+        overlay: {
+          zIndex: 50
+        }
+      }}
+    >
+      <div className={classNames('h-full overflow-auto',
+        {
+          'max-w-6xl mx-auto px-6': isFullScreen,
+          'hide-scrollbar': true // { Mansoor: this is a class name where i used this in the index.css file in the line 198 - 207}
+        },
+        { 'opacity-50': isMutationLoading }
+      )}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+
+            <h2 className="text-2xl font-semibold text-custom-blue">
+              {taskId ? "Update Task" : "Add New Task"}
+
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+              >
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+              <button
+                onClick={handleClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mb-6">
+
+            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+              {/* Title */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
+                />
+                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+              </div>
+              {/* individual assigned to*/}
+              {organization ? (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+                  <div className="relative">
+                    <select
+                      value={formData.assignedToId || ''}
+                      onChange={(e) => {
+                        const selectedUserId = e.target.value;
+                        const selectedUser = usersRes.find(user => user._id === selectedUserId);
+                        setFormData(prev => ({
+                          ...prev,
+                          assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
+                          assignedToId: selectedUserId
+                        }));
+                      }}
+                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
                     >
-                      {isFullScreen ? (
-                        <Minimize className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <Expand className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-                    <button
-                      onClick={handleClose}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                      <option value="" hidden>Select User</option>
+                      {usersRes.map((user) => (
+                        <option
+                          className='font-medium text-gray-500 text-sm'
+                          key={user._id}
+                          value={user._id}
+                        >
+                          {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
                   </div>
                 </div>
-    
-                <div className="grid grid-cols-1 gap-6 mb-6">
-          
-          <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-            {/* Title */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
-              />
-              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-            </div>
-            {/* individual assigned to*/}
-            {organization ? (
-              <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-              <div className="relative">
-                <select
-                  value={formData.assignedToId || ''}
-                  onChange={(e) => {
-                    const selectedUserId = e.target.value;
-                    const selectedUser = usersRes.find(user => user._id === selectedUserId);
-                    setFormData(prev => ({
-                      ...prev,
-                      assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
-                      assignedToId: selectedUserId
-                    }));
-                  }}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select User</option>
-                  {usersRes.map((user) => (
-                    <option 
-                      className='font-medium text-gray-500 text-sm' 
-                      key={user._id} 
-                      value={user._id}
-                    >
-                      {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
-                    </option>
-                  ))}
-                </select>
-                {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
-              </div>
-            </div>
-            ) : (
-              <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-              <input
-                type="text"
-                value={formData.assignedTo}
-                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-              />
-              {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
-            </div>
-            )}
-            
-          </div>  
+              ) : (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+                  <input
+                    type="text"
+                    value={formData.assignedTo}
+                    onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
+                  />
+                  {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+                </div>
+              )}
 
-            
-            
+            </div>
+
+
+
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-            {/* Priority */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Priority</label>
-              <div className="relative">
-                <select
-                  value={selectedPriority}
-                  onChange={handlePriorityChange}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select Priority</option>
-                  {Array.isArray(priorities) && priorities.map((priority) => (
-                    <option key={priority} value={priority}>{priority}</option>
-                  ))}
-                </select>
-                {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
+              {/* Priority */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <div className="relative">
+                  <select
+                    value={selectedPriority}
+                    onChange={handlePriorityChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
+                  >
+                    <option value="" hidden>Select Priority</option>
+                    {Array.isArray(priorities) && priorities.map((priority) => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    ))}
+                  </select>
+                  {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
+                </div>
               </div>
-            </div>
 
-            {/* Status */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <div className="relative">
-                <select
-                  value={selectedStatus}
-                  onChange={handleStatusChange}
-                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
-                >
-                  <option value="" hidden>Select Status</option>
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+              {/* Status */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <div className="relative">
+                  <select
+                    value={selectedStatus}
+                    onChange={handleStatusChange}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
+                  >
+                    <option value="" hidden>Select Status</option>
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+                </div>
               </div>
-            </div>
             </div>
             {/* Related To */}
             <div className="space-y-1">
@@ -481,7 +489,7 @@ const TaskForm = ({
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
                         !showDropdownOptionRelatedTo
-                        
+
                       )
                     }
                     readOnly
@@ -489,7 +497,7 @@ const TaskForm = ({
                     className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedToOption && 'border-red-500'}`}
                   />
                   <MdArrowDropDown
-                     size={20}
+                    size={20}
                     className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
                     onClick={() =>
                       setShowDropdownOptionRelatedTo(
@@ -522,18 +530,18 @@ const TaskForm = ({
 
             {/* Due Date */}
             <div className="space-y-1">
-            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
-             Due Date
-            </label>
-            <input
-              type="datetime-local"
-              id="scheduledDate"
-              name="scheduledDate"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 16)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />         
+              <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+                Due Date
+              </label>
+              <input
+                type="datetime-local"
+                id="scheduledDate"
+                name="scheduledDate"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
             </div>
 
@@ -542,7 +550,7 @@ const TaskForm = ({
               <label className="block text-sm font-medium text-gray-700">Comments</label>
               <textarea
                 value={formData.comments}
-                onChange={(e) => setFormData({...formData, comments: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                 placeholder="Add comments"
                 className={`w-full px-3 py-2 h-40 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.comments && 'border-red-500'}`}
                 rows="5"
@@ -564,12 +572,12 @@ const TaskForm = ({
               {taskId ? 'Update Task' : 'Create Task'}
             </button>
           </div>
-          {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
-              
-          </div>
-        </Modal>
-   
+
+      </div>
+    </Modal>
+
   );
 }
 

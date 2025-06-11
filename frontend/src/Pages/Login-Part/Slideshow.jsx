@@ -5,8 +5,6 @@ import img3 from '../Dashboard-Part/Images/internal.webp';
 import img4 from '../Dashboard-Part/Images/mock.webp';
 import img5 from '../Dashboard-Part/Images/questionBank.webp';
 
-
-
 const images = [img1, img2, img3, img4, img5];
 
 const Slideshow = () => {
@@ -27,7 +25,7 @@ const Slideshow = () => {
   }, []);
 
   return (
-    <div className="relative h-[calc(100vh-48px)] sm:h-[532px] w-full overflow-hidden bg-gradient-to-r from-pink-400 via-purple-500 to-blue-700">
+    <div className="relative h-[calc(100vh-48px)] sm:h-[400px] w-full overflow-hidden bg-gradient-to-r from-pink-400 via-purple-500 to-blue-700">
       {/* Images */}
       {images.map((image, index) => (
         <div
