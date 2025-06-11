@@ -3,21 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { Minimize, Expand, X } from 'lucide-react';
-import Switch from "react-switch";
+// import Switch from "react-switch";
 import { validateInterviewTemplate } from '../../utils/InterviewTemplateValidation';
 import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
-import { useQueryClient } from '@tanstack/react-query';
+// import { useQueryClient } from '@tanstack/react-query';
 import LoadingButton from '../../Components/LoadingButton';
 import { ReactComponent as FaPlus } from '../../icons/FaPlus.svg';
 
-
 const InterviewSlideover = ({ mode }) => {
     const { templatesData, saveTemplate, isMutationLoading } = useInterviewTemplates();
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     const { id } = useParams();
     const navigate = useNavigate();
-
+    const [isLoading, setIsLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [formKey, setFormKey] = useState(Date.now());
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [newTemplate, setNewTemplate] = useState({
         templateTitle: '',
@@ -29,30 +29,35 @@ const InterviewSlideover = ({ mode }) => {
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isCreatingRound, setIsCreatingRound] = useState(false);
+    // const [isCreatingRound, setIsCreatingRound] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            setIsEditMode(true);
-            const foundTemplate = templatesData.find(tem => tem._id === id);
-            if (foundTemplate) {
+        if (templatesData) {
+            if (id) {
+                setIsEditMode(true);
+                const foundTemplate = templatesData.find(tem => tem._id === id);
+                if (foundTemplate) {
+                    setNewTemplate(prev => ({
+                        ...prev,
+                        templateTitle: foundTemplate.templateName || '',
+                        label: foundTemplate.label || '',
+                        description: foundTemplate.description || '',
+                        status: foundTemplate.status || 'draft',
+                        rounds: foundTemplate.rounds || []
+                    }));
+                }
+            } else {
+                setIsEditMode(false);
                 setNewTemplate({
-                    templateTitle: foundTemplate.templateName || '',
-                    label: foundTemplate.label || '',
-                    description: foundTemplate.description || '',
-                    status: foundTemplate.status || 'draft',
-                    rounds: foundTemplate.rounds || []
+                    templateTitle: '',
+                    label: '',
+                    description: '',
+                    status: 'draft',
+                    rounds: []
                 });
             }
-        } else {
-            setIsEditMode(false);
-            setNewTemplate({
-                templateTitle: '',
-                label: '',
-                description: '',
-                status: 'draft',
-                rounds: []
-            });
+            setIsLoading(false);
+            setFormKey(Date.now());
         }
     }, [id, templatesData]);
 
@@ -70,6 +75,8 @@ const InterviewSlideover = ({ mode }) => {
     };
 
     const handleTitleChange = (e) => {
+        if (isLoading) return;
+        
         const value = e.target.value;
          // Less restrictive filtering - allow most characters but still create a safe label
     // const sanitizedValue = value; // Remove filtering or make it less restrictive
@@ -94,6 +101,8 @@ const InterviewSlideover = ({ mode }) => {
     };
 
     const handleDescriptionChange = (e) => {
+        if (isLoading) return;
+        
         const value = e.target.value;
         setNewTemplate(prev => ({
             ...prev,
@@ -200,11 +209,6 @@ const InterviewSlideover = ({ mode }) => {
         }
     };
 
-
-
-
-
-
     const onClose = () => {
         if (mode === 'Edit' || mode === 'Create') {
             navigate(`/interview-templates`);
@@ -216,8 +220,6 @@ const InterviewSlideover = ({ mode }) => {
         //     navigate('/interview-templates');
         // }
     };
-
-
 
     const modalClass = classNames(
         'fixed bg-white shadow-2xl border-l border-gray-200 z-50',
@@ -256,7 +258,12 @@ const InterviewSlideover = ({ mode }) => {
                         </div>
                     </div>
 
-                    <form id="new-template-form" onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-y-auto">
+                    <form 
+                        key={formKey}
+                        id="new-template-form" 
+                        onSubmit={handleSubmit} 
+                        className="flex-1 flex flex-col overflow-y-auto"
+                    >
                         <div className="px-2 sm:px-6 flex-1">
                             <div className="space-y-6 pt-6 pb-5">
                                 <div>
@@ -411,9 +418,6 @@ const InterviewSlideover = ({ mode }) => {
                                     <FaPlus className="w-5 h-5 mr-1" /> Add Round
                                 </LoadingButton>
                             )}
-
-
-
                         </div>
                     </form>
                 </div>
