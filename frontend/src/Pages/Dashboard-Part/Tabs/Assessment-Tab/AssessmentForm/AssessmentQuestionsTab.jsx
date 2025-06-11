@@ -52,6 +52,12 @@ const AssessmentQuestionsTab = ({
   setIsQuestionLimitErrorPopupOpen
 }) => {
   const [isQuestionPopup, setIsQuestionPopup] = useState(false);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const handlePopupToggle = (section = null) => {
+    setIsQuestionPopup(!isQuestionPopup);
+    setSelectedSection(section);
+  };
+
 
   // Toggle action menu for sections and questions
   const toggleActionMenu = (type, sectionIndex, questionIndex = null) => {
@@ -79,9 +85,9 @@ const AssessmentQuestionsTab = ({
   const questionScoreOverall = totalScore && totalQuestions ? (Number(totalScore) / totalQuestions).toFixed(2) : 0;
 
 
-  const handlePopupToggle = (index) => {
-    setIsQuestionPopup(!isQuestionPopup);
-  };
+  // const handlePopupToggle = (index) => {
+  //   setIsQuestionPopup(!isQuestionPopup);
+  // };
 
   return (
     <div className="">
@@ -211,15 +217,17 @@ const AssessmentQuestionsTab = ({
                       <h3 className="font-semibold text-gray-800">{section.SectionName}</h3>
                     </div>
 
-                    <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-                    onClick={handlePopupToggle}>
-                      <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110"
-                         />
+                    <button
+                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                      onClick={() => handlePopupToggle(section)}
+                    >
+                      <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
                       Add Questions
                     </button>
 
+
                     {/* Question Popup */}
-                    {isQuestionPopup && (
+                    {/* {isQuestionPopup && (
                       <div
                         className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
                         onClick={() => setIsQuestionPopup(false)}
@@ -237,8 +245,6 @@ const AssessmentQuestionsTab = ({
                               />
                             </button>
                           </div>
-
-
                           {isQuestionPopup &&
                             <QuestionBank
                               assessmentId={assessmentId}
@@ -251,57 +257,11 @@ const AssessmentQuestionsTab = ({
                               checkedCount={checkedCount}
                               type="assessment"
                             />
-
                           }
 
                         </div>
                       </div>
-                    )}
-
-                    {/* <Popup
-                      trigger={
-                        <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                          <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
-                          Add Questions
-                        </button>
-                      }
-                      modal
-                      closeOnDocumentClick={false}
-                      overlayStyle={{
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        backdropFilter: "blur(5px)",
-                        WebkitBackdropFilter: "blur(5px)",
-                      }}
-                      contentStyle={{
-                        width: "90%",
-                        maxWidth: "1200px",
-                        height: "90vh",
-                        borderRadius: "0.5rem",
-                        padding: "0",
-                        border: "none",
-                        backgroundColor: "white",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                      }}
-                    >
-                      {(close) => (
-                        <div className="">
-
-
-                          <QuestionBank
-                            assessmentId={assessmentId}
-                            sectionName={section.SectionName}
-                            updateQuestionsInAddedSectionFromQuestionBank={
-                              updateQuestionsInAddedSectionFromQuestionBank
-                            }
-                            closeQuestionBank={close}
-                            addedSections={addedSections}
-                            questionsLimit={questionsLimit}
-                            checkedCount={checkedCount}
-                            type="assessment"
-                          />
-                        </div>
-                      )}
-                    </Popup> */}
+                    )}                    */}
                   </div>
 
                   <div className="flex items-center space-x-4">
@@ -468,6 +428,37 @@ const AssessmentQuestionsTab = ({
           })}
         </div>
       </div>
+      {isQuestionPopup && selectedSection && (
+        <div
+          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+          onClick={() => setIsQuestionPopup(false)}
+        >
+          <div
+            className="bg-white rounded-md w-[95%] h-[90%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="py-3 px-4  flex items-center justify-between">
+              <h2 className="text-xl text-custom-blue font-semibold">Add Assessment Questions</h2>
+              <button>
+                <X
+                  className="text-2xl text-red-500"
+                  onClick={() => handlePopupToggle()}
+                />
+              </button>
+            </div>
+            <QuestionBank
+              assessmentId={assessmentId}
+              sectionName={selectedSection.SectionName}
+              updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+              addedSections={addedSections}
+              questionsLimit={questionsLimit}
+              checkedCount={checkedCount}
+              type="assessment"
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
