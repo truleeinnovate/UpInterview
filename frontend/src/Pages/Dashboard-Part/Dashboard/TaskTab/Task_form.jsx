@@ -26,6 +26,7 @@ const TaskForm = ({
 }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
+
   const ownerId = tokenPayload?.userId
   const organization = tokenPayload?.organization;
   const { candidateData, isMutationLoading } = useCandidates();
@@ -76,6 +77,7 @@ const TaskForm = ({
   const [selectedStatus, setSelectedStatus] = useState("New");
   const statuses = ["New", "In Progress", "Completed", "No Response"];
   const [isFullScreen, setIsFullScreen] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState("");
 
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null); // Add error state
@@ -520,14 +522,18 @@ const TaskForm = ({
 
             {/* Due Date */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Due Date</label>
-              <input
-                type="datetime-local"
-                value={formData.dueDate ? new Date(formData.dueDate).toISOString().slice(0, 16) : ''}
-                onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                min={today}
-                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.dueDate && 'border-red-500'}`}
-              />
+            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+             Due Date
+            </label>
+            <input
+              type="datetime-local"
+              id="scheduledDate"
+              name="scheduledDate"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />         
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
             </div>
 
