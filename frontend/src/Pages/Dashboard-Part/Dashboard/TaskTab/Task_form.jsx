@@ -618,7 +618,7 @@ const TaskForm = ({
         </div>
               
           </div>
-        </Modal>
+    </Modal>
    
   );
 }
