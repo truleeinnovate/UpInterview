@@ -5,6 +5,8 @@ import { format, isToday, isTomorrow, isThisWeek, parseISO, addWeeks, startOfWee
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../../../../config';
+import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 const TaskList = () => {
   const [taskData, setTaskData] = useState([]);
@@ -12,6 +14,12 @@ const TaskList = () => {
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
   const navigate = useNavigate();
+
+   const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const organization = tokenPayload?.organization;
+    const tenantId = tokenPayload?.tenantId;
+    const currentUserId = tokenPayload?.userId;
 
   // Custom function to check if a date is in the next week
   const isNextWeek = (date) => {
@@ -27,7 +35,14 @@ const TaskList = () => {
       setLoading(true);
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-        setTaskData(response.data);
+        let filteredTasks = response.data;
+      if (organization === true) {
+        filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
+      } else {
+        filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
+      }
+      
+      setTaskData(filteredTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
       } finally {
@@ -35,7 +50,7 @@ const TaskList = () => {
       }
     };
     fetchTasks();
-  }, []);
+  }, [currentUserId, organization, tenantId]);
 
   // Filter tasks based on time and status criteria
   const filterTasks = () => {
