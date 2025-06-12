@@ -65,11 +65,9 @@ const Task = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
-  console.log("organization", organization);
   const tenantId = tokenPayload?.tenantId;
-  console.log("tenantId", tenantId);
   const currentUserId = tokenPayload?.userId;
-  console.log("currentUserId", currentUserId);
+
 
   // Reset filters when popup opens
   useEffect(() => {
@@ -82,7 +80,6 @@ const Task = () => {
   const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-      console.log("response", response);
       let filteredTasks = response.data;
       if (organization === true) {
         filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
