@@ -182,8 +182,6 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
           </div>
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>
-          ) : error ? (
-            <div className="p-4 text-center">{error}</div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-4 text-center text-gray-500">No notifications</div>
           ) : (
@@ -248,8 +246,6 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
             <div className="p-4 sm:p-6 overflow-y-auto max-h-[400px]">
               {loading ? (
                 <div className="text-center text-gray-500 py-8">Loading notifications...</div>
-              ) : error ? (
-                <div className="text-center text-red-500 py-8">{error}</div>
               ) : filteredNotifications.length > 0 ? (
                 <NotificationList notifications={filteredNotifications} detailed={true} onMarkAsRead={markAsRead} />
               ) : (

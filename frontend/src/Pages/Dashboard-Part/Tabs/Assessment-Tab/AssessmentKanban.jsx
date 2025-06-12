@@ -316,6 +316,21 @@ const AssessmentKanban = ({
                         )}
                       </Draggable>
                     ))}
+                    
+                    {column.items.length === 0 && (
+                      <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
+                        <DocumentTextIcon className="w-12 h-12 text-gray-300 mb-3" />
+                        <h3 className="text-lg font-medium text-gray-700 mb-1">
+                          No {column.title.toLowerCase()} assessments found
+                        </h3>
+                        <p className="text-gray-500 text-center max-w-md text-sm">
+                          {column.title === 'Active' 
+                            ? 'There are no active assessments to display.'
+                            : 'There are no inactive assessments at the moment.'}
+                        </p>
+                      </div>
+                    )}
+                    
                     {provided.placeholder}
                   </div>
                 )}

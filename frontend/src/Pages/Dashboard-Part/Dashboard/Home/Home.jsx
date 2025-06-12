@@ -133,8 +133,11 @@ const Home = () => {
           >
             <TaskList />
             <InterviewerSchedule />
-            <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />
-            <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />
+
+            {!freelancer && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
+            
+            {!freelancer && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />}
+            
           </motion.div>
         </div>
       </main>

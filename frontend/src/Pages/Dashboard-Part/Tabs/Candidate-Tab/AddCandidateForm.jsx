@@ -568,10 +568,8 @@ console.log('currentRoles:', currentRoles);
         <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-
               <h2 className="text-2xl font-semibold text-custom-blue">
                 {id ? "Update Candidate" : "Add New Candidate"}
-
               </h2>
               <div className="flex items-center gap-2">
                 <button
