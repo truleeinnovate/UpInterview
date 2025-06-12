@@ -28,6 +28,7 @@ const TaskForm = ({
   const tokenPayload = decodeJwt(authToken);
 
   const ownerId = tokenPayload?.userId
+  const tenantId = tokenPayload?.tenantId
   const organization = tokenPayload?.organization;
   const { candidateData, isMutationLoading } = useCandidates();
   const {positionData} = usePositions();
@@ -270,6 +271,8 @@ const TaskForm = ({
     try {
       const taskData = {
         ...formData,
+        ownerId:ownerId,
+        tenantId:tenantId,
         dueDate: scheduledDate,
         priority: selectedPriority,
         status: selectedStatus,

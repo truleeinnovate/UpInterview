@@ -176,7 +176,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
       </button>
 
       {isOpen && !showAllNotifications && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 mx-4 sm:mx-0">
+        <div className="absolute  top-11  right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 sm:mx-0">
           <div className="px-3 sm:px-4 py-2 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
           </div>

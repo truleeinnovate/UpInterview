@@ -68,38 +68,38 @@ const SuggestedQuestionsComponent = ({
     const [tempDifficultyLevelFilterItems, setTempDifficultyLevelFilterItems] = useState([]);
     const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
     const [tempSkillInput, setTempSkillInput] = useState("");
+    const [searchInput, setSearchInput] = useState("");
     const [tempFiltrationData, setTempFiltrationData] = useState(JSON.parse(JSON.stringify(filtrationData)));
 
+    
+   
     // Filter questions
     const suggestedQuestionsFilteredData = useMemo(() => {
         if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
         return suggestedQuestions.filter((question) => {
-            const matchesTags =
-                selectedSkills.length === 0 && !skillInput
-                    ? true
-                    : question.tags.some((tag) =>
-                        selectedSkills.includes(tag.toLowerCase()) ||
-                        (skillInput && tag.toLowerCase().includes(skillInput.toLowerCase()))
-                    );
-            const matchesQuestionText =
-                !questionInput ||
-                question.questionText.toLowerCase().includes(questionInput.toLowerCase());
+            // Unified search: check both question text and tags
+            const matchesSearch = 
+                !searchInput ||
+                question.questionText.toLowerCase().includes(searchInput.toLowerCase()) ||
+                question.tags.some(tag => tag.toLowerCase().includes(searchInput.toLowerCase()));
+            
             const matchesType =
                 questionTypeFilterItems.length === 0 ||
                 questionTypeFilterItems.includes(question.questionType.toLowerCase());
+            
             const matchesDifficultyLevel =
                 difficultyLevelFilterItems.length === 0 ||
                 difficultyLevelFilterItems.includes(question.difficultyLevel.toLowerCase());
-            return matchesTags && matchesQuestionText && matchesType && matchesDifficultyLevel;
+            
+            return matchesSearch && matchesType && matchesDifficultyLevel;
         });
     }, [
         suggestedQuestions,
-        selectedSkills,
-        skillInput,
-        questionInput,
+        searchInput,
         questionTypeFilterItems,
         difficultyLevelFilterItems,
     ]);
+
 
     // Pagination
     const totalPages = Math.ceil(suggestedQuestionsFilteredData.length / itemsPerPage);
@@ -124,15 +124,15 @@ const SuggestedQuestionsComponent = ({
         });
     }, [interviewQuestionsList, interviewQuestionsLists]);
 
-    // Filter tags for skill dropdown
-    const filteredTags = useMemo(() => {
-        if (!skillInput || !suggestedQuestions) return [];
-        const allTags = new Set();
-        suggestedQuestions.forEach((question) => {
-            question.tags.forEach((tag) => allTags.add(tag.toLowerCase()));
-        });
-        return [...allTags].filter((tag) => tag.includes(skillInput.toLowerCase()));
-    }, [skillInput, suggestedQuestions]);
+    // // Filter tags for skill dropdown
+    // const filteredTags = useMemo(() => {
+    //     if (!skillInput || !suggestedQuestions) return [];
+    //     const allTags = new Set();
+    //     suggestedQuestions.forEach((question) => {
+    //         question.tags.forEach((tag) => allTags.add(tag.toLowerCase()));
+    //     });
+    //     return [...allTags].filter((tag) => tag.includes(skillInput.toLowerCase()));
+    // }, [skillInput, suggestedQuestions]);
 
     // Handlers
     const handleToggle = (questionId, item) => {
@@ -216,14 +216,14 @@ const SuggestedQuestionsComponent = ({
         }
     };
 
-    const onClickDropdownSkill = (tag) => {
-        if (!selectedSkills.includes(tag)) {
-            setSelectedSkills((prev) => [...prev, tag]);
-            setSkillInput("");
-        } else {
-            toast.error(`${tag} already selected`);
-        }
-    };
+    // const onClickDropdownSkill = (tag) => {
+    //     if (!selectedSkills.includes(tag)) {
+    //         setSelectedSkills((prev) => [...prev, tag]);
+    //         setSkillInput("");
+    //     } else {
+    //         toast.error(`${tag} already selected`);
+    //     }
+    // };
 
     const onClickCrossIcon = (skill) => {
         setSelectedSkills((prev) => prev.filter((s) => s !== skill));
@@ -237,43 +237,43 @@ const SuggestedQuestionsComponent = ({
         if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
     };
 
-    const onChangeCheckboxInQuestionType = (e, id, index) => {
-        const { value, checked } = e.target;
-        setFiltrationData((prev) =>
-            prev.map((category) =>
-                category.id === id
-                    ? {
-                        ...category,
-                        options: category.options.map((opt, i) =>
-                            i === index ? { ...opt, isChecked: checked } : opt
-                        ),
-                    }
-                    : category
-            )
-        );
-        setQuestionTypeFilterItems((prev) =>
-            checked ? [...prev, value] : prev.filter((item) => item !== value)
-        );
-    };
+    // const onChangeCheckboxInQuestionType = (e, id, index) => {
+    //     const { value, checked } = e.target;
+    //     setFiltrationData((prev) =>
+    //         prev.map((category) =>
+    //             category.id === id
+    //                 ? {
+    //                     ...category,
+    //                     options: category.options.map((opt, i) =>
+    //                         i === index ? { ...opt, isChecked: checked } : opt
+    //                     ),
+    //                 }
+    //                 : category
+    //         )
+    //     );
+    //     setQuestionTypeFilterItems((prev) =>
+    //         checked ? [...prev, value] : prev.filter((item) => item !== value)
+    //     );
+    // };
 
-    const onChangeCheckboxInDifficultyLevel = (e, id, index) => {
-        const { value, checked } = e.target;
-        setFiltrationData((prev) =>
-            prev.map((category) =>
-                category.id === id
-                    ? {
-                        ...category,
-                        options: category.options.map((opt, i) =>
-                            i === index ? { ...opt, isChecked: checked } : opt
-                        ),
-                    }
-                    : category
-            )
-        );
-        setDifficultyLevelFilterItems((prev) =>
-            checked ? [...prev, value] : prev.filter((item) => item !== value)
-        );
-    };
+    // const onChangeCheckboxInDifficultyLevel = (e, id, index) => {
+    //     const { value, checked } = e.target;
+    //     setFiltrationData((prev) =>
+    //         prev.map((category) =>
+    //             category.id === id
+    //                 ? {
+    //                     ...category,
+    //                     options: category.options.map((opt, i) =>
+    //                         i === index ? { ...opt, isChecked: checked } : opt
+    //                     ),
+    //                 }
+    //                 : category
+    //         )
+    //     );
+    //     setDifficultyLevelFilterItems((prev) =>
+    //         checked ? [...prev, value] : prev.filter((item) => item !== value)
+    //     );
+    // };
 
     const onClickRemoveSelectedFilterItem = (item) => {
         if (questionTypeFilterItems.includes(item)) {
@@ -402,34 +402,7 @@ const SuggestedQuestionsComponent = ({
     return (
         <div className="h-full flex flex-col">
             {/* Search/Filter Bar */}
-            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"} z-40`}>
-                <div>
-                    <div className="relative flex items-center rounded-md border">
-                        <span className="text-custom-blue p-2">
-                            <Search className="w-5 h-5" />
-                        </span>
-                        <input
-                            onChange={(e) => setSkillInput(e.target.value)}
-                            value={skillInput}
-                            type="search"
-                            placeholder="Search by skills"
-                            className="w-[85%] rounded-md focus:outline-none pr-2"
-                        />
-                        {skillInput && filteredTags.length > 0 && (
-                            <ul className="absolute top-full left-0 w-full bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-50">
-                                {filteredTags.map((tag, index) => (
-                                    <li
-                                        key={index}
-                                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => onClickDropdownSkill(tag)}
-                                    >
-                                        {tag}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                </div>
+            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"} z-40`}>
                 <div className="flex gap-x-3">
                     <div className="relative flex items-center rounded-md border">
                         <span className="p-2 text-custom-blue">
@@ -437,10 +410,10 @@ const SuggestedQuestionsComponent = ({
                         </span>
                         <input
                             type="search"
-                            placeholder="Search by Questions"
+                            placeholder="Search by Skills & Questions"
                             className="w-[85%] rounded-md focus:outline-none pr-2"
-                            value={questionInput}
-                            onChange={(e) => setQuestionInput(e.target.value)}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                         />
                     </div>
                     <div className="flex items-center gap-3">

@@ -21,6 +21,8 @@ import TaskProfileDetails from './TaskProfileDetails.jsx';
 import axios from 'axios';
 import { config } from '../../../../config.js';
 import TaskKanban from './TaskKanban.jsx';
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const Task = () => {
   const navigate = useNavigate();
@@ -60,6 +62,15 @@ const Task = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const organization = tokenPayload?.organization;
+  console.log("organization", organization);
+  const tenantId = tokenPayload?.tenantId;
+  console.log("tenantId", tenantId);
+  const currentUserId = tokenPayload?.userId;
+  console.log("currentUserId", currentUserId);
+
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -71,11 +82,19 @@ const Task = () => {
   const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-      setTaskData(response.data);
+      console.log("response", response);
+      let filteredTasks = response.data;
+      if (organization === true) {
+        filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
+      } else {
+        filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
+      }
+      
+      setTaskData(filteredTasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  }, []);
+  }, [currentUserId, organization, tenantId]);
 
   useEffect(() => {
     fetchTasks();

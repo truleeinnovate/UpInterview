@@ -14,7 +14,7 @@ const getTasks = async (req, res) => {
 // Create a new task
 const createTask = async (req, res) => {
   const lastTask = await Task.findOne({})
-  .sort({ createdAt: -1 })
+  .sort({ _id: -1 })
   .select('taskCode')
   .lean();
 let nextNumber = 1;
@@ -25,7 +25,7 @@ nextNumber = parseInt(match[1], 10) + 1;
 }
 }
 const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
-    const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
+    const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments,ownerId,tenantId } = req.body;
     const task = new Task({
       title,
       assignedTo,
@@ -36,6 +36,8 @@ const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
       dueDate,
       comments,
       taskCode,
+      ownerId,
+      tenantId
     });
   
     try {
