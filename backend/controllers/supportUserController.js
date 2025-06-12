@@ -17,7 +17,7 @@ exports.createTicket = async(req,res)=>{
             return res.status(400).send({ message: "Organization is required" });
         }
         const lastTicket = await SupportUser.findOne({})
-                        .sort({ createdAt: -1 })
+                        .sort({ _id: -1 })
                         .select('ticketCode')
                         .lean();
         let nextNumber = 1;

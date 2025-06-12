@@ -135,7 +135,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const outlineDropdownContent = (
-    <div className="absolute top-12 w-80 text-sm rounded-md bg-white border border-custom-blue right-0 z-50 -mr-20">
+    <div className="absolute top-12  w-80 text-sm rounded-md bg-white border border-custom-blue right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2 border-b">
         <h2 className="text-start font-medium text-custom-blue">Help & Training</h2>
         <button className="text-custom-blue hover:text-blue-500" onClick={toggleOutlineDropdown}>
@@ -179,7 +179,7 @@ const Navbar = () => {
   );
 
   const profileDropdownContent = (
-    <div className="absolute top-10 border border-custom-blue w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-50">
+    <div className="absolute top-11 border border-custom-blue w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
       <div className="p-2 flex items-center">
         <p className="font-medium text-custom-blue" onClick={toggleProfileDropdown}>
           {profileImage ? (
@@ -252,6 +252,8 @@ const Navbar = () => {
             <IoMdInformationCircleOutline
               className={dropdownState.outlineDropdown ? "text-custom-blue" : "text-black"}
             />
+            {dropdownState.outlineDropdown && <IoIosArrowUp className="text-[12px] w-9 h-9 text text-custom-blue absolute top-6 left-0 z-50 " />}
+            {dropdownState.outlineDropdown && <IoIosArrowDown className="text-[16px] w-4 h-4 text-white rotate-45 absolute z-40 top-10 left-2   bg-white"/>}
           </p>
           {dropdownState.outlineDropdown && outlineDropdownContent}
         </div>
@@ -263,11 +265,15 @@ const Navbar = () => {
       key: "notification",
       ref: notificationRef,
       content: (
+        <div className="relative">
         <NotificationPanel
           isOpen={dropdownState.isNotificationOpen}
           setIsOpen={(value) => setDropdownState((prev) => ({ ...prev, isNotificationOpen: value }))}
           closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
         />
+        {dropdownState.isNotificationOpen && <IoIosArrowUp className="text-[16px] w-5 h-5 text-white rotate-45 absolute z-40 top-11 right-0 left-0 border border-gray-200  bg-white" />}
+        
+        </div>
       ),
       className: "text-xl border rounded-md",
       isActive: dropdownState.isNotificationOpen,
@@ -289,6 +295,8 @@ const Navbar = () => {
                 className={dropdownState.profileDropdown ? "text-custom-blue" : "text-black"}
               />
             )}
+            {dropdownState.profileDropdown && <IoIosArrowUp className="text-[12px] w-9 h-9 text text-custom-blue absolute top-5 pl-1 right-0 z-50 " />}
+            {dropdownState.profileDropdown && <IoIosArrowDown className="text-[16px] w-5 h-4 text-white rotate-45 absolute z-40 top-10 right-1   bg-white"/>}
           </p>
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>

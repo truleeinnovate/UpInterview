@@ -1,11 +1,13 @@
 
 import Modal from 'react-modal';
-import { Phone, GraduationCap, School, Mail, ExternalLink, X } from 'lucide-react';
+import { Phone, GraduationCap, School, Mail, ExternalLink, X, Briefcase, User, Calendar } from 'lucide-react';
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Loading from '../../../../../Components/Loading';
 import { useCandidates } from '../../../../../apiHooks/useCandidates';
+import { FaGenderless } from 'react-icons/fa';
+import { LiaGenderlessSolid } from 'react-icons/lia';
 Modal.setAppElement('#root');
 
 const CandidateDetails = ({mode}) => {
@@ -89,7 +91,8 @@ const fromPath = getFromPath();
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <div className="flex items-center justify-center mb-4">
+         
+            <div className="flex justify-center items-center  gap-4 mb-4">
             <div className="relative">
               {candidate?.ImageData ? (
                 <img
@@ -112,21 +115,62 @@ const fromPath = getFromPath();
 
               </span> */}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-center mb-6">
+            <div className="text-center">
 
               <h3 className="text-2xl font-bold text-gray-900">{candidate?.FirstName || ''} {candidate?.LastName || ''}</h3>
 
               <p className="text-gray-600 mt-1">{candidate.CurrentRole || 'position'}</p>
 
             </div>
+            </div>
+          
+
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">Personal Details</h4>
+                <div className="space-y-4">
+                <div className='grid grid-cols-2 gap-6'>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <User className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="text-gray-700">{candidate?.FirstName || 'N/A'} {candidate?.LastName || ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <Calendar className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div>
+                    <p className="text-sm text-gray-500">Date of Birth</p>
+                    <p className="text-gray-700">{new Date(candidate?.Date_Of_Birth).toLocaleDateString() || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className='grid grid-cols-2 gap-6'>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div>
+                    <p className="text-sm text-gray-500">Gender</p>
+                    <p className="text-gray-700">{candidate?.Gender || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h4>
                 <div className="space-y-4">
+                <div className='grid grid-cols-2 gap-6'>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
                       <Mail className="w-5 h-5 text-gray-500" />
@@ -143,6 +187,7 @@ const fromPath = getFromPath();
                     <span className="text-gray-700">{candidate?.Phone}</span>
 
                   </div>
+                </div>
 
                 </div>
               </div>
@@ -150,17 +195,20 @@ const fromPath = getFromPath();
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Professional Details</h4>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-2">
+                    <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
                       <GraduationCap className="w-5 h-5" />
                     </div>
-
+                    
                     <div>
                       <p className="text-sm text-gray-500">Qualification</p>
 
                       <p className="text-gray-700">{candidate?.HigherQualification || 'N/A'}</p>
 
                     </div>
+                    </div>
+                    <div>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <School className="w-5 h-5" />
@@ -171,7 +219,29 @@ const fromPath = getFromPath();
                       </div>
 
                     </div>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Experence</p>
+                        <p className="text-gray-700">{candidate?.CurrentExperience || 'N/A'} </p>
+                      </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Relevent Experence</p>
+                        <p className="text-gray-700">{candidate?.RelevantExperience || 'N/A'} </p>
+                      </div>
+                      </div>
+                    </div>
                 </div>
               </div>
             </div>

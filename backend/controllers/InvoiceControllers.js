@@ -13,7 +13,6 @@ const getInvoice = async (req, res) => {
 
         const queryField = isOrganization === 'true' ? 'tenantId' : 'ownerId';
         const invoices = await Invoice.find({ [queryField]: id })
-            .sort({ updatedAt: -1, createdAt: -1 })
             .populate('planId')
             .populate('ownerId');
 

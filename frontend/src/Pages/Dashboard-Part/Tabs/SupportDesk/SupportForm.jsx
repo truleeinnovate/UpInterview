@@ -19,6 +19,7 @@ const SupportForm = () => {
   } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const ownerId = tokenPayload?.userId;
+  console.log(`ownerId ------- ${ownerId}`);
   const tenantId = tokenPayload?.tenantId;
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,13 +46,14 @@ const SupportForm = () => {
   const { otherIssueFlag, otherIssue, selectedIssue, file, description } = formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
+  //console.log(`contact ------- ${JSON.stringify(contact)}`);
   const [organization, setOrganization] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`);
-        setContact(response.data.data);
+        setContact(response.data);
 
         const response2 = await axios.get(`${process.env.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`);
         setOrganization(response2.data.company);
@@ -140,7 +142,7 @@ const SupportForm = () => {
     description,
     file: file !== "No file selected" ? file : null,
     ...(editMode ? {} : {
-      contact: contact?.firstName || '',
+      contact: `${contact?.firstName.charAt(0).toUpperCase() + contact?.firstName.slice(1)} ${contact?.lastName.charAt(0).toUpperCase() + contact?.lastName.slice(1)}` || '',
       tenantId,
       ownerId,
       organization: organization,
@@ -207,7 +209,7 @@ const SupportForm = () => {
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
-              </button>
+            </button>
             </div>
           </div>
         </div>
