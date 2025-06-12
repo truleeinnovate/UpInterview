@@ -7,11 +7,12 @@ import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.
 import { config } from "../../config";
 
 const OrganizationLogin = () => {
-console.log('org login')
+  console.log('org login')
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -41,7 +42,6 @@ console.log('org login')
   };
 
   const handleBlur = (field, value) => {
-    // Only validate if the field has a value
     if (field === 'email' && value) {
       setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
     } else if (field === 'password' && value) {
@@ -58,6 +58,8 @@ console.log('org login')
 
     if (emailError || passwordError) return;
 
+    setIsLoading(true);
+    
     try {
       console.log("🔐 Attempting org login...");
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
@@ -81,6 +83,8 @@ console.log('org login')
         ...prev,
         email: error.response?.data.message || 'Login failed. Please try again.',
       }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,11 +98,6 @@ console.log('org login')
           </div>
           {/* Right Column - Login Form */}
           <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
-            {/* <div className="mb-8 flex justify-center">
-              <button className="border border-gray-400 font-medium rounded-md px-10 py-2">
-                User
-              </button>
-            </div> */}
             <div>
               <p className="text-2xl font-semibold mb-7 text-center">Welcome Back</p>
               <form onSubmit={handleLogin}>
@@ -170,37 +169,35 @@ console.log('org login')
                 </div>
 
                 {/* Login & Cancel Buttons */}
-                {/* <div className="flex flex-col items-center">
-                  <button
-                    type="submit"
-                    className="bg-custom-blue text-white rounded-full px-16 py-2 mb-2"
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-white text-custom-blue rounded-full px-16 py-2 border border-gray-400"
-                    onClick={() => navigate('/')}
-                  >
-                    Cancel
-                  </button>
-                </div> */}
                 <div className="flex flex-col space-y-2">
                   <button
                     type="submit"
-                    className="w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300"
+                    disabled={isLoading}
+                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${
+                      isLoading ? 'opacity-80' : 'hover:bg-blue-600'
+                    }`}
                   >
-                    Login
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Authenticating...
+                      </>
+                    ) : 'Login'}
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate('/')}
-                    className="w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 hover:bg-gray-100"
+                    disabled={isLoading}
+                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${
+                      isLoading ? 'opacity-50' : 'hover:bg-gray-100'
+                    }`}
                   >
                     Cancel
                   </button>
                 </div>
-
 
                 {/* Signup Link */}
                 <div className="flex justify-center mt-4">
