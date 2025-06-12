@@ -376,22 +376,26 @@ const BasicDetailsTab = ({
                     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2">
                       <p className="font-medium text-gray-700 text-sm">Recent Positions</p>
                     </div>
-                    <ul className="py-1">
-                      {positions.map((position) => (
-                        <li
-                          key={position._id}
-                          className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePositionSelect(position);
-                            setShowDropdownPosition(false);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            <span className="ml-3 block truncate">{position.title}</span>
-                          </div>
-                        </li>
-                      ))}
+                    <ul>
+                      {positions.length === 0 ? (
+                        <div className="text-gray-500 py-2 px-4">No recent positions found</div>
+                      ) : (
+                        positions.map((position) => (
+                          <li
+                            key={position._id}
+                            className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePositionSelect(position);
+                              setShowDropdownPosition(false);
+                            }}
+                          >
+                            <div className="flex items-center">
+                              <span className="ml-3 block truncate">{position.title}</span>
+                            </div>
+                          </li>
+                        ))
+                      )}
                     </ul>
                     <div className="border-t border-gray-200 px-4 py-2">
                       <button

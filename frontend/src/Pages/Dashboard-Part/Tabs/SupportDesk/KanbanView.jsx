@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { Briefcase } from "lucide-react";
+
 
 const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading = false }) => {
   const navigate = useNavigate();
@@ -123,14 +125,14 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
       className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
     >
       <div className="h-full w-full">
-        <motion.div 
+        <motion.div
           className="flex items-center justify-between mb-6"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
           <h3 className="text-xl font-semibold text-gray-800">All Tickets</h3>
-          <motion.span 
+          <motion.span
             className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200"
             whileHover={{ scale: 1.05 }}
           >
@@ -138,133 +140,142 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
           </motion.span>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full pb-20">
-          {currentTickets.map((ticket, index) => (
-            <motion.div
-              key={ticket._id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              whileHover={{ y: -5 }}
-              className={`bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full ${
-                index >= currentTickets.length - 5 ? 'mb-10' : ''
-              }`}
-            >
-              <div className="flex justify-between items-start mb-4 gap-2">
-                <motion.div
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() =>
-                    navigate(
-                      userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
-                      { state: { ticketData: ticket } }
-                    )
-                  }
-                  whileHover={{ x: 2 }}
-                >
-                  <h4 
-                    className="text-xl font-medium text-custom-blue truncate"
-                    onClick={() => {
-                      if (userRole === 'Admin') {
-                        navigate(`/support-desk/${ticket._id}`, {
-                          state: { ticketData: ticket },
-                        });
-                      } else if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
-                        navigate(`/support-desk/view/${ticket._id}`, {
-                          state: { ticketData: ticket },
-                        });
-                      }
-                    }}
+          {currentTickets.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+              <Briefcase className="w-16 h-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No Tickets Found</h3>
+              <p className="text-gray-500 text-center max-w-md">
+                There are no tickets to display at the moment. Create a new ticket to get started.
+              </p>
+            </div>
+          ) : (
+            currentTickets.map((ticket, index) => (
+              <motion.div
+                key={ticket._id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ y: -5 }}
+                className={`bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full ${index >= currentTickets.length - 5 ? 'mb-10' : ''
+                  }`}
+              >
+                <div className="flex justify-between items-start mb-4 gap-2">
+                  <motion.div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() =>
+                      navigate(
+                        userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                        { state: { ticketData: ticket } }
+                      )
+                    }
+                    whileHover={{ x: 2 }}
                   >
-                    {ticket.ticketCode}
-                  </h4>
-                  <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
-                </motion.div>
-                <div className="flex gap-1 flex-shrink-0">
-                  {hasActionAccess(ticket) && (
-                    <>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() =>
-                          navigate(
-                            userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
-                            { state: { ticketData: ticket } }
-                          )
+                    <h4
+                      className="text-xl font-medium text-custom-blue truncate"
+                      onClick={() => {
+                        if (userRole === 'Admin') {
+                          navigate(`/support-desk/${ticket._id}`, {
+                            state: { ticketData: ticket },
+                          });
+                        } else if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
+                          navigate(`/support-desk/view/${ticket._id}`, {
+                            state: { ticketData: ticket },
+                          });
                         }
-                        title="View Details"
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <FaEye className="w-4 h-4" />
-                      </motion.button>
-                      {userRole === 'Admin' && (
+                      }}
+                    >
+                      {ticket.ticketCode}
+                    </h4>
+                    <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
+                  </motion.div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    {hasActionAccess(ticket) && (
+                      <>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
-                            navigate(`/support-desk/edit-ticket/${ticket._id}`, {
-                              state: { ticketData: ticket },
-                            })
+                            navigate(
+                              userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                              { state: { ticketData: ticket } }
+                            )
                           }
-                          title="Edit Ticket"
-                          className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                          title="View Details"
+                          className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                         >
-                          <FaPencilAlt className="w-4 h-4" />
+                          <FaEye className="w-4 h-4" />
                         </motion.button>
-                      )}
-                    </>
-                  )}
+                        {userRole === 'Admin' && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() =>
+                              navigate(`/support-desk/edit-ticket/${ticket._id}`, {
+                                state: { ticketData: ticket },
+                              })
+                            }
+                            title="Edit Ticket"
+                            className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                          >
+                            <FaPencilAlt className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-auto space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.div 
-                    className="flex items-center gap-1.5 text-gray-600"
-                    whileHover={{ x: 2 }}
-                  >
-                    <span className="text-gray-500">Contact</span>
-                    <span className="truncate">{ticket.contact || 'N/A'}</span>
-                  </motion.div>
-                  <motion.div 
-                    className="flex items-center gap-1.5 text-gray-600"
-                    whileHover={{ x: 2 }}
-                  >
-                    <span className="text-gray-500">Issue Type</span>
-                    <span>{ticket.issueType || 'N/A'}</span>
-                  </motion.div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.div 
-                    className="flex items-center gap-1.5"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
-                      {ticket.status || 'N/A'}
-                    </span>
-                  </motion.div>
-                  {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
-                    <motion.div 
-                      className="flex items-center gap-1.5"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
-                        {ticket.priority || 'N/A'}
-                      </span>
-                    </motion.div>
-                  )}
-                </div>
-                {userRole === 'SuperAdmin' && (
+                <div className="mt-auto space-y-2 text-sm">
                   <div className="grid grid-cols-2 gap-2">
-                    <motion.div 
+                    <motion.div
                       className="flex items-center gap-1.5 text-gray-600"
                       whileHover={{ x: 2 }}
                     >
-                      <span className="text-gray-500">Assigned To</span>
-                      <span>{ticket.assignedTo || 'N/A'}</span>
+                      <span className="text-gray-500">Contact</span>
+                      <span className="truncate">{ticket.contact || 'N/A'}</span>
+                    </motion.div>
+                    <motion.div
+                      className="flex items-center gap-1.5 text-gray-600"
+                      whileHover={{ x: 2 }}
+                    >
+                      <span className="text-gray-500">Issue Type</span>
+                      <span>{ticket.issueType || 'N/A'}</span>
                     </motion.div>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                  <div className="grid grid-cols-2 gap-2">
+                    <motion.div
+                      className="flex items-center gap-1.5"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                        {ticket.status || 'N/A'}
+                      </span>
+                    </motion.div>
+                    {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
+                      <motion.div
+                        className="flex items-center gap-1.5"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
+                          {ticket.priority || 'N/A'}
+                        </span>
+                      </motion.div>
+                    )}
+                  </div>
+                  {userRole === 'SuperAdmin' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.div
+                        className="flex items-center gap-1.5 text-gray-600"
+                        whileHover={{ x: 2 }}
+                      >
+                        <span className="text-gray-500">Assigned To</span>
+                        <span>{ticket.assignedTo || 'N/A'}</span>
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
     </motion.div>

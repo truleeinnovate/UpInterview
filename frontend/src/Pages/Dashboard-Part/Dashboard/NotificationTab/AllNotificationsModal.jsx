@@ -2,9 +2,11 @@
 /* eslint-disable react/prop-types */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Filter, Bell, MessageSquare, ChevronDown, RefreshCw, Mail, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Search, Filter, Minimize, Expand, Bell, MessageSquare, ChevronDown, RefreshCw, Mail } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import NotificationDetailsModal from './NotificationDetailsModal';
+import Modal from 'react-modal';
+import classNames from 'classnames';
 
 const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,13 +14,13 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  // const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'email', or 'whatsapp'
 
   // Check if notifications is properly structured
   const hasEmailProperty = notifications && Array.isArray(notifications.email);
   const hasWhatsappProperty = notifications && Array.isArray(notifications.whatsapp);
-  
+
   // Create a safe combined array of notifications
   const allNotifications = [
     ...(hasEmailProperty ? notifications.email : []),
@@ -50,11 +52,11 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
     if (selectedTimeRange !== 'all') {
       const now = new Date();
       const notificationDate = (timestamp) => new Date(timestamp);
-      
+
       switch (selectedTimeRange) {
         case 'today':
           filtered = filtered.filter(
-            notification => 
+            notification =>
               notificationDate(notification.timestamp).toDateString() === now.toDateString()
           );
           break;
@@ -92,7 +94,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
 
   const getNotificationCounts = () => {
     if (!hasEmailProperty || !hasWhatsappProperty) return { email: 0, whatsapp: 0, total: 0 };
-    
+
     return {
       email: notifications.email.length,
       whatsapp: notifications.whatsapp.length,
@@ -102,27 +104,28 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
 
   const counts = getNotificationCounts();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   if (!isOpen) return null;
+
+  const modalClass = classNames(
+    'fixed bg-white shadow-2xl border-l border-gray-200',
+    {
+      'overflow-y-auto': !isModalOpen,
+      'overflow-hidden': isModalOpen,
+      'inset-0': isFullScreen,
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+    }
+  );
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 h-full"
-        onClick={onClose}
-      >
-        <div className="absolute inset-0" onClick={onClose} />
-      </motion.div>
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className={`fixed right-0 top-0 h-screen bg-white shadow-xl z-50 transition-all duration-300 ${
-          isExpanded ? 'w-full' : 'w-1/2'
-        }`}
+      <Modal
+        isOpen={true}
+        // onRequestClose={onClose}
+        className={modalClass}
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -138,11 +141,16 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-                title={isExpanded ? "Collapse" : "Expand"}
+                title={isFullScreen ? "Collapse" : "Expand"}
               >
-                {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                {/* {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />} */}
+                {isFullScreen ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
               </button>
               <button
                 onClick={onClose}
@@ -158,11 +166,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           <div className="flex items-center space-x-2 mb-4">
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                activeTab === 'all'
-                  ? 'bg-indigo-50 text-custom-blue'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === 'all'
+                ? 'bg-indigo-50 text-custom-blue'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <Bell size={18} />
               <span className="text-sm">All</span>
@@ -174,11 +181,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             </button>
             <button
               onClick={() => setActiveTab('email')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                activeTab === 'email'
-                  ? 'bg-indigo-50 text-custom-blue'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === 'email'
+                ? 'bg-indigo-50 text-custom-blue'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <Mail size={18} />
               <span className="text-sm">Email</span>
@@ -190,11 +196,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             </button>
             <button
               onClick={() => setActiveTab('whatsapp')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                activeTab === 'whatsapp'
-                  ? 'bg-indigo-50 text-custom-blue'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === 'whatsapp'
+                ? 'bg-indigo-50 text-custom-blue'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <MessageSquare size={18} />
               <span className="text-sm">WhatsApp</span>
@@ -227,12 +232,11 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                 <span className="text-sm text-gray-600">Filters</span>
                 <ChevronDown
                   size={16}
-                  className={`text-gray-500 transform transition-transform duration-300 ${
-                    showFilters ? 'rotate-180' : ''
-                  }`}
+                  className={`text-gray-500 transform transition-transform duration-300 ${showFilters ? 'rotate-180' : ''
+                    }`}
                 />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedFilter('all');
@@ -310,11 +314,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         <span className="text-sm font-medium text-gray-900">
                           {notification.subject || 'No Subject'}
                         </span>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                          notification.status.toLowerCase() === 'success' ? 'bg-green-100 text-green-600' :
+                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${notification.status.toLowerCase() === 'success' ? 'bg-green-100 text-green-600' :
                           notification.status.toLowerCase() === 'failed' ? 'bg-red-100 text-red-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
+                            'bg-gray-100 text-gray-600'
+                          }`}>
                           {notification.status}
                         </span>
                       </div>
@@ -345,13 +348,13 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                       </div>
                     </div>
                     <div className='flex items-start justify-end'>
-                    <button
-                     onClick={() => setSelectedNotification(notification)}
-                     className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 space-x-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
-                    >
-                    <span className="text-sm font-medium">View Details</span>
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => setSelectedNotification(notification)}
+                        className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 space-x-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                      >
+                        <span className="text-sm font-medium">View Details</span>
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))
@@ -367,13 +370,13 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                   )}
                 </div>
                 <h3 className="text-lg font-medium text-gray-700 mb-2">
-                  {activeTab === 'all' 
-                    ? "No Notifications Found" 
+                  {activeTab === 'all'
+                    ? "No Notifications Found"
                     : `No ${activeTab === 'email' ? 'Email' : 'WhatsApp'} Notifications`}
                 </h3>
                 <p className="text-gray-500 text-center max-w-md mb-4">
-                  {searchQuery 
-                    ? `No notifications match your search for "${searchQuery}".` 
+                  {searchQuery
+                    ? `No notifications match your search for "${searchQuery}".`
                     : selectedFilter !== 'all' || selectedTimeRange !== 'all'
                       ? "No notifications match your current filters."
                       : activeTab === 'all'
@@ -381,7 +384,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         : `You don't have any ${activeTab} notifications at the moment.`}
                 </p>
                 {(searchQuery || selectedFilter !== 'all' || selectedTimeRange !== 'all' || activeTab !== 'all') && (
-                  <button 
+                  <button
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedFilter('all');
@@ -397,7 +400,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             )}
           </div>
         </div>
-      </motion.div>
+      </Modal>
 
       <NotificationDetailsModal
         isOpen={!!selectedNotification}

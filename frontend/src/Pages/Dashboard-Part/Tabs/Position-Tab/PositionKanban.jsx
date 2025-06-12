@@ -21,7 +21,7 @@ const PositionKanban = ({ positions, loading }) => {
           <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
           <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {[...Array(8)].map((_, index) => (
             <motion.div
@@ -44,7 +44,7 @@ const PositionKanban = ({ positions, loading }) => {
                   <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
                 </div>
               </div>
-              
+
               <div className="space-y-3 mb-4">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ const PositionKanban = ({ positions, loading }) => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
@@ -82,14 +82,14 @@ const PositionKanban = ({ positions, loading }) => {
 
   return (
     <DndContext collisionDetection={closestCenter}>
-      <motion.div 
+      <motion.div
         className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <div className="h-full">
-          <motion.div 
+          <motion.div
             className="flex items-center justify-between mb-6"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -102,104 +102,114 @@ const PositionKanban = ({ positions, loading }) => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
-            {positions.map((position, index) => (
-              <motion.div
-                key={position._id}
-                className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                whileHover={{ y: -5 }}
-                onClick={() => navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }})}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center">
-                    <div className="relative"></div>
-                    <div>
-                      <h4 className="text-sm font-medium text-custom-blue">{position?.title || 'N/A'}</h4>
+            {positions.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+                <Briefcase className="w-16 h-16 text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No Positions Found</h3>
+                <p className="text-gray-500 text-center max-w-md">
+                  There are no positions to display at the moment. Create a new position to get started.
+                </p>
+              </div>
+            ) : (
+              positions.map((position, index) => (
+                <motion.div
+                  key={position._id}
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ y: -5 }}
+                  onClick={() => navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } })}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center">
+                      <div className="relative"></div>
+                      <div>
+                        <h4 className="text-sm font-medium text-custom-blue">{position?.title || 'N/A'}</h4>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname }});
-                      }}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/position/edit-position/${position._id}`);
-                      }}
-                      className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Building2 className="w-4 h-4 text-gray-500" />
-                      <span className="truncate"> {position?.companyname || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Briefcase className="w-4 h-4 text-gray-500" />
-                      <span className="truncate">
-                        {position?.minexperience && position?.maxexperience
-                          ? `${position.minexperience} - ${position.maxexperience} years`
-                          : position?.minexperience
-                            ? `${position.minexperience} - Not Disclosed`
-                            : position?.maxexperience
-                              ? `${position.maxexperience} - Not Disclosed`
-                              : 'Not Disclosed'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                      {formatCreatedDate(position?.createdDate)}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <MapPin className="w-4 h-4 text-red-500" />
-                      <span>{position?.Location || 'Not disclosed'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <div className="flex flex-wrap gap-1">
-                    {position?.skills?.slice(0, 3).map((skill, index) => (
-                      <motion.span
-                        key={index}
-                        className="px-2 py-1 bg-custom-bg text-custom-blue rounded-lg text-xs font-medium"
-                        whileHover={{ scale: 1.05 }}
+                    <div className="flex items-center gap-1">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } });
+                        }}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View Details"
                       >
-                        {skill.skill}
-                      </motion.span>
-                    ))}
-                    {position?.skills?.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium">
-                        +{position?.skills.length - 3} more
-                      </span>
-                    )}
+                        <Eye className="w-4 h-4" />
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/position/edit-position/${position._id}`);
+                        }}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </motion.button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        <Building2 className="w-4 h-4 text-gray-500" />
+                        <span className="truncate"> {position?.companyname || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        <Briefcase className="w-4 h-4 text-gray-500" />
+                        <span className="truncate">
+                          {position?.minexperience && position?.maxexperience
+                            ? `${position.minexperience} - ${position.maxexperience} years`
+                            : position?.minexperience
+                              ? `${position.minexperience} - Not Disclosed`
+                              : position?.maxexperience
+                                ? `${position.maxexperience} - Not Disclosed`
+                                : 'Not Disclosed'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        {formatCreatedDate(position?.createdDate)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        <MapPin className="w-4 h-4 text-red-500" />
+                        <span>{position?.Location || 'Not disclosed'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="flex flex-wrap gap-1">
+                      {position?.skills?.slice(0, 3).map((skill, index) => (
+                        <motion.span
+                          key={index}
+                          className="px-2 py-1 bg-custom-bg text-custom-blue rounded-lg text-xs font-medium"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          {skill.skill}
+                        </motion.span>
+                      ))}
+                      {position?.skills?.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium">
+                          +{position?.skills.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </motion.div>

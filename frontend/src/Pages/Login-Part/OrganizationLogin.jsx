@@ -174,7 +174,7 @@ const OrganizationLogin = () => {
                     type="submit"
                     disabled={isLoading}
                     className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${
-                      isLoading ? 'opacity-80' : 'hover:bg-blue-600'
+                      isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'
                     }`}
                   >
                     {isLoading ? (
