@@ -51,19 +51,33 @@ const sendEmail = async (toEmail, subject, messageBody, ccEmail) => {
   try {
     if (!toEmail) throw new Error("Recipient email is required");
 
+    // const transporter = nodemailer.createTransport({
+    //   host: process.env.EMAIL_HOST,
+    //   port: process.env.EMAIL_PORT || 465, // Ensure it's 465 for SSL
+    //   secure: true, // MUST be true for port 465
+    //   auth: {
+    //     user: process.env.EMAIL_USERNAME,
+    //     pass: process.env.EMAIL_PASSWORD
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: true // Ensure valid SSL/TLS
+    //   }
+    // });
+
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT || 465, // Ensure it's 465 for SSL
-      secure: true, // MUST be true for port 465
+      port: parseInt(process.env.EMAIL_PORT), // Convert to number
+      secure: process.env.EMAIL_PORT === '465', // true for 465, false otherwise
       auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD
       },
       tls: {
-        rejectUnauthorized: true // Ensure valid SSL/TLS
+        // Only needed for some providers
+        rejectUnauthorized: false // Set to true in production with valid certs
       }
     });
-    
+
 
 
     // Inline image example (CID)
