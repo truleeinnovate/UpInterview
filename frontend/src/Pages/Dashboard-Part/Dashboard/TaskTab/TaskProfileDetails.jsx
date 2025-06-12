@@ -10,6 +10,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
   const [showMainContent] = useState(true);
+  const [isModalOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Task Profile Details";
@@ -20,12 +21,14 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200',
-    {
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-    }
-  );
+          'fixed bg-white shadow-2xl border-l border-gray-200',
+          {
+            'overflow-y-auto': !isModalOpen,
+            'overflow-hidden': isModalOpen,
+            'inset-0': isFullScreen,
+            'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+          }
+        );
 
   if (!task) return <div>Loading...</div>;
 
@@ -35,11 +38,9 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
             isOpen={true}
             // onRequestClose={onClose}
             className={modalClass}
-            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
-            scroll={true}
-            style={{ overflow: 'auto' }}
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
           >
-          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+          <div className={classNames('h-full' , { 'max-w-8xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
     
