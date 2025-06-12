@@ -92,6 +92,7 @@ const TaskForm = ({
   const [showDropdownOptionRelatedTo, setShowDropdownOptionRelatedTo] = useState(false);
   const [showDropdownAssignedTo, setShowDropdownAssignedTo] = useState(false);
   const [showDropdownPriority, setShowDropdownPriority] = useState(false);
+  const [isModalOpen] = useState(false);
 
   const formRef = useRef(null);
 
@@ -339,12 +340,14 @@ const TaskForm = ({
     };
   
     const modalClass = classNames(
-      'fixed bg-white shadow-2xl border-l border-gray-200',
-      {
-        'inset-0': isFullScreen,
-        'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-      }
-    );
+        'fixed bg-white shadow-2xl border-l border-gray-200',
+        {
+          'overflow-y-auto': !isModalOpen,
+          'overflow-hidden': isModalOpen,
+          'inset-0': isFullScreen,
+          'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+        }
+      );
 
 
 
@@ -353,11 +356,9 @@ const TaskForm = ({
             isOpen={true}
             // onRequestClose={onClose}
             className={modalClass}
-            overlayClassName="absolute inset-0 bg-black bg-opacity-50 z-50"
-            scroll={true}
-            style={{ overflow: 'auto' }}
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
           >
-          <div className={classNames('h-full overflow-auto' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
     
@@ -385,7 +386,7 @@ const TaskForm = ({
                   </div>
                 </div>
     
-                <form ref={formRef} onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto px-4 py-2">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 mb-6">
           
           <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
@@ -599,7 +600,8 @@ const TaskForm = ({
                 rows="5"
               />
             </div>
-          </div>
+
+          
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -616,9 +618,9 @@ const TaskForm = ({
             </button>
           </div>
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
+          </div>
         </form>
-        </div>
-              
+             </div>   
           </div>
     </Modal>
    
