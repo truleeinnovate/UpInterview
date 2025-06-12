@@ -438,7 +438,7 @@ export const Organization = () => {
                   <div className="relative w-1/4" ref={countryCodeDropdownRef}>
                     <div
                       className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } bg-white px-3 h-12 cursor-pointer`}
+                        } bg-white px-3 h-11 cursor-pointer`}
                       onClick={toggleDropdownCountryCode}
                     >
                       <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
