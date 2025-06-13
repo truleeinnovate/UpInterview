@@ -251,7 +251,7 @@ const MultiStepForm = () => {
       firstName: basicDetailsData.firstName,
       lastName: basicDetailsData.lastName,
       profileId: basicDetailsData.profileId,
-      isFreelancer: isInternalInterviewer ? false : Freelancer,
+      isFreelancer: isInternalInterviewer ? false : Freelancer,//when user is coming as organization user then they have fleelancer false
       email: basicDetailsData.email,
       isProfileCompleted: true,
     };

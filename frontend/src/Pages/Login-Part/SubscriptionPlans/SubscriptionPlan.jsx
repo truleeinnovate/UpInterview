@@ -178,7 +178,7 @@ const SubscriptionPlan = () => {
       );
       console.log(organization, plan.name, "organization");
       if ((organization === "false" || !organization) && plan.name === "Base") {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/subscriptions/free`, {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
           ownerId: user.ownerId,
           tenantId: user.tenantId,
         });

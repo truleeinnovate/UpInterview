@@ -242,6 +242,7 @@ export const Organization = () => {
         tenantId: response.data.tenantId,
         ownerId: response.data.ownerId,
         lastName: organizationData.lastName,
+        firstName: organizationData.firstName
       }).catch((err) => console.error('Email error:', err));
 
       navigate('/subscription-plans');

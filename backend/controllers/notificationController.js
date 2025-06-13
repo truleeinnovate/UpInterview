@@ -21,16 +21,16 @@ const getNotifications = async (req, res) => {
   try {
     const { objectId, category, candidateId } = req.query; // Get objectId, category, and candidateId from query params
 
-    if (!category) {
-      return res.status(400).json({ message: "Category is required" });
-    }
+    // if (!category) {
+    //   return res.status(400).json({ message: "Category is required" });
+    // }
 
     let filter = {};
 
     if (category === "assessment" || category === "interview") {
-      if (!objectId) {
-        return res.status(400).json({ message: "Object ID is required for this category" });
-      }
+      // if (!objectId) {
+      //   return res.status(400).json({ message: "Object ID is required for this category" });
+      // }
       filter = { "object.objectId": objectId };
     } else if (category === "candidate") {
       if (!candidateId) {
@@ -53,9 +53,40 @@ const getNotifications = async (req, res) => {
 };
 
 
+const getAllNotification = async (req, res) => {
+  try {
+    const { organizationId, tenantId, ownerId } = req.query;
+
+    if (typeof organizationId === 'undefined') {
+      return res.status(400).json({ message: 'organizationId is required' });
+    }
+
+    const isOrganization = organizationId === 'true';
+
+    let filter = {};
+    if (isOrganization) {
+      if (!tenantId) {
+        return res.status(400).json({ message: 'tenantId is required for organization notifications' });
+      }
+      filter.tenantId = tenantId;
+    } else {
+      if (!ownerId) {
+        return res.status(400).json({ message: 'ownerId is required for individual notifications' });
+      }
+      filter.ownerId = ownerId;
+    }
+
+    const notifications = await Notifications.find(filter);
+    res.json(notifications);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 // ✅ Properly exporting functions
 module.exports = {
   saveNotifications,
   getNotifications,
+  getAllNotification,
 };
