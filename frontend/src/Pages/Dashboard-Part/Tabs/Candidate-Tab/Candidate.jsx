@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, UserCircle, Pencil, Mail } from 'lucide-react';
+import { Eye, UserCircle, Pencil, Mail, Rotate3d } from 'lucide-react';
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import Header from '../../../../Components/Shared/Header/Header';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
@@ -277,7 +277,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       {
         key: '360-view',
         label: '360° View',
-        icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+        icon: <Rotate3d size={24} className='text-custom-blue' />,
         onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
       },
       {

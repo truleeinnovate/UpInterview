@@ -7,6 +7,7 @@ import { CiCreditCard1 } from "react-icons/ci";
 import { LiaWalletSolid } from "react-icons/lia";
 import { NavLink, useLocation } from "react-router-dom";
 import axios from "axios";
+import { X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 // import { useAuth0 } from "@auth0/auth0-react";
 import "./Navbar-Sidebar.scss";
@@ -135,23 +136,18 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const outlineDropdownContent = (
-    <div className="absolute top-12  w-80 text-sm rounded-md bg-white border border-custom-blue right-7 z-30 -mr-20">
-      <div className="flex justify-between items-center px-4 py-2 border-b">
+    <div className="absolute top-12  w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
+      <div className="flex justify-between items-center px-4 py-2">
         <h2 className="text-start font-medium text-custom-blue">Help & Training</h2>
-        <button className="text-custom-blue hover:text-blue-500" onClick={toggleOutlineDropdown}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M15.293 4.293a1 1 0 1 1 1.414 1.414L11.414 10l5.293 5.293a1 1 0 1 1-1.414 1.414L10 11.414l-5.293 5.293a1 1 0 1 1-1.414-1.414L8.586 10 3.293 4.707a1 1 0 1 1 1.414-1.414L10 8.586l5.293-5.293z"
-              clipRule="evenodd"
-            />
-          </svg>
+        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={toggleOutlineDropdown}>
+        <X className="w-4 h-4" />
+         
         </button>
       </div>
       <div>
         <div className="text-sm border-b w-full">
           <div className="mt-2 mb-2 ml-8 flex items-center">
-            <p className="text-custom-blue">Introduction</p>
+            <p className="text-black">Introduction</p>
           </div>
           {[
             { label: "Getting Started", toggle: handleGettingToggle, isOpen: dropdownState.isGettingDropdownOpen },
@@ -165,11 +161,11 @@ const Navbar = () => {
             <div key={index} className="flex justify-between mr-4 mt-2">
               <div className="cursor-pointer">
                 <label className="inline-flex items-center ml-5">
-                  <span className="ml-3 text-custom-blue">{label}</span>
+                  <span className="ml-3 text-gray-500">{label}</span>
                 </label>
               </div>
               <div className="cursor-pointer" onClick={toggle}>
-                {isOpen ? <FaCaretUp className="ml-10 text-custom-blue" /> : <FaCaretDown className="ml-10 text-custom-blue" />}
+                {isOpen ? <FaCaretUp className="ml-10 text-black" /> : <FaCaretDown className="ml-10 text-black" />}
               </div>
             </div>
           ))}
@@ -179,7 +175,7 @@ const Navbar = () => {
   );
 
   const profileDropdownContent = (
-    <div className="absolute top-11 border border-custom-blue w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
+    <div className="absolute top-12 border w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
       <div className="p-2 flex items-center">
         <p className="font-medium text-custom-blue" onClick={toggleProfileDropdown}>
           {profileImage ? (
@@ -218,7 +214,7 @@ const Navbar = () => {
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
-            className="flex items-center py-2 hover:bg-gray-200 hover:text-custom-blue rounded-md"
+            className="flex items-center py-2 text-black hover:bg-gray-200 hover:text-custom-blue rounded-md"
             to={to}
             onClick={() => closeAllDropdowns()}
           >
@@ -248,12 +244,12 @@ const Navbar = () => {
       ref: outlineRef,
       content: (
         <div className="relative">
-          <p className="font-medium" onClick={toggleOutlineDropdown}>
+          <p className="font-medium cursor-pointer" onClick={toggleOutlineDropdown}>
             <IoMdInformationCircleOutline
               className={dropdownState.outlineDropdown ? "text-custom-blue" : "text-black"}
             />
-            {dropdownState.outlineDropdown && <IoIosArrowUp className="text-[12px] w-9 h-9 text text-custom-blue absolute top-6 left-0 z-50 " />}
-            {dropdownState.outlineDropdown && <IoIosArrowDown className="text-[16px] w-4 h-4 text-white rotate-45 absolute z-40 top-10 left-2   bg-white"/>}
+            {/* <div className="absolute top-10 right-0 w-4 h-4 bg-white border-t border-l border-custom-blue rotate-45 z-50"></div> */}
+            {dropdownState.outlineDropdown && <IoIosArrowUp className="absolute top-10 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
           </p>
           {dropdownState.outlineDropdown && outlineDropdownContent}
         </div>
@@ -271,7 +267,7 @@ const Navbar = () => {
           setIsOpen={(value) => setDropdownState((prev) => ({ ...prev, isNotificationOpen: value }))}
           closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
         />
-        {dropdownState.isNotificationOpen && <IoIosArrowUp className="text-[16px] w-5 h-5 text-white rotate-45 absolute z-40 top-11 right-0 left-0 border border-gray-200  bg-white" />}
+        {dropdownState.isNotificationOpen && <IoIosArrowUp className="absolute top-12 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
         
         </div>
       ),
@@ -283,7 +279,7 @@ const Navbar = () => {
       ref: profileRef,
       content: (
         <div className="relative">
-          <p className="font-medium" onClick={toggleProfileDropdown}>
+          <p className="font-medium cursor-pointer" onClick={toggleProfileDropdown}>
             {profileImage ? (
               <img
                 src={profileImage}
@@ -292,11 +288,10 @@ const Navbar = () => {
               />
             ) : (
               <CgProfile
-                className={dropdownState.profileDropdown ? "text-custom-blue" : "text-black"}
+                className={`cursor-pointer ${dropdownState.profileDropdown ? "text-custom-blue" : "text-black"}`}
               />
             )}
-            {dropdownState.profileDropdown && <IoIosArrowUp className="text-[12px] w-9 h-9 text text-custom-blue absolute top-5 pl-1 right-0 z-50 " />}
-            {dropdownState.profileDropdown && <IoIosArrowDown className="text-[16px] w-5 h-4 text-white rotate-45 absolute z-40 top-10 right-1   bg-white"/>}
+            {dropdownState.profileDropdown && <IoIosArrowUp className="absolute top-10 left-0 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
           </p>
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>

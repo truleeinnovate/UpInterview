@@ -110,10 +110,10 @@ const MainContent = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={classNames(
-                      'px-4 py-2.5 rounded-lg mr-2 font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm',
+                      'px-4 py-2.5 mr-2 font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm',
                       activeTab === tab.id
-                        ? 'bg-custom-blue text-white shadow-sm'
-                        : 'text-gray-600 hover:bg-gray-100 bg-white shadow-sm'
+                        ? 'border-b-2 border-custom-blue  text-custom-blue'
+                        : 'text-gray-600 rounded-lg hover:bg-gray-100 shadow-sm'
                     )}
                   >
                     <span className="text-base">{tab.icon}</span>
