@@ -59,7 +59,7 @@ const OrganizationLogin = () => {
     if (emailError || passwordError) return;
 
     setIsLoading(true);
-    
+
     try {
       console.log("🔐 Attempting org login...");
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
@@ -70,13 +70,32 @@ const OrganizationLogin = () => {
       console.log('Login response data:', response.data);
 
       if (response.data.success) {
-        console.log('Login successful!');
-        const { token } = response.data;
+        const { token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
+        console.log("organization login", response.data);
         setAuthCookies(token);
-        navigate('/home');
+
+        // Check profile status
+        if (typeof isProfileCompleted === 'undefined') {
+          navigate('/home');
+        } else if (isProfileCompleted === true) {
+          navigate('/home');
+        } else if (isProfileCompleted === false && roleName) {
+          navigate('/complete-profile', { state: { isProfileComplete: true, roleName, contactDataFromOrg } });
+        } else {
+          navigate('/home');
+        }
       } else {
         setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
       }
+
+      // if (response.data.success) {
+      //   console.log('Login successful!');
+      //   const { token } = response.data;
+      //   setAuthCookies(token);
+      //   navigate('/home');
+      // } else {
+      //   setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
+      // }
     } catch (error) {
       console.error('Login error:', error);
       setErrors((prev) => ({
@@ -87,6 +106,9 @@ const OrganizationLogin = () => {
       setIsLoading(false);
     }
   };
+
+
+
 
   return (
     <>
@@ -173,9 +195,8 @@ const OrganizationLogin = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${
-                      isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'
-                    }`}
+                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'
+                      }`}
                   >
                     {isLoading ? (
                       <>
@@ -191,9 +212,8 @@ const OrganizationLogin = () => {
                     type="button"
                     onClick={() => navigate('/')}
                     disabled={isLoading}
-                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${
-                      isLoading ? 'opacity-50' : 'hover:bg-gray-100'
-                    }`}
+                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${isLoading ? 'opacity-50' : 'hover:bg-gray-100'
+                      }`}
                   >
                     Cancel
                   </button>

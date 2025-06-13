@@ -7,7 +7,6 @@ const Profile = require('../models/Profile');
 const Role = require('../models/RolesData.js');
 const Tabs = require('../models/Tabs');
 const Objects = require('../models/Objects');
-const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
 const { generateToken } = require('../utils/jwt');
