@@ -115,14 +115,17 @@ export const isAuthenticated = () => {
 };
 
 // Logout function
-export const logout = () => {
+export const logout = (isOrganization = false) => {
   clearAllCookies();
   // Clear any stored expiration time
   localStorage.removeItem('tokenExpiration');
   
-  // If we're not already on the root path, navigate there
-  if (window.location.pathname !== '/') {
+  // Determine the redirect path based on user type
+  const redirectPath = isOrganization ? '/organization-login' : '/select-user-type';
+  
+  // If we're not already on the target path, navigate there
+  if (window.location.pathname !== redirectPath) {
     // Use window.location.replace to prevent back button from returning to protected routes
-    window.location.replace('/');
+    window.location.replace(redirectPath);
   }
 };

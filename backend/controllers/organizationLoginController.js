@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Organization } = require('../models/Organization');
+const { Organization } = require('../models/Tenant');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
 const SharingSettings = require('../models/SharingSettings');
@@ -394,6 +394,7 @@ const resetPassword = async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
+      console.error("JWT Verification Error:", err.message, err.name);
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
 

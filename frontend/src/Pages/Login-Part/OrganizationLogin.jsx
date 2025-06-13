@@ -189,7 +189,7 @@ const OrganizationLogin = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/select-user-type')}
                     disabled={isLoading}
                     className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${
                       isLoading ? 'opacity-50' : 'hover:bg-gray-100'

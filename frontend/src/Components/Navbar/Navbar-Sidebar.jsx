@@ -21,6 +21,7 @@ import { useCustomContext } from "../../Context/Contextfetch.js";
 const Navbar = () => {
   const location = useLocation();
   const authToken = Cookies.get("authToken");
+  console.log("authToken", authToken);
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   // const userName = tokenPayload?.userName;
@@ -204,7 +205,7 @@ const Navbar = () => {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-            logout();
+            logout(organization);
             navigate("/");
           }}
         >

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import PropTypes from 'prop-types';
@@ -70,16 +70,16 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      // setError(null);
       const response = await axios.get(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}`);
       const sortedNotifications = Array.isArray(response.data)
         ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
@@ -87,16 +87,16 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
       setNotificationList(sortedNotifications);
     } catch (err) {
       console.error('Error fetching notifications:', err);
-      setError('Failed to fetch notifications');
+      // setError('Failed to fetch notifications');
       setNotificationList([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [ownerId]);
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
 
   useEffect(() => {
     if (!isOpen) {

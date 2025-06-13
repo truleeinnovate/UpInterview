@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { fetchFilterData } from '../utils/dataUtils';
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';

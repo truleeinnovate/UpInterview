@@ -98,7 +98,7 @@ const fetchFilterData = async (endpoint, sharingPermissions) => {
             const currentUser = currentUserResponse.data;
             currentUserRoleId = currentUser.RoleId;
         }
-        const sharingRuleUserIds = await getSharingRulesUserIds(currentUserRoleId, sharingPermissions, userId, organizationId);
+        // const sharingRuleUserIds = await getSharingRulesUserIds(currentUserRoleId, sharingPermissions, userId, organizationId);
 
         // Fetch role details if needed
         let currentUserRole;
