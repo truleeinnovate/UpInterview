@@ -47,7 +47,7 @@ const SupportViewPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <h2 className="text-xl font-medium">Support Ticket Details</h2>
+            <h2 className="text-2xl font-semibold text-custom-blue">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
             {/* <button

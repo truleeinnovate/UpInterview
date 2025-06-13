@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCandidates } from '../../../../../apiHooks/useCandidates';
 import Loading from '../../../../../Components/Loading';
 import { LiaGenderlessSolid } from 'react-icons/lia';
+import { ReactComponent as FaEdit } from '../../../../../icons/FaEdit.svg';
 Modal.setAppElement('#root');
 
 const CandidateFullscreen = () => {
@@ -43,10 +44,16 @@ const CandidateFullscreen = () => {
 
   const content = (
     <div className="h-full flex flex-col">
-      <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
-        <h2 className="text-xl font-bold text-gray-800">Candidate</h2>
+      <div className="sticky top-0 bg-white p-4 flex justify-between items-center z-10">
+        <h2 className="text-2xl font-semibold text-custom-blue">Candidate</h2>
         <div className="flex items-center gap-2">
-
+          <button 
+          onClick={() => navigate(`/candidate/edit/${candidate._id}`)}
+          className=" hover:bg-gray-100 rounded-lg transition-colors"
+          title="Edit"
+          >
+          <FaEdit className="w-5 h-5 text-gray-500 hover:text-custom-blue"/>
+          </button>
         
           <button
             onClick={() => navigate('/candidate')}

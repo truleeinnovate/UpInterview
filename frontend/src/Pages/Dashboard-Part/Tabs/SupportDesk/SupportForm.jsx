@@ -191,7 +191,7 @@ const SupportForm = () => {
             <button onClick={() => navigate('/support-desk')} className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8">
               <IoArrowBack className="text-2xl" />
             </button>
-            <h2 className="text-lg font-medium">{editMode ? "Edit Support Ticket" : "New Support Ticket"}</h2>
+            <h2 className="text-2xl font-semibold text-custom-blue">{editMode ? "Edit Support Ticket" : "New Support Ticket"}</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleFullWidth}

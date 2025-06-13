@@ -697,11 +697,11 @@ const selectedLabelId = useMemo(() => {
               selectedLabel === listName && (
                 <div key={listName} className="mt-4">
                   <div
-                    className={`flex justify-between items-center bg-blue-200  p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
+                    className={`flex justify-between items-center bg-blue-50 p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
                       }`}
                   >
                     <div className="flex items-baseline gap-3">
-                      <h3 className="font-semibold truncate max-w-xs ml-1">{listName}</h3>
+                      <h3 className="font-semibold truncate max-w-xs text-custom-blue ml-1">{listName}</h3>
                       <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
                         {items.length} questions
                       </span>

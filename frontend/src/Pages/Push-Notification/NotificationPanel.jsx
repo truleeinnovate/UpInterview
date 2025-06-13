@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import { config } from '../../config';
+import { X } from 'lucide-react';
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
@@ -165,7 +166,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
     <div className="relative">
       <button
         onClick={togglePanel}
-        className={`relative p-2 ${isOpen ? 'text-custom-blue' : 'text-black'} hover:text-gray-800 focus:outline-none rounded-lg`}
+        className={`relative p-2 ${isOpen ? 'text-custom-blue' : 'text-black'} focus:outline-none rounded-lg`}
       >
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -176,9 +177,13 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
       </button>
 
       {isOpen && !showAllNotifications && (
-        <div className="absolute  top-11  right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 sm:mx-0">
-          <div className="px-3 sm:px-4 py-2 border-b border-gray-200">
+        <div className="absolute top-14 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
+          <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={togglePanel}>
+            <X className="w-4 h-4" />
+             
+            </button>
           </div>
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>

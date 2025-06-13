@@ -1,6 +1,6 @@
 
 import Modal from 'react-modal';
-import { Phone, GraduationCap, School, Mail, ExternalLink, X, Briefcase, User, Calendar } from 'lucide-react';
+import { Phone, GraduationCap, School, Mail, ExternalLink, X, Briefcase, User, Calendar, Expand, Minimize } from 'lucide-react';
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -8,12 +8,14 @@ import Loading from '../../../../../Components/Loading';
 import { useCandidates } from '../../../../../apiHooks/useCandidates';
 import { FaGenderless } from 'react-icons/fa';
 import { LiaGenderlessSolid } from 'react-icons/lia';
+import { ReactComponent as FaEdit } from '../../../../../icons/FaEdit.svg';
 Modal.setAppElement('#root');
 
 const CandidateDetails = ({mode}) => {
     const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const { id } = useParams();
     const location = useLocation();
 
@@ -59,11 +61,29 @@ const fromPath = getFromPath();
 
   const content = (
     <div className="h-full flex flex-col">
-      <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
-        <h2 className="text-xl font-bold text-gray-800">Candidate</h2>
+      <div className="sticky top-0 bg-white p-4 flex justify-between items-center z-10">
+        <h2 className="text-2xl font-semibold text-custom-blue">Candidate</h2>
         <div className="flex items-center gap-2">
-
+            <button 
+            onClick={() => navigate(`/candidate/edit/${candidate._id}`)}
+            className=" hover:bg-gray-100 rounded-lg transition-colors"
+            title="Edit"
+            >
+             <FaEdit className="w-5 h-5 text-gray-500 hover:text-custom-blue"/>
+            </button>
           {/* {!isFullScreen && ( */}
+          <button
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              title={isFullScreen ? 'Minimize':'Expand'}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+            >
+              {isFullScreen ? (
+                <Minimize className="w-5 h-5 text-gray-500" />
+              ) : (
+                <Expand className="w-5 h-5 text-gray-500" />
+              )}
+            </button>
+
             <button
               onClick={() => 
                 {
@@ -75,7 +95,8 @@ const fromPath = getFromPath();
               className=" hover:bg-gray-100 rounded-lg transition-colors"
               title="Open in Fullscreen"
             >
-              <ExternalLink className="w-5 h-5 text-gray-500" />
+              
+              <ExternalLink className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
             </button>
           {/* )} */}
 
@@ -296,7 +317,7 @@ const fromPath = getFromPath();
   // }
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden">
+    <div className={`fixed inset-y-0 right-0 ${isFullScreen ? 'w-full ':'w-1/2'} bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden`}>
       {content}
     </div>
   );
