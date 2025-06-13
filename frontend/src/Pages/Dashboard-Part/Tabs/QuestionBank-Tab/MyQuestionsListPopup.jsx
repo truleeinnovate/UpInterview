@@ -231,28 +231,34 @@ const MyQuestionsList1 = forwardRef(
 
             {/* List Items */}
             <div className="max-h-40 overflow-y-auto px-3 pt-1">
-              {createdLists.map((list) => (
-                <label
-                  key={list._id}
-                  className="flex items-center gap-2 py-1 text-sm hover:bg-gray-50 rounded px-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedListIds.includes(list._id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedListIds((prev) => [...prev, list._id]);
-                      } else {
-                        setSelectedListIds((prev) => prev.filter((id) => id !== list._id));
-                      }
-                    }}
-                  />
-                  {list.label}
-                </label>
-              ))}
+              {createdLists.length === 0 ? (
+                <div className="py-3 text-center text-gray-500 text-sm">
+                  No lists found. Create a new list to get started.
+                </div>
+              ) : (
+                createdLists.map((list) => (
+                  <label
+                    key={list._id}
+                    className="flex items-center gap-2 py-1 text-sm hover:bg-gray-50 rounded px-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedListIds.includes(list._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedListIds((prev) => [...prev, list._id]);
+                        } else {
+                          setSelectedListIds((prev) => prev.filter((id) => id !== list._id));
+                        }
+                      }}
+                    />
+                    {list.label}
+                  </label>
+                ))
+              )}
             </div>
 
-            <div className="border-t mt-2 pt-2 flex justify-end p-2">
+            <div className="border-t mt-2 flex justify-end p-2">
               <LoadingButton
                 onClick={handleAddToList}
                 isLoading={addQuestionToListLoading}
@@ -303,16 +309,26 @@ const MyQuestionsList1 = forwardRef(
                         .filter((service) =>
                           service.label &&
                           service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                        )
-                        .map((service) => (
-                          <li
-                            key={service._id}
-                            className="bg-white p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSelectCandidate(service)}
-                          >
-                            {service.label}
-                          </li>
-                        ))}
+                        ).length > 0 ? (
+                        createdLists
+                          .filter((service) =>
+                            service.label &&
+                            service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
+                          )
+                          .map((service) => (
+                            <li
+                              key={service._id}
+                              className="bg-white p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSelectCandidate(service)}
+                            >
+                              {service.label}
+                            </li>
+                          ))
+                      ) : (
+                        <li className="p-3 text-center text-gray-500 text-sm">
+                          No lists found matching your search
+                        </li>
+                      )}
                     </ul>
 
                     {/* Create New List Button */}

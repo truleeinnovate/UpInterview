@@ -110,7 +110,7 @@ const AssessmentQuestionsTab = ({
             <div className="h-10 w-px bg-gray-200 mx-4"></div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-gray-500">Passing Score</p>
-              <p className="text-2xl font-semibold text-blue-600">{overallPassScore || "0"}</p>
+              <p className="text-2xl font-semibold text-custom-blue">{overallPassScore || "0"}</p>
             </div>
           </div>
         )}
@@ -218,7 +218,7 @@ const AssessmentQuestionsTab = ({
                     </div>
 
                     <button
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                      className="flex items-center gap-1 text-sm text-custom-blue hover:text-custom-blue/90 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                       onClick={() => handlePopupToggle(section)}
                     >
                       <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />

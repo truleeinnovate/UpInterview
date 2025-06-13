@@ -290,7 +290,7 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={assessmentData?.length}
-              searchPlaceholder="Search by Assessment Title, Position..."
+              searchPlaceholder="Search by Assessments..."
               filterIconRef={filterIconRef}
             />
           </div>

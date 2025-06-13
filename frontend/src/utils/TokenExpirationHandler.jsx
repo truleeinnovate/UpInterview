@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { getAuthToken } from './AuthCookieManager/AuthCookieManager';
+// import { getAuthToken } from './AuthCookieManager/AuthCookieManager';
 
 const PROTECTED_ROUTES = ['/home', '/candidate', '/position', '/interview', '/evaluation', '/settings', '/account-settings'];
 

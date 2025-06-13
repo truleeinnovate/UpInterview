@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import InterviewStatusIndicator from './InterviewStatusIndicator';
 import FeedbackStatusChangeModal from './FeedbackStatusChangeModal';
 import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
@@ -19,7 +19,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const [feedbackData, setFeedbackData] = useState([]);
 
-  const fetchInterviewers = async () => {
+  const fetchInterviewers = useCallback(async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
 
@@ -48,11 +48,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     } catch (err) {
       console.error('❌ Error fetching interviewers:', err);
     }
-  };
+  }, [interviewer]);
 
   useEffect(() => {
     fetchInterviewers();
-  }, []);
+  }, [fetchInterviewers]);
 
   const getMappedPolicy = (policy) => {
     switch (policy) {
@@ -87,11 +87,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     selected: false,
     closed: false
   });
-  const [feedback, setFeedback] = useState({
-    status: 'New',
-    rating: 4.5,
-    comments: ''
-  });
+  // const [feedback, setFeedback] = useState({
+  //   status: 'New',
+  //   rating: 4.5,
+  //   comments: ''
+  // });
 
   const [newStatus, setNewStatus] = useState({
     status: '',
@@ -147,39 +147,39 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const statusOptions = ['Contacted', 'In Progress', 'Active', 'InActive', 'Blacklisted'];
 
-  const updateStatusLine = (status) => {
-    const newStatusLine = {
-      new: true,
-      contacted: false,
-      inprogress: false,
-      selected: false,
-      closed: false,
-    };
+  // const updateStatusLine = (status) => {
+  //   const newStatusLine = {
+  //     new: true,
+  //     contacted: false,
+  //     inprogress: false,
+  //     selected: false,
+  //     closed: false,
+  //   };
 
-    switch (status) {
-      case 'Contacted':
-        newStatusLine.contacted = true;
-        break;
-      case 'In Progress':
-        newStatusLine.contacted = true;
-        newStatusLine.inprogress = true;
-        break;
-      case 'Active/InActive':
-        newStatusLine.contacted = true;
-        newStatusLine.inprogress = true;
-        newStatusLine.selected = true;
-        break;
-      case 'Blacklisted':
-        newStatusLine.contacted = true;
-        newStatusLine.inprogress = true;
-        newStatusLine.selected = true;
-        newStatusLine.closed = true;
-        break;
-      default:
-        break;
-    }
-    setStatusLine(newStatusLine);
-  };
+  //   switch (status) {
+  //     case 'Contacted':
+  //       newStatusLine.contacted = true;
+  //       break;
+  //     case 'In Progress':
+  //       newStatusLine.contacted = true;
+  //       newStatusLine.inprogress = true;
+  //       break;
+  //     case 'Active/InActive':
+  //       newStatusLine.contacted = true;
+  //       newStatusLine.inprogress = true;
+  //       newStatusLine.selected = true;
+  //       break;
+  //     case 'Blacklisted':
+  //       newStatusLine.contacted = true;
+  //       newStatusLine.inprogress = true;
+  //       newStatusLine.selected = true;
+  //       newStatusLine.closed = true;
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  //   setStatusLine(newStatusLine);
+  // };
 
   const handleChangeStatus = () => {
     if (feedbackData?.length > 0) {
@@ -193,19 +193,19 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
   };
 
 
-  const handleSave = () => {
-    if (!newStatus.status) {
-      return;
-    }
-    setFeedback({
-      status: newStatus.status,
-      rating: newStatus.rating,
-      comments: newStatus.comments,
-    });
-    updateStatusLine(newStatus.status);
-    setNewStatus({ status: '', rating: 4.5, comments: '' });
-    setShowStatusModal(false);
-  };
+  // const handleSave = () => {
+  //   if (!newStatus.status) {
+  //     return;
+  //   }
+  //   setFeedback({
+  //     status: newStatus.status,
+  //     rating: newStatus.rating,
+  //     comments: newStatus.comments,
+  //   });
+  //   updateStatusLine(newStatus.status);
+  //   setNewStatus({ status: '', rating: 4.5, comments: '' });
+  //   setShowStatusModal(false);
+  // };
 
   // const handleCancel = () => {
   //   setNewStatus({ status: '', rating: 4.5, comments: '' });

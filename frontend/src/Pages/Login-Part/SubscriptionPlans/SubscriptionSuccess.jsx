@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 
 const SubscriptionSuccess = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { paymentId, subscriptionId, orderId, isUpgrading, nextRoute } = location.state || {};
+    const { paymentId, subscriptionId, isUpgrading, nextRoute } = location.state || {};
 
     useEffect(() => {
         // If no payment details, redirect to home

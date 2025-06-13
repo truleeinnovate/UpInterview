@@ -138,6 +138,7 @@ const BasicDetailsTab = ({
                   onChange={(e) =>
                     handleInputChange("AssessmentTitle", e.target.value)
                   }
+                  placeholder="Enter assessment name"
                   autoComplete="off"
                   className={`block w-full border ${errors.AssessmentTitle ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
