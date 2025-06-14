@@ -195,7 +195,7 @@ const handleSubmit = async (e) => {
 
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="candidate" className="block text-sm font-medium text-gray-700">Candidate *</label>
+                    <label htmlFor="candidate" className="block text-sm font-medium text-gray-700">Candidate <span className="text-red-500">*</span></label>
                     <select
                       id="candidate"
                       value={candidateId}
@@ -215,7 +215,7 @@ const handleSubmit = async (e) => {
                   </div>
 
                   <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700">Position *</label>
+                    <label htmlFor="position" className="block text-sm font-medium text-gray-700">Position <span className="text-red-500">*</span></label>
                     <select
                       id="position"
                       value={positionId}
@@ -227,8 +227,7 @@ const handleSubmit = async (e) => {
                         } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
                       <option value="">Select a position</option>
-                      {(positionData ?? []).filter(position => Array.isArray(position.rounds) && position.rounds.length > 0)
-                      .map(position => (
+                      {(positionData ?? []).map(position => (
                         <option key={position._id} value={position._id}>{position.title}</option>
                       ))}
                     </select>

@@ -27,6 +27,15 @@ const Navbar = () => {
   const userId = tokenPayload?.userId;
   // const userName = tokenPayload?.userName;
     const { userProfile } = useCustomContext();
+  
+  // Format name to capitalize first letter of first and last names
+  const formatName = (name) => {
+    if (!name) return '';
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
+  
+  const firstName = formatName(userProfile?.firstName);
+  const lastName = formatName(userProfile?.lastName);
   const organization = tokenPayload?.organization;
   // const { logout } = useAuth0();
   const navigate = useNavigate();
@@ -184,7 +193,7 @@ const Navbar = () => {
             <CgProfile className="text-custom-blue text-xl" />
           )}
         </p>
-        <span className="font-medium ml-1">{userProfile?.firstName} {userProfile?.lastName}</span>
+        <span className="font-medium ml-1">{firstName} {lastName}</span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
         <button
