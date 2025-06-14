@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Organization } = require('../models/Organization');
+const { Organization } = require('../models/Tenant');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
 const SharingSettings = require('../models/SharingSettings');
@@ -7,7 +7,6 @@ const Profile = require('../models/Profile');
 const Role = require('../models/RolesData.js');
 const Tabs = require('../models/Tabs');
 const Objects = require('../models/Objects');
-const { loginSendEmail } = require("./loginEmailCommonController");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
 const { generateToken } = require('../utils/jwt');
@@ -389,32 +388,39 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid request" });
     }
 
-    // Verify token and extract type
+    // Verify token and extract id and type
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
+      console.error("JWT Verification Error:", err.message, err.name);
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
 
-    const { id, type } = decoded; // Extract type from token
+    const { id, type } = decoded;
 
-    // Find user
-    const user = await Users.findById(id);
+    // Find the user
+    const user = await Users.findById(id).select("+password"); // In case password is select: false
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // If user is resetting password, ensure it's different from the old one
-    if (type !== "usercreatepass") {
+    // Check if password already exists
+    const hasExistingPassword = !!user.password;
+
+    if (type !== "usercreatepass" && hasExistingPassword) {
       const isSamePassword = await bcrypt.compare(newPassword, user.password);
       if (isSamePassword) {
-        return res.status(400).json({ success: false, message: "New password must be different from the old password." });
+        return res.status(400).json({
+          success: false,
+          message: "New password must be different from the old password.",
+        });
       }
     }
 
-    // Hash new password and update user
-    user.password = await bcrypt.hash(newPassword, 10);
+    // Hash and save new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
@@ -424,6 +430,7 @@ const resetPassword = async (req, res) => {
     return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
 
 
 // get organization details
@@ -710,7 +717,7 @@ const updateBasedIdOrganizations = async (req, res) => {
     const organization = await Organization.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { 
+      {
         new: true, // Return the updated document
         runValidators: true // Run schema validators
       }
@@ -725,12 +732,12 @@ const updateBasedIdOrganizations = async (req, res) => {
         status: 'success',
         message: 'Organization updated success',
         data: organization
-    });
+      });
   } catch (error) {
     console.error('Error updating organization:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error updating organization',
-      error: error.message 
+      error: error.message
     });
   }
 };

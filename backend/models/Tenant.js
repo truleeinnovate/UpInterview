@@ -59,3 +59,46 @@ const OrganizationSchema = new mongoose.Schema({
 const Organization = mongoose.model('Organization', OrganizationSchema);
 
 module.exports = { Organization};
+
+
+
+// const mongoose = require('mongoose');
+ 
+// const TenantSchema = new mongoose.Schema({
+//   name: { type: String, required: true }, // Org or Individual name
+//   type: { type: String, enum: ['organization', 'individual'], required: true },
+ 
+//   subdomain: { type: String, unique: true, required: true }, // e.g., abc.interview.app
+//   domainEnabled: { type: Boolean, default: false },
+ 
+//   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Creator
+ 
+//   email: { type: String, required: true },
+//   phone: { type: String },
+//   country: { type: String },
+//   timezone: { type: String },
+ 
+//   // Plan & Billing
+//   plan: { type: String, enum: ['basic', 'advanced', 'enterprise'], default: 'basic' },
+//   planStatus: { type: String, enum: ['trial', 'active', 'expired', 'cancelled'], default: 'trial' },
+//   trialEndsAt: { type: Date },
+//   subscriptionId: { type: String }, // Stripe or payment gateway ID
+ 
+//   // Limits
+//   usageLimits: {
+//     assessments: { type: Number, default: 5 },
+//     interviews: { type: Number, default: 5 },
+//     users: { type: Number, default: 5 },
+//     bandwidthMB: { type: Number, default: 10 },
+//     internalInterviewers: { type: Number, default: 5 }
+//   },
+ 
+//   // Status & Metadata
+//   status: { type: String, enum: ['active', 'pending', 'suspended', 'expired'], default: 'active' },
+//   createdAt: { type: Date, default: Date.now },
+//   updatedAt: { type: Date, default: Date.now },
+//   lastActiveAt: { type: Date },
+//   notes: { type: String }
+// });
+ 
+// module.exports = mongoose.model('Tenant', TenantSchema);

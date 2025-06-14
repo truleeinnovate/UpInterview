@@ -5,21 +5,24 @@ import { Mail, MessageSquare, ChevronRight, Paperclip } from 'lucide-react';
 import AllNotificationsModal from './AllNotificationsModal';
 import NotificationDetailsModal from './NotificationDetailsModal';
 import { config } from '../../../../config';
+import Cookies from "js-cookie";
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 
 const NotificationsSection = () => {
   const [activeTab, setActiveTab] = useState('email');
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [notificationsData, setNotificationsData] = useState({ email: [], whatsapp: [] });
-  const organizationId = true;
-  const tenantId = "670286b86ebcb318dab2f676"; // This should come from your auth context
-  const ownerId = "670286b86ebcb318dab2f678"; // // This should come from your auth context
 
-
+    const authToken = Cookies.get('authToken');
+    const tokenPayload = decodeJwt(authToken);
+    const ownerId = tokenPayload?.userId;
+    const tenantId = tokenPayload?.tenantId;
+    const organization = tokenPayload?.organization;
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/notifications/all?organizationId=${organizationId}&tenantId=${tenantId}&ownerId=${ownerId}`);
+        const response = await axios.get(`${config.REACT_APP_API_URL}/notifications/all?organizationId=${organization}&tenantId=${tenantId}&ownerId=${ownerId}`);
         
         // Process the flat array into categorized structure
         const categorizedNotifications = {
@@ -58,7 +61,7 @@ const NotificationsSection = () => {
       }
     };
     fetchNotifications();
-  }, [organizationId, tenantId, ownerId]);
+  }, [organization, tenantId, ownerId]);
 
   return (
     <>

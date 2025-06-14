@@ -1,12 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Clock, CheckCircle, XCircle, Calendar, User, Briefcase, Hash } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { parse, isValid, isAfter, isToday, startOfDay } from 'date-fns';
+import { useInterviews } from '../../../../../apiHooks/useInterviews';
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
-  const { interviewRounds } = useCustomContext();
+  const {
+    interviewData,
+  } = useInterviews();
+  // interviewData is get from useInterviews hook
+  const interviewRounds = useMemo(() => {
+    return interviewData.flatMap(interview => {
+      if (!Array.isArray(interview.rounds)) return [];
+      return interview.rounds.map(round => ({
+        ...round,
+        interviewCode: interview.interviewCode,
+        candidateId: interview.candidateId,
+        positionId: interview.positionId,
+      }));
+    });
+  }, [interviewData]);
   const [upcomingRounds, setUpcomingRounds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -107,12 +121,13 @@ const InterviewerSchedule = () => {
           upcomingRounds.map((round, index) => {
             const statusToShow = round.status || 'Pending';
             const statusDetails = getStatusDetails(statusToShow);
-            const interviewCode = round.interviewId?.interviewCode || 'no interview';
-            const candidateName = round.interviewId?.candidateId?.FirstName
-              ? `${round.interviewId.candidateId.FirstName} ${round.interviewId.candidateId.LastName || ''}`
+            const interviewCode = round.interviewCode || 'no interview';
+            const candidateName = round.candidateId
+              ? `${round.candidateId.FirstName || ''} ${round.candidateId.LastName || ''}`.trim() || 'Unknown Candidate'
               : 'Unknown Candidate';
-            const positionTitle = round.interviewId?.positionId?.title || 'Unknown Position';
-            const companyName = round.interviewId?.positionId?.companyname || '';
+            const positionTitle = round.positionId?.title || 'Unknown Position';
+            const companyName = round.positionId?.companyname || '';
+            const candidateEmail = round.candidateId?.Email || 'no email provided';
 
             return (
               <div
@@ -146,7 +161,7 @@ const InterviewerSchedule = () => {
                       <User size={18} className="text-gray-400" />
                       <div>
                         <p className="font-medium text-gray-800">{candidateName}</p>
-                        <p className="text-sm text-gray-600">{round.interviewId?.candidateId?.Email || 'no email provided'}</p>
+                        <p className="text-sm text-gray-600">{candidateEmail}</p>
                       </div>
                     </div>
                     {/* position title, company name */}

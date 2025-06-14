@@ -280,12 +280,12 @@ const PassScore = ({
   return (
     <div className="fixed inset-0 bg-white flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 shadow-sm">
-        <h2 className="text-lg font-semibold">Pass Score</h2>
+      <div className="flex justify-between items-center p-4 border-gray-200">
+        <h2 className="text-lg font-semibold text-custom-blue">Pass Score</h2>
         <button
           type="button"
           onClick={handleClose}
-          className="p-1 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white"
+          className="p-1 rounded-full focus:outline-none"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -509,7 +509,7 @@ const PassScore = ({
       </div>
 
       {/* Footer Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-sm">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-gray-200 p-4 shadow-sm">
         <div className="max-w-3xl mx-auto flex justify-end">
           <button
             type="button"

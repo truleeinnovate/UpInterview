@@ -22,10 +22,20 @@ import { useCustomContext } from "../../Context/Contextfetch.js";
 const Navbar = () => {
   const location = useLocation();
   const authToken = Cookies.get("authToken");
+  console.log("authToken", authToken);
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   // const userName = tokenPayload?.userName;
     const { userProfile } = useCustomContext();
+  
+  // Format name to capitalize first letter of first and last names
+  const formatName = (name) => {
+    if (!name) return '';
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
+  
+  const firstName = formatName(userProfile?.firstName);
+  const lastName = formatName(userProfile?.lastName);
   const organization = tokenPayload?.organization;
   // const { logout } = useAuth0();
   const navigate = useNavigate();
@@ -136,16 +146,15 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const outlineDropdownContent = (
-    <div className="absolute top-12  w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
+    <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
         <h2 className="text-start font-medium text-custom-blue">Help & Training</h2>
         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={toggleOutlineDropdown}>
         <X className="w-4 h-4" />
-         
         </button>
       </div>
       <div>
-        <div className="text-sm border-b w-full">
+        <div className="text-sm border-b w-full pb-5">
           <div className="mt-2 mb-2 ml-8 flex items-center">
             <p className="text-black">Introduction</p>
           </div>
@@ -184,7 +193,7 @@ const Navbar = () => {
             <CgProfile className="text-custom-blue text-xl" />
           )}
         </p>
-        <span className="font-medium ml-1">{userProfile?.firstName} {userProfile?.lastName}</span>
+        <span className="font-medium ml-1">{firstName} {lastName}</span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
         <button
@@ -200,7 +209,7 @@ const Navbar = () => {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-            logout();
+            logout(organization);
             navigate("/");
           }}
         >

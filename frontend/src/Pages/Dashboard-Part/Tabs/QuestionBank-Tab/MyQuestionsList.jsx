@@ -588,29 +588,39 @@ const selectedLabelId = useMemo(() => {
             </button>
             {isDropdownOpen && (
               <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                {Object.keys(groupedQuestions).map((listName, idx) => (
-                  <div
-                    key={idx}
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                      ? "bg-blue-50 text-custom-blue font-semibold"
-                      : groupedQuestions[listName].length === 0
-                        ? "text-gray-400"
-                        : ""
+                {Object.keys(groupedQuestions).length > 0 ? (
+                  Object.keys(groupedQuestions).map((listName, idx) => (
+                    <div
+                      key={idx}
+                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                        selectedLabel === listName
+                          ? "bg-blue-50 text-custom-blue font-semibold"
+                          : groupedQuestions[listName].length === 0
+                          ? "text-gray-400"
+                          : ""
                       }`}
-                    onClick={() => handleLabelChange(listName)}
-                    title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="truncate">{listName}</span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${groupedQuestions[listName].length === 0 ? "text-gray-500 bg-gray-100" : "text-gray-500 bg-gray-100"
+                      onClick={() => handleLabelChange(listName)}
+                      title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="truncate">{listName}</span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            groupedQuestions[listName].length === 0
+                              ? "text-gray-500 bg-gray-100"
+                              : "text-gray-500 bg-gray-100"
                           }`}
-                      >
-                        {groupedQuestions[listName].length}
-                      </span>
+                        >
+                          {groupedQuestions[listName].length}
+                        </span>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    No labels found. Create a new list to get started.
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

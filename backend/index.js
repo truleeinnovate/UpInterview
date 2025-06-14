@@ -925,3 +925,7 @@ app.get('/sharing-rules-objects', async (req, res) => {
     res.status(500).json({ message: 'Error fetching sharing rules objects', error: error.message });
   }
 });
+
+//notifications
+const notificationRoutes = require('./routes/notificationRoutes.js');
+app.use('/notifications', notificationRoutes);

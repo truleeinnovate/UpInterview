@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
 import Cookies from "js-cookie";
 const SubscriptionPlan = () => {
-  console.log('subscription plan')
+  // console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
 
@@ -32,7 +32,7 @@ const SubscriptionPlan = () => {
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const [subscriptionData, setSubscriptionData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   // Fetch subscription data
   useEffect(() => {
@@ -53,7 +53,7 @@ const SubscriptionPlan = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
@@ -178,7 +178,7 @@ const SubscriptionPlan = () => {
       );
       console.log(organization, plan.name, "organization");
       if ((organization === "false" || !organization) && plan.name === "Base") {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/subscriptions/free`, {
+        await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
           ownerId: user.ownerId,
           tenantId: user.tenantId,
         });
