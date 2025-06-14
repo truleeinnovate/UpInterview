@@ -36,22 +36,22 @@ const { generateToken } = require('../utils/jwt');
 //     }
 
 //     // <-----------------------OutsourceInterviewer------------------------------->
-//     const newInterviewer = new OutsourceInterviewer({
-//       ownerId: savedUser._id,
-//       contactId: savedContact._id,
-//       requestedRate: {
-//         hourlyRate: contactData.hourlyRate
-//       },
-//       finalRate: null,
-//       feedback: [{
-//         givenBy: savedUser._id,
-//         rating: 4.5,
-//         comments: "",
-//         createdAt: new Date()
-//       }],
-//       createdBy: savedUser._id,
-//       currency: 'USD'
-//     });
+// const newInterviewer = new OutsourceInterviewer({
+//   ownerId: savedUser._id,
+//   contactId: savedContact._id,
+//   requestedRate: {
+//     hourlyRate: contactData.hourlyRate
+//   },
+//   finalRate: null,
+//   feedback: [{
+//     givenBy: savedUser._id,
+//     rating: 4.5,
+//     comments: "",
+//     createdAt: new Date()
+//   }],
+//   createdBy: savedUser._id,
+//   currency: 'USD'
+// });
 
 //     const savedInterviewer = await newInterviewer.save();
 //     console.log("Outsource Interviewer successfully created:", savedInterviewer._id);
@@ -140,8 +140,7 @@ exports.individualLogin = async (req, res) => {
         ownerId: savedUser._id,
         contactId: savedContact._id,
         requestedRate: {
-          min: contactData.ExpectedRateMin,
-          max: contactData.ExpectedRateMax,
+          hourlyRate: contactData.hourlyRate
         },
         finalRate: null,
         feedback: [{

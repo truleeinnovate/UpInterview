@@ -137,16 +137,15 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const outlineDropdownContent = (
-    <div className="absolute top-12  w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
+    <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
         <h2 className="text-start font-medium text-custom-blue">Help & Training</h2>
         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={toggleOutlineDropdown}>
         <X className="w-4 h-4" />
-         
         </button>
       </div>
       <div>
-        <div className="text-sm border-b w-full">
+        <div className="text-sm border-b w-full pb-5">
           <div className="mt-2 mb-2 ml-8 flex items-center">
             <p className="text-black">Introduction</p>
           </div>
