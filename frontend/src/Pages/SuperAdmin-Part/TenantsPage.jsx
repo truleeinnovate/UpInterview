@@ -15,7 +15,7 @@ import {
   Mail,
   UserCircle,
   Pencil,
-  Import,
+  // Import,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
@@ -24,10 +24,10 @@ import { config } from "../../config.js";
 
 function TenantsPage() {
   const [view, setView] = useState("table");
-  const [selectedTenant, setSelectedTenant] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  // const [selectedTenant, setSelectedTenant] = useState(null);
+  // const [selectTenantView, setSelectTenantView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
+  // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -199,9 +199,6 @@ function TenantsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // filters
-  const statusOptions = ["active", "inactive", "pending", "inProgress"];
-
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
       prev.includes(status)
@@ -350,6 +347,7 @@ function TenantsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  // Table Columns
   const tableColumns = [
     {
       key: "name",
@@ -489,6 +487,55 @@ function TenantsPage() {
     </div>
   );
 
+  // Render Filter Content
+  const renderFilterContent = () => {
+    // filter options
+    const statusOptions = ["active", "inactive", "pending", "inProgress"];
+
+    return (
+      <div className="space-y-3">
+        {/* Current Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Current Status</span>
+            {isCurrentStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isCurrentStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {statusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStatus.includes(status)}
+                          onChange={() => handleCurrentStatusToggle(status)}
+                          className="accent-custom-blue"
+                        />
+                        <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-background">
       <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
@@ -623,7 +670,7 @@ function TenantsPage() {
                 </div>
               )}
 
-              {/* Render FilterPopup */}
+              {/* FilterPopup */}
               <FilterPopup
                 isOpen={isFilterPopupOpen}
                 onClose={() => setFilterPopupOpen(false)}
@@ -631,52 +678,7 @@ function TenantsPage() {
                 onClearAll={handleClearAll}
                 filterIconRef={filterIconRef}
               >
-                <div className="space-y-3">
-                  {/* Current Status Section */}
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() =>
-                        setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                      }
-                    >
-                      <span className="font-medium text-gray-700">
-                        Current Status
-                      </span>
-                      {isCurrentStatusOpen ? (
-                        <ChevronUp className="text-xl text-gray-700" />
-                      ) : (
-                        <ChevronDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isCurrentStatusOpen && (
-                      <div className="mt-1 space-y-2 pl-2">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex-1">
-                            <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                              {statusOptions.map((status) => (
-                                <label
-                                  key={status}
-                                  className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedStatus.includes(status)}
-                                    onChange={() =>
-                                      handleCurrentStatusToggle(status)
-                                    }
-                                    className="accent-custom-blue"
-                                  />
-                                  <span>{status}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {renderFilterContent()}
               </FilterPopup>
             </motion.div>
           </div>

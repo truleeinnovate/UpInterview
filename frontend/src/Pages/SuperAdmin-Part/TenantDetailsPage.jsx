@@ -7,6 +7,7 @@ import {
   AiOutlineFile,
   AiOutlineApi,
   AiOutlineFolder,
+  AiOutlineContacts,
 } from "react-icons/ai";
 
 import OverviewTab from "../../Components/SuperAdminComponents/TenantDetails/OverviewTab";
@@ -20,6 +21,7 @@ import AuditLogsTab from "../../Components/SuperAdminComponents/TenantDetails/Au
 import ReportsTab from "../../Components/SuperAdminComponents/TenantDetails/ReportsTab";
 import DocumentsTab from "../../Components/SuperAdminComponents/TenantDetails/DocumentsTab";
 import BillingPage from "../SuperAdmin-Part/BillingPage";
+import ContactTab from "../../Components/SuperAdminComponents/TenantDetails/Contact/Contact";
 
 import { config } from "../../config";
 import axios from "axios";
@@ -101,6 +103,12 @@ function TenantDetailsPage() {
               icon={<AiOutlineFile />}
               label="Overview"
             />
+            <Tab
+              active={activeTab === "contact"}
+              onClick={() => setActiveTab("contact")}
+              icon={<AiOutlineContacts />}
+              label="Contact"
+            />
             {/* <Tab
               active={activeTab === 'candidates'}
               onClick={() => setActiveTab('candidates')}
@@ -176,6 +184,7 @@ function TenantDetailsPage() {
           {/* {activeTab === "audit" && <AuditLogsTab />} */}
           {/* {activeTab === "reports" && <ReportsTab />} */}
           {/* {activeTab === "documents" && <DocumentsTab />} */}
+          {activeTab === "contact" && <ContactTab organizationId={id} />}
         </div>
       </div>
     </div>

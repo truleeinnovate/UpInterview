@@ -18,8 +18,18 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
+import {
+  AiOutlineDownload,
+  AiOutlineMail,
+  AiOutlineCreditCard,
+  AiOutlineBank,
+  AiOutlineUser,
+  AiOutlineKey,
+  AiOutlineShop,
+} from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config.js";
+import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 
 function PaymentsTable({ organizationId }) {
   const [view, setView] = useState("table");
@@ -39,6 +49,7 @@ function PaymentsTable({ organizationId }) {
 
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const [payments, setPayments] = useState([
     {
@@ -226,9 +237,6 @@ function PaymentsTable({ organizationId }) {
     },
   ]);
 
-  // filters
-  const statusOptions = ["success", "pending", "captured", "charged"];
-
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
       prev.includes(status)
@@ -386,10 +394,10 @@ function PaymentsTable({ organizationId }) {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  const formatCurrency = (amount, currency) => {
+  const formatCurrency = (amount, currency = "USD") => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
     }).format(amount);
   };
 
@@ -469,7 +477,10 @@ function PaymentsTable({ organizationId }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => setSelectedPaymentId(row._id),
+      onClick: (row) => {
+        setSelectedPaymentId(row._id);
+        setIsPopupOpen(true);
+      },
     },
     // {
     //   key: "360-view",
@@ -501,6 +512,7 @@ function PaymentsTable({ organizationId }) {
         onClick={(e) => {
           e.stopPropagation();
           setSelectedPaymentId(item._id);
+          setIsPopupOpen(true);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -545,6 +557,308 @@ function PaymentsTable({ organizationId }) {
       )}
     </div>
   );
+
+  const renderFilterContent = () => {
+    // filters options
+    const statusOptions = ["success", "pending", "captured", "charged"];
+
+    return (
+      <div className="space-y-3">
+        {/* Current Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Current Status</span>
+            {isCurrentStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isCurrentStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {statusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStatus.includes(status)}
+                          onChange={() => handleCurrentStatusToggle(status)}
+                          className="accent-custom-blue"
+                        />
+                        <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render PopupContent
+  const renderPopupContent = (payment) => {
+    return (
+      <div className="px-4">
+        <div className="rounded-sm px-4 w-full">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-2">
+              <div className="flex justify-center items-center  gap-4 mb-4">
+                <div className="relative">
+                  {payment?.ImageData ? (
+                    <img
+                      src={`http://localhost:5000/${payment?.ImageData?.path}`}
+                      alt={payment?.FirstName || payment?.firstName}
+                      onError={(e) => {
+                        e.target.src = "/default-profile.png";
+                      }}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                      {payment?.firstName?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                  payment?.Status === 'active' ? 'bg-green-100 text-green-800' :
+                  payment?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {payment?.Status ? payment?.Status.charAt(0).toUpperCase() + payment?.Status.slice(1) : "?"}
+  
+                </span> */}
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {payment?.firstName ? payment.firstName : "N/A"}
+                  </h3>
+
+                  <p className="text-gray-600 mt-1">
+                    {payment?.CurrentRole || "position"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 flex items-center">
+                        <AiOutlineCreditCard className="mr-2" />
+                        Payment Information
+                      </h4>
+                      <div className="mt-2 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Amount</span>
+                          <span className="font-medium">
+                            {formatCurrency(payment.amount, payment.currency)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Status</span>
+                          <StatusBadge
+                            status={
+                              payment.status === "captured"
+                                ? "success"
+                                : payment.status === "pending"
+                                ? "warning"
+                                : "error"
+                            }
+                            text={payment?.status?.toUpperCase()}
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Payment Method</span>
+                          <span className="capitalize">
+                            {payment?.paymentMethod?.replace("_", " ")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-sm font-medium text-gray-500 flex items-center">
+                      <AiOutlineBank className="mr-2" />
+                      Gateway Details
+                    </h4>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Gateway</span>
+                        <span className="capitalize">
+                          {payment.paymentGateway}
+                        </span>
+                      </div>
+                      {payment.razorpayPaymentId && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Razorpay Payment ID
+                          </span>
+                          <span className="font-mono text-sm">
+                            {payment.razorpayPaymentId}
+                          </span>
+                        </div>
+                      )}
+                      {payment.razorpayOrderId && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Razorpay Order ID
+                          </span>
+                          <span className="font-mono text-sm">
+                            {payment.razorpayOrderId}
+                          </span>
+                        </div>
+                      )}
+                      {payment.razorpaySignature && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Signature</span>
+                          <span
+                            className="font-mono text-sm truncate max-w-[200px]"
+                            title={payment.razorpaySignature}
+                          >
+                            {payment.razorpaySignature}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-500 flex items-center">
+                    <AiOutlineUser className="mr-2" />
+                    Customer Information
+                  </h4>
+                  <div className="mt-2 space-y-2">
+                    {payment.razorpayCustomerId && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Customer ID</span>
+                        <span className="font-mono text-sm">
+                          {payment.razorpayCustomerId}
+                        </span>
+                      </div>
+                    )}
+                    {payment.cardId && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Card ID</span>
+                        <span className="font-mono text-sm">
+                          {payment.cardId}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-500 flex items-center">
+                    <AiOutlineKey className="mr-2" />
+                    Transaction Details
+                  </h4>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Transaction ID</span>
+                      <span className="font-mono">{payment.transactionId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Transaction Date</span>
+                      <span>{formatDate(payment.transactionDate)}</span>
+                    </div>
+                    {payment.paidAt && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Paid At</span>
+                        <span>{formatDate(payment.paidAt)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-500 flex items-center">
+                    <AiOutlineShop className="mr-2" />
+                    Subscription Details
+                  </h4>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Recurring</span>
+                      <span>{payment.isRecurring ? "Yes" : "No"}</span>
+                    </div>
+                    {payment.isRecurring && (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Billing Cycle</span>
+                          <span className="capitalize">
+                            {payment.billingCycle}
+                          </span>
+                        </div>
+                        {payment.subscriptionId && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">
+                              Subscription ID
+                            </span>
+                            <span className="font-mono text-sm">
+                              {payment.subscriptionId}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                {/* <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  {payment.metadata &&
+                    Object.keys(payment.metadata).length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">
+                          Additional Information
+                        </h4>
+                        <div className="mt-2 bg-gray-50 rounded-lg p-3">
+                          <pre className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {JSON.stringify(payment.metadata, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                  {payment.notes && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">
+                        Notes
+                      </h4>
+                      <p className="mt-2 text-gray-600">{payment.notes}</p>
+                    </div>
+                  )}
+                </div> */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button className="btn-secondary flex items-center">
+                      <AiOutlineDownload className="mr-2" />
+                      Download Receipt
+                    </button>
+                    <button className="btn-secondary flex items-center">
+                      <AiOutlineMail className="mr-2" />
+                      Email Receipt
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -645,54 +959,7 @@ function PaymentsTable({ organizationId }) {
                     onClearAll={handleClearAll}
                     filterIconRef={filterIconRef}
                   >
-                    <div className="space-y-3">
-                      {/* Current Status Section */}
-                      <div>
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() =>
-                            setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                          }
-                        >
-                          <span className="font-medium text-gray-700">
-                            Current Status
-                          </span>
-                          {isCurrentStatusOpen ? (
-                            <ChevronUp className="text-xl text-gray-700" />
-                          ) : (
-                            <ChevronDown className="text-xl text-gray-700" />
-                          )}
-                        </div>
-                        {isCurrentStatusOpen && (
-                          <div className="mt-1 space-y-2 pl-2">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                                  {statusOptions.map((status) => (
-                                    <label
-                                      key={status}
-                                      className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedStatus.includes(
-                                          status
-                                        )}
-                                        onChange={() =>
-                                          handleCurrentStatusToggle(status)
-                                        }
-                                        className="accent-custom-blue"
-                                      />
-                                      <span>{status}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {renderFilterContent()}
                   </FilterPopup>
                 </div>
               </motion.div>
@@ -701,12 +968,16 @@ function PaymentsTable({ organizationId }) {
         </main>
       </div>
 
+      {/* Details view popup */}
       <div>
-        {selectedPayment && (
-          <PaymentDetailsModal
+        {isPopupOpen && selectedPayment && (
+          <SidebarPopup
+            title="Payment"
             payment={selectedPayment}
-            onClose={() => setSelectedPayment(null)}
-          />
+            onClose={() => setIsPopupOpen(null)}
+          >
+            {renderPopupContent(selectedPayment)}
+          </SidebarPopup>
         )}
       </div>
       <Outlet />

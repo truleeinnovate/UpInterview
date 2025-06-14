@@ -1,3 +1,5 @@
+
+// SUPER ADMIN added by Ashok
 const express = require("express");
 const PaymentsRouter = express.Router();
 
@@ -9,7 +11,6 @@ const {
 
 PaymentsRouter.get("/:id", getPaymentById);
 
-// SUPER ADMIN added by Ashok
 PaymentsRouter.get("/:id", getSinglePaymentById);
 
 PaymentsRouter.get("/", getPaymentsSummary);

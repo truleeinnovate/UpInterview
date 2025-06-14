@@ -329,8 +329,8 @@ const OutsourceInterviewersPage = lazy(
     import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
   // import("./Pages/SuperAdmin-Part/OutsourceInterviewersPage.jsx") // super admin part
 );
-const InterviewerRequestsPage = lazy(() =>
-  import("./Pages/Interview-Request/InterviewRequest.jsx")
+const InterviewerRequestsPage = lazy(
+  () => import("./Pages/Interview-Request/InterviewRequest.jsx")
   // import("./Pages/SuperAdmin-Part/InterviewerRequestsPage.jsx") // super admin part
 );
 const BillingPage = lazy(() =>
@@ -364,6 +364,11 @@ const InternalLogsPage = lazy(() =>
 );
 const IntegrationsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
+);
+const ContactProfileDetails = lazy(() =>
+  import(
+    "./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"
+  )
 );
 // ---------------------------------------------------------->
 
@@ -897,6 +902,10 @@ const App = () => {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="internal-logs" element={<InternalLogsPage />} />
               <Route path="integrations" element={<IntegrationsPage />} />
+              <Route
+                path="contact-profile-details"
+                element={<ContactProfileDetails />}
+              />
             </Route>
             {/* ------------------------------------------------------------------------> */}
 

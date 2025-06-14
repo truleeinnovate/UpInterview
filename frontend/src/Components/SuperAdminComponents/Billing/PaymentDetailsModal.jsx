@@ -14,10 +14,10 @@ import { Minimize, Expand, X } from "lucide-react";
 function PaymentDetailsModal({ payment, onClose }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const formatCurrency = (amount, currency) => {
+  const formatCurrency = (amount, currency = "USD") => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
     }).format(amount);
   };
 
@@ -82,7 +82,7 @@ function PaymentDetailsModal({ payment, onClose }) {
                           ? "warning"
                           : "error"
                       }
-                      text={payment.status.toUpperCase()}
+                      text={payment?.status?.toUpperCase()}
                     />
                   </div>
                   <div className="flex justify-between">

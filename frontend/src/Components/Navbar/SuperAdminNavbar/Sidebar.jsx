@@ -226,6 +226,7 @@ import {
   AiOutlineUp,
 } from "react-icons/ai";
 import { CgDetailsMore } from "react-icons/cg";
+import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
 
 function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth();
@@ -294,14 +295,7 @@ function Sidebar({ open, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <div className="flex items-center">
-            <img
-              className="h-8 w-auto"
-              src="https://ui-avatars.com/api/?name=IA&background=4f46e5&color=ffffff&size=40"
-              alt="Interview Admin"
-            />
-            <span className="ml-2 text-xl font-semibold text-gray-900">
-              Interview Admin
-            </span>
+            <img src={logo} alt="Logo" className="w-24" />
           </div>
           <button
             type="button"

@@ -19,10 +19,25 @@ import {
   Pencil,
   ChevronUp,
   ChevronDown,
+  Phone,
+  GraduationCap,
+  School,
+  // ExternalLink,
+  // X,
+  Briefcase,
+  // User,
+  Calendar,
 } from "lucide-react";
+import { LiaGenderlessSolid } from "react-icons/lia";
+import {
+  AiOutlineDownload,
+  AiOutlineMail,
+  AiOutlineEdit,
+} from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
+import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 
 function InvoicesTable({ organizationId }) {
   const [view, setView] = useState("table");
@@ -391,16 +406,6 @@ function InvoicesTable({ organizationId }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // filters ----------------------------------------------------------------
-  const statusOptions = [
-    "paid",
-    "partially Paid",
-    "assigned",
-    "pending",
-    "overdue",
-    "cancelled",
-  ];
-
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
       prev.includes(status)
@@ -412,6 +417,7 @@ function InvoicesTable({ organizationId }) {
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Reset filters when popup opens
   useEffect(() => {
@@ -653,7 +659,10 @@ function InvoicesTable({ organizationId }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => setSelectedInvoiceId(row._id),
+      onClick: (row) => {
+        setSelectedInvoiceId(row._id);
+        setIsPopupOpen(true);
+      },
     },
     // {
     //   key: "360-view",
@@ -684,7 +693,7 @@ function InvoicesTable({ organizationId }) {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setIsPopupOpen(true);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -730,12 +739,286 @@ function InvoicesTable({ organizationId }) {
     </div>
   );
 
+  // Render Filter Content
+  const renderFilterContent = () => {
+    // filter options
+    const statusOptions = [
+      "paid",
+      "partially Paid",
+      "assigned",
+      "pending",
+      "overdue",
+      "cancelled",
+    ];
+
+    return (
+      <div className="space-y-3">
+        {/* Current Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Current Status</span>
+            {isCurrentStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isCurrentStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {statusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStatus.includes(status)}
+                          onChange={() => handleCurrentStatusToggle(status)}
+                          className="accent-custom-blue"
+                        />
+                        <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render Popup content
+  const renderPopupContent = (invoice) => {
+    return (
+      <div className="px-4">
+        <div className="rounded-sm px-4 w-full">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-2">
+              <div className="flex justify-center items-center  gap-4 mb-4">
+                <div className="relative">
+                  {invoice?.ImageData ? (
+                    <img
+                      src={`http://localhost:5000/${invoice?.ImageData?.path}`}
+                      alt={invoice?.FirstName || invoice?.firstName}
+                      onError={(e) => {
+                        e.target.src = "/default-profile.png";
+                      }}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                      {invoice?.firstName?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                invoice?.Status === 'active' ? 'bg-green-100 text-green-800' :
+                invoice?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {invoice?.Status ? invoice?.Status.charAt(0).toUpperCase() + invoice?.Status.slice(1) : "?"}
+
+              </span> */}
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {invoice?.firstName ? invoice.firstName : "N/A"}
+                  </h3>
+
+                  <p className="text-gray-600 mt-1">
+                    {invoice?.CurrentRole || "position"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Invoice Details
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">
+                            Invoice Information
+                          </h4>
+                          <div className="mt-2 space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Type</span>
+                              <span className="capitalize">
+                                {invoice?.type?.replace("_", " ")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Status</span>
+                              <StatusBadge
+                                status={
+                                  invoice.status === "paid"
+                                    ? "success"
+                                    : invoice.status === "partially_paid"
+                                    ? "warning"
+                                    : invoice.status === "overdue"
+                                    ? "error"
+                                    : "warning"
+                                }
+                                text={invoice?.status
+                                  ?.replace("_", " ")
+                                  .toUpperCase()}
+                              />
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Due Date</span>
+                              <span>{formatDate(invoice.dueDate)}</span>
+                            </div>
+                            {invoice.type === "subscription" && (
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-500">
+                                  Subscription Period
+                                </h4>
+                                <div className="mt-2 space-y-2">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">
+                                      Start Date
+                                    </span>
+                                    <span>{formatDate(invoice.startDate)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">
+                                      End Date
+                                    </span>
+                                    <span>{formatDate(invoice.endDate)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Payment Summary
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="text-sm font-medium text-gray-900 mb-4">
+                            Payment Summary
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">
+                                Total Amount
+                              </span>
+                              <span>
+                                {formatCurrency(invoice?.totalAmount)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Amount Paid</span>
+                              <span>{formatCurrency(invoice?.amountPaid)}</span>
+                            </div>
+                            {invoice?.outstandingAmount > 0 && (
+                              <div className="flex justify-between text-error-600 font-medium">
+                                <span>Outstanding Amount</span>
+                                <span>
+                                  {formatCurrency(invoice?.outstandingAmount)}
+                                </span>
+                              </div>
+                            )}
+                            {invoice?.discount > 0 && (
+                              <div className="flex justify-between text-success-600">
+                                <span>Discount Applied</span>
+                                <span>
+                                  -{formatCurrency(invoice?.discount)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-900 mb-4">
+                    Line Items
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Description
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Quantity
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Amount
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Tax
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Total
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {invoice?.lineItems?.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {item.description}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 text-right">
+                              {item.quantity}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 text-right">
+                              {formatCurrency(item.amount)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 text-right">
+                              {formatCurrency(item.tax)}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                              {formatCurrency(
+                                item.amount * item.quantity + item.tax
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 min-h-screen">
       <div className="absolute md:mt-2 sm:mt-4 top-2 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4">
           <h2 className="text-lg font-medium text-custom-blue">Invoices</h2>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Invoices</div>
@@ -771,6 +1054,7 @@ function InvoicesTable({ organizationId }) {
             </div>
           </div>
         </div>
+
         <div className="flex justify-between items-center">
           {/* Header and Tool bar */}
           <div className="md:mt-2 sm:mt-4 w-full">
@@ -801,6 +1085,7 @@ function InvoicesTable({ organizationId }) {
             </main>
           </div>
         </div>
+
         {/* New table content */}
         <main>
           <div className="sm:px-0">
@@ -844,52 +1129,7 @@ function InvoicesTable({ organizationId }) {
                   onClearAll={handleClearAll}
                   filterIconRef={filterIconRef}
                 >
-                  <div className="space-y-3">
-                    {/* Current Status Section */}
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() =>
-                          setIsCurrentStatusOpen(!isCurrentStatusOpen)
-                        }
-                      >
-                        <span className="font-medium text-gray-700">
-                          Current Status
-                        </span>
-                        {isCurrentStatusOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
-                        ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
-                        )}
-                      </div>
-                      {isCurrentStatusOpen && (
-                        <div className="mt-1 space-y-2 pl-2">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-1">
-                              <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                                {statusOptions.map((status) => (
-                                  <label
-                                    key={status}
-                                    className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedStatus.includes(status)}
-                                      onChange={() =>
-                                        handleCurrentStatusToggle(status)
-                                      }
-                                      className="accent-custom-blue"
-                                    />
-                                    <span>{status}</span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {renderFilterContent()}
                 </FilterPopup>
               </div>
             </motion.div>
@@ -897,12 +1137,16 @@ function InvoicesTable({ organizationId }) {
         </main>
       </div>
 
+      {/* Details view popup */}
       <div>
-        {selectedInvoice && (
-          <InvoiceDetailsModal
+        {isPopupOpen && selectedInvoice && (
+          <SidebarPopup
+            title="Invoice"
             invoice={selectedInvoice}
-            onClose={() => setSelectedInvoice(null)}
-          />
+            onClose={() => setIsPopupOpen(false)}
+          >
+            {renderPopupContent(selectedInvoice)}
+          </SidebarPopup>
         )}
       </div>
 
@@ -918,7 +1162,6 @@ function InvoicesTable({ organizationId }) {
           isEdit={editModeOn}
         />
       )}
-
       <Outlet />
     </div>
   );

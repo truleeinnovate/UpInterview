@@ -15,21 +15,35 @@ import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import Loading from "../../SuperAdminComponents/Loading/Loading.jsx";
 import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
-import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  Phone,
+  GraduationCap,
+  School,
+  // ExternalLink,
+  // X,
+  Briefcase,
+  User,
+  Calendar,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import TableView from "../../Shared/Table/TableView.jsx";
 import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
+import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
+import { LiaGenderlessSolid } from "react-icons/lia";
 
 function UsersTab({ users }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  // const [editModeOn, setEditModeOn] = useState(false);
+  // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -42,6 +56,17 @@ function UsersTab({ users }) {
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  // get user by ID
+  useEffect(() => {
+    if (selectedUserId && users?.length) {
+      const foundUser = users.find((user) => user._id === selectedUserId);
+      setSelectedUser(foundUser || null);
+    }
+  }, [selectedUserId, users]);
 
   useEffect(() => {
     if (isTablet) {
@@ -123,7 +148,7 @@ function UsersTab({ users }) {
   }
 
   if (!users) {
-    return <div>No tenants found.</div>;
+    return <div>No Users found.</div>;
   }
 
   const formatDate = (dateString) => {
@@ -151,6 +176,15 @@ function UsersTab({ users }) {
             {row?.firstName || row?.FirstName}
           </div>
           <div className="text-gray-500">{row?.email || row?.Email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      render: (value, row) => (
+        <div className="text-gray-500">
+          {row?.contact || row?.Contact || "N/A"}
         </div>
       ),
     },
@@ -183,26 +217,29 @@ function UsersTab({ users }) {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => {
+        setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -214,7 +251,8 @@ function UsersTab({ users }) {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`view-details/${item._id}`);
+          setSelectedUserId(item._id);
+          setIsPopupOpen(true);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -259,6 +297,241 @@ function UsersTab({ users }) {
       )}
     </div>
   );
+
+  // Render Popup content
+  const renderPopupContent = (user) => {
+    return (
+      <div className="px-4">
+        <div className="rounded-sm px-4 w-full">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-2">
+              <div className="flex justify-center items-center  gap-4 mb-4">
+                <div className="relative">
+                  {user?.ImageData ? (
+                    <img
+                      src={`http://localhost:5000/${user?.ImageData?.path}`}
+                      alt={user?.FirstName || user?.firstName}
+                      onError={(e) => {
+                        e.target.src = "/default-profile.png";
+                      }}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                      {user?.firstName?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                user?.Status === 'active' ? 'bg-green-100 text-green-800' :
+                user?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {user?.Status ? user?.Status.charAt(0).toUpperCase() + user?.Status.slice(1) : "?"}
+
+              </span> */}
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {user?.firstName ? user.firstName : "N/A"}
+                  </h3>
+
+                  <p className="text-gray-600 mt-1">
+                    {user.CurrentRole || "position"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Personal Details
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <User className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Name</p>
+                            <p className="text-gray-700">
+                              {user?.firstName || "N/A"} {user?.lastName || ""}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Calendar className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Date of Birth
+                            </p>
+                            <p className="text-gray-700">
+                              {new Date(
+                                user?.Date_Of_Birth
+                              ).toLocaleDateString() || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-custom-bg rounded-lg">
+                              <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Gender</p>
+                              <p className="text-gray-700">
+                                {user?.Gender || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Contact Information
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Mail className="w-5 h-5 text-gray-500" />
+                          </div>
+
+                          <span className="text-gray-700">
+                            {user?.email || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Phone className="w-5 h-5 text-gray-500" />
+                          </div>
+
+                          <span className="text-gray-700">{user?.Phone}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Professional Details
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Qualification
+                            </p>
+
+                            <p className="text-gray-700">
+                              {user?.HigherQualification || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <School className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">University</p>
+                            <p className="text-gray-700">
+                              {user?.UniversityCollege || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Briefcase className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Experience</p>
+                            <p className="text-gray-700">
+                              {user?.CurrentExperience || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Briefcase className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Relevant Experience
+                            </p>
+                            <p className="text-gray-700">
+                              {user?.RelevantExperience || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                    Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {user?.skills ? (
+                      user.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
+                        >
+                          {skill.skill}
+                        </span>
+                      ))
+                    ) : (
+                      <span>No skills found</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* have to add these feilds show case here later  */}
+                {user.interviews && user.interviews.length > 0 && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Latest Interview
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">
+                          {user.interviews[0].company}
+                        </span>
+                        <span className="text-gray-500">
+                          {user.interviews[0].position}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Latest round: {user.interviews[0].rounds[0].round}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -312,22 +585,20 @@ function UsersTab({ users }) {
                         columns={tableColumns}
                         loading={isLoading}
                         actions={tableActions}
-                        emptyState="No candidates found."
+                        emptyState="No users found."
                       />
                     </div>
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        data={currentFilteredRows.map((candidate) => ({
-                          ...candidate,
-                          id: candidate._id,
-                          title: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
+                        data={currentFilteredRows.map((user) => ({
+                          ...user,
+                          id: user._id,
+                          title: `${user.FirstName || ""} ${
+                            user.LastName || ""
                           }`,
                           subtitle:
-                            candidate.CurrentRole ||
-                            candidate.CurrentExperience ||
-                            "N/A",
+                            user.CurrentRole || user.CurrentExperience || "N/A",
                           avatar: "",
                           status: "active",
                           isAssessmentView: <p>Is assignment view</p>,
@@ -335,7 +606,7 @@ function UsersTab({ users }) {
                         columns={kanbanColumns}
                         loading={isLoading}
                         renderActions={renderKanbanActions}
-                        emptyState="No Tenants found."
+                        emptyState="No Users found."
                       />
                     </div>
                   )}
@@ -428,6 +699,19 @@ function UsersTab({ users }) {
           </div>
         </div>
       )}
+
+      {/* View Details Popup */}
+      <div>
+        {isPopupOpen && selectedUser && (
+          <SidebarPopup
+            title="User"
+            subTitle={selectedUserId}
+            onClose={() => setIsPopupOpen(false)}
+          >
+            {renderPopupContent(selectedUser)}
+          </SidebarPopup>
+        )}
+      </div>
     </div>
   );
 }

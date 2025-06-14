@@ -107,79 +107,79 @@
 //             )}
 //           </div>
 //         </div>
-//         <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
-//           {/* Skill/Technology */}
-//           <div className="flex mt-2 justify-between">
-//             <div className="cursor-pointer">
-//               <label className="inline-flex items-center">
-//                 <input
-//                   type="checkbox"
-//                   className="form-checkbox h-4 w-4"
-//                   checked={isTechMainChecked}
-//                   onChange={handleTechMainToggle}
-//                 />
-//                 <span className="ml-3 font-bold">Skill/Technology</span>
-//               </label>
-//             </div>
-//             <div
-//               className="cursor-pointer mr-3 text-2xl"
-//               onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
-//             >
-//               {isTechDropdownOpen ? (
-//                 <MdKeyboardArrowUp />
-//               ) : (
-//                 <MdKeyboardArrowDown />
-//               )}
-//             </div>
-//           </div>
-//           {isTechDropdownOpen && (
-//             <div className="bg-white py-2 mt-1">
-//               {skills.map((option, index) => (
-//                 <label key={index} className="inline-flex items-center">
-//                   <input
-//                     type="checkbox"
-//                     className="form-checkbox h-4 w-4"
-//                     checked={selectedTechOptions.includes(option.SkillName)}
-//                     onChange={() => handleTechOptionToggle(option.SkillName)}
-//                   />
-//                   <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">
-//                     {option.SkillName}
-//                   </span>
-//                 </label>
-//               ))}
-//             </div>
-//           )}
-//           <div className="flex justify-between mt-2 ml-5">
-//             <div className="cursor-pointer">
-//               <label className="inline-flex items-center">
-//                 <span className="ml-3 font-bold">Experience</span>
-//               </label>
-//             </div>
-//           </div>
-//           <div className="bg-white py-2 mt-1">
-//             <div className="flex items-center ml-10">
-//               <input
-//                 type="number"
-//                 placeholder="Min"
-//                 value={minExperience}
-//                 min="0"
-//                 max="15"
-//                 onChange={(e) => handleExperienceChange(e, "min")}
-//                 className="border-b form-input w-20"
-//               />
-//               <span className="mx-3">to</span>
-//               <input
-//                 type="number"
-//                 placeholder="Max"
-//                 value={maxExperience}
-//                 min="1"
-//                 max="15"
-//                 onChange={(e) => handleExperienceChange(e, "max")}
-//                 className="border-b form-input w-20"
-//               />
-//             </div>
-//           </div>
-//         </div>
+// <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
+//   {/* Skill/Technology */}
+//   <div className="flex mt-2 justify-between">
+//     <div className="cursor-pointer">
+//       <label className="inline-flex items-center">
+//         <input
+//           type="checkbox"
+//           className="form-checkbox h-4 w-4"
+//           checked={isTechMainChecked}
+//           onChange={handleTechMainToggle}
+//         />
+//         <span className="ml-3 font-bold">Skill/Technology</span>
+//       </label>
+//     </div>
+//     <div
+//       className="cursor-pointer mr-3 text-2xl"
+//       onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
+//     >
+//       {isTechDropdownOpen ? (
+//         <MdKeyboardArrowUp />
+//       ) : (
+//         <MdKeyboardArrowDown />
+//       )}
+//     </div>
+//   </div>
+//   {isTechDropdownOpen && (
+//     <div className="bg-white py-2 mt-1">
+//       {skills.map((option, index) => (
+//         <label key={index} className="inline-flex items-center">
+//           <input
+//             type="checkbox"
+//             className="form-checkbox h-4 w-4"
+//             checked={selectedTechOptions.includes(option.SkillName)}
+//             onChange={() => handleTechOptionToggle(option.SkillName)}
+//           />
+//           <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">
+//             {option.SkillName}
+//           </span>
+//         </label>
+//       ))}
+//     </div>
+//   )}
+//   <div className="flex justify-between mt-2 ml-5">
+//     <div className="cursor-pointer">
+//       <label className="inline-flex items-center">
+//         <span className="ml-3 font-bold">Experience</span>
+//       </label>
+//     </div>
+//   </div>
+//   <div className="bg-white py-2 mt-1">
+//     <div className="flex items-center ml-10">
+//       <input
+//         type="number"
+//         placeholder="Min"
+//         value={minExperience}
+//         min="0"
+//         max="15"
+//         onChange={(e) => handleExperienceChange(e, "min")}
+//         className="border-b form-input w-20"
+//       />
+//       <span className="mx-3">to</span>
+//       <input
+//         type="number"
+//         placeholder="Max"
+//         value={maxExperience}
+//         min="1"
+//         max="15"
+//         onChange={(e) => handleExperienceChange(e, "max")}
+//         className="border-b form-input w-20"
+//       />
+//     </div>
+//   </div>
+// </div>
 //         {/* Footer */}
 //         <div className="fixed bottom-0 w-72 sm:w-full md:w-full bg-white space-x-3 flex justify-end border-t p-2">
 //           <button
@@ -714,16 +714,25 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import axios from "axios";
 
-import { config } from "../../config.js";
+import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import InterviewerDetails from "./InterviewerDetails.jsx";
 import { useCustomContext } from "../../Context/Contextfetch.js";
+
+// ===================================================================
+import InterviewStatusIndicator from "./InterviewStatusIndicator";
+import FeedbackStatusChangeModal from "./FeedbackStatusChangeModal";
+import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
+import Availability from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability";
+import axios from "axios";
+import { config } from "../../config.js";
+// ==================================================================
 
 const OutsourceInterviewers = () => {
   const { Outsourceinterviewers: outsource, loading } = useCustomContext();
 
   const [view, setView] = useState("table");
-  // const [selectedTenant, setSelectedTenant] = useState(null);
+  const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
@@ -733,6 +742,7 @@ const OutsourceInterviewers = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
+    experience: { min: "", max: "" },
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -740,7 +750,18 @@ const OutsourceInterviewers = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState("Admin");
 
+  const [selectedInterviewerId, setSelectedInterviewerId] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [interviewers, setInterviewers] = useState([]);
+
+  useEffect(() => {
+    if (selectedInterviewerId && outsource?.length) {
+      const foundUser = outsource.find(
+        (user) => user._id === selectedInterviewerId
+      );
+      setSelectedInterviewer(foundUser || null);
+    }
+  }, [selectedInterviewerId, outsource]);
 
   useEffect(() => {
     if (outsource) {
@@ -757,9 +778,6 @@ const OutsourceInterviewers = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // filters
-  const statusOptions = ["accepted", "inprogress"];
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -831,14 +849,9 @@ const OutsourceInterviewers = () => {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((organization) => {
-      const fieldsToSearch = [
-        organization.firstName,
-        organization.lastName,
-        organization.Email,
-        organization.Phone,
-        organization.company,
-        organization.status,
-      ].filter((field) => field !== null && field !== undefined);
+      const fieldsToSearch = [organization.status].filter(
+        (field) => field !== null && field !== undefined
+      );
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
@@ -881,7 +894,7 @@ const OutsourceInterviewers = () => {
   }
 
   if (!interviewers || interviewers.length === 0) {
-    return <div>No tenants found.</div>;
+    return <div>No Outsource interviewers found.</div>;
   }
 
   const formatDate = (dateString) => {
@@ -892,31 +905,46 @@ const OutsourceInterviewers = () => {
   // Table Columns
   const tableColumns = [
     {
-      key: "interviewerId",
-      header: "Interviewer ID",
+      key: "name",
+      header: "Name",
       render: (vale, row) => (
-        <span>{row.interviewerId ? row.interviewerId : "N/A"}</span>
+        <span>
+          {row?.contactId?.firstName
+            ? row?.contactId?.firstName
+            : row?.contactId?.lastName}
+        </span>
       ),
     },
     {
-      key: "interviewerTyp",
-      header: "Interviewer Type",
+      key: "skills",
+      header: "Skills",
       render: (value, row) => (
-        <span>{row.interviewerType ? row.interviewerType : "N/A"}</span>
+        <span>
+          {row?.contactId?.skills?.length
+            ? row?.contactId?.skills.join(", ")
+            : "N/A"}
+        </span>
       ),
     },
     {
-      key: "interviewerName",
-      header: "Interviewer Name",
+      key: "experience",
+      header: "Experience",
       render: (value, row) => (
-        <span>{row.interviewerName ? row.interviewerName : "N/A"}</span>
+        <span>
+          {row?.contactId?.experience ? row?.contactId?.experience : "N/A"}
+        </span>
       ),
     },
     {
-      key: "position",
-      header: "Position",
+      key: "rating",
+      header: "Rating",
+      render: (value, row) => <span>{row.rating ? row.rating : "N/A"}</span>,
+    },
+    {
+      key: "pricePerHour",
+      header: "Price/Hour",
       render: (value, row) => (
-        <span>{row.position ? row.position : "N/A"}</span>
+        <span>{row?.requestedRate?.hourlyRate || "N/A"}</span>
       ),
     },
     {
@@ -929,13 +957,6 @@ const OutsourceInterviewers = () => {
         />
       ),
     },
-    {
-      key: "requestedAt",
-      header: " Requested At",
-      render: (value, row) => (
-        <span>{row ? formatDate(row?.requestedAt) : "N/A"}</span>
-      ),
-    },
   ];
 
   // Table Actions Configuration
@@ -944,26 +965,29 @@ const OutsourceInterviewers = () => {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+      onClick: (row) => {
+        setSelectedInterviewerId(row._id);
+        setIsPopupOpen(true);
+      },
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -975,7 +999,8 @@ const OutsourceInterviewers = () => {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`/tenants/${item._id}`);
+          setSelectedInterviewerId(item._id);
+          setIsPopupOpen(true);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
@@ -1019,6 +1044,63 @@ const OutsourceInterviewers = () => {
         </button>
       )}
     </div>
+  );
+
+  // Render Filter Content
+  const renderFilterContent = () => {
+    // filters options
+    const statusOptions = ["new", "accepted"];
+
+    return (
+      <div className="space-y-3">
+        {/* Current Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Current Status</span>
+            {isCurrentStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isCurrentStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 rounded-md p-2 space-y-2">
+                    {statusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStatus.includes(status)}
+                          onChange={() => handleCurrentStatusToggle(status)}
+                          className="accent-custom-blue"
+                        />
+                        <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render Popup Content
+  const renderPopupContent = () => (
+    <InterviewerDetails
+      selectedInterviewersData={selectedInterviewer}
+      isOpen={isPopupOpen}
+    />
   );
 
   return (
@@ -1077,7 +1159,7 @@ const OutsourceInterviewers = () => {
               </div>
             )}
 
-            {/* Render FilterPopup */}
+            {/* FilterPopup */}
             <FilterPopup
               isOpen={isFilterPopupOpen}
               onClose={() => setFilterPopupOpen(false)}
@@ -1085,53 +1167,22 @@ const OutsourceInterviewers = () => {
               onClearAll={handleClearAll}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3">
-                {/* Current Status Section */}
-                <div>
-                  <div
-                    className="flex justify-between items-center cursor-pointer"
-                    onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
-                  >
-                    <span className="font-medium text-gray-700">
-                      Current Status
-                    </span>
-                    {isCurrentStatusOpen ? (
-                      <ChevronUp className="text-xl text-gray-700" />
-                    ) : (
-                      <ChevronDown className="text-xl text-gray-700" />
-                    )}
-                  </div>
-                  {isCurrentStatusOpen && (
-                    <div className="mt-1 space-y-2 pl-2">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-1">
-                          <div className="mt-2 rounded-md p-2 space-y-2">
-                            {statusOptions.map((status) => (
-                              <label
-                                key={status}
-                                className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedStatus.includes(status)}
-                                  onChange={() =>
-                                    handleCurrentStatusToggle(status)
-                                  }
-                                  className="accent-custom-blue"
-                                />
-                                <span>{status}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {renderFilterContent()}
             </FilterPopup>
           </motion.div>
         </div>
+      </div>
+      {/* Details view popup */}
+      <div className="flex-grow h-full">
+        {isPopupOpen && selectedInterviewer && (
+          <SidebarPopup
+            title="Outsource Interviewer Details"
+            subTitle={selectedInterviewerId}
+            onClose={() => setIsPopupOpen(false)}
+          >
+            {renderPopupContent(selectedInterviewer)}
+          </SidebarPopup>
+        )}
       </div>
       <Outlet />
     </>

@@ -892,8 +892,8 @@ app.get("/check-email", async (req, res) => {
 
 const historyFeedsRoutes = require("./routes/feedsRoutes");
 const InvoiceRouter = require("./routes/InvoiceRoutes.js");
-const PaymentsRoute = require("./routes/paymentsRoutes.js");
-const ReceiptsRoute = require("./routes/receiptsRoute.js");
+const PaymentsRoute = require("./routes/paymentsRoutes.js"); // SUPER ADMIN added by Ashok
+const ReceiptsRoute = require("./routes/receiptsRoute.js"); // SUPER ADMIN added by Ashok
 const WalletRouter = require("./routes/WalletRoutes.js");
 app.use("/feeds", historyFeedsRoutes);
 
@@ -901,11 +901,13 @@ app.use("/feeds", historyFeedsRoutes);
 // invoices
 app.use("/invoices", InvoiceRouter);
 
-// app.use("/get-invoice-id", InvoiceRouter);
+// app.use("/get-invoice-id", InvoiceRouter); // COMMENTED BY Ashok
 
+// SUPER ADMIN added by Ashok
 // payments
 app.use("/payments", PaymentsRoute);
 
+// SUPER ADMIN added by Ashok
 // receipts
 app.use("/receipts", ReceiptsRoute);
 
