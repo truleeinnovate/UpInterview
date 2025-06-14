@@ -27,7 +27,7 @@ const UsersSchema = new mongoose.Schema({
     lastName: { type: String },
     firstName: { type: String },
     email: { type: String},
-    password: { type: String },
+    password: { type: String,select: true },
     isFreelancer: String,
     isAddedTeam: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
