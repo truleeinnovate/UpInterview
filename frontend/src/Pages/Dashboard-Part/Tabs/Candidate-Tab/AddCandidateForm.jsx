@@ -148,8 +148,8 @@ console.log('currentRoles:', currentRoles);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
   const [file, setFile] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const [resumeFile, setResumeFile] = useState(null);
+  // const [imageFile, setImageFile] = useState(null);
+  // const [resumeFile, setResumeFile] = useState(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [entries, setEntries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -157,18 +157,18 @@ console.log('currentRoles:', currentRoles);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
-  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
+  // const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
+  // const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const expertiseOptions = ["Basic", "Medium", "Expert"];
-  const [filePreview, setFilePreview] = useState(null);
-  const [isImageUploaded, setIsImageUploaded] = useState(false);
+  // const [filePreview, setFilePreview] = useState(null);
+  // const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
   const [searchTermCurrentRole, setSearchTermCurrentRole] = useState('');
 
-  const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
+  // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
   const experienceOptions = [
     "0-1 Years",
@@ -243,8 +243,8 @@ console.log('currentRoles:', currentRoles);
       setEntries(selectedCandidate.skills || []);
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(selectedCandidate.skills?.map(skill => skill.skill) || []);
-      setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
-      setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
+      // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
+      // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
   }, [id, candidateData]);
 
@@ -390,27 +390,27 @@ console.log('currentRoles:', currentRoles);
     const file = e.target.files[0];
     if (file) {
       setFile(file);
-      setImageFile(file);
+      // setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
-      setIsImageUploaded(true);
+      // setIsImageUploaded(true);
     }
   };
 
   const handleResumeChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setResumeFile(file);
+      // setResumeFile(file);
       setSelectedResume(file);
     }
   };
 
   const removeImage = () => {
-    setImageFile(null);
+    // setImageFile(null);
     setImagePreview(null);
   };
 
   const removeResume = () => {
-    setResumeFile(null);
+    // setResumeFile(null);
     setSelectedResume(null);
   };
 

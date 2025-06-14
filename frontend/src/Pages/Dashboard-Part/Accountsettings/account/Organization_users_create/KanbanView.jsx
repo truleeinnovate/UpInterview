@@ -1,12 +1,12 @@
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
-import { Eye, Pencil, Mail, Phone, Briefcase, Linkedin, Badge, Info, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, Pencil, Mail, Phone, Briefcase, Info, CheckCircle, XCircle } from 'lucide-react';
 import maleImage from "../../../Images/man.png";
 import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-import { config } from '../../../../../config';
+// import axios from 'axios';
+// import { config } from '../../../../../config';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useState } from 'react';
 

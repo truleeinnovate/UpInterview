@@ -320,7 +320,7 @@ const Users = () => {
             filterIconRef={filterIconRef}
           />
         </div>
-        <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+        <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
           <motion.div className="bg-white">
             <div className="relative w-full">
               {view === 'table' ? (
@@ -336,11 +336,11 @@ const Users = () => {
                   />
                 </div>
               ) : (
-                <div className="w-full">
+                <div className="w-full pl-4 pt-4 pr-4 mb-5">
                   <KanbanView
                     currentFilteredRows={currentFilteredRows}
                     loading={usersLoading}
-                    setActionViewMore={() => { }} // Placeholder; adjust if needed
+                    setActionViewMore={() => { }}
                     userData={usersRes}
                     toggleSidebar={() => navigate('new')}
                   />
