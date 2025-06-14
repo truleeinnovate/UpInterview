@@ -1,9 +1,7 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
-// import { useCustomContext } from '../../../../Context/Contextfetch';
 import Header from '../../../../Components/Shared/Header/Header';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
 import TableView from '../../../../Components/Shared/Table/TableView';
@@ -14,16 +12,9 @@ import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from '../../../../apiHooks/usePositions';
 import { useMasterData } from '../../../../apiHooks/useMasterData';
 
-
-
-
-
 const PositionTab = () => {
   const { skills } = useMasterData();
-
-
-    const { positionData, isLoading } = usePositions();
-  
+  const { positionData, isLoading } = usePositions();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState('table');
