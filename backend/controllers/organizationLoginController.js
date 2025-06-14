@@ -393,7 +393,6 @@ const resetPassword = async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      console.error("JWT Verification Error:", err.message, err.name);
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
 
@@ -430,8 +429,6 @@ const resetPassword = async (req, res) => {
     return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
-
-
 
 // get organization details
 const getBasedIdOrganizations = async (req, res) => {
@@ -750,4 +747,3 @@ module.exports = {
   deactivateSubdomain,
   updateBasedIdOrganizations
 };
-
