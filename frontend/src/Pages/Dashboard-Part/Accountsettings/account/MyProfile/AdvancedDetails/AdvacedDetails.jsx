@@ -32,7 +32,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
  
 
   return (
-    <div className="space-y-6">
+    <div>
       <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
         <h3 className={`text-lg font-medium  ${mode === 'users' ? 'hidden' : ""}`}>Advanced Details</h3>
 
@@ -54,9 +54,9 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
       </div>
 
 
-      <div className="space-y-4 bg-white p-6 rounded-lg shadow">
+      <div className="bg-white rounded-lg">
 
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
             <p className="font-medium">{contactData.currentRole || "N/A"}</p>

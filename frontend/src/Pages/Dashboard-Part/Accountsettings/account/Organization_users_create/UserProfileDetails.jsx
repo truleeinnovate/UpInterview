@@ -30,7 +30,7 @@ const ConfirmationModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full">
         <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
         <p className="mb-2">
           Are you sure you want to change the status of <span className="font-bold">{userName} to {newStatus}</span>?
@@ -63,7 +63,7 @@ const UserProfileDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
-  const { toggleUserStatus,refetchUsers } = useCustomContext();
+  const { toggleUserStatus, refetchUsers } = useCustomContext();
 
   const [activeTab, setActiveTab] = useState('basic');
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -71,26 +71,26 @@ const UserProfileDetails = () => {
   const [newStatus, setNewStatus] = useState(userData?.status || 'active');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-const [basicEditOpen, setBasicEditOpen] = useState(false);
-const [advacedEditOpen,setAdvacedEditOpen] =useState(false);
-const [interviewEditOpen,setInterviewEditOpen] =useState(false);
-const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
+  const [basicEditOpen, setBasicEditOpen] = useState(false);
+  const [advacedEditOpen, setAdvacedEditOpen] = useState(false);
+  const [interviewEditOpen, setInterviewEditOpen] = useState(false);
+  const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
 
 
   useEffect(() => {
     document.title = "User Profile Details";
   }, []);
 
-    const handleBasicEditSuccess = () => {
+  const handleBasicEditSuccess = () => {
     refetchUsers() // Refresh the users data in context
   };
 
 
-      const handleAdvacedEditSuccess = () => {
+  const handleAdvacedEditSuccess = () => {
     refetchUsers() // Refresh the users data in context
   };
 
-      const handleInterviewEditSuccess = () => {
+  const handleInterviewEditSuccess = () => {
     refetchUsers() // Refresh the users data in context
   };
 
@@ -150,44 +150,35 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
     ];
 
   const renderBasicDetails = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        
-          <BasicDetails mode='users' usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen} />
-       
+    <div className={isFullScreen ? "mx-3" : ""}>
+      <div className="bg-white p-6 rounded-lg">
+        <BasicDetails mode='users' usersId={userData.contactId} setBasicEditOpen={setBasicEditOpen} />
       </div>
     </div>
   );
 
   const renderAdvancedDetails = () => (
-    <div className="space-y-6">
-      <div className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <AdvancedDetails  mode='users' usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  />
-        
+    <div className={isFullScreen ? "mx-3" : ""}>
+      <div className="bg-white p-6 rounded-lg">
+        <AdvancedDetails mode='users' usersId={userData.contactId} setAdvacedEditOpen={setAdvacedEditOpen} />
+
       </div>
     </div>
   );
 
   const renderInterviewDetails = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <InterviewUserDetails mode='users' usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}/>
-      
+    <div className={isFullScreen ? "mx-3" : ""}>
+      <div className="bg-white p-6 rounded-lg">
+        <InterviewUserDetails mode='users' usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen} />
       </div>
     </div>
   );
 
   const renderAvailability = () => {
-   
     return (
-     
-        <div className="grid grid-cols-1 gap-2 
-     bg-white p-2  rounded-lg shadow">
-          <AvailabilityUser mode='users' usersId={userData.contactId}  setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen}/>
-          
-
-        </div>
-      
+      <div className={isFullScreen ? "mx-3" : ""}>
+        <AvailabilityUser mode='users' usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen} />
+      </div>
     );
   };
 
@@ -201,8 +192,6 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
     }
   );
 
-
-
   return (
     <>
       <Modal
@@ -212,17 +201,9 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
         <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center space-x-4">
-                <button
-                  className="text-gray-500 hover:bg-gray-200 rounded-full p-2"
-                  onClick={handleClose}
-                >
-                  <ArrowLeft className="text-2xl" />
-                </button>
-                <h2 className="text-2xl font-bold text-custom-blue">User Profile</h2>
-              </div>
+          <div>
+            <div className="flex justify-between items-center mb-2 mx-3 mt-3">
+              <h2 className="text-xl font-bold text-custom-blue">User Profile</h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsFullScreen(!isFullScreen)}
@@ -243,7 +224,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2 mx-3">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
@@ -256,7 +237,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
                   />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900">
                     {userData.firstName} {userData.lastName}
                   </h3>
                   <p className="text-gray-600">{userData.currentRole || userData.label || "N/A"}</p>
@@ -280,7 +261,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex border-b border-gray-200 mb-6">
+            <div className="flex border-gray-200 mx-3">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -298,7 +279,7 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
             </div>
 
             {/* Tab Content */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 230px)' }}>
+            <div style={{ maxHeight: 'calc(100vh - 230px)' }}>
               <>
                 {activeTab === 'basic' && renderBasicDetails()}
                 {activeTab === 'advanced' && renderAdvancedDetails()}
@@ -318,24 +299,24 @@ const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
           </div>
         </div>
 
-        
-      {basicEditOpen && 
-      <BasicDetailsEditPage from="users" usersId={userData.contactId} setBasicEditOpen ={setBasicEditOpen}  onSuccess={handleBasicEditSuccess}/> 
-      }
 
-      {advacedEditOpen &&
-        <EditAdvacedDetails from="users" usersId={userData.contactId} setAdvacedEditOpen ={setAdvacedEditOpen}  onSuccess={handleAdvacedEditSuccess}/>
-      }
-     
+        {basicEditOpen &&
+          <BasicDetailsEditPage from="users" usersId={userData.contactId} setBasicEditOpen={setBasicEditOpen} onSuccess={handleBasicEditSuccess} />
+        }
 
-      {
-        interviewEditOpen &&   <EditInterviewDetails from="users" usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen}  onSuccess={handleInterviewEditSuccess}/>
-      }
+        {advacedEditOpen &&
+          <EditAdvacedDetails from="users" usersId={userData.contactId} setAdvacedEditOpen={setAdvacedEditOpen} onSuccess={handleAdvacedEditSuccess} />
+        }
 
-      {
-       availabilityEditOpen && <EditAvailabilityDetails  from="users" usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen}  onSuccess={handleInterviewEditSuccess}/>
-      }
- </Modal>
+
+        {
+          interviewEditOpen && <EditInterviewDetails from="users" usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen} onSuccess={handleInterviewEditSuccess} />
+        }
+
+        {
+          availabilityEditOpen && <EditAvailabilityDetails from="users" usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen} onSuccess={handleInterviewEditSuccess} />
+        }
+      </Modal>
 
     </>
   );

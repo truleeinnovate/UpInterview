@@ -7,7 +7,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
-// import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 
 const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen }) => {
   const { usersRes } = useCustomContext();
@@ -30,32 +29,6 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
   const tokenPayload = decodeJwt(authToken);
 
   const userId = tokenPayload.userId;
-
-  // console.log("userId AvailabilityUser", userId);
-
-  // useEffect(() => {
-  //   const fetchData = () => {
-  //     try {
-  //       if (usersId) {
-  //               const selectedContact = usersRes.find(user => user.contactId === usersId);
-  //                 setContactData(selectedContact || {});
-  //         //  fetchContacts(usersId);
-  //       } else {
-  //           const contact = singlecontact[0]; 
-  //            if (contact) {
-  //         setContactData(contact);
-  //       }
-  //       }
-
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-
-
-  //   fetchData();
-
-  // }, [userId, singlecontact,usersRes]);
 
   useEffect(() => {
     const selectedContact = usersId
@@ -154,7 +127,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
         <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Availability</h3>
 
@@ -172,15 +145,9 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2  gap-6 
-    sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8  bg-white p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg shadow
-    ${isFullScreen === false ? ' grid-cols-1' :'2xl:grid-cols-2'}
-    `}>
+      <div className={`mx-5 grid gap-6 ${isFullScreen === false ? 'grid-cols-1' : 'grid-cols-2'}`}>
 
-
-
-
-        <div className='flex flex-col justify-between items-center mb-4'>
+        <div className='flex flex-col justify-between items-center mb-6'>
           <div className="overflow-x-auto w-full">
             <div className="w-full">
               <div className="grid grid-cols-8 gap-1">
@@ -221,8 +188,8 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                           <div
                             key={`${hour}-${dateIndex}`}
                             className={`h-12 border border-gray-100 rounded-md ${available
-                                ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
-                                : 'bg-gray-50'
+                              ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
+                              : 'bg-gray-50'
                               }`}
                           >
                             {available && (
@@ -252,7 +219,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
           </div>
         </div>
 
-        <div className={`  ${isFullScreen === false ? 'flex items-center gap-3 m-auto' : 'space-y-6'}`}>
+        <div className='flex flex-col gap-6 mb-6'>
           {/* Enhanced Timezone Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center space-x-3 mb-4">
@@ -260,14 +227,14 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                 <Globe className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Timezone</h3>
-                <p className="text-sm text-gray-500">Your local timezone</p>
+                <h3 className="font-bold text-gray-800">Timezone</h3>
+                <p className="text-gray-500 text-[12px]">Your local timezone</p>
               </div>
             </div>
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-blue-600" />
-                <p className="font-semibold text-gray-800 text-lg">
+                <p className="font-semibold text-gray-800">
                   {selectedTimezone || "Not set"}
                 </p>
               </div>
@@ -281,8 +248,8 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                 <Clock className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Preferred Duration</h3>
-                <p className="text-sm text-gray-500">Interview length</p>
+                <h3 className="font-bold text-gray-800">Preferred Duration</h3>
+                <p className="text-[12px] text-gray-500">Interview length</p>
               </div>
             </div>
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
@@ -293,7 +260,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                       {selectedOption || "?"}
                     </span>
                   </div>
-                  <span className="font-semibold text-gray-800 text-lg">
+                  <span className="font-semibold text-gray-800 text-[12px]">
                     {selectedOption || "Not set"} {selectedOption && "minutes"}
                   </span>
                 </div>
@@ -301,7 +268,6 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
             </div>
           </div>
         </div>
-
 
       </div>
 
@@ -311,21 +277,3 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 }
 
 export default AvailabilityUser
-
-
-
-        {/* <div className="mt-6 ">
-          <div>
-            <p className="text-sm text-gray-500 sm:text-xs md:text-sm lg:text-base">Timezone</p>
-            <div className="flex-grow w-full overflow-visible">
-              <p className="font-medium 
-            sm:text-sm md:text-base lg:text-lg">{selectedTimezone || "N/A"}</p>
-            </div>
-          </div>
-
-
-          <div className="mt-5">
-            <p className="text-sm text-gray-500 sm:text-xs md:text-sm lg:text-base">Preferred Duration</p>
-            <p className="font-medium sm:text-sm md:text-base lg:text-lg">{selectedOption || "N/A"} minutes</p>
-          </div>
-        </div> */}

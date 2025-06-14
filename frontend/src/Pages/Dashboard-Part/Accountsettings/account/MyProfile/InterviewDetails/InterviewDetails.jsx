@@ -54,7 +54,7 @@ const InterviewUserDetails = ({mode,usersId,setInterviewEditOpen}) => {
 
 
   return (
-    <div className="space-y-6">
+    <div>
       <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
         <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Interview Details</h3>
 
@@ -75,7 +75,7 @@ const InterviewUserDetails = ({mode,usersId,setInterviewEditOpen}) => {
 
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white rounded-lg">
 
         <div className="grid mb-2 grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
 
