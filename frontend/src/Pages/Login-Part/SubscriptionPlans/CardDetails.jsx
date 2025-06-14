@@ -387,66 +387,67 @@ const CardDetails = () => {
         }
     };
     
+
     
-    useEffect(() => {
-        const checkSubscriptionStatus = async () => {
-            // Check if we're returning from a subscription authorization
-            const pendingSubscription = localStorage.getItem('pendingSubscription');
-            const params = new URLSearchParams(window.location.search);
-            const razorpayPaymentId = params.get('razorpay_payment_id');
-            const razorpaySignature = params.get('razorpay_signature');
+    // useEffect(() => {
+    //     const checkSubscriptionStatus = async () => {
+    //         // Check if we're returning from a subscription authorization
+    //         const pendingSubscription = localStorage.getItem('pendingSubscription');
+    //         const params = new URLSearchParams(window.location.search);
+    //         const razorpayPaymentId = params.get('razorpay_payment_id');
+    //         const razorpaySignature = params.get('razorpay_signature');
             
-            if (pendingSubscription && (razorpayPaymentId || params.get('error_code'))) {
-                const subscriptionData = JSON.parse(pendingSubscription);
+    //         if (pendingSubscription && (razorpayPaymentId || params.get('error_code'))) {
+    //             const subscriptionData = JSON.parse(pendingSubscription);
                 
-                // Clear the pending subscription data
-                localStorage.removeItem('pendingSubscription');
+    //             // Clear the pending subscription data
+    //             localStorage.removeItem('pendingSubscription');
                 
-                // If we have a payment ID, verify the payment
-                if (razorpayPaymentId && razorpaySignature) {
-                    try {
-                        toast.loading("Verifying subscription...");
+    //             // If we have a payment ID, verify the payment
+    //             if (razorpayPaymentId && razorpaySignature) {
+    //                 try {
+    //                     toast.loading("Verifying subscription...");
                         
-                        const verificationResponse = await axios.post(
-                            `${process.env.REACT_APP_API_URL}/payment/verify-subscription`, 
-                            {
-                                razorpay_payment_id: razorpayPaymentId,
-                                razorpay_subscription_id: subscriptionData.subscriptionId,
-                                razorpay_signature: razorpaySignature,
-                                ownerId: subscriptionData.ownerId,
-                                tenantId: subscriptionData.tenantId,
-                                planId: subscriptionData.planId,
-                                membershipType: subscriptionData.membershipType
-                            }
-                        );
+    //                     const verificationResponse = await axios.post(
+    //                         `${process.env.REACT_APP_API_URL}/payment/verify-subscription`, 
+    //                         {
+    //                             razorpay_payment_id: razorpayPaymentId,
+    //                             razorpay_subscription_id: subscriptionData.subscriptionId,
+    //                             razorpay_signature: razorpaySignature,
+    //                             ownerId: subscriptionData.ownerId,
+    //                             tenantId: subscriptionData.tenantId,
+    //                             planId: subscriptionData.planId,
+    //                             membershipType: subscriptionData.membershipType
+    //                         }
+    //                     );
                         
-                        toast.dismiss();
+    //                     toast.dismiss();
                         
-                        if (verificationResponse.data.status === "success") {
-                            toast.success("Subscription successfully activated!");
+    //                     if (verificationResponse.data.status === "success") {
+    //                         toast.success("Subscription successfully activated!");
                             
-                            // Navigate based on upgrade status
-                            if (isUpgrading) {
-                                navigate("/account-settings/subscription");
-                            } else {
-                                navigate("/home");
-                            }
-                        } else {
-                            toast.error("Subscription verification failed. Please contact support.");
-                        }
-                    } catch (error) {
-                        console.error("Error verifying subscription:", error);
-                        toast.error("Failed to verify subscription. Please contact support.");
-                    }
-                } else if (params.get('error_code')) {
-                    // Handle payment failure
-                    toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`);
-                }
-            }
-        };
+    //                         // Navigate based on upgrade status
+    //                         if (isUpgrading) {
+    //                             navigate("/account-settings/subscription");
+    //                         } else {
+    //                             navigate("/home");
+    //                         }
+    //                     } else {
+    //                         toast.error("Subscription verification failed. Please contact support.");
+    //                     }
+    //                 } catch (error) {
+    //                     console.error("Error verifying subscription:", error);
+    //                     toast.error("Failed to verify subscription. Please contact support.");
+    //                 }
+    //             } else if (params.get('error_code')) {
+    //                 // Handle payment failure
+    //                 toast.error(`Payment failed: ${params.get('error_description') || 'Unknown error'}`);
+    //             }
+    //         }
+    //     };
         
-        checkSubscriptionStatus();
-    }, [isUpgrading, navigate]); // Added isUpgrading and navigate to dependency array
+    //     checkSubscriptionStatus();
+    // }, [isUpgrading, navigate]); // Added isUpgrading and navigate to dependency array
 
     return (
         <div className="flex pt-4 flex-col h-full w-full items-center bg-white">

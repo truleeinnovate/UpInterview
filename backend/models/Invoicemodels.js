@@ -45,6 +45,8 @@ const InvoiceSchema = new mongoose.Schema({
             tax: { type: Number, default: 0 }
         }
     ],
+    invoiceCode:{type:String,unique:true},
+    failureReason: { type: String },
     comments: { type: String, default: '' },
 }, { timestamps: true });
 

@@ -121,8 +121,24 @@ export const useInterviewTemplates = () => {
         },
     });
 
+    const deleteRoundMutation = useMutation({
+        mutationFn: async (roundId) => {
+          const response = await axios.delete(
+            `${config.REACT_APP_API_URL}/interviewTemplates/delete-round/${roundId}`
+          );
+          return response.data;
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries(['positions']);
+        },
+        onError: (error) => {
+          console.error('Error deleting round:', error);
+          //toast.error('Failed to delete round');
+        },
+      });
+
     // Calculate loading states
-    const isMutationLoading = saveTemplate.isPending || addOrUpdateRound.isPending;
+    const isMutationLoading = saveTemplate.isPending || addOrUpdateRound.isPending || deleteRoundMutation.isPending;
     const isLoading = isQueryLoading || isMutationLoading;
 
     // Controlled logging
@@ -154,5 +170,6 @@ export const useInterviewTemplates = () => {
         addOrUpdateRoundError: addOrUpdateRound.error,
         saveTemplate: saveTemplate.mutateAsync,
         addOrUpdateRound: addOrUpdateRound.mutateAsync,
+        deleteRoundMutation:deleteRoundMutation.mutateAsync
     };
 };

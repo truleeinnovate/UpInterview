@@ -41,6 +41,22 @@ const  createInvoice = async (
     throw new Error('Invalid type value');
   }
 
+  
+
+  // Generate invoice code
+  const lastInvoice = await Invoicemodels.findOne({})
+    .sort({ _id: -1 })
+    .select('invoiceCode')
+    .lean();
+  let nextNumber = 1;
+  if (lastInvoice && lastInvoice.invoiceCode) {
+    const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+    if (match) {
+      nextNumber = parseInt(match[1], 10) + 1;
+    }
+  }
+  const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+
   return await Invoicemodels.create({
     // invoiceId: invoiceId,
     tenantId: tenantId,
@@ -60,6 +76,7 @@ const  createInvoice = async (
       quantity: 1,
       tax: 0
     }],
+    invoiceCode: invoiceCode,
     createdAt: new Date(),
   });
 };

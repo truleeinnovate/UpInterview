@@ -10,7 +10,7 @@ exports.createMockInterview = async (req, res) => {
 
     const {  skills, ownerId, tenantId, candidateName, 
       higherQualification, currentExperience, technology, Role,
-      jobDescription,rounds } = req.body;
+      jobDescription,rounds, } = req.body;
 
     const mockInterview = new MockInterview({
       // title,

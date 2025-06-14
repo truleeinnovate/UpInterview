@@ -28,9 +28,9 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     razorpaySubscriptionId: { type: String, required: false },
     razorpayPaymentId: { type: String, required: false },
     lastPaymentId: { type: String, required: false },
-    lastPaymentDate:{type: Date}
+    lastPaymentDate:{type: Date},
     // razorpaySubscriptionStatus: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending'], default: 'pending' },
-    // razorpayPlanId: { type: String, required: false }
+    razorpayPlanId: { type: String, required: false }
     
 }, { timestamps: true });
 

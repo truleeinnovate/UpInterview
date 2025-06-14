@@ -8,7 +8,7 @@ import Cookies from "js-cookie";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import { X, Users, User, Trash2, Clock, Calendar } from 'lucide-react';
+import { X, Users, User, Trash2, Clock, Calendar, Search, ChevronDown } from 'lucide-react';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
 import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
@@ -17,6 +17,113 @@ import LoadingButton from '../../../../Components/LoadingButton';
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
 
+
+// Reusable CustomDropdown Component
+const CustomDropdown = ({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+  error,
+  placeholder,
+  optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
+  optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
+  disableSearch = false,
+  hideLabel = false,
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleSelect = (option) => {
+    console.log('Selected option:', option);
+    const selectedValue = optionValue ? option[optionValue] : option;
+    onChange({ target: { name, value: selectedValue } });
+    setShowDropdown(false);
+    setSearchTerm('');
+  };
+
+  const filteredOptions = options?.filter(option => {
+    const displayValue = optionKey ? option[optionKey] : option;
+    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div ref={dropdownRef}>
+      {!hideLabel && (
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+          {label} <span className="text-red-500">*</span>
+        </label>
+      )}
+      <div className="relative">
+        <input
+          name={name}
+          type="text"
+          id={name}
+          value={value}
+          onClick={toggleDropdown}
+          placeholder={placeholder}
+          autoComplete="off"
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          readOnly
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+          <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
+        </div>
+        {showDropdown && (
+          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+            {!disableSearch && (
+              <div className="border-b">
+                <div className="flex items-center border rounded px-2 py-1 m-2">
+                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder={`Search ${label}`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 focus:border-black focus:outline-none w-full"
+                  />
+                </div>
+              </div>
+            )}
+            {filteredOptions?.length > 0 ? (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={option._id || index}
+                  onClick={() => handleSelect(option)}
+                  className="cursor-pointer hover:bg-gray-200 p-2"
+                >
+                  {optionKey ? option[optionKey] : option}
+                </div>
+              ))
+            ) : (
+              <div className="p-2 text-gray-500">No options found</div>
+            )}
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+    </div>
+  );
+};
 
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -51,9 +158,10 @@ const MockSchedulelater = () => {
     technologies,
     skills,
     currentRoles,
+    contacts
   } = useMasterData();
 
-  console.log("qualification", qualifications);
+  //console.log("qualification", qualifications);
 
   const {
     mockinterviewData,
@@ -86,7 +194,7 @@ const MockSchedulelater = () => {
       dateTime: "",
     },
     // status: 'Pending',  
-    });
+  });
   console.log("formData", formData);
 
 
@@ -172,6 +280,8 @@ const MockSchedulelater = () => {
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editModeSelectedInterviewerNames, setEditModeSelectedInterviewerNames] = useState([]);
+  //console.log(`editModeSelectedInterviewerNames ------- ${editModeSelectedInterviewerNames.length}`)
 
 
   const authToken = Cookies.get("authToken");
@@ -228,11 +338,17 @@ const MockSchedulelater = () => {
       const MockEditData = mockinterviewData.find(moc => moc._id === id);
 
       console.log("MockEditData MockEditData", MockEditData);
+      // contacts.map((contact) => (
+      //   <option key={contact._id} value={contact._id}>
+      //     {contact.firstName} {contact.lastName}
+      //   </option>
+      // ))
 
 
       if (MockEditData) {
         setmockEdit(true)
-        console.log("MockEditData MockEditData", MockEditData.skills)
+        console.log("MockEditData MockEditData interviwers", MockEditData.rounds?.interviewersNames)
+        setEditModeSelectedInterviewerNames(MockEditData.rounds?.interviewersNames)
         setFormData({
           skills: MockEditData.skills || [],
           candidateName: MockEditData.candidateName || "",
@@ -246,7 +362,7 @@ const MockSchedulelater = () => {
             interviewMode: MockEditData.rounds?.interviewMode || "",
             duration: MockEditData.rounds?.duration || "30", // Use rounds.duration
             instructions: MockEditData.rounds?.instructions || "",
-            interviewers: Array.isArray(MockEditData.rounds?.interviewers) ? MockEditData.rounds.interviewers : [],
+            interviewers: Array.isArray(MockEditData.rounds?.interviewers) ? MockEditData.rounds?.interviewers : [],
             status: MockEditData.rounds?.status || "Pending",
             dateTime: MockEditData.rounds?.dateTime || "",
             interviewType: MockEditData.rounds?.interviewType || "scheduled",
@@ -375,6 +491,10 @@ const MockSchedulelater = () => {
     const interviewerIds = externalInterviewers
       .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
       .map(interviewer => interviewer._id);
+
+    // const interviewerNames = externalInterviewers
+    // .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
+    // .map(interviewer => interviewer.contact.Name);
   
     // Optional: Add validation for interviewers
     if (interviewerIds.length === 0 && selectedInterviewType === "external") {
@@ -390,7 +510,8 @@ const MockSchedulelater = () => {
       ...formData,
       rounds: {
         ...formData.rounds,
-        interviewers: interviewerIds,
+        interviewers: interviewerIds
+
       },
       entries,
       combinedDateTime,
@@ -595,40 +716,14 @@ const MockSchedulelater = () => {
   };
 
 
-  const handleEdit = (index) => {
-    const entry = entries[index];
-    setSelectedSkill(entry.skill);
-    setSelectedExp(entry.experience);
-    setSelectedLevel(entry.expertise);
-    setEditingIndex(index);
-    setIsModalOpen(true);
-    // setUnsavedChanges(true);
-  };
 
-  const handleDelete = (index) => {
-    setDeleteIndex(index);
-    // setUnsavedChanges(true);
-  };
-
-  const cancelDelete = () => {
-    setDeleteIndex(null);
-  };
+  
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     // setUnsavedChanges(true);
   }
-  const confirmDelete = () => {
-    if (deleteIndex !== null) {
-      const entry = entries[deleteIndex];
-      setAllSelectedSkills(
-        allSelectedSkills.filter((skill) => skill !== entry.skill)
-      );
-      setEntries(entries.filter((_, i) => i !== deleteIndex));
-      setDeleteIndex(null);
-      // setUnsavedChanges(true);
-    }
-  };
+  
 
 
   // date and duration
@@ -686,6 +781,8 @@ const MockSchedulelater = () => {
     // setShowPopup(false);
   };
 
+ 
+
 
 
   const formatDate = (dateString) => {
@@ -716,18 +813,18 @@ const MockSchedulelater = () => {
     // setUnsavedChanges(true);
   };
 
-  const handleQualificationSelect = (qualification) => {
-    // setSelectedQualification(qualification.QualificationName);
+  const handleDropdownChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      higherQualification: qualification.QualificationName,
+      higherQualification: value,
     }));
-    setShowDropdownQualification(false);
     setErrors((prevErrors) => ({
       ...prevErrors,
       higherQualification: "",
     }));
   };
+
 
   const handleNext = () => {
     const { formIsValid, newErrors } = validatePage1(formData, entries); // Validate Page 1
@@ -890,53 +987,19 @@ const MockSchedulelater = () => {
                           )}
                         </div>
                       </div>
-                      {/* Higher Qualification */}
-                      <div >
-
-                        <label
-                          htmlFor="higherQualification"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Higher Qualification{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-
-
-                        <div className=" relative">
-                          <input
-                            value={formData.higherQualification}
-                            onClick={toggleDropdownQualification}
-                            name="higherQualification"
-                            type="text"
-                            id="higherQualification"
-                            readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.higherQualification ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                              }`}
-                          />
-
-                          {errors.higherQualification && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.higherQualification}
-                            </p>
-                          )}
-
-
-                          {showDropdownQualification && (
-                            <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {qualifications.map((qualification, index) => (
-                                <div
-                                  key={index}
-                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleQualificationSelect(qualification)}
-                                >
-                                  {qualification.QualificationName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                      </div>
+                      
+                      {/* higher qualification */}
+                <CustomDropdown
+                  label="Higher Qualification"
+                  name="HigherQualification"
+                  value={formData.higherQualification}
+                  options={qualifications}
+                  onChange={handleDropdownChange}
+                  error={errors.higherQualification}
+                  placeholder="Select Higher Qualification"
+                  optionKey="QualificationName"
+                  optionValue="QualificationName"
+                />
                     </div>
 
                     {/* Technology and Current Experience */}
@@ -1270,30 +1333,30 @@ const MockSchedulelater = () => {
                       {/* <div>
                                         <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                                           Status *
-                                        </label>
+                        </label>
                                         <div className="mt-1 flex items-center">
-                                          <select
+                          <select
                                             id="status"
                                             name="status"
                                             value={formData.status}
                                             onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                                             className={`block w-full pl-3 pr-10 py-2 text-base border ${errors.status ? 'border-red-500' : 'border-gray-300'
                                               } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                                            required
-                                          >
+                            required
+                          >
                                             <option value="In Progress">In Progress</option>
                                             <option value="Pending">Pending</option>
                                             <option value="Scheduled">Scheduled</option>
                                             <option value="Completed">Completed</option>
                                             <option value="Cancelled">Cancelled</option>
-                                          </select>
+                          </select>
                                           <div className="ml-2">
                                             <StatusBadge status={formData.status} size="sm" />
-                                          </div>
-                                        </div>
+                        </div>
+                      </div>
                                         {errors.status && (
                                           <p className="mt-1 text-sm text-red-500">{errors.status}</p>
-                                        )}
+                        )}
                                       </div> */}
 
 
@@ -1309,12 +1372,12 @@ const MockSchedulelater = () => {
                             type="button"
                             onClick={() => { setInterviewType("instant"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "instant" } })); }}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-blue-500 bg-blue-50"
+                              ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
-                            <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-blue-500" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-blue-700" : "text-gray-900"}`}>
+                            <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-custom-blue" : "text-gray-400"}`} />
+                            <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-custom-blue" : "text-gray-900"}`}>
                               Instant Interview
                             </span>
                             <span className="mt-1 text-sm text-gray-500">Starts in 15 minutes</span>
@@ -1324,12 +1387,12 @@ const MockSchedulelater = () => {
                             type="button"
                             onClick={() => { setInterviewType("scheduled"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "scheduled" } })); }}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-blue-500 bg-blue-50"
+                              ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
-                            <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-blue-500" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-blue-700" : "text-gray-900"}`}>
+                            <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-400"}`} />
+                            <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-900"}`}>
                               Schedule for Later
                             </span>
                             <span className="mt-1 text-sm text-gray-500">Pick date & time</span>
@@ -1377,8 +1440,8 @@ const MockSchedulelater = () => {
                         {interviewType === "instant" && (
                           <div className="mt-4 p-4 bg-blue-50 rounded-md">
                             <div className="flex items-center">
-                              <Clock className="h-5 w-5 text-blue-500 mr-2" />
-                              <p className="text-sm text-blue-700">
+                              <Clock className="h-5 w-5 text-custom-blue mr-2" />
+                              <p className="text-sm text-custom-blue">
                                 Interview will start at{" "}
                                 <span className="font-medium">
                                   {new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -1431,7 +1494,7 @@ const MockSchedulelater = () => {
 
                       {/* Selected Interviewers Summary */}
                       <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                        {selectedInterviewers.length === 0 ? (
+                         {selectedInterviewers.length === 0 ? (
                           <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
                         ) : (
                           <div>

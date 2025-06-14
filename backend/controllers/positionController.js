@@ -750,10 +750,38 @@ const saveInterviewRoundPosition = async (req, res) => {
 //   }
 // };
 
+
+const deleteRound = async (req, res) => {
+  const { roundId } = req.params;
+  
+  try {
+    const position = await Position.findOne({ 'rounds._id': roundId });
+    if (!position) {
+      return res.status(404).json({ message: 'Round not found' });
+    }
+
+    // Find the index of the round to delete
+    const roundIndex = position.rounds.findIndex(round => round._id.toString() === roundId);
+    if (roundIndex === -1) {
+      return res.status(404).json({ message: 'Round not found' });
+    }
+
+    // Remove the round from the array
+    position.rounds.splice(roundIndex, 1);
+
+    // Save the updated position
+    await position.save();
+
+    res.status(200).json({ message: 'Round deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting round:', error);
+    res.status(500).json({ message: 'Error deleting round' });
+  }
+};
+
 module.exports = {
   createPosition,
   updatePosition,
   saveInterviewRoundPosition,
-  // getPositionById
-  // updateRounds
+  deleteRound
 };

@@ -60,8 +60,25 @@ export const usePositions = () => {
       console.log('Error adding rounds:', error);
     },
   });
+  
 
-  const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending;
+  const deleteRoundMutation = useMutation({
+    mutationFn: async (roundId) => {
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/position/delete-round/${roundId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['positions']);
+    },
+    onError: (error) => {
+      console.error('Error deleting round:', error);
+      //toast.error('Failed to delete round');
+    },
+  });
+
+  const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending || deleteRoundMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
 
   console.log('usePositions states:', {
@@ -86,5 +103,6 @@ export const usePositions = () => {
     addRoundsMutationError: addRoundsMutation.error,
     addOrUpdatePosition: positionMutation.mutateAsync,
     addRounds: addRoundsMutation.mutateAsync,
+    deleteRoundMutation:deleteRoundMutation.mutateAsync
   };
 };
