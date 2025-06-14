@@ -58,6 +58,7 @@ const PositionSlideDetails = () => {
         if (foundPosition) {
           setPosition(foundPosition || []);
           setRounds(foundPosition.rounds || []);
+          console.log(`position roumds ------- ${foundPosition.rounds}`)
           setActiveRound(foundPosition.rounds[0]?._id);
         }
       } catch (error) {

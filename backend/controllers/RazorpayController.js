@@ -207,7 +207,21 @@ const verifyPayment = async (req, res) => {
           } else {
               console.log('Creating new payment record for verified payment');
               // Create new payment record
+              // Generate payment code
+                const lastPayment = await Payment.findOne({})
+                  .sort({ _id: -1 })
+                  .select('paymentCode')
+                  .lean();
+                let nextNumber = 1;
+                if (lastPayment && lastPayment.paymentCode) {
+                  const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
+                  if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1;
+                  }
+                }
+                const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
               const newPayment = new Payment({
+                  paymentCode: paymentCode,
                   tenantId: tenantId,
                   ownerId: ownerId,
                   planId: planId,
@@ -469,8 +483,22 @@ const verifyPayment = async (req, res) => {
                       
                       // Only create receipt if payment was successful
                       if (payment.status === 'captured' || payment.status === 'authorized') {
+                          // Generate Recepit code
+                        const lastRecepit = await Receipt.findOne({})
+                                                .sort({ _id: -1 })
+                                                .select('receiptCode')
+                                                .lean();
+                        let nextNumber = 1;
+                        if (lastRecepit && lastRecepit.receiptCode) {
+                            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
+                        if (match) {
+                            nextNumber = parseInt(match[1], 10) + 1;
+                          }
+                        }
+                        const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
                           console.log('Creating receipt for successful payment');
                           const receipt = new Receipt({
+                              receiptCode:receiptCode,
                               tenantId: tenantId,
                               ownerId: ownerId,
                               planName: plan.name,
@@ -991,19 +1019,23 @@ const handlePaymentFailed = async (payment) => {
             console.error('Subscription not found in our records:', payment.subscription_id);
             return;
         }
+
+        // Update any related pending or due invoices
+        const Invoice = require('../models/Invoicemodels');
+        const invoice = await Invoice.findOne({ _id: customerSubscription.invoiceId });
         
-        // Create an invoice for the failed payment
-        const invoice = await Invoice.create({
-            ownerId: customerSubscription.ownerId,
-            tenantId: customerSubscription.tenantId,
-            subscriptionId: customerSubscription._id,
-            amount: payment.amount / 100, // Convert from paisa to rupees
-            status: 'failed',
-            paymentDate: new Date(),
-            dueDate: new Date(),
-            billingCycle: customerSubscription.selectedBillingCycle,
-            failureReason: payment.error_description || 'Payment failed'
-        });
+        if (invoice) {
+            invoice.amount= customerSubscription.totalAmount
+            invoice.status= 'failed',
+            invoice.paymentDate= new Date(),
+            invoice.dueDate= new Date(),
+            invoice.billingCycle= customerSubscription.selectedBillingCycle,
+            invoice.failureReason= payment.error_description || 'Payment failed'
+            await invoice.save();
+        }
+        
+       
+
         
         // Create a payment record for the failed payment
         const failedPayment = new Payment({
@@ -1042,9 +1074,7 @@ const handlePaymentFailed = async (payment) => {
         customerSubscription.lastFailedPaymentDate = new Date();
         customerSubscription.lastFailedPaymentId = payment.id;
         customerSubscription.status = SUBSCRIPTION_STATUSES.FAILED;
-        customerSubscription.failedPaymentAttempts = (customerSubscription.failedPaymentAttempts || 0) + 1;
-        customerSubscription.invoices = customerSubscription.invoices || [];
-        customerSubscription.invoices.push(invoice._id);
+        customerSubscription.invoiceId=invoice._id;
         await customerSubscription.save();
         
         console.log('Updated subscription with failed payment information');
@@ -1346,7 +1376,21 @@ const handleSubscriptionUpdated = async (subscription) => {
         if (subscription.paid_at && subscription.invoice_id) {
             try {
                 const Receipt = require('../models/Receiptmodels');
+                // Generate Receipt code
+                const lastRecepit = await Receipt.findOne({})
+                                                .sort({ _id: -1 })
+                                                .select('receiptCode')
+                                                .lean();
+                        let nextNumber = 1;
+                        if (lastRecepit && lastRecepit.receiptCode) {
+                            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
+                        if (match) {
+                            nextNumber = parseInt(match[1], 10) + 1;
+                          }
+                        }
+        const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
                 const receipt = new Receipt({
+                    receiptCode:receiptCode,
                     invoiceId: existingInvoice._id,
                     tenantId: customerSubscription.tenantId,
                     ownerId: customerSubscription.ownerId,
@@ -1597,7 +1641,20 @@ const handleSubscriptionCharged = async (subscription) => {
         console.log('Using payment ID as transaction ID for receipt:', paymentId);
         
         // Create a receipt for this payment - with positional parameters matching function definition
+        const lastRecepit = await Receipt.findOne({})
+                                                .sort({ _id: -1 })
+                                                .select('receiptCode')
+                                                .lean();
+                        let nextNumber = 1;
+                        if (lastRecepit && lastRecepit.receiptCode) {
+                            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
+                        if (match) {
+                            nextNumber = parseInt(match[1], 10) + 1;
+                          }
+                        }
+        const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
         const receipt = new Receipt({
+            receiptCode:receiptCode,
             tenantId: customerSubscription.tenantId,
             ownerId: customerSubscription.ownerId,
             planName: planName,

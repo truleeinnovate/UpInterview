@@ -473,6 +473,7 @@ const createInterview = async (req, res) => {
         } else {
             // Generate interviewCode for new interview
             const lastInterview = await Interview.findOne({})
+                .sort({ _id: -1 })
                 .select('interviewCode')
                 .lean();
 

@@ -5,7 +5,8 @@ const {
     getAllTemplates,
     // getTemplateById,
     updateTemplate,
-    deleteTemplate
+    deleteTemplate,
+    deleteRound
 } = require('../controllers/interviewTemplateController');
 
 
@@ -19,5 +20,7 @@ router.route('/:id')
     // .get(getTemplateById)
     .patch(updateTemplate)
     .delete(deleteTemplate);
+
+    router.delete('/delete-round/:roundId',deleteRound)
 
 module.exports = router;

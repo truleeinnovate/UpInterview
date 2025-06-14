@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const PaymentSchema = new mongoose.Schema({
+    paymentCode:{type:String,unique:true},
     tenantId: { type: String },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: false },

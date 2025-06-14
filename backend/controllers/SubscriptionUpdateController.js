@@ -171,13 +171,26 @@ const updateSubscriptionPlan = async (req, res) => {
         customerSubscription.metadata = {};
       }
       customerSubscription.metadata.razorpayPlanId = planIdToUse;
-      customerSubscription.planName = newPlan.planName || newPlan.name;
+      customerSubscription.planName = newPlan.planName;
       // Set the end date based on membership type
       customerSubscription.endDate = calculateEndDate(membershipType);
       
       await customerSubscription.save();
       console.log('Updated customer subscription with new plan');
       
+      // Generate invoice code
+        const lastInvoice = await Invoice.findOne({})
+          .sort({ _id: -1 })
+          .select('invoiceCode')
+          .lean();
+        let nextNumber = 1;
+        if (lastInvoice && lastInvoice.invoiceCode) {
+          const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+          if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+        const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
       // Create invoice with all required fields
       const newInvoice = new Invoice({
         tenantId: tenantId,
@@ -192,6 +205,7 @@ const updateSubscriptionPlan = async (req, res) => {
         startDate: new Date(),
         endDate: customerSubscription.endDate,
         lineItems: { description: `${membershipType} Plan Update`, amount: price },
+        invoiceCode:invoiceCode,
         outstandingAmount: price
       });
       

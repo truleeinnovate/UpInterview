@@ -40,7 +40,7 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
 
       <div className="mt-3">
         <div className={`text-sm text-gray-600 ${!isExpanded && 'line-clamp-2'}`}>{introduction}</div>
-        <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center">
+        <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs text-custom-blue hover:text-custom-blue/80 mt-1 flex items-center">
           {isExpanded ? <>Show less <ChevronUp className="h-3 w-3 ml-1" /></> : <>Show more <ChevronDown className="h-3 w-3 ml-1" /></>}
         </button>
       </div>
@@ -66,10 +66,10 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
         </div>
         {navigatedfrom !== 'dashboard' && (
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={onViewDetails} className="text-blue-600 hover:text-blue-700">
+            <Button variant="outline" size="sm" onClick={onViewDetails} className="text-custom-blue hover:text-custom-blue/80">
               <ExternalLink className="h-3 w-3 mr-1" /> View Details
             </Button>
-            <Button variant={isSelected ? "destructive" : "default"} size="sm" onClick={onSelect}>
+            <Button variant={isSelected ? "destructive" : "customblue"} size="sm" onClick={onSelect}>
               {isSelected ? 'Remove' : 'Select'}
             </Button>
           </div>
@@ -387,14 +387,14 @@ function OutsourcedInterviewerModal({
           <div className="px-6 py-4 bg-white border-b border-gray-200 z-10">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-blue-800">Interview Scheduling Policy</h3>
+                    <h3 className="text-sm font-medium text-custom-blue">Interview Scheduling Policy</h3>
                     {isOpen ? (
-                      <ChevronUp className="h-5 w-5 text-blue-700" />
+                      <ChevronUp className="h-5 w-5 text-custom-blue" />
                     ) : (
-                      <ChevronDown className="h-5 w-5 text-blue-700" />
+                      <ChevronDown className="h-5 w-5 text-custom-blue" />
                     )}
                   </div>
                 </div>
@@ -402,11 +402,11 @@ function OutsourcedInterviewerModal({
 
               {isOpen && (
                 <div className="mt-3 ml-8 space-y-2">
-                  <div className="flex items-center text-sm text-blue-700">
+                  <div className="flex items-center text-sm text-custom-blue">
                     <Clock className="h-4 w-4 mr-1" />
                     <span>Response: 2-4 hours</span>
                   </div>
-                  <div className="text-sm text-blue-700 space-y-1">
+                  <div className="text-sm text-custom-blue space-y-1">
                     <div className="flex items-center">
                       <Users className="h-4 w-4 mr-2" />
                       <span>Interviews are scheduled based on first acceptance</span>
@@ -489,7 +489,7 @@ function OutsourcedInterviewerModal({
               <button
                 onClick={handleProceed}
                 disabled={selectedInterviewersLocal.length === 0}
-                className="bg-custom-blue px-4 py-2 rounded-md text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="bg-custom-blue px-4 py-2 rounded-md text-white hover:bg-custom-blue/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Schedule ({selectedInterviewersLocal.length})
               </button>

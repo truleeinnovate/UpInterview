@@ -496,6 +496,19 @@ app.get('/api/:model', async (req, res) => {
         // });
 
         break;
+      case 'mockinterview':
+        query = query.populate({
+        path: 'rounds.interviewers',
+        model: 'Contacts',
+        select: 'firstName lastName email',
+      });
+      break;
+      // case 'mockinterview':
+      //   query = query.populate({
+      //     path: 'rounds.interviewers',
+      //     model: 'Contacts',
+      //     //select: 'firstName lastName',
+      //   })
 
       case 'interview':
         query = query

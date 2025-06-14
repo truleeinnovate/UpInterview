@@ -44,7 +44,7 @@ const InvoiceTab = () => {
                 return {
                     id: invoice._id,
                     paymentId,
-                    invoiceNumber: invoice.invoiceNumber || `INV-${invoice._id.substring(0, 8)}`,
+                    invoiceNumber: invoice.invoiceCode,
                     customer: invoice.ownerId ? {
                         id: invoice.ownerId._id,
                         name: invoice.ownerId.Name || `${invoice.ownerId.Firstname} ${invoice.ownerId.Lastname || ''}`.trim(),

@@ -4,8 +4,8 @@ import {
   Calendar,
   Clock,
   Edit,
+  XCircle,
   // CheckCircle,
-  // XCircle,
   // ThumbsDown,
   ChevronDown,
   ChevronUp,
@@ -25,6 +25,7 @@ import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates';
 import { config } from '../../../../../config';
 import { useAssessments } from '../../../../../apiHooks/useAssessments';
+import { usePositions } from '../../../../../apiHooks/usePositions';
 
 const PositionRoundCard = ({
   round,
@@ -42,13 +43,25 @@ const PositionRoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-  const {fetchAssessmentQuestions} = useAssessments()
+  const { deleteRoundMutation } = usePositions();
+  const { fetchAssessmentQuestions } = useAssessments();
+
+  const handleDeleteRound = async () => {
+    try {
+      await deleteRoundMutation(round._id);
+      toast.success('Round deleted successfully');
+    } catch (error) {
+      console.error('Error deleting round:', error);
+      toast.error('Failed to delete round');
+    }
+  };
 
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [confirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [loadingQuestions] = useState(false);
@@ -593,6 +606,17 @@ console.log("round",round);
               Edit Round
             </Button>
           )}
+          {canEdit && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteConfirmModal(true)}
+              className="flex items-center"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Delete Round
+            </Button>
+          )}
         </div>
         {/* )} */}
 
@@ -612,6 +636,24 @@ console.log("round",round);
               </Button>
               <Button variant="success" onClick={handleConfirmStatusChange}>
                 Yes, Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+{showDeleteConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+          <div className="bg-white p-5 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-3">
+              Are you sure you want to delete this round?
+            </h3>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteRound}>
+                Delete
               </Button>
             </div>
           </div>
