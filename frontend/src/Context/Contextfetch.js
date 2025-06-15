@@ -274,13 +274,7 @@ const CustomProvider = ({ children }) => {
     fetchContactsData();
   }, []);
 
-
   const [singlecontact, setsingleContact] = useState([]);
-
-  // console.log("singlecontact", singlecontact);
-
-
-
 
   useEffect(() => {
     const fetchContacts = async (usersId = null) => {
@@ -347,9 +341,6 @@ const CustomProvider = ({ children }) => {
     },
     enabled: !!tenantId,
   });
-
-  console.log("usersRes", usersRes);
-
 
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({

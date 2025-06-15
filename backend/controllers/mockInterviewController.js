@@ -91,197 +91,93 @@ exports.updateMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = 'Update mock interview';
   const mockId = req.params.id;
-
   const { tenantId, ownerId, ...updateFields } = req.body;
-  
 
   try {
-    // const existingMockInterview = await MockInterview.findById(mockId);
     const currentMockInterview = await MockInterview.findById(mockId);
-
     if (!currentMockInterview) {
       console.error('MockInterview not found for ID:', mockId);
-      return res.status(404).json({ message: 'MockInterview not founddd' });
+      return res.status(404).json({ message: 'MockInterview not found' });
     }
-    
 
-    // Compare current values with updateFields to identify changes
-    // const changes = Object.entries(updateFields)
-    //   .filter(([key, newValue]) => {
-    //     const oldValue = currentMockInterview[key];
+    // Track changes for logging
+    const changes = [];
 
-    //     // Handle arrays (e.g., `skills`) by comparing stringified versions
-    //     if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-    //       const normalizeArray = (array) =>
-    //         array
-    //           .map((item) => {
-    //             const { _id, ...rest } = item; // Ignore _id for comparison
-    //             return rest;
-    //           })
-    //           .sort((a, b) => a.skill.localeCompare(b.skill)); // Sort by `skill` or another key
+    // Handle skills update (merge and avoid duplicates)
+    if (updateFields.skills && Array.isArray(updateFields.skills)) {
+      const newSkills = updateFields.skills.filter(
+        (skill) => !currentMockInterview.skills.some((existing) => existing.skill === skill.skill)
+      );
+      if (newSkills.length > 0) {
+        changes.push({
+          fieldName: 'skills',
+          oldValue: currentMockInterview.skills.map((s) => s.skill),
+          newValue: [...currentMockInterview.skills, ...newSkills].map((s) => s.skill),
+        });
+        currentMockInterview.skills = [...currentMockInterview.skills, ...newSkills];
+      }
+    }
 
-    //       return (
-    //         JSON.stringify(normalizeArray(oldValue)) !==
-    //         JSON.stringify(normalizeArray(newValue))
-    //       );
-    //     }
+    // Handle rounds update
+    if (updateFields.rounds && Array.isArray(updateFields.rounds) && updateFields.rounds.length > 0) {
+      const newRound = updateFields.rounds[0]; // Assume single round for now
+      const oldRound = currentMockInterview.rounds || {};
 
-    //     // Handle dates (convert to ISO strings for comparison)
-    //     if (
-    //       (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
-    //       (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
-    //     ) {
-    //       return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
-    //     }
-
-    //     // Default comparison for strings, numbers, and other types
-    //     return oldValue !== newValue;
-    //   })
-    //   .map(([key, newValue]) => ({
-    //     fieldName: key,
-    //     oldValue: currentMockInterview[key],
-    //     newValue,
-    //   }));
-
-     // Handle skills update (ensure no duplicates)
-      // Handle skills update (ensure no duplicates)
-
-
-   // Detect changes in the rounds subdocument
-   const changes = [];
-   const oldRounds = currentMockInterview.rounds || {}; // Ensure rounds exists
-   const newRounds = updateFields.rounds || {
-    interviewer: updateFields.interviewer,
-    dateTime: updateFields.dateTime,
-    duration: updateFields.duration,
-    status: updateFields.status,
-  }; // Change: Extract rounds from updateFields
-
-  // Compare old and new rounds values to detect changes
-  Object.entries(newRounds).forEach(([key, newValue]) => {
-    const oldValue = oldRounds[key];
-    if (newValue !== undefined && oldValue !== newValue) { // Only consider defined new values
-      changes.push({
-        fieldName: `rounds.${key}`,
-        oldValue: oldValue === undefined ? 'undefined' : oldValue,
-        newValue,
+      // Track changes in rounds fields
+      Object.entries(newRound).forEach(([key, newValue]) => {
+        const oldValue = oldRound[key];
+        if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+          changes.push({
+            fieldName: `rounds.${key}`,
+            oldValue: oldValue === undefined ? 'undefined' : oldValue,
+            newValue,
+          });
+        }
       });
+
+      // Special handling for status
+      if (newRound.status === 'Reschedule') {
+        newRound.status = 'scheduled';
+      } else if (newRound.status === 'cancel') {
+        newRound.status = 'cancelled';
+      }
+
+      // Update interviewers (ensure it's an array of ObjectIds)
+      if (newRound.interviewers) {
+        currentMockInterview.rounds.interviewers = newRound.interviewers.map((id) => id);
+      }
+
+      // Update other round fields
+      currentMockInterview.rounds = {
+        ...currentMockInterview.rounds,
+        ...newRound,
+      };
+      currentMockInterview.markModified('rounds');
     }
-  });
 
-  // currentMockInterview.rounds = {
-  //   ...currentMockInterview.rounds.toObject(),
-  //   ...newRounds,
-  // };
+    // Update top-level fields
+    const topLevelFields = [
+      'candidateName',
+      'higherQualification',
+      'currentExperience',
+      'technology',
+      'jobDescription',
+      'Role',
+      'lastModifiedById',
+    ];
+    topLevelFields.forEach((field) => {
+      if (updateFields[field] !== undefined && currentMockInterview[field] !== updateFields[field]) {
+        changes.push({
+          fieldName: field,
+          oldValue: currentMockInterview[field],
+          newValue: updateFields[field],
+        });
+        currentMockInterview[field] = updateFields[field];
+      }
+    });
 
-   // Handle skills update (ensure no duplicates)
-   if (updateFields.skills && Array.isArray(updateFields.skills)) {
-     const uniqueSkills = updateFields.skills.filter(
-       (skill) => !currentMockInterview.skills.some((existing) => existing.skill === skill.skill)
-     );
-     currentMockInterview.skills = [...currentMockInterview.skills, ...uniqueSkills];
-     // Change: Detect changes in skills
-     if (uniqueSkills.length > 0) {
-       changes.push({
-         fieldName: 'skills',
-         oldValue: currentMockInterview.skills.map(s => s.skill),
-         newValue: [...currentMockInterview.skills, ...uniqueSkills].map(s => s.skill),
-       });
-     }
-   }
-
-  // Update rounds subdocument directly
-  if (Object.keys(newRounds).length > 0) {
-    // Change: Special handling for reschedule
-    if (newRounds.status === 'Reschedule') {
-      newRounds.status = 'scheduled'; // Map 'Reschedule' to 'scheduled'
-    } else if (newRounds.status === 'cancel') {
-      newRounds.status = 'cancelled';
-    }
-    currentMockInterview.rounds = {
-      ...currentMockInterview.rounds.toObject(),
-      ...newRounds,
-    };
-    currentMockInterview.markModified('rounds');
-  }
-
-   // Update top-level fields
-   if (updateFields.jobDescription) {
-     if (currentMockInterview.jobDescription !== updateFields.jobDescription) {
-       changes.push({
-         fieldName: 'jobDescription',
-         oldValue: currentMockInterview.jobDescription,
-         newValue: updateFields.jobDescription,
-       });
-     }
-     currentMockInterview.jobDescription = updateFields.jobDescription;
-   }
-   if (updateFields.Role) {
-     if (currentMockInterview.Role !== updateFields.Role) {
-       changes.push({
-         fieldName: 'Role',
-         oldValue: currentMockInterview.Role,
-         newValue: updateFields.Role,
-       });
-     }
-     currentMockInterview.Role = updateFields.Role;
-   }
-   if (updateFields.candidateName) {
-     if (currentMockInterview.candidateName !== updateFields.candidateName) {
-       changes.push({
-         fieldName: 'candidateName',
-         oldValue: currentMockInterview.candidateName,
-         newValue: updateFields.candidateName,
-       });
-     }
-     currentMockInterview.candidateName = updateFields.candidateName;
-   }
-   if (updateFields.higherQualification) {
-     if (currentMockInterview.higherQualification !== updateFields.higherQualification) {
-       changes.push({
-         fieldName: 'higherQualification',
-         oldValue: currentMockInterview.higherQualification,
-         newValue: updateFields.higherQualification,
-       });
-     }
-     currentMockInterview.higherQualification = updateFields.higherQualification;
-   }
-   if (updateFields.currentExperience) {
-     if (currentMockInterview.currentExperience !== updateFields.currentExperience) {
-       changes.push({
-         fieldName: 'currentExperience',
-         oldValue: currentMockInterview.currentExperience,
-         newValue: updateFields.currentExperience,
-       });
-     }
-     currentMockInterview.currentExperience = updateFields.currentExperience;
-   }
-   if (updateFields.technology) {
-     if (currentMockInterview.technology !== updateFields.technology) {
-       changes.push({
-         fieldName: 'technology',
-         oldValue: currentMockInterview.technology,
-         newValue: updateFields.technology,
-       });
-     }
-     currentMockInterview.technology =  updateFields.technology;
-   }
-   if (updateFields.modifiedBy) {
-     currentMockInterview.modifiedBy = updateFields.modifiedBy;
-   }
-   if (updateFields.lastModifiedById) {
-     currentMockInterview.lastModifiedById = updateFields.lastModifiedById;
-   }
-
-    // Perform the update
-    // const updatedMockInterview = await MockInterview.findByIdAndUpdate(
-    //   mockId,
-    //   updateQuery,
-    //   { new: true }  // Return the updated document
-    // );
-// Save the updated document
-const updatedMockInterview = await currentMockInterview.save();
-     
+    // Save the updated document
+    const updatedMockInterview = await currentMockInterview.save();
 
     // Generate feed
     res.locals.feedData = {
@@ -309,24 +205,23 @@ const updatedMockInterview = await currentMockInterview.save();
       ownerId,
       processName: 'Update mock interview',
       requestBody: req.body,
-      message: 'Mock interview created successfully',
+      message: 'Mock interview updated successfully',
       status: 'success',
       responseBody: updatedMockInterview,
     };
 
     // Send response
-    res.status(201).json({
+    res.status(200).json({
       status: 'success',
       message: 'Mock interview updated successfully',
       data: updatedMockInterview,
     });
   } catch (error) {
     console.error('Error updating MockInterview:', error);
-    // Handle errors
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Create mock interview',
+      processName: 'Update mock interview',
       requestBody: req.body,
       message: error.message,
       status: 'error',
@@ -334,9 +229,8 @@ const updatedMockInterview = await currentMockInterview.save();
 
     res.status(500).json({
       status: 'error',
-      message: error.message,
+      message: 'Failed to update mock interview. Please try again later.',
       data: { error: error.message },
-
     });
   }
 };

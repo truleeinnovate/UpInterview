@@ -149,7 +149,7 @@ console.log("mockinterviewData:", mockinterviewData);
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/mockinterview-details/${row._id}`)}
         >
-          {row?.rounds?.roundTitle || 'Not Provided'}
+          {row?.rounds?.[0]?.roundTitle || 'Not Provided'}
         </div>
       ),
     },
@@ -161,35 +161,64 @@ console.log("mockinterviewData:", mockinterviewData);
     {
       key: 'status',
       header: 'Status',
-      render: (value, row) => row?.rounds?.status || 'Not Provided',
+      render: (value, row) => row?.rounds?.[0]?.status || 'Not Provided',
     },
     {
       key: 'duration',
       header: 'Duration',
-      render: (value, row) => row?.rounds?.duration || 'Not Provided',
+      render: (value, row) => row?.rounds?.[0]?.duration || 'Not Provided',
     },
     {
       key: 'interviewer',
       header: 'Interviewer',
-      render: () => 'Not Provided', // Placeholder, update if interviewer data is available
+      render: (value, row) => {
+        const interviewers = row?.rounds?.[0]?.interviewers || [];
+        if (interviewers.length === 0) return 'Not Provided';
+        
+        // Map interviewer names, accessing contact.Name or firstName/lastName
+        const names = interviewers
+          .map((interviewer) => {
+            const contact = interviewer?.contact;
+            return contact?.Name || `${contact?.firstName || ''} ${contact?.lastName || ''}`.trim();
+          })
+          .filter(Boolean); // Remove empty strings
+        
+        if (names.length === 0) return 'Not Provided';
+        
+        // Show first name and truncate with ... if more than one
+        const displayText = names.length > 1 ? `${names[0]}...` : names[0];
+        const additionalCount = names.length > 1 ? names.length - 1 : 0;
+        
+        return (
+          <div className="w-48 truncate flex items-center space-x-1">
+            <span className="text-sm text-gray-900" title={names.join(', ')}>
+              {displayText}
+            </span>
+            {additionalCount > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-black bg-gray-200 rounded-full">
+                +{additionalCount}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
- {
-  key: 'createdAt',
-  header: 'Created On',
-  render: (value) => {
-    if (!value) return 'Not Provided';
-    const date = new Date(value);
-    return date.toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  },
-}
-
+    {
+      key: 'createdAt',
+      header: 'Created On',
+      render: (value) => {
+        if (!value) return 'Not Provided';
+        const date = new Date(value);
+        return date.toLocaleString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+      },
+    },
   ];
 
   const tableActions = [
