@@ -1,9 +1,6 @@
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-// import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
-// import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
-// import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
-// import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from 'react-router-dom';
 import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
@@ -17,7 +14,6 @@ import LoadingButton from '../../../../Components/LoadingButton';
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
 
-
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
   label,
@@ -27,8 +23,8 @@ const CustomDropdown = ({
   onChange,
   error,
   placeholder,
-  optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
-  optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
+  optionKey,
+  optionValue,
   disableSearch = false,
   hideLabel = false,
 }) => {
@@ -41,7 +37,6 @@ const CustomDropdown = ({
   };
 
   const handleSelect = (option) => {
-    console.log('Selected option:', option);
     const selectedValue = optionValue ? option[optionValue] : option;
     onChange({ target: { name, value: selectedValue } });
     setShowDropdown(false);
@@ -125,13 +120,12 @@ const CustomDropdown = ({
   );
 };
 
-
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
 const parseCustomDateTime = (dateTimeStr) => {
   if (!dateTimeStr) return null;
   const [datePart, timePart] = dateTimeStr.split(" ");
   const [day, month, year] = datePart.split("-");
-  const formattedDate = `${year}-${month}-${day}T${timePart}:00`; // Convert to ISO-like format
+  const formattedDate = `${year}-${month}-${day}T${timePart}:00`;
   const date = new Date(formattedDate);
   return isNaN(date.getTime()) ? null : date;
 };
@@ -150,30 +144,11 @@ const formatToCustomDateTime = (date) => {
 };
 
 const MockSchedulelater = () => {
-  const {
-    singlecontact
-  } = useCustomContext();
-  const {
-    qualifications,
-    technologies,
-    skills,
-    currentRoles,
-    contacts
-  } = useMasterData();
-
-  //console.log("qualification", qualifications);
-
-  const {
-    mockinterviewData,
-    addOrUpdateMockInterview,
-    isMutationLoading
-  } = useMockInterviews();
-
-  // Usage remains exactly the same as before
-  console.log('singlecontact:', singlecontact);
+  const { singlecontact } = useCustomContext();
+  const { qualifications, technologies, skills, currentRoles, contacts } = useMasterData();
+  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
-
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -193,84 +168,16 @@ const MockSchedulelater = () => {
       status: "Pending",
       dateTime: "",
     },
-    // status: 'Pending',  
   });
-  console.log("formData", formData);
-
 
   const [interviewType, setInterviewType] = useState("scheduled");
-  const [combinedDateTime, setCombinedDateTime] = useState("")
+  const [combinedDateTime, setCombinedDateTime] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
-
-  const [mockEdit, setmockEdit] = useState(false);
+  const [mockEdit, setMockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
   const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
-
-  // Load skills from either singlecontact (for new records) or mockinterviewData (for edit)
-  useEffect(() => {
-    if (id && mockinterviewData?.length > 0) {
-      // Edit mode - load from mockinterviewData
-      const mockData = mockinterviewData.find(moc => moc._id === id);
-      if (mockData?.skills?.length > 0) {
-        const skillEntries = mockData.skills.map(skill => ({
-          skill: skill.skill || '',
-          experience: skill.experience || '',
-          expertise: skill.expertise || ''
-        }));
-        setEntries(skillEntries);
-        setFormData(prev => ({
-          ...prev,
-          skills: skillEntries
-        }));
-        // Set to view mode by default
-        setEditingIndex(null);
-        console.log("Skills loaded from mockinterviewData:", skillEntries);
-      }
-    } else if (singlecontact[0]?.skills?.length > 0) {
-      // New record - load from singlecontact
-      const initialSkills = Array.isArray(singlecontact[0].skills) 
-        ? singlecontact[0].skills 
-        : [singlecontact[0].skills];
-      
-      const newEntries = initialSkills.map(skill => ({
-        skill,
-        experience: "",
-        expertise: ""
-      }));
-      
-      setEntries(newEntries);
-      setFormData(prev => ({
-        ...prev,
-        skills: newEntries
-      }));
-      
-      // For new records, show first skill in edit mode
-      if (newEntries.length > 0) {
-        setEditingIndex(0);
-        setSelectedSkill(newEntries[0].skill);
-        setSelectedExp(newEntries[0].experience);
-        setSelectedLevel(newEntries[0].expertise);
-      }
-      
-      // if (newEntries.length > 0) {
-      //   setEditingIndex('all');
-
-      //   // Create parallel arrays for skill / exp / level
-      //   const skillsArr = newEntries.map(e => e.skill || '');
-      //   const expArr    = newEntries.map(e => e.experience || '');
-      //   const levelArr  = newEntries.map(e => e.expertise || '');
-
-      //   setSelectedSkill(skillsArr);
-      //   setSelectedExp(expArr);
-      //   setSelectedLevel(levelArr);
-      // }
-
-      console.log("Skills initialized from singlecontact", initialSkills);
-    }
-  }, [singlecontact, id, mockinterviewData]);
-
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -280,19 +187,15 @@ const MockSchedulelater = () => {
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editModeSelectedInterviewerNames, setEditModeSelectedInterviewerNames] = useState([]);
-  //console.log(`editModeSelectedInterviewerNames ------- ${editModeSelectedInterviewerNames.length}`)
-
+  const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+  const [externalInterviewers, setExternalInterviewers] = useState([]);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-
   const organizationId = tokenPayload?.tenantId;
-  const Navigate = useNavigate();
 
   const [showDropdownRole, setShowDropdownRole] = useState(false);
-
 
   const toggleDropdownRole = () => {
     setShowDropdownRole(!showDropdownRole);
@@ -310,10 +213,10 @@ const MockSchedulelater = () => {
     skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-
+  // Populate formData for new interview from singlecontact
   useEffect(() => {
     if (!id && singlecontact?.length > 0) {
-      const contact = singlecontact[0]; // Use first contact
+      const contact = singlecontact[0];
       setFormData((prev) => ({
         ...prev,
         candidateName: `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
@@ -321,34 +224,30 @@ const MockSchedulelater = () => {
         currentExperience: contact.Experience || "",
         technology: contact.technologies?.[0] || "",
         Role: contact.currentRole || "",
-        skills: contact.skills|| [],
+        skills: contact.skills || [],
       }));
-      console.log("contact contact", contact);
-      // setEntries(contact.skills || []);
-      // setAllSelectedSkills(contact.skills?.map((skill) => skill.skill) || []);
     }
   }, [singlecontact, id]);
 
-
-
-
+  // Populate formData for edit mode
   useEffect(() => {
     if (id && mockinterviewData.length > 0) {
-
       const MockEditData = mockinterviewData.find(moc => moc._id === id);
-
-      console.log("MockEditData MockEditData", MockEditData);
-      // contacts.map((contact) => (
-      //   <option key={contact._id} value={contact._id}>
-      //     {contact.firstName} {contact.lastName}
-      //   </option>
-      // ))
-
-
       if (MockEditData) {
-        setmockEdit(true)
-        console.log("MockEditData MockEditData interviwers", MockEditData.rounds?.interviewersNames)
-        setEditModeSelectedInterviewerNames(MockEditData.rounds?.interviewersNames)
+        setMockEdit(true);
+        // Map interviewers to externalInterviewers format
+        const formattedInterviewers = MockEditData.rounds?.[0]?.interviewers?.map(interviewer => ({
+          _id: interviewer._id,
+          name: interviewer.contact?.Name || `${interviewer.contact?.firstName || ''} ${interviewer.contact?.lastName || ''}`.trim()
+        })) || [];
+
+        setExternalInterviewers(formattedInterviewers);
+        setSelectedInterviewType(formattedInterviewers.length > 0 ? 'external' : 'scheduled');
+
+        console.log('Edit Mode - MockEditData:', MockEditData);
+        console.log('Edit Mode - Formatted Interviewers:', formattedInterviewers);
+        console.log('Edit Mode - Selected Interview Type:', formattedInterviewers.length > 0 ? 'external' : 'scheduled');
+
         setFormData({
           skills: MockEditData.skills || [],
           candidateName: MockEditData.candidateName || "",
@@ -358,77 +257,50 @@ const MockSchedulelater = () => {
           jobDescription: MockEditData.jobDescription || "",
           Role: MockEditData.Role || "",
           rounds: {
-            roundTitle: MockEditData.rounds?.roundTitle || "",
-            interviewMode: MockEditData.rounds?.interviewMode || "",
-            duration: MockEditData.rounds?.duration || "30", // Use rounds.duration
-            instructions: MockEditData.rounds?.instructions || "",
-            interviewers: Array.isArray(MockEditData.rounds?.interviewers) ? MockEditData.rounds?.interviewers : [],
-            status: MockEditData.rounds?.status || "Pending",
-            dateTime: MockEditData.rounds?.dateTime || "",
-            interviewType: MockEditData.rounds?.interviewType || "scheduled",
+            roundTitle: MockEditData.rounds?.[0]?.roundTitle || "",
+            interviewMode: MockEditData.rounds?.[0]?.interviewMode || "",
+            duration: MockEditData.rounds?.[0]?.duration || "30",
+            instructions: MockEditData.rounds?.[0]?.instructions || "",
+            interviewType: MockEditData.rounds?.[0]?.interviewType || "scheduled",
+            interviewers: MockEditData.rounds?.[0]?.interviewers?.map(i => i._id) || [],
+            status: MockEditData.rounds?.[0]?.status || "Pending",
+            dateTime: MockEditData.rounds?.[0]?.dateTime || "",
           },
         });
-        // const updatedEntries = MockEditData?.skills.map((entry, index) =>
-        //   index === editingIndex ? { skill: selectedSkill, experience: selectedExp, expertise: selectedLevel } : entry
-        // );
-        // setEntries(MockEditData?.skills || []);
-        // setAllSelectedSkills(MockEditData.skills?.map(skill => skill.skill) || [])
 
-        setInterviewType(MockEditData.rounds?.interviewType || "scheduled");
-        // Change: Parse and set dateTime for editing
-        if (MockEditData.rounds?.dateTime) {
-          const [startStr, endStr] = MockEditData.rounds.dateTime.split(" - ");
+        setInterviewType(MockEditData.rounds?.[0]?.interviewType || "scheduled");
+        if (MockEditData.rounds?.[0]?.dateTime) {
+          const [startStr, endStr] = MockEditData.rounds[0].dateTime.split(" - ");
           const startDate = parseCustomDateTime(startStr);
           if (startDate && !isNaN(startDate.getTime())) {
             setScheduledDate(startDate.toISOString().slice(0, 16));
             setStartTime(startDate.toISOString());
             const endDate = endStr ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`) : null;
             setEndTime(endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : "");
-            setCombinedDateTime(MockEditData.rounds.dateTime);
+            setCombinedDateTime(MockEditData.rounds[0].dateTime);
           }
+        }
+
+        // Populate skills entries
+        if (MockEditData.skills?.length > 0) {
+          const skillEntries = MockEditData.skills.map(skill => ({
+            skill: skill.skill || '',
+            experience: skill.experience || '',
+            expertise: skill.expertise || ''
+          }));
+          setEntries(skillEntries);
+          setAllSelectedSkills(skillEntries.map(entry => entry.skill));
         }
       }
     } else {
-      // Change: Set default instant interview time for new form
       updateTimes(formData.rounds.duration);
     }
-
-
-
-  }, [mockEdit, id, mockinterviewData, formData.rounds.duration]);
-
-
-  // useEffect(() => {
-  //   if (mockEdit && MockEditData.skills) {
-  //     const initialSkills = MockEditData.skills || [];
-  //     const initialRows = MockEditData.skills.map((skill, index) => ({
-  //       skill: skill.skill || "",
-  //       experience: MockEditData.SkillExperience?.[index] || "", // Handle missing skill experience
-  //       expertise: MockEditData.SkillExpertise?.[index] || "", // Handle missing expertise
-  //     }));
-
-  //     // Set the skills data in the form state
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       skills: initialRows,
-  //     }));
-
-  //     // Set the initial rows for the UI and selected skills
-  //     setEntries(MockEditData.skills || []);
-  //     setAllSelectedSkills(initialSkills.map(skill => skill.skill));
-  //   }
-  // }, [MockEditData]);
-
+  }, [id, mockinterviewData]);
 
   const [errors, setErrors] = useState({});
 
-
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-
-
     let errorMessage = getErrorMessage(name, value);
     if (name === 'currentExperience') {
       const numValue = parseInt(value, 10);
@@ -438,8 +310,6 @@ const MockSchedulelater = () => {
     } else {
       errorMessage = getErrorMessage(name, value);
     }
-
-
 
     if (name.startsWith("rounds.")) {
       const roundField = name.split(".")[1];
@@ -453,74 +323,67 @@ const MockSchedulelater = () => {
     setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   };
 
-
   const handleExperienceKeyDown = (e) => {
-    // Allow: backspace, delete, tab, escape, enter
     if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
-      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-      (e.keyCode === 65 && e.ctrlKey === true) ||
-      (e.keyCode === 67 && e.ctrlKey === true) ||
-      (e.keyCode === 86 && e.ctrlKey === true) ||
-      (e.keyCode === 88 && e.ctrlKey === true) ||
-      // Allow: home, end, left, right
-      (e.keyCode >= 35 && e.keyCode <= 39)) {
+        (e.keyCode === 65 && e.ctrlKey === true) ||
+        (e.keyCode === 67 && e.ctrlKey === true) ||
+        (e.keyCode === 86 && e.ctrlKey === true) ||
+        (e.keyCode === 88 && e.ctrlKey === true) ||
+        (e.keyCode >= 35 && e.keyCode <= 39)) {
       return;
     }
-
-    // Block everything except numbers (0-9)
     if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
       e.preventDefault();
     }
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Validate form
+    console.group("Mock Interview Form Submission");
+    console.log("Form data:", formData);
+    console.log("Entries:", entries);
+    console.log("Errors:", errors);
+    console.log("External Interviewers:", externalInterviewers);
+    console.log("Selected Interview Type:", selectedInterviewType);
+
     const { formIsValid, newErrors } = validatemockForm(formData, entries, errors);
     setErrors(newErrors);
-  
+
     if (!formIsValid) {
-      console.log("Form is not valid:", newErrors);
+      console.error("Form is not valid:", newErrors);
+      console.groupEnd();
       return;
     }
-  
-    // Extract interviewer IDs and validate
+
     const interviewerIds = externalInterviewers
-      .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
+      .filter(interviewer => interviewer && interviewer._id)
       .map(interviewer => interviewer._id);
 
-    // const interviewerNames = externalInterviewers
-    // .filter(interviewer => interviewer && interviewer._id) // Ensure no undefined or missing _id
-    // .map(interviewer => interviewer.contact.Name);
-  
-    // Optional: Add validation for interviewers
-    if (interviewerIds.length === 0 && selectedInterviewType === "external") {
+    if (selectedInterviewType === "external" && interviewerIds.length === 0) {
       setErrors(prev => ({
         ...prev,
         interviewers: "At least one interviewer must be selected",
       }));
+      console.error("No interviewers selected");
+      console.groupEnd();
       return;
     }
-  
-    // Update formData with interviewer IDs
+
     const updatedFormData = {
       ...formData,
       rounds: {
         ...formData.rounds,
-        interviewers: interviewerIds
-
+        interviewers: interviewerIds,
+        interviewType: selectedInterviewType === "external" ? "external" : interviewType,
+        dateTime: combinedDateTime
       },
       entries,
       combinedDateTime,
     };
-  
-    console.log("Submitting form with data:", updatedFormData); // Debug log
-  
-    // Call the mutation
-    addOrUpdateMockInterview({
+
+    console.log("Updated form data with interviewers:", updatedFormData);
+
+    await addOrUpdateMockInterview({
       formData: updatedFormData,
       id: mockEdit ? id : undefined,
       isEdit: mockEdit,
@@ -550,6 +413,7 @@ const MockSchedulelater = () => {
         });
         setExternalInterviewers([]);
         setSelectedInterviewType(null);
+        console.groupEnd();
       },
       onError: (error) => {
         console.error("Error saving mock interview:", error);
@@ -557,11 +421,10 @@ const MockSchedulelater = () => {
           ...prev,
           submit: "Failed to save interview. Please try again.",
         }));
+        console.groupEnd();
       }
     });
   };
-
-  //for skills
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
@@ -582,7 +445,6 @@ const MockSchedulelater = () => {
     } else {
       document.removeEventListener("mousedown", handleOutsideClick);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
@@ -641,10 +503,6 @@ const MockSchedulelater = () => {
         newSkills.push(selectedSkill);
         return newSkills;
       });
-
-      setEditingIndex(null);
-
-      // setAllSelectedSkills([selectedSkill]);
       setFormData((prevFormData) => ({
         ...prevFormData,
         skills: updatedEntries,
@@ -655,14 +513,11 @@ const MockSchedulelater = () => {
         experience: selectedExp,
         expertise: selectedLevel,
       };
-
       const updatedEntries = [...entries, newEntry];
-
       setEntries(updatedEntries);
       setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
       setAllSelectedExperiences([...allSelectedExperiences, selectedExp]);
       setAllSelectedExpertises([...allSelectedExpertises, selectedLevel]);
-
       setFormData((prevFormData) => ({
         ...prevFormData,
         skills: updatedEntries,
@@ -677,8 +532,6 @@ const MockSchedulelater = () => {
     resetForm();
   };
 
-  
-
   const resetForm = () => {
     setSelectedSkill("");
     setSelectedExp("");
@@ -691,7 +544,6 @@ const MockSchedulelater = () => {
     if (currentStep === 0) {
       if (editingIndex !== null) {
         const currentSkill = entries[editingIndex]?.skill;
-
         return (
           selectedSkill !== "" &&
           selectedExp !== "" &&
@@ -715,18 +567,10 @@ const MockSchedulelater = () => {
     return false;
   };
 
-
-
-  
-
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
-    // setUnsavedChanges(true);
-  }
-  
+  };
 
-
-  // date and duration
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
   const calculateEndTime = (startTime, duration) => {
@@ -744,20 +588,17 @@ const MockSchedulelater = () => {
     return `${formattedEndHour}:${endMinute.toString().padStart(2, "0")} ${ampm}`;
   };
 
-
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [endTime, setEndTime] = useState("");
-
-
   const [dateTime, setDateTime] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const calculatedEndTime = calculateEndTime(startTime, formData.duration);
+    const calculatedEndTime = calculateEndTime(startTime, formData.rounds.duration);
     setEndTime(calculatedEndTime);
     setDateTime(`${formatDate(selectedDate)} ${formatTime(startTime)} - ${calculatedEndTime}`);
-  }, [startTime, formData.duration, selectedDate]);
+  }, [startTime, formData.rounds.duration, selectedDate]);
 
   const formatTime = (time) => {
     const [hour, minute] = time.split(":");
@@ -770,28 +611,21 @@ const MockSchedulelater = () => {
   const handleStartTimeChange = (e) => {
     const selectedStartTime = e.target.value;
     setStartTime(selectedStartTime);
-    const calculatedEndTime = calculateEndTime(selectedStartTime, formData.duration);
+    const calculatedEndTime = calculateEndTime(selectedStartTime, formData.rounds.duration);
     setEndTime(calculatedEndTime);
   };
 
   const handleConfirm = () => {
-    const calculatedEndTime = calculateEndTime(startTime, formData.duration);
+    const calculatedEndTime = calculateEndTime(startTime, formData.rounds.duration);
     setEndTime(calculatedEndTime);
     setDateTime(`${formatDate(selectedDate)} ${formatTime(startTime)} - ${calculatedEndTime}`);
-    // setShowPopup(false);
   };
-
- 
-
-
 
   const formatDate = (dateString) => {
     const [year, month, day] = dateString.split("-");
     return `${day}-${month}-${year}`;
   };
 
-
-  // const [selectedTechnology, setSelectedTechnology] = useState("");
   const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -800,7 +634,6 @@ const MockSchedulelater = () => {
   };
 
   const handleTechnologySelect = (technology) => {
-    // setSelectedTechnology(technology.TechnologyMasterName);
     setFormData((prevFormData) => ({
       ...prevFormData,
       technology: technology.TechnologyMasterName,
@@ -810,7 +643,6 @@ const MockSchedulelater = () => {
       ...prevErrors,
       technology: "",
     }));
-    // setUnsavedChanges(true);
   };
 
   const handleDropdownChange = (e) => {
@@ -825,11 +657,9 @@ const MockSchedulelater = () => {
     }));
   };
 
-
   const handleNext = () => {
-    const { formIsValid, newErrors } = validatePage1(formData, entries); // Validate Page 1
+    const { formIsValid, newErrors } = validatePage1(formData, entries);
     setErrors(newErrors);
-
     if (formIsValid) {
       setCurrentPage(2);
     } else {
@@ -837,31 +667,29 @@ const MockSchedulelater = () => {
     }
   };
 
-
   const updateTimes = (newDuration) => {
     let start = null;
     let end = null;
 
     if (interviewType === "instant") {
       const now = new Date();
-      now.setMinutes(now.getMinutes() + 15); // Start 15 minutes from now
+      now.setMinutes(now.getMinutes() + 15);
       start = now;
       end = new Date(now);
-      end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
+      end.setMinutes(end.getMinutes() + Number(newDuration || 30));
     } else if (interviewType === "scheduled" && scheduledDate) {
-      start = new Date(scheduledDate); // Parse ISO string from datetime-local
-      if (isNaN(start.getTime())) return; // Exit if invalid date
+      start = new Date(scheduledDate);
+      if (isNaN(start.getTime())) return;
       end = new Date(start);
-      end.setMinutes(end.getMinutes() + Number(newDuration || 30)); // Default to 30 if undefined
+      end.setMinutes(end.getMinutes() + Number(newDuration || 30));
     }
 
     if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
       setStartTime(start.toISOString());
       setEndTime(end.toISOString());
       const formattedStart = formatToCustomDateTime(start);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1]; // Only time part
+      const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
       setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
-      // Change: Update formData.rounds.dateTime
       setFormData((prev) => ({
         ...prev,
         rounds: { ...prev.rounds, dateTime: `${formattedStart} - ${formattedEnd}` },
@@ -869,13 +697,10 @@ const MockSchedulelater = () => {
     }
   };
 
-  // Update times when mode, date, or duration changes
   useEffect(() => {
     updateTimes(formData.rounds.duration);
   }, [formData.rounds.interviewType, scheduledDate, formData.rounds.duration]);
 
-
-  // Change: Handle interview type change and set default duration
   useEffect(() => {
     if (interviewType === "instant") {
       const date = new Date();
@@ -888,87 +713,77 @@ const MockSchedulelater = () => {
     }
   }, [interviewType]);
 
-  console.log("role data", formData.Role);
+  const handleExternalInterviewerSelect = (newInterviewers) => {
+    const formattedInterviewers = newInterviewers.map(interviewer => ({
+      _id: interviewer._id,
+      name: interviewer.contact?.Name || `${interviewer.contact?.firstName || ''} ${interviewer.contact?.lastName || ''}`.trim()
+    }));
 
-  // const [isInternalInterviews, setInternalInterviews] = useState(false);
-  // const [selectedInterviewType, setSelectedInterviewType] = useState(null);
-  // const [internalInterviewers, setInternalInterviewers] = useState([]);
-  // console.log("internalInterviewers selected", internalInterviewers);
-  // const selectedInterviewers =
-  //   selectedInterviewType === "internal"
-  //     ? internalInterviewers
-  //     : [];
-  // const isInternalSelected = selectedInterviewType === "internal";
+    // Merge new interviewers with existing ones, avoiding duplicates
+    setExternalInterviewers(prev => {
+      const existingIds = prev.map(i => i._id);
+      const uniqueNewInterviewers = formattedInterviewers.filter(i => !existingIds.includes(i._id));
+      return [...prev, ...uniqueNewInterviewers];
+    });
 
-  // Add state for external interviewers only
-  const [selectedInterviewType, setSelectedInterviewType] = useState(null);
-  const [externalInterviewers, setExternalInterviewers] = useState([]);
-  console.log("externalInterviewers", externalInterviewers);
-
-  // Handler for selecting external interviewers
-  const handleExternalInterviewerSelect = (interviewers) => {
-    console.log("interviewers", interviewers);
     setSelectedInterviewType("external");
-    setExternalInterviewers(interviewers);
   };
 
-  // Handler for removing an external interviewer
   const handleRemoveExternalInterviewer = (interviewerId) => {
-    setExternalInterviewers(prev =>
-      prev.filter(i => i._id !== interviewerId)
-    );
+    setExternalInterviewers(prev => prev.filter(i => i._id !== interviewerId));
+    setFormData(prev => ({
+      ...prev,
+      rounds: {
+        ...prev.rounds,
+        interviewers: prev.rounds.interviewers.filter(id => id !== interviewerId),
+      },
+    }));
     if (externalInterviewers.length === 1) {
-      setSelectedInterviewType(null);
+      setSelectedInterviewType("scheduled");
     }
   };
 
-  // Handler for clearing all external interviewers
   const handleClearAllInterviewers = () => {
     setExternalInterviewers([]);
-    setSelectedInterviewType(null);
+    setFormData(prev => ({
+      ...prev,
+      rounds: {
+        ...prev.rounds,
+        interviewers: [],
+      },
+    }));
+    setSelectedInterviewType("scheduled");
   };
 
   const selectedInterviewers = selectedInterviewType === "external" ? externalInterviewers : [];
-  console.log("selectedInterviewers", selectedInterviewers);
 
   return (
     <div className="flex items-center justify-center">
       <div className="bg-white rounded-lg w-full flex flex-col">
-        {/* Modal Header */}
         <div className="mt-4 mb-4">
-
           <h2 className="text-2xl font-semibold px-[13%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
             Schedule Mock Interview
           </h2>
-
         </div>
 
         <div className="px-[13%] sm:px-[5%] md:px-[5%]">
-          {/* Content */}
           <div className="bg-white rounded-lg shadow-md border">
             <div className="flex justify-between items-center px-5 pt-4">
               <h2 className="text-lg font-semibold sm:text-md">{currentPage === 1 ? "Candidate Details:" : "Interview Details:"}</h2>
             </div>
 
             <div className="px-6 pt-3">
-              <form className="space-y-5 mb-5" >
-                {/* onSubmit={handleSubmit} */}
+              <form className="space-y-5 mb-5">
                 {currentPage === 1 && (
-
-
                   <>
-
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      {/* name */}
                       <div>
-
                         <label
                           htmlFor="CandidateName"
                           className="block text-sm font-medium text-gray-700 mb-1"
                         >
                           Name <span className="text-red-500">*</span>
                         </label>
-
                         <div className="flex-grow">
                           <input
                             value={formData.candidateName}
@@ -977,8 +792,7 @@ const MockSchedulelater = () => {
                             type="text"
                             id="CandidateName"
                             readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.candidateName ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                              }`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.candidateName ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
                           />
                           {errors.candidateName && (
                             <p className="text-red-500 text-sm mt-1">
@@ -987,36 +801,28 @@ const MockSchedulelater = () => {
                           )}
                         </div>
                       </div>
-                      
-                      {/* higher qualification */}
-                <CustomDropdown
-                  label="Higher Qualification"
-                  name="HigherQualification"
-                  value={formData.higherQualification}
-                  options={qualifications}
-                  onChange={handleDropdownChange}
-                  error={errors.higherQualification}
-                  placeholder="Select Higher Qualification"
-                  optionKey="QualificationName"
-                  optionValue="QualificationName"
-                />
+                      <CustomDropdown
+                        label="Higher Qualification"
+                        name="HigherQualification"
+                        value={formData.higherQualification}
+                        options={qualifications}
+                        onChange={handleDropdownChange}
+                        error={errors.higherQualification}
+                        placeholder="Select Higher Qualification"
+                        optionKey="QualificationName"
+                        optionValue="QualificationName"
+                      />
                     </div>
-
-                    {/* Technology and Current Experience */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      {/* Technology */}
-                      <div >
-
+                      <div>
                         <label
                           htmlFor="technology"
                           className="block text-sm font-medium text-gray-700 mb-1"
                         >
                           Technology <span className="text-red-500">*</span>
                         </label>
-
                         <div className="flex-grow relative">
                           <div className="relative">
-
                             <input
                               value={formData.technology}
                               onClick={toggleDropdownTechnology}
@@ -1024,21 +830,13 @@ const MockSchedulelater = () => {
                               type="text"
                               id="Technology"
                               readOnly
-
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.technology ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                                }`}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.technology ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
                             />
                             {errors.technology && (
                               <p className="text-red-500 text-sm mt-1">
                                 {errors.technology}
                               </p>
                             )}
-                            {/* <div
-                      className="absolute right-0 top-0"
-                      onClick={toggleDropdownTechnology}
-                    >
-                      <MdArrowDropDown className="text-lg text-gray-500 mt-1 cursor-pointer" />
-                    </div> */}
                           </div>
                           {showDropdownTechnology && (
                             <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
@@ -1055,9 +853,7 @@ const MockSchedulelater = () => {
                           )}
                         </div>
                       </div>
-
-                      {/* Current Experience */}
-                      <div >
+                      <div>
                         <div>
                           <label
                             htmlFor="currentExperience"
@@ -1077,8 +873,7 @@ const MockSchedulelater = () => {
                             max="15"
                             autoComplete="off"
                             onKeyDown={handleExperienceKeyDown}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                              }`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
                           />
                           {errors.currentExperience && (
                             <p className="text-red-500 text-sm mt-1">
@@ -1087,9 +882,6 @@ const MockSchedulelater = () => {
                           )}
                         </div>
                       </div>
-
-
-                      {/* Current Role */}
                       <div>
                         <div>
                           <label
@@ -1129,95 +921,80 @@ const MockSchedulelater = () => {
                           )}
                         </div>
                       </div>
-
-
-
                     </div>
-
-
                     <div>
-              <SkillsField
-                entries={entries}
-                errors={errors}
-                onAddSkill={(setEditingIndex) => {
-                  setEntries((prevEntries) => {
-                    const newEntries = [...prevEntries, { skill: '', experience: "", expertise: "" }];
-                    console.log("New entries after add:", newEntries);
-                    setEditingIndex(newEntries.length - 1);
-                    return newEntries;
-                  });
-                  setSelectedSkill("");
-                  setSelectedExp("");
-                  setSelectedLevel("");
-                }}
-                onEditSkill={(index) => {
-                  const entry = entries[index];
-                  setSelectedSkill(entry.skill || "");
-                  setSelectedExp(entry.experience);
-                  setSelectedLevel(entry.expertise);
-                }}
-                onDeleteSkill={(index) => {
-                  const entry = entries[index];
-                  setAllSelectedSkills(
-                    allSelectedSkills.filter((skill) => skill !== entry.skill)
-                  );
-                  setEntries(entries.filter((_, i) => i !== index));
-                }}
-                setIsModalOpen={setIsModalOpen}
-                setEditingIndex={setEditingIndex}
-                isModalOpen={isModalOpen}
-                currentStep={currentStep}
-                setCurrentStep={setCurrentStep}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedSkill={selectedSkill}
-                setSelectedSkill={setSelectedSkill}
-                allSelectedSkills={allSelectedSkills}
-                selectedExp={selectedExp}
-                setSelectedExp={setSelectedExp}
-                selectedLevel={selectedLevel}
-                setSelectedLevel={setSelectedLevel}
-                skills={skills}
-                expertiseOptions={expertiseOptions}
-                experienceOptions={experienceOptions}
-                isNextEnabled={isNextEnabled}
-                handleAddEntry={handleAddEntry}
-                skillpopupcancelbutton={skillpopupcancelbutton}
-                editingIndex={editingIndex}
-              />
-              </div>
-                    {/* Job Responsibilities */}
-                    <div >
-
+                      <SkillsField
+                        entries={entries}
+                        errors={errors}
+                        onAddSkill={(setEditingIndex) => {
+                          setEntries((prevEntries) => {
+                            const newEntries = [...prevEntries, { skill: '', experience: "", expertise: "" }];
+                            setEditingIndex(newEntries.length - 1);
+                            return newEntries;
+                          });
+                          setSelectedSkill("");
+                          setSelectedExp("");
+                          setSelectedLevel("");
+                        }}
+                        onEditSkill={(index) => {
+                          const entry = entries[index];
+                          setSelectedSkill(entry.skill || "");
+                          setSelectedExp(entry.experience);
+                          setSelectedLevel(entry.expertise);
+                        }}
+                        onDeleteSkill={(index) => {
+                          const entry = entries[index];
+                          setAllSelectedSkills(
+                            allSelectedSkills.filter((skill) => skill !== entry.skill)
+                          );
+                          setEntries(entries.filter((_, i) => i !== index));
+                        }}
+                        setIsModalOpen={setIsModalOpen}
+                        setEditingIndex={setEditingIndex}
+                        isModalOpen={isModalOpen}
+                        currentStep={currentStep}
+                        setCurrentStep={setCurrentStep}
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        selectedSkill={selectedSkill}
+                        setSelectedSkill={setSelectedSkill}
+                        allSelectedSkills={allSelectedSkills}
+                        selectedExp={selectedExp}
+                        setSelectedExp={setSelectedExp}
+                        selectedLevel={selectedLevel}
+                        setSelectedLevel={setSelectedLevel}
+                        skills={skills}
+                        expertiseOptions={expertiseOptions}
+                        experienceOptions={experienceOptions}
+                        isNextEnabled={isNextEnabled}
+                        handleAddEntry={handleAddEntry}
+                        skillpopupcancelbutton={skillpopupcancelbutton}
+                        editingIndex={editingIndex}
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Job Description
                       </label>
-
                       <textarea
                         onChange={handleChange}
                         name="jobDescription"
                         id="jobDescription"
                         value={formData.jobDescription}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none `}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none`}
                         rows={6}
                         placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-
                       ></textarea>
                     </div>
-
                     <div className="text-center text-sm p-2">(OR)</div>
-
-                    {/* Resume */}
-                    <div className="w-full  flex justify-center">
-                      <div className="w-full ms-[40%] flex items-center justify-center gap-5 ">
-
+                    <div className="w-full flex justify-center">
+                      <div className="w-full ms-[40%] flex items-center justify-center gap-5">
                         <label
                           htmlFor="fileUpload"
                           className="text-sm font-medium text-gray-900"
                         >
                           Resume
                         </label>
-
                         <div className="flex-grow">
                           <div className="flex items-center mt-3">
                             <button
@@ -1258,34 +1035,25 @@ const MockSchedulelater = () => {
                     </div>
                   </>
                 )}
-
-                {/* Interview Details */}
                 {currentPage === 2 && (
                   <>
-
                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
-
                       <div>
                         <label htmlFor="rounds.roundTitle" className="block text-sm font-medium text-gray-700">
                           Round Title *
                         </label>
-
                         <input
                           id="rounds.roundTitle"
                           name="rounds.roundTitle"
                           value={formData.rounds.roundTitle}
                           onChange={handleChange}
-                          className={`mt-1 block w-full border ${errors["rounds.roundTitle"] ? 'border-red-500' : 'border-gray-300'
-                            } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          className={`mt-1 block w-full border ${errors["rounds.roundTitle"] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           required
                         />
-
                         {errors["rounds.roundTitle"] && (
-                          <p className="mt-1 text-sm text-red-500">{errors.roundTitle}</p>
+                          <p className="mt-1 text-sm text-red-500">{errors["rounds.roundTitle"]}</p>
                         )}
                       </div>
-
-
                       <div>
                         <label htmlFor="rounds.interviewMode" className="block text-sm font-medium text-gray-700">
                           Interview Mode *
@@ -1296,25 +1064,20 @@ const MockSchedulelater = () => {
                           value={formData.rounds.interviewMode}
                           onChange={(event) => {
                             const { name, value } = event.target;
-
                             setFormData((prevData) => ({
                               ...prevData,
                               rounds: {
                                 ...prevData.rounds,
-                                [name.split(".")[1]]: value, // Extracts "interviewMode"
+                                [name.split(".")[1]]: value,
                               },
                             }));
-
-                            // Clear error if a valid selection is made
                             setErrors((prevErrors) => ({
                               ...prevErrors,
                               [name]: value ? "" : "This field is required",
                             }));
                           }}
-                          className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${errors.interviewMode ? 'border-red-500' : 'border-gray-300'
-                            } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                          className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${errors.interviewMode ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                           required
-                        // disabled={roundTitle === "Assessment"}
                         >
                           <option value="">Select Interview Mode</option>
                           <option value="Face to Face">Face to Face</option>
@@ -1325,228 +1088,174 @@ const MockSchedulelater = () => {
                         )}
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
-
-
-                      {/* Status */}
-                      {/* <div>
-                                        <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                                          Status *
-                        </label>
-                                        <div className="mt-1 flex items-center">
-                          <select
-                                            id="status"
-                                            name="status"
-                                            value={formData.status}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                                            className={`block w-full pl-3 pr-10 py-2 text-base border ${errors.status ? 'border-red-500' : 'border-gray-300'
-                                              } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                            required
-                          >
-                                            <option value="In Progress">In Progress</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Scheduled">Scheduled</option>
-                                            <option value="Completed">Completed</option>
-                                            <option value="Cancelled">Cancelled</option>
-                          </select>
-                                          <div className="ml-2">
-                                            <StatusBadge status={formData.status} size="sm" />
-                        </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Interview Scheduling
+                      </label>
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+                        <button
+                          type="button"
+                          onClick={() => { setInterviewType("instant"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "instant" } })); }}
+                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant" ? "border-custom-blue bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
+                        >
+                          <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-custom-blue" : "text-gray-400"}`} />
+                          <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-custom-blue" : "text-gray-900"}`}>
+                            Instant Interview
+                          </span>
+                          <span className="mt-1 text-sm text-gray-500">Starts in 15 minutes</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setInterviewType("scheduled"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "scheduled" } })); }}
+                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled" ? "border-custom-blue bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
+                        >
+                          <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-400"}`} />
+                          <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-900"}`}>
+                            Schedule for Later
+                          </span>
+                          <span className="mt-1 text-sm text-gray-500">Pick date & time</span>
+                        </button>
                       </div>
-                                        {errors.status && (
-                                          <p className="mt-1 text-sm text-red-500">{errors.status}</p>
-                        )}
-                                      </div> */}
-
-
-                    </div>
-
-                    <>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Interview Scheduling
-                        </label>
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                          <button
-                            type="button"
-                            onClick={() => { setInterviewType("instant"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "instant" } })); }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
-                          >
-                            <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-custom-blue" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-custom-blue" : "text-gray-900"}`}>
-                              Instant Interview
-                            </span>
-                            <span className="mt-1 text-sm text-gray-500">Starts in 15 minutes</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => { setInterviewType("scheduled"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "scheduled" } })); }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
-                          >
-                            <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-900"}`}>
-                              Schedule for Later
-                            </span>
-                            <span className="mt-1 text-sm text-gray-500">Pick date & time</span>
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-2">
-                          {interviewType === "scheduled" && (
-                            <div className="mt-4">
-                              <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
-                                Scheduled Date & Time
-                              </label>
-                              <input
-                                type="datetime-local"
-                                id="scheduledDate"
-                                name="scheduledDate"
-                                value={scheduledDate}
-                                onChange={(e) => setScheduledDate(e.target.value)}
-                                min={new Date().toISOString().slice(0, 16)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              />
-                            </div>
-                          )}
-
+                      <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-2">
+                        {interviewType === "scheduled" && (
                           <div className="mt-4">
-                            <label htmlFor="rounds.duration" className="block text-sm font-medium text-gray-700">
-                              Duration (minutes)
+                            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+                              Scheduled Date & Time
                             </label>
-                            <select
-                              id="rounds.duration"
-                              name="rounds.duration"
-                              value={formData.rounds.duration}
-                              onChange={handleChange}
+                            <input
+                              type="datetime-local"
+                              id="scheduledDate"
+                              name="scheduledDate"
+                              value={scheduledDate}
+                              onChange={(e) => setScheduledDate(e.target.value)}
+                              min={new Date().toISOString().slice(0, 16)}
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            >
-                              <option value="30">30 min</option>
-                              <option value="45">45 min</option>
-                              <option value="60">60 min</option>
-                              <option value="90">90 min</option>
-                              <option value="120">120 min</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {interviewType === "instant" && (
-                          <div className="mt-4 p-4 bg-blue-50 rounded-md">
-                            <div className="flex items-center">
-                              <Clock className="h-5 w-5 text-custom-blue mr-2" />
-                              <p className="text-sm text-custom-blue">
-                                Interview will start at{" "}
-                                <span className="font-medium">
-                                  {new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                </span>{" "}
-                                and end at{" "}
-                                <span className="font-medium">
-                                  {new Date(endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                </span>
-                              </p>
-                            </div>
+                            />
                           </div>
                         )}
-
-                        {interviewType === "scheduled" && scheduledDate && (
-                          <div className="mt-4 p-4 bg-green-50 rounded-md">
-                            <div className="flex items-center">
-                              <Calendar className="h-5 w-5 text-green-500 mr-2" />
-                              <p className="text-sm text-green-700">
-                                Scheduled from{" "}
-                                <span className="font-medium">
-                                  {formatToCustomDateTime(new Date(startTime))}
-                                </span>{" "}
-                                to{" "}
-                                <span className="font-medium">
-                                  {formatToCustomDateTime(new Date(endTime))}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-medium text-gray-700">Interviewers</label>
-                        <div className="flex space-x-2">
-                          <Button
-                            type="button"
-                            onClick={() => setShowOutsourcePopup(true)}
-                            variant="outline"
-                            size="sm"
-                            className={`${selectedInterviewType === "external" ? "" : ""}`}
-                            disabled={false}
-                            title=""
+                        <div className="mt-4">
+                          <label htmlFor="rounds.duration" className="block text-sm font-medium text-gray-700">
+                            Duration (minutes)
+                          </label>
+                          <select
+                            id="rounds.duration"
+                            name="rounds.duration"
+                            value={formData.rounds.duration}
+                            onChange={handleChange}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           >
-                            <User className="h-4 w-4 mr-1 text-orange-600" />
-                            Select Outsourced
-                          </Button>
+                            <option value="30">30 min</option>
+                            <option value="45">45 min</option>
+                            <option value="60">60 min</option>
+                            <option value="90">90 min</option>
+                            <option value="120">120 min</option>
+                          </select>
                         </div>
                       </div>
-
-                      {/* Selected Interviewers Summary */}
-                      <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                         {selectedInterviewers.length === 0 ? (
-                          <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
-                        ) : (
-                          <div>
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700">
-                                  {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
-                                  <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
-                                    Outsourced
-                                  </span>
+                      {interviewType === "instant" && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-md">
+                          <div className="flex items-center">
+                            <Clock className="h-5 w-5 text-custom-blue mr-2" />
+                            <p className="text-sm text-custom-blue">
+                              Interview will start at{" "}
+                              <span className="font-medium">
+                                {new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>{" "}
+                              and end at{" "}
+                              <span className="font-medium">
+                                {new Date(endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {interviewType === "scheduled" && scheduledDate && (
+                        <div className="mt-4 p-4 bg-green-50 rounded-md">
+                          <div className="flex items-center">
+                            <Calendar className="h-5 w-5 text-green-500 mr-2" />
+                            <p className="text-sm text-green-700">
+                              Scheduled from{" "}
+                              <span className="font-medium">
+                                {formatToCustomDateTime(new Date(startTime))}
+                              </span>{" "}
+                              to{" "}
+                              <span className="font-medium">
+                                {formatToCustomDateTime(new Date(endTime))}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Interviewers</label>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          onClick={() => setShowOutsourcePopup(true)}
+                          variant="outline"
+                          size="sm"
+                          className={`${selectedInterviewType === "external" ? "" : ""}`}
+                          disabled={false}
+                          title=""
+                        >
+                          <User className="h-4 w-4 mr-1 text-orange-600" />
+                          Select Outsourced
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
+                      {selectedInterviewers.length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                      ) : (
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 text-gray-500 mr-2" />
+                              <span className="text-sm text-gray-700">
+                                {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
+                                <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                  Outsourced
                                 </span>
-                              </div>
-                              {selectedInterviewers.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={handleClearAllInterviewers}
-                                  className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Clear All
-                                </button>
-                              )}
+                              </span>
                             </div>
-                            <div className="mb-3">
-                              <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
-                              <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                {console.log("externalInterviewers in MockSchedulelater", externalInterviewers)}
-                                {externalInterviewers.map((interviewer) => (
-                                  <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
-                                    <div className="flex items-center">
-                                      <span className="ml-2 text-sm text-orange-800 truncate">{interviewer.contact.Name}</span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
-                                      className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                      title="Remove interviewer"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </button>
+                            {selectedInterviewers.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={handleClearAllInterviewers}
+                                className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Clear All
+                              </button>
+                            )}
+                          </div>
+                          <div className="mb-3">
+                            <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
+                            <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                              {externalInterviewers.map((interviewer) => (
+                                <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                                  <div className="flex items-center">
+                                    <span className="ml-2 text-sm text-orange-800 truncate">
+                                      {interviewer.name}
+                                    </span>
                                   </div>
-                                ))}
-                              </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
+                                    className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                    title="Remove interviewer"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        )}
-                      </div>
-                      {errors.interviewers && <p className="text-red-500 text-sm -mt-5">{errors.interviewers}</p>}
-
-                    </>
-
+                        </div>
+                      )}
+                    </div>
+                    {errors.interviewers && <p className="text-red-500 text-sm -mt-5">{errors.interviewers}</p>}
                     <div>
                       <label htmlFor="rounds.instructions" className="block text-sm font-medium text-gray-700">
                         Instructions
@@ -1558,180 +1267,82 @@ const MockSchedulelater = () => {
                         value={formData.rounds.instructions}
                         onChange={handleChange}
                         placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       />
-                      {/* <p className="mt-1 text-sm text-gray-500">
-                        Add Instructions after the interview round is completed
-                      </p> */}
                     </div>
-
-
-
-
-
-
-                    {/* <div>
-                    <label
-                      htmlFor="Interviewer"
-                     className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Interviewer <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative flex-grow">
-                      <div
-                        className="w-full px-3 py-5 border rounded-md focus:outline-none"
-                     
-                        onClick={toggleSidebar}
-                      ></div>
-                      {errors.interviewer && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.interviewer}
-                        </p>
-                      )}
-                    </div>
-                  </div> */}
-
-
-                    {/* <div >
-                
-                    <label
-                      htmlFor="Instructions"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Instructions <span className="text-red-500">*</span>
-                    </label>
-                 
-                  <div className="flex-grow">
-                    <textarea
-                      value={textareaValue}
-                      onChange={handleChangedescription}
-                      name="instructions"
-                      id="instructions"
-                      rows={5}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none  ${errors.instructions
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-black"
-                        }`}
-                         placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-
-                    ></textarea>
-                    {errors.instructions && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.instructions}
-                      </p>
-                    )}
-                    {textareaValue.length > 0 && (
-                      <p className="text-gray-600 text-xs float-right -mt-4">
-                        {textareaValue.length}/250
-                      </p>
-                    )}
-                  </div>
-                </div>  */}
-
-
                   </>
                 )}
-
-
               </form>
             </div>
           </div>
-
-          {/* Footer  */}
-          {
-            currentPage === 1 ?
-              <div className="flex justify-end gap-4 mt-5 mb-4">
-                <button
-                  className="border border-custom-blue p-3 rounded py-1"
-                  onClick={() => navigate('/mockinterview')}
-                >
-                  Cancel
-                </button>
-
-                <LoadingButton
-                  onClick={handleNext}
-                  isLoading={isMutationLoading}
-                  loadingText={mockEdit ? "Updating..." : "Saving..."}
-
-                >
-                  {mockEdit ? "Update" : "Save"} & Next
-                </LoadingButton>
-              </div>
-
-              :
-
-              <div className="flex justify-end gap-4 mt-5 mb-4 ">
-                <button
-                  className="border border-custom-blue p-3 rounded py-1"
-                  onClick={() => setCurrentPage(1)}
-                >
-                  Back
-                </button>
-
-
-                <LoadingButton
-                  onClick={(e) => handleSubmit(e)}
-                  isLoading={isMutationLoading}
-                  loadingText={mockEdit ? "Updating..." : "Saving..."}
-
-                >
-                  {formData.rounds.interviewType === 'InstantInterview' ? 'Save & Schedule' : 'Save'}
-
-                </LoadingButton>
-              </div>
-          }
-
-
-          {/* {showPopup && <PopupComponent onClose={handlePopupClose} />} */}
-
-          {/* showing date and time */}
-          {
-            showPopup && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                <div className="bg-white p-5 rounded-lg shadow-lg w-1/3 relative">
-                  <div className="mb-4">
-                    <label className="block mb-2 font-bold">Select Date</label>
-                    <input
-                      type="date"
-                      className="border p-2 w-full"
-                      min={getTodayDate()}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      value={selectedDate}
-
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block mb-2 font-bold">Start Time</label>
-                    <input
-                      type="time"
-                      className="border p-2 w-full"
-                      onChange={handleStartTimeChange}
-                      value={startTime}
-
-
-                    />
-                  </div>
-                  {selectedDate && startTime && endTime && (
-                    <button
-                      onClick={handleConfirm}
-                      className="px-4 py-2 bg-custom-blue text-white rounded float-right"
-                    >
-                      Confirm
-                    </button>
-                  )}
+          {currentPage === 1 ? (
+            <div className="flex justify-end gap-4 mt-5 mb-4">
+              <button
+                className="border border-custom-blue p-3 rounded py-1"
+                onClick={() => navigate('/mockinterview')}
+              >
+                Cancel
+              </button>
+              <LoadingButton
+                onClick={handleNext}
+                isLoading={isMutationLoading}
+                loadingText={mockEdit ? "Updating..." : "Saving..."}
+              >
+                {mockEdit ? "Update" : "Save"} & Next
+              </LoadingButton>
+            </div>
+          ) : (
+            <div className="flex justify-end gap-4 mt-5 mb-4">
+              <button
+                className="border border-custom-blue p-3 rounded py-1"
+                onClick={() => setCurrentPage(1)}
+              >
+                Back
+              </button>
+              <LoadingButton
+                onClick={(e) => handleSubmit(e)}
+                isLoading={isMutationLoading}
+                loadingText={mockEdit ? "Updating..." : "Saving..."}
+              >
+                {formData.rounds.interviewType === 'instant' ? 'Save & Schedule' : 'Save'}
+              </LoadingButton>
+            </div>
+          )}
+          {showPopup && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white p-5 rounded-lg shadow-lg w-1/3 relative">
+                <div className="mb-4">
+                  <label className="block mb-2 font-bold">Select Date</label>
+                  <input
+                    type="date"
+                    className="border p-2 w-full"
+                    min={getTodayDate()}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    value={selectedDate}
+                  />
                 </div>
+                <div className="mb-4">
+                  <label className="block mb-2 font-bold">Start Time</label>
+                  <input
+                    type="time"
+                    className="border p-2 w-full"
+                    onChange={handleStartTimeChange}
+                    value={startTime}
+                  />
+                </div>
+                {selectedDate && startTime && endTime && (
+                  <button
+                    onClick={handleConfirm}
+                    className="px-4 py-2 bg-custom-blue text-white rounded float-right"
+                  >
+                    Confirm
+                  </button>
+                )}
               </div>
-            )
-          }
-
-
-
-        </div >
-
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* External Interviews Modal */}
       {showOutsourcePopup && (
         <OutsourceOption
           onClose={() => setShowOutsourcePopup(false)}
@@ -1741,8 +1352,7 @@ const MockSchedulelater = () => {
           navigatedfrom="mock-interview"
         />
       )}
-
-    </div >
+    </div>
   );
 };
 

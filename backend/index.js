@@ -1,4 +1,4 @@
- require('dotenv').config();
+require('dotenv').config();
 
 // const express = require('express');
 // const mongoose = require('mongoose');
@@ -429,11 +429,32 @@ app.get('/api/:model', async (req, res) => {
   try {
     let query = DataModel.find(tenantId ? { tenantId } : { ownerId });
 
-    
-    
+
+
     // Handle specific models with additional population
     switch (model.toLowerCase()) {
-    
+
+      // case 'mockinterview':
+      //   query = query
+      //     .populate({
+      //       path: 'rounds.interviewers',
+      //       model: 'Interviewavailability',
+      //     });
+      //   break;
+
+      case 'mockinterview':
+        query = query
+          .populate({
+            path: 'rounds.interviewers',
+            model: 'Interviewavailability',
+            populate: {
+              path: 'contact',
+              model: 'Contacts',
+              // select: 'firstName lastName email',
+            },
+          });
+        break;
+
       case 'tenentquestions':
         // First fetch all list names for this tenant/owner
         const lists = await TenantQuestionsListNames.find(tenantId ? { tenantId } : { ownerId });
@@ -487,28 +508,10 @@ app.get('/api/:model', async (req, res) => {
           .populate({
             path: 'rounds.interviewers',
             model: 'Contacts',
-          select: 'firstName lastName email',
+            select: 'firstName lastName email',
           })
 
-        // .populate({
-        //   path: 'rounds.questions.questionId',
-        //   model: 'Questions',
-        // });
-
         break;
-      case 'mockinterview':
-        query = query.populate({
-        path: 'rounds.interviewers',
-        model: 'Contacts',
-        select: 'firstName lastName email',
-      });
-      break;
-      // case 'mockinterview':
-      //   query = query.populate({
-      //     path: 'rounds.interviewers',
-      //     model: 'Contacts',
-      //     //select: 'firstName lastName',
-      //   })
 
       case 'interview':
         query = query

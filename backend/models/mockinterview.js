@@ -18,18 +18,18 @@ const mockInterviewSchema = new mongoose.Schema({
   // title: String,
   skills: [
     {
-        skill: String,
-        experience: String,
-        expertise: String,
+      skill: String,
+      experience: String,
+      expertise: String,
     },
-],
- 
+  ],
+
   // interviewer: String,
   // duration: String,
   // category: String, 
   // instructions: String,
   jobDescription: String,
-  Role:String,
+  Role: String,
   candidateName: String,
   higherQualification: String,
   currentExperience: String,
@@ -37,25 +37,26 @@ const mockInterviewSchema = new mongoose.Schema({
   technology: String,
   // interviewType: String, // instant or schedule later
   // status: String,
-  rounds: 
-  {
-     roundTitle: String,
-     interviewMode: String,  
-     interviewerType: String, // outsourced default
-     duration: String,
-     instructions: String,
-     interviewType:String,  // instant or schedule later
-     interviewers: [
-         { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
-     ],
-     status: String, // draft - if accept - scheduled, if request sent then (request sent)
-     dateTime: String,
-  },
+  rounds: [
+    {
+      roundTitle: String,
+      interviewMode: String,
+      interviewerType: String,
+      duration: String,
+      instructions: String,
+      interviewType: String,
+      interviewers: [
+        { type: mongoose.Schema.Types.ObjectId, ref: 'Interviewavailability' }
+      ],
+      status: String,
+      dateTime: String,
+    }
+  ],
   resume: String,//in future we have to work on resume saving functionality
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    ownerId: String,
-    tenantId: String,
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  ownerId: String,
+  tenantId: String,
 }, { timestamps: true });
 
 const MockInterview = mongoose.model('MockInterview', mockInterviewSchema);

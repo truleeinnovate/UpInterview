@@ -25,6 +25,8 @@ export const useMockInterviews = () => {
     queryFn: async () => {
       try {
         const filteredInterviews = await fetchFilterData('mockinterview', mockInterviewPermissions);
+        // console.log('Raw API response:', filteredInterviews[0]?.rounds?.interviewers);
+        // console.log('Raw API response:', filteredInterviews);
         return filteredInterviews.reverse();
       } catch (err) {
         console.error('Fetch error:', err);
@@ -35,73 +37,91 @@ export const useMockInterviews = () => {
     retry: 1,
   });
 
+  // useEffect(() => {
+  //   console.log('Mock interview data:', mockinterviewData);
+  //   if (mockinterviewData.length > 0) {
+  //     console.log('First interview data:', mockinterviewData[0]);
+  //     console.log('First interview rounds:', mockinterviewData[0].rounds);
+  //     if (mockinterviewData[0].rounds && mockinterviewData[0].rounds.length > 0) {
+  //       console.log('Interviewers data:', mockinterviewData[0].rounds[0].interviewers);
+  //       if (mockinterviewData[0].rounds[0].interviewers.length > 0) {
+  //         console.log('First interviewer contact:', mockinterviewData[0].rounds[0].interviewers[0].contact);
+  //       }
+  //     }
+  //   }
+  // }, [mockinterviewData]);
+
 
   // Add/Update mock interview mutation
- // Add/Update mock interview mutation
-// Add/Update mock interview mutation
-const addOrUpdateMockInterview = useMutation({
-  mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
-    const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
-
-    const payload = {
-      skills: formData.entries?.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
-      Role: formData.Role,
-      candidateName: formData.candidateName,
-      higherQualification: formData.higherQualification,
-      currentExperience: formData.currentExperience,
-      technology: formData.technology,
-      jobDescription: formData.jobDescription,
-      rounds: {
-        ...formData.rounds,
-        dateTime: formData.combinedDateTime,
-        status: status,
-      },
-      createdById: userId,
-      lastModifiedById: userId,
-      ownerId: userId,
-      tenantId: organizationId,
-    };
-
-    const url = isEdit
-      ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-      : `${config.REACT_APP_API_URL}/mockinterview`;
-
-    const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
-
-    // Handle interviewer requests if any
-    if (formData.rounds.interviewers?.length > 0 && response.data.savedRound?._id) {
-      await Promise.all(
-        formData.rounds.interviewers.map(async (interviewerId) => {
-          const outsourceRequestData = {
-            tenantId: organizationId,
-            ownerId: userId,
-            scheduledInterviewId: interviewerId,
-            id: interviewerId,
-            dateTime: formData.combinedDateTime,
-            duration: formData.rounds.duration,
-            candidateId: formData.candidate?._id || null, // Fallback to null if candidate._id is undefined
-            roundId: response.data.savedRound._id,
-            requestMessage: "Outsource interview request",
-            expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          };
-          await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
-        })
-      );
-    }
-
-    return response.data;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries(['mockinterviews']);
-  },
-  onError: (error) => {
-    console.error("Mock interview error:", error);
-  }
-});
+  // Add/Update mock interview mutation
+  // Add/Update mock interview mutation
+  const addOrUpdateMockInterview = useMutation({
+    mutationFn: async ({ formData, id, isEdit, userId, organizationId }) => {
+      const status = formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+  
+      const payload = {
+        skills: formData.entries?.map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
+        Role: formData.Role,
+        candidateName: formData.candidateName,
+        higherQualification: formData.higherQualification,
+        currentExperience: formData.currentExperience,
+        technology: formData.technology,
+        jobDescription: formData.jobDescription,
+        rounds: [{
+          ...formData.rounds,
+          dateTime: formData.combinedDateTime,
+          status: status,
+        }],
+        createdById: userId,
+        lastModifiedById: userId,
+        ownerId: userId,
+        tenantId: organizationId,
+      };
+  
+      console.log('Sending payload:', payload); // Debug payload
+  
+      const url = isEdit
+        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview`;
+  
+      const response = await axios[isEdit ? 'patch' : 'post'](url, payload);
+  
+      console.log('API response:', response.data); // Debug response
+  
+      if (formData.rounds.interviewers?.length > 0 && response.data.savedRound?._id) {
+        await Promise.all(
+          formData.rounds.interviewers.map(async (interviewerId) => {
+            const outsourceRequestData = {
+              tenantId: organizationId,
+              ownerId: userId,
+              scheduledInterviewId: interviewerId,
+              id: interviewerId,
+              dateTime: formData.combinedDateTime,
+              duration: formData.rounds.duration,
+              candidateId: formData.candidate?._id || null,
+              roundId: response.data.savedRound._id,
+              requestMessage: "Outsource interview request",
+              expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            };
+            await axios.post(`${config.REACT_APP_API_URL}/interviewrequest`, outsourceRequestData);
+          })
+        );
+      }
+  
+      return response.data;
+    },
+    onSuccess: () => {
+      console.log('Invalidating queries for mockinterviews');
+      queryClient.invalidateQueries(['mockinterviews']);
+    },
+    onError: (error) => {
+      console.error("Mock interview error:", error);
+    },
+  });
 
   // Calculate loading states
   const isMutationLoading = addOrUpdateMockInterview.isPending;
@@ -113,12 +133,12 @@ const addOrUpdateMockInterview = useMutation({
       initialLoad.current = false;
       return;
     }
-    console.log('useMockInterviews state update:', {
-      mockInterviewCount: mockinterviewData.length,
-      isLoading,
-      isQueryLoading,
-      isMutationLoading
-    });
+    // console.log('useMockInterviews state update:', {
+    //   mockInterviewCount: mockinterviewData.length,
+    //   isLoading,
+    //   isQueryLoading,
+    //   isMutationLoading
+    // });
   }, [mockinterviewData.length, isLoading, isQueryLoading, isMutationLoading]);
 
   return {
