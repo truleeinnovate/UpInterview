@@ -1027,4 +1027,15 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
-module.exports = { createInterview, saveInterviewRound, getDashboardStats };
+const deleteRound = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await InterviewRounds.findByIdAndDelete(id);
+        res.json({ message: 'Round deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+module.exports = { createInterview, saveInterviewRound, getDashboardStats, deleteRound };

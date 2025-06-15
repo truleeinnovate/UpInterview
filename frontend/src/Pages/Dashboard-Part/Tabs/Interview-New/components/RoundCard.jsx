@@ -24,6 +24,7 @@ import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { config } from '../../../../../config';
 import { useAssessments } from '../../../../../apiHooks/useAssessments';
+import { useInterviews } from '../../../../../apiHooks/useInterviews';
 
 const RoundCard = ({
   round,
@@ -42,7 +43,8 @@ const RoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-    const {fetchAssessmentQuestions} = useAssessments()
+  const { deleteRoundMutation } = useInterviews();
+  const {fetchAssessmentQuestions} = useAssessments()
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
    const [showRejectionModal, setShowRejectionModal] = useState(false);
@@ -52,6 +54,7 @@ const RoundCard = ({
   const [activeTab, setActiveTab] = useState('details');
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
 
 
@@ -115,6 +118,16 @@ const RoundCard = ({
     // if (!expandedSections[sectionId] && !sectionQuestions[sectionId]) {
     //   await fetchQuestionsForAssessment(round?.assessmentId);
     // }
+  };
+
+  const handleDeleteRound = async () => {
+    try {
+      await deleteRoundMutation(round._id);
+      toast.success('Round deleted successfully');
+    } catch (error) {
+      console.error('Error deleting round:', error);
+      toast.error('Failed to delete round');
+    }
   };
 
     const toggleShowQuestions = () => {
@@ -707,6 +720,17 @@ const RoundCard = ({
                       </Button>
                     </>
                   )}
+                  {canEdit && (
+                  <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteConfirmModal(true)}
+                  className="flex items-center"
+                  >
+                  <XCircle className="h-4 w-4 mr-1" />
+                      Delete Round
+                  </Button>
+                  )}
                 </div>
               )}
             </>
@@ -733,6 +757,24 @@ const RoundCard = ({
           </div>
         </div>
       )}
+
+    {showDeleteConfirmModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+              <div className="bg-white p-5 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-3">
+                  Are you sure you want to delete this round?
+                </h3>
+                <div className="flex justify-end space-x-3">
+                  <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDeleteRound}>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
 
       {showRejectionModal && (
