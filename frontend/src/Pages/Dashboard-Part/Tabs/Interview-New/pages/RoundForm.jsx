@@ -33,6 +33,7 @@ const RoundFormInterviews = () => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
+  const organization = tokenPayload?.organization;
   const [errors, setErrors] = useState({});
 
   const interview = interviewData?.find(interview => interview._id === interviewId);
@@ -49,6 +50,24 @@ const RoundFormInterviews = () => {
     const [sectionQuestions, setSectionQuestions] = useState({});
     const [questionsLoading, setQuestionsLoading] = useState(false);
   
+
+    const [ownerData, setOwnerData] = useState(null);
+    
+      useEffect(() => {
+        const fetchOwnerData = async () => {
+          if (!organization && userId) {
+            try {
+              const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${userId}`);
+              setOwnerData(response.data);
+            } catch (error) {
+              console.error('Error fetching owner data:', error);
+            }
+          }
+        };
+        fetchOwnerData();
+      }, [organization, userId]);
+
+
 
   useEffect(() => {
     if (interviewData) {
@@ -548,7 +567,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
             ownerId: userId,
             scheduledInterviewId: interviewId,
             interviewerType: selectedInterviewType,
-            interviewerId: interviewer._id,
+            interviewerId: organization === false ? interviewer.contactId : interviewer._id,
             status: isInternal ? "accepted" : "inprogress",
             dateTime: combinedDateTime,
             duration,
@@ -1231,7 +1250,25 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">Interviewers</label>
                         <div className="flex space-x-2">
-                          <Button
+                          {organization === false ? (
+                             <Button
+                             type="button"
+                             onClick={() => {
+                              handleInternalInterviewerSelect([ownerData]);
+                              // clearError('interviewerType');
+                            }}
+                             variant="outline"
+                             size="sm"
+                             className={`${isExternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
+                             disabled={isExternalSelected}
+                             title={isExternalSelected ? "Clear external interviewers first" : ""}
+                           >
+                             <User className="h-4 w-4 mr-1 text-blue-600" />
+                             Select Internal
+                           </Button>
+                             
+                          ) : (
+                            <Button
                             type="button"
                             onClick={() => setInternalInterviews(true)}
                             variant="outline"
@@ -1243,6 +1280,9 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                             <User className="h-4 w-4 mr-1 text-blue-600" />
                             Select Internal
                           </Button>
+
+                          )}
+                          
                           <Button
                             type="button"
                             onClick={() => setShowOutsourcePopup(true)}

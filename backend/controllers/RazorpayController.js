@@ -1038,7 +1038,21 @@ const handlePaymentFailed = async (payment) => {
 
         
         // Create a payment record for the failed payment
+        // Generate payment code
+        const lastPayment = await Payment.findOne({})
+        .sort({ _id: -1 })
+        .select('paymentCode')
+        .lean();
+      let nextNumber = 1;
+      if (lastPayment && lastPayment.paymentCode) {
+        const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        }
+      }
+      const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
         const failedPayment = new Payment({
+            paymentCode:paymentCode,
             ownerId: customerSubscription.ownerId,
             tenantId: customerSubscription.tenantId,
             planId: customerSubscription.subscriptionPlanId || customerSubscription.planId,

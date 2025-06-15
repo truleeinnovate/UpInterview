@@ -4,7 +4,8 @@ import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
 import { ChevronDown, User, X, Users, Trash2, ChevronUp, Search } from 'lucide-react';
 import InternalInterviews from '../Dashboard-Part/Tabs/Interview-New/pages/Internal-Or-Outsource/InternalInterviewers';
-
+import axios from "axios";
+import { config } from "../../config.js";
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode.js';
 import QuestionBank from '../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
@@ -58,6 +59,27 @@ function RoundFormTemplates() {
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const tenantId = tokenPayload?.tenantId;
+  const ownerId = tokenPayload?.userId
+  const organization = tokenPayload?.organization;
+
+
+  const [ownerData, setOwnerData] = useState(null);
+  
+    useEffect(() => {
+      const fetchOwnerData = async () => {
+        if (!organization && ownerId) {
+          try {
+            const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
+            setOwnerData(response.data);
+          } catch (error) {
+            console.error('Error fetching owner data:', error);
+          }
+        }
+      };
+      fetchOwnerData();
+    }, [organization, ownerId]);
+
+    
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -600,7 +622,7 @@ function RoundFormTemplates() {
         interviewerType: formData.interviewerType,
         interviewers:
           formData.interviewerType === 'Internal' || formData.roundTitle !== 'Assessment'
-            ? formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
+            ? organization === false ? formData.interviewers.map((interviewer) => interviewer.contactId) : formData.interviewers.map((interviewer) => interviewer._id).filter(Boolean)
             : [],
         questions: formData.roundTitle === 'Assessment' ? [] : formData.interviewQuestionsList
           .map(q => ({
@@ -1035,7 +1057,24 @@ function RoundFormTemplates() {
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-700">Interviewers</label>
                     <div className="flex space-x-2">
-                      <Button
+                      {organization === false ? (
+                        <Button
+                        type="button"
+                        onClick={() => {
+                          handleInternalInterviewerSelect([ownerData]);
+                          clearError('interviewerType');
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className={`${formData.interviewerType === 'External' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={formData.interviewerType === 'External'}
+                        title={formData.interviewerType === 'External' ? 'Clear External interviewers first' : ''}
+                      >
+                        <User className="h-4 w-4 mr-1 text-blue-600" />
+                        Select Internal
+                      </Button>
+                      ):(
+                        <Button
                         type="button"
                         onClick={() => {
                           setInternalInterviews(true);
@@ -1050,6 +1089,9 @@ function RoundFormTemplates() {
                         <User className="h-4 w-4 mr-1 text-blue-600" />
                         Select Internal
                       </Button>
+
+                      )}
+                      
                       <Button
                         type="button"
                         // onClick={handleExternalInterviewerSelect}

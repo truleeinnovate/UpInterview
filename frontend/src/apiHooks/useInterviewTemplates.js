@@ -129,7 +129,7 @@ export const useInterviewTemplates = () => {
           return response.data;
         },
         onSuccess: () => {
-          queryClient.invalidateQueries(['positions']);
+          queryClient.invalidateQueries(['interviewTemplates']);
         },
         onError: (error) => {
           console.error('Error deleting round:', error);

@@ -11,10 +11,11 @@ import QuestionBank from '../../QuestionBank-Tab/QuestionBank.jsx';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 import { usePositions } from '../../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../../Components/LoadingButton';
+import axios from "axios";
+import { config } from "../../../../../config.js";
 
 
 function RoundFormPosition() {
-
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { positionData, isMutationLoading, addRounds } = usePositions();
 
@@ -22,13 +23,15 @@ function RoundFormPosition() {
   const positionId = id;
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const ownerId = tokenPayload?.userId
   const tenantId = tokenPayload?.tenantId;
+  const organization = tokenPayload?.organization;
 
   const isPositionContext = !!positionId;
   const contextId = isPositionContext && positionId;
 
 
-  const [assessmentTemplate, setAssessmentTemplate] = useState({ assessmentId: '', assessmentName: '' });
+
   const [position, setPosition] = useState(null);
   const [rounds, setRounds] = useState([]);
 
@@ -68,6 +71,22 @@ function RoundFormPosition() {
       [fieldName]: ''
     }));
   };
+
+  const [ownerData, setOwnerData] = useState(null);
+
+  useEffect(() => {
+    const fetchOwnerData = async () => {
+      if (!organization && ownerId) {
+        try {
+          const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
+          setOwnerData(response.data);
+        } catch (error) {
+          console.error('Error fetching owner data:', error);
+        }
+      }
+    };
+    fetchOwnerData();
+  }, [organization, ownerId]);
 
   // const handleAddQuestionToRound = async (question) => {
   //   if (question && question.questionId && question.snapshot) {
@@ -181,11 +200,11 @@ function RoundFormPosition() {
   const isEditing = !!roundId && roundId !== 'new';
   const roundEditData = isEditing && rounds?.find(r => r._id === roundId);
 
-    useEffect(() => {
+  useEffect(() => {
       const handleClickOutside = (event) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
           setShowDropdown(false);
-        }
+    }
       };
   
       document.addEventListener('mousedown', handleClickOutside);
@@ -399,7 +418,6 @@ function RoundFormPosition() {
     ? selectedInterviewers.map(interviewer => interviewer?._id).filter(Boolean)
     : [];
 
-
   // Validate form
   const validateForm = () => {
     const newErrors = {
@@ -506,7 +524,7 @@ function RoundFormPosition() {
       ...(formData.roundTitle !== "Assessment" && {
         interviewers: formData.roundTitle === "Assessment" ? [] :
           formData.interviewerType === "Internal"
-            ? formData.interviewers.map((interviewer) => interviewer._id)
+            ? organization === false ? formData.interviewers.map((interviewer) => interviewer.contactId) : formData.interviewers.map((interviewer) => interviewer._id)
             : [], // If outsource, send empty array
       }),
       ...(formData.roundTitle === "Assessment" && formData.assessmentTemplate.assessmentId
@@ -531,10 +549,9 @@ function RoundFormPosition() {
         }),
       instructions: formData.instructions,
     };
-console.log("formData.duration",formData.duration);
+    console.log("formData.duration", formData.duration);
 
-    console.log("round data",roundData);
-    
+    console.log("round data", roundData);
 
 
     try {
@@ -563,8 +580,6 @@ console.log("formData.duration",formData.duration);
       // { label: isEditing ? `Edit ${roundEditData?.roundTitle || 'Round'}` : 'Add New Round', path: '' }
     ]
 
-
-
   if (isEditing && roundEditData) {
     breadcrumbItems.push({
       label: `Edit ${roundEditData.roundTitle || 'Round'}`,
@@ -579,13 +594,9 @@ console.log("formData.duration",formData.duration);
     });
   }
 
-
-
-
   const handlePopupToggle = (index) => {
     setIsInterviewQuestionPopup(!isInterviewQuestionPopup);
   };
-
 
   const handleAssessmentSelect = (assessment) => {
     // Set as an object, not an array
@@ -626,11 +637,9 @@ console.log("formData.duration",formData.duration);
     setShowDropdown(false);
   };
 
-
   const title = isEditing
     ? (isPositionContext ? 'Edit Position Round' : 'Edit Interview Round')
     : (isPositionContext ? 'Add New Position Round' : 'Add New Interview Round');
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1062,7 +1071,24 @@ console.log("formData.duration",formData.duration);
                         <div className="flex justify-between items-center mb-2">
                           <label className="block text-sm font-medium text-gray-700">Interviewers</label>
                           <div className="flex space-x-2">
-                            <Button
+                            {organization === false ? (
+                              <Button
+                              type="button"
+                              onClick={() => {
+                                handleInternalInterviewerSelect([ownerData]);
+                                clearError('interviewerType');
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className={`${isExternalSelected ? "opacity-50 cursor-not-allowed" : ""}`}
+                              disabled={isExternalSelected}
+                              title={isExternalSelected ? "Clear external interviewers first" : ""}
+                            >
+                              <User className="h-4 w-4 mr-1 text-blue-600" />
+                              Select Internal
+                            </Button>
+                            ) : (
+                              <Button
                               type="button"
                               onClick={() => {
                                 setInternalInterviews(true);
@@ -1077,6 +1103,8 @@ console.log("formData.duration",formData.duration);
                               <User className="h-4 w-4 mr-1 text-blue-600" />
                               Select Internal
                             </Button>
+                            )}
+                            
 
                             <Button
                               type="button"
@@ -1140,11 +1168,12 @@ console.log("formData.duration",formData.duration);
                                 <div className="mb-1">
                                   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                    {console.log('formData.interviewers', formData.interviewers)}
                                     {formData.interviewers.map((interviewer, index) => (
-                                      <div key={`${interviewer._id} - ${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
+                                      <div key={`${interviewer._id}-${index}`} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                         <div className="flex items-center">
-                                          <span className="ml-2 text-sm text-blue-800 truncate">{interviewer?.firstName + " " + interviewer?.lastName || ""}</span>
+                                          <span className="ml-2 text-sm text-blue-800 truncate">
+                                            {`${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()}
+                                          </span>
                                         </div>
                                         <button
                                           type="button"
