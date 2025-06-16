@@ -73,7 +73,7 @@ export function WebhookFormPopup({ webhook, events, onSave, onClose }) {
             <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
               <div>
                 <div className="flex justify-between items-center mb-2 mx-3 mt-3">
-                  <h2 className="text-xl font-bold text-custom-blue">Edit Webhook Information</h2>
+                  <h2 className="text-xl font-bold text-custom-blue">Basic Webhook Information</h2>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setIsFullScreen(!isFullScreen)}
