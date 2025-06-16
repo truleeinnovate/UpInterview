@@ -1,22 +1,14 @@
 import InvoiceTab from '../../../Tabs/Invoice-Tab/Invoice';
-
-import { useEffect, useState } from 'react';
 import './billing-styles.css';
 
 
 const BillingSubtabs = () => {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
   
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-sm h-screen">
+    <div className="w-full bg-gray-50">
       <div className="invoice-tab-wrapper">
-        {isMounted && <InvoiceTab />}
+         <InvoiceTab />
       </div>
     </div>
   );

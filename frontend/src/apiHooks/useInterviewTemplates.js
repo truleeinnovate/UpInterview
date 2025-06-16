@@ -97,11 +97,12 @@ export const useInterviewTemplates = () => {
     const addOrUpdateRound = useMutation({
         mutationFn: async ({ id, roundData, roundId, template }) => {
             const headers = { Authorization: `Bearer ${queryParams.authToken}` };
+            const currentRounds = template?.rounds || [];
             const updatedRounds = roundId
-                ? template.rounds.map((round) =>
+                ? currentRounds.map((round) =>
                       round._id === roundId ? { ...round, ...roundData } : round
                   )
-                : [...(template.rounds || []), roundData];
+                : [...currentRounds, roundData];
 
             const response = await axios.patch(
                 `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,

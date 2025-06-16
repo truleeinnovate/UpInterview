@@ -25,6 +25,8 @@ const BasicDetails = ({mode,usersId,setBasicEditOpen}) => {
 
   const userId = tokenPayload.userId;
 
+  console.log("mode ----", mode);
+
   
   useEffect(() => {
   const selectedContact = usersId
@@ -45,8 +47,8 @@ const BasicDetails = ({mode,usersId,setBasicEditOpen}) => {
       {/* <SettingsPage /> */}
       {/* <SidebarProfile  isSidebarOpen = {isSidebarOpen} handleTabChange ={handleTabChange} activeTab ={activeTab} filteredNavigation={filteredNavigation}/> */}
       <div>
-        <div className={`flex items-center ${mode === 'users' ? 'justify-end' : "justify-between"}`}>
-          <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Basic Details</h3>
+        <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
+      
 
           <button
             onClick={() => {
@@ -68,7 +70,7 @@ const BasicDetails = ({mode,usersId,setBasicEditOpen}) => {
 
         </div>
 
-        <div className="bg-white rounded-lg">
+        <div className={`bg-white rounded-lg ${mode !== 'users' ? 'p-4':'' }`}>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
 

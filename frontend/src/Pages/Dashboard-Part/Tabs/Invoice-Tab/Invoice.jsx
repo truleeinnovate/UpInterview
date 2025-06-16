@@ -307,8 +307,8 @@ const InvoiceTab = () => {
     });
 
     return (
-        <div className="w-full bg-background min-h-screen">
-            <div className="fixed top-16 left-0 right-0 bg-background">
+        <div className="w-full min-h-screen border-0">
+            <div className="fixed top-16 left-0 right-0">
                 <main className="px-6 sm:mt-20 md:mt-24">
                     <div className="sm:px-0">
                         <motion.div
@@ -345,7 +345,7 @@ const InvoiceTab = () => {
                     {loading ? (
                         <Loading />
                     ) : (
-                        <motion.div className="bg-white w-full">
+                        <motion.div className="w-full">
                             <div className="relative w-full">
                                 {viewMode === 'table' ? (
                                     <div className="w-full">

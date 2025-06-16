@@ -99,7 +99,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-indigo-100 rounded-xl">
-                <Bell className="w-6 h-6 text-indigo-600" />
+                <Bell className="w-6 h-6 text-custom-blue" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">All Notifications</h2>
@@ -210,7 +210,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center space-x-2">
                       {notification.type === 'email' ? (
-                        <Mail size={16} className="text-indigo-600" />
+                        <Mail size={16} className="text-custom-blue" />
                       ) : (
                         <MessageSquare size={16} className="text-green-600" />
                       )}
@@ -218,7 +218,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         {notification.type === 'email' ? notification.subject : 'WhatsApp Message'}
                       </span>
                       <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                        notification.status === 'sent' ? 'bg-blue-100 text-blue-600' :
+                        notification.status === 'sent' ? 'bg-custom-blue- text-custom-blue/80' :
                         notification.status === 'delivered' ? 'bg-green-100 text-green-600' :
                         'bg-gray-100 text-gray-600'
                       }`}>

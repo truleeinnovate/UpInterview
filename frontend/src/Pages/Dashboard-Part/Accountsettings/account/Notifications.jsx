@@ -20,7 +20,7 @@ const NotificationsDetails = () => {
                     <span className="capitalize">{type.split(/(?=[A-Z])/).join(' ')}</span>
                     <button
                       className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                        enabled ? 'bg-blue-600' : 'bg-gray-200'
+                        enabled ? 'bg-custom-blue' : 'bg-gray-200'
                       }`}
                     >
                       <span

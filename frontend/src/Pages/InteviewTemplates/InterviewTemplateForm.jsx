@@ -59,7 +59,7 @@ const InterviewSlideover = ({ mode }) => {
             setIsLoading(false);
             setFormKey(Date.now());
         }
-    }, [id, templatesData]);
+    }, [id]);
 
     const validateForm = () => {
         const templateForValidation = {

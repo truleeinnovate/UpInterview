@@ -203,7 +203,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
     >
       <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
         <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
-          <h2 className="text-lg sm:text-2xl font-bold">Wallet Top-up</h2>
+          <h2 className="text-2xl font-semibold text-custom-blue">Wallet Top-up</h2>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
@@ -235,8 +235,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                     key={presetAmount}
                     type="button"
                     onClick={() => setAmount(presetAmount.toString())}
-                    className={`p-4 text-center border rounded-lg hover:border-blue-500 ${
-                      amount === presetAmount.toString() ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                    className={`p-4 text-center border rounded-lg hover:border-custom-blue ${
+                      amount === presetAmount.toString() ? 'border-custom-blue bg-blue-50' : 'border-gray-200'
                     }`}
                   >
                     ${presetAmount.toLocaleString()}
@@ -253,7 +253,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     placeholder="Enter amount"
                     min="1"
                     step="0.01"
@@ -269,7 +269,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               </label>
               <div className="p-4 border rounded-lg bg-gray-50">
                 <div className="flex items-center">
-                  <div className="h-4 w-4 text-blue-600 bg-blue-600 rounded-full"></div>
+                  <div className="h-4 w-4 text-custom-blue bg-custom-blue rounded-full"></div>
                   <span className="ml-3">Credit Card</span>
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
@@ -304,7 +304,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               <button
                 type="submit"
                 disabled={!amount || isProcessing}
-                className="w-32 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-32 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isProcessing ? 'Processing...' : 'Top Up Now'}
               </button>

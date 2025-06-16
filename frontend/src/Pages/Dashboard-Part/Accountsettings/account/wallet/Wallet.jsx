@@ -227,7 +227,7 @@ const Wallet = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Transaction History</h3>
-          <button className="text-blue-600 hover:text-blue-800">
+          <button className="text-custom-blue hover:text-custom-blue/80">
             Export Transactions
           </button>
         </div>

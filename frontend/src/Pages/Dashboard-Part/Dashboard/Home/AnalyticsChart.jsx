@@ -11,19 +11,19 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
         </div>
         <div className="flex items-center space-x-4">
           <button
-            className={`text-sm ${period === 'weekly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            className={`text-sm ${period === 'weekly' ? 'text-white bg-custom-blue/80 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
             onClick={() => setPeriod('weekly')}
           >
             Weekly
           </button>
           <button
-            className={`text-sm ${period === 'monthly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            className={`text-sm ${period === 'monthly' ? 'text-white bg-custom-blue/80 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
             onClick={() => setPeriod('monthly')}
           >
             Monthly
           </button>
           <button
-            className={`text-sm ${period === 'yearly' ? 'text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
+            className={`text-sm ${period === 'yearly' ? 'text-white bg-custom-blue/80 px-3 py-1 rounded-lg' : 'text-gray-600 hover:text-gray-900'}`}
             onClick={() => setPeriod('yearly')}
           >
             Yearly
@@ -39,9 +39,9 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
                 <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-            <XAxis dataKey="name" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#217989" />
+            <XAxis dataKey="name" stroke="#217989" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis stroke="#217989" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'white',
@@ -53,7 +53,7 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
             <Area
               type="monotone"
               dataKey="interviews"
-              stroke="#4F46E5"
+              stroke="#217989"
               strokeWidth={2}
               fill="url(#colorInterviews)"
             />

@@ -12,7 +12,7 @@ const TicketSchema = new mongoose.Schema(
   {
     ticketCode:{type:String,unique:true},
     contact: { type: String, required: true },
-    organization: { type: String, required: true },
+    organization: { type: String },
     issueType: { type: String, required: true },
     status: { type: String, default: 'New' },
     priority: { type: String, default: 'Medium' },

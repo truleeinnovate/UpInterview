@@ -245,7 +245,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
       
       {loading && (
         <div className="flex justify-center items-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue"></div>
         </div>
       )}
       {!activeDomain && (
@@ -257,22 +257,22 @@ console.log("organizationId in subdomainmanagement", organizationId);
                 Subdomain Name
               </label>
               <div className="flex items-center space-x-2">
-                <div className="flex-1 flex items-center">
+                <div className="flex items-center">
                   <input
                     type="text"
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
                     placeholder="your-subdomain"
-                    className="rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-1"
+                    className="p-2 w-64 rounded-l-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue flex-1"
                   />
-                  <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                  <span className="inline-flex items-center px-3 py-2 border border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                     .{baseDomain}
                   </span>
                 </div>
                 <button
                   onClick={() => checkSubdomainAvailability(subdomain, setAvailability)}
                   disabled={!subdomain || isChecking}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 whitespace-nowrap"
                 >
                   {isChecking ? 'Checking...' : 'Check Availability'}
                 </button>
@@ -375,7 +375,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
                     value={newSubdomain}
                     onChange={(e) => setNewSubdomain(e.target.value.toLowerCase())}
                     placeholder="new-subdomain"
-                    className="rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-1"
+                    className="rounded-l-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue flex-1"
                   />
                   <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                     .{baseDomain}
@@ -384,7 +384,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
                 <button
                   onClick={() => checkSubdomainAvailability(newSubdomain, setNewAvailability)}
                   disabled={!newSubdomain || isChecking}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 whitespace-nowrap"
                 >
                   {isChecking ? 'Checking...' : 'Check Availability'}
                 </button>
@@ -415,7 +415,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
               {newAvailability?.available && (
                 <button
                   onClick={updateSubdomain}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
                 >
                   Update Subdomain
                 </button>
@@ -445,8 +445,8 @@ console.log("organizationId in subdomainmanagement", organizationId);
               </div>
             </div>
           </div>
-          <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4">
-            <p className="text-sm text-blue-700">
+          <div className="mt-4 bg-blue-50 border-l-4 border-custom-blue p-4">
+            <p className="text-sm text-custom-blue">
               <strong>Note:</strong> All subdomains are automatically secured with SSL certificates and will be accessible via HTTPS.
             </p>
           </div>

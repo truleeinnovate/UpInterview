@@ -22,7 +22,7 @@ function EmailTemplates({
           </div>
         ) : (
           templates.map((template) => (
-            <div key={template._id} className="border rounded-lg px-4 hover:bg-gray-50 transition-colors group">
+            <div key={template._id} className="border bg-white rounded-lg px-4 transition-colors group">
               <div className="flex justify-between items-start mb-2 space-y-2 sm:space-y-0">
                 <div>
                   <div className="flex flex-wrap items-center pt-4  gap-2">
@@ -95,7 +95,7 @@ function EmailTemplates({
                   )} */}
                 </div>
               </div>
-              <div className="bg-gray-50 rounded p-3 mb-4 text-sm text-gray-600">
+              <div className="rounded p-3 mb-4 text-sm text-gray-600">
                 <p className="line-clamp-1  w-1/2 prose max-w-none"
                  dangerouslySetInnerHTML={{__html: template.body}} 
                  ></p>
