@@ -267,7 +267,7 @@ const InterviewSlideover = ({ mode }) => {
                         <div className="px-2 sm:px-6 flex-1">
                             <div className="space-y-6 pt-6 pb-5">
                                 <div>
-                                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="templateTitle" className="block text-sm font-medium text-gray-700">
                                         Title <span className="text-red-500">*</span>
                                     </label>
                                     <input

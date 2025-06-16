@@ -50,12 +50,12 @@ const  createInvoice = async (
     .lean();
   let nextNumber = 1;
   if (lastInvoice && lastInvoice.invoiceCode) {
-    const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+    const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
     if (match) {
       nextNumber = parseInt(match[1], 10) + 1;
     }
   }
-  const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+  const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
   return await Invoicemodels.create({
     // invoiceId: invoiceId,
