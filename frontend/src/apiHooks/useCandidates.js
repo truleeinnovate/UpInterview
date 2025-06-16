@@ -9,8 +9,6 @@ export const useCandidates = () => {
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const candidatePermissions = sharingPermissionscontext?.candidate || {};
 
-  console.log('useCandidates initialized with permissions:', candidatePermissions);
-
   const {
     data: candidateData = [],
     isLoading: isQueryLoading,
@@ -70,14 +68,6 @@ export const useCandidates = () => {
   // For v4, use mutation.isLoading
   const isMutationLoading = mutation.isPending; // or mutation.isLoading for v4
   const isLoading = isQueryLoading || isMutationLoading;
-
-  console.log('useCandidates states:', {
-    isQueryLoading,
-    isMutationLoading,
-    isLoading,
-    candidateDataCount: candidateData.length,
-    mutationState: mutation,
-  });
 
   return {
     candidateData,

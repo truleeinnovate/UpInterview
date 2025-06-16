@@ -17,6 +17,9 @@ const OrganizationSchema = new mongoose.Schema({
   CreatedDate: { type: Date, default: Date.now },
   profileId:{ type: String },
   website:{type:String},
+  status: { type: String, enum: ['active', 'inactive','submitted','payment_pending','created','cancelled', ], default: 'draft' },
+  isEmailVerified: { type: Boolean, default: false },
+//need to add boolean value for individaul pages wich page is submitted
 
   // Company Details
   industry: { type: String },         // added
