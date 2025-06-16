@@ -14,7 +14,6 @@ const OrganizationSchema = new mongoose.Schema({
   employees: { type: String, required: true },
   country: { type: String, required: true },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-  CreatedDate: { type: Date, default: Date.now },
   profileId:{ type: String },
   website:{type:String},
   status: { type: String, enum: ['active', 'inactive','submitted','payment_pending','created','cancelled', ], default: 'draft' },
@@ -57,7 +56,7 @@ const OrganizationSchema = new mongoose.Schema({
   subdomainAddedDate: { type: Date },
   subdomainLastVerified: { type: Date }
 
-});
+}, { timestamps: true });
 
 const Organization = mongoose.model('Organization', OrganizationSchema);
 

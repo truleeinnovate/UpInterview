@@ -1,44 +1,57 @@
-import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
 import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { config } from "../../config";
+import { validateWorkEmail } from '../../utils/workEmailValidation.js';
+import toast from "react-hot-toast";
 
 const OrganizationLogin = () => {
-  console.log('org login')
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
+  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle verification success
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const verified = query.get('verified');
+    if (verified === 'true') {
+      toast.success('Email verified successfully!');
+      navigate('/organization-login');
+      window.location.reload();
+    }
+  }, [location, navigate]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // Validation functions
   const validateEmail = (email) => {
-    if (!email) {
-      return 'Email is required';
-    }
+    if (!email) return 'Email is required';
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-      return 'Please enter a valid email address';
-    }
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
     return '';
   };
 
   const validatePassword = (password) => {
-    if (!password) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters long';
     return '';
+  };
+
+  const validateLogin = () => {
+    const emailError = validateWorkEmail(email);
+    const passwordError = validatePassword(password);
+    setErrors({ email: emailError, password: passwordError });
+    return !emailError && !passwordError;
   };
 
   const handleBlur = (field, value) => {
@@ -51,12 +64,7 @@ const OrganizationLogin = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    const emailError = validateEmail(email);
-    const passwordError = validatePassword(password);
-    setErrors({ email: emailError, password: passwordError });
-
-    if (emailError || passwordError) return;
+    if (!validateLogin()) return;
 
     setIsLoading(true);
 
@@ -67,69 +75,112 @@ const OrganizationLogin = () => {
         password,
       });
 
-      console.log('Login response data:', response.data);
+      const { token, isEmailVerified, status, isProfileCompleted, roleName, contactDataFromOrg, success, message } = response.data;
 
-      if (response.data.success) {
-        const { token, isProfileCompleted, roleName, contactDataFromOrg } = response.data;
-        console.log("organization login", response.data);
-        setAuthCookies(token);
-
-        // Check profile status
-        if (typeof isProfileCompleted === 'undefined') {
-          navigate('/home');
-        } else if (isProfileCompleted === true) {
-          navigate('/home');
-        } else if (isProfileCompleted === false && roleName) {
-          navigate('/complete-profile', { state: { isProfileComplete: true, roleName, contactDataFromOrg } });
-        } else {
-          navigate('/home');
-        }
-      } else {
-        setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
+      if (!success) {
+        throw new Error(message || 'Login failed');
       }
 
-      // if (response.data.success) {
-      //   console.log('Login successful!');
-      //   const { token } = response.data;
-      //   setAuthCookies(token);
-      //   navigate('/home');
-      // } else {
-      //   setErrors((prev) => ({ ...prev, email: response.data.message || 'Login failed' }));
-      // }
+      setAuthCookies(token);
+
+      if (!isEmailVerified) {
+        setIsEmailVerified(false);
+        setIsLoading(false);
+        toast.error('Please verify your email to continue.');
+        return;
+      }
+
+      // Handle all status cases
+      switch (status) {
+        case 'submitted':
+        case 'payment_pending':
+          navigate('/subscription-plans');
+          break;
+        case 'active':
+          if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
+            navigate('/home');
+          } else if (isProfileCompleted === false && roleName) {
+            navigate('/complete-profile', {
+              state: { isProfileComplete: true, roleName, contactDataFromOrg }
+            });
+          } else {
+            navigate('/home');
+          }
+          break;
+        default:
+          navigate('/');
+      }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors((prev) => ({
-        ...prev,
-        email: error.response?.data.message || 'Login failed. Please try again.',
-      }));
+      if (error.response?.status === 403) {
+        if (error.response.data.isEmailVerified === false) {
+          setIsEmailVerified(false);
+          toast.error('Please verify your email to continue.');
+        } else {
+          // Handle other 403 cases (like invalid status)
+          const status = error.response.data?.status;
+          if (status === 'submitted' || status === 'payment_pending') {
+            // If backend hasn't been updated yet, still handle these cases
+            navigate('/subscription-plans');
+          } else {
+            toast.error(error.response.data?.message || 'Account not active. Please contact support.');
+          }
+        }
+      } else {
+        setErrors({
+          email: error.response?.data.message || error.message || 'Login failed. Please try again.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleResendVerification = async () => {
+    if (isResending) return;
+    setIsResending(true);
+    try {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/emails/resend-verification`, { email });
+      if (response.data.success) {
+        toast.success('Verification email resent!');
+        setCountdown(60);
+      } else {
+        toast.error(response.data.message || 'Failed to resend verification email');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to resend verification email');
+    } finally {
+      setIsResending(false);
+    }
+  };
 
+  const [countdown, setCountdown] = useState(0);
 
+  // Countdown timer logic
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   return (
-    <>
-      <div>
-        <div className="grid grid-cols-2 sm:grid-cols-1 items-center">
-          {/* Left Column - Slideshow */}
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-1 items-center">
+        <div>
+          <Slideshow />
+        </div>
+        <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
           <div>
-            <Slideshow />
-          </div>
-          {/* Right Column - Login Form */}
-          <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
-            <div>
-              <p className="text-2xl font-semibold mb-7 text-center">Welcome Back</p>
+            <p className="text-2xl font-semibold mb-7 text-center">Welcome Back</p>
+            {isEmailVerified ? (
               <form onSubmit={handleLogin}>
-                {/* Email Field */}
                 <div className="relative mb-4">
                   <input
                     type="email"
                     id="email"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'
-                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={email}
                     onChange={(e) => {
@@ -139,22 +190,16 @@ const OrganizationLogin = () => {
                     onBlur={(e) => handleBlur('email', e.target.value)}
                     autoComplete="email"
                   />
-                  <label
-                    htmlFor="email"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                  >
+                  <label htmlFor="email" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3">
                     Work Email
                   </label>
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
-
-                {/* Password Field */}
                 <div className="relative mb-4">
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                     placeholder=" "
                     value={password}
                     onChange={(e) => {
@@ -164,10 +209,7 @@ const OrganizationLogin = () => {
                     onBlur={(e) => handleBlur('password', e.target.value)}
                     autoComplete="current-password"
                   />
-                  <label
-                    htmlFor="password"
-                    className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                  >
+                  <label htmlFor="password" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3">
                     Password
                   </label>
                   <button
@@ -179,8 +221,6 @@ const OrganizationLogin = () => {
                   </button>
                   {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>
-
-                {/* Forgot Password */}
                 <div className="mb-5">
                   <p
                     className="text-custom-blue cursor-pointer text-xs"
@@ -189,14 +229,11 @@ const OrganizationLogin = () => {
                     Forgot Password?
                   </p>
                 </div>
-
-                {/* Login & Cancel Buttons */}
                 <div className="flex flex-col space-y-2">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'
-                      }`}
+                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'}`}
                   >
                     {isLoading ? (
                       <>
@@ -212,25 +249,50 @@ const OrganizationLogin = () => {
                     type="button"
                     onClick={() => navigate('/select-user-type')}
                     disabled={isLoading}
-                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${isLoading ? 'opacity-50' : 'hover:bg-gray-100'
-                      }`}
+                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${isLoading ? 'opacity-50' : 'hover:bg-gray-100'}`}
                   >
                     Cancel
                   </button>
                 </div>
-
-                {/* Signup Link */}
                 <div className="flex justify-center mt-4">
                   <p className="text-sm mb-4">
                     If not registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-signup')}>Sign Up</span>
                   </p>
                 </div>
               </form>
-            </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-lg mb-2">
+                  We've already sent a verification email to <span className="font-semibold">{email}</span>.
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  If you didn’t receive it, you can resend the email below.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={isResending || countdown > 0}
+                    className={`px-4 py-2 rounded-md transition-colors ${isResending || countdown > 0
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
+                  >
+                    {isResending ? 'Resending...' : countdown > 0 ? `Resend in ${countdown}s` : 'Resend Email'}
+                  </button>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors text-gray-700"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </div>
+
+            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

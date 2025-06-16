@@ -7,7 +7,7 @@ const config = require("../../config");
 const CustomerSubscription = require('../../models/CustomerSubscriptionmodels.js');
 const cron = require('node-cron');
 const moment = require('moment');
-const Organization = require('../../models/Tenant.js');
+const {Organization} = require('../../models/Tenant.js');
 // this controller use for sending mails in signup or reset password
 
 
@@ -219,6 +219,8 @@ exports.afterSubscribeFreePlan = async (req, res) => {
 
 // Cron job to automate email sending for all subscriptions
 cron.schedule('0 0 * * *', async () => {
+    console.log('Running automated email reminder job at 1', new Date().toISOString());
+
   try {
     console.log('Running automated email reminder job at', new Date().toISOString());
 
@@ -285,21 +287,21 @@ cron.schedule('0 0 * * *', async () => {
         const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
 
         // Save notification
-        const notificationData = [{
-          toAddress: user.email,
-          fromAddress: process.env.EMAIL_FROM,
-          title: 'Complete Your Payment',
-          body: `Please complete the payment for your ${planName} subscription. Details: ${planDetails}`,
-          notificationType: 'email',
-          object: { objectName: 'subscription', objectId: organization.ownerId },
-          status: emailResponse.success ? 'Success' : 'Failed',
-          tenantId: subscription.tenantId,
-          recipientId: organization.ownerId,
-          createdBy: organization.ownerId,
-          modifiedBy: organization.ownerId,
-        }];
+        // const notificationData = [{
+        //   toAddress: user.email,
+        //   fromAddress: process.env.EMAIL_FROM,
+        //   title: 'Complete Your Payment',
+        //   body: `Please complete the payment for your ${planName} subscription. Details: ${planDetails}`,
+        //   notificationType: 'email',
+        //   object: { objectName: 'subscription', objectId: organization.ownerId },
+        //   status: emailResponse.success ? 'Success' : 'Failed',
+        //   tenantId: subscription.tenantId,
+        //   recipientId: organization.ownerId,
+        //   createdBy: organization.ownerId,
+        //   modifiedBy: organization.ownerId,
+        // }];
 
-        await notificationMiddleware({ notificationData }, { json: () => {} }, () => {});
+        // await notificationMiddleware({ notificationData }, { json: () => {} }, () => {});
         console.log(`Incomplete payment reminder sent to ${user.email} for organization ${organization._id} at ${hoursSinceCreation} hours/${daysSinceCreation} days`);
       }
     }

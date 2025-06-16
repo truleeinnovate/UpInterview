@@ -96,6 +96,7 @@ const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportD
 const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
 const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
 const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
+const VerifyEmail = lazy(() => import('./VerifyWorkEmail.jsx'));
 
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({
@@ -141,6 +142,7 @@ const App = () => {
     '/complete-profile',
     '/subscription-plans',
     '/payment-details',
+    '/verify-email'
   ], []);
 
   // const settingsSidebarPaths = useMemo(() => [
@@ -164,7 +166,7 @@ const App = () => {
 
   const showLogo = showLogoPaths.includes(location.pathname);
 
-  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans', '/verify-email'].includes(location.pathname);
 
   return (
     <ErrorBoundary>
@@ -395,6 +397,8 @@ const App = () => {
               <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
               {/* task */}
               <Route path="/task" element={<Task />} />
+{/* verify work email */}
+              <Route path="/verify-email" element={<VerifyEmail />} />
             </Route>
           </Routes>
         </div>

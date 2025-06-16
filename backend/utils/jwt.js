@@ -28,4 +28,21 @@ const verifyToken = (token) => {
   }
 };
 
-module.exports = { generateToken, verifyToken };
+
+const generateEmailVerificationToken = (email, userId) => {
+  return jwt.sign(
+    { email, userId },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+};
+
+const verifyEmailToken = (token) => {
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return null;
+  }
+};
+
+module.exports = { generateToken, verifyToken,generateEmailVerificationToken,verifyEmailToken };
