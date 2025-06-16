@@ -4,7 +4,7 @@ export function ViewDetailsButton({ onClick, className = "" }) {
   return (
     <button 
       onClick={onClick}
-      className={`inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 ${className}`}
+      className={`inline-flex items-center px-3 py-1 text-sm font-medium text-custom-blue hover:text-custom-blue/80 ${className}`}
     >
       <EyeIcon className="h-4 w-4 mr-1" />
       View Details

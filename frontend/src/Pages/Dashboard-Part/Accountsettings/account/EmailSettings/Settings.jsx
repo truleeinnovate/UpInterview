@@ -28,7 +28,7 @@ function Settings({ onClose }) {
   return (
     <>
     
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center justify-between border-b px-6 py-4 z-50">
         <h3 className="text-lg font-medium">Settings</h3>
         <button
           onClick={onClose}

@@ -27,7 +27,7 @@ const Sharing = () => {
         <div className="flex space-x-3">
           <button
             onClick={() => setIsSharing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
           >
             Share New Content
           </button>
@@ -44,7 +44,7 @@ const Sharing = () => {
               <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
               <button
                 className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  value ? 'bg-blue-600' : 'bg-gray-200'
+                  value ? 'bg-custom-blue' : 'bg-gray-200'
                 }`}
               >
                 <span

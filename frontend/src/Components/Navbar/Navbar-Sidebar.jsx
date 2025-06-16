@@ -311,7 +311,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="bg-white fixed top-0 left-0 right-0 z-50 shadow-sm">
+      <div className="bg-white fixed top-0 left-0 right-0 z-20 shadow-sm">
         <div className="mx-auto relative">
           <div className="flex justify-between items-center border-gray-100 p-2 sm:px-4">
             {/* Mobile menu button and logo */}

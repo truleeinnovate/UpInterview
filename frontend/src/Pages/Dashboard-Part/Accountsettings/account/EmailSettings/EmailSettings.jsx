@@ -12,7 +12,7 @@ function EmailSettings() {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
-  const ownerId = tokenPayload.ownerId;
+  const ownerId = tokenPayload.userId;
   console.log("tenantId EmailSettings", tenantId);
   console.log("ownerId EmailSettings", ownerId);
   if (!tenantId || !ownerId) {
@@ -340,8 +340,8 @@ Template Manager Team
             {!currentSettings.useCustomEmail && !isEditing && (
               <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
                 <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div className="text-sm text-blue-700">
+                  <AlertCircle className="h-5 w-5 text-custom-blue mt-0.5" />
+                  <div className="text-sm text-custom-blue">
                     <p>Using default email configuration:</p>
                     <p className="mt-1 font-medium">{currentSettings.defaultAddress}</p>
                   </div>
@@ -420,8 +420,8 @@ Template Manager Team
 
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                 <div className="flex items-start space-x-2">
-                  <Mail className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div className="text-sm text-blue-700">
+                  <Mail className="h-5 w-5 text-custom-blue mt-0.5" />
+                  <div className="text-sm text-custom-blue">
                     <p className="font-medium">About Test Emails</p>
                     <p className="mt-1">
                       This will send a test email using your current configuration. Use this to verify your email settings are working correctly.
@@ -440,7 +440,7 @@ Template Manager Team
               <button
                 onClick={handleTestEmail}
                 disabled={isSendingTest}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-custom-blue text-white px-4 py-2 rounded-lg hover:bg-custom-blue/80 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 <span>{isSendingTest ? 'Sending...' : 'Send Test'}</span>

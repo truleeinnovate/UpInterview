@@ -22,6 +22,7 @@ export const useSupportTickets = () => {
 
   const userId   = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
+  const organization = tokenPayload?.organization;
 
   /* --------------------------------------------------------------------- */
   /*  QUERY: fetch tickets                                                  */
@@ -37,7 +38,11 @@ export const useSupportTickets = () => {
       if (!userRole) return [];
 
       if (['SuperAdmin', 'Support Team'].includes(userRole)) return all;
-      if (userRole === 'Admin'      && tenantId) return all.filter(t => t.tenantId      === tenantId);
+      if (!organization) {
+        if (userRole === 'Admin'      && userId) return all.filter(t => t.ownerId      === userId);
+      }else{
+        if (userRole === 'Admin'      && tenantId) return all.filter(t => t.tenantId      === tenantId);
+      }
       if (userRole === 'Individual' && userId)   return all.filter(t => t.ownerId       === userId);
       if (userId)                                  return all.filter(t => t.assignedToId === userId);
 

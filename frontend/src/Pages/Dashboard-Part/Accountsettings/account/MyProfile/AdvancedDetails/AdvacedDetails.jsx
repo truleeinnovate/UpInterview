@@ -33,9 +33,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
   return (
     <div>
-      <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
-        <h3 className={`text-lg font-medium  ${mode === 'users' ? 'hidden' : ""}`}>Advanced Details</h3>
-
+      <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
         <button
           onClick={
             () => {
@@ -54,7 +52,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
       </div>
 
 
-      <div className="bg-white rounded-lg">
+      <div className={`bg-white rounded-lg ${mode !== 'users' ? 'p-4' : ''}`}>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
