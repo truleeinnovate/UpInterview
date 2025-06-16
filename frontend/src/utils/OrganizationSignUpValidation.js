@@ -1,24 +1,24 @@
-export const validateEmail = async (email, checkEmailExists) => {
-  let errorMessage = '';
+// export const validateEmail = async (email, checkEmailExists) => {
+//   let errorMessage = '';
 
-  if (!email) {
-    errorMessage = 'Email is required';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errorMessage = 'Invalid email format';
-  } else if (checkEmailExists) {
-    try {
-      const exists = await checkEmailExists(email);
-      if (exists) {
-        errorMessage = 'Email already registered';
-      }
-    } catch (err) {
-      console.error('Error checking email:', err);
-      errorMessage = 'Error verifying email';
-    }
-  }
+//   if (!email) {
+//     errorMessage = 'Email is required';
+//   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+//     errorMessage = 'Invalid email format';
+//   } else if (checkEmailExists) {
+//     try {
+//       const exists = await checkEmailExists(email);
+//       if (exists) {
+//         errorMessage = 'Email already registered';
+//       }
+//     } catch (err) {
+//       console.error('Error checking email:', err);
+//       errorMessage = 'Error verifying email';
+//     }
+//   }
 
-  return errorMessage;
-};
+//   return errorMessage;
+// };
 
 export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
@@ -118,7 +118,7 @@ export const validateConfirmPassword = (password, confirmPassword) => {
 export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkProfileIdExists) => {
   const errors = {};
 
-  errors.email = await validateEmail(formData.email, checkEmailExists);
+  // errors.email = await validateEmail(formData.email, checkEmailExists);
   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
   errors.phone = validatePhone(formData.phone, formData.countryCode);

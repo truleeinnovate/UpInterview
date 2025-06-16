@@ -1,7 +1,7 @@
 
 const express = require('express')
 const {afterSubscribePlan,afterSubscribeFreePlan} = require('../../controllers/EmailsController/subscriptionEmailController')
-const { sendSignUpEmail,forgotPasswordSendEmail} = require('../../controllers/EmailsController/signUpEmailController')
+const { sendSignUpEmail,forgotPasswordSendEmail,resendVerification} = require('../../controllers/EmailsController/signUpEmailController')
 const { shareAssessment, resendAssessmentLink,sendOtp } = require('../../controllers/EmailsController/assessmentEmailController')
 
 const router = express.Router()
@@ -12,6 +12,9 @@ router.post('/subscription/free',afterSubscribeFreePlan)
 
 router.post('/send-signup-email', sendSignUpEmail);
 router.post("/forgot-password", forgotPasswordSendEmail);
+
+
+router.post('/resend-verification', resendVerification);
 
 //assessment related
 
