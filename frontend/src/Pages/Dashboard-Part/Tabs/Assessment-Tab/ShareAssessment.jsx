@@ -51,7 +51,6 @@ const ShareAssessment = ({
       setAssignedCandidates(assigned);
     } catch (error) {
       console.error('Error fetching assigned candidates:', error);
-      toast.error('Failed to fetch assigned candidates');
     }
   };
 

@@ -9,7 +9,6 @@ export const usePositions = () => {
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const positionPermissions = sharingPermissionscontext?.position || {};
 
-  console.log('usePositions initialized with permissions:', positionPermissions);
 
   const {
     data: positionData = [],
@@ -81,14 +80,6 @@ export const usePositions = () => {
   const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending || deleteRoundMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
 
-  console.log('usePositions states:', {
-    isQueryLoading,
-    isMutationLoading,
-    isLoading,
-    positionDataCount: positionData.length,
-    positionMutationState: positionMutation,
-    addRoundsMutationState: addRoundsMutation,
-  });
 
   return {
     positionData,

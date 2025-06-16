@@ -13,9 +13,10 @@ export const shareAssessmentAPI = async ({
   setIsLoading = () => {},
 }) => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  const organizationId = tokenPayload?.tenantId
-  const userId = tokenPayload?.userId
+  const organizationId = tokenPayload?.tenantId;
+  const userId = tokenPayload?.userId;
 
+  // Validation
   if (!assessmentId) {
     setErrors((prev) => ({ ...prev, Assessment: 'Assessment ID is required' }));
     return { success: false, error: 'Assessment ID missing' };
@@ -37,6 +38,13 @@ export const shareAssessmentAPI = async ({
         linkExpiryDays,
         organizationId,
         userId,
+      },
+      {
+        timeout: 30000, // 30 seconds timeout
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('authToken')}`,
+        }
       }
     );
 
@@ -48,10 +56,23 @@ export const shareAssessmentAPI = async ({
     return { success: true, message: response.data.message, data: response.data.data };
   } catch (error) {
     console.error('Assessment sharing failed:', error);
-    toast.error(error.response?.data?.message || 'Failed to share assessment');
+    
+    // Handle specific error cases
+    let errorMessage = 'Failed to share assessment';
+    if (error.response) {
+      if (error.response.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.';
+      } else if (error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Request timed out. Please check your connection and try again.';
+    }
+
+    toast.error(errorMessage);
     return {
       success: false,
-      error: error.message,
+      error: errorMessage,
       response: error.response?.data,
     };
   } finally {
