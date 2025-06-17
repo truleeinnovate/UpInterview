@@ -1,18 +1,17 @@
 import { Outlet } from 'react-router-dom';
-import Users from './Users'; // Your existing Users component
+import './user-styles.css';
+import UsersAccountTab from './UsersAccountTab';
 
-function UsersLayout() {
+
+const UsersLayout = () => {
+  
+
   return (
-    <div>
-      {/* Users List - takes 60% width */}
-      {/* <div className="w-[60%] pr-4 overflow-y-auto"> */}
-        <Users />
-      {/* </div> */}
-      
-      {/* Content Area - takes 40% width */}
-      {/* <div className="w-[40%] border-l pl-4 overflow-y-auto"> */}
-        <Outlet /> {/* This will render UserForm or UserProfileDetails */}
-      {/* </div> */}
+    <div className="w-full bg-gray-50 h-screen">
+      <div className="invoice-tab-wrapper">
+      <UsersAccountTab />
+      <Outlet />
+      </div>
     </div>
   );
 }

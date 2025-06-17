@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { X, Minimize, Expand } from 'lucide-react';
+import Modal from 'react-modal';
+import classNames from 'classnames';
 
 export function SharingSettingsPopup({ settings, onSave, onClose }) {
   const [formData, setFormData] = useState({
@@ -7,27 +10,60 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
     security: { ...settings.security },
     domains: { ...settings.domains }
   })
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleClose = () => {
+    setIsModalOpen(false)
+    onClose()
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     onSave(formData)
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Edit Sharing Settings</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
+  const modalClass = classNames(
+      'fixed bg-white shadow-2xl border-l border-gray-200',
+      {
+        'overflow-y-auto': !isModalOpen,
+        'overflow-hidden': isModalOpen,
+        'inset-0': isFullScreen,
+        'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      }
+    );
 
+  return (
+     <Modal
+            isOpen={true}
+            onRequestClose={handleClose}
+            className={modalClass}
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+          >
+            <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
+              <div>
+                <div className="flex justify-between items-center mb-2 mx-3 mt-3">
+                  <h2 className="text-xl font-bold text-custom-blue">Edit Sharing Settings</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                    >
+                      {isFullScreen ? (
+                        <Minimize className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Expand className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-6">
             {/* General Settings */}
             <div>
@@ -46,7 +82,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         }
                       }))}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                        value ? 'bg-blue-600' : 'bg-gray-200'
+                        value ? 'bg-custom-blue' : 'bg-gray-200'
                       }`}
                     >
                       <span
@@ -77,7 +113,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         }
                       }))}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                        value ? 'bg-blue-600' : 'bg-gray-200'
+                        value ? 'bg-custom-blue' : 'bg-gray-200'
                       }`}
                     >
                       <span
@@ -108,7 +144,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         allowedDomains: e.target.value.split('\n').filter(Boolean)
                       }
                     }))}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
                     placeholder="Enter domains (one per line)"
                   />
@@ -126,7 +162,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         blockList: e.target.value.split('\n').filter(Boolean)
                       }
                     }))}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
                     placeholder="Enter domains (one per line)"
                   />
@@ -145,13 +181,17 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
             >
               Save Changes
             </button>
           </div>
         </form>
-      </div>
-    </div>
+              </div>
+            </div>
+    
+    
+          </Modal>
+    
   )
 }

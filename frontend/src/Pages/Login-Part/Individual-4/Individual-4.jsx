@@ -662,6 +662,37 @@ const MultiStepForm = () => {
         requestData,
         { withCredentials: true }
       );
+  
+      const { contactId, token,isProfileCompleted } = response.data;
+  
+      // Handle image upload
+      if (file) {
+        const imageData = new FormData();
+        imageData.append('image', file);
+        imageData.append('type', 'contact');
+        imageData.append('id', contactId);
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else if (linkedInData?.pictureUrl && !filePreview) {
+        const response = await fetch(linkedInData.pictureUrl);
+        const blob = await response.blob();
+        const imageFile = new File([blob], 'linkedin-profile.jpg', { type: 'image/jpeg' });
+        const imageData = new FormData();
+        imageData.append('image', imageFile);
+        imageData.append('type', 'contact');
+        imageData.append('id', contactId);
+        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+  
+      if (!token) {
+        console.error("No token received from server");
+        toast.error("Failed to authenticate. Please try again.", { autoClose: 5000 });
+        setLoading(false);
+        return;
+      }
 
       // Handle successful save
       if (response.data.token) {
@@ -740,6 +771,13 @@ const MultiStepForm = () => {
           // Form completed, redirect to subscription plans
           navigate('/subscription-plans');
         }
+      }
+      setLoading(false);
+      if (isProfileCompleted) {
+        navigate('/home');
+      } else {
+      navigate('/subscription-plans');
+        
       }
     } catch (error) {
       console.error('Error saving profile:', error);

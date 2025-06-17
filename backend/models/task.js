@@ -19,7 +19,7 @@ const taskSchema = new mongoose.Schema({
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     ownerId: {type:String, required:true},
-    tenantId: {type:String, required:true},
+    tenantId: {type:String},
 }, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);

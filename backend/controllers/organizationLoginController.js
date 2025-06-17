@@ -9,9 +9,12 @@ const Tabs = require('../models/Tabs');
 const Objects = require('../models/Objects');
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require('../models/rolesPermissionObject');
-const { generateToken } = require('../utils/jwt');
+const { generateToken, generateEmailVerificationToken, verifyEmailToken } = require('../utils/jwt');
 const saltRounds = 10;
 const mongoose = require('mongoose');
+const { sendVerificationEmail } = require('../controllers/EmailsController/signUpEmailController.js');
+
+
 
 const registerOrganization = async (req, res) => {
   let savedOrganization = null;
@@ -26,6 +29,13 @@ const registerOrganization = async (req, res) => {
     // Validate required fields
     if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate work email
+    const domain = email.split('@')[1]?.toLowerCase();
+    const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+    if (personalDomains.includes(domain)) {
+      return res.status(400).json({ message: 'Please use your company email address' });
     }
 
     // Fetch tabs and objects data from DB
@@ -49,11 +59,14 @@ const registerOrganization = async (req, res) => {
     console.log('Creating new organization...');
     const organization = new Organization({
       firstName, lastName, email, phone, profileId, jobTitle,
-      company, employees, country, password: hashedPassword
+      company, employees, country, password: hashedPassword,
+      status: 'submitted',
     });
 
     savedOrganization = await organization.save();
     console.log('Organization saved successfully with ID:', savedOrganization._id);
+
+
 
     // Create new user
     console.log('Creating new user...');
@@ -64,11 +77,18 @@ const registerOrganization = async (req, res) => {
       profileId,
       phone,
       tenantId: savedOrganization._id,
-      password: hashedPassword
+      password: hashedPassword,
+      isEmailVerified: false
     });
     console.log('New user object:', JSON.stringify(newUser, null, 2));
     const savedUser = await newUser.save();
     console.log('User saved successfully with ID:', savedUser._id);
+
+    // Update the organization with ownerId (user's _id)
+    await Organization.findByIdAndUpdate(savedOrganization._id, {
+      ownerId: savedUser._id
+    });
+    console.log('Organization updated with ownerId:', savedUser._id);
 
     // Create new contact
     console.log('Creating new contact...');
@@ -88,6 +108,13 @@ const registerOrganization = async (req, res) => {
 
     const savedContact = await contact.save();
     console.log('Contact saved successfully with ID:', savedContact._id);
+
+
+    //sending email verification
+    const emailResult = await sendVerificationEmail(email, savedUser._id, firstName, lastName);
+    if (!emailResult.success) {
+      throw new Error(emailResult.message);
+    }
 
     // Create default sharing settings
     console.log('Creating default sharing settings...');
@@ -231,7 +258,7 @@ const organizationUserCreation = async (req, res) => {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id, isEmailVerified } = UserData;
 
     if (editMode && _id) {
       // Update existing user
@@ -248,6 +275,7 @@ const organizationUserCreation = async (req, res) => {
       existingUser.roleId = roleId;
       existingUser.countryCode = countryCode;
       existingUser.isProfileCompleted = isProfileCompleted;
+      existingUser.isEmailVerified = isEmailVerified;
 
       const savedUser = await existingUser.save();
 
@@ -282,7 +310,8 @@ const organizationUserCreation = async (req, res) => {
         tenantId,
         roleId,
         countryCode,
-        isProfileCompleted
+        isProfileCompleted,
+        isEmailVerified: false
       });
 
       const savedUser = await newUser.save();
@@ -325,6 +354,29 @@ const loginOrganization = async (req, res) => {
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Email not verified',
+        isEmailVerified: false
+      });
+    }
+
+    // Check email verification
+    const organization = await Organization.findOne({ _id: user.tenantId });
+    console.log('organization', organization);
+
+
+
+
+    // Check status
+    if (!['active', 'payment_pending'].includes(organization.status)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account not active',
+        status: organization.status
+      });
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -358,7 +410,9 @@ const loginOrganization = async (req, res) => {
       token,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
-      contactDataFromOrg
+      contactDataFromOrg,
+      isEmailVerified: user.isEmailVerified,
+      status: organization.status
     });
 
   } catch (error) {
@@ -420,6 +474,13 @@ const resetPassword = async (req, res) => {
     // Hash and save new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
+
+     // If type is 'usercreatepass', mark email as verified
+    if (type === "usercreatepass") {
+      user.isEmailVerified = true;
+    }
+
+    
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
@@ -739,11 +800,53 @@ const updateBasedIdOrganizations = async (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required'
+      });
+    }
+
+    const decoded = verifyEmailToken(token);
+    if (!decoded) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification token'
+      });
+    }
+
+    const { email, userId } = decoded;
+
+    // Update user and organization
+    await Users.findByIdAndUpdate(userId, { isEmailVerified: true });
+    // await Organization.findOneAndUpdate(
+    //   { ownerId: userId },
+    //   { isEmailVerified: true }
+    // );
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully'
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying email'
+    });
+  }
+};
+
 module.exports = {
   registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
   deactivateSubdomain,
-  updateBasedIdOrganizations
+  updateBasedIdOrganizations,
+  verifyEmail
 };

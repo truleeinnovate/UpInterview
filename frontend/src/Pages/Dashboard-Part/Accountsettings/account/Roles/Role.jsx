@@ -70,7 +70,7 @@ console.log("tenantId in role", tenantId);
               <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+              <span className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                 {role.canAssign?.length || 0} Assignable Roles
               </span>
               <EditButton 
@@ -150,7 +150,7 @@ console.log("tenantId in role", tenantId);
                   }
                   
                   return (
-                    <span key={assignableRoleId} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <span key={assignableRoleId} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                       {label}
                     </span>
                   );

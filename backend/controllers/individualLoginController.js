@@ -294,7 +294,9 @@ exports.individualLogin = async (req, res) => {
       ownerId: savedUser._id,
       contactId: savedContact._id,
       isUpdate,
-      token: token
+      ...(isProfileCompleteData?.isProfileComplete && { tenantId: savedUser.tenantId }),
+      token: token,
+      isProfileCompleted:savedUser.isProfileCompleted
     });
 
   } catch (error) {

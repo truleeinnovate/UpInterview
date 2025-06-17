@@ -64,7 +64,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.accountName}
             onChange={(e) => setNewAccount({ ...newAccount, accountName: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
           <p className="mt-1 text-sm text-gray-500">Enter the name exactly as it appears on your bank account</p>
@@ -82,7 +82,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.bankName}
             onChange={(e) => setNewAccount({ ...newAccount, bankName: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -94,7 +94,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <select
             value={newAccount.accountType}
             onChange={(e) => setNewAccount({ ...newAccount, accountType: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
           >
             <option value="checking">Checking</option>
             <option value="savings">Savings</option>
@@ -109,7 +109,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.accountNumber}
             onChange={(e) => setNewAccount({ ...newAccount, accountNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -122,7 +122,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.confirmAccountNumber}
             onChange={(e) => setNewAccount({ ...newAccount, confirmAccountNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -135,7 +135,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.routingNumber}
             onChange={(e) => setNewAccount({ ...newAccount, routingNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -148,7 +148,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="text"
             value={newAccount.swiftCode}
             onChange={(e) => setNewAccount({ ...newAccount, swiftCode: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
           />
           <p className="mt-1 text-sm text-gray-500">Required for international transfers</p>
         </div>
@@ -161,7 +161,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             type="checkbox"
             checked={newAccount.isDefault}
             onChange={(e) => setNewAccount({ ...newAccount, isDefault: e.target.checked })}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue"
           />
           <span className="text-sm text-gray-700">Set as default account for receiving payments</span>
         </label>
@@ -177,7 +177,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
         >
           Add Account
         </button>
@@ -194,7 +194,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
               <div className="flex items-center space-x-2">
                 <h4 className="font-medium">{account.accountName}</h4>
                 {account.isDefault && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  <span className="px-2 py-1 bg-blue-100 text-custom-blue rounded-full text-xs">
                     Default
                   </span>
                 )}
@@ -222,7 +222,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
     <div className="flex justify-end items-center">
       <button
         onClick={() => setIsAddingAccount(true)}
-        className="w-44 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
       >
         Add Bank Account
       </button>
@@ -251,7 +251,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
     >
       <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}> 
         <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
-          <h2 className="text-lg sm:text-2xl font-bold">Bank Accounts</h2>
+          <h2 className="text-2xl font-semibold text-custom-blue">Bank Accounts</h2>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
@@ -273,8 +273,8 @@ export function BankAccountsPopup({ onClose, onSave }) {
         </div>
         <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
           <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-              <p className="text-sm text-blue-700">
+            <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
+              <p className="text-sm text-custom-blue">
                 Add your bank account details to receive payments for completed interviews. Payments are processed within 2-3 business days.
               </p>
             </div>

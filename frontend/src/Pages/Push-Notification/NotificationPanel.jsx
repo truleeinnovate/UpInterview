@@ -178,8 +178,8 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
 
       {isOpen && !showAllNotifications && (
         <div className="absolute top-14 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
-          <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-b border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+          <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-gray-200">
+            <h3 className="text-base sm:text-lg font-medium text-gray-800">Notifications</h3>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={togglePanel}>
             <X className="w-4 h-4" />
              
@@ -188,7 +188,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No notifications</div>
+            <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
           ) : (
             <>
               <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />

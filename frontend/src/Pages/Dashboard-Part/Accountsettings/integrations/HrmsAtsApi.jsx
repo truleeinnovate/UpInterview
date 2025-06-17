@@ -1,10 +1,18 @@
 import { useState } from 'react'
 import { integrations, availableIntegrations, syncHistory, integrationMetrics } from '../mockData/hrmsData'
 import { ViewDetailsButton, EditButton } from '../common/Buttons'
-import { SidePopup } from '../common/SidePopup'
+import { X, Minimize, Expand } from 'lucide-react';
+import Modal from 'react-modal';
+import classNames from 'classnames';
 import { IntegrationFormPopup } from './IntegrationFormPopup'
 
+// Set app element for accessibility
+Modal.setAppElement('#root');
+
+
 const HrmsAtsApi = () => {
+   const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState(null)
   const [editingIntegration, setEditingIntegration] = useState(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -15,19 +23,29 @@ const HrmsAtsApi = () => {
     setIsCreating(false)
   }
 
+  const modalClass = classNames(
+        'fixed bg-white shadow-2xl border-l border-gray-200',
+        {
+          'overflow-y-auto': !isModalOpen,
+          'overflow-hidden': isModalOpen,
+          'inset-0': isFullScreen,
+          'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+        }
+      );
+
   return (
     <div className="space-y-6">
       {/* Info Box */}
-      <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
+      <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="h-5 w-5 text-custom-blue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-purple-800">HRMS/ATS Integration</h3>
-            <div className="mt-2 text-sm text-purple-700">
+            <h3 className="text-sm font-medium text-custom-blue">HRMS/ATS Integration</h3>
+            <div className="mt-2 text-sm text-custom-blue">
               <p>Connect your HR and recruitment systems:</p>
               <ul className="list-disc list-inside mt-1">
                 <li>Sync employee and candidate data</li>
@@ -44,7 +62,7 @@ const HrmsAtsApi = () => {
         <h2 className="text-2xl font-bold">HRMS & ATS Integrations</h2>
         <button
           onClick={() => setIsCreating(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
         >
           Add Integration
         </button>
@@ -76,7 +94,7 @@ const HrmsAtsApi = () => {
       {/* Active Integrations */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y border border-gray-200 divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Integration</th>
@@ -128,7 +146,7 @@ const HrmsAtsApi = () => {
         <h3 className="text-lg font-medium mb-4">Recent Sync History</h3>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y border border-gray-200 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Integration</th>
@@ -174,15 +192,36 @@ const HrmsAtsApi = () => {
 
       {/* Integration Details Popup */}
       {selectedIntegration && (
-        <SidePopup
-          title="Integration Details"
-          onClose={() => setSelectedIntegration(null)}
-          position="right"
-          size="medium"
-        >
-          <div className="space-y-6">
+        <Modal
+                    isOpen={true}
+                    className={modalClass}
+                    overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+                  >
+                    <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
+                      <div>
+                        <div className="flex justify-between items-center mb-2 mx-3 mt-3">
+                          <h2 className="text-xl font-bold text-custom-blue">Integration Information</h2>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setIsFullScreen(!isFullScreen)}
+                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                            >
+                              {isFullScreen ? (
+                                <Minimize className="w-5 h-5 text-gray-500" />
+                              ) : (
+                                <Expand className="w-5 h-5 text-gray-500" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setSelectedIntegration(null)}
+                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="py-4 px-4">
             <div>
-              <h3 className="text-lg font-medium mb-4">Basic Information</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Name</p>
@@ -255,7 +294,11 @@ const HrmsAtsApi = () => {
               </div>
             </div>
           </div>
-        </SidePopup>
+                      </div>
+                    </div>
+            
+            </Modal>
+        
       )}
 
       {/* Integration Form Popup */}

@@ -24,7 +24,7 @@ const InvoiceSchema = new mongoose.Schema({
     outstandingAmount: { type: Number, default: function() { return this.totalAmount - this.amountPaid; } },
     status: { 
         type: String, 
-        enum: ['pending', 'paid', 'partially_paid', 'failed', 'overdue', 'charged','cancelled'], 
+        enum: ['pending','active', 'created', 'paid', 'partially_paid', 'failed', 'overdue', 'charged','cancelled'], 
         default: 'pending' 
     },
     relatedObjectId: { type: mongoose.Schema.Types.ObjectId, required: false }, 

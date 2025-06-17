@@ -1,7 +1,14 @@
 import { useState } from 'react'
-import { SidePopup } from '../common/SidePopup'
+import { X, Minimize, Expand } from 'lucide-react';
+import Modal from 'react-modal';
+import classNames from 'classnames';
+
+// Set app element for accessibility
+Modal.setAppElement('#root');
 
 export function IntegrationFormPopup({ integration, availableIntegrations, onSave, onClose }) {
+  const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: integration?.name || '',
     type: integration?.type || '',
@@ -39,26 +46,59 @@ export function IntegrationFormPopup({ integration, availableIntegrations, onSav
     }))
   }
 
+  const modalClass = classNames(
+        'fixed bg-white shadow-2xl border-l border-gray-200',
+        {
+          'overflow-y-auto': !isModalOpen,
+          'overflow-hidden': isModalOpen,
+          'inset-0': isFullScreen,
+          'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+        }
+      );
+
   return (
-    <SidePopup
-      title={integration ? 'Edit Integration' : 'Add Integration'}
-      onClose={onClose}
-      position="right"
-      size="medium"
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Modal
+                isOpen={true}
+                onRequestClose={onClose}
+                className={modalClass}
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+              >
+                <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
+                  <div>
+                    <div className="flex justify-between items-center mb-2 mx-3 mt-3">
+                      <h2 className="text-xl font-bold text-custom-blue">Edit Information</h2>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setIsFullScreen(!isFullScreen)}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                        >
+                          {isFullScreen ? (
+                            <Minimize className="w-5 h-5 text-gray-500" />
+                          ) : (
+                            <Expand className="w-5 h-5 text-gray-500" />
+                          )}
+                        </button>
+                        <button
+                          onClick={onClose}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  <div className='px-4 py-4'>
+                  <form onSubmit={handleSubmit} className="space-y-6">
         {/* Integration Selection */}
         {!integration && (
           <div>
-            <h3 className="text-lg font-medium mb-4">Select Integration</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {availableIntegrations.map(item => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleIntegrationSelect(item.id)}
-                  className={`p-4 border rounded-lg text-left hover:border-blue-500 ${
-                    selectedIntegration?.id === item.id ? 'border-blue-500 ring-2 ring-blue-200' : ''
+                  className={`p-4 border rounded-lg text-left hover:border-custom-blue ${
+                    selectedIntegration?.id === item.id ? 'border-custom-blue ring-2 ring-custom-blue' : ''
                   }`}
                 >
                   <h4 className="font-medium">{item.name}</h4>
@@ -161,7 +201,7 @@ export function IntegrationFormPopup({ integration, availableIntegrations, onSav
                           [key]: e.target.checked
                         }
                       }))}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-custom-blue focus:ring-blue-500"
                     />
                     <span className="ml-2 text-sm text-gray-700 capitalize">
                       {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -183,13 +223,17 @@ export function IntegrationFormPopup({ integration, availableIntegrations, onSav
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
             disabled={!integration && !selectedIntegration}
           >
             {integration ? 'Save Changes' : 'Add Integration'}
           </button>
         </div>
       </form>
-    </SidePopup>
+                    </div>
+                  </div>
+                </div>
+        
+        </Modal>
   )
 }

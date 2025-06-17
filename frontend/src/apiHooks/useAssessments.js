@@ -123,6 +123,27 @@ const fetchAssessmentResults = async (assessmentId) => {
 };
 
 
+// Fetch scheduled assessments for a specific assessment
+const fetchScheduledAssessments = async (assessmentId) => {
+  try {
+    const response = await axios.get(
+      `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
+    );
+    return {
+      data: response.data,
+      error: null
+    };
+  } catch (error) {
+    console.error('Error fetching scheduled assessments:', error.message);
+    return {
+      data: [],
+      error: error.message
+    };
+  }
+};
+
+
+
   // Calculate loading states
   const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
@@ -155,6 +176,7 @@ const fetchAssessmentResults = async (assessmentId) => {
     addOrUpdateAssessment: addOrUpdateAssessment.mutateAsync,
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
     fetchAssessmentQuestions, // assessment questions getting 
-    fetchAssessmentResults
+    fetchAssessmentResults,
+    fetchScheduledAssessments
   };
 };

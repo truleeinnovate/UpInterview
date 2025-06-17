@@ -48,7 +48,7 @@ const FeedbackList = () => {
           <h3 className="text-xl font-semibold text-gray-800">Recent Feedback</h3>
           <p className="text-gray-500 text-sm mt-1">Latest interview feedback and evaluations</p>
         </div>
-        <button className="flex items-center space-x-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
+        <button className="flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
           <span>View All Feedback</span>
           <ChevronRight size={16} />
         </button>
@@ -73,7 +73,7 @@ const FeedbackList = () => {
               </div>
               <span className={`text-sm font-medium ${
                 feedback.rating === 'Excellent' ? 'text-green-600' :
-                feedback.rating === 'Good' ? 'text-blue-600' :
+                feedback.rating === 'Good' ? 'text-custom-blue' :
                 'text-orange-600'
               }`}>
                 {feedback.rating}

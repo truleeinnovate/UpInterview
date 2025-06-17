@@ -17,7 +17,8 @@ const Subscription = () => {
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
-  const organization = tokenPayload?.organization?.toString();
+  const organization = tokenPayload?.organization;
+  console.log("organization ----", organization);
   const orgId = tokenPayload?.tenantId;
 
 
@@ -25,7 +26,7 @@ const Subscription = () => {
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
-    userType: organization === "true" ? "organization" : "individual",
+    userType: organization === true ? "organization" : "individual",
     tenantId: orgId,
     ownerId: userId,
   });
@@ -335,10 +336,10 @@ const Subscription = () => {
         <div className="flex-1">
           <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Subscription</h2>
-            {subscriptionData && subscriptionData.status === 'active' && (
+            {subscriptionData && subscriptionData.status === 'active' && ((organization !== "false" || subscriptionData.planName !== "Base")) && (
               <button
                 onClick={() => setShowCancelModal(true)}
-                className="bg-custom-blue py-2 px-4 rounded-lg text-white"
+                className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}
               >
                 Cancel Subscription
               </button>

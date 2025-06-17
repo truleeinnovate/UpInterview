@@ -13,8 +13,8 @@ exports.createTicket = async(req,res)=>{
         if (!contact) {
             return res.status(400).send({ message: "Contact is required" });
         }
-        if (!organization) {
-            return res.status(400).send({ message: "Organization is required" });
+        if (organization && !organization) {
+            return res.status(400).send({ message: "Organization is required when organization flag is true" });
         }
         const lastTicket = await SupportUser.findOne({})
                         .sort({ _id: -1 })

@@ -255,6 +255,12 @@ const TaskForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // First validate ownerId and tenantId
+    if (!ownerId) {
+      setError("Missing required user information. Please log in again.");
+      return;
+    }
+
     const newErrors = validateTaskForm(
       formData,
       selectedPriority,
@@ -271,14 +277,16 @@ const TaskForm = ({
     try {
       const taskData = {
         ...formData,
-        ownerId:ownerId,
-        tenantId:tenantId,
+        ownerId,
+        tenantId,
         dueDate: scheduledDate,
         priority: selectedPriority,
         status: selectedStatus,
         assignedTo: formData.assignedTo,
-        assignedToId: formData.assignedToId // Always send assignedToId
+        assignedToId: formData.assignedToId
       };
+
+      console.log("Submitting task with data:", taskData); // Debug log
 
       if (taskId) {
         await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, taskData);
@@ -290,7 +298,7 @@ const TaskForm = ({
       handleClose();
     } catch (error) {
       console.error("Error saving task:", error);
-      setError(error.message);
+      setError(error.response?.data?.message || error.message || "Failed to save task");
     }
   };
 

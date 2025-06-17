@@ -9,7 +9,7 @@ const StatsCard = ({ title, value, change, icon: Icon, color }) => {
           {title}
         </h3>
         <div className={`p-2 bg-${color}-50 rounded-lg`}>
-          <Icon size={18} className={`text-${color}-600`} />
+          <Icon size={18} className={`text-custom-blue`} />
         </div>
       </div>
       
@@ -25,7 +25,7 @@ const StatsCard = ({ title, value, change, icon: Icon, color }) => {
           <div className="flex items-center space-x-2 mt-1">
             <motion.span
               whileHover={{ scale: 1.05 }}
-              className={`text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded-lg text-xs font-medium`}
+              className={`text-custom-blue bg-${color}-50 px-2 py-0.5 rounded-lg text-xs font-medium`}
             >
               {change}
             </motion.span>
