@@ -119,15 +119,6 @@ const createSubscriptionControllers = async (req, res) => {
         discount
       );
 
-      const subscription = await createSubscriptionRecord(
-        userDetails,
-        planDetails,
-        pricing,
-        discount,
-        totalAmount,
-        invoice._id,
-        status
-      );
       
       
       const subscription = await createSubscriptionRecord(
