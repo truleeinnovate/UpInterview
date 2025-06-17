@@ -1,6 +1,6 @@
 const { Users } = require("../models/Users.js");
 const { Contacts } = require("../models/Contacts.js");
-const availabilityController = require("./interviewAvailabilityController.js");
+const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require('../utils/jwt');
 
@@ -87,90 +87,213 @@ const { generateToken } = require('../utils/jwt');
 
 exports.individualLogin = async (req, res) => {
   try {
+    const { userData, contactData, availabilityData, Freelancer, isInternalInterviewer, isUpdate } = req.body;
 
-    const { userData, contactData, availabilityData, Freelancer, isProfileCompleteData, isInternalInterviewer } = req.body;
+    // Validate input
+    if (!userData || !contactData) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required user or contact data"
+      });
+    }
 
     let savedUser, savedContact;
-    let isUpdate = false;
 
-    if (isProfileCompleteData?.isProfileComplete === true && isProfileCompleteData.ownerId && isProfileCompleteData.contactId) {
-      isUpdate = true;
+    if (isUpdate && userData.ownerId && contactData._id) {
+      // UPDATE EXISTING RECORDS
+      const userUpdate = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        profileId: userData.profileId,
+        isFreelancer: userData.isFreelancer,
+        isProfileCompleted: userData.isProfileCompleted,
+        completionStatus: userData.completionStatus
+      };
 
-      // Update User
       savedUser = await Users.findByIdAndUpdate(
-        isProfileCompleteData.ownerId,
-        userData,
+        userData.ownerId,
+        { $set: userUpdate },
         { new: true }
       );
 
-      // Update Contact
+      if (!savedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Clean contact data
+      const { availability, ...contactDataWithoutAvailability } = contactData;
+      const contactUpdate = {
+        ...contactDataWithoutAvailability,
+        completionStatus: contactData.completionStatus
+      };
+
+      // Remove undefined values
+      Object.keys(contactUpdate).forEach(key => {
+        if (contactUpdate[key] === undefined) {
+          delete contactUpdate[key];
+        }
+      });
+
       savedContact = await Contacts.findByIdAndUpdate(
-        isProfileCompleteData.contactId,
-        contactData,
+        contactData._id,
+        { $set: contactUpdate },
         { new: true }
       );
+
+      if (!savedContact) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact not found"
+        });
+      }
     } else {
-      // Create new user
-      const newUser = new Users(userData);
+      // CREATE NEW RECORDS
+      const newUser = new Users({
+        ...userData,
+        completionStatus: userData.completionStatus || {
+          basicDetails: true,
+          additionalDetails: false,
+          interviewDetails: false,
+          availabilityDetails: false
+        },
+        isProfileCompleted: userData.isProfileCompleted || false
+      });
       savedUser = await newUser.save();
 
-      // Create new contact
+      const { availability, ...contactDataWithoutAvailability } = contactData;
       const newContact = new Contacts({
-        ...contactData,
-        ownerId: savedUser._id
+        ...contactDataWithoutAvailability,
+        ownerId: savedUser._id,
+        completionStatus: contactData.completionStatus || {
+          basicDetails: true,
+          additionalDetails: false,
+          interviewDetails: false,
+          availabilityDetails: false
+        }
       });
       savedContact = await newContact.save();
     }
 
-    // Save availability if freelancer or internal interviewer
-    if (Freelancer || isInternalInterviewer) {
-      const mockReq = { body: { contact: savedContact._id, days: availabilityData } };
-      const mockRes = {
-        status: (code) => ({
-          json: (data) => console.log("Availability response:", data),
-        }),
-      };
-      await availabilityController.createOrUpdateInterviewAvailability(mockReq, mockRes);
-    }
-    // <-----------------------OutsourceInterviewer------------------------------->
+    // Handle interview-related data for freelancers or internal interviewers
+    if ((Freelancer || isInternalInterviewer) && contactData.completionStatus?.interviewDetails) {
+      try {
+        const interviewUpdate = {};
 
-    // Save outsource interviewer if freelancer
-    if (Freelancer) {
-      const newInterviewer = new OutsourceInterviewer({
-        ownerId: savedUser._id,
-        contactId: savedContact._id,
-        requestedRate: {
-          hourlyRate: contactData.hourlyRate
-        },
-        finalRate: null,
-        feedback: [{
-          givenBy: savedUser._id,
-          rating: 4.5,
-          comments: "",
-          createdAt: new Date()
-        }],
-        createdBy: savedUser._id,
-        currency: 'USD'
-      });
-      await newInterviewer.save();
+        // Only include fields that are explicitly provided
+        if (contactData.skills !== undefined) interviewUpdate.skills = contactData.skills || [];
+        if (contactData.technologies !== undefined) interviewUpdate.technologies = contactData.technologies || [];
+        if (contactData.previousInterviewExperience !== undefined) {
+          interviewUpdate.previousInterviewExperience = contactData.previousInterviewExperience || '';
+        }
+        if (contactData.expertiseLevel_ConductingInterviews !== undefined) {
+          interviewUpdate.expertiseLevel_ConductingInterviews = contactData.expertiseLevel_ConductingInterviews || '';
+        }
+        if (contactData.hourlyRate !== undefined) interviewUpdate.hourlyRate = contactData.hourlyRate;
+        if (contactData.interviewFormatWeOffer !== undefined) interviewUpdate.InterviewFormatWeOffer = contactData.interviewFormatWeOffer || [];
+        if (contactData.expectedRatePerMockInterview !== undefined) interviewUpdate.expectedRatePerMockInterview = contactData.expectedRatePerMockInterview || '';
+        if (contactData.noShowPolicy !== undefined) interviewUpdate.noShowPolicy = contactData.noShowPolicy || '';
+        if (contactData.bio !== undefined) interviewUpdate.bio = contactData.bio || '';
+        if (contactData.professionalTitle !== undefined) interviewUpdate.professionalTitle = contactData.professionalTitle || '';
+
+        // Only update if there are fields to update
+        if (Object.keys(interviewUpdate).length > 0) {
+          await Contacts.findByIdAndUpdate(
+            savedContact._id,
+            { $set: interviewUpdate },
+            { new: true }
+          );
+        }
+      } catch (error) {
+        console.error("Error saving interview data:", error);
+        throw new Error("Failed to save interview data: " + error.message);
+      }
     }
-    // <-----------------------OutsourceInterviewer------------------------------->
+
+    // Handle availability data for freelancers or internal interviewers
+    if ((Freelancer || isInternalInterviewer) && availabilityData && availabilityData.length > 0) {
+      try {
+        // Delete existing availability slots if updating
+        if (isUpdate) {
+          await InterviewAvailability.deleteMany({ contact: savedContact._id });
+        }
+
+        // Create new availability slots
+        const availabilityDocs = availabilityData
+          .filter(dayData => dayData.timeSlots && dayData.timeSlots.length > 0)
+          .map(dayData => ({
+            contact: savedContact._id,
+            day: dayData.day,
+            timeSlots: dayData.timeSlots
+              .filter(slot => slot.startTime && slot.endTime)
+              .map(slot => ({
+                startTime: slot.startTime,
+                endTime: slot.endTime
+              })),
+            createdBy: savedUser._id
+          }))
+          .filter(dayData => dayData.timeSlots.length > 0);
+
+        if (availabilityDocs.length > 0) {
+          await InterviewAvailability.insertMany(availabilityDocs);
+        }
+      } catch (error) {
+        console.error("Error saving availability data:", error);
+        throw new Error("Failed to save availability data: " + error.message);
+      }
+    }
+
+    // Handle outsource interviewer for freelancers with hourly rate
+    if (Freelancer && contactData.hourlyRate) {
+      try {
+        const existingInterviewer = await OutsourceInterviewer.findOne({ contactId: savedContact._id });
+        
+        if (existingInterviewer) {
+          await OutsourceInterviewer.findByIdAndUpdate(
+            existingInterviewer._id,
+            {
+              $set: {
+                'requestedRate.hourlyRate': contactData.hourlyRate,
+                updatedAt: new Date()
+              }
+            },
+            { new: true }
+          );
+        } else {
+          const newInterviewer = new OutsourceInterviewer({
+            ownerId: savedUser._id,
+            contactId: savedContact._id,
+            requestedRate: {
+              hourlyRate: contactData.hourlyRate
+            },
+            status: 'new',
+            createdBy: savedUser._id
+          });
+          await newInterviewer.save();
+        }
+      } catch (error) {
+        console.error("Error saving outsource interviewer:", error);
+      }
+    }
+
+    // Generate token
     const payload = {
       userId: savedUser._id.toString(),
-      ...(isProfileCompleteData?.isProfileComplete && { tenantId: savedUser.tenantId }),
-      organization: isProfileCompleteData?.isProfileComplete === true,
+      organization: false,
       timestamp: new Date().toISOString(),
       freelancer: userData.isFreelancer
     };
-
     const token = generateToken(payload);
 
     res.status(200).json({
       success: true,
-      message: "Profile created successfully",
+      message: isUpdate ? "Profile updated successfully" : "Profile created successfully",
       ownerId: savedUser._id,
       contactId: savedContact._id,
-      ...(isProfileCompleteData?.isProfileComplete && { tenantId: savedUser.tenantId }),
+      isUpdate,
       token: token
     });
 

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import { GlobeAltIcon, MapPinIcon } from '@heroicons/react/24/outline'
-import { MapPin, Globe } from 'lucide-react'; // ✅ Import correct icons
-
-// import { companyProfile,companySizes,industries } from '../mockData/companyData'
+import { GlobeAltIcon } from '@heroicons/react/24/outline'
+import { MapPin, Globe } from 'lucide-react';
 import Cookies from "js-cookie";
 import { BrandingSection } from './BrandingSection';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -11,10 +9,11 @@ import { useCustomContext } from '../../../../../Context/Contextfetch';
 
 const CompanyProfile = () => {
 
-    const {
-      organizationsLoading,
-      organizationData
-    } = useCustomContext();
+  const {
+    organizationsLoading,
+    organizationData
+  } = useCustomContext();
+
   const [brandingSettings, setBrandingSettings] = useState({})
   const [companyProfile, setCompanyProfile] = useState({});
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ const CompanyProfile = () => {
 
   // useEffect(() => {
   //   const fetchData = async () => {
-      
+
   //       // const organization_Data = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-details/${organizationId}`);
   //       // Find user based on userId
   //       if (organizationsLoading){
@@ -55,7 +54,6 @@ const CompanyProfile = () => {
     return <h4>Loading ...</h4>
   }
 
-  
   return (
     <>
       <div className="space-y-6 md:mt-4  sm:mt-4">
@@ -116,7 +114,7 @@ const CompanyProfile = () => {
                   </div>
                 </div>
 
-                 <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Location</label>
                   <div className="flex items-center mt-1">
                     <MapPin className="h-5 w-5 text-gray-400 mr-2" />

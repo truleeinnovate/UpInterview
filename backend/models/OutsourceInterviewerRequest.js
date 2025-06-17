@@ -27,25 +27,22 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
 });
 
 // Auto-generate a unique interviewer number before saving
-// OutsourceInterviewerSchema.pre('save', async function (next) {
-//     if (!this.interviewerNo) {
-//         // Generate a sequential unique number (e.g., OINT-1001, OINT-1002, ...)
-//         const lastRecord = await mongoose.model('OutsourceInterviewer').findOne().sort({ createdAt: -1 });
-//         const lastNumber = lastRecord?.interviewerNo ? parseInt(lastRecord.interviewerNo.split('-')[1]) : 1000;
-//         this.interviewerNo = `OINT-${lastNumber + 1}`;
-//     }
-//     next();
-// });
-
 OutsourceInterviewerSchema.pre('save', async function (next) {
-    if (!this.interviewerNo) {
-        // Use a separate counter collection to avoid sorting
-        const counter = await mongoose.model('Counter').findOneAndUpdate(
-            { name: 'outsourceInterviewer' },
-            { $inc: { seq: 1 } },
-            { upsert: true, new: true }
-        );
-        this.interviewerNo = `OINT-${counter.seq}`;
+    if (this.isNew && !this.interviewerNo) {
+        try {
+            // Use a separate counter collection to avoid sorting
+            const Counter = mongoose.model('Counter');
+            const counter = await Counter.findOneAndUpdate(
+                { name: 'outsourceInterviewer' },
+                { $inc: { seq: 1 } },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+            this.interviewerNo = `OINT-${counter.seq}`;
+        } catch (error) {
+            console.error('Error generating interviewer number:', error);
+            // Fallback to timestamp if counter fails
+            this.interviewerNo = `OINT-${Date.now()}`;
+        }
     }
     next();
 });
