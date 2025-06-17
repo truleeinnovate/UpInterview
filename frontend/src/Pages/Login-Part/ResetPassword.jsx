@@ -64,7 +64,7 @@ const ResetPassword = () => {
       if (response.ok) {
         setMessage({ text: data.message || "Password updated successfully!", type: "success" });
         setTimeout(() => {
-          window.location.href = type === "usercreatepass" ? "/login" : "/organization-login";
+          window.location.href = type === "usercreatepass" ? "/organization-login" : "/organization-login";
         }, 2000);
       } else {
         console.log('error', data)

@@ -1,3 +1,8 @@
+//ashraf added this to check online consoles
+const appInsights = require("applicationinsights");
+appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
+
+
 require('dotenv').config();
 
 // const express = require('express');

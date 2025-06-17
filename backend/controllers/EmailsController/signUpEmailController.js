@@ -72,14 +72,14 @@ exports.sendSignUpEmail = async (req, res) => {
 
     // Replace placeholders
     const emailSubject = emailTemplate.subject
-      .replace('{{companyName}}', 'Your Company Name');
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{firstName}}/g, firstName || '')
       .replace(/{{lastName}}/g, lastName || '')
       .replace(/{{email}}/g, email)
-      .replace(/{{companyName}}/g, 'Your Company Name')
-      .replace(/{{supportEmail}}/g, 'support@yourcompany.com');
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
     // Send email
     const emailResponse = await sendEmail(email, emailSubject, emailBody);
@@ -185,7 +185,7 @@ exports.forgotPasswordSendEmail = async (req, res) => {
     // Replace placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{actionType}}', actionType)
-      .replace('{{companyName}}', 'Your Company Name');
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{actionType}}/g, actionType)
@@ -193,7 +193,7 @@ exports.forgotPasswordSendEmail = async (req, res) => {
       .replace(/{{actionDescription}}/g, actionDescription)
       .replace(/{{actionButtonText}}/g, actionButtonText)
       .replace(/{{actionLink}}/g, actionLink)
-      .replace(/{{companyName}}/g, 'Your Company Name');
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME);
 
     await sendEmail(email, emailSubject, emailBody);
 
@@ -213,7 +213,7 @@ exports.forgotPasswordSendEmail = async (req, res) => {
 
 
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log('\n===== Running TEST Organization Status Email Reminder Job =====');
   console.log('Start Time:', new Date().toISOString());
 
@@ -239,14 +239,14 @@ cron.schedule('* * * * *', async () => {
       const createdAt = moment(organization.createdAt);
       const now = moment();
 
-      const secondsSinceCreation = now.diff(createdAt, 'seconds');
+      // const secondsSinceCreation = now.diff(createdAt, 'seconds');
       const hoursSinceCreation = now.diff(createdAt, 'hours');
       const daysSinceCreation = now.diff(createdAt, 'days');
 
-      console.log(`[DEBUG] Time since creation: ${secondsSinceCreation}s / ${hoursSinceCreation}h / ${daysSinceCreation}d`);
+      // console.log(`[DEBUG] Time since creation: ${secondsSinceCreation}s / ${hoursSinceCreation}h / ${daysSinceCreation}d`);
 
-      const reminderTriggers = [
-        secondsSinceCreation >= 10 && secondsSinceCreation <= 20,
+      const reminderTriggers = [ 
+        // secondsSinceCreation >= 10 && secondsSinceCreation <= 20,
         hoursSinceCreation === 24,
         hoursSinceCreation === 48,
         daysSinceCreation === 7,
@@ -263,11 +263,11 @@ cron.schedule('* * * * *', async () => {
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
 
-        const emailSubject = emailTemplateSubmitted.subject.replace('{{companyName}}', 'Upinterview');
+        const emailSubject = emailTemplateSubmitted.subject.replace('{{companyName}}', process.env.COMPANY_NAME);
         const emailBody = emailTemplateSubmitted.body
           .replace(/{{userName}}/g, userName)
-          .replace(/{{companyName}}/g, 'Upinterview')
-          .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
+          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
           .replace(/{{paymentLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/payment`);
 
         console.log(`[SENDING EMAIL] To: ${user.email}, Subject: "${emailSubject}"`);
@@ -323,11 +323,11 @@ cron.schedule('* * * * *', async () => {
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
 
-        const emailSubject = emailTemplateDraft.subject.replace('{{companyName}}', 'Upinterview');
+        const emailSubject = emailTemplateDraft.subject.replace('{{companyName}}', process.env.COMPANY_NAME);
         const emailBody = emailTemplateDraft.body
           .replace(/{{userName}}/g, userName)
-          .replace(/{{companyName}}/g, 'Upinterview')
-          .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
+          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
           .replace(/{{profileLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/profile`);
 
         console.log(`[SENDING EMAIL] To: ${user.email}, Subject: "${emailSubject}"`);

@@ -11,16 +11,16 @@ import { useCustomContext } from '../Context/Contextfetch';
 axios.defaults.withCredentials = true;
 
 export const useSupportTickets = () => {
-  const queryClient  = useQueryClient();
+  const queryClient = useQueryClient();
   const { userRole } = useCustomContext();          // “SuperAdmin”, “Admin”, “Individual”, …
 
   /* --------------------------------------------------------------------- */
   /*  Auth token                                                            */
   /* --------------------------------------------------------------------- */
-  const authToken    = Cookies.get('authToken') ?? '';
+  const authToken = Cookies.get('authToken') ?? '';
   const tokenPayload = authToken ? decodeJwt(authToken) : {};
 
-  const userId   = tokenPayload?.userId;
+  const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
@@ -39,12 +39,12 @@ export const useSupportTickets = () => {
 
       if (['SuperAdmin', 'Support Team'].includes(userRole)) return all;
       if (!organization) {
-        if (userRole === 'Admin'      && userId) return all.filter(t => t.ownerId      === userId);
-      }else{
-        if (userRole === 'Admin'      && tenantId) return all.filter(t => t.tenantId      === tenantId);
+        if (userRole === 'Admin' && userId) return all.filter(t => t.ownerId === userId);
+      } else {
+        if (userRole === 'Admin' && tenantId) return all.filter(t => t.tenantId === tenantId);
       }
-      if (userRole === 'Individual' && userId)   return all.filter(t => t.ownerId       === userId);
-      if (userId)                                  return all.filter(t => t.assignedToId === userId);
+      if (userRole === 'Individual' && userId) return all.filter(t => t.ownerId === userId);
+      if (userId) return all.filter(t => t.assignedToId === userId);
 
       return [];
     } catch (err) {
@@ -60,8 +60,8 @@ export const useSupportTickets = () => {
     error,
   } = useQuery({
     queryKey: ['supportTickets', userRole, tenantId, userId],
-    queryFn : fetchTickets,
-    enabled : !!userRole,           // wait until role is known
+    queryFn: fetchTickets,
+    enabled: !!userRole,           // wait until role is known
     staleTime: 1000 * 60 * 5,       // 5 min
     retry: 1,
   });
@@ -71,7 +71,7 @@ export const useSupportTickets = () => {
   /* --------------------------------------------------------------------- */
   const submitTicketMutation = useMutation({
     mutationFn: async ({ data, editMode, ticketId }) => {
-      const url    = editMode
+      const url = editMode
         ? `${config.REACT_APP_API_URL}/update-ticket/${ticketId}`
         : `${config.REACT_APP_API_URL}/create-ticket`;
 
@@ -103,13 +103,13 @@ export const useSupportTickets = () => {
   /* --------------------------------------------------------------------- */
   return {
     tickets,
-    isLoading          : isQueryLoading || submitTicketMutation.isPending,
+    isLoading: isQueryLoading || submitTicketMutation.isPending,
     isQueryLoading,
-    isMutationLoading  : submitTicketMutation.isPending,
+    isMutationLoading: submitTicketMutation.isPending,
     isError,
     error,
-    isMutationError    : submitTicketMutation.isError,
-    mutationError      : submitTicketMutation.error,
-    submitTicket       : submitTicketMutation.mutateAsync,
+    isMutationError: submitTicketMutation.isError,
+    mutationError: submitTicketMutation.error,
+    submitTicket: submitTicketMutation.mutateAsync,
   };
 };

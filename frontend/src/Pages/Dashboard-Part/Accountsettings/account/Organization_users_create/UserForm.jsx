@@ -6,11 +6,13 @@ import Modal from 'react-modal';
 import axios from "axios";
 import Cookies from 'js-cookie';
 import { useNavigate, useLocation } from "react-router-dom";
-import { validateUserForm, validateEmail } from "../../../../../utils/AppUserValidation";
+import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
 import Switch from "react-switch";
+import { validateWorkEmail, checkEmailExists } from '../../../../../utils/workEmailValidation.js';
+
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
@@ -78,19 +80,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     setStatus("inactive");
   };
 
-  // Check if email exists
-  const checkEmailExists = useCallback(async (email) => {
-    if (!email) return false;
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/check-email?email=${email}`
-      );
-      return response.data.exists;
-    } catch (error) {
-      console.error("Email check error:", error);
-      return false;
-    }
-  }, []);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -101,14 +90,29 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
   // Email validation on blur
   const handleEmailValidation = async (email) => {
-    clearTimeout(emailTimeoutRef.current);
+    if (!email) {
+      setErrors((prev) => ({ ...prev, email: '' }));
+      setIsCheckingEmail(false);
+      return;
+    }
+
     setIsCheckingEmail(true);
 
-    emailTimeoutRef.current = setTimeout(async () => {
-      const errorMessage = await validateEmail(email, editMode ? null : checkEmailExists);
-      setErrors((prev) => ({ ...prev, email: errorMessage }));
+    const formatError = validateWorkEmail(email);
+    if (formatError) {
+      setErrors((prev) => ({ ...prev, email: formatError }));
       setIsCheckingEmail(false);
-    }, 500);
+      return;
+    }
+
+    const exists = await checkEmailExists(email);
+    if (exists) {
+      setErrors((prev) => ({ ...prev, email: 'Email already registered' }));
+    } else {
+      setErrors((prev) => ({ ...prev, email: '' }));
+    }
+
+    setIsCheckingEmail(false);
   };
 
   const handleBlur = (e) => {
