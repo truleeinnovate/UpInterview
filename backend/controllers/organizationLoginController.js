@@ -363,7 +363,7 @@ const loginOrganization = async (req, res) => {
     }
 
     // Check email verification
-    const organization = await Organization.findOne({ ownerId: user._id });
+    const organization = await Organization.findOne({ _id: user.tenantId });
     console.log('organization', organization);
 
 
@@ -474,6 +474,13 @@ const resetPassword = async (req, res) => {
     // Hash and save new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
+
+     // If type is 'usercreatepass', mark email as verified
+    if (type === "usercreatepass") {
+      user.isEmailVerified = true;
+    }
+
+    
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
