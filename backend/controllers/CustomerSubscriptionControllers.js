@@ -5,6 +5,7 @@ const Invoicemodels = require('../models/Invoicemodels.js');
 const Wallet = require('../models/WalletTopup.js');
 const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 
+
 // Function to handle subscription creation
 const createSubscriptionControllers = async (req, res) => {
   try {
@@ -13,6 +14,11 @@ const createSubscriptionControllers = async (req, res) => {
     if (!planDetails || !userDetails || !status) {
       return res.status(400).json({ message: 'Missing required details cretateSubscriptionControllers.' });
     }
+    console.log("planDetails ----", planDetails);
+    console.log("userDetails ----", userDetails);
+    console.log("status ----", status);
+    console.log("totalAmount ----", totalAmount);
+   
 
     const { subscriptionPlanId } = planDetails;
 
@@ -98,19 +104,8 @@ const createSubscriptionControllers = async (req, res) => {
     }
 
     // Accept both 'pending' and 'created' statuses for new subscriptions
-    if (status === "pending" || status === "created") {
+    if (status === "pending" || status === "created" || (userDetails.userType === "individual" && (userDetails.membershipType === "monthly" || userDetails.membershipType === "annual"))) {
       console.log(`Processing subscription with status: ${status}`);
-      
-      const invoice = await createInvoice(
-        userDetails.tenantId,
-        userDetails.ownerId,
-        planDetails.planName,
-        planDetails.subscriptionPlanId,
-        numericTotalAmount,
-        userDetails,
-        status, // Pass the original status to maintain consistency
-        discount
-      );
 
       const subscription = await createSubscriptionRecord(
         userDetails,
@@ -118,8 +113,22 @@ const createSubscriptionControllers = async (req, res) => {
         pricing,
         discount,
         totalAmount,
-        invoice._id
+        invoice._id,
+        status
       );
+
+      const invoice = await createInvoice(
+        userDetails.tenantId,
+        userDetails.ownerId,
+        plan.planName,
+        planDetails.subscriptionPlanId,
+        numericTotalAmount,
+        userDetails,
+        status, // Pass the original status to maintain consistency
+        discount
+      );
+      
+      
 
 
       console.log(`Created subscription with status: ${status}`);

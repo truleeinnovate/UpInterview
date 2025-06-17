@@ -16,14 +16,15 @@ const SubscriptionPlan = () => {
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
-  const organization = tokenPayload?.organization?.toString();
+  const organization = tokenPayload?.organization;
+  console.log("organization ----", organization);
   const orgId = tokenPayload?.tenantId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
-    userType: organization === "true" ? "organization" : "individual",
+    userType: organization === true ? "organization" : "individual",
     tenantId: orgId,
     ownerId: userId,
   });
@@ -75,10 +76,13 @@ const SubscriptionPlan = () => {
           }
         );
         const data = response.data;
+        console.log("data ----", data);
 
         const filteredPlans = data.filter(
           (plan) => plan.subscriptionType === user.userType
         );
+        console.log("user.userType ----", user.userType);
+        console.log("filteredPlans ----", filteredPlans);
 
         const formattedPlans = filteredPlans.map((plan) => {
           const monthlyPricing = plan.pricing.find(
@@ -163,9 +167,9 @@ const SubscriptionPlan = () => {
         membershipType: isAnnual ? "annual" : "monthly",
       },
       totalAmount,
-      status: "pending",
+      status: user.userType === "individual" && plan.name === "Base" ? "active" : "pending",
     };
-
+    console.log("payload ----", payload);
     try {
       const subscriptionResponse = await axios.post(
         `${config.REACT_APP_API_URL}/create-customer-subscription`,

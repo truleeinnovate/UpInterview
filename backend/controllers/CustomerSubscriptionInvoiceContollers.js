@@ -1,6 +1,48 @@
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Receipt = require('../models/Receiptmodels.js'); 
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js'); 
+const SubscriptionPlan = require('../models/Subscriptionmodels.js');
+const { Organization } = require('../models/Tenant');
+
+const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,status,receiptId) => {
+  console.log("userDetails ----", userDetails.ownerId);
+  const tenant = await Organization.findOne({ ownerId: userDetails.ownerId });
+        if(tenant){
+          tenant.status =  status === 'active' ? 'active' : 'payment_pending';
+          await tenant.save();
+    }
+ 
+  let features = [];
+  if (userDetails.userType === "individual" && userDetails.membershipType === "monthly"){
+    const planData = await SubscriptionPlan.findById(planDetails.subscriptionPlanId);
+
+  if (planData && planData.features) {
+    features = planData.features.map(feature => ({
+      name: feature.name,
+      limit: feature.limit,
+      description: feature.description
+  }));
+  }
+
+  }
+  
+  return await CustomerSubscription.create({
+    tenantId: userDetails.tenantId,
+    ownerId: userDetails.ownerId,
+    subscriptionPlanId: planDetails.subscriptionPlanId,
+    selectedBillingCycle: userDetails.membershipType,
+    startDate: new Date(),
+    status: status === 'active' ? "active" : "created",
+    price: totalAmount,
+    discount: discount,
+    endDate: null,
+    totalAmount: pricing - parseFloat(discount),
+    invoiceId: invoiceId,
+    receiptId: receiptId || null ,
+    subPlanStatus:false,
+    features: (userDetails.userType === "individual" && userDetails.membershipType === "monthly" && userDetails.membershipType === "annual") ? features : []
+  });
+};
 
 
 const  createInvoice = async (
@@ -27,7 +69,7 @@ const  createInvoice = async (
 
 
   // Validate status against enum values
-  const validStatuses = ['pending', 'paid', 'partially_paid', 'failed', 'overdue'];
+  const validStatuses = ['active','created','pending', 'paid', 'partially_paid', 'failed', 'overdue'];
   if (!validStatuses.includes(status)) {
     throw new Error('Invalid status value');
   }
@@ -82,23 +124,7 @@ const  createInvoice = async (
 };
 
   
-  const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,receiptId) => {
-    return await CustomerSubscription.create({
-      tenantId: userDetails.tenantId,
-      ownerId: userDetails.ownerId,
-      subscriptionPlanId: planDetails.subscriptionPlanId,
-      selectedBillingCycle: userDetails.membershipType,
-      startDate: new Date(),
-      status: 'inactive',
-      price: totalAmount,
-      discount: discount,
-      endDate: null,
-      totalAmount: pricing - parseFloat(discount),
-      invoiceId: invoiceId,
-      receiptId: receiptId || null ,
-      subPlanStatus:false
-    });
-  };
+  
   
   const createReceipt = async (tenantId,ownerId, invoiceId, totalPaid, transactionId, cardDetails) => {
    
