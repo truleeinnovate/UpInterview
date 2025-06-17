@@ -108,7 +108,6 @@ const createSubscriptionControllers = async (req, res) => {
       console.log(`Processing subscription with status: ${status}`);
 
 
-
       const invoice = await createInvoice(
         userDetails.tenantId,
         userDetails.ownerId,
@@ -118,6 +117,16 @@ const createSubscriptionControllers = async (req, res) => {
         userDetails,
         status, // Pass the original status to maintain consistency
         discount
+      );
+
+      const subscription = await createSubscriptionRecord(
+        userDetails,
+        planDetails,
+        pricing,
+        discount,
+        totalAmount,
+        invoice._id,
+        status
       );
       
       
