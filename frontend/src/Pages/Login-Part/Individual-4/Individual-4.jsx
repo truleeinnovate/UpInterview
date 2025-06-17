@@ -322,7 +322,7 @@ const MultiStepForm = () => {
         { autoClose: 5000 }
       );
   
-      const { contactId, token } = response.data;
+      const { contactId, token,isProfileCompleted } = response.data;
   
       // Handle image upload
       if (file) {
@@ -370,7 +370,12 @@ const MultiStepForm = () => {
       }
   
       setLoading(false);
+      if (isProfileCompleted) {
+        navigate('/home');
+      } else {
       navigate('/subscription-plans');
+        
+      }
     } catch (error) {
       console.error('Submission failed:', error);
       setLoading(false);

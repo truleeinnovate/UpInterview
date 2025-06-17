@@ -8,11 +8,19 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../../config.js';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentsTab({ assessment }) {
+  const { fetchScheduledAssessments } = useAssessments();
+
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  console.log("assessment", assessment);
+  useEffect(() => {
+    if (assessment) {
+      console.log('assessment', assessment);
+    }
+  }, [assessment]);
+
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
@@ -21,27 +29,27 @@ function AssessmentsTab({ assessment }) {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [openSchedules, setOpenSchedules] = useState({});
 
-  const fetchScheduledAssessments = async (assessmentId) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
-      );
-      setScheduledAssessments(response.data);
-      const initialOpenState = response.data.reduce((acc, schedule) => {
-        acc[schedule._id] = false;
-        return acc;
-      }, {});
-      setOpenSchedules(initialOpenState);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching scheduled assessments:', error);
-      // toast.error('Failed to fetch scheduled assessments');
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      if (assessment?._id) {
+        const { data, error } = await fetchScheduledAssessments(assessment._id);
+        if (!error) {
+          setScheduledAssessments(data);
+          const initialOpenState = data.reduce((acc, schedule) => {
+            acc[schedule._id] = false;
+            return acc;
+          }, {});
+          setOpenSchedules(initialOpenState);
+        } else {
+          console.error('Failed to fetch scheduled assessments:', error);
+          toast.error('Failed to load scheduled assessments');
+        }
+      }
+    };
+
+    fetchData();
+  }, [assessment]);
+
 
   const handleResendLink = async (candidateAssessmentId) => {
     try {
@@ -96,10 +104,10 @@ function AssessmentsTab({ assessment }) {
   if (loading) return <div className="p-4 text-gray-600">Loading assessments...</div>;
 
   const formattedCandidates = (candidates) =>
-   
+
     candidates.map((candidate) => ({
       id: candidate._id,
-      _id:candidate.candidateId._id,
+      _id: candidate.candidateId._id,
       FirstName: candidate.candidateId?.FirstName || 'Unknown',
       LastName: candidate.candidateId?.LastName || '',
       Email: candidate.candidateId?.Email || 'No email',
@@ -119,11 +127,11 @@ function AssessmentsTab({ assessment }) {
       CurrentExperience: candidate.candidateId?.CurrentExperience || 'N/A',
       skills: candidate.candidateId?.skills || [],
       ImageData: candidate.candidateId?.ImageData || null,
-      assessmentId:assessment._id
+      assessmentId: assessment._id
     }));
 
-    
-    //  console.log("scheduledAssessments ", scheduledAssessments);
+
+  //  console.log("scheduledAssessments ", scheduledAssessments);
 
   return (
     <div className="space-y-6">
@@ -148,7 +156,7 @@ function AssessmentsTab({ assessment }) {
               >
                 <div>
                   <h4 className="text-lg font-semibold text-gray-800">
-                  {schedule.order}
+                    {schedule.order}
                   </h4>
                   <div className="flex items-center mt-2 space-x-4">
                     <span className="text-sm text-gray-600">
@@ -158,11 +166,10 @@ function AssessmentsTab({ assessment }) {
                         : 'N/A'}
                     </span>
                     <span
-                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                        schedule.status === 'scheduled'
+                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === 'scheduled'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
                     </span>
@@ -176,19 +183,19 @@ function AssessmentsTab({ assessment }) {
                   )}
                 </div>
               </div>
-   {openSchedules[schedule._id] && (
-  <div className="border-t border-gray-200">
-    <div className="overflow-auto max-h-[400px] "> {/* Added padding */}
-      <div className="min-w-[800px] "> {/* Added padding */}
-        <Candidate
-          candidates={formattedCandidates(schedule.candidates)}
-          onResendLink={handleResendLink}
-          isAssessmentView={true}
-        />
-      </div>
-    </div>
-  </div>
-)}
+              {openSchedules[schedule._id] && (
+                <div className="border-t border-gray-200">
+                  <div className="overflow-auto max-h-[400px] "> {/* Added padding */}
+                    <div className="min-w-[800px] "> {/* Added padding */}
+                      <Candidate
+                        candidates={formattedCandidates(schedule.candidates)}
+                        onResendLink={handleResendLink}
+                        isAssessmentView={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         ) : (
@@ -209,8 +216,8 @@ function AssessmentsTab({ assessment }) {
           isOpen={isShareOpen}
           onCloseshare={() => setIsShareOpen(false)}
           assessment={assessment}
-          // AssessmentTitle={assessment?.AssessmentTitle}
-          // assessmentId={assessment._id}
+        // AssessmentTitle={assessment?.AssessmentTitle}
+        // assessmentId={assessment._id}
         />
       )}
     </div>

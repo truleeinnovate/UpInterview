@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MantineProvider, createTheme } from '@mantine/core';
+import appInsights from './appInsights';
 
 const theme = createTheme({
   fontFamily: 'Inter, sans-serif',
@@ -20,6 +21,7 @@ const theme = createTheme({
 });
 
 const queryClient = new QueryClient();
+appInsights.trackPageView();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

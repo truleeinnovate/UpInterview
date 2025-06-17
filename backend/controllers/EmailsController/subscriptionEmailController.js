@@ -118,6 +118,7 @@ exports.afterSubscribePlan = async (req, res) => {
 
     // Step 2: Get Latest Subscription of the User
     const subscription = await CustomerSubscription.findOne({ ownerId })
+      .populate('subscriptionPlanId', 'name'); // Populate just the name field
 
     if (!subscription) {
       return res.status(404).json({ success: false, message: "Subscription not found" });
@@ -127,7 +128,6 @@ exports.afterSubscribePlan = async (req, res) => {
     const {
       selectedBillingCycle,
       price,
-      totalAmount,
       status,
       startDate,
       endDate
@@ -141,7 +141,8 @@ exports.afterSubscribePlan = async (req, res) => {
     };
     const duration = durationMap[selectedBillingCycle] || selectedBillingCycle;
 
-    const planName = selectedBillingCycle?.toUpperCase() + " Plan";
+const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+
     const planPrice = `₹${price}`;
 
     // Step 3: Get Email Template
@@ -158,7 +159,7 @@ exports.afterSubscribePlan = async (req, res) => {
     // Step 4: Replace Template Placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{planName}}', planName)
-      .replace('{{companyName}}', 'Upinterview');
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const formattedStartDate = new Date(startDate).toLocaleDateString('en-IN');
     const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'N/A';
@@ -170,9 +171,9 @@ exports.afterSubscribePlan = async (req, res) => {
       .replace(/{{duration}}/g, duration)
       .replace(/{{startDate}}/g, formattedStartDate)
       .replace(/{{endDate}}/g, formattedEndDate)
-      .replace(/{{status}}/g, status || 'Active')
-      .replace(/{{companyName}}/g, 'Upinterview')
-      .replace(/{{supportEmail}}/g, 'support@yourcompany.com');
+      .replace(/{{status}}/g, status)
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
 
     // Step 5: Send Email
@@ -208,10 +209,18 @@ exports.afterSubscribeFreePlan = async (req, res) => {
   try {
     const { ownerId, tenantId } = req.body;
     const user = await Users.findOne({ _id: ownerId });
-    const planName = "Base Plan";
-    if (!user || !user.email) {
-      return res.status(401).json({ success: false, message: "User or email not found" });
+
+    // Step 2: Get Latest Subscription of the User
+    const subscription = await CustomerSubscription.findOne({ ownerId })
+      .populate('subscriptionPlanId', 'name'); // Populate just the name field
+
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: "Subscription not found" });
     }
+
+const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+
+
 
     // Get email template
     const emailTemplate = await emailTemplateModel.findOne({ category: 'free_plan_subscription', isActive: true, isSystemTemplate: true });
@@ -224,13 +233,13 @@ exports.afterSubscribeFreePlan = async (req, res) => {
     // Replace placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{planName}}', planName)
-      .replace('{{companyName}}', 'Upinterview');
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{userName}}/g, userName)
       .replace(/{{planName}}/g, planName)
-      .replace(/{{companyName}}/g, 'Upinterview')
-      .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
       .replace(/{{upgradeLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/subscription`);
 
     // Send email
@@ -281,21 +290,22 @@ cron.schedule('0 0 * * *', async () => {
     }
 
     for (const organization of pendingOrganizations) {
-      const subscription = await CustomerSubscription.findOne({ ownerId: organization.ownerId });
+      const subscription = await CustomerSubscription.findOne({ ownerId: organization.ownerId })
+        .populate('subscriptionPlanId', 'name');
       if (!subscription) {
         console.warn(`No subscription found for ownerId: ${organization.ownerId}`);
         continue;
       }
 
-      const createdAt = moment(organization.CreatedDate);
+      const createdAt = moment(organization.createdAt);
       const now = moment();
-      const secondsSinceCreation = now.diff(createdAt, 'seconds');
+      // const secondsSinceCreation = now.diff(createdAt, 'seconds');
       const hoursSinceCreation = now.diff(createdAt, 'hours');
       const daysSinceCreation = now.diff(createdAt, 'days');
 
       // Send reminders at 10 seconds (for testing), 24h, 48h, 7 days, 30 days
       const reminderTriggers = [
-        secondsSinceCreation === 10, // Test case
+        // secondsSinceCreation === 10, // Test case
         hoursSinceCreation === 24,
         hoursSinceCreation === 48,
         daysSinceCreation === 7,
@@ -310,21 +320,22 @@ cron.schedule('0 0 * * *', async () => {
         }
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-        const planName = subscription.subscriptionPlanId ? 'Selected Plan' : 'Base Plan';
+        const planName = subscription.subscriptionPlanId?.name
+          || `${subscription.selectedBillingCycle?.toUpperCase()} Plan`;
         const planDetails = subscription.subscriptionPlanId ?
           `Plan: ${planName}, Billing Cycle: ${subscription.selectedBillingCycle}` :
           'Base Plan with standard features';
 
         const emailSubject = emailTemplateIncomplete.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', 'Upinterview');
+          .replace('{{companyName}}', process.env.COMPANY_NAME);
 
         const emailBody = emailTemplateIncomplete.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{planName}}/g, planName)
-          .replace(/{{companyName}}/g, 'Upinterview')
-          .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
-          .replace(/{{paymentLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/subscription`)
+          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
+          .replace(/{{paymentLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/subscription-plans`)
           .replace(/{{planDetails}}/g, planDetails);
 
         const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
@@ -379,20 +390,21 @@ cron.schedule('0 0 * * *', async () => {
         }
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-        const planName = subscription.subscriptionPlanId ? 'Selected Plan' : 'Base Plan';
+const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+
         const billingCycle = subscription.selectedBillingCycle;
         const formattedBillingDate = nextBillingDate.format('MMMM Do, YYYY');
 
         const emailSubject = emailTemplateRenewal.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', 'Upinterview')
+          .replace('{{companyName}}', process.env.COMPANY_NAME)
           .replace('{{nextBillingDate}}', formattedBillingDate);
 
         const emailBody = emailTemplateRenewal.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{planName}}/g, planName)
-          .replace(/{{companyName}}/g, 'Upinterview')
-          .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
+          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
           .replace(/{{nextBillingDate}}/g, formattedBillingDate)
           .replace(/{{billingCycle}}/g, billingCycle);
 
