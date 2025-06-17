@@ -410,7 +410,9 @@ const loginOrganization = async (req, res) => {
       token,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
-      contactDataFromOrg
+      contactDataFromOrg,
+      isEmailVerified: user.isEmailVerified,
+      status: organization.status
     });
 
   } catch (error) {
