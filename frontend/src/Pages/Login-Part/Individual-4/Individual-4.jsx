@@ -28,9 +28,9 @@ const FooterButtons = ({
   return (
     <div className="flex justify-between space-x-3 mt-4 mb-4 sm:text-sm">
       {currentStep > 0 ? (
-        <button 
-          type="button" 
-          onClick={onPrev} 
+        <button
+          type="button"
+          onClick={onPrev}
           disabled={isSubmitting}
           className={`border ${isSubmitting ? 'border-gray-300 text-gray-400 cursor-not-allowed' : 'border-custom-blue text-custom-blue hover:bg-gray-50'} rounded px-6 sm:px-3 py-1`}
         >
@@ -60,7 +60,6 @@ const FooterButtons = ({
 };
 
 const MultiStepForm = () => {
-      console.log('MultiStepForm')
   const navigate = useNavigate();
   const location = useLocation();
   const { Freelancer, profession, linkedInData } = location.state || {}; //from profile3
@@ -72,6 +71,14 @@ const MultiStepForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
+
+  // Track completion status of each section
+  const [completionStatus, setCompletionStatus] = useState({
+    basicDetails: false,
+    additionalDetails: false,
+    interviewDetails: false,
+    availabilityDetails: false
+  });
 
   // Add these new states:
   const [selectedSkills, setSelectedSkills] = useState([]);
@@ -187,102 +194,445 @@ const MultiStepForm = () => {
 
   const [completed, setCompleted] = useState([false, false, false, false]);
 
+  const updateCompletionStatus = (step, isValid) => {
+    let statusKey = '';
+    switch (step) {
+      case 0: statusKey = 'basicDetails'; break;
+      case 1: statusKey = 'additionalDetails'; break;
+      case 2: statusKey = 'interviewDetails'; break;
+      case 3: statusKey = 'availabilityDetails'; break;
+      default: return;
+    }
+    setCompletionStatus(prev => ({
+      ...prev,
+      [statusKey]: isValid
+    }));
+  };
+
+  // const handleNextStep = async () => {
+  //   console.log(
+  //     `handleNextStep: currentStep=${currentStep}, showLimitedSteps=${showLimitedSteps}, isInternalInterviewer=${isInternalInterviewer}`
+  //   );
+  //   let isValid = false;
+
+  //   // Validate current step before proceeding
+  //   if (currentStep === 0) {
+  //     // Basic details validation
+  //     const basicDetailsErrors = {};
+  //     if (!basicDetailsData.email) basicDetailsErrors.email = 'Email is required';
+  //     if (!basicDetailsData.lastName) basicDetailsErrors.lastName = 'Last name is required';
+  //     if (!basicDetailsData.phone) basicDetailsErrors.phone = 'Phone number is required';
+  //     if (!basicDetailsData.linkedinUrl) basicDetailsErrors.linkedinUrl = 'LinkedIn URL is required';
+
+  //     setErrors({
+  //       ...errors,
+  //       ...basicDetailsErrors
+  //     });
+
+  //     isValid = Object.keys(basicDetailsErrors).length === 0;
+  //   } else if (currentStep === 1) {
+  //     // Professional details validation
+  //     const professionalErrors = {};
+  //     if (!additionalDetailsData.currentRole) professionalErrors.currentRole = 'Current role is required';
+  //     if (!additionalDetailsData.industry) professionalErrors.industry = 'Industry is required';
+  //     if (!additionalDetailsData.yearsOfExperience) professionalErrors.yearsOfExperience = 'Years of experience is required';
+  //     if (!additionalDetailsData.location) professionalErrors.location = 'Location is required';
+
+  //     setErrors({
+  //       ...errors,
+  //       ...professionalErrors
+  //     });
+
+  //     isValid = Object.keys(professionalErrors).length === 0;
+  //   } else if (currentStep === 2) {
+  //     // Interview details validation
+  //     const interviewErrors = {};
+  //     if (!interviewDetailsData.skills) interviewErrors.skills = 'Skills are required';
+  //     if (!interviewDetailsData.previousInterviewExperience) interviewErrors.previousInterviewExperience = 'Previous interview experience is required';
+  //     if (!interviewDetailsData.expertiseLevel_ConductingInterviews) interviewErrors.expertiseLevel_ConductingInterviews = 'Expertise level is required';
+
+  //     setErrors({
+  //       ...errors,
+  //       ...interviewErrors
+  //     });
+
+  //     isValid = Object.keys(interviewErrors).length === 0;
+  //   } else if (currentStep === 3) {
+  //     // Availability validation
+  //     const availabilityErrors = {};
+  //     if (!availabilityDetailsData.timeZone) availabilityErrors.timeZone = 'Timezone is required';
+
+  //     setErrors({
+  //       ...errors,
+  //       ...availabilityErrors
+  //     });
+
+  //     isValid = Object.keys(availabilityErrors).length === 0;
+  //   } else {
+  //     isValid = true;
+  //   }
+
+  //   if (!isValid) {
+  //     console.log("Validation failed. Errors:", errors);
+  //     return;
+  //   }
+
+  //   setCompleted((prev) => {
+  //     const updated = [...prev];
+  //     updated[currentStep] = true;
+  //     return updated;
+  //   });
+
+  //   // For non-freelancer or limited steps profile (EXCLUDING internal interviewers), save at step 0 (basic details)
+  //   if (
+  //     (!Freelancer && !isInternalInterviewer) ||
+  //     (showLimitedSteps && !isInternalInterviewer)
+  //   ) {
+  //     console.log("Saving basic details");
+  //     await handleSubmit();
+  //     return;
+  //   }
+
+  //   // For freelancer/internal interviewer, save at last step
+  //   if ((Freelancer || isInternalInterviewer) && currentStep === 3) {
+  //     console.log("Saving at last step");
+  //     await handleSubmit();
+  //   } else {
+  //     const nextStep = currentStep + 1;
+  //     console.log(`Moving to step ${nextStep}`);
+  //     setCurrentStep(nextStep);
+  //   }
+  // };
+
+  const [createdIds, setCreatedIds] = useState({
+    ownerId: null,
+    contactId: null
+  });
+
   const handleNextStep = async () => {
+    console.log(`handleNextStep: currentStep=${currentStep}`);
+    let isValid = false;
+  
+    // Validate current step
+    if (currentStep === 0) {
+      const basicDetailsErrors = {};
+      if (!basicDetailsData.email) basicDetailsErrors.email = 'Email is required';
+      if (!basicDetailsData.lastName) basicDetailsErrors.lastName = 'Last name is required';
+      if (!basicDetailsData.phone) basicDetailsErrors.phone = 'Phone number is required';
+      if (!basicDetailsData.linkedinUrl) basicDetailsErrors.linkedinUrl = 'LinkedIn URL is required';
+  
+      setErrors({ ...errors, ...basicDetailsErrors });
+      isValid = Object.keys(basicDetailsErrors).length === 0;
+    } else if (currentStep === 1) {
+      const professionalErrors = {};
+      if (!additionalDetailsData.currentRole) professionalErrors.currentRole = 'Current role is required';
+      if (!additionalDetailsData.industry) professionalErrors.industry = 'Industry is required';
+      if (!additionalDetailsData.yearsOfExperience) professionalErrors.yearsOfExperience = 'Years of experience is required';
+      if (!additionalDetailsData.location) professionalErrors.location = 'Location is required';
+  
+      setErrors({ ...errors, ...professionalErrors });
+      isValid = Object.keys(professionalErrors).length === 0;
+    } else if (currentStep === 2) {
+      const interviewErrors = {};
+      if (!interviewDetailsData.skills.length) interviewErrors.skills = 'Skills are required';
+      if (!interviewDetailsData.previousInterviewExperience) interviewErrors.previousInterviewExperience = 'Previous interview experience is required';
+      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) interviewErrors.expertiseLevel_ConductingInterviews = 'Expertise level is required';
+  
+      setErrors({ ...errors, ...interviewErrors });
+      isValid = Object.keys(interviewErrors).length === 0;
+    } else if (currentStep === 3) {
+      const availabilityErrors = {};
+      if (!availabilityDetailsData.timeZone) availabilityErrors.timeZone = 'Timezone is required';
+      if (!availabilityDetailsData.preferredDuration) availabilityErrors.preferredDuration = 'Preferred duration is required';
+  
+      setErrors({ ...errors, ...availabilityErrors });
+      isValid = Object.keys(availabilityErrors).length === 0;
+    } else {
+      isValid = true;
+    }
+  
+    if (!isValid) {
+      console.log("Validation failed. Errors:", errors);
+      return;
+    }
+  
+    // Determine the status key for the current step
+    const statusKey =
+      currentStep === 0 ? 'basicDetails' :
+      currentStep === 1 ? 'additionalDetails' :
+      currentStep === 2 ? 'interviewDetails' : 'availabilityDetails';
+  
+    // Update completion status
+    const updatedCompletionStatus = {
+      ...completionStatus,
+      [statusKey]: true
+    };
+  
+    setCompletionStatus(updatedCompletionStatus);
+  
+    try {
+      setLoading(true);
+  
+      // Prepare data to save
+      const userData = {
+        firstName: basicDetailsData.firstName,
+        lastName: basicDetailsData.lastName,
+        profileId: basicDetailsData.profileId,
+        isFreelancer: isInternalInterviewer ? false : Freelancer,
+        email: basicDetailsData.email,
+        isProfileCompleted: currentStep === (isInternalInterviewer ? 3 : (Freelancer ? 3 : 1)),
+        completionStatus: updatedCompletionStatus,
+        ...(createdIds.ownerId && { ownerId: createdIds.ownerId }),
+        ...(createdIds.contactId && { contactId: createdIds.contactId }),
+        isInternalInterviewer
+      };
+  
+      const contactData = {
+        // Step 0: Basic Details
+        ...(currentStep >= 0 && {
+          firstName: basicDetailsData.firstName,
+          lastName: basicDetailsData.lastName,
+          profileId: basicDetailsData.profileId,
+          email: basicDetailsData.email,
+          countryCode: basicDetailsData.countryCode,
+          phone: basicDetailsData.phone,
+          linkedinUrl: basicDetailsData.linkedinUrl,
+          portfolioUrl: basicDetailsData.portfolioUrl,
+          dateOfBirth: basicDetailsData.dateOfBirth,
+          gender: basicDetailsData.gender
+        }),
+        // Step 1: Additional Details
+        ...(currentStep >= 1 && {
+          currentRole: additionalDetailsData.currentRole,
+          industry: additionalDetailsData.industry,
+          yearsOfExperience: additionalDetailsData.yearsOfExperience,
+          location: additionalDetailsData.location,
+          coverLetterdescription: additionalDetailsData.coverLetterdescription
+        }),
+        // Step 2: Interview Details
+        ...(currentStep >= 2 && {
+          skills: interviewDetailsData.skills,
+          technologies: interviewDetailsData.technologies,
+          previousInterviewExperience: interviewDetailsData.previousInterviewExperience,
+          previousInterviewExperienceYears: interviewDetailsData.previousInterviewExperienceYears,
+          expertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
+          hourlyRate: interviewDetailsData.hourlyRate,
+          interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
+          expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
+          noShowPolicy: interviewDetailsData.noShowPolicy,
+          bio: interviewDetailsData.bio,
+          professionalTitle: interviewDetailsData.professionalTitle
+        }),
+        // Step 3: Availability Details
+        ...(currentStep >= 3 && {
+          timeZone: availabilityDetailsData.timeZone,
+          preferredDuration: availabilityDetailsData.preferredDuration
+        }),
+        LetUsKnowYourProfession: profession,
+        completionStatus: updatedCompletionStatus,
+        ...(createdIds.contactId && { _id: createdIds.contactId })
+      };
+  
+      // Clean contactData to remove undefined values
+      Object.keys(contactData).forEach(key => {
+        if (contactData[key] === undefined) {
+          delete contactData[key];
+        }
+      });
+  
+      // Prepare availability data only for step 3
+      const availabilityData = (isInternalInterviewer || Freelancer) && currentStep === 3
+        ? Object.keys(times)
+            .map((day) => ({
+              day,
+              timeSlots: times[day]
+                .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable')
+                .map((slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                })),
+            }))
+            .filter((dayData) => dayData.timeSlots.length > 0)
+        : [];
+  
+      const requestData = {
+        userData,
+        contactData,
+        ...(availabilityData.length > 0 && { availabilityData }),
+        Freelancer,
+        isInternalInterviewer,
+        isUpdate: createdIds.ownerId !== null
+      };
+  
+      // Send data to backend
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/Individual/Signup`,
+        requestData,
+        { withCredentials: true }
+      );
+  
+      if (response.data.token) {
+        setAuthCookies(response.data.token);
+  
+        // Store IDs after creation
+        if (!createdIds.ownerId && response.data.ownerId) {
+          setCreatedIds({
+            ownerId: response.data.ownerId,
+            contactId: response.data.contactId
+          });
+        }
+  
+        // Handle file uploads for step 0
+        if (currentStep === 0) {
+          if (linkedInData?.pictureUrl && !filePreview && response.data.contactId) {
+            try {
+              const imageResponse = await fetch(linkedInData.pictureUrl);
+              const blob = await imageResponse.blob();
+              const imageFile = new File([blob], 'linkedin-profile.jpg', { type: 'image/jpeg' });
+              const imageData = new FormData();
+              imageData.append('image', imageFile);
+              imageData.append('type', 'contact');
+              imageData.append('id', response.data.contactId);
+  
+              await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
+              });
+            } catch (linkedInError) {
+              console.error('Error uploading LinkedIn picture:', linkedInError);
+            }
+          }
+  
+          if (file && response.data.contactId) {
+            const imageData = new FormData();
+            imageData.append('image', file);
+            imageData.append('type', 'contact');
+            imageData.append('id', response.data.contactId);
+  
+            try {
+              await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
+              });
+              toast.success('Profile picture uploaded successfully!');
+            } catch (uploadError) {
+              console.error('Error uploading profile picture:', uploadError);
+              toast.error('Failed to upload profile picture. You can update it later.');
+            }
+          }
+        }
+  
+        toast.success(
+          response.data.isUpdate
+            ? "Profile updated successfully!"
+            : "Profile created successfully!",
+          { autoClose: 2000 }
+        );
+  
+        // Move to next step or redirect
+        if (currentStep < (isInternalInterviewer ? 3 : (Freelancer ? 3 : 1))) {
+          setCurrentStep(currentStep + 1);
+        } else {
+          navigate('/subscription-plans');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error(
+        error.response?.data?.message || 'Failed to save profile. Please try again.',
+        { autoClose: 5000 }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to validate the current step
+  const validateCurrentStep = async (step) => {
     let params = {};
     let isValid = false;
 
-    if (currentStep === 0) {
-      params = {
-        formData: basicDetailsData,
-      };
-      isValid = await validateSteps(
-        currentStep,
-        params,
-        setErrors,
-        // checkProfileIdExists,
-        // checkEmailExists
-      );
-
-    } else if (currentStep === 1) {
+    if (step === 1) {
       params = {
         formData: additionalDetailsData,
         selectedIndustry: additionalDetailsData.industry,
         selectedLocation: additionalDetailsData.location,
       };
-      isValid = validateSteps(currentStep, params, setErrors);
-    } else if (currentStep === 2) {
+      isValid = await validateSteps(step, params, setErrors);
+    } else if (step === 2) {
       params = {
         selectedCandidates: selectedCandidates,
         selectedSkills: interviewDetailsData.skills,
-        InterviewPreviousExperience:
-          interviewDetailsData.previousInterviewExperience,
+        InterviewPreviousExperience: interviewDetailsData.previousInterviewExperience,
         expertiseLevel: interviewDetailsData.expertiseLevel_ConductingInterviews,
         formData2: interviewDetailsData,
       };
-      isValid = validateSteps(currentStep, params, setErrors);
-    } else if (currentStep === 3) {
+      isValid = await validateSteps(step, params, setErrors);
+    } else if (step === 3) {
       params = {
         times: times,
         formData3: availabilityDetailsData,
         selectedOption: availabilityDetailsData.preferredDuration,
       };
-      isValid = validateSteps(currentStep, params, setErrors);
+      isValid = await validateSteps(step, params, setErrors);
     }
 
-    if (!isValid) {
-      console.log("Validation failed. Errors:", errors);
-      return;
-    }
-
-    setCompleted((prev) => {
-      const updated = [...prev];
-      updated[currentStep] = true;
-      return updated;
-    });
-
-    // For non-freelancer or limited steps profile (EXCLUDING internal interviewers), save at step 1
-    if (
-      (!Freelancer && currentStep === 1 && !isInternalInterviewer) ||
-      (showLimitedSteps && currentStep === 1 && !isInternalInterviewer)
-    ) {
-      await handleSubmit();
-      return;
-    }
-
-    // For freelancer/internal interviewer, save at last step
-    if ((Freelancer || isInternalInterviewer) && currentStep === 3) {
-      await handleSubmit();
-    } else {
-      const nextStep = Math.min(currentStep + 1, showLimitedSteps ? 1 : 3);
-      setCurrentStep(nextStep);
-    }
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
-  
-    const userData = {
-      firstName: basicDetailsData.firstName,
-      lastName: basicDetailsData.lastName,
-      profileId: basicDetailsData.profileId,
-      isFreelancer: isInternalInterviewer ? false : Freelancer,//when user is coming as organization user then they have fleelancer false
-      email: basicDetailsData.email,
-      isProfileCompleted: true,
-    };
-  
-    const contactData = {
-      ...basicDetailsData,
-      ...additionalDetailsData,
-      ...(isInternalInterviewer || Freelancer ? interviewDetailsData : {}),
-      LetUsKnowYourProfession: profession,
-      // Add preferredDuration and timeZone to contactData
-      preferredDuration: availabilityDetailsData.preferredDuration,
-      timeZone: availabilityDetailsData.timeZone,
-    };
-  
-    const availabilityData = (isInternalInterviewer || Freelancer)
-      ? Object.keys(availabilityDetailsData.availability || times)
+
+    try {
+      // Determine which section is being completed
+      const currentSection =
+        currentStep === 0 ? 'basicDetails' :
+          currentStep === 1 ? 'additionalDetails' :
+            currentStep === 2 ? 'interviewDetails' : 'availabilityDetails';
+
+      // Update completion status for the current step
+      const updatedCompletionStatus = {
+        ...completionStatus,
+        [currentSection]: true
+      };
+
+      // Prepare user data with completion status
+      const userData = {
+        firstName: basicDetailsData.firstName,
+        lastName: basicDetailsData.lastName,
+        profileId: basicDetailsData.profileId,
+        isFreelancer: isInternalInterviewer ? false : Freelancer,
+        email: basicDetailsData.email,
+        isProfileCompleted: true,
+        completionStatus: updatedCompletionStatus,
+        ...(contactDataFromOrg?.ownerId && { ownerId: contactDataFromOrg.ownerId }),
+        ...(contactDataFromOrg?._id && { contactId: contactDataFromOrg._id }),
+        isInternalInterviewer
+      };
+
+      // Prepare contact data with completion status
+      const contactData = {
+        ...basicDetailsData,
+        ...(currentStep >= 1 ? additionalDetailsData : {}),
+        ...(currentStep >= 2 ? interviewDetailsData : {}),
+        ...(currentStep >= 3 ? availabilityDetailsData : {}),
+        LetUsKnowYourProfession: profession,
+        preferredDuration: availabilityDetailsData?.preferredDuration,
+        timeZone: availabilityDetailsData?.timeZone,
+        completionStatus: updatedCompletionStatus
+      };
+
+      // Remove any undefined values from contact data
+      Object.keys(contactData).forEach(key => {
+        if (contactData[key] === undefined) {
+          delete contactData[key];
+        }
+      });
+
+      // Prepare availability data if needed
+      const availabilityData = (isInternalInterviewer || Freelancer) && currentStep === 3
+        ? Object.keys(availabilityDetailsData.availability || times)
           .map((day) => ({
             day,
             timeSlots: availabilityDetailsData.availability[day]
@@ -293,33 +643,24 @@ const MultiStepForm = () => {
               })),
           }))
           .filter((dayData) => dayData.timeSlots.length > 0)
-      : [];
-  
-    let isProfileCompleteData = {};
-    if (isProfileComplete) {
-      isProfileCompleteData = {
-        isProfileComplete: true,
-        ownerId: contactDataFromOrg.ownerId,
-        contactId: contactDataFromOrg._id,
-        isInternalInterviewer,
-      };
-    }
-  
-    try {
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
+        : [];
+
+      // Prepare the complete data object to send to the backend
+      const requestData = {
         userData,
         contactData,
-        availabilityData,
-        Freelancer,
-        isProfileCompleteData,
-      });
-  
-      // Show success toast based on create/update
-      toast.success(
-        response.data.isUpdate 
-          ? "Profile updated successfully!" 
-          : "Profile created successfully!",
-        { autoClose: 5000 }
+        ...(availabilityData.length > 0 && { availabilityData }),
+        ...(isProfileComplete && { isProfileComplete: true })
+      };
+
+      // Update the completion status in state
+      setCompletionStatus(updatedCompletionStatus);
+
+      // Save the data to the backend
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/Individual/Signup`,
+        requestData,
+        { withCredentials: true }
       );
   
       const { contactId, token,isProfileCompleted } = response.data;
@@ -353,22 +694,84 @@ const MultiStepForm = () => {
         return;
       }
 
-      // Store JWT in cookies
-      setAuthCookies(token);
-  
-      // Send welcome email
-      try {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-          email: userData.email,
-          tenantId: response.data.tenantId,
-          ownerId: response.data.ownerId,
-          lastName: userData.lastName,
-        });
-      } catch (emailError) {
-        console.error('Email error:', emailError);
-        // Don't show error toast for email failure
+      // Handle successful save
+      if (response.data.token) {
+        // Save the token and user data
+        setAuthCookies(response.data.token);
+
+        // Handle LinkedIn profile picture if available
+        if (linkedInData?.pictureUrl && !filePreview && response.data.contactId) {
+          try {
+            const imageResponse = await fetch(linkedInData.pictureUrl);
+            const blob = await imageResponse.blob();
+            const imageFile = new File([blob], 'linkedin-profile.jpg', { type: 'image/jpeg' });
+            const imageData = new FormData();
+            imageData.append('image', imageFile);
+            imageData.append('type', 'contact');
+            imageData.append('id', response.data.contactId);
+
+            await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+              withCredentials: true
+            });
+          } catch (linkedInError) {
+            console.error('Error uploading LinkedIn picture:', linkedInError);
+          }
+        }
+
+        // Handle custom profile picture upload if available
+        if (file && response.data.contactId) {
+          const imageData = new FormData();
+          imageData.append('image', file);
+          imageData.append('type', 'contact');
+          imageData.append('id', response.data.contactId);
+
+          try {
+            await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+              withCredentials: true
+            });
+            toast.success('Profile picture uploaded successfully!');
+          } catch (uploadError) {
+            console.error('Error uploading profile picture:', uploadError);
+            toast.error('Failed to upload profile picture. You can update it later.');
+          }
+        }
+
+        // Send welcome email
+        try {
+          await axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+            email: userData.email,
+            tenantId: response.data.tenantId,
+            ownerId: response.data.ownerId,
+            lastName: userData.lastName,
+          });
+        } catch (emailError) {
+          console.error('Email error:', emailError);
+          // Don't show error toast for email failure
+        }
+
+        // Show success message
+        toast.success(
+          response.data.isUpdate
+            ? "Profile updated successfully!"
+            : "Profile created successfully!",
+          { autoClose: 5000 }
+        );
+
+        // Move to the next step or complete the form
+        if (currentStep < (isInternalInterviewer ? 3 : (Freelancer ? 3 : 1))) {
+          // Only move to next step if validation passes
+          const nextStep = currentStep + 1;
+          const isValid = await validateCurrentStep(nextStep);
+          if (isValid) {
+            setCurrentStep(nextStep);
+          }
+        } else {
+          // Form completed, redirect to subscription plans
+          navigate('/subscription-plans');
+        }
       }
-  
       setLoading(false);
       if (isProfileCompleted) {
         navigate('/home');
@@ -377,12 +780,13 @@ const MultiStepForm = () => {
         
       }
     } catch (error) {
-      console.error('Submission failed:', error);
-      setLoading(false);
+      console.error('Error saving profile:', error);
       toast.error(
-        error.response?.data?.message || "Failed to submit form. Please try again.",
+        error.response?.data?.message || 'Failed to save profile. Please try again.',
         { autoClose: 5000 }
       );
+    } finally {
+      setLoading(false);
     }
   };
 

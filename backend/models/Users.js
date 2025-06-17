@@ -17,10 +17,6 @@
 
 // const Users = mongoose.model('Users', UsersSchema);
 // module.exports = {
-//   Users,
-// };
-
-
 const mongoose = require('mongoose');
 
 const UsersSchema = new mongoose.Schema({
@@ -38,6 +34,12 @@ const UsersSchema = new mongoose.Schema({
     createdBy: { type: String },
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },
+    completionStatus: {
+      basicDetails: { type: Boolean, default: false },
+      additionalDetails: { type: Boolean, default: false },
+      interviewDetails: { type: Boolean, default: false },
+      availabilityDetails: { type: Boolean, default: false }
+    },
 }, { timestamps: true });
 
 const Users = mongoose.model('Users', UsersSchema);

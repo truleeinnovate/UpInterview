@@ -168,6 +168,12 @@ const ContactsSchema = new mongoose.Schema({
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    completionStatus: {
+      basicDetails: { type: Boolean, default: false },
+      additionalDetails: { type: Boolean, default: false },
+      interviewDetails: { type: Boolean, default: false },
+      availabilityDetails: { type: Boolean, default: false }
+    },
 }, { timestamps: true });
 
 
