@@ -17,7 +17,8 @@ const Subscription = () => {
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
-  const organization = tokenPayload?.organization?.toString();
+  const organization = tokenPayload?.organization;
+  console.log("organization ----", organization);
   const orgId = tokenPayload?.tenantId;
 
 
@@ -25,7 +26,7 @@ const Subscription = () => {
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
-    userType: organization === "true" ? "organization" : "individual",
+    userType: organization === true ? "organization" : "individual",
     tenantId: orgId,
     ownerId: userId,
   });
@@ -338,7 +339,7 @@ const Subscription = () => {
             {subscriptionData && subscriptionData.status === 'active' && (
               <button
                 onClick={() => setShowCancelModal(true)}
-                className="bg-custom-blue py-2 px-4 rounded-lg text-white"
+                className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white ${(organization === "false" && user.userType === "individual" && subscriptionData.planName === "Base") ? 'hidden' : 'visible'}`}
               >
                 Cancel Subscription
               </button>

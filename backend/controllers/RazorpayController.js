@@ -7,6 +7,7 @@ const PaymentCard = require('../models/Carddetails.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Receipt = require('../models/Receiptmodels.js');
+const { Organization } = require('../models/Tenant');
 
 // Import helper functions directly from the controller
 const helpers = require('./CustomerSubscriptionInvoiceContollers.js');
@@ -363,6 +364,8 @@ const verifyPayment = async (req, res) => {
             // Continue despite error - focus on subscription and invoice updates
         }
 
+        
+
         // Update existing CustomerSubscription, Invoice
         try {
 
@@ -525,7 +528,14 @@ const verifyPayment = async (req, res) => {
 
                 await customerSubscription.save();
                 console.log('Subscription updated with receipt ID');
-
+                
+                if (payment.status === 'captured' || payment.status === 'authorized' || payment.status === 'succeeded'){
+                    const tenant = await Organization.findOne({ ownerId: ownerId });
+                    if(tenant){
+                      tenant.status = 'active';
+                      await tenant.save();
+                    }
+                }
 
                 // Update wallet if plan has credits
                 if (plan && plan.walletCredits > 0) {
