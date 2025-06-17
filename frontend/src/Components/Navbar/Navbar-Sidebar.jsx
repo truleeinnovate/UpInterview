@@ -154,7 +154,7 @@ const Navbar = () => {
       </div>
       <div>
         <div className="text-sm border-b w-full pb-5">
-          <div className="mt-2 mb-2 ml-8 flex items-center">
+          <div className="mt-1 mb-2 ml-4 flex items-center">
             <p className="text-black">Introduction</p>
           </div>
           {[
@@ -168,7 +168,7 @@ const Navbar = () => {
           ].map(({ label, toggle, isOpen }, index) => (
             <div key={index} className="flex justify-between mr-4 mt-2">
               <div className="cursor-pointer">
-                <label className="inline-flex items-center ml-5">
+                <label className="inline-flex items-center ml-3">
                   <span className="ml-3 text-gray-500">{label}</span>
                 </label>
               </div>
@@ -311,7 +311,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="bg-white fixed top-0 left-0 right-0 z-20 shadow-sm">
+      <div className="bg-white fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div className="mx-auto relative">
           <div className="flex justify-between items-center border-gray-100 p-2 sm:px-4">
             {/* Mobile menu button and logo */}

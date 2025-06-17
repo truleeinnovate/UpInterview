@@ -107,15 +107,7 @@ const createSubscriptionControllers = async (req, res) => {
     if (status === "pending" || status === "created" || (userDetails.userType === "individual" && (userDetails.membershipType === "monthly" || userDetails.membershipType === "annual"))) {
       console.log(`Processing subscription with status: ${status}`);
 
-      const subscription = await createSubscriptionRecord(
-        userDetails,
-        planDetails,
-        pricing,
-        discount,
-        totalAmount,
-        invoice._id,
-        status
-      );
+      
 
       const invoice = await createInvoice(
         userDetails.tenantId,
@@ -126,6 +118,16 @@ const createSubscriptionControllers = async (req, res) => {
         userDetails,
         status, // Pass the original status to maintain consistency
         discount
+      );
+
+      const subscription = await createSubscriptionRecord(
+        userDetails,
+        planDetails,
+        pricing,
+        discount,
+        totalAmount,
+        invoice._id,
+        status
       );
       
       

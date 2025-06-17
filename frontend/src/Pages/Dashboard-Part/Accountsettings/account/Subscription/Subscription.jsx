@@ -336,10 +336,10 @@ const Subscription = () => {
         <div className="flex-1">
           <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Subscription</h2>
-            {subscriptionData && subscriptionData.status === 'active' && (
+            {subscriptionData && subscriptionData.status === 'active' && ((organization !== "false" || subscriptionData.planName !== "Base")) && (
               <button
                 onClick={() => setShowCancelModal(true)}
-                className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white ${(organization === "false" && user.userType === "individual" && subscriptionData.planName === "Base") ? 'hidden' : 'visible'}`}
+                className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}
               >
                 Cancel Subscription
               </button>
