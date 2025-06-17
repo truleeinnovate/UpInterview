@@ -33,10 +33,10 @@ const registerOrganization = async (req, res) => {
 
     // Validate work email
     const domain = email.split('@')[1]?.toLowerCase();
-    // const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
-    // if (personalDomains.includes(domain)) {
-    //   return res.status(400).json({ message: 'Please use your company email address' });
-    // }
+    const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+    if (personalDomains.includes(domain)) {
+      return res.status(400).json({ message: 'Please use your company email address' });
+    }
 
     // Fetch tabs and objects data from DB
     console.log('Fetching tabs and objects data from database...');

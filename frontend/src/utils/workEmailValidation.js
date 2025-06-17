@@ -6,21 +6,21 @@ export const validateWorkEmail = (email) => {
   }
   
   // Standard email format validation
-//   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//   if (!emailRegex.test(email)) {
-//     return 'Invalid email format';
-//   }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return 'Invalid email format';
+  }
   
-//   // Work email validation (must be a company email, not common personal domains)
-//   const personalDomains = [
-//     'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 
-//     'aol.com', 'icloud.com', 'protonmail.com', 'mail.com'
-//   ];
+  // Work email validation (must be a company email, not common personal domains)
+  const personalDomains = [
+    'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 
+    'aol.com', 'icloud.com', 'protonmail.com', 'mail.com'
+  ];
   
   const domain = email.split('@')[1]?.toLowerCase();
-//   if (personalDomains.includes(domain)) {
-//     return 'Please use your company email address';
-//   }
+  if (personalDomains.includes(domain)) {
+    return 'Please use your company email address';
+  }
   
   return '';
 };
