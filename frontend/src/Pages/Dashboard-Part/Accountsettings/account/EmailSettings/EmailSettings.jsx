@@ -374,8 +374,8 @@ Template Manager Team
       {/* Test Email Modal */}
       {showTestEmail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[95vh] overflow-y-auto mx-4">
-            <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto mx-4">
+            <div className="sticky top-0 z-10 bg-white flex items-center justify-between border-b px-6 py-4">
               <h3 className="text-lg font-medium">Send Test Email</h3>
               <button
                 onClick={() => setShowTestEmail(false)}
