@@ -7,7 +7,7 @@ const config = require("../../config");
 const CustomerSubscription = require('../../models/CustomerSubscriptionmodels.js');
 const cron = require('node-cron');
 const moment = require('moment');
-const {Organization} = require('../../models/Tenant.js');
+const { Organization } = require('../../models/Tenant.js');
 // this controller use for sending mails in signup or reset password
 
 
@@ -108,41 +108,82 @@ const {Organization} = require('../../models/Tenant.js');
 
 exports.afterSubscribePlan = async (req, res) => {
   try {
-    const { ownerId, tenantId, planName, planPrice, duration } = req.body;
+    const { ownerId, tenantId } = req.body;
+
+    // Step 1: Find User
     const user = await Users.findOne({ _id: ownerId });
     if (!user || !user.email) {
       return res.status(401).json({ success: false, message: "User or email not found" });
     }
 
-    // Get email template
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'subscription_confirmation',isActive: true,isSystemTemplate: true});
+    // Step 2: Get Latest Subscription of the User
+    const subscription = await CustomerSubscription.findOne({ ownerId })
+
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: "Subscription not found" });
+    }
+
+    // Extract necessary data from subscription
+    const {
+      selectedBillingCycle,
+      price,
+      totalAmount,
+      status,
+      startDate,
+      endDate
+    } = subscription;
+
+    // Format duration based on billing cycle
+    const durationMap = {
+      monthly: "1 Month",
+      quarterly: "3 Months",
+      annual: "1 Year"
+    };
+    const duration = durationMap[selectedBillingCycle] || selectedBillingCycle;
+
+    const planName = selectedBillingCycle?.toUpperCase() + " Plan";
+    const planPrice = `₹${price}`;
+
+    // Step 3: Get Email Template
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: 'subscription_confirmation',
+      isActive: true,
+      isSystemTemplate: true
+    });
+
     if (!emailTemplate) {
-      // console.error(`No email template found for category: ${EMAIL_CATEGORIES.SUBSCRIPTION_CONFIRMATION}`);
       return res.status(404).json({ success: false, message: "Email template not found" });
     }
 
-    // Replace placeholders
+    // Step 4: Replace Template Placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{planName}}', planName)
       .replace('{{companyName}}', 'Upinterview');
+
+    const formattedStartDate = new Date(startDate).toLocaleDateString('en-IN');
+    const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'N/A';
 
     const emailBody = emailTemplate.body
       .replace(/{{userName}}/g, user.Name || '')
       .replace(/{{planName}}/g, planName)
       .replace(/{{planPrice}}/g, planPrice)
       .replace(/{{duration}}/g, duration)
+      .replace(/{{startDate}}/g, formattedStartDate)
+      .replace(/{{endDate}}/g, formattedEndDate)
+      .replace(/{{status}}/g, status || 'Active')
       .replace(/{{companyName}}/g, 'Upinterview')
       .replace(/{{supportEmail}}/g, 'support@yourcompany.com');
 
-    // Send email
+
+    // Step 5: Send Email
     const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
 
-    // Save subscription notification
+    // Step 6: Save Notification
     req.notificationData = [{
       toAddress: user.email,
       fromAddress: process.env.EMAIL_FROM,
       title: "Subscription Plan Activated",
-      body: `Subscription for plan ${planName} has been activated successfully.`,
+      body: `Subscription for ${planName} has been activated successfully.`,
       notificationType: "email",
       object: { objectName: "subscription", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
@@ -152,14 +193,16 @@ exports.afterSubscribePlan = async (req, res) => {
       modifiedBy: ownerId,
     }];
 
-    await notificationMiddleware(req, res, () => {});
+    await notificationMiddleware(req, res, () => { });
 
     return res.json({ success: true, message: "Subscription successful and email sent!" });
+
   } catch (error) {
     console.error("Subscription Error:", error);
     return res.status(500).json({ success: false, message: "Subscription failed", error: error.message });
   }
 };
+
 
 exports.afterSubscribeFreePlan = async (req, res) => {
   try {
@@ -171,7 +214,7 @@ exports.afterSubscribeFreePlan = async (req, res) => {
     }
 
     // Get email template
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'free_plan_subscription',isActive: true,isSystemTemplate: true });
+    const emailTemplate = await emailTemplateModel.findOne({ category: 'free_plan_subscription', isActive: true, isSystemTemplate: true });
     if (!emailTemplate) {
       // console.error(`No email template found for category: ${EMAIL_CATEGORIES.FREE_PLAN_SUBSCRIPTION}`);
       return res.status(404).json({ success: false, message: "Email template not found" });
@@ -208,7 +251,7 @@ exports.afterSubscribeFreePlan = async (req, res) => {
       modifiedBy: ownerId,
     }];
 
-    await notificationMiddleware(req, res, () => {});
+    await notificationMiddleware(req, res, () => { });
 
     return res.json({ success: true, message: "Free Plan subscription successful and email sent!" });
   } catch (error) {
@@ -219,7 +262,7 @@ exports.afterSubscribeFreePlan = async (req, res) => {
 
 // Cron job to automate email sending for all subscriptions
 cron.schedule('0 0 * * *', async () => {
-    console.log('Running automated email reminder job at 1', new Date().toISOString());
+  console.log('Running automated email reminder job at 1', new Date().toISOString());
 
   try {
     console.log('Running automated email reminder job at', new Date().toISOString());
@@ -268,8 +311,8 @@ cron.schedule('0 0 * * *', async () => {
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
         const planName = subscription.subscriptionPlanId ? 'Selected Plan' : 'Base Plan';
-        const planDetails = subscription.subscriptionPlanId ? 
-          `Plan: ${planName}, Billing Cycle: ${subscription.selectedBillingCycle}` : 
+        const planDetails = subscription.subscriptionPlanId ?
+          `Plan: ${planName}, Billing Cycle: ${subscription.selectedBillingCycle}` :
           'Base Plan with standard features';
 
         const emailSubject = emailTemplateIncomplete.subject
@@ -370,7 +413,7 @@ cron.schedule('0 0 * * *', async () => {
           modifiedBy: subscription.ownerId,
         }];
 
-        await notificationMiddleware({ notificationData }, { json: () => {} }, () => {});
+        await notificationMiddleware({ notificationData }, { json: () => { } }, () => { });
         console.log(`Payment renewal reminder sent to ${user.email} for subscription ${subscription._id} at ${daysUntilBilling} days remaining`);
       }
     }

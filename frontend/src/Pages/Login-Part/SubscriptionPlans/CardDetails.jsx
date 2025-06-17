@@ -342,6 +342,7 @@ const CardDetails = () => {
                                          await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
                                             ownerId,
                                             tenantId,
+                                            
                                             // ccEmail: "shaikmansoor1200@gmail.com",
                                         });
 
