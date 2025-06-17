@@ -213,13 +213,15 @@ exports.forgotPasswordSendEmail = async (req, res) => {
 
 
 
-cron.schedule('0 0 * * *', async () => {
-    console.log('Running organization status email reminder job at 1', new Date().toISOString());
-  try {
-    console.log('Running organization status email reminder job at', new Date().toISOString());
+cron.schedule('* * * * *', async () => {
+  console.log('\n===== Running TEST Organization Status Email Reminder Job =====');
+  console.log('Start Time:', new Date().toISOString());
 
-    // 1. Submitted Status Reminders (24h, 48h, 7 days, 30 days)
+  try {
+    console.log('[INFO] Fetching organizations with status "submitted"...');
     const submittedOrganizations = await Organization.find({ status: 'submitted' });
+    console.log(`[INFO] Found ${submittedOrganizations.length} submitted organizations.`);
+
     const emailTemplateSubmitted = await emailTemplateModel.findOne({
       category: 'submitted_status_reminder',
       isActive: true,
@@ -227,69 +229,61 @@ cron.schedule('0 0 * * *', async () => {
     });
 
     if (!emailTemplateSubmitted) {
-      console.error('No email template found for submitted_status_reminder');
+      console.error('[ERROR] No email template found for submitted_status_reminder');
       return;
     }
 
     for (const organization of submittedOrganizations) {
+      console.log(`\n[PROCESSING] Organization ID: ${organization._id} (submitted)`);
+
       const createdAt = moment(organization.createdAt);
       const now = moment();
-      const secondsSinceCreation = now.diff(createdAt, 'seconds');
 
+      const secondsSinceCreation = now.diff(createdAt, 'seconds');
       const hoursSinceCreation = now.diff(createdAt, 'hours');
       const daysSinceCreation = now.diff(createdAt, 'days');
 
-      // Send reminders at 24h, 48h, 7 days, 30 days
+      console.log(`[DEBUG] Time since creation: ${secondsSinceCreation}s / ${hoursSinceCreation}h / ${daysSinceCreation}d`);
+
       const reminderTriggers = [
-        secondsSinceCreation === 10, // Test case
+        secondsSinceCreation >= 10 && secondsSinceCreation <= 20,
         hoursSinceCreation === 24,
         hoursSinceCreation === 48,
         daysSinceCreation === 7,
-        daysSinceCreation === 30
+        daysSinceCreation === 30,
       ];
 
       if (reminderTriggers.some(trigger => trigger)) {
         const user = await Users.findOne({ _id: organization.ownerId });
+
         if (!user || !user.email) {
-          console.warn(`No user or email found for ownerId: ${organization.ownerId}`);
+          console.warn(`[WARNING] No user or email found for ownerId: ${organization.ownerId}`);
           continue;
         }
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
 
-        const emailSubject = emailTemplateSubmitted.subject
-          .replace('{{companyName}}', 'Upinterview');
-
+        const emailSubject = emailTemplateSubmitted.subject.replace('{{companyName}}', 'Upinterview');
         const emailBody = emailTemplateSubmitted.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{companyName}}/g, 'Upinterview')
           .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
           .replace(/{{paymentLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/payment`);
 
+        console.log(`[SENDING EMAIL] To: ${user.email}, Subject: "${emailSubject}"`);
         const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
+        console.log(`[EMAIL STATUS] Success: ${emailResponse.success}`);
 
-        // Save notification
-        // const notificationData = [{
-        //   toAddress: user.email,
-        //   fromAddress: process.env.EMAIL_FROM,
-        //   title: 'Complete Your Payment Process',
-        //   body: `Please complete the payment process for your Upinterview organization setup.`,
-        //   notificationType: 'email',
-        //   object: { objectName: 'organization', objectId: organization.ownerId },
-        //   status: emailResponse.success ? 'Success' : 'Failed',
-        //   tenantId: organization._id,
-        //   recipientId: organization.ownerId,
-        //   createdBy: organization.ownerId,
-        //   modifiedBy: organization.ownerId,
-        // }];
-
-        // await notificationMiddleware({ notificationData }, { json: () => { } }, () => { });
-        console.log(`Submitted status reminder sent to ${user.email} for organization ${organization._id} at ${hoursSinceCreation} hours/${daysSinceCreation} days`);
+        console.log(`[SUCCESS] Reminder sent for submitted organization ${organization._id}`);
+      } else {
+        console.log('[SKIPPED] Reminder not due yet.');
       }
     }
 
-    // 2. Draft Status Reminders (24h, 48h, 7 days, 30 days)
+    console.log('\n[INFO] Fetching organizations with status "draft"...');
     const draftOrganizations = await Organization.find({ status: 'draft' });
+    console.log(`[INFO] Found ${draftOrganizations.length} draft organizations.`);
+
     const emailTemplateDraft = await emailTemplateModel.findOne({
       category: 'draft_status_reminder',
       isActive: true,
@@ -297,69 +291,61 @@ cron.schedule('0 0 * * *', async () => {
     });
 
     if (!emailTemplateDraft) {
-      console.error('No email template found for draft_status_reminder');
+      console.error('[ERROR] No email template found for draft_status_reminder');
       return;
     }
 
     for (const organization of draftOrganizations) {
+      console.log(`\n[PROCESSING] Organization ID: ${organization._id} (draft)`);
+
       const createdAt = moment(organization.createdAt);
       const now = moment();
+
       const hoursSinceCreation = now.diff(createdAt, 'hours');
       const daysSinceCreation = now.diff(createdAt, 'days');
 
-      // Send reminders at 24h, 48h, 7 days, 30 days
+      console.log(`[DEBUG] Time since creation: ${hoursSinceCreation}h / ${daysSinceCreation}d`);
+
       const reminderTriggers = [
         hoursSinceCreation === 24,
         hoursSinceCreation === 48,
         daysSinceCreation === 7,
-        daysSinceCreation === 30
+        daysSinceCreation === 30,
       ];
 
       if (reminderTriggers.some(trigger => trigger)) {
         const user = await Users.findOne({ _id: organization.ownerId });
+
         if (!user || !user.email) {
-          console.warn(`No user or email found for ownerId: ${organization.ownerId}`);
+          console.warn(`[WARNING] No user or email found for ownerId: ${organization.ownerId}`);
           continue;
         }
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
 
-        const emailSubject = emailTemplateDraft.subject
-          .replace('{{companyName}}', 'Upinterview');
-
+        const emailSubject = emailTemplateDraft.subject.replace('{{companyName}}', 'Upinterview');
         const emailBody = emailTemplateDraft.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{companyName}}/g, 'Upinterview')
           .replace(/{{supportEmail}}/g, 'support@yourcompany.com')
           .replace(/{{profileLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/profile`);
 
+        console.log(`[SENDING EMAIL] To: ${user.email}, Subject: "${emailSubject}"`);
         const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
+        console.log(`[EMAIL STATUS] Success: ${emailResponse.success}`);
 
-        // Save notification
-        // const notificationData = [{
-        //   toAddress: user.email,
-        //   fromAddress: process.env.EMAIL_FROM,
-        //   title: 'Complete Your Profile',
-        //   body: `Please complete your Upinterview organization profile setup.`,
-        //   notificationType: 'email',
-        //   object: { objectName: 'organization', objectId: organization.ownerId },
-        //   status: emailResponse.success ? 'Success' : 'Failed',
-        //   tenantId: organization._id,
-        //   recipientId: organization.ownerId,
-        //   createdBy: organization.ownerId,
-        //   modifiedBy: organization.ownerId,
-        // }];
-
-        // await notificationMiddleware({ notificationData }, { json: () => { } }, () => { });
-        console.log(`Draft status reminder sent to ${user.email} for organization ${organization._id} at ${hoursSinceCreation} hours/${daysSinceCreation} days`);
+        console.log(`[SUCCESS] Reminder sent for draft organization ${organization._id}`);
+      } else {
+        console.log('[SKIPPED] Reminder not due yet.');
       }
     }
 
-    console.log('Organization status email reminder job completed successfully.');
+    console.log('\n✅ Organization status email reminder job completed at:', new Date().toISOString());
   } catch (error) {
-    console.error('Organization Status Email Reminder Job Error:', error);
+    console.error('\n❌ Organization Status Email Reminder Job Error:', error);
   }
 });
+
 
 
 

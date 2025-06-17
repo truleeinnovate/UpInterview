@@ -61,7 +61,6 @@ const registerOrganization = async (req, res) => {
       firstName, lastName, email, phone, profileId, jobTitle,
       company, employees, country, password: hashedPassword,
       status: 'submitted',
-      isEmailVerified: false
     });
 
     savedOrganization = await organization.save();
@@ -78,7 +77,8 @@ const registerOrganization = async (req, res) => {
       profileId,
       phone,
       tenantId: savedOrganization._id,
-      password: hashedPassword
+      password: hashedPassword,
+      isEmailVerified: false
     });
     console.log('New user object:', JSON.stringify(newUser, null, 2));
     const savedUser = await newUser.save();
@@ -258,7 +258,7 @@ const organizationUserCreation = async (req, res) => {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id, isEmailVerified } = UserData;
 
     if (editMode && _id) {
       // Update existing user
@@ -275,6 +275,7 @@ const organizationUserCreation = async (req, res) => {
       existingUser.roleId = roleId;
       existingUser.countryCode = countryCode;
       existingUser.isProfileCompleted = isProfileCompleted;
+      existingUser.isEmailVerified = isEmailVerified;
 
       const savedUser = await existingUser.save();
 
@@ -309,7 +310,8 @@ const organizationUserCreation = async (req, res) => {
         tenantId,
         roleId,
         countryCode,
-        isProfileCompleted
+        isProfileCompleted,
+        isEmailVerified: false
       });
 
       const savedUser = await newUser.save();
@@ -352,18 +354,19 @@ const loginOrganization = async (req, res) => {
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
-
-    // Check email verification
-    const organization = await Organization.findOne({ ownerId: user._id });
-    console.log('organization', organization);
-
-    if (!organization.isEmailVerified) {
+    if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
         message: 'Email not verified',
         isEmailVerified: false
       });
     }
+
+    // Check email verification
+    const organization = await Organization.findOne({ ownerId: user._id });
+    console.log('organization', organization);
+
+
 
 
     // Check status
@@ -791,40 +794,40 @@ const updateBasedIdOrganizations = async (req, res) => {
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
-    
+
     if (!token) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Verification token is required' 
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required'
       });
     }
 
     const decoded = verifyEmailToken(token);
     if (!decoded) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid or expired verification token' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification token'
       });
     }
 
     const { email, userId } = decoded;
-    
+
     // Update user and organization
     await Users.findByIdAndUpdate(userId, { isEmailVerified: true });
-    await Organization.findOneAndUpdate(
-      { ownerId: userId },
-      { isEmailVerified: true }
-    );
+    // await Organization.findOneAndUpdate(
+    //   { ownerId: userId },
+    //   { isEmailVerified: true }
+    // );
 
-    res.json({ 
-      success: true, 
-      message: 'Email verified successfully' 
+    res.json({
+      success: true,
+      message: 'Email verified successfully'
     });
   } catch (error) {
     console.error('Email verification error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error verifying email' 
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying email'
     });
   }
 };
