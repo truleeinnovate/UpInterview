@@ -123,12 +123,12 @@ exports.getAllTemplates = async (req, res) => {
 exports.updateTemplate = async (req, res) => {
     try {
         // Validate required fields
-        if (!req.body.tenantId) {
-            return res.status(400).json({
-                status: false,
-                message: 'Tenant ID is required'
-            });
-        }
+        // if (!req.body.tenantId) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         message: 'Tenant ID is required'
+        //     });
+        // }
 
         if (!req.body) {
             return res.status(400).json({

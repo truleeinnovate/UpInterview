@@ -79,6 +79,8 @@ exports.newQuestion = async (req, res) => {
 };
 
 // edit question also add 
+// Helper function to validate ObjectIds
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 exports.updateQuestion = async (req, res) => {
   res.locals.loggedByController = true;
@@ -86,6 +88,7 @@ exports.updateQuestion = async (req, res) => {
 
   const questionId = req.params.id;
   const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
+  console.log('tenant-----------',questionId)
 
   if (!questionId) {
     return res.status(400).json({ message: "Question ID is required." });
@@ -95,6 +98,12 @@ exports.updateQuestion = async (req, res) => {
     const currentQuestion = await TenantQuestions.findById(questionId).lean();
     if (!currentQuestion) {
       return res.status(404).json({ message: "Question not found." });
+    }
+
+    // Filter out any invalid IDs
+    const validListIds = tenantListId.filter(isValidObjectId);
+    if (validListIds.length !== tenantListId.length) {
+      throw new Error('Some of the provided list IDs are invalid');
     }
 
     // Prepare update data
@@ -178,9 +187,81 @@ exports.updateQuestion = async (req, res) => {
   }
 };
 
+// exports.updateByOwner = async (req, res) => {
+//   const { tenantListId } = req.body;
+//   const { ownerId } = req.query;
+//   console.log('tenantlistyid ----', tenantListId);
+//   console.log('owner -----',ownerId)
+
+//   if (!tenantListId || !ownerId) {
+//     return res.status(400).json({ message: 'Missing required fields: tenantListId and ownerId' });
+//   }
+
+//   try {
+//     const updatedOwner = await TenantQuestions.updateMany(
+//       { ownerId },
+//       {
+//         $push: { tenantListId },
+//         $set: { updatedBy: ownerId },
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedOwner) {
+//       return res.status(404).json({ message: 'No owner found with given Id' });
+//     }
+
+//     const changes = Object.keys(req.body).map((key) => {
+//       return {
+//         fieldName: key,
+//         oldValue: updatedOwner[key],
+//         newValue: req.body[key],
+//       };
+//     });
+
+//     const logData = {
+//       tenantId: ownerId,
+//       ownerId,
+//       processName: 'Update owner',
+//       requestBody: req.body,
+//       message: 'Owner updated successfully',
+//       status: 'success',
+//       responseBody: updatedOwner,
+//       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+//         fieldName,
+//         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+//       })),
+//     };
+
+//     res.locals.logData = logData;
+
+//     res.status(200).json({
+//       status: "success",
+//       message: "Owner updated successfully",
+//       data: updatedOwner,
+//     });
+//   } catch (error) {
+//     res.locals.logData = {
+//       tenantId: ownerId,
+//       ownerId,
+//       processName: 'Update owner',
+//       requestBody: req.body,
+//       message: error.message,
+//       status: 'error',
+//     };
+//     res.status(500).json({ status: 'error', message: error.message });
+//   }
+// };
+
+
 exports.getQuestionBySuggestedId = async (req, res) => {
-  const { suggestedQuestionId } = req.params;
+  // res.locals.loggedByController = true;
+  // res.locals.processName = 'Get question by suggested ID';
+  const suggestedQuestionId = req.params.suggestedQuestionId;
   const { tenantId, ownerId } = req.query;
+  console.log('suggestedQuestionId:', suggestedQuestionId);
+  console.log('tenantId:', tenantId);
+  console.log('ownerId:', ownerId);
 
   if (!suggestedQuestionId || (!tenantId && !ownerId)) {
     return res.status(400).json({ message: 'Missing required fields: suggestedQuestionId and either tenantId or ownerId' });
@@ -188,8 +269,10 @@ exports.getQuestionBySuggestedId = async (req, res) => {
 
   try {
     const query = {
-      suggestedQuestionId: mongoose.Types.ObjectId(suggestedQuestionId),
+      suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId),
     };
+    console.log('query:', query);
+
     if (tenantId) {
       query.tenantId = tenantId;
     } else if (ownerId) {
@@ -197,11 +280,11 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     }
 
     const question = await TenantQuestions.findOne(query).populate('tenantListId');
+    console.log('question:', question);
 
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
-
 
     res.status(200).json({
       status: 'success',

@@ -124,6 +124,7 @@ useEffect(() => {
     setSelectedListId(candidateId);
   };
   const [selectedLabels, setSelectedLabels] = useState(false);
+  console.log('selected---',selectedLabels)
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
       setFormData({
@@ -150,6 +151,7 @@ useEffect(() => {
       setAnswerMatching(question.autoAssessment?.criteria || "");
       setCharLimits(question.charLimits || { min: 1, max: 100 });
       const labelNames = question.tenantListId.map(tenant => tenant);
+      console.log('labelNames ----------------',question.tenantListId)
       setSelectedLabels(labelNames);
       setSelectedMinExperience(question.minexperience || "");
       setSelectedMaxExperience(question.maxexperience || "");
@@ -667,7 +669,7 @@ useEffect(() => {
 
                 {/* My Question List */}
                 <div className="mb-4">
-                  <MyQuestionList fromform={true} onSelectList={handleListSelection} ref={listRef} error={errors.tenantListId} defaultTenantList={selectedLabels}
+                  <MyQuestionList fromform={true} onSelectList={handleListSelection} ref={listRef} error={errors.tenantListId} defaultTenantList={selectedLabels} notEditmode={!isEdit}
                     onErrorClear={handleErrorClear}
                   />
                 </div>

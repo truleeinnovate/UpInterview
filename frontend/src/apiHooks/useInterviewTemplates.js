@@ -50,7 +50,7 @@ export const useInterviewTemplates = () => {
                 throw err;
             }
         },
-        enabled: !!queryParams.authToken && !!queryParams.tenantId && !!queryParams.userId,
+        enabled: !!queryParams.authToken &&  (!!queryParams.tenantId  || !!queryParams.userId),
         retry: 1,
         staleTime: 1000 * 60 * 5, // 5 minutes cache
         refetchOnWindowFocus: false,
