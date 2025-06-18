@@ -19,6 +19,7 @@ const MyQuestionsList1 = forwardRef(
       error,
       onErrorClear,
       defaultTenantList,
+      notEditmode,
       setSelectedLabelnew,
       setActionViewMoreSection,
     },
@@ -35,11 +36,13 @@ const MyQuestionsList1 = forwardRef(
     } = useQuestions();
 
     const [selectedListIds, setSelectedListIds] = useState([]);
+    console.log("selectedListIds ---", selectedListIds);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
     const [newListName, setNewListName] = useState('');
     const [newListNameForName, setNewListNameForName] = useState('');
     const [searchTermTechnology, setSearchTermTechnology] = useState('');
     const [selectedCandidates, setSelectedCandidates] = useState([]);
+    // console.log('selectedCandidates ----------------',selectedCandidates)
     const [inputError, setInputError] = useState('');
 
     const authToken = Cookies.get('authToken');
@@ -55,7 +58,7 @@ const MyQuestionsList1 = forwardRef(
     // Set initial selectedListIds based on existing question
     useEffect(() => {
       if (existingQuestion?.data?.tenantListId) {
-        setSelectedListIds(existingQuestion.data.tenantListId.map((id) => id.toString()));
+        setSelectedListIds(existingQuestion?.data?.tenantListId?.map((id) => id.toString()));
       }
     }, [existingQuestion]);
 
@@ -132,14 +135,19 @@ const MyQuestionsList1 = forwardRef(
         // Determine lists to add and remove
         const currentListIds = existingQuestion?.data?.tenantListId?.map((id) => id.toString()) || [];
         const listsToAdd = selectedListIds.filter((id) => !currentListIds.includes(id));
+        console.log("listsToAdd ------", listsToAdd);
         const listsToRemove = currentListIds.filter((id) => !selectedListIds.includes(id));
-
+        console.log("listsToRemove ------", listsToRemove);
+        
         if (listsToAdd.length > 0) {
-          await addQuestionToList({
+        console.log('addQuestionToList------------1111111111111111',)
+         const addQuestion = await addQuestionToList({
             listIds: listsToAdd,
             suggestedQuestionId: question._id,
             userId,
           });
+
+          console.log('addQuestionToList------------',addQuestion)
         }
 
         if (listsToRemove.length > 0) {
@@ -188,6 +196,7 @@ const MyQuestionsList1 = forwardRef(
 
     const handleSelectCandidate = (service) => {
       const isSelected = selectedCandidates.some((candidate) => candidate._id === service._id);
+      // console.log('isSelected ----------------',isSelected)
       if (!isSelected) {
         setSelectedCandidates((prevState) => [
           ...prevState,
@@ -360,6 +369,7 @@ const MyQuestionsList1 = forwardRef(
                           {selectedCandidates.length !== 1 ? 's' : ''} selected
                         </span>
                       </div>
+                      
                       {selectedCandidates.length > 0 && (
                         <button
                           type="button"
@@ -382,7 +392,7 @@ const MyQuestionsList1 = forwardRef(
                         >
                           <div className="flex-1 overflow-hidden">
                             <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
-                              {candidate.label}
+                              {notEditmode && typeof candidate === 'string' ? candidate : candidate.label}
                             </span>
                           </div>
                           <button

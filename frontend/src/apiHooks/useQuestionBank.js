@@ -161,10 +161,12 @@ export const useQuestions = () => {
 
   // ✅ Mutation #3: Add or Update Question in Lists
   const addQuestionToListMutation = useMutation({
-    mutationFn: async ({ listIds, suggestedQuestionId, userId }) => {
+    mutationFn: async ({ listIds, suggestedQuestionId}) => {
       if (!suggestedQuestionId || !listIds?.length) {
         throw new Error('Missing required fields: suggestedQuestionId or listIds');
       }
+      console.log('testing-------')
+      console.log('suggestedQuestionId ---',suggestedQuestionId)
       // Check if a question already exists for the suggestedQuestionId
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`, {
         params: {
@@ -172,6 +174,7 @@ export const useQuestions = () => {
         },
       });
       const existingQuestion = response.data;
+      console.log('exisiting ---- ', response.status)
 
       if (existingQuestion && existingQuestion.data) {
         // Update existing question's tenantListId
