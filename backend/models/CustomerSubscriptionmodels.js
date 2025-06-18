@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const CustomerSubscriptionSchema = new mongoose.Schema({
-    tenantId: { type: String, ref: 'Customer' },
+    tenantId: { type: String, ref: 'Tenant' },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     subscriptionPlanId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: false },
     selectedBillingCycle: { type: String, enum: ['monthly', 'quarterly', 'annual'], required: true },

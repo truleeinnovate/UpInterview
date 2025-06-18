@@ -42,7 +42,7 @@ const RoleSchema = new Schema({
     },
     tenantId: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'Tenant',
     }
 }, { timestamps: true });
 

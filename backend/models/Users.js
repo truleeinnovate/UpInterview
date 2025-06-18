@@ -26,7 +26,7 @@ const UsersSchema = new mongoose.Schema({
     password: { type: String, select: true },
     isFreelancer: String,
     isAddedTeam: String,
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
     roleId: { type: String },
     profileId: { type: String },
     status: { type: String, enum: ['active', 'inactive',], default: 'active' },
@@ -34,12 +34,6 @@ const UsersSchema = new mongoose.Schema({
     createdBy: { type: String },
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },
-    // completionStatus: {
-    //   basicDetails: { type: Boolean, default: false },
-    //   additionalDetails: { type: Boolean, default: false },
-    //   interviewDetails: { type: Boolean, default: false },
-    //   availabilityDetails: { type: Boolean, default: false }
-    // },
 }, { timestamps: true });
 
 const Users = mongoose.model('Users', UsersSchema);

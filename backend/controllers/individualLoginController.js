@@ -5,12 +5,14 @@ const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js")
 const { generateToken } = require('../utils/jwt');
 const Tenant = require("../models/Tenant");
 
+
 // exports.individualLogin = async (req, res) => {
 //   try {
 //     const { userData, contactData, availabilityData } = req.body;
 
 //     // Step 1: Create User in DB
 //     const newUser = new Users(userData);
+//     const savedUser = await newUser.save();
 //     const savedUser = await newUser.save();
 
 //     // Step 2: Create Contact and Link to User

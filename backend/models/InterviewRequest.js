@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const OutsourceInterviewRequestSchema = new mongoose.Schema({
     tenantId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Organization'
+        ref: 'Tenant'
     },
     ownerId: { 
         type: String

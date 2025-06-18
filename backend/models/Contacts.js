@@ -164,7 +164,7 @@ const ContactsSchema = new mongoose.Schema({
     // isAddedTeam: String,
     // interviewType: String,
     availability: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interviewavailability' }],
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
