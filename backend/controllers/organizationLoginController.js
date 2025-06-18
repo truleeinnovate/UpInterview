@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Tenant } = require('../models/Tenant');
+const Tenant = require('../models/Tenant');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
 const SharingSettings = require('../models/SharingSettings');
@@ -17,7 +17,7 @@ const { sendVerificationEmail } = require('../controllers/EmailsController/signU
 
 
 const registerOrganization = async (req, res) => {
-  let savedOrganization = null;
+  let savedTenant = null;
   try {
     console.log('Starting organization registration process...');
     const {
@@ -57,29 +57,16 @@ const registerOrganization = async (req, res) => {
 
     // Create new organization
     console.log('Creating new organization...');
-    // const organization = new Organization({
-    //   firstName, lastName, email, phone, profileId, jobTitle,
-    //   company, employees, country, password: hashedPassword,
-    //   status: 'submitted',
-    // });
+    const tenant = new Tenant({
+      firstName, lastName, email, phone, profileId, jobTitle,
+      company, employees, country, password: hashedPassword,
+      status: 'submitted',
+      type: 'organization',
+    });
 
     // savedOrganization = await organization.save();
-    const tenant = new Tenant({
-      name: company,
-      type: 'organization',
-      subdomain: '', // Set this as needed
-      domainEnabled: false,
-      owner: savedUser._id,
-      email,
-      phone,
-      country,
-      timezone: '', // Set as needed
-      plan: 'basic',
-      planStatus: 'trial',
-      status: 'active'
-    });
     const savedTenant = await tenant.save();
-    console.log('Organization saved successfully with ID:', savedOrganization._id);
+    console.log('Organization saved successfully with ID:', savedTenant._id);
 
 
 
@@ -91,7 +78,7 @@ const registerOrganization = async (req, res) => {
       email,
       profileId,
       phone,
-      tenantId: savedOrganization._id,
+      tenantId: savedTenant._id,
       password: hashedPassword,
       isEmailVerified: false
     });
@@ -100,7 +87,7 @@ const registerOrganization = async (req, res) => {
     console.log('User saved successfully with ID:', savedUser._id);
 
     // Update the organization with ownerId (user's _id)
-    await Organization.findByIdAndUpdate(savedOrganization._id, {
+    await Tenant.findByIdAndUpdate(savedTenant._id, {
       ownerId: savedUser._id
     });
     console.log('Organization updated with ownerId:', savedUser._id);
@@ -117,7 +104,7 @@ const registerOrganization = async (req, res) => {
       company: company,
       employees: employees,
       countryCode: countryCode,
-      tenantId: savedOrganization._id,
+      tenantId: savedTenant._id,
       ownerId: savedUser._id
     });
 
@@ -141,7 +128,7 @@ const registerOrganization = async (req, res) => {
 
     const sharingSettings = new SharingSettings({
       Name: 'sharingSettingDefaultName',
-      organizationId: savedOrganization._id,
+      organizationId: savedTenant._id,
       accessBody
     });
 
@@ -175,7 +162,7 @@ const registerOrganization = async (req, res) => {
         Description: `Default profile description for ${profileName}`,
         Tabs: profileTabs,
         Objects: profileObjects,
-        organizationId: savedOrganization._id
+        organizationId: savedTenant._id
       });
 
       const savedProfile = await profile.save();
@@ -201,7 +188,7 @@ const registerOrganization = async (req, res) => {
         label,
         roleName,
         description: `Default role description for ${roleName}`,
-        tenantId: savedOrganization._id,
+        tenantId: savedTenant._id,
         objects: roleObjects,
         level,
         inherits: [],
@@ -223,7 +210,7 @@ const registerOrganization = async (req, res) => {
     // Generate JWT
     const payload = {
       userId: savedUser._id.toString(),
-      tenantId: savedOrganization._id.toString(),
+      tenantId: savedTenant._id.toString(),
       organization: true,
       timestamp: new Date().toISOString(),
     };
@@ -240,9 +227,9 @@ const registerOrganization = async (req, res) => {
     console.log('Organization registration completed successfully');
     res.status(201).json({
       message: "Organization created successfully",
-      tenantId: savedOrganization._id,
+      tenantId: savedTenant._id,
       ownerId: savedUser._id,
-      organization: savedOrganization,
+      organization: savedTenant,
       token
     });
 
@@ -250,16 +237,16 @@ const registerOrganization = async (req, res) => {
     console.error('Error in organization registration:', error);
     if (error.code === 11000) {
       console.log('Duplicate key error detected:', error.message);
-      if (savedOrganization) {
-        console.log('Cleaning up organization with ID:', savedOrganization._id);
-        await Organization.deleteOne({ _id: savedOrganization._id });
+      if (savedTenant) {
+        console.log('Cleaning up organization with ID:', savedTenant._id);
+        await Organization.deleteOne({ _id: savedTenant._id });
       }
       return res.status(400).json({ message: 'Duplicate key error' });
     }
     console.error('Unexpected error:', error.message, error.stack);
-    if (savedOrganization) {
-      console.log('Cleaning up organization with ID:', savedOrganization._id);
-      await Organization.deleteOne({ _id: savedOrganization._id });
+    if (savedTenant) {
+      console.log('Cleaning up organization with ID:', savedTenant._id);
+      await Organization.deleteOne({ _id: savedTenant._id });
     }
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
@@ -378,7 +365,7 @@ const loginOrganization = async (req, res) => {
     }
 
     // Check email verification
-    const organization = await Organization.findOne({ _id: user.tenantId });
+    const organization = await Tenant.findOne({ _id: user.tenantId });
     console.log('organization', organization);
 
 
@@ -517,7 +504,7 @@ const getBasedIdOrganizations = async (req, res) => {
     }
 
     // ✅ Fetch the organization by _id
-    const organization = await Organization.findById(id).lean();
+    const organization = await Tenant.findById(id).lean();
 
     if (!organization) {
       return res.status(404).json({ message: 'Organization not found.' });
@@ -554,7 +541,7 @@ const checkSubdomainAvailability = async (req, res) => {
     }
 
     // Check if subdomain already exists
-    const existingOrganization = await Organization.findOne({ subdomain });
+    const existingOrganization = await Tenant.findOne({ subdomain });
 
     if (existingOrganization) {
       return res.status(200).json({
@@ -597,7 +584,7 @@ const updateSubdomain = async (req, res) => {
     }
 
     // Check if subdomain already exists for other organizations
-    const existingOrganization = await Organization.findOne({
+    const existingOrganization = await Tenant.findOne({
       subdomain,
       _id: { $ne: organizationId }
     });
@@ -611,7 +598,7 @@ const updateSubdomain = async (req, res) => {
 
     // Update organization with new subdomain
     const fullDomain = `${subdomain}.${baseDomain || 'app.upinterview.io'}`;
-    const updatedOrganization = await Organization.findByIdAndUpdate(
+    const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
         subdomain,
@@ -660,7 +647,7 @@ const getOrganizationSubdomain = async (req, res) => {
       return res.status(400).json({ message: 'Invalid organization ID format' });
     }
 
-    const organization = await Organization.findById(organizationId);
+    const organization = await Tenant.findById(organizationId);
 
     if (!organization) {
       return res.status(404).json({ message: 'Organization not found' });
@@ -697,7 +684,7 @@ const activateSubdomain = async (req, res) => {
       return res.status(400).json({ message: 'Invalid organization ID format' });
     }
 
-    const updatedOrganization = await Organization.findByIdAndUpdate(
+    const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
         subdomainStatus,
@@ -787,7 +774,7 @@ const updateBasedIdOrganizations = async (req, res) => {
     }
 
     // Update the organization
-    const organization = await Organization.findByIdAndUpdate(
+    const organization = await Tenant.findByIdAndUpdate(
       id,
       { $set: updateData },
       {
