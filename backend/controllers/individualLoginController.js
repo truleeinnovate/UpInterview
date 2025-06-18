@@ -3,6 +3,7 @@ const { Contacts } = require("../models/Contacts.js");
 const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require('../utils/jwt');
+const Tenant = require("../models/Tenant");
 
 // exports.individualLogin = async (req, res) => {
 //   try {
@@ -144,6 +145,22 @@ exports.individualLogin = async (req, res) => {
         { new: true }
       );
 
+      const tenant = new Tenant({
+        name: `${savedUser.firstName} ${savedUser.lastName}`,
+        type: 'individual',
+        subdomain: '', // Set as needed, or generate a unique one
+        domainEnabled: false,
+        owner: savedUser._id,
+        email: savedUser.email,
+        phone: savedUser.phone,
+        country: '', // Set as needed
+        timezone: '', // Set as needed
+        plan: 'basic',
+        planStatus: 'trial',
+        status: 'active'
+      });
+      const savedTenant = await tenant.save();
+
       if (!savedContact) {
         return res.status(404).json({
           success: false,
@@ -154,12 +171,12 @@ exports.individualLogin = async (req, res) => {
       // CREATE NEW RECORDS
       const newUser = new Users({
         ...userData,
-        completionStatus: userData.completionStatus || {
-          basicDetails: true,
-          additionalDetails: false,
-          interviewDetails: false,
-          availabilityDetails: false
-        },
+        // completionStatus: userData.completionStatus || {
+        //   basicDetails: true,
+        //   additionalDetails: false,
+        //   interviewDetails: false,
+        //   availabilityDetails: false
+        // },
         isProfileCompleted: userData.isProfileCompleted || false
       });
       savedUser = await newUser.save();
@@ -250,7 +267,7 @@ exports.individualLogin = async (req, res) => {
     if (Freelancer && contactData.hourlyRate) {
       try {
         const existingInterviewer = await OutsourceInterviewer.findOne({ contactId: savedContact._id });
-        
+
         if (existingInterviewer) {
           await OutsourceInterviewer.findByIdAndUpdate(
             existingInterviewer._id,
@@ -294,9 +311,9 @@ exports.individualLogin = async (req, res) => {
       ownerId: savedUser._id,
       contactId: savedContact._id,
       isUpdate,
-      ...(isProfileCompleteData?.isProfileComplete && { tenantId: savedUser.tenantId }),
+      // ...(isProfileCompleteData?.isProfileComplete && { tenantId: savedUser.tenantId }),
       token: token,
-      isProfileCompleted:savedUser.isProfileCompleted
+      isProfileCompleted: savedUser.isProfileCompleted
     });
 
   } catch (error) {
