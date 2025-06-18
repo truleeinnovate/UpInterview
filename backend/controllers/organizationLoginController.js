@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Organization } = require('../models/Tenant');
+const { Tenant } = require('../models/Tenant');
 const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
 const SharingSettings = require('../models/SharingSettings');
@@ -57,13 +57,28 @@ const registerOrganization = async (req, res) => {
 
     // Create new organization
     console.log('Creating new organization...');
-    const organization = new Organization({
-      firstName, lastName, email, phone, profileId, jobTitle,
-      company, employees, country, password: hashedPassword,
-      status: 'submitted',
-    });
+    // const organization = new Organization({
+    //   firstName, lastName, email, phone, profileId, jobTitle,
+    //   company, employees, country, password: hashedPassword,
+    //   status: 'submitted',
+    // });
 
-    savedOrganization = await organization.save();
+    // savedOrganization = await organization.save();
+    const tenant = new Tenant({
+      name: company,
+      type: 'organization',
+      subdomain: '', // Set this as needed
+      domainEnabled: false,
+      owner: savedUser._id,
+      email,
+      phone,
+      country,
+      timezone: '', // Set as needed
+      plan: 'basic',
+      planStatus: 'trial',
+      status: 'active'
+    });
+    const savedTenant = await tenant.save();
     console.log('Organization saved successfully with ID:', savedOrganization._id);
 
 
@@ -475,12 +490,12 @@ const resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
-     // If type is 'usercreatepass', mark email as verified
+    // If type is 'usercreatepass', mark email as verified
     if (type === "usercreatepass") {
       user.isEmailVerified = true;
     }
 
-    
+
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
