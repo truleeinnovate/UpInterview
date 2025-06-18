@@ -312,7 +312,7 @@ const MultiStepForm = () => {
   const handleNextStep = async () => {
     console.log(`handleNextStep: currentStep=${currentStep}`);
     let isValid = false;
-  
+
     // Validate current step
     if (currentStep === 0) {
       const basicDetailsErrors = {};
@@ -320,7 +320,7 @@ const MultiStepForm = () => {
       if (!basicDetailsData.lastName) basicDetailsErrors.lastName = 'Last name is required';
       if (!basicDetailsData.phone) basicDetailsErrors.phone = 'Phone number is required';
       if (!basicDetailsData.linkedinUrl) basicDetailsErrors.linkedinUrl = 'LinkedIn URL is required';
-  
+
       setErrors({ ...errors, ...basicDetailsErrors });
       isValid = Object.keys(basicDetailsErrors).length === 0;
     } else if (currentStep === 1) {
@@ -329,7 +329,7 @@ const MultiStepForm = () => {
       if (!additionalDetailsData.industry) professionalErrors.industry = 'Industry is required';
       if (!additionalDetailsData.yearsOfExperience) professionalErrors.yearsOfExperience = 'Years of experience is required';
       if (!additionalDetailsData.location) professionalErrors.location = 'Location is required';
-  
+
       setErrors({ ...errors, ...professionalErrors });
       isValid = Object.keys(professionalErrors).length === 0;
     } else if (currentStep === 2) {
@@ -337,42 +337,42 @@ const MultiStepForm = () => {
       if (!interviewDetailsData.skills.length) interviewErrors.skills = 'Skills are required';
       if (!interviewDetailsData.previousInterviewExperience) interviewErrors.previousInterviewExperience = 'Previous interview experience is required';
       if (!interviewDetailsData.expertiseLevel_ConductingInterviews) interviewErrors.expertiseLevel_ConductingInterviews = 'Expertise level is required';
-  
+
       setErrors({ ...errors, ...interviewErrors });
       isValid = Object.keys(interviewErrors).length === 0;
     } else if (currentStep === 3) {
       const availabilityErrors = {};
       if (!availabilityDetailsData.timeZone) availabilityErrors.timeZone = 'Timezone is required';
       if (!availabilityDetailsData.preferredDuration) availabilityErrors.preferredDuration = 'Preferred duration is required';
-  
+
       setErrors({ ...errors, ...availabilityErrors });
       isValid = Object.keys(availabilityErrors).length === 0;
     } else {
       isValid = true;
     }
-  
+
     if (!isValid) {
       console.log("Validation failed. Errors:", errors);
       return;
     }
-  
+
     // Determine the status key for the current step
     const statusKey =
       currentStep === 0 ? 'basicDetails' :
-      currentStep === 1 ? 'additionalDetails' :
-      currentStep === 2 ? 'interviewDetails' : 'availabilityDetails';
-  
+        currentStep === 1 ? 'additionalDetails' :
+          currentStep === 2 ? 'interviewDetails' : 'availabilityDetails';
+
     // Update completion status
     const updatedCompletionStatus = {
       ...completionStatus,
       [statusKey]: true
     };
-  
+
     setCompletionStatus(updatedCompletionStatus);
-  
+
     try {
       setLoading(true);
-  
+
       // Prepare data to save
       const userData = {
         firstName: basicDetailsData.firstName,
@@ -386,7 +386,7 @@ const MultiStepForm = () => {
         ...(createdIds.contactId && { contactId: createdIds.contactId }),
         isInternalInterviewer
       };
-  
+
       const contactData = {
         // Step 0: Basic Details
         ...(currentStep >= 0 && {
@@ -432,29 +432,29 @@ const MultiStepForm = () => {
         completionStatus: updatedCompletionStatus,
         ...(createdIds.contactId && { _id: createdIds.contactId })
       };
-  
+
       // Clean contactData to remove undefined values
       Object.keys(contactData).forEach(key => {
         if (contactData[key] === undefined) {
           delete contactData[key];
         }
       });
-  
+
       // Prepare availability data only for step 3
       const availabilityData = (isInternalInterviewer || Freelancer) && currentStep === 3
         ? Object.keys(times)
-            .map((day) => ({
-              day,
-              timeSlots: times[day]
-                .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable')
-                .map((slot) => ({
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                })),
-            }))
-            .filter((dayData) => dayData.timeSlots.length > 0)
+          .map((day) => ({
+            day,
+            timeSlots: times[day]
+              .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable')
+              .map((slot) => ({
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              })),
+          }))
+          .filter((dayData) => dayData.timeSlots.length > 0)
         : [];
-  
+
       const requestData = {
         userData,
         contactData,
@@ -463,17 +463,17 @@ const MultiStepForm = () => {
         isInternalInterviewer,
         isUpdate: createdIds.ownerId !== null
       };
-  
+
       // Send data to backend
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,
         requestData,
         { withCredentials: true }
       );
-  
+
       if (response.data.token) {
         setAuthCookies(response.data.token);
-  
+
         // Store IDs after creation
         if (!createdIds.ownerId && response.data.ownerId) {
           setCreatedIds({
@@ -481,7 +481,7 @@ const MultiStepForm = () => {
             contactId: response.data.contactId
           });
         }
-  
+
         // Handle file uploads for step 0
         if (currentStep === 0) {
           if (linkedInData?.pictureUrl && !filePreview && response.data.contactId) {
@@ -493,7 +493,7 @@ const MultiStepForm = () => {
               imageData.append('image', imageFile);
               imageData.append('type', 'contact');
               imageData.append('id', response.data.contactId);
-  
+
               await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
@@ -502,13 +502,13 @@ const MultiStepForm = () => {
               console.error('Error uploading LinkedIn picture:', linkedInError);
             }
           }
-  
+
           if (file && response.data.contactId) {
             const imageData = new FormData();
             imageData.append('image', file);
             imageData.append('type', 'contact');
             imageData.append('id', response.data.contactId);
-  
+
             try {
               await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -521,19 +521,24 @@ const MultiStepForm = () => {
             }
           }
         }
-  
+
         toast.success(
           response.data.isUpdate
             ? "Profile updated successfully!"
             : "Profile created successfully!",
           { autoClose: 2000 }
         );
-  
+
         // Move to next step or redirect
         if (currentStep < (isInternalInterviewer ? 3 : (Freelancer ? 3 : 1))) {
           setCurrentStep(currentStep + 1);
         } else {
-          navigate('/subscription-plans');
+          if (response.data.isProfileCompleted) {
+            navigate('/home');
+          } else {
+            navigate('/subscription-plans');
+          }
+
         }
       }
     } catch (error) {
@@ -662,9 +667,9 @@ const MultiStepForm = () => {
         requestData,
         { withCredentials: true }
       );
-  
-      const { contactId, token,isProfileCompleted } = response.data;
-  
+
+      const { contactId, token, isProfileCompleted } = response.data;
+
       // Handle image upload
       if (file) {
         const imageData = new FormData();
@@ -686,7 +691,7 @@ const MultiStepForm = () => {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
-  
+
       if (!token) {
         console.error("No token received from server");
         toast.error("Failed to authenticate. Please try again.", { autoClose: 5000 });
@@ -776,8 +781,8 @@ const MultiStepForm = () => {
       if (isProfileCompleted) {
         navigate('/home');
       } else {
-      navigate('/subscription-plans');
-        
+        navigate('/subscription-plans');
+
       }
     } catch (error) {
       console.error('Error saving profile:', error);

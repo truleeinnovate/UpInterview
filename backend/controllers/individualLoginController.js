@@ -87,7 +87,7 @@ const { generateToken } = require('../utils/jwt');
 
 exports.individualLogin = async (req, res) => {
   try {
-    const { userData, contactData, availabilityData, Freelancer, isInternalInterviewer, isUpdate } = req.body;
+    const { userData, contactData, availabilityData, Freelancer, isInternalInterviewer,isProfileCompleteData, isUpdate } = req.body;
 
     // Validate input
     if (!userData || !contactData) {
