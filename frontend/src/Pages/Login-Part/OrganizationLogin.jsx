@@ -62,79 +62,6 @@ const OrganizationLogin = () => {
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!validateLogin()) return;
-
-    setIsLoading(true);
-
-    try {
-      console.log("🔐 Attempting org login...");
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
-        email: email.trim().toLowerCase(),
-        password,
-      });
-
-      const { token, isEmailVerified, status, isProfileCompleted, roleName, contactDataFromOrg, success, message } = response.data;
-
-      if (!success) {
-        throw new Error(message || 'Login failed');
-      }
-
-      setAuthCookies(token);
-
-      if (!isEmailVerified) {
-        setIsEmailVerified(false);
-        setIsLoading(false);
-        toast.error('Please verify your email to continue.');
-        return;
-      }
-
-      // Handle all status cases
-      switch (status) {
-        case 'submitted':
-        case 'payment_pending':
-          navigate('/subscription-plans');
-          break;
-        case 'active':
-          if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
-            navigate('/home');
-          } else if (isProfileCompleted === false && roleName) {
-            navigate('/complete-profile', {
-              state: { isProfileComplete: true, roleName, contactDataFromOrg }
-            });
-          } else {
-            navigate('/home');
-          }
-          break;
-        default:
-          navigate('/');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      if (error.response?.status === 403) {
-        if (error.response.data.isEmailVerified === false) {
-          setIsEmailVerified(false);
-          toast.error('Please verify your email to continue.');
-        } else {
-          // Handle other 403 cases (like invalid status)
-          const status = error.response.data?.status;
-          if (status === 'submitted' || status === 'payment_pending') {
-            // If backend hasn't been updated yet, still handle these cases
-            navigate('/subscription-plans');
-          } else {
-            toast.error(error.response.data?.message || 'Account not active. Please contact support.');
-          }
-        }
-      } else {
-        setErrors({
-          email: error.response?.data.message || error.message || 'Login failed. Please try again.',
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleResendVerification = async () => {
     if (isResending) return;
@@ -164,6 +91,98 @@ const OrganizationLogin = () => {
     }
     return () => clearTimeout(timer);
   }, [countdown]);
+
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  if (!validateLogin()) return;
+
+  setIsLoading(true);
+
+  try {
+    console.log("🔐 Attempting org login...");
+    const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    const {
+      token,
+      isEmailVerified,
+      status,
+      isProfileCompleted,
+      roleName,
+      contactDataFromOrg,
+      success,
+      message,
+    } = response.data;
+
+    if (!success) {
+      throw new Error(message || 'Login failed');
+    }
+
+    setAuthCookies(token);
+
+    if (!isEmailVerified) {
+      setIsEmailVerified(false);
+      await handleResendVerification();
+      setCountdown(60);
+      toast.error('Please verify your email to continue.');
+      return;
+    }
+
+    // Handle all status cases 
+    switch (status) {
+      case 'submitted':
+      case 'payment_pending':
+        navigate('/subscription-plans');
+        break;
+      case 'active':
+        if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
+          navigate('/home');
+        } else if (isProfileCompleted === false && roleName) {
+          navigate('/complete-profile', {
+            state: { isProfileComplete: true, roleName, contactDataFromOrg }
+          });
+        } else {
+          navigate('/home');
+        }
+        break;
+      default:
+        navigate('/');
+    }
+
+  } catch (error) {
+    setIsLoading(false);
+    console.error('Login error:', error);
+
+    if (error.response?.status === 403) {
+      const data = error.response.data;
+
+      if (data?.isEmailVerified === false) {
+        setIsEmailVerified(false);
+        await handleResendVerification();
+        setCountdown(60);
+        toast.error('Please verify your email to continue.');
+        return;
+      }
+
+      if (data?.status === 'submitted' || data?.status === 'payment_pending') {
+        navigate('/subscription-plans');
+        return;
+      }
+
+      toast.error(data?.message || 'Access denied.');
+    } else {
+      toast.error(error.response?.data?.message || 'Login failed. Please try again.');
+      setErrors((prev) => ({
+        ...prev,
+        email: error.response?.data.message || error.message || 'Login failed.',
+      }));
+    }
+  }
+};
+
+
 
   return (
     <div>
