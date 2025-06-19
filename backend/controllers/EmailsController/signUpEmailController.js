@@ -59,10 +59,17 @@ const { generateEmailVerificationToken } = require('../../utils/jwt');
 
 exports.sendSignUpEmail = async (req, res) => {
   try {
-    const { email, tenantId, ownerId, lastName, firstName } = req.body;
-    if (!email) {
-      return res.status(401).json({ success: false, message: "Email not found" });
+    const { tenantId, ownerId } = req.body;
+    if (!ownerId) {
+      return res.status(401).json({ success: false, message: "ownerId not found" });
     }
+    const user = await Users.findOne({ _id: ownerId });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const email = user.email;
+    const lastName = user.lastName;
+    const firstName = user.firstName;
 
     // Get email template
     const emailTemplate = await emailTemplateModel.findOne({ category: 'welcome', isActive: true, isSystemTemplate: true });

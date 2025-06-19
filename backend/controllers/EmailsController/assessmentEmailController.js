@@ -525,212 +525,212 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
-exports.shareAssessment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+// exports.shareAssessment = async (req, res) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
 
-  try {
-    const {
-      assessmentId,
-      selectedCandidates,
-      organizationId,
-      userId,
-      companyName = process.env.COMPANY_NAME,
-      supportEmail = process.env.SUPPORT_EMAIL
-    } = req.body;
+//   try {
+//     const {
+//       assessmentId,
+//       selectedCandidates,
+//       organizationId,
+//       userId,
+//       companyName = process.env.COMPANY_NAME,
+//       supportEmail = process.env.SUPPORT_EMAIL
+//     } = req.body;
 
-    if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing assessment ID' });
-    }
+//     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
+//       return res.status(400).json({ success: false, message: 'Invalid or missing assessment ID' });
+//     }
 
-    if (!selectedCandidates || selectedCandidates.length === 0) {
-      return res.status(400).json({ success: false, message: 'No candidates selected' });
-    }
+//     if (!selectedCandidates || selectedCandidates.length === 0) {
+//       return res.status(400).json({ success: false, message: 'No candidates selected' });
+//     }
 
-    // 1. Fetch the assessment to get linkExpiryDays
-    const assessment = await Assessment.findById(assessmentId).session(session);
-    if (!assessment) {
-      throw new Error('Assessment not found');
-    }
-    const linkExpiryDays = assessment.linkExpiryDays; 
-     const assessmentDuration = assessment.assessmentDuration;
+//     // 1. Fetch the assessment to get linkExpiryDays
+//     const assessment = await Assessment.findById(assessmentId).session(session);
+//     if (!assessment) {
+//       throw new Error('Assessment not found');
+//     }
+//     const linkExpiryDays = assessment.linkExpiryDays; 
+//      const assessmentDuration = assessment.assessmentDuration;
 
 
-    // 2. Create a new ScheduleAssessment
-    const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
-    const order = `Assessment ${scheduleCount + 1}`;
+//     // 2. Create a new ScheduleAssessment
+//     const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
+//     const order = `Assessment ${scheduleCount + 1}`;
 
-    const scheduleAssessment = new ScheduleAssessment({
-      assessmentId,
-      organizationId,
-      status: 'scheduled',
-      proctoringEnabled: true,
-      createdBy: userId,
-      order,
-    });
-    await scheduleAssessment.save({ session });
+//     const scheduleAssessment = new ScheduleAssessment({
+//       assessmentId,
+//       organizationId,
+//       status: 'scheduled',
+//       proctoringEnabled: true,
+//       createdBy: userId,
+//       order,
+//     });
+//     await scheduleAssessment.save({ session });
 
-    // 3. Check for existing CandidateAssessments
-    const existingAssessments = await CandidateAssessment.find({
-      scheduledAssessmentId: scheduleAssessment._id,
-      candidateId: { $in: selectedCandidates.map((c) => c._id) },
-    }).session(session);
+//     // 3. Check for existing CandidateAssessments
+//     const existingAssessments = await CandidateAssessment.find({
+//       scheduledAssessmentId: scheduleAssessment._id,
+//       candidateId: { $in: selectedCandidates.map((c) => c._id) },
+//     }).session(session);
 
-    const existingCandidateIdsSet = new Set(existingAssessments.map((a) => a.candidateId.toString()));
+//     const existingCandidateIdsSet = new Set(existingAssessments.map((a) => a.candidateId.toString()));
 
-    const newCandidates = selectedCandidates.filter(
-      (candidate) => !existingCandidateIdsSet.has(candidate._id.toString())
-    );
+//     const newCandidates = selectedCandidates.filter(
+//       (candidate) => !existingCandidateIdsSet.has(candidate._id.toString())
+//     );
 
-    if (newCandidates.length === 0) {
-      await session.commitTransaction();
-      return res.status(200).json({
-        success: true,
-        message: 'All selected candidates are already assigned to this schedule',
-        data: { scheduledAssessmentId: scheduleAssessment._id },
-      });
-    }
+//     if (newCandidates.length === 0) {
+//       await session.commitTransaction();
+//       return res.status(200).json({
+//         success: true,
+//         message: 'All selected candidates are already assigned to this schedule',
+//         data: { scheduledAssessmentId: scheduleAssessment._id },
+//       });
+//     }
 
-    // 4. Create CandidateAssessments for new candidates
-    const expiryAt = new Date(Date.now() + linkExpiryDays * 24 * 60 * 60 * 1000);
-    const candidateAssessments = newCandidates.map((candidate) => ({
-      scheduledAssessmentId: scheduleAssessment._id,
-      candidateId: candidate._id,
-      status: 'pending',
-      expiryAt,
-      isActive: true,
-      assessmentLink: '',
-    }));
+//     // 4. Create CandidateAssessments for new candidates
+//     const expiryAt = new Date(Date.now() + linkExpiryDays * 24 * 60 * 60 * 1000);
+//     const candidateAssessments = newCandidates.map((candidate) => ({
+//       scheduledAssessmentId: scheduleAssessment._id,
+//       candidateId: candidate._id,
+//       status: 'pending',
+//       expiryAt,
+//       isActive: true,
+//       assessmentLink: '',
+//     }));
 
-    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
+//     const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
 
-    // 5. Send emails and update assessment links
-    const notifications = [];
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite',isSystemTemplate: true,isActive: true }).session(session);
-    if (!emailTemplate && newCandidates.length > 0) {
-      throw new Error('Email template not found');
-    }
+//     // 5. Send emails and update assessment links
+//     const notifications = [];
+//     const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite',isSystemTemplate: true,isActive: true }).session(session);
+//     if (!emailTemplate && newCandidates.length > 0) {
+//       throw new Error('Email template not found');
+//     }
 
-    for (const candidate of newCandidates) {
-      const candidateData = await Candidate.findOne({ _id: candidate._id }).session(session);
-      if (!candidateData) {
-        console.error(`Candidate not found for ID: ${candidate._id}`);
-        continue;
-      }
+//     for (const candidate of newCandidates) {
+//       const candidateData = await Candidate.findOne({ _id: candidate._id }).session(session);
+//       if (!candidateData) {
+//         console.error(`Candidate not found for ID: ${candidate._id}`);
+//         continue;
+//       }
 
-      const emails = Array.isArray(candidate.emails)
-        ? candidate.emails
-        : candidate.emails
-          ? [candidate.emails]
-          : candidate.Email
-            ? [candidate.Email]
-            : [];
-      if (emails.length === 0) {
-        console.error(`No valid email for candidate ID: ${candidate._id}`);
-        continue;
-      }
+//       const emails = Array.isArray(candidate.emails)
+//         ? candidate.emails
+//         : candidate.emails
+//           ? [candidate.emails]
+//           : candidate.Email
+//             ? [candidate.Email]
+//             : [];
+//       if (emails.length === 0) {
+//         console.error(`No valid email for candidate ID: ${candidate._id}`);
+//         continue;
+//       }
 
-      const candidateAssessment = insertedAssessments.find(
-        (ca) => ca.candidateId.toString() === candidate._id.toString()
-      );
-      if (!candidateAssessment) continue;
+//       const candidateAssessment = insertedAssessments.find(
+//         (ca) => ca.candidateId.toString() === candidate._id.toString()
+//       );
+//       if (!candidateAssessment) continue;
 
-      const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
-      const link = `${config.REACT_APP_API_URL_FRONTEND}assessmenttest?candidateAssessmentId=${encryptedId}`;
+//       const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
+//       const link = `${config.REACT_APP_API_URL_FRONTEND}assessmenttest?candidateAssessmentId=${encryptedId}`;
 
-      await CandidateAssessment.findByIdAndUpdate(
-        candidateAssessment._id,
-        { assessmentLink: link },
-        { session }
-      );
+//       await CandidateAssessment.findByIdAndUpdate(
+//         candidateAssessment._id,
+//         { assessmentLink: link },
+//         { session }
+//       );
 
-      const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
-      const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
-      const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-      });
-    const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
+//       const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
+//       const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
+//       const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
+//         weekday: 'long',
+//         year: 'numeric',
+//         month: 'long',
+//         day: 'numeric',
+//         hour: '2-digit',
+//         minute: '2-digit',
+//         timeZoneName: 'short'
+//       });
+//     const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
 
-      const emailBody = cleanedBody
-        .replace(/{{candidateName}}/g, candidateName)
-        .replace(/{{companyName}}/g, companyName)
-        .replace(/{{expiryDate}}/g, formattedExpiryDate)
-        .replace(/{{assessmentLink}}/g, link)
-        .replace(/{{assessmentDuration}}/g, assessmentDuration)
-        .replace(/{{supportEmail}}/g, supportEmail);
+//       const emailBody = cleanedBody
+//         .replace(/{{candidateName}}/g, candidateName)
+//         .replace(/{{companyName}}/g, companyName)
+//         .replace(/{{expiryDate}}/g, formattedExpiryDate)
+//         .replace(/{{assessmentLink}}/g, link)
+//         .replace(/{{assessmentDuration}}/g, assessmentDuration)
+//         .replace(/{{supportEmail}}/g, supportEmail);
 
-      const sendEmailResponses = await Promise.all(
-        emails.map((email) => sendEmail(email,emailSubject, emailBody))
-      );
+//       const sendEmailResponses = await Promise.all(
+//         emails.map((email) => sendEmail(email,emailSubject, emailBody))
+//       );
 
-      const emailStatus = sendEmailResponses.every((response) => response.success)
-        ? 'Success'
-        : 'Failed';
+//       const emailStatus = sendEmailResponses.every((response) => response.success)
+//         ? 'Success'
+//         : 'Failed';
 
-      sendEmailResponses.forEach((response, index) => {
-        if (!response.success) {
-          console.error(`Error sending email to ${emails[index]}: ${response.message}`);
-        }
-      });
+//       sendEmailResponses.forEach((response, index) => {
+//         if (!response.success) {
+//           console.error(`Error sending email to ${emails[index]}: ${response.message}`);
+//         }
+//       });
 
-      notifications.push({
-        toAddress: emails,
-      fromAddress: process.env.EMAIL_FROM,
-        title: `Assessment Email ${emailStatus}`,
-        body: `Email ${emailStatus} for candidate ${candidateData.LastName}.`,
-        notificationType: 'email',
-        object: {
-          objectName: 'assessment',
-          objectId: assessmentId,
-        },
-        status: emailStatus,
-        tenantId: organizationId,
-        recipientId: candidate._id,
-        createdBy: userId,
-        modifiedBy: userId,
-      });
-    }
+//       notifications.push({
+//         toAddress: emails,
+//       fromAddress: process.env.EMAIL_FROM,
+//         title: `Assessment Email ${emailStatus}`,
+//         body: `Email ${emailStatus} for candidate ${candidateData.LastName}.`,
+//         notificationType: 'email',
+//         object: {
+//           objectName: 'assessment',
+//           objectId: assessmentId,
+//         },
+//         status: emailStatus,
+//         tenantId: organizationId,
+//         recipientId: candidate._id,
+//         createdBy: userId,
+//         modifiedBy: userId,
+//       });
+//     }
 
-    if (notifications.length > 0) {
-      if (!Notification || typeof Notification.insertMany !== 'function') {
-        throw new Error('Notification model is not properly initialized');
-      }
+//     if (notifications.length > 0) {
+//       if (!Notification || typeof Notification.insertMany !== 'function') {
+//         throw new Error('Notification model is not properly initialized');
+//       }
 
-      await Notification.insertMany(notifications, { session });
-      req.notificationData = notifications;
-      await notificationMiddleware(req, res, () => { });
-    }
+//       await Notification.insertMany(notifications, { session });
+//       req.notificationData = notifications;
+//       await notificationMiddleware(req, res, () => { });
+//     }
 
-    await session.commitTransaction();
-    res.status(200).json({
-      success: true,
-      message: 'Assessment shared successfully',
-      data: { scheduledAssessmentId: scheduleAssessment._id },
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    console.error('Error sharing assessment:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to share assessment',
-      error: error.message,
-    });
-  } finally {
-    session.endSession();
-  }
-};
+//     await session.commitTransaction();
+//     res.status(200).json({
+//       success: true,
+//       message: 'Assessment shared successfully',
+//       data: { scheduledAssessmentId: scheduleAssessment._id },
+//     });
+//   } catch (error) {
+//     await session.abortTransaction();
+//     console.error('Error sharing assessment:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to share assessment',
+//       error: error.message,
+//     });
+//   } finally {
+//     session.endSession();
+//   }
+// };
 
 exports.resendAssessmentLink = async (req, res) => {
   try {
-    const { 
-      candidateAssessmentId, 
-      userId, 
+    const {
+      candidateAssessmentId,
+      userId,
       organizationId,
       companyName = process.env.COMPANY_NAME,
       supportEmail = process.env.SUPPORT_EMAIL
@@ -769,7 +769,7 @@ exports.resendAssessmentLink = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Candidate not found' });
     }
 
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite',isSystemTemplate: true,isActive: true });
+    const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite', isSystemTemplate: true, isActive: true });
     if (!emailTemplate) {
       return res.status(404).json({ success: false, message: 'Email template not found' });
     }
@@ -853,262 +853,239 @@ exports.resendAssessmentLink = async (req, res) => {
   }
 };
 
+exports.shareAssessment = async (req, res) => {
+  let session;
+  try {
+    session = await mongoose.startSession();
 
+    const {
+      assessmentId,
+      selectedCandidates,
+      organizationId,
+      userId,
+      companyName = process.env.COMPANY_NAME,
+      supportEmail = process.env.SUPPORT_EMAIL
+    } = req.body;
 
+    // Input validation
+    if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid or missing assessment ID' });
+    }
 
-// const MAX_RETRIES = 3;
-// const RETRY_DELAY_MS = 1000;
+    if (!selectedCandidates || selectedCandidates.length === 0) {
+      return res.status(400).json({ success: false, message: 'No candidates selected' });
+    }
 
-// const retryTransaction = async (operation, retries = MAX_RETRIES) => {
-//   let lastError;
-  
-//   for (let attempt = 1; attempt <= retries; attempt++) {
-//     const session = await mongoose.startSession();
-    
-//     try {
-//       const transactionOptions = {
-//         readPreference: 'primary',
-//         readConcern: { level: 'local' },
-//         writeConcern: { w: 'majority' },
-//         maxCommitTimeMS: 30000 // 30 seconds timeout
-//       };
-      
-//       await session.startTransaction(transactionOptions);
-      
-//       const result = await operation(session);
-      
-//       await session.commitTransaction();
-//       await session.endSession();
-      
-//       return result;
-//     } catch (error) {
-//       if (session.inTransaction()) {
-//         await session.abortTransaction();
-//       }
-//       await session.endSession();
-      
-//       lastError = error;
-      
-//       if (attempt < retries) {
-//         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * attempt));
-//       }
-//     }
-//   }
-  
-//   throw lastError;
-// };
+    // Start transaction
+    await session.startTransaction();
 
-// exports.shareAssessment = async (req, res) => {
-//   try {
-//     const {
-//       assessmentId,
-//       selectedCandidates,
-//       organizationId,
-//       userId,
-//       companyName = "Upinterview",
-//       assessmentDuration = "60 minutes",
-//       supportEmail = "support@example.com",
-//       linkExpiryDays = 3
-//     } = req.body;
+    // 1. Fetch the assessment
+    const assessment = await Assessment.findById(assessmentId).session(session);
+    if (!assessment) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Assessment not found' });
+    }
+    const linkExpiryDays = assessment.linkExpiryDays;
+    const assessmentDuration = assessment.assessmentDuration;
 
-//     // Validate input
-//     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
-//       return res.status(400).json({ 
-//         success: false, 
-//         message: 'Invalid or missing assessment ID' 
-//       });
-//     }
+    // 2. Create ScheduleAssessment
+    const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
+    const order = `Assessment ${scheduleCount + 1}`;
 
-//     if (!selectedCandidates || selectedCandidates.length === 0) {
-//       return res.status(400).json({ 
-//         success: false, 
-//         message: 'No candidates selected' 
-//       });
-//     }
+    const scheduleAssessment = new ScheduleAssessment({
+      assessmentId,
+      organizationId,
+      status: 'scheduled',
+      proctoringEnabled: true,
+      createdBy: userId,
+      order,
+    });
+    await scheduleAssessment.save({ session });
 
-//     const result = await retryTransaction(async (session) => {
-//       // 1. Fetch the assessment
-//       const assessment = await Assessment.findById(assessmentId).session(session);
-//       if (!assessment) {
-//         throw new Error('Assessment not found');
-//       }
+    // 3. Check existing CandidateAssessments
+    const existingAssessments = await CandidateAssessment.find({
+      scheduledAssessmentId: scheduleAssessment._id,
+      candidateId: { $in: selectedCandidates.map(c => c._id) },
+    }).session(session);
 
-//       // 2. Create a new ScheduleAssessment
-//       const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
-//       const order = `Assessment ${scheduleCount + 1}`;
+    const existingCandidateIds = existingAssessments.map(a => a.candidateId.toString());
+    const newCandidates = selectedCandidates.filter(
+      candidate => !existingCandidateIds.includes(candidate._id.toString())
+    );
 
-//       const scheduleAssessment = new ScheduleAssessment({
-//         assessmentId,
-//         organizationId,
-//         status: 'scheduled',
-//         proctoringEnabled: true,
-//         createdBy: userId,
-//         order,
-//       });
-//       await scheduleAssessment.save({ session });
+    if (newCandidates.length === 0) {
+      await session.commitTransaction();
+      return res.status(200).json({
+        success: true,
+        message: 'All selected candidates already assigned',
+        data: { scheduledAssessmentId: scheduleAssessment._id },
+      });
+    }
 
-//       // 3. Check for existing CandidateAssessments
-//       const existingAssessments = await CandidateAssessment.find({
-//         scheduledAssessmentId: scheduleAssessment._id,
-//         candidateId: { $in: selectedCandidates.map((c) => c._id) },
-//       }).session(session);
+    // 4. Create CandidateAssessments
+    const expiryAt = new Date(Date.now() + linkExpiryDays * 24 * 60 * 60 * 1000);
+    const candidateAssessments = newCandidates.map(candidate => ({
+      scheduledAssessmentId: scheduleAssessment._id,
+      candidateId: candidate._id,
+      status: 'pending',
+      expiryAt,
+      isActive: true,
+      assessmentLink: '',
+    }));
 
-//       const existingCandidateIdsSet = new Set(existingAssessments.map((a) => a.candidateId.toString()));
-//       const newCandidates = selectedCandidates.filter(
-//         (candidate) => !existingCandidateIdsSet.has(candidate._id.toString())
-//       );
+    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
 
-//       if (newCandidates.length === 0) {
-//         return {
-//           success: true,
-//           message: 'All selected candidates are already assigned to this schedule',
-//           data: { scheduledAssessmentId: scheduleAssessment._id },
-//         };
-//       }
+    // 5. Email processing
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: 'assessment_invite',
+      isSystemTemplate: true,
+      isActive: true
+    }).session(session);
 
-//       // 4. Create CandidateAssessments for new candidates
-//       const expiryAt = new Date(Date.now() + (linkExpiryDays || 3) * 24 * 60 * 60 * 1000);
-//       const candidateAssessments = newCandidates.map((candidate) => ({
-//         scheduledAssessmentId: scheduleAssessment._id,
-//         candidateId: candidate._id,
-//         status: 'pending',
-//         expiryAt,
-//         isActive: true,
-//         assessmentLink: '',
-//       }));
+    if (!emailTemplate && newCandidates.length > 0) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Email template not found' });
+    }
 
-//       const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
+    const notifications = [];
+    const emailPromises = [];
 
-//       // 5. Send emails and update assessment links
-//       const emailTemplate = await emailTemplateModel.findOne({ 
-//         category: 'assessment_invite',
-//         isSystemTemplate: true,
-//         isActive: true 
-//       }).session(session);
+    for (const candidate of newCandidates) {
+      const candidateData = await Candidate.findOne({ _id: candidate._id }).session(session);
+      if (!candidateData) {
+        console.error(`Candidate not found: ${candidate._id}`);
+        continue;
+      }
 
-//       if (!emailTemplate && newCandidates.length > 0) {
-//         throw new Error('Email template not found');
-//       }
+      const emails = Array.isArray(candidate.emails)
+        ? candidate.emails
+        : candidate.emails
+          ? [candidate.emails]
+          : candidate.Email
+            ? [candidate.Email]
+            : [];
 
-//       const notifications = [];
-//       const emailSendPromises = [];
+      if (emails.length === 0) {
+        console.error(`No email for candidate: ${candidate._id}`);
+        continue;
+      }
 
-//       for (const candidate of newCandidates) {
-//         const candidateData = await Candidate.findOne({ _id: candidate._id }).session(session);
-//         if (!candidateData) {
-//           console.warn(`Candidate not found for ID: ${candidate._id}`);
-//           continue;
-//         }
+      const candidateAssessment = insertedAssessments.find(
+        ca => ca.candidateId.toString() === candidate._id.toString()
+      );
+      if (!candidateAssessment) continue;
 
-//         const emails = Array.isArray(candidate.emails)
-//           ? candidate.emails
-//           : candidate.emails
-//             ? [candidate.emails]
-//             : candidate.Email
-//               ? [candidate.Email]
-//               : [];
-        
-//         if (emails.length === 0) {
-//           console.warn(`No valid email for candidate ID: ${candidate._id}`);
-//           continue;
-//         }
+      const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
+      const link = `${config.REACT_APP_API_URL_FRONTEND}assessmenttest?candidateAssessmentId=${encryptedId}`;
 
-//         const candidateAssessment = insertedAssessments.find(
-//           (ca) => ca.candidateId.toString() === candidate._id.toString()
-//         );
-//         if (!candidateAssessment) continue;
+      await CandidateAssessment.findByIdAndUpdate(
+        candidateAssessment._id,
+        { assessmentLink: link },
+        { session }
+      );
 
-//         const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
-//         const link = `${config.REACT_APP_API_URL_FRONTEND}assessmenttest?candidateAssessmentId=${encryptedId}`;
+      const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
+      const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
+      const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
 
-//         await CandidateAssessment.findByIdAndUpdate(
-//           candidateAssessment._id,
-//           { assessmentLink: link },
-//           { session }
-//         );
+      const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
+      const emailBody = cleanedBody
+        .replace(/{{candidateName}}/g, candidateName)
+        .replace(/{{companyName}}/g, companyName)
+        .replace(/{{expiryDate}}/g, formattedExpiryDate)
+        .replace(/{{assessmentLink}}/g, link)
+        .replace(/{{assessmentDuration}}/g, assessmentDuration)
+        .replace(/{{supportEmail}}/g, supportEmail);
 
-//         const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
-//         const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
-//         const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
-//           weekday: 'long',
-//           year: 'numeric',
-//           month: 'long',
-//           day: 'numeric',
-//           hour: '2-digit',
-//           minute: '2-digit',
-//           timeZoneName: 'short'
-//         });
+      // Queue email sends but don't await them here
+      emailPromises.push(
+        ...emails.map(email =>
+          sendEmail(email, emailSubject, emailBody)
+            .then(response => ({
+              email,
+              success: response.success,
+              message: response.message || 'Email sent'
+            }))
+            .catch(error => ({
+              email,
+              success: false,
+              message: error.message
+            }))
+        )
+      );
 
-//         const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
-//         const emailBody = cleanedBody
-//           .replace(/{{candidateName}}/g, candidateName)
-//           .replace(/{{companyName}}/g, companyName)
-//           .replace(/{{expiryDate}}/g, formattedExpiryDate)
-//           .replace(/{{assessmentLink}}/g, link)
-//           .replace(/{{assessmentDuration}}/g, assessmentDuration)
-//           .replace(/{{supportEmail}}/g, supportEmail);
+      notifications.push({
+        toAddress: emails,
+        fromAddress: process.env.EMAIL_FROM,
+        title: `Assessment Email Sent`,
+        body: `Email sent to candidate ${candidateData.LastName}`,
+        notificationType: 'email',
+        object: {
+          objectName: 'assessment',
+          objectId: assessmentId,
+        },
+        status: 'Pending',
+        tenantId: organizationId,
+        recipientId: candidate._id,
+        createdBy: userId,
+        modifiedBy: userId,
+      });
+    }
 
-//         // Queue email sends (but don't await them yet)
-//         emailSendPromises.push(
-//           Promise.all(
-//             emails.map((email) => sendEmail(email, emailSubject, emailBody)
-//               .then(response => ({ email, response }))
-//               .catch(error => ({ email, error }))
-//             )
-//           ).then(results => {
-//             const emailStatus = results.every(r => !r.error) ? 'Success' : 'Failed';
-            
-//             results.forEach((result) => {
-//               if (result.error) {
-//                 console.error(`Error sending email to ${result.email}:`, result.error);
-//               }
-//             });
+    // Save notifications first
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications, { session });
+    }
 
-//             notifications.push({
-//               toAddress: emails,
-//               fromAddress: 'ashrafshaik250@gmail.com',
-//               title: `Assessment Email ${emailStatus}`,
-//               body: `Email ${emailStatus} for candidate ${candidateData.LastName}.`,
-//               notificationType: 'email',
-//               object: {
-//                 objectName: 'assessment',
-//                 objectId: assessmentId,
-//               },
-//               status: emailStatus,
-//               tenantId: organizationId,
-//               recipientId: candidate._id,
-//               createdBy: userId,
-//               modifiedBy: userId,
-//             });
-//           })
-//         );
-//       }
+    // Commit transaction before sending emails
+    await session.commitTransaction();
 
-//       // Wait for all emails to be processed
-//       await Promise.all(emailSendPromises);
+    // Now send emails outside transaction
+    const emailResults = await Promise.all(emailPromises);
+    const failedEmails = emailResults.filter(r => !r.success);
 
-//       // Save notifications if any
-//       if (notifications.length > 0) {
-//         await Notification.insertMany(notifications, { session });
-//         req.notificationData = notifications;
-//         await notificationMiddleware(req, res, () => {});
-//       }
+    if (failedEmails.length > 0) {
+      console.error('Some emails failed to send:', failedEmails);
+      // Update notifications for failed emails
+      await Notification.updateMany(
+        { toAddress: { $in: failedEmails.map(f => f.email) } },
+        { $set: { status: 'Failed', body: 'Failed to send email' } }
+      );
+    } else {
+      await Notification.updateMany(
+        { _id: { $in: notifications.map(n => n._id) } },
+        { $set: { status: 'Success' } }
+      );
+    }
 
-//       return {
-//         success: true,
-//         message: 'Assessment shared successfully',
-//         data: { scheduledAssessmentId: scheduleAssessment._id },
-//       };
-//     });
+    return res.status(200).json({
+      success: true,
+      message: 'Assessment shared successfully',
+      data: { scheduledAssessmentId: scheduleAssessment._id },
+    });
 
-//     res.status(200).json(result);
-//   } catch (error) {
-//     console.error('Error sharing assessment:', error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to share assessment',
-//       error: error.message,
-//       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-//     });
-//   }
-// };
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+    }
+    console.error('Error sharing assessment:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to share assessment',
+      error: error.message,
+    });
+  } finally {
+    if (session) {
+      session.endSession();
+    }
+  }
+};
+
