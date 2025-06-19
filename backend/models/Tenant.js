@@ -3,20 +3,20 @@ const mongoose = require('mongoose');
 // Ranjith added OrganizationSchema
 const TenantSchema = new mongoose.Schema({
   // Basic Information
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true },
+  firstName: { type: String },
+  lastName: { type: String },
+  email: { type: String },
   phone: { type: String },
-  // username: { type: String, required: true },
-  jobTitle: { type: String, required: true },
-  company: { type: String, required: true },
-  employees: { type: String, required: true },
-  country: { type: String, required: true },
-  type: { type: String, enum: ['organization', 'individual'], required: true },
+  // username: { type: String },
+  jobTitle: { type: String },
+  company: { type: String },
+  employees: { type: String },
+  country: { type: String },
+  type: { type: String, enum: ['organization', 'individual'] },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   profileId:{ type: String },
   website:{type:String},
-  status: { type: String, enum: ['active', 'inactive','submitted','payment_pending','created','cancelled', ], default: 'draft' },
+  status: { type: String, enum: ['active', 'inactive','submitted','payment_pending','created','cancelled','draft' ], default: 'draft' },
 //need to add boolean value for individaul pages wich page is submitted
 
   // Company Details

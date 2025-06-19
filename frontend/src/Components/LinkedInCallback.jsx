@@ -31,11 +31,12 @@ const LinkedInCallback = () => {
             },
           }
         );
-        console.log('recieved response from the backend :-',response, response.data)
+        console.log('Received response from the backend:', response.data);
 
-        const { userInfo, existingUser, token, isProfileCompleted, roleName } = response.data;
+        const { existingUser, token, isProfileCompleted, roleName } = response.data;
 
         if (existingUser) {
+          console.log('Existing user detected:', { token, isProfileCompleted, roleName });
           if (token) {
             setAuthCookies(token);
           }
@@ -50,15 +51,14 @@ const LinkedInCallback = () => {
             navigate('/home');
           }
         } else {
+          console.log('New user, navigating to select-profession with state:', {
+            token: response.data.token,
+            linkedIn_email: response.data.email
+          });
           navigate('/select-profession', {
             state: {
-              linkedInData: {
-                firstName: userInfo.firstName,
-                lastName: userInfo.lastName,
-                email: userInfo.email,
-                pictureUrl: userInfo.pictureUrl,
-                profileUrl: userInfo.profileUrl,
-              },
+              linkedIn_email: response.data.email,
+              token: response.data.token
             },
           });
         }

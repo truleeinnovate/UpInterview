@@ -339,10 +339,15 @@ const CardDetails = () => {
                                                 nextRoute: isUpgrading ? '/account-settings/subscription' : '/home'
                                             }
                                         });
-                                         await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
+
+                                        axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+                                            tenantId: tenantId,
+                                            ownerId: ownerId,
+                                        }).catch((err) => console.error('Email error:', err));
+                                        await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
                                             ownerId,
                                             tenantId,
-                                            
+
                                             // ccEmail: "shaikmansoor1200@gmail.com",
                                         });
 
@@ -394,9 +399,9 @@ const CardDetails = () => {
         }
     };
 
-    
 
-    
+
+
     // useEffect(() => {
     //     const checkSubscriptionStatus = async () => {
     //         // Check if we're returning from a subscription authorization
@@ -404,18 +409,18 @@ const CardDetails = () => {
     //         const params = new URLSearchParams(window.location.search);
     //         const razorpayPaymentId = params.get('razorpay_payment_id');
     //         const razorpaySignature = params.get('razorpay_signature');
-            
+
     //         if (pendingSubscription && (razorpayPaymentId || params.get('error_code'))) {
     //             const subscriptionData = JSON.parse(pendingSubscription);
-                
+
     //             // Clear the pending subscription data
     //             localStorage.removeItem('pendingSubscription');
-                
+
     //             // If we have a payment ID, verify the payment
     //             if (razorpayPaymentId && razorpaySignature) {
     //                 try {
     //                     toast.loading("Verifying subscription...");
-                        
+
     //                     const verificationResponse = await axios.post(
     //                         `${process.env.REACT_APP_API_URL}/payment/verify-subscription`, 
     //                         {
@@ -428,12 +433,12 @@ const CardDetails = () => {
     //                             membershipType: subscriptionData.membershipType
     //                         }
     //                     );
-                        
+
     //                     toast.dismiss();
-                        
+
     //                     if (verificationResponse.data.status === "success") {
     //                         toast.success("Subscription successfully activated!");
-                            
+
     //                         // Navigate based on upgrade status
     //                         if (isUpgrading) {
     //                             navigate("/account-settings/subscription");
@@ -453,7 +458,7 @@ const CardDetails = () => {
     //             }
     //         }
     //     };
-        
+
     //     checkSubscriptionStatus();
     // }, [isUpgrading, navigate]); // Added isUpgrading and navigate to dependency array
 

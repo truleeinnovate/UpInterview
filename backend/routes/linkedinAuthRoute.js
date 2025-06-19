@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { Users } = require('../models/Users');
+const { Contacts } = require('../models/Contacts');
+const Tenant = require('../models/Tenant');
 const config = require('../config.js');
 
 router.use((req, res, next) => {
@@ -79,36 +81,98 @@ router.post('/check-user', async (req, res) => {
     console.log('Backend: 4. Checking database for existing user');
     const existingUser = await Users.findOne({ email: userInfo.email });
 
-    let token = null;
-    let userData = null;
-
     if (existingUser) {
-      // Generate JWT token for existing user
+      // Only send user data, not LinkedIn data
       const payload = {
         userId: existingUser._id.toString(),
         tenantId: existingUser.tenantId,
-        organization: false, // Assuming LinkedIn users are not organizations
+        organization: false,
         timestamp: new Date().toISOString(),
       };
-      token = generateToken(payload);
-      userData = {
+      const token = generateToken(payload);
+      const userData = {
         isProfileCompleted: existingUser.isProfileCompleted,
-        roleName: existingUser.roleId ? (await Role.findById(existingUser.roleId))?.roleName : null
+        roleName: existingUser.roleId ? (await Role.findById(existingUser.roleId))?.roleName : null,
+        // Add any other fields you want to send
       };
+      return res.json({
+        existingUser: true,
+        email: existingUser.email,
+        token,
+      });
+    } else {
+      // Create new User
+      const newUser = await Users.create({
+        ...userInfo // includes firstName, lastName, email, pictureUrl, profileUrl
+      });
+
+      // Create new Tenant
+      const newTenant = await Tenant.create({
+        email: userInfo.email,
+        owner: newUser._id
+      });
+
+      // Create new Contact
+      const newContact = await Contacts.create({
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+        email: userInfo.email,
+        linkedinUrl: userInfo.profileUrl,
+        imageData: {
+          path: userInfo.pictureUrl
+        },
+        ownerId: newUser._id,
+        tenantId: newTenant._id,
+        createdBy: newUser._id
+      });
+
+      // Generate token
+      const token = generateToken({
+        userId: newUser._id.toString(),
+        tenantId: newTenant._id.toString(),
+        organization: false,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.json({
+        existingUser: false,
+        email: newUser.email,
+        token
+      });
     }
 
-    console.log('Backend: 5. Sending response');
 
-    const responsePayload = {
-      existingUser: Boolean(existingUser),
-      userInfo,
-      token,
-      ...userData
-    };
 
-    console.log('final response :-', responsePayload);
+    //   let token = null;
+    //   let userData = null;
 
-    res.json(responsePayload);
+    //   if (existingUser) {
+    //     // Generate JWT token for existing user
+    //     const payload = {
+    //       userId: existingUser._id.toString(),
+    //       tenantId: existingUser.tenantId,
+    //       organization: false, // Assuming LinkedIn users are not organizations
+    //       timestamp: new Date().toISOString(),
+    //     };
+    //     token = generateToken(payload);
+    //     userData = {
+    //       isProfileCompleted: existingUser.isProfileCompleted,
+    //       roleName: existingUser.roleId ? (await Role.findById(existingUser.roleId))?.roleName : null
+    //     };
+    //   }
+
+    //   console.log('Backend: 5. Sending response');
+
+    //   const responsePayload = {
+    //     existingUser: Boolean(existingUser),
+    //     userInfo,
+    //     token,
+    //     ...userData
+    //   };
+
+    //   console.log('final response :-', responsePayload);
+
+    //   res.json(responsePayload);
 
   } catch (error) {
     console.error('Backend Error:', error);

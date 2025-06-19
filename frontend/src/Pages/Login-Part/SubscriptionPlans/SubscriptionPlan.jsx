@@ -15,18 +15,18 @@ const SubscriptionPlan = () => {
   const tokenPayload = decodeJwt(authToken);
 
   // Extract user details from token payload
-  const userId = tokenPayload?.userId;
+  const ownerId = tokenPayload?.userId;
   const organization = tokenPayload?.organization;
   console.log("organization ----", organization);
-  const orgId = tokenPayload?.tenantId;
+  const tenantId = tokenPayload?.tenantId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
     userType: organization === true ? "organization" : "individual",
-    tenantId: orgId,
-    ownerId: userId,
+    tenantId: tenantId,
+    ownerId: ownerId,
   });
 
   const navigate = useNavigate();
@@ -39,10 +39,10 @@ const SubscriptionPlan = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!userId) {
+        if (!ownerId) {
           throw new Error('User ID not found');
         }
-        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`, {
+        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${ownerId}`, {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include token in request headers
           },
@@ -58,10 +58,10 @@ const SubscriptionPlan = () => {
       }
     };
 
-    if (userId) {
+    if (ownerId) {
       fetchData();
     }
-  }, [userId, authToken]);
+  }, [ownerId, authToken]);
 
   // Fetch subscription plans
   useEffect(() => {
@@ -186,6 +186,11 @@ const SubscriptionPlan = () => {
           ownerId: user.ownerId,
           tenantId: user.tenantId,
         });
+
+              axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+                tenantId: tenantId,
+                ownerId: ownerId,
+              }).catch((err) => console.error('Email error:', err));
 
         // If upgrading, navigate to a specific page; otherwise, go to home
         navigate(isUpgrading ? "/SubscriptionDetails" : "/home");

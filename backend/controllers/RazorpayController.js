@@ -7,7 +7,7 @@ const PaymentCard = require('../models/Carddetails.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Receipt = require('../models/Receiptmodels.js');
-const { Organization } = require('../models/Tenant');
+const Tenant = require('../models/Tenant');
 
 // Import helper functions directly from the controller
 const helpers = require('./CustomerSubscriptionInvoiceContollers.js');
@@ -530,7 +530,7 @@ const verifyPayment = async (req, res) => {
                 console.log('Subscription updated with receipt ID');
                 
                 if (payment.status === 'captured' || payment.status === 'authorized' || payment.status === 'succeeded'){
-                    const tenant = await Organization.findOne({ ownerId: ownerId });
+                    const tenant = await Tenant.findOne({ ownerId: ownerId });
                     if(tenant){
                       tenant.status = 'active';
                       await tenant.save();
