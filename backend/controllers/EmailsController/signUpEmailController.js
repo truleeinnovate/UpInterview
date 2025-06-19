@@ -8,7 +8,7 @@ const config = require("../../config");
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 const moment = require('moment');
-const { Organization } = require('../../models/Tenant.js');
+const Tenant = require('../../models/Tenant.js');
 const { generateEmailVerificationToken } = require('../../utils/jwt');
 
 
@@ -470,7 +470,7 @@ exports.resendVerification = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const organization = await Organization.findOne({ ownerId: user._id });
+    const organization = await Tenant.findOne({ ownerId: user._id });
     console.log('organization', organization);
 
     if (!organization) {
