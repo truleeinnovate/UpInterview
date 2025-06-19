@@ -11,6 +11,7 @@ import { config } from '../../../../../config.js';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentsTab({ assessment }) {
+  
   const { fetchScheduledAssessments } = useAssessments();
 
 
@@ -73,6 +74,7 @@ function AssessmentsTab({ assessment }) {
           candidateAssessmentId,
           userId,
           organizationId,
+          assessmentId: assessment._id,
         }
       );
 

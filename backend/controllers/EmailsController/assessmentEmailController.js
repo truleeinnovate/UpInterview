@@ -732,6 +732,7 @@ exports.resendAssessmentLink = async (req, res) => {
       candidateAssessmentId,
       userId,
       organizationId,
+      assessmentId,
       companyName = process.env.COMPANY_NAME,
       supportEmail = process.env.SUPPORT_EMAIL
     } = req.body;
@@ -768,6 +769,12 @@ exports.resendAssessmentLink = async (req, res) => {
     if (!candidate) {
       return res.status(404).json({ success: false, message: 'Candidate not found' });
     }
+
+    const assessment = await Assessment.findById(assessmentId);
+    if (!assessment) {
+      return res.status(404).json({ success: false, message: 'Assessment not found' });
+    }
+    const assessmentDuration = assessment.assessmentDuration || 60;
 
     const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite', isSystemTemplate: true, isActive: true });
     if (!emailTemplate) {
@@ -857,6 +864,7 @@ exports.shareAssessment = async (req, res) => {
   let session;
   try {
     session = await mongoose.startSession();
+    await session.startTransaction();
 
     const {
       assessmentId,
@@ -867,7 +875,7 @@ exports.shareAssessment = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL
     } = req.body;
 
-    // Input validation
+    // Validate input
     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
       return res.status(400).json({ success: false, message: 'Invalid or missing assessment ID' });
     }
@@ -876,33 +884,51 @@ exports.shareAssessment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No candidates selected' });
     }
 
-    // Start transaction
-    await session.startTransaction();
-
-    // 1. Fetch the assessment
+    // Fetch assessment with validation
     const assessment = await Assessment.findById(assessmentId).session(session);
     if (!assessment) {
       await session.abortTransaction();
       return res.status(404).json({ success: false, message: 'Assessment not found' });
     }
-    const linkExpiryDays = assessment.linkExpiryDays;
-    const assessmentDuration = assessment.assessmentDuration;
 
-    // 2. Create ScheduleAssessment
+    // Handle link expiry days - ensure it's a valid number
+    let linkExpiryDays = parseInt(assessment.linkExpiryDays, 10);
+    if (isNaN(linkExpiryDays) || linkExpiryDays <= 0) {
+      linkExpiryDays = 3; // Default to 3 days if invalid
+    }
+
+    // Calculate expiry date safely
+    const expiryAt = new Date();
+    expiryAt.setDate(expiryAt.getDate() + linkExpiryDays);
+
+    // Verify date is valid
+    if (isNaN(expiryAt.getTime())) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid expiry date calculation',
+        details: {
+          linkExpiryDays: assessment.linkExpiryDays,
+          calculatedDate: expiryAt.toString()
+        }
+      });
+    }
+
+    const assessmentDuration = assessment.assessmentDuration || 60; // Default to 60 minutes if not set
+
+    // Create schedule assessment
     const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
-    const order = `Assessment ${scheduleCount + 1}`;
-
     const scheduleAssessment = new ScheduleAssessment({
       assessmentId,
       organizationId,
       status: 'scheduled',
       proctoringEnabled: true,
       createdBy: userId,
-      order,
+      order: `Assessment ${scheduleCount + 1}`,
     });
     await scheduleAssessment.save({ session });
 
-    // 3. Check existing CandidateAssessments
+    // Check for existing candidate assessments
     const existingAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: scheduleAssessment._id,
       candidateId: { $in: selectedCandidates.map(c => c._id) },
@@ -922,27 +948,26 @@ exports.shareAssessment = async (req, res) => {
       });
     }
 
-    // 4. Create CandidateAssessments
-    const expiryAt = new Date(Date.now() + linkExpiryDays * 24 * 60 * 60 * 1000);
+    // Create candidate assessments with validated dates
     const candidateAssessments = newCandidates.map(candidate => ({
       scheduledAssessmentId: scheduleAssessment._id,
       candidateId: candidate._id,
       status: 'pending',
-      expiryAt,
+      expiryAt: new Date(expiryAt), // Create new Date instance for each
       isActive: true,
       assessmentLink: '',
     }));
 
     const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
 
-    // 5. Email processing
+    // Process emails
     const emailTemplate = await emailTemplateModel.findOne({
       category: 'assessment_invite',
       isSystemTemplate: true,
       isActive: true
     }).session(session);
 
-    if (!emailTemplate && newCandidates.length > 0) {
+    if (!emailTemplate) {
       await session.abortTransaction();
       return res.status(404).json({ success: false, message: 'Email template not found' });
     }
@@ -957,13 +982,10 @@ exports.shareAssessment = async (req, res) => {
         continue;
       }
 
-      const emails = Array.isArray(candidate.emails)
-        ? candidate.emails
-        : candidate.emails
-          ? [candidate.emails]
-          : candidate.Email
-            ? [candidate.Email]
-            : [];
+      const emails = [].concat(
+        candidate.emails || [],
+        candidate.Email ? [candidate.Email] : []
+      ).filter(Boolean);
 
       if (emails.length === 0) {
         console.error(`No email for candidate: ${candidate._id}`);
@@ -984,8 +1006,8 @@ exports.shareAssessment = async (req, res) => {
         { session }
       );
 
-      const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
-      const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
+      // Format email content
+      const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
       const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -997,7 +1019,7 @@ exports.shareAssessment = async (req, res) => {
       });
 
       const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
-      const emailBody = cleanedBody
+      const emailBody = emailTemplate.body
         .replace(/{{candidateName}}/g, candidateName)
         .replace(/{{companyName}}/g, companyName)
         .replace(/{{expiryDate}}/g, formattedExpiryDate)
@@ -1005,28 +1027,20 @@ exports.shareAssessment = async (req, res) => {
         .replace(/{{assessmentDuration}}/g, assessmentDuration)
         .replace(/{{supportEmail}}/g, supportEmail);
 
-      // Queue email sends but don't await them here
+      // Queue email sends
       emailPromises.push(
         ...emails.map(email =>
           sendEmail(email, emailSubject, emailBody)
-            .then(response => ({
-              email,
-              success: response.success,
-              message: response.message || 'Email sent'
-            }))
-            .catch(error => ({
-              email,
-              success: false,
-              message: error.message
-            }))
+            .then(response => ({ email, success: true }))
+            .catch(error => ({ email, success: false, error: error.message }))
         )
       );
 
       notifications.push({
         toAddress: emails,
         fromAddress: process.env.EMAIL_FROM,
-        title: `Assessment Email Sent`,
-        body: `Email sent to candidate ${candidateData.LastName}`,
+        title: `Assessment Invitation`,
+        body: `Assessment invitation sent to ${candidateName}`,
         notificationType: 'email',
         object: {
           objectName: 'assessment',
@@ -1040,7 +1054,7 @@ exports.shareAssessment = async (req, res) => {
       });
     }
 
-    // Save notifications first
+    // Save notifications
     if (notifications.length > 0) {
       await Notification.insertMany(notifications, { session });
     }
@@ -1048,13 +1062,12 @@ exports.shareAssessment = async (req, res) => {
     // Commit transaction before sending emails
     await session.commitTransaction();
 
-    // Now send emails outside transaction
+    // Send emails outside transaction
     const emailResults = await Promise.all(emailPromises);
     const failedEmails = emailResults.filter(r => !r.success);
 
     if (failedEmails.length > 0) {
-      console.error('Some emails failed to send:', failedEmails);
-      // Update notifications for failed emails
+      console.error('Failed emails:', failedEmails);
       await Notification.updateMany(
         { toAddress: { $in: failedEmails.map(f => f.email) } },
         { $set: { status: 'Failed', body: 'Failed to send email' } }
@@ -1073,19 +1086,16 @@ exports.shareAssessment = async (req, res) => {
     });
 
   } catch (error) {
-    if (session) {
-      await session.abortTransaction();
-    }
+    if (session) await session.abortTransaction();
     console.error('Error sharing assessment:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to share assessment',
       error: error.message,
+      ...(error.errors ? { details: error.errors } : {})
     });
   } finally {
-    if (session) {
-      session.endSession();
-    }
+    if (session) session.endSession();
   }
 };
 

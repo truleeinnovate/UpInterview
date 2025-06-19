@@ -7,7 +7,8 @@ const config = require("../../config");
 const CustomerSubscription = require('../../models/CustomerSubscriptionmodels.js');
 const cron = require('node-cron');
 const moment = require('moment');
-const { Organization } = require('../../models/Tenant.js');
+const Tenant = require('../../models/Tenant.js');
+
 // this controller use for sending mails in signup or reset password
 
 
@@ -277,7 +278,7 @@ cron.schedule('0 0 * * *', async () => {
     console.log('Running automated email reminder job at', new Date().toISOString());
 
     // 1. Incomplete Payment Reminders (10s, 24h, 48h, 1 week, 1 month)
-    const pendingOrganizations = await Organization.find({ status: 'payment_pending' });
+    const pendingOrganizations = await Tenant.find({ status: 'payment_pending' });
     const emailTemplateIncomplete = await emailTemplateModel.findOne({
       category: 'incomplete_payment_reminder',
       isActive: true,

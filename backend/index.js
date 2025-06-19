@@ -8,7 +8,6 @@ const app = express();
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('CORS origin check:', origin);
 
     if (!origin) return callback(null, true);
 
