@@ -24,12 +24,14 @@ const LinkedInCallback = () => {
           `${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code, redirectUri: window.location.origin + '/callback' },
           {
+            withCredentials: true,
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
           }
         );
+        console.log('recieved response from the backend :-',response, response.data)
 
         const { userInfo, existingUser, token, isProfileCompleted, roleName } = response.data;
 
