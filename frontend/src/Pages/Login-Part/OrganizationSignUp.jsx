@@ -256,13 +256,13 @@ export const Organization = () => {
       // toast.success(response.data.message || 'Organization created successfully');
 
       // Send welcome email silently
-      axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-        email: organizationData.email,
-        tenantId: response.data.tenantId,
-        ownerId: response.data.ownerId,
-        lastName: organizationData.lastName,
-        firstName: organizationData.firstName
-      }).catch((err) => console.error('Email error:', err));
+      // axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+      //   email: organizationData.email,
+      //   tenantId: response.data.tenantId,
+      //   ownerId: response.data.ownerId,
+      //   lastName: organizationData.lastName,
+      //   firstName: organizationData.firstName
+      // }).catch((err) => console.error('Email error:', err));
 
       // Set form submitted state and email for verification message
       setEmail(selectedEmail);
