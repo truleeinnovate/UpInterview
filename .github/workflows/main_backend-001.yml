@@ -99,6 +99,11 @@ jobs:
           cd deploy
           zip -r ../release.zip .
 
+      - name: ⏱️ Wait to avoid SCM conflicts
+        run: |
+          echo "Waiting for 20 seconds to avoid SCM container conflicts..."
+          sleep 20
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         with:

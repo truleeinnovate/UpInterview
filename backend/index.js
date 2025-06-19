@@ -2,121 +2,34 @@
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
 require('dotenv').config();
-
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// const bodyParser = require('body-parser');
-// const cookieParser = require('cookie-parser');
-// const app = express();
-
-// // Parse cookies
-// app.use(cookieParser());
-// app.use(bodyParser.json());
-
-// const port = process.env.PORT;
-// const mongoUri = process.env.MONGODB_URI;
-
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     // Allow requests from localhost for development
-//     if (!origin || origin === 'http://localhost:3000' || origin === 'https://www.app.upinterview.io') {
-//       callback(null, true);
-//     } else {
-//       // For production, allow requests from any subdomain of upinterview.io
-//       const allowedDomains = ['upinterview.io', 'app.upinterview.io'];
-//       const originDomain = origin.split('//')[1].split(':')[0];
-//       const isAllowedDomain = allowedDomains.some(domain => originDomain.endsWith(domain));
-
-//       if (isAllowedDomain) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error('Not allowed by CORS'));
-//       }
-//     }
-//   },
-//   credentials: true,
-//   optionsSuccessStatus: 200,
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
-//   exposedHeaders: ['Set-Cookie'],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-// };
-
-// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(() => console.log('MongoDB connected successfully'))
-//   .catch(err => console.error('MongoDB connection error:', err));
-
-// // Enhanced CORS handling - applied before routes
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*');
-//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-//   res.header('Access-Control-Allow-Credentials', 'true');
-
-//   // Handle preflight OPTIONS requests
-//   if (req.method === 'OPTIONS') {
-//     return res.status(200).end();
-//   }
-
-//   // console.log('CORS headers set for:', req.method, req.url);
-//   next();
-// });
-
-// Force production mode to avoid webhook issues
-process.env.NODE_ENV = 'production';
-console.log(`🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`);
-
-
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-
+const express = require('express');
 const app = express();
-const port = process.env.PORT || 5000;
-
-mongoose.connect(process.env.MONGODB_URI, {
-
-}).then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('CORS origin check:', origin);
 
-    // Allow requests with no origin (like mobile apps, server-to-server, or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true);
 
-    // Allow local development
     if (
       origin.startsWith('http://localhost:') ||
       origin.startsWith('https://localhost:')
-    ) {
-      return callback(null, true);
-    }
+    ) return callback(null, true);
 
-    // Parse the origin URL
     let originHost;
     try {
-      const originUrl = new URL(origin);
-      originHost = originUrl.hostname;
+      originHost = new URL(origin).hostname;
     } catch (e) {
-      console.log('Invalid origin URL:', origin);
       return callback(new Error('Invalid origin URL'));
     }
 
-    // Allow main domain and all subdomains of app.upinterview.io
     if (
       originHost === 'app.upinterview.io' ||
       /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
-    ) {
-      return callback(null, true);
-    }
+    ) return callback(null, true);
 
-    callback(new Error('Not allowed by CORS'));
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept'],
@@ -126,9 +39,29 @@ const corsOptions = {
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// Force production mode to avoid webhook issues
+console.log('process.env.NODE_ENV checking in index.js:-', process.env.NODE_ENV)
+console.log(`🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`);
+
+require('dotenv').config();
+
+const mongoose = require('mongoose');
+
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+
+
+const port = process.env.PORT || 5000;
+
+mongoose.connect(process.env.MONGODB_URI, {
+
+}).then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Explicitly handle preflight requests
-app.options('*', cors(corsOptions));
+
 
 // Special middleware to capture raw body for webhook signature verification
 // This MUST come before any bodyParsers

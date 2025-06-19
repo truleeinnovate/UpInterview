@@ -6,6 +6,7 @@ import { config } from '../../config.js';
 
 const Profile1 = () => {
   console.log('profile1')
+  console.log('config.REACT_APP_REDIRECT_URI from individual-2:', config.REACT_APP_REDIRECT_URI)
   const [selectedOption, setSelectedOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();

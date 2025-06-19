@@ -20,8 +20,8 @@
 const mongoose = require('mongoose');
 
 const UsersSchema = new mongoose.Schema({
-    lastName: { type: String },
     firstName: { type: String },
+    lastName: { type: String },
     email: { type: String },
     password: { type: String, select: true },
     isFreelancer: String,
