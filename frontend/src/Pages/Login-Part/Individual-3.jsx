@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import Slideshow from './Slideshow';
 
 const Profile3 = () => {
-    console.log('profile3')
     const [selectedTab, setSelectedTab] = useState('');
     const navigate = useNavigate();
     const [showPopup, setShowPopup] = useState(false);
@@ -31,14 +30,17 @@ const Profile3 = () => {
 
     const navigateToNext = (Freelancer) => {
         const professionName = selectedTab === 'technical' ? 'Technical_Expert/Developer' : 'HR/Recruiter';
-        navigate('/complete-profile', { 
-          state: { 
-            Freelancer, 
+        const stateToPass = {
+            Freelancer,
             profession: professionName,
-            linkedInData: location.state?.linkedInData 
-          } 
+            token: location.state?.token,
+            linkedIn_email: location.state?.linkedIn_email,
+        };
+        console.log('stateToPass:', stateToPass);
+        navigate('/complete-profile', {
+            state: stateToPass,
         });
-      };
+    };
 
     return (
         <div>
@@ -109,28 +111,28 @@ const Popup = ({ onClose, onConfirm }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
             <div className="relative bg-white p-8 rounded-xl shadow-xl max-w-md w-[90%] sm:w-[80%] md:w-[60%] lg:w-[45%] mx-auto overflow-hidden">
                 {/* Close Button */}
-                <button 
-                    onClick={onClose} 
+                <button
+                    onClick={onClose}
                     className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     aria-label="Close popup"
                 >
                     <X className="text-gray-500 hover:text-gray-700" size={20} />
                 </button>
-                
+
                 {/* Content */}
                 <div className="space-y-6">
                     <div className="text-center">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Interviewer Type</h3>
                         <p className="text-gray-600">Do you want to be an outsource interviewer (freelancer)?</p>
                     </div>
-                    
+
                     <div className="flex justify-end gap-4 mt-8">
                         <button
                             onClick={() => handleSelect(true)}
                             disabled={isSubmitting}
                             className={`px-6 py-2 rounded-lg border-[1.5px] font-medium transition-all duration-200 flex-1
-                                ${selectedOption === true 
-                                    ? 'bg-custom-blue text-white border-custom-blue shadow-md' 
+                                ${selectedOption === true
+                                    ? 'bg-custom-blue text-white border-custom-blue shadow-md'
                                     : 'text-custom-blue bg-white border-custom-blue hover:bg-custom-blue hover:bg-opacity-10'
                                 }
                                 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
@@ -146,13 +148,13 @@ const Popup = ({ onClose, onConfirm }) => {
                                 </span>
                             ) : 'Yes'}
                         </button>
-                        
+
                         <button
                             onClick={() => handleSelect(false)}
                             disabled={isSubmitting}
                             className={`px-6 py-2 rounded-lg border-[1.5px] font-medium transition-all duration-200 flex-1
-                                ${selectedOption === false 
-                                    ? 'bg-custom-blue text-white border-custom-blue shadow-md' 
+                                ${selectedOption === false
+                                    ? 'bg-custom-blue text-white border-custom-blue shadow-md'
                                     : 'text-custom-blue bg-white border-custom-blue hover:bg-custom-blue hover:bg-opacity-10'
                                 }
                                 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
@@ -170,7 +172,7 @@ const Popup = ({ onClose, onConfirm }) => {
                         </button>
                     </div>
                 </div>
-                
+
                 {/* Loading overlay */}
                 {isSubmitting && (
                     <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center">

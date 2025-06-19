@@ -2,11 +2,11 @@ const Invoicemodels = require('../models/Invoicemodels.js');
 const Receipt = require('../models/Receiptmodels.js'); 
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js'); 
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
-const { Organization } = require('../models/Tenant');
+const Tenant = require('../models/Tenant');
 
 const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,status,receiptId) => {
   console.log("userDetails ----", userDetails.ownerId);
-  const tenant = await Organization.findOne({ ownerId: userDetails.ownerId });
+  const tenant = await Tenant.findOne({ ownerId: userDetails.ownerId });
         if(tenant){
           tenant.status =  status === 'active' ? 'active' : 'payment_pending';
           await tenant.save();
