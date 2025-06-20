@@ -496,21 +496,21 @@ const CardDetails = () => {
                         <div className="w-9/12 md:w-7/12  sm:w-6/12">
 
                             <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
-                                <h3 className="text-lg font-medium text-blue-800 mb-2">Secure Payment</h3>
-                                <p className="text-blue-600">
+                                <h3 className="text-lg font-medium text-custom-blue mb-2">Secure Payment</h3>
+                                <p className="text-custom-blue">
                                     Your payment information will be securely collected by Razorpay's payment form.
                                     No card details are stored on our servers.
                                 </p>
 
                                 <div className="mt-3 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-custom-blue mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
-                                    <span className="text-blue-600">Your payment is protected with industry-standard encryption</span>
+                                    <span className="text-custom-blue">Your payment is protected with industry-standard encryption</span>
                                 </div>
 
                                 <div className="mt-3 flex justify-center">
-                                    <img alt="VisaCard" className="h-8 mx-1" src="https://dwglogo.com/wp-content/uploads/2016/08/Visa-logo-02.png" />
+                                    <img alt="VisaCard" className="h-8 mx-1" src="https://img.icons8.com/?size=100&id=13608&format=png&color=000000" />
                                     <img alt="MasterCard" className="h-8 mx-1" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
                                     <img alt="Razorpay" className="h-8 mx-1" src="https://razorpay.com/assets/razorpay-logo.svg" />
                                 </div>
@@ -522,7 +522,7 @@ const CardDetails = () => {
                                     : `$${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
                                 </span>
 
-                                <span className="text-blue-400">Details</span>
+                                <span className="text-custom-blue">Details</span>
                             </div>
 
                         </div>
