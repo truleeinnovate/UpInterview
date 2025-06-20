@@ -112,12 +112,24 @@ export const useQuestions = () => {
   // ✅ Mutation #1: Save or Update a Question
   const saveOrUpdateQuestionMutation = useMutation({
     mutationFn: async ({ questionData, isEdit, questionId }) => {
-      console.log('Starting saveOrUpdateQuestion mutation:', { isEdit, questionId });
+      // Ensure required fields are included
+      const payload = {
+        ...questionData,
+        suggestedQuestionId: questionData.suggestedQuestionId || '',
+        ownerId: userId || '',  // Add ownerId from current user
+        isEdit: isEdit
+      };
+
+      console.log('Payload:', payload);
+      console.log('isEdit:', isEdit);
+      console.log('questionId:', questionId);
+      
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/newquestion/${questionId}`
         : `${config.REACT_APP_API_URL}/newquestion`;
+      
       const method = isEdit ? 'patch' : 'post';
-      const response = await axios[method](url, questionData);
+      const response = await axios[method](url, payload);
       console.log('Mutation response:', response.data);
       return response.data;
     },
@@ -161,53 +173,52 @@ export const useQuestions = () => {
 
   // ✅ Mutation #3: Add or Update Question in Lists
   const addQuestionToListMutation = useMutation({
-    mutationFn: async ({ listIds, suggestedQuestionId}) => {
+    mutationFn: async ({ listIds, suggestedQuestionId }) => {
       if (!suggestedQuestionId || !listIds?.length) {
-        throw new Error('Missing required fields: suggestedQuestionId or listIds');
+        throw new Error('Missing required fields');
       }
-      console.log('testing-------')
-      console.log('suggestedQuestionId ---',suggestedQuestionId)
-      // Check if a question already exists for the suggestedQuestionId
-      const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`, {
-        params: {
-          [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId,
-        },
-      });
-      const existingQuestion = response.data;
-      console.log('exisiting ---- ', response.status)
-
-      if (existingQuestion && existingQuestion.data) {
-        // Update existing question's tenantListId
-        const currentListIds = existingQuestion.data.tenantListId.map((id) => id.toString());
-        const updatedListIds = Array.from(new Set([...currentListIds, ...listIds])); // Merge and remove duplicates
-        const updateResponse = await axios.patch(
-          `${config.REACT_APP_API_URL}/newquestion/${existingQuestion.data._id}`,
-          {
-            tenantListId: updatedListIds,
-            [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId,
-            ownerId: userId,
-          }
+      
+      try {
+        // First get existing question with current lists
+        const { data } = await axios.get(
+          `${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`,
+          { params: { [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId } }
         );
-        return updateResponse.data;
-      } else {
-        // Create a new question
-        const questionData = {
-          tenantListId: listIds,
-          suggestedQuestionId,
-          ownerId: userId,
-          [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId,
-        };
-        const createResponse = await axios.post(`${config.REACT_APP_API_URL}/newquestion`, questionData);
-        return createResponse.data;
+        
+        // Merge existing and new list IDs
+        const currentListIds = data.data?.tenantListId?.map(id => id.toString()) || [];
+        const updatedListIds = [...new Set([...currentListIds, ...listIds])];
+        
+        // Update question with merged list IDs
+        const response = await axios.patch(
+          `${config.REACT_APP_API_URL}/newquestion/${data.data._id}`,
+          { tenantListId: updatedListIds }
+        );
+        return response.data;
+      } catch (error) {
+        if (error.response?.status === 404) {
+          // Create new question if not found
+          const createResponse = await axios.post(
+            `${config.REACT_APP_API_URL}/newquestion`,
+            {
+              suggestedQuestionId,
+              tenantListId: listIds,
+              [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId
+            }
+          );
+          return createResponse.data;
+        }
+        throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['myQuestions']);
-      queryClient.invalidateQueries(['questionBySuggestedId']);
+      queryClient.invalidateQueries(['questionBySuggestedId', variables.suggestedQuestionId]);
+      queryClient.invalidateQueries(['allQuestionLists']);
     },
     onError: (error) => {
-      console.error('Failed to add or update question in lists:', error.response?.data?.message || error.message);
-    },
+      console.error('Update failed:', error.response?.data?.message || error.message);
+    }
   });
 
   // ✅ Mutation #4: Remove Question from Lists

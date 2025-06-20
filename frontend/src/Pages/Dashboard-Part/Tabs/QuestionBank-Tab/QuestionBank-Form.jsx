@@ -42,7 +42,12 @@ const QuestionBankForm = ({
 }) => {
 
   const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading,createdLists } = useQuestions();
-  console.log("selectedLabelId", selectedLabelId);
+  // console.log("selectedLabelId ================", selectedLabelId);
+  const [selectedLabels, setSelectedLabels] = useState(false);
+  // console.log('selected---541651',selectedLabels)
+
+  const [selectedListId, setSelectedListId] = useState([]);
+  // console.log("selectedListId ==== ---", selectedListId);
   
 useEffect(() => {
   if (!isEdit && selectedLabelId && createdLists?.length > 0) {
@@ -84,7 +89,6 @@ useEffect(() => {
   const [hintContent, setHintContent] = useState('');
   const [autoAssessment, setAutoAssessment] = useState(false);
   const [answerMatching, setAnswerMatching] = useState('Exact');
-  const [selectedListId, setSelectedListId] = useState([]);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errors, setErrors] = useState("");
@@ -123,8 +127,7 @@ useEffect(() => {
   const handleListSelection = (candidateId) => {
     setSelectedListId(candidateId);
   };
-  const [selectedLabels, setSelectedLabels] = useState(false);
-  console.log('selected---',selectedLabels)
+
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
       setFormData({
@@ -210,7 +213,7 @@ useEffect(() => {
       minexperience: parseInt(selectedMinExperience),
       maxexperience: parseInt(selectedMaxExperience),
       isCustom: true,
-      tenantListId: selectedListId,
+      tenantListId: !isEdit && selectedLabelId ? [selectedLabelId] :selectedListId,
       difficultyLevel: selectedDifficultyLevel,
       questionType: selectedQuestionType,
       skill: selectedSkill,
@@ -669,7 +672,7 @@ useEffect(() => {
 
                 {/* My Question List */}
                 <div className="mb-4">
-                  <MyQuestionList fromform={true} onSelectList={handleListSelection} ref={listRef} error={errors.tenantListId} defaultTenantList={selectedLabels} notEditmode={!isEdit}
+                  <MyQuestionList fromform={true} onSelectList={handleListSelection} ref={listRef} error={errors.tenantListId} defaultTenantList={selectedLabels} notEditmode={!isEdit} selectedListId={selectedLabelId}
                     onErrorClear={handleErrorClear}
                   />
                 </div>
