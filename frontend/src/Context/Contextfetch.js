@@ -259,6 +259,7 @@ const CustomProvider = ({ children }) => {
       //   });
       // }
 
+      console.log("DAAAAAAAAAAAAAAATA: ", data);
       await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
