@@ -1,33 +1,41 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Camera, RefreshCw, ChevronDown, XCircle, Maximize, Minimize } from 'lucide-react';
-import { X } from 'lucide-react';
-import classNames from 'classnames';
-import Modal from 'react-modal';
+import {
+  Camera,
+  RefreshCw,
+  ChevronDown,
+  XCircle,
+  Maximize,
+  Minimize,
+} from "lucide-react";
+import { X } from "lucide-react";
+import classNames from "classnames";
+import Modal from "react-modal";
 import axios from "axios";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
 import Switch from "react-switch";
-import { validateWorkEmail, checkEmailExists } from '../../../../../utils/workEmailValidation.js';
-
+import {
+  validateWorkEmail,
+  checkEmailExists,
+} from "../../../../../utils/workEmailValidation.js";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;
-  const editMode = location.pathname.includes('/users/edit/');
-
+  const editMode = location.pathname.includes("/users/edit/");
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
-
   const fileInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
+  console.log("INITIAL USER DATA: ", initialUserData);
 
   // State declarations
   const [file, setFile] = useState(null);
@@ -47,7 +55,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     tenantId: tenantId,
     imageData: "",
     countryCode: "+91",
-    status: "active" // Default status
+    status: "active", // Default status
   });
 
   // Role dropdown state
@@ -69,7 +77,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       tenantId: tenantId,
       imageData: "",
       countryCode: "+91",
-      status: "inactive"
+      status: "inactive",
     });
     setFile(null);
     setFilePreview(null);
@@ -80,18 +88,17 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     setStatus("inactive");
   };
 
-
   // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: "" }));
+    setUserData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   // Email validation on blur
   const handleEmailValidation = async (email) => {
     if (!email) {
-      setErrors((prev) => ({ ...prev, email: '' }));
+      setErrors((prev) => ({ ...prev, email: "" }));
       setIsCheckingEmail(false);
       return;
     }
@@ -107,9 +114,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
     const exists = await checkEmailExists(email);
     if (exists) {
-      setErrors((prev) => ({ ...prev, email: 'Email already registered' }));
+      setErrors((prev) => ({ ...prev, email: "Email already registered" }));
     } else {
-      setErrors((prev) => ({ ...prev, email: '' }));
+      setErrors((prev) => ({ ...prev, email: "" }));
     }
 
     setIsCheckingEmail(false);
@@ -117,7 +124,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    if (name === 'email') {
+    if (name === "email") {
       handleEmailValidation(value);
     }
   };
@@ -125,12 +132,13 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   // Handle status toggle
   const handleStatusToggle = () => {
     const newStatus = userData.status === "active" ? "inactive" : "active";
-    setUserData(prev => ({ ...prev, status: newStatus }));
+    setUserData((prev) => ({ ...prev, status: newStatus }));
   };
   // Initialize form data for edit mode
   useEffect(() => {
     if (editMode && initialUserData) {
       setUserData({
+        _id: initialUserData._id || "", // added by Ashok
         firstName: initialUserData.firstName || "",
         lastName: initialUserData.lastName || "",
         email: initialUserData.email || "",
@@ -138,11 +146,13 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         roleId: initialUserData.roleId || "",
         tenantId: tenantId,
         countryCode: initialUserData.countryCode || "+91",
-        status: initialUserData.status || "inactive"
+        status: initialUserData.status || "inactive",
+        contactId: initialUserData.contactId || "", // Added by Ashok
       });
       setSelectedCurrentRole(initialUserData.label || "");
       setSelectedCurrentRoleId(initialUserData.roleId || "");
-      setFilePreview(initialUserData.imageUrl || "");
+      // setFilePreview(initialUserData.imageUrl || "");
+      setFilePreview(initialUserData?.imageData?.path); // Added by Ashok
       setStatus(initialUserData.status || "inactive");
     }
   }, [editMode, initialUserData, tenantId]);
@@ -150,10 +160,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/organization/roles/${tenantId}`);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
+        );
         setCurrentRole(response.data);
       } catch (error) {
-        console.error('Error fetching roles:', error);
+        console.error("Error fetching roles:", error);
       }
     };
 
@@ -180,7 +192,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   };
 
   const handleDeleteImage = () => {
-    if (window.confirm('Remove this image?')) {
+    if (window.confirm("Remove this image?")) {
       setFile(null);
       setFilePreview(null);
       setIsImageUploaded(false);
@@ -195,9 +207,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const handleRoleSelect = (role) => {
     setSelectedCurrentRole(role.label);
     setSelectedCurrentRoleId(role._id);
-    setUserData(prev => ({ ...prev, roleId: role._id }));
+    setUserData((prev) => ({ ...prev, roleId: role._id }));
     setShowDropdownRole(false);
-    setErrors(prev => ({ ...prev, roleId: "" }));
+    setErrors((prev) => ({ ...prev, roleId: "" }));
   };
 
   const handlePhoneInput = (e) => {
@@ -208,24 +220,25 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   };
 
   const handleCountryCodeChange = (e) => {
-    setUserData(prev => ({ ...prev, countryCode: e.target.value }));
+    setUserData((prev) => ({ ...prev, countryCode: e.target.value }));
   };
 
   const toggleFullWidth = () => {
-    setIsFullScreen(prev => !prev);
+    setIsFullScreen((prev) => !prev);
   };
 
   const toggleDropdownRole = () => {
-    setShowDropdownRole(prev => !prev);
+    setShowDropdownRole((prev) => !prev);
   };
 
   // Filter roles based on search
-  const filteredCurrentRoles = currentRole.filter(role =>
+  const filteredCurrentRoles = currentRole.filter((role) =>
     role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
   );
 
   // Form submission
   const handleSubmit = (e) => {
+    console.log("USERS DATA ORIGINAL: ", userData);
     e.preventDefault();
     if (isLoading) return;
 
@@ -242,21 +255,21 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       {
         onSettled: () => {
           setIsLoading(false);
-          navigate('/account-settings/users');
-        }
+          navigate("/account-settings/users");
+        },
       }
     );
   };
 
   const handleClose = () => {
-    navigate('/account-settings/users');
+    navigate("/account-settings/users");
   };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
+    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     {
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
@@ -267,7 +280,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+      <div
+        className={classNames("h-full", {
+          "max-w-6xl mx-auto px-6": isFullScreen,
+        })}
+      >
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
@@ -275,9 +292,14 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         )}
         <div className="p-3">
           <div className="flex justify-between items-center mb-6 mt-2">
-            <h2 className="text-2xl font-bold text-custom-blue">{editMode ? "Edit User" : "New User"}</h2>
+            <h2 className="text-2xl font-bold text-custom-blue">
+              {editMode ? "Edit User" : "New User"}
+            </h2>
             <div className="flex items-center gap-2">
-              <button onClick={toggleFullWidth} className="p-1 rounded-full hover:bg-white/10">
+              <button
+                onClick={toggleFullWidth}
+                className="p-1 rounded-full hover:bg-white/10"
+              >
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
@@ -293,56 +315,92 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           <div className="flex flex-col">
             <div className="flex-1 overflow-y-auto p-4">
               <form onSubmit={handleSubmit}>
-                {errors.form && <p className="text-red-500 text-sm mb-4">{errors.form}</p>}
+                {errors.form && (
+                  <p className="text-red-500 text-sm mb-4">{errors.form}</p>
+                )}
                 <div className="flex justify-center mb-4">
                   <div className="w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center relative overflow-hidden group">
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" disabled={isLoading} />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isLoading}
+                    />
                     {filePreview ? (
                       <>
-                        <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <img
+                          src={filePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200">
                           <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onClick={handleReplaceImage} className="text-white hover:text-blue-400" disabled={isLoading}>
+                            <button
+                              type="button"
+                              onClick={handleReplaceImage}
+                              className="text-white hover:text-blue-400"
+                              disabled={isLoading}
+                            >
                               <RefreshCw className="text-2xl" />
                             </button>
-                            <button type="button" onClick={handleDeleteImage} className="text-white hover:text-red-400" disabled={isLoading}>
+                            <button
+                              type="button"
+                              onClick={handleDeleteImage}
+                              className="text-white hover:text-red-400"
+                              disabled={isLoading}
+                            >
                               <XCircle className="text-2xl" />
                             </button>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50" disabled={isLoading}>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50"
+                        disabled={isLoading}
+                      >
                         <Camera className="text-4xl text-gray-400" />
-                        <span className="text-sm text-gray-500 mt-2">Upload Photo</span>
+                        <span className="text-sm text-gray-500 mt-2">
+                          Upload Photo
+                        </span>
                       </button>
                     )}
                   </div>
                 </div>
 
-
-
-
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-x-6 gap-y-4">
                   <div className="col-span-2 flex justify-between items-center">
                     <h1 className="font-medium text-lg">Personal Details:</h1>
-
                   </div>
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      First Name
+                    </label>
                     <input
                       type="text"
                       name="firstName"
                       id="firstName"
                       value={userData.firstName}
                       onChange={handleChange}
-                      className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${isLoading ? 'opacity-50' : ''}`}
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
+                        isLoading ? "opacity-50" : ""
+                      }`}
                       disabled={isLoading}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Last Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -351,14 +409,25 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       id="lastName"
                       value={userData.lastName}
                       onChange={handleChange}
-                      className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.lastName ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue ${isLoading ? 'opacity-50' : ''}`}
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                        errors.lastName ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue ${
+                        isLoading ? "opacity-50" : ""
+                      }`}
                       disabled={isLoading}
                     />
-                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                    {errors.lastName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.lastName}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Work Email <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -370,7 +439,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         value={userData.email}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.email ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue ${isLoading ? 'opacity-50' : ''}`}
+                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                          errors.email ? "border-red-500" : "border-gray-300"
+                        } focus:border-custom-blue ${
+                          isLoading ? "opacity-50" : ""
+                        }`}
                         placeholder="your.email@example.com"
                         autoComplete="email"
                         disabled={isLoading}
@@ -381,11 +454,18 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         </div>
                       )}
                     </div>
-                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Phone <span className="text-red-500">*</span>
                     </label>
                     <div className="flex">
@@ -393,7 +473,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         name="countryCode"
                         value={userData.countryCode}
                         onChange={handleCountryCodeChange}
-                        className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${errors.phone ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue w-1/4 mr-2 ${isLoading ? 'opacity-50' : ''}`}
+                        className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
+                          errors.phone ? "border-red-500" : "border-gray-300"
+                        } focus:border-custom-blue w-1/4 mr-2 ${
+                          isLoading ? "opacity-50" : ""
+                        }`}
                         disabled={isLoading}
                       >
                         <option value="+91">+91 (IN)</option>
@@ -406,15 +490,26 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         id="phone"
                         value={userData.phone}
                         onChange={handlePhoneInput}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.phone ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue ${isLoading ? 'opacity-50' : ''}`}
+                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                          errors.phone ? "border-red-500" : "border-gray-300"
+                        } focus:border-custom-blue ${
+                          isLoading ? "opacity-50" : ""
+                        }`}
                         disabled={isLoading}
                       />
                     </div>
-                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Role <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -423,7 +518,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         readOnly
                         value={selectedCurrentRole}
                         onClick={toggleDropdownRole}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? 'border-red-500' : 'border-gray-300'} focus:border-custom-blue cursor-pointer ${isLoading ? 'opacity-50' : ''}`}
+                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                          errors.roleId ? "border-red-500" : "border-gray-300"
+                        } focus:border-custom-blue cursor-pointer ${
+                          isLoading ? "opacity-50" : ""
+                        }`}
                         disabled={isLoading}
                       />
                       <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
@@ -434,13 +533,15 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                               type="text"
                               placeholder="Search roles..."
                               value={searchTermRole}
-                              onChange={(e) => setSearchTermRole(e.target.value)}
+                              onChange={(e) =>
+                                setSearchTermRole(e.target.value)
+                              }
                               className="w-full px-2 py-1 border rounded"
                               disabled={isLoading}
                             />
                           </div>
                           <div className="max-h-60 overflow-y-auto">
-                            {filteredCurrentRoles.map(role => (
+                            {filteredCurrentRoles.map((role) => (
                               <div
                                 key={role._id}
                                 onClick={() => handleRoleSelect(role)}
@@ -453,7 +554,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         </div>
                       )}
                     </div>
-                    {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
+                    {errors.roleId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.roleId}
+                      </p>
+                    )}
                   </div>
 
                   <div className="col-span-2">
@@ -462,11 +567,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                     </label>
                     <div className="flex items-center mt-2">
                       <Switch
-                        checked={userData.status === 'active'}
+                        checked={userData.status === "active"}
                         onChange={(checked) => {
-                          setUserData(prev => ({
+                          setUserData((prev) => ({
                             ...prev,
-                            status: checked ? 'active' : 'inactive'
+                            status: checked ? "active" : "inactive",
                           }));
                         }}
                         onColor="#98e6e6"
@@ -480,10 +585,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         uncheckedIcon={false}
                       />
                       <span className="ml-2 text-sm text-gray-700">
-                        {userData.status === 'active' ? 'Active' : 'Inactive'}
+                        {userData.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </div>
-
                   </div>
                 </div>
               </form>
@@ -501,10 +605,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
               <button
                 type="submit"
                 onClick={handleSubmit}
-                className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 disabled={isLoading}
               >
-                {editMode ? 'Save Changes' : 'Save'}
+                {editMode ? "Save Changes" : "Save"}
               </button>
             </div>
           </div>

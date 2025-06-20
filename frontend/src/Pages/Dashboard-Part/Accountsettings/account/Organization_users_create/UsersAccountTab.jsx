@@ -1,27 +1,35 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, Pencil, ChevronUp, ChevronDown, CheckCircle, XCircle, Info } from 'lucide-react';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
-import Header from '../../../../../Components/Shared/Header/Header';
-import Toolbar from '../../../../../Components/Shared/Toolbar/Toolbar';
-import TableView from '../../../../../Components/Shared/Table/TableView';
-import { FilterPopup } from '../../../../../Components/Shared/FilterPopup/FilterPopup';
-import KanbanView from './KanbanView';
-import Loading from '../../../../../Components/Loading';
-import toast from 'react-hot-toast';
-import maleImage from '../../../Images/man.png';
-import femaleImage from '../../../Images/woman.png';
-import genderlessImage from '../../../Images/transgender.png';
-import ConfirmationModal from './ConfirmModel';
-
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Eye,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+  CheckCircle,
+  XCircle,
+  Info,
+} from "lucide-react";
+import { useCustomContext } from "../../../../../Context/Contextfetch";
+import Header from "../../../../../Components/Shared/Header/Header";
+import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar";
+import TableView from "../../../../../Components/Shared/Table/TableView";
+import { FilterPopup } from "../../../../../Components/Shared/FilterPopup/FilterPopup";
+import KanbanView from "./KanbanView";
+import Loading from "../../../../../Components/Loading";
+import toast from "react-hot-toast";
+import maleImage from "../../../Images/man.png";
+import femaleImage from "../../../Images/woman.png";
+import genderlessImage from "../../../Images/transgender.png";
+import ConfirmationModal from "./ConfirmModel";
 
 const UsersAccountTab = () => {
-  const { usersRes, usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
+  const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
+    useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
-  const [view, setView] = useState('table');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState("table");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -32,7 +40,7 @@ const UsersAccountTab = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
+  const [newStatus, setNewStatus] = useState("");
   const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
   const filterIconRef = useRef(null);
 
@@ -40,14 +48,14 @@ const UsersAccountTab = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        setView('kanban');
+        setView("kanban");
       } else {
-        setView('table');
+        setView("table");
       }
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Reset filters when popup opens
@@ -61,9 +69,7 @@ const UsersAccountTab = () => {
   // Filter handling
   const handleRoleToggle = (role) => {
     setSelectedRoles((prev) =>
-      prev.includes(role)
-        ? prev.filter((r) => r !== role)
-        : [...prev, role]
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
     );
   };
 
@@ -142,7 +148,7 @@ const UsersAccountTab = () => {
 
   // Action logic
   const handleStatusToggleAction = (user) => {
-    const status = user.status === 'active' ? 'inactive' : 'active';
+    const status = user.status === "active" ? "inactive" : "active";
     setSelectedUser(user);
     setNewStatus(status);
     setShowConfirmation(true);
@@ -174,28 +180,28 @@ const UsersAccountTab = () => {
   // Table Columns Configuration
   const tableColumns = [
     {
-      key: 'name',
-      header: 'Name',
+      key: "name",
+      header: "Name",
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
-            {row.imageUrl ? (
+            {row?.imageData?.path ? (
               <img
                 className="h-8 w-8 rounded-full object-cover"
-                src={row.imageUrl}
-                alt={`${row.firstName || ''} ${row.lastName || ''}`}
+                src={row?.imageData?.path}
+                alt={`${row.firstName || ""} ${row.lastName || ""}`}
                 onError={(e) => {
                   e.target.src =
-                    row.gender === 'Male'
+                    row.gender === "Male"
                       ? maleImage
-                      : row.gender === 'Female'
-                        ? femaleImage
-                        : genderlessImage;
+                      : row.gender === "Female"
+                      ? femaleImage
+                      : genderlessImage;
                 }}
               />
             ) : (
               <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.firstName ? row.firstName.charAt(0).toUpperCase() : '?'}
+                {row.firstName ? row.firstName.charAt(0).toUpperCase() : "?"}
               </div>
             )}
           </div>
@@ -204,33 +210,34 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName || ''} ${row.lastName || ''}`.trim() || 'Unknown'}
+              {`${row.firstName || ""} ${row.lastName || ""}`.trim() ||
+                "Unknown"}
             </div>
           </div>
         </div>
       ),
     },
-    { key: 'email', header: 'Email', render: (value) => value || 'N/A' },
-    { key: 'phone', header: 'Phone', render: (value) => value || 'N/A' },
-    { key: 'label', header: 'Role', render: (value) => value || 'N/A' },
+    { key: "email", header: "Email", render: (value) => value || "N/A" },
+    { key: "phone", header: "Phone", render: (value) => value || "N/A" },
+    { key: "label", header: "Role", render: (value) => value || "N/A" },
   ];
 
   // Table Actions Configuration
   const tableActions = [
     {
-      key: 'status',
+      key: "status",
       label: (row) => {
-        if (!row.status) return 'Unknown Status';
-        return row.status === 'active' ? 'In Active' : 'Active';
+        if (!row.status) return "Unknown Status";
+        return row.status === "active" ? "In Active" : "Active";
       },
       icon: (row) => (
         <div
           className="flex items-center justify-center w-6 h-6"
-          title={row.status === 'active' ? 'Deactivate user' : 'Activate user'}
+          title={row.status === "active" ? "Deactivate user" : "Activate user"}
         >
-          {row.status === 'active' ? (
+          {row.status === "active" ? (
             <CheckCircle size={20} className="text-green-500" />
-          ) : row.status === 'inactive' ? (
+          ) : row.status === "inactive" ? (
             <XCircle size={20} className="text-red-500" />
           ) : (
             <Info size={20} className="text-gray-500" />
@@ -243,14 +250,14 @@ const UsersAccountTab = () => {
     },
 
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => handleEdit(row),
     },
@@ -288,16 +295,19 @@ const UsersAccountTab = () => {
               title="Users"
               onAddClick={() => {
                 if (usersRes.length >= currentPlan.maxUsers) {
-                  toast('Please upgrade your plan or deactivate existing users to add more.', {
-                    icon: '⚠️',
-                    style: {
-                      background: '#fff3cd',
-                      color: '#856404',
-                      border: '1px solid #ffeeba',
-                    },
-                  });
+                  toast(
+                    "Please upgrade your plan or deactivate existing users to add more.",
+                    {
+                      icon: "⚠️",
+                      style: {
+                        background: "#fff3cd",
+                        color: "#856404",
+                        border: "1px solid #ffeeba",
+                      },
+                    }
+                  );
                 } else {
-                  navigate('new');
+                  navigate("new");
                 }
               }}
               addButtonText="Add User"
@@ -323,10 +333,8 @@ const UsersAccountTab = () => {
         <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
           <motion.div className="">
             <div className="relative w-full">
-              {view === 'table' ? (
+              {view === "table" ? (
                 <div className="w-full">
-
-
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
@@ -340,9 +348,9 @@ const UsersAccountTab = () => {
                   <KanbanView
                     currentFilteredRows={currentFilteredRows}
                     loading={usersLoading}
-                    setActionViewMore={() => { }}
+                    setActionViewMore={() => {}}
                     userData={usersRes}
-                    toggleSidebar={() => navigate('new')}
+                    toggleSidebar={() => navigate("new")}
                   />
                 </div>
               )}
@@ -371,7 +379,10 @@ const UsersAccountTab = () => {
                       <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                         {uniqueRoles.length > 0 ? (
                           uniqueRoles.map((role) => (
-                            <label key={role} className="flex items-center space-x-2">
+                            <label
+                              key={role}
+                              className="flex items-center space-x-2"
+                            >
                               <input
                                 type="checkbox"
                                 checked={selectedRoles.includes(role)}
@@ -382,7 +393,9 @@ const UsersAccountTab = () => {
                             </label>
                           ))
                         ) : (
-                          <span className="text-sm text-gray-500">No roles available</span>
+                          <span className="text-sm text-gray-500">
+                            No roles available
+                          </span>
                         )}
                       </div>
                     )}
@@ -398,13 +411,15 @@ const UsersAccountTab = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 25 }}
+            transition={{ type: "spring", damping: 25 }}
             className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-100"
           >
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">User Management Guide</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    User Management Guide
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Manage your team's interviewers efficiently
                   </p>
@@ -431,7 +446,9 @@ const UsersAccountTab = () => {
                 <ul className="space-y-3 pl-8">
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
-                    <span className="ml-2">Create and manage interviewer accounts</span>
+                    <span className="ml-2">
+                      Create and manage interviewer accounts
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
@@ -439,11 +456,15 @@ const UsersAccountTab = () => {
                   </li>
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
-                    <span className="ml-2">Configure interview availability and expertise</span>
+                    <span className="ml-2">
+                      Configure interview availability and expertise
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
-                    <span className="ml-2">Track interviewer performance and ratings</span>
+                    <span className="ml-2">
+                      Track interviewer performance and ratings
+                    </span>
                   </li>
                 </ul>
               </div>

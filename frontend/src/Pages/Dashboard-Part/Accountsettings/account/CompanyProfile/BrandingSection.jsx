@@ -1,69 +1,72 @@
-import { useState } from 'react'
-import { PhotoIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline'
+import { useState } from "react";
+import { PhotoIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
 export function BrandingSection({ branding, onUpdate, readOnly = false }) {
-  const [dragActive, setDragActive] = useState(false)
+  console.log("BRANDING SECTION ======================: ", branding);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleDrag = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
+      setDragActive(true);
     } else if (e.type === "dragleave") {
-      setDragActive(false)
+      setDragActive(false);
     }
-  }
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
+      handleFile(e.dataTransfer.files[0]);
     }
-  }
+  };
 
   const handleChange = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
+      handleFile(e.target.files[0]);
     }
-  }
+  };
 
   const handleFile = (file) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader()
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
       reader.onload = (e) => {
-        onUpdate({ ...branding, logo: e.target.result })
-      }
-      reader.readAsDataURL(file)
+        onUpdate({ ...branding, logo: e.target.result });
+      };
+      reader.readAsDataURL(file);
     } else {
-      alert('Please upload an image file')
+      alert("Please upload an image file");
     }
-  }
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h3 className="text-lg font-medium mb-4">Company Branding</h3>
-      
+
       {/* Logo Upload */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Company Logo
+          </label>
           <div
             className={`border-2 border-dashed rounded-lg p-6 ${
-              dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+              dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
             }`}
             onDragEnter={!readOnly ? handleDrag : undefined}
             onDragLeave={!readOnly ? handleDrag : undefined}
             onDragOver={!readOnly ? handleDrag : undefined}
             onDrop={!readOnly ? handleDrop : undefined}
           >
-            {branding.logo ? (
+            {branding?.path ? (
               <div className="flex items-center justify-center">
                 <img
-                  src={branding.logo}
+                  src={branding.path}
                   alt="Company Logo"
                   className="max-h-32 max-w-full"
                 />
@@ -95,7 +98,6 @@ export function BrandingSection({ branding, onUpdate, readOnly = false }) {
             )}
           </div>
         </div>
-
         {/* Brand Colors */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -137,8 +139,7 @@ export function BrandingSection({ branding, onUpdate, readOnly = false }) {
             </div>
           </div>
         </div> */}
-
-        {/* Brand Guidelines */}      {/* Email Template */}
+        {/* Brand Guidelines */} {/* Email Template */}
         {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Brand Guidelines</label>
           {!readOnly && (
@@ -171,5 +172,5 @@ export function BrandingSection({ branding, onUpdate, readOnly = false }) {
         </div> */}
       </div>
     </div>
-  )
+  );
 }
