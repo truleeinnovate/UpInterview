@@ -1,71 +1,134 @@
 const { TenantQuestions } = require("../models/tenantQuestions");
 
-
 const mongoose = require('mongoose');
 
+// exports.newQuestion = async (req, res) => {
+//   try {
+//     const { suggestedQuestionId, tenantListId, ownerId, tenantId} = req.body;
+//     console.log('req.body:',req.body)
+    
+//     if (!suggestedQuestionId || (!tenantId && !ownerId)) {
+//       return res.status(400).json({ message: 'Missing required fields: suggestedQuestionId and either tenantId or ownerId' });
+//     }
+
+//     const questionData = {
+//       suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId),
+//       ...(tenantListId && { tenantListId: tenantListId.map(id => new mongoose.Types.ObjectId(id)) }),
+//       ...(ownerId && { ownerId }),
+//       ...(tenantId && { tenantId })
+//     };
+
+//     const newQuestion = await TenantQuestions.create(questionData);
+
+//     res.locals.feedData = {
+//       tenantId,
+//       feedType: 'info',
+//       action: {
+//           name: 'question_created',
+//           description: `Question was created`,
+//       },
+//       ownerId,
+//       parentId: newQuestion._id,
+//       parentObject: 'TenantQuestion',
+//       metadata: req.body,
+//       severity: res.statusCode >= 500 ? 'high' : 'low',
+//       message: `Question was created successfully`,
+//   };
+
+//     res.locals.logData = {
+//       tenantId,
+//       ownerId,
+//       processName: 'Create question',
+//       requestBody: req.body,
+//       status: 'success',
+//       message: 'New question created successfully',
+//       responseBody: newQuestion,
+//   };
+//     res.status(201).json({
+//       status: 'success',
+//       message: 'Question created successfully',
+//       data: newQuestion,
+//     });
+//   } catch (error) {
+//         res.locals.logData = {
+//             tenantId: req.body.tenantId,
+//             ownerId: req.body.ownerId,
+//             processName: 'Create question',
+//             requestBody: req.body,
+//             message: error.message,
+//             status: 'error',
+//         };
+//     res.status(500).json({ status: 'error', message: error.message });
+//   }
+// };
+
 exports.newQuestion = async (req, res) => {
-    res.locals.loggedByController = true;
-    res.locals.processName = 'Create question';
-    try {
-        const {
-            ownerId,
-            tenantId,
-            suggestedQuestionId,
-            tenantListId = [],
-            isCustom = false,
-        } = req.body;
+  try {
+    const { isEdit, ...questionBody } = req.body;
+    const { suggestedQuestionId, tenantListId, ownerId, tenantId } = questionBody;
+    
+    if (!tenantId && !ownerId) {
+      return res.status(400).json({ message: 'Missing required fields: either tenantId or ownerId' });
+    }
 
-        if (!ownerId || !tenantId || (!suggestedQuestionId && !isCustom)) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
+    let questionData;
+    //console.log('questionBody:',questionBody)
+    // Remove invalid id
+    if (!suggestedQuestionId) delete questionBody.suggestedQuestionId;
 
-        // Validate tenantListId entries
-        if (tenantListId.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
-            return res.status(400).json({ message: 'Invalid tenantListId values' });
-        }
+    if (!suggestedQuestionId){
+      // Prepare question data with all fields
+      questionData = {
+        ...questionBody,
+        ...(tenantListId && { tenantListId: tenantListId.map(id => new mongoose.Types.ObjectId(id)) }),
+        ...(ownerId && { ownerId }),
+        ...(tenantId && { tenantId })
+      };
+      
+    } else{
+      // Prepare question data with suggestedQuestionId
+      questionData = {
+        ...{suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId)},
+        ...(tenantListId && { tenantListId: tenantListId.map(id => new mongoose.Types.ObjectId(id)) }),
+        ...(ownerId && { ownerId }),
+        ...(tenantId && { tenantId })
+      };
+    }
+    //console.log('questionData:',questionData)
 
-        const newQuestion = new TenantQuestions({
-            ...req.body,
-            tenantListId: Array.isArray(tenantListId) ? tenantListId : [tenantListId],
-            createdBy: ownerId,
-            updatedBy: ownerId,
-        });
+    const newQuestion = await TenantQuestions.create(questionData);
+    //console.log('Created question:', newQuestion)
 
-        await newQuestion.save();
+    res.locals.feedData = {
+      tenantId,
+      feedType: 'info',
+      action: {
+          name: 'question_created',
+          description: `Question was created`,
+      },
+      ownerId,
+      parentId: newQuestion._id,
+      parentObject: 'TenantQuestion',
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? 'high' : 'low',
+      message: `Question was created successfully`,
+  };
 
-        console.log('New question created successfully:', newQuestion);
-
-        res.locals.feedData = {
-            tenantId,
-            feedType: 'info',
-            action: {
-                name: 'question_created',
-                description: `Question was created`,
-            },
-            ownerId,
-            parentId: newQuestion._id,
-            parentObject: 'TenantQuestion',
-            metadata: req.body,
-            severity: res.statusCode >= 500 ? 'high' : 'low',
-            message: `Question was created successfully`,
-        };
-
-        res.locals.logData = {
-            tenantId,
-            ownerId,
-            processName: 'Create question',
-            requestBody: req.body,
-            status: 'success',
-            message: 'New question created successfully',
-            responseBody: newQuestion,
-        };
-
-        res.status(201).json({
-            status: 'success',
-            message: 'New question created successfully',
-            data: newQuestion,
-        });
-    } catch (error) {
+    res.locals.logData = {
+      tenantId,
+      ownerId,
+      processName: 'Create question',
+      requestBody: req.body,
+      status: 'success',
+      message: 'New question created successfully',
+      responseBody: newQuestion,
+  };
+    res.status(201).json({
+      status: 'success',
+      message: 'Question created successfully',
+      data: newQuestion,
+    });
+  } catch (error) {
         res.locals.logData = {
             tenantId: req.body.tenantId,
             ownerId: req.body.ownerId,
@@ -74,8 +137,8 @@ exports.newQuestion = async (req, res) => {
             message: error.message,
             status: 'error',
         };
-        res.status(500).json({ status: 'error', message: error.message });
-    }
+    res.status(500).json({ status: 'error', message: error.message });
+  }
 };
 
 // edit question also add 
@@ -83,62 +146,51 @@ exports.newQuestion = async (req, res) => {
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 exports.updateQuestion = async (req, res) => {
-  res.locals.loggedByController = true;
-  res.locals.processName = 'Update question';
-
-  const questionId = req.params.id;
-  const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
-  console.log('tenant-----------',questionId)
-
-  if (!questionId) {
-    return res.status(400).json({ message: "Question ID is required." });
-  }
-
   try {
-    const currentQuestion = await TenantQuestions.findById(questionId).lean();
-    if (!currentQuestion) {
-      return res.status(404).json({ message: "Question not found." });
-    }
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Update question';
 
-    // Filter out any invalid IDs
-    const validListIds = tenantListId.filter(isValidObjectId);
-    if (validListIds.length !== tenantListId.length) {
-      throw new Error('Some of the provided list IDs are invalid');
-    }
+    //console.log('req.params.id:',req.params.id)
 
-    // Prepare update data
-    const updateData = { ...updateFields, updatedBy: ownerId };
-    if (tenantListId) {
-      updateData.tenantListId = Array.isArray(tenantListId) ? tenantListId : [tenantListId];
-    }
+    const questionId = req.params.id;
+    //console.log('questionId:',questionId)
+    const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
+    // console.log('suggestedQuestionId:',updateFields.suggestedQuestionId)
+    console.log('updateFields:',updateFields)
 
-    // Compare current values with updateData to identify changes
-    const changes = Object.entries(updateData)
-      .filter(([key, newValue]) => {
-        const oldValue = currentQuestion[key];
-        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-          return JSON.stringify(oldValue.sort()) !== JSON.stringify(newValue.sort());
-        }
-        return oldValue !== newValue;
-      })
-      .map(([key, newValue]) => ({
-        fieldName: key,
-        oldValue: currentQuestion[key],
-        newValue,
-      }));
+    // Remove invalid id
+    if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
+    
+    const question = await TenantQuestions.findById(questionId);
+    
+    if (!question) return res.status(404).json({ message: 'Question not found' });
 
-    if (changes.length === 0) {
-      return res.status(200).json({
-        status: 'no_changes',
-        message: 'No changes detected, question details remain the same',
-      });
-    }
+  
+    
+    // Remove duplicates and convert to ObjectIds
+    const uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
+    // apply any other fields being edited
+    Object.assign(question, updateFields);
 
-    const updatedQuestion = await TenantQuestions.findByIdAndUpdate(
-      questionId,
-      { $set: updateData },
-      { new: true }
-    ).populate('tenantListId');
+    // if (tenantListId) {
+    //       const uniqueListIds = [...new Set(tenantListId)]
+    //                             .map(id => new mongoose.Types.ObjectId(id));
+    //       question.tenantListId = uniqueListIds;
+    //     }
+      
+    //     // apply any other fields being edited
+    //     Object.assign(question, updateFields);
+
+    const changes = [
+      {
+        fieldName: 'tenantListId',
+        oldValue: question.tenantListId.map(String),
+        newValue: uniqueListIds.map(String)
+      }
+    ];
+    
+    question.tenantListId = uniqueListIds;
+    await question.save();
 
     res.locals.feedData = {
       tenantId,
@@ -148,7 +200,7 @@ exports.updateQuestion = async (req, res) => {
         description: `Question was updated`,
       },
       ownerId,
-      parentId: questionId,
+      parentId: question._id,
       parentObject: 'TenantQuestion',
       metadata: req.body,
       severity: res.statusCode >= 500 ? 'high' : 'low',
@@ -166,15 +218,16 @@ exports.updateQuestion = async (req, res) => {
       requestBody: req.body,
       message: 'Question updated successfully',
       status: 'success',
-      responseBody: updatedQuestion,
+      responseBody: question,
     };
-
+    
     res.status(200).json({
-      status: "success",
-      message: "Question updated successfully",
-      data: updatedQuestion,
+      status: 'success',
+      message: 'Question updated successfully',
+      data: question
     });
   } catch (error) {
+    const { tenantId, ownerId } = req.body;
     res.locals.logData = {
       tenantId,
       ownerId,
@@ -187,109 +240,42 @@ exports.updateQuestion = async (req, res) => {
   }
 };
 
-// exports.updateByOwner = async (req, res) => {
-//   const { tenantListId } = req.body;
-//   const { ownerId } = req.query;
-//   console.log('tenantlistyid ----', tenantListId);
-//   console.log('owner -----',ownerId)
-
-//   if (!tenantListId || !ownerId) {
-//     return res.status(400).json({ message: 'Missing required fields: tenantListId and ownerId' });
-//   }
-
-//   try {
-//     const updatedOwner = await TenantQuestions.updateMany(
-//       { ownerId },
-//       {
-//         $push: { tenantListId },
-//         $set: { updatedBy: ownerId },
-//       },
-//       { new: true }
-//     );
-
-//     if (!updatedOwner) {
-//       return res.status(404).json({ message: 'No owner found with given Id' });
-//     }
-
-//     const changes = Object.keys(req.body).map((key) => {
-//       return {
-//         fieldName: key,
-//         oldValue: updatedOwner[key],
-//         newValue: req.body[key],
-//       };
-//     });
-
-//     const logData = {
-//       tenantId: ownerId,
-//       ownerId,
-//       processName: 'Update owner',
-//       requestBody: req.body,
-//       message: 'Owner updated successfully',
-//       status: 'success',
-//       responseBody: updatedOwner,
-//       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
-//         fieldName,
-//         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
-//       })),
-//     };
-
-//     res.locals.logData = logData;
-
-//     res.status(200).json({
-//       status: "success",
-//       message: "Owner updated successfully",
-//       data: updatedOwner,
-//     });
-//   } catch (error) {
-//     res.locals.logData = {
-//       tenantId: ownerId,
-//       ownerId,
-//       processName: 'Update owner',
-//       requestBody: req.body,
-//       message: error.message,
-//       status: 'error',
-//     };
-//     res.status(500).json({ status: 'error', message: error.message });
-//   }
-// };
-
-
 exports.getQuestionBySuggestedId = async (req, res) => {
-  // res.locals.loggedByController = true;
-  // res.locals.processName = 'Get question by suggested ID';
   const suggestedQuestionId = req.params.suggestedQuestionId;
   const { tenantId, ownerId } = req.query;
-  console.log('suggestedQuestionId:', suggestedQuestionId);
-  console.log('tenantId:', tenantId);
-  console.log('ownerId:', ownerId);
 
   if (!suggestedQuestionId || (!tenantId && !ownerId)) {
     return res.status(400).json({ message: 'Missing required fields: suggestedQuestionId and either tenantId or ownerId' });
   }
 
   try {
+    let question;
     const query = {
-      suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId),
+      suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId)
     };
-    console.log('query:', query);
 
     if (tenantId) {
       query.tenantId = tenantId;
+      question = await TenantQuestions.findOne(query).populate('tenantListId');
     } else if (ownerId) {
       query.ownerId = ownerId;
+      question = await TenantQuestions.findOne(query).populate('tenantListId');
     }
-
-    const question = await TenantQuestions.findOne(query).populate('tenantListId');
-    console.log('question:', question);
 
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
 
+    // Ensure list IDs are strings
+    const responseData = {
+      ...question.toObject(),
+      tenantListId: question.tenantListId.map(id => id._id?.toString() || id.toString())
+    };
+
     res.status(200).json({
       status: 'success',
       message: 'Question retrieved successfully',
-      data: question,
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });

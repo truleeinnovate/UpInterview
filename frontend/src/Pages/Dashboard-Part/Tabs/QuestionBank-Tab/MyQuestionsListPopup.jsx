@@ -20,6 +20,7 @@ const MyQuestionsList1 = forwardRef(
       onErrorClear,
       defaultTenantList,
       notEditmode,
+      selectedListId,
       setSelectedLabelnew,
       setActionViewMoreSection,
     },
@@ -34,8 +35,10 @@ const MyQuestionsList1 = forwardRef(
       addQuestionToListLoading,
       useQuestionBySuggestedId,
     } = useQuestions();
+    console.log("selectedListId ---", selectedListId);
+    console.log("notEditmode ---", notEditmode);
 
-    const [selectedListIds, setSelectedListIds] = useState([]);
+    const [selectedListIds, setSelectedListIds] = useState(notEditmode ? [selectedListId] : []);
     console.log("selectedListIds ---", selectedListIds);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
     const [newListName, setNewListName] = useState('');
@@ -134,6 +137,7 @@ const MyQuestionsList1 = forwardRef(
       try {
         // Determine lists to add and remove
         const currentListIds = existingQuestion?.data?.tenantListId?.map((id) => id.toString()) || [];
+        console.log("currentListIds ------", currentListIds);
         const listsToAdd = selectedListIds.filter((id) => !currentListIds.includes(id));
         console.log("listsToAdd ------", listsToAdd);
         const listsToRemove = currentListIds.filter((id) => !selectedListIds.includes(id));
@@ -273,7 +277,7 @@ const MyQuestionsList1 = forwardRef(
                 isLoading={addQuestionToListLoading}
                 loadingText="Updating..."
               >
-                Add
+                Save
               </LoadingButton>
             </div>
           </div>
