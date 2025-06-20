@@ -47,7 +47,7 @@ const QuestionBankForm = ({
   // console.log('selected---541651',selectedLabels)
 
   const [selectedListId, setSelectedListId] = useState([]);
-  // console.log("selectedListId ==== ---", selectedListId);
+  console.log("selectedLabelId =================+", [...selectedListId, selectedLabelId]);
   
 useEffect(() => {
   if (!isEdit && selectedLabelId && createdLists?.length > 0) {
@@ -60,6 +60,7 @@ useEffect(() => {
     }
   }
 }, [isEdit, selectedLabelId, createdLists]);
+
 
   const questionTypeOptions = [
     "Interview Questions",
@@ -180,7 +181,7 @@ useEffect(() => {
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
-    setSelectedListId("");
+    setSelectedListId([]);
     setMcqOptions([
       { option: "", isSaved: false, isEditing: false },
       { option: "", isSaved: false, isEditing: false },
@@ -213,7 +214,7 @@ useEffect(() => {
       minexperience: parseInt(selectedMinExperience),
       maxexperience: parseInt(selectedMaxExperience),
       isCustom: true,
-      tenantListId: !isEdit && selectedLabelId ? [selectedLabelId] :selectedListId,
+      tenantListId: !isEdit && selectedLabelId ? [selectedLabelId, ...selectedListId] : selectedListId,
       difficultyLevel: selectedDifficultyLevel,
       questionType: selectedQuestionType,
       skill: selectedSkill,
