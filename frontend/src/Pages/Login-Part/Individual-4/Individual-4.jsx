@@ -72,6 +72,9 @@ const MultiStepForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Initialize currentStep from location.state or default to 0
+  const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
+
   const {
     Freelancer,
     profession,
@@ -103,7 +106,7 @@ const MultiStepForm = () => {
   const [errors, setErrors] = useState({});
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [file, setFile] = useState(null);
-  const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
+  // const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
   // const [formLoading, setFormLoading] = useState(false);
   // const loading = contactLoading || formLoading;
   const [filePreview, setFilePreview] = useState(null);
@@ -383,7 +386,7 @@ const MultiStepForm = () => {
       const tenantData = {
         isProfileCompletedForTenant: currentStep === (Freelancer ? 3 : 1),
       };
-      
+
 
       Object.keys(contactData).forEach((key) => {
         if (contactData[key] === undefined) {
@@ -461,7 +464,8 @@ const MultiStepForm = () => {
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
         } else {
-          navigate(response.data.isProfileCompleted ? '/home' : '/subscription-plans');
+          // navigate(response.data.isProfileCompleted ? '/home' : '/subscription-plans');.
+          navigate('/subscription-plans');
         }
       }
     } catch (error) {
