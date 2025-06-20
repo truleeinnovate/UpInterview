@@ -4,11 +4,15 @@ import axios from 'axios';
 import { config } from '../config.js';
 import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
+import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
 const LinkedInCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { matchedContact } = useIndividualLogin();
+  console.log('matchedContact from linkedin callback:', matchedContact);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -42,13 +46,13 @@ const LinkedInCallback = () => {
           }
 
           if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
-            navigate('/home');
+            // navigate('/home');
           } else if (isProfileCompleted === false && roleName) {
             navigate('/complete-profile', {
               state: { isProfileComplete: true, roleName },
             });
           } else {
-            navigate('/home');
+            // navigate('/home');
           }
         } else {
           console.log('New user, navigating to select-profession with state:', {
