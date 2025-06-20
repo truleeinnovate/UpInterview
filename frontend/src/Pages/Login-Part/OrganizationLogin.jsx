@@ -111,7 +111,7 @@ const OrganizationLogin = () => {
       status,
       isProfileCompleted,
       roleName,
-      contactDataFromOrg,
+      contactEmailFromOrg,
       success,
       message,
     } = response.data;
@@ -141,7 +141,7 @@ const OrganizationLogin = () => {
           navigate('/home');
         } else if (isProfileCompleted === false && roleName) {
           navigate('/complete-profile', {
-            state: { isProfileComplete: true, roleName, contactDataFromOrg }
+            state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
           });
         } else {
           navigate('/home');

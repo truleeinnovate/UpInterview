@@ -108,12 +108,14 @@ router.post('/check-user', async (req, res) => {
 
       // Create new Tenant
       const newTenant = await Tenant.create({
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
         email: userInfo.email,
-        owner: newUser._id
+        ownerId: newUser._id, // who is created this tenant
       });
 
       // Create new Contact
-      const newContact = await Contacts.create({
+      await Contacts.create({
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         email: userInfo.email,
