@@ -248,16 +248,18 @@ const CustomProvider = ({ children }) => {
       const organizationId = response.data.data._id;
 
       // Handle image upload if a file is provided
-      if (file) {
-        const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "organization");
-        imageData.append("id", organizationId);
+      // if (file) {
+      //   const imageData = new FormData();
+      //   imageData.append("image", file);
+      //   imageData.append("type", "organization");
+      //   imageData.append("id", organizationId);
 
-        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+      // }
+
+      await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
     },

@@ -297,9 +297,10 @@ const CompanyEditProfile = () => {
 
       // Common upload function
 
-      // UPLOADING FILES 
+      // UPLOADING FILES
       // file, type, entity, entityId
       await uploadFile(logoFile, "logo", "organization", id);
+      console.log("LOGO FILE =============================: ", logoFile);
 
       const updatedData = {
         company: formData.company,

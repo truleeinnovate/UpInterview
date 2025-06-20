@@ -2,7 +2,6 @@ import { useState } from "react";
 import { PhotoIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
 export function BrandingSection({ branding, onUpdate, readOnly = false }) {
-  console.log("BRANDING SECTION ======================: ", branding);
   const [dragActive, setDragActive] = useState(false);
 
   const handleDrag = (e) => {
