@@ -343,6 +343,7 @@ const Users = () => {
                     setActionViewMore={() => { }}
                     userData={usersRes}
                     toggleSidebar={() => navigate('new')}
+                   onStatusToggle={handleStatusToggle}
                   />
                 </div>
               )}
@@ -391,6 +392,8 @@ const Users = () => {
               </FilterPopup>
             </div>
           </motion.div>
+
+
         </div>
       </div>
       {showUserManagementPopup && (
@@ -460,13 +463,17 @@ const Users = () => {
           </motion.div>
         </div>
       )}
-      <ConfirmationModal
+
+
+
+      {/* <ConfirmationModal
         show={showConfirmation}
         userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
-      />
+      /> */}
+     
     </div>
   );
 };

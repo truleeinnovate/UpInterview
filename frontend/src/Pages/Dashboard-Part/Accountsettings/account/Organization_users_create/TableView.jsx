@@ -81,7 +81,7 @@ const {
     <div className="w-full h-[calc(100vh-12rem)] flex flex-col">
 
       {/* Confirmation Popup */}
-      {showConfirmation && (
+      {/* {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
@@ -104,7 +104,7 @@ const {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
 
       <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1 overflow-hidden">
