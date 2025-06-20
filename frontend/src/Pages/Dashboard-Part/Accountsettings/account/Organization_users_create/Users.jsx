@@ -167,9 +167,9 @@ const Users = () => {
     navigate(`details/${user._id}`, { state: { userData: user } });
   };
 
-  const handleEdit = (user) => {
-    navigate(`edit/${user._id}`, { state: { userData: user } });
-  };
+  // const handleEdit = (user) => {
+  //   navigate(`edit/${user._id}`, { state: { userData: user } });
+  // };
 
   // Table Columns Configuration
   const tableColumns = [
@@ -248,12 +248,12 @@ const Users = () => {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => handleEdit(row),
-    },
+    // {
+    //   key: 'edit',
+    //   label: 'Edit',
+    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //   onClick: (row) => handleEdit(row),
+    // },
   ];
 
   return (
@@ -331,7 +331,7 @@ const Users = () => {
                     data={currentFilteredRows}
                     columns={tableColumns}
                     loading={usersLoading}
-                    actions={tableActions}
+                    // actions={tableActions}
                     emptyState="No users found."
                   />
                 </div>

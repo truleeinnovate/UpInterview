@@ -179,7 +179,7 @@ const KanbanView = ({ currentFilteredRows, setActionViewMore, handleUserClick, h
                   >
                     <Eye className="w-4 h-4" />
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => {
                       navigate(`edit/${users._id}`, { state: { userData: users } });
                     }}
@@ -187,7 +187,7 @@ const KanbanView = ({ currentFilteredRows, setActionViewMore, handleUserClick, h
                     title="Edit"
                   >
                     <Pencil className="w-4 h-4" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
