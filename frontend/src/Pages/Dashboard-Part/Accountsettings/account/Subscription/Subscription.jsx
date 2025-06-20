@@ -375,7 +375,7 @@ const Subscription = () => {
               }`}
           >
             <div
-              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-yellow-500" : "translate-x-0 bg-yellow-500"
+              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-white" : "translate-x-0 bg-white"
                 }`}
             ></div>
           </div>
@@ -443,8 +443,9 @@ const Subscription = () => {
                 </div>
                 <button
                   onClick={() => submitPlans(plan)}
-                  className={`w-full font-semibold py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm md:text-base lg:text-lg mt-4 transition-all duration-200
-                    ${isHighlighted(plan) ? "bg-purple-600 hover:bg-purple-700 text-white" : "text-purple-600 bg-purple-100 hover:bg-purple-200"}
+                  className={`w-full font-semibold py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm md:text-base lg:text-lg mt-4 transition-all duration-200   shadow-lg border
+
+                    ${isHighlighted(plan) ? "bg-white hover:bg-white text-black " : "text-black bg-white hover:bg-white shadow-slate-50"}
                     ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
                     ${(() => {
                       // Check if this is an upgrade button
