@@ -215,7 +215,7 @@ const {
                                   <Eye className="w-4 h-4 text-blue-600" />
                                   View
                                 </button>
-                                <button
+                                {/* <button
                                   className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
                                   onClick={() => {
                                     // handleEditClick(users);
@@ -224,7 +224,7 @@ const {
                                 >
                                   <Pencil className="w-4 h-4 text-green-600" />
                                   Edit
-                                </button>
+                                </button> */}
                               </div>
                             </div>
                           )}

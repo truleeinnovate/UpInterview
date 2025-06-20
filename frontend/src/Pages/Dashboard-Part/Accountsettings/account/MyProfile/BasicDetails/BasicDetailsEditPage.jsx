@@ -300,8 +300,9 @@ const resolvedId = usersId || id;
                   <input
                     type="email"
                     name="email"
-                    value={formData.email || ""}
+                    value={formData.email}
                     onChange={handleInputChange}
+                     disabled={from !== "users"} 
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   />
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -312,7 +313,7 @@ const resolvedId = usersId || id;
                   <input
                     type="text"
                     name="firstName"
-                    value={formData.firstName || ""}
+                    value={formData.firstName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   />
@@ -372,7 +373,7 @@ const resolvedId = usersId || id;
                   <input
                     type="text"
                     name="profileId"
-                    value={formData.profileId || ""}
+                    value={formData.profileId}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   />
@@ -433,7 +434,7 @@ const resolvedId = usersId || id;
                   <input
                     type="text"
                     name="linkedinUrl"
-                    value={formData.linkedinUrl || ""}
+                    value={formData.linkedinUrl}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
                   />
@@ -445,7 +446,7 @@ const resolvedId = usersId || id;
                   <input
                     type="text"
                     name="portfolioUrl"
-                    value={formData.portfolioUrl || ""}
+                    value={formData.portfolioUrl}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
                   />

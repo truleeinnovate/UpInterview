@@ -10,16 +10,15 @@ import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
-import Switch from "react-switch";
+// import Switch from "react-switch";
 import { validateWorkEmail, checkEmailExists } from '../../../../../utils/workEmailValidation.js';
-
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;
-  const editMode = location.pathname.includes('/users/edit/');
+  // const editMode = location.pathname.includes('/users/edit/');
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -29,14 +28,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
 
-  // State declarations
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Full page loading state
-  const [status, setStatus] = useState("inactive"); // Status state for toggle
+  const [isLoading, setIsLoading] = useState(false);
 
   const [userData, setUserData] = useState({
     firstName: "",
@@ -47,10 +44,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     tenantId: tenantId,
     imageData: "",
     countryCode: "+91",
-    status: "active" // Default status
+    status: "active"
   });
 
-  // Role dropdown state
   const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
   const [showDropdownRole, setShowDropdownRole] = useState(false);
@@ -58,7 +54,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const [searchTermRole, setSearchTermRole] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Reset form fields
   const resetForm = () => {
     setUserData({
       firstName: "",
@@ -77,18 +72,14 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     setSelectedCurrentRole("");
     setSelectedCurrentRoleId("");
     setErrors({});
-    setStatus("inactive");
   };
 
-
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // Email validation on blur
   const handleEmailValidation = async (email) => {
     if (!email) {
       setErrors((prev) => ({ ...prev, email: '' }));
@@ -122,30 +113,28 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
   };
 
-  // Handle status toggle
   const handleStatusToggle = () => {
     const newStatus = userData.status === "active" ? "inactive" : "active";
     setUserData(prev => ({ ...prev, status: newStatus }));
   };
-  // Initialize form data for edit mode
-  useEffect(() => {
-    if (editMode && initialUserData) {
-      setUserData({
-        firstName: initialUserData.firstName || "",
-        lastName: initialUserData.lastName || "",
-        email: initialUserData.email || "",
-        phone: initialUserData.phone || "",
-        roleId: initialUserData.roleId || "",
-        tenantId: tenantId,
-        countryCode: initialUserData.countryCode || "+91",
-        status: initialUserData.status || "inactive"
-      });
-      setSelectedCurrentRole(initialUserData.label || "");
-      setSelectedCurrentRoleId(initialUserData.roleId || "");
-      setFilePreview(initialUserData.imageUrl || "");
-      setStatus(initialUserData.status || "inactive");
-    }
-  }, [editMode, initialUserData, tenantId]);
+
+  // useEffect(() => {
+  //   if (editMode && initialUserData) {
+  //     setUserData({
+  //       firstName: initialUserData.firstName || "",
+  //       lastName: initialUserData.lastName || "",
+  //       email: initialUserData.email || "",
+  //       phone: initialUserData.phone || "",
+  //       roleId: initialUserData.roleId || "",
+  //       tenantId: tenantId,
+  //       countryCode: initialUserData.countryCode || "+91",
+  //       status: initialUserData.status || "inactive"
+  //     });
+  //     setSelectedCurrentRole(initialUserData.label || "");
+  //     setSelectedCurrentRoleId(initialUserData.roleId || "");
+  //     setFilePreview(initialUserData.imageUrl || "");
+  //   }
+  // }, [editMode, initialUserData, tenantId]);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -162,14 +151,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
   }, [tenantId]);
 
-  // Clean up timeouts
   useEffect(() => {
     return () => {
       clearTimeout(emailTimeoutRef.current);
     };
   }, []);
 
-  // File handling functions
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -191,7 +178,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     fileInputRef.current?.click();
   };
 
-  // Role selection
   const handleRoleSelect = (role) => {
     setSelectedCurrentRole(role.label);
     setSelectedCurrentRoleId(role._id);
@@ -219,30 +205,36 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     setShowDropdownRole(prev => !prev);
   };
 
-  // Filter roles based on search
   const filteredCurrentRoles = currentRole.filter(role =>
     role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
   );
 
-  // Form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
 
-    // Form validation
-    const newErrors = validateUserForm(userData);
+    setIsLoading(true);
+
+    // Validate all form fields
+    const newErrors = await validateUserForm(userData);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
     addOrUpdateUser.mutate(
-      { userData, file, editMode },
+      { userData, file },
       {
+        onSuccess: () => {
+          resetForm();
+          navigate('/account-settings/users');
+        },
+        onError: () => {
+          setErrors((prev) => ({ ...prev, form: 'Failed to save user. Please try again.' }));
+        },
         onSettled: () => {
           setIsLoading(false);
-          navigate('/account-settings/users');
         }
       }
     );
@@ -275,7 +267,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         )}
         <div className="p-3">
           <div className="flex justify-between items-center mb-6 mt-2">
-            <h2 className="text-2xl font-bold text-custom-blue">{editMode ? "Edit User" : "New User"}</h2>
+            <h2 className="text-2xl font-bold text-custom-blue">New User</h2>
             <div className="flex items-center gap-2">
               <button onClick={toggleFullWidth} className="p-1 rounded-full hover:bg-white/10">
                 {isFullScreen ? (
@@ -320,13 +312,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                   </div>
                 </div>
 
-
-
-
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-x-6 gap-y-4">
                   <div className="col-span-2 flex justify-between items-center">
                     <h1 className="font-medium text-lg">Personal Details:</h1>
-
                   </div>
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -456,7 +444,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                     {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
                   </div>
 
-                  <div className="col-span-2">
+                  {/* <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700">
                       UserStatus
                     </label>
@@ -483,8 +471,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         {userData.status === 'active' ? 'Active' : 'Inactive'}
                       </span>
                     </div>
-
-                  </div>
+                  </div> */}
                 </div>
               </form>
             </div>
@@ -504,7 +491,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                 className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={isLoading}
               >
-                {editMode ? 'Save Changes' : 'Save'}
+                Save
               </button>
             </div>
           </div>
