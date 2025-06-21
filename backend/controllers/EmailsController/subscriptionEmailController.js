@@ -172,7 +172,7 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
       .replace(/{{duration}}/g, duration)
       .replace(/{{startDate}}/g, formattedStartDate)
       .replace(/{{endDate}}/g, formattedEndDate)
-      .replace(/{{status}}/g, status)
+      // .replace(/{{status}}/g, status)
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
