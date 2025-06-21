@@ -1079,7 +1079,7 @@ const BasicDetails = ({
         </div>
 
         {/* Date of Birth */}
-        <div className="sm:col-span-6">
+        <div className="sm:col-span-3">
           <label htmlFor="dateofbirth" className="block text-sm font-medium text-gray-700 mb-1">
             Date of Birth
           </label>
@@ -1113,7 +1113,7 @@ const BasicDetails = ({
           </label>
 
           {/* This wrapper controls the width for both input and dropdown */}
-          <div className="relative inline-block w-full max-w-md">
+          <div className="relative inline-block w-full">
             <input
               ref={profileIdInputRef}
               type="text"
