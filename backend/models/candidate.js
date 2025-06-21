@@ -31,6 +31,13 @@ const candidateSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
     },
+    resume: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    },
+
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: String,
