@@ -108,9 +108,7 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
                   </div>
                   <div className="flex items-start space-x-2">
                     <span className="text-sm font-medium text-gray-700 w-12">To:</span>
-                    <span className="text-sm text-gray-600 break-all">
-                      {notification.recipients ? notification.recipients.join(', ') : notification.recipient}
-                    </span>
+                    <span className="text-sm text-gray-600 break-all">{Array.isArray(notification.recipients) ? notification.recipients.join(', ') : notification.recipients}</span>
                   </div>
                   {notification.cc && notification.cc.length > 0 && (
                     <div className="flex items-start space-x-2">
