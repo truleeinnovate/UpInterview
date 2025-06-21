@@ -1,18 +1,25 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { config } from '../config.js';
-import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { config } from "../config.js";
+import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { uploadFile } from "../apiHooks/imageApis.js";
 
 const CustomContext = createContext();
 
 const CustomProvider = ({ children }) => {
-  const authToken = Cookies.get('authToken');
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-
 
   const [userRole, setuserRole] = useState("Admin");
 
@@ -26,11 +33,10 @@ const CustomProvider = ({ children }) => {
   // const [iter] = useState(6);
   // const [searchText, setSearchText] = useState('');
   // const [isOpen, setIsopen] = useState(false);
-  const [page, setPage] = useState('Home');
+  const [page, setPage] = useState("Home");
   // const [popupVisibility, setPopupVisibility] = useState(false);
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
-
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
@@ -59,10 +65,12 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/auth/users/${userId}`
+        );
         setUserProfile(response.data);
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error("Error fetching user profile:", error);
       }
     };
 
@@ -70,9 +78,6 @@ const CustomProvider = ({ children }) => {
       fetchUserProfile();
     }
   }, [userId]);
-
-
-
 
   // Fetch My Questions Data
   // const fetchMyQuestionsData = useCallback(async () => {
@@ -130,13 +135,13 @@ const CustomProvider = ({ children }) => {
 
   const queryClient = useQueryClient();
 
-
-
   // outsource interviewers
   const [Outsourceinterviewers, setOutsourceInterviewers] = useState([]);
   const fetchoutsourceInterviewers = useCallback(async () => {
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/outsourceInterviewers`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/outsourceInterviewers`
+      );
       const reversedData = response.data.reverse();
       setOutsourceInterviewers(reversedData);
     } catch (err) {
@@ -151,35 +156,38 @@ const CustomProvider = ({ children }) => {
   // notifications
   const [notificationsData] = useState([]);
 
-
-
   // Fetch groups
   const [groups, setGroups] = useState([]);
 
   const fetchGroupsData = useCallback(async () => {
     if (!tenantId) {
-      console.error('No tenantId found in cookies');
+      console.error("No tenantId found in cookies");
       setGroups([]);
       setLoading(false);
       return;
     }
 
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/groups/data`, {
-        params: {
-          tenantId: tenantId,
-        },
-      });
-
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/groups/data`,
+        {
+          params: {
+            tenantId: tenantId,
+          },
+        }
+      );
 
       if (response.data && Array.isArray(response.data)) {
         setGroups(response.data);
       } else {
-        console.error('Invalid groups data format:', response.data);
+        console.error("Invalid groups data format:", response.data);
         setGroups([]);
       }
     } catch (error) {
-      console.error('Error fetching groups:', error.response?.data?.error || error.message);
+      console.error(
+        "Error fetching groups:",
+        error.response?.data?.error || error.message
+      );
       setGroups([]);
     } finally {
       setLoading(false);
@@ -199,7 +207,7 @@ const CustomProvider = ({ children }) => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
       setUsersData(response.data);
     } catch (error) {
-      console.error('Error fetching users data:', error);
+      console.error("Error fetching users data:", error);
     }
   };
 
@@ -207,15 +215,20 @@ const CustomProvider = ({ children }) => {
     fetchUsersData();
   }, []);
 
-
   // organization code
-  const { data: organizationData, isLoading: organizationsLoading, error: organizationError } = useQuery({
-    queryKey: ['organization', tenantId],
+  const {
+    data: organizationData,
+    isLoading: organizationsLoading,
+    error: organizationError,
+  } = useQuery({
+    queryKey: ["organization", tenantId],
     queryFn: async () => {
       if (!tenantId) {
-        throw new Error('Invalid organization ID');
+        throw new Error("Invalid organization ID");
       }
-      const response = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`
+      );
       return response.data;
     },
     enabled: !!tenantId,
@@ -225,31 +238,34 @@ const CustomProvider = ({ children }) => {
   const addOrUpdateOrganization = useMutation({
     mutationFn: async ({ id, data, file }) => {
       const url = `${config.REACT_APP_API_URL}/Organization/organization-details/${id}`;
-      const method = 'patch';
+      const method = "patch";
       const response = await axios[method](url, data, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       const organizationId = response.data.data._id;
 
       // Handle image upload if a file is provided
-      if (file) {
-        const imageData = new FormData();
-        imageData.append('image', file);
-        imageData.append('type', 'organization');
-        imageData.append('id', organizationId);
+      // if (file) {
+      //   const imageData = new FormData();
+      //   imageData.append("image", file);
+      //   imageData.append("type", "organization");
+      //   imageData.append("id", organizationId);
 
-        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      }
+      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+      // }
+
+      console.log("DAAAAAAAAAAAAAAATA: ", data);
+      await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['organizations']); // ✅ Refresh the org list
+      queryClient.invalidateQueries(["organizations"]); // ✅ Refresh the org list
     },
   });
 
@@ -260,11 +276,9 @@ const CustomProvider = ({ children }) => {
       const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allUsers_data = allUsers.data;
 
-
-
       setContacts(allUsers_data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       // setLoading(false);
     }
@@ -279,60 +293,60 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchContacts = async (usersId = null) => {
       try {
-        const res = await axios.get(`${config.REACT_APP_API_URL}/contacts/owner/${userId}`);
+        const res = await axios.get(
+          `${config.REACT_APP_API_URL}/contacts/owner/${userId}`
+        );
         setsingleContact(res.data);
       } catch (err) {
-        console.error('Error fetching user contacts:', err);
+        console.error("Error fetching user contacts:", err);
       }
     };
 
     fetchContacts();
   }, [userId]);
 
-
-
-
   // getting interveiwers and showing it in the home (available interviewers) and interveiwers
   const [interviewers, setInterviewers] = useState([]);
-  const [loadingInterviewer, setLoadingInterviewer] = useState(false)
+  const [loadingInterviewer, setLoadingInterviewer] = useState(false);
   const fetchInterviewers = async () => {
     try {
       setLoadingInterviewer(true);
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
+      );
 
       setLoadingInterviewer(false);
       setInterviewers(response.data);
-
     } catch (err) {
       console.error(err.message);
     } finally {
       setLoadingInterviewer(false);
     }
-  }
-
+  };
 
   useEffect(() => {
-
     fetchInterviewers();
   }, [tenantId]);
-
-
 
   // Query for fetching users
   const {
     data: usersRes = [],
     isLoading: usersLoading,
-    refetch: refetchUsers
+    refetch: refetchUsers,
   } = useQuery({
-    queryKey: ['users', tenantId],
+    queryKey: ["users", tenantId],
     queryFn: async () => {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/${tenantId}`) 
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/users/${tenantId}`
+      );
 
       // Process image URLs and reverse the array (newest first)
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
-            const imageUrl = `${config.REACT_APP_API_URL}/${contact.imageData.path.replace(/\\/g, '/')}`;
+            const imageUrl = `${
+              config.REACT_APP_API_URL
+            }/${contact.imageData.path.replace(/\\/g, "/")}`;
             return { ...contact, imageUrl };
           }
           return contact;
@@ -355,7 +369,9 @@ const CustomProvider = ({ children }) => {
           roleId: userData.roleId,
           countryCode: userData.countryCode,
           isProfileCompleted: false,
-          ...(editMode && { _id: userData._id }) // Only include _id in edit mode
+          isEmailVerified: true,
+          ...(editMode && { _id: userData._id }), // Only include _id in edit mode
+          editMode,
         },
         contactData: {
           firstName: userData.firstName,
@@ -363,8 +379,8 @@ const CustomProvider = ({ children }) => {
           email: userData.email,
           phone: userData.phone,
           tenantId: userData.tenantId,
-          countryCode: userData.countryCode
-        }
+          countryCode: userData.countryCode,
+        },
       };
 
       // Use the same endpoint for both create and edit
@@ -374,38 +390,47 @@ const CustomProvider = ({ children }) => {
       );
 
       // Handle image upload if file is present
-      if (file) {
-        const imageData = new FormData();
-        imageData.append("image", file);
-        imageData.append("type", "contact");
-        imageData.append("id", response.data.contactId);
+      // if (file) {
+      //   const imageData = new FormData();
+      //   imageData.append("file", file);
+      //   imageData.append("type", "profilePic");
+      //   imageData.append("entity", "contact");
+      //   imageData.append("entityId", response.data.contactId);
 
-        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else if (!userData.imageUrl && editMode) {
-        // Delete image if no file and no existing image in edit mode
-        await axios.delete(`${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`);
-      }
+      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   });
+      // }
+
+      // else if (!userData.imageData.path && editMode) {
+      //   // Delete image if no file and no existing image in edit mode
+      //   await axios.delete(
+      //     `${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`
+      //   );
+      // }
+
+      // UPLOADING FILES LIKE IMAGES AND RESUMES
+      // file, type, entity, entityId
+      await uploadFile(file, "image", "contact", response.data.contactId);
 
       // Send welcome email only for new user creation
       if (!editMode) {
         await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
-          type: "usercreatepass"
+          type: "usercreatepass",
         });
       }
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']); // Refresh the users list
+      queryClient.invalidateQueries(["users"]); // Refresh the users list
     },
     onError: (error) => {
       console.error("User operation error:", error);
       // You can add toast notifications here
       // toast.error(error.response?.data?.message || "An error occurred");
-    }
+    },
   });
 
   // Mutation for toggling user status
@@ -415,18 +440,18 @@ const CustomProvider = ({ children }) => {
         `${config.REACT_APP_API_URL}/users/${userId}/status`,
         {
           status: newStatus, // or you could send the new status explicitly
-          updatedBy: `${userId}` // Track who made the change
+          updatedBy: `${userId}`, // Track who made the change
         }
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']); // Refresh the users list
+      queryClient.invalidateQueries(["users"]); // Refresh the users list
     },
     onError: (error) => {
       console.error("Status toggle error:", error);
       // toast.error("Failed to update user status");
-    }
+    },
   });
 
   // Delete user mutation
@@ -438,14 +463,13 @@ const CustomProvider = ({ children }) => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']); // Refresh the users list
+      queryClient.invalidateQueries(["users"]); // Refresh the users list
     },
     onError: (error) => {
       console.error("Delete user error:", error);
       // toast.error("Failed to delete user");
-    }
+    },
   });
-
 
   const [currentPlan, setcurrentPlan] = useState([]);
   // const [loading, setLoading] = useState(true);
@@ -454,7 +478,9 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`);
+        const Sub_res = await axios.get(
+          `${config.REACT_APP_API_URL}/subscriptions/${userId}`
+        );
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
         // If subscription exists, set it; otherwise, keep it empty
 
@@ -462,7 +488,7 @@ const CustomProvider = ({ children }) => {
           setcurrentPlan(Subscription_data);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -478,15 +504,16 @@ const CustomProvider = ({ children }) => {
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const WalletBalance_res = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
+        const WalletBalance_res = await axios.get(
+          `${config.REACT_APP_API_URL}/wallet/${userId}`
+        );
         const WalletBalance_data = WalletBalance_res.data || {};
-
 
         if (WalletBalance_data) {
           SetWalletBalance(WalletBalance_data);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -497,11 +524,12 @@ const CustomProvider = ({ children }) => {
 
   const [tickets, setTickets] = useState([]);
 
-
   const getTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/get-tickets`
+      );
       let filteredTickets = response.data.tickets || [];
 
       if (userRole === "SuperAdmin" || userRole === "Support Team") {
@@ -542,11 +570,13 @@ const CustomProvider = ({ children }) => {
   const fetchInterviewRounds = useCallback(async () => {
     try {
       // Fetch all interview rounds with interviewId populated
-      const response = await axios.get(`${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`
+      );
       // You may need to adjust the API endpoint to support population if not already
       setInterviewRounds(response.data.reverse());
     } catch (error) {
-      console.error('Error fetching interview rounds:', error);
+      console.error("Error fetching interview rounds:", error);
       setInterviewRounds([]);
     }
   }, []);
@@ -560,7 +590,6 @@ const CustomProvider = ({ children }) => {
       value={{
         // getInterviewerQuestions,
 
-        
         // fetchMyQuestionsData,
         // myQuestionsList,
         // setMyQuestionsList,
@@ -587,7 +616,6 @@ const CustomProvider = ({ children }) => {
         // setPagination,
         // pagination,
 
-
         loading,
 
         // users
@@ -601,11 +629,8 @@ const CustomProvider = ({ children }) => {
         // wallet Balance
         walletBalance,
 
-        // subscription current plan 
+        // subscription current plan
         currentPlan,
-
-
-
 
         // teams
         // teamsData,
@@ -614,8 +639,6 @@ const CustomProvider = ({ children }) => {
         // outsource interviewers
         Outsourceinterviewers,
         fetchoutsourceInterviewers,
-
-
 
         // master data
         // skills,
@@ -638,8 +661,6 @@ const CustomProvider = ({ children }) => {
         // users
         usersData,
         fetchUsersData,
-
-
 
         // organization
         organizationData,

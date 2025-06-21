@@ -1,27 +1,27 @@
 // Candidate.jsx
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, UserCircle, Pencil, Mail, Rotate3d } from 'lucide-react';
-import { useCustomContext } from '../../../../Context/Contextfetch';
-import Header from '../../../../Components/Shared/Header/Header';
-import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
-import TableView from '../../../../Components/Shared/Table/TableView';
-import KanbanView from '../../../../Components/Shared/Kanban/KanbanView';
-import AddCandidateForm from './AddCandidateForm.jsx';
-import CandidateDetails from './CandidateViewDetails/CandidateDetails';
-import { useMediaQuery } from 'react-responsive';
-import { Outlet } from 'react-router-dom';
-import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
-import { ChevronUp, ChevronDown } from 'lucide-react';
-import { useCandidates } from '../../../../apiHooks/useCandidates';
-import { useMasterData } from '../../../../apiHooks/useMasterData';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Eye, UserCircle, Pencil, Mail, Rotate3d } from "lucide-react";
+import { useCustomContext } from "../../../../Context/Contextfetch";
+import Header from "../../../../Components/Shared/Header/Header";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
+import TableView from "../../../../Components/Shared/Table/TableView";
+import KanbanView from "../../../../Components/Shared/Kanban/KanbanView";
+import AddCandidateForm from "./AddCandidateForm.jsx";
+import CandidateDetails from "./CandidateViewDetails/CandidateDetails";
+import { useMediaQuery } from "react-responsive";
+import { Outlet } from "react-router-dom";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { useCandidates } from "../../../../apiHooks/useCandidates";
+import { useMasterData } from "../../../../apiHooks/useMasterData";
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
-  const [view, setView] = useState('table');
+  const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -30,25 +30,17 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
-    experience: { min: '', max: '' },
+    experience: { min: "", max: "" },
   });
   const [isQualificationOpen, setIsQualificationOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [isExperienceOpen, setIsExperienceOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
-  const [experience, setExperience] = useState({ min: '', max: '' });
-  const {
-  skills,
-  qualifications,
-} = useMasterData();
-
-
-
-
+  const [experience, setExperience] = useState({ min: "", max: "" });
+  const { skills, qualifications } = useMasterData();
 
   const { candidateData, isLoading } = useCandidates();
-  
 
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -67,26 +59,24 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   }, [isFilterPopupOpen, selectedFilters]);
 
   const handleStatusToggle = (status) => {
-    setSelectedStatus(prev =>
+    setSelectedStatus((prev) =>
       prev.includes(status)
-        ? prev.filter(s => s !== status)
+        ? prev.filter((s) => s !== status)
         : [...prev, status]
     );
   };
 
   const handleTechToggle = (tech) => {
-    setSelectedTech(prev =>
-      prev.includes(tech)
-        ? prev.filter(t => t !== tech)
-        : [...prev, tech]
+    setSelectedTech((prev) =>
+      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
     );
   };
 
   const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, Number(e.target.value) || ''));
-    setExperience(prev => ({
+    const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
+    setExperience((prev) => ({
       ...prev,
-      [type]: value
+      [type]: value,
     }));
   };
 
@@ -94,11 +84,11 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     const clearedFilters = {
       status: [],
       tech: [],
-      experience: { min: '', max: '' }
+      experience: { min: "", max: "" },
     };
     setSelectedStatus([]);
     setSelectedTech([]);
-    setExperience({ min: '', max: '' });
+    setExperience({ min: "", max: "" });
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -107,9 +97,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   useEffect(() => {
     if (isTablet) {
-      setView('kanban');
+      setView("kanban");
     } else {
-      setView('table');
+      setView("table");
     }
   }, [isTablet]);
 
@@ -121,12 +111,17 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       tech: selectedTech,
       experience: {
         min: Number(experience.min) || 0,
-        max: Number(experience.max) || 15
-      }
+        max: Number(experience.max) || 15,
+      },
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
-    setIsFilterActive(filters.status.length > 0 || filters.tech.length > 0 || filters.experience.min || filters.experience.max);
+    setIsFilterActive(
+      filters.status.length > 0 ||
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
+    );
     setFilterPopupOpen(false);
   };
 
@@ -151,7 +146,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         selectedFilters.status.includes(user.HigherQualification);
       const matchesTech =
         selectedFilters.tech.length === 0 ||
-        user.skills?.some((skill) => selectedFilters.tech.includes(skill.skill));
+        user.skills?.some((skill) =>
+          selectedFilters.tech.includes(skill.skill)
+        );
       const matchesExperience =
         (!selectedFilters.experience.min ||
           user.CurrentExperience >= selectedFilters.experience.min) &&
@@ -162,7 +159,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus && matchesTech && matchesExperience;
+      return (
+        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
+      );
     });
   };
 
@@ -191,21 +190,24 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Table Columns Configuration
   const tableColumns = [
     {
-      key: 'name',
-      header: 'Candidate Name',
+      key: "name",
+      header: "Candidate Name",
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             {row?.ImageData ? (
               <img
                 className="h-8 w-8 rounded-full object-cover"
-                src={`http://localhost:5000/${row?.ImageData?.path}`}
-                alt={row?.FirstName || 'Candidate'}
-                onError={(e) => { e.target.src = '/default-profile.png'; }}
+                // src={`http://localhost:5000/${row?.ImageData?.path}`}
+                src={row?.ImageData?.path || null} // Added by Ashok
+                alt={row?.FirstName || "Candidate"}
+                onError={(e) => {
+                  e.target.src = "/default-profile.png";
+                }}
               />
             ) : (
               <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.FirstName ? row.FirstName.charAt(0) : '?'}
+                {row.FirstName ? row.FirstName.charAt(0) : "?"}
               </div>
             )}
           </div>
@@ -214,28 +216,40 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => navigate(`view-details/${row._id}`)}
             >
-              {(row?.FirstName || '') + ' ' + (row.LastName || '')}
+              {(row?.FirstName || "") + " " + (row.LastName || "")}
             </div>
           </div>
         </div>
       ),
     },
     {
-      key: 'Email',
-      header: 'Email',
+      key: "Email",
+      header: "Email",
       render: (value) => (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
-          <span>{value || 'Not Provided'}</span>
+          <span>{value || "Not Provided"}</span>
         </div>
       ),
     },
-    { key: 'Phone', header: 'Contact', render: (value) => value || 'Not Provided' },
-    { key: 'HigherQualification', header: 'Higher Qualification', render: (value) => value || 'Not Provided' },
-    { key: 'CurrentExperience', header: 'Current Experience', render: (value) => value || 'Not Provided' },
     {
-      key: 'skills',
-      header: 'Skills/Technology',
+      key: "Phone",
+      header: "Contact",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "HigherQualification",
+      header: "Higher Qualification",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "CurrentExperience",
+      header: "Current Experience",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "skills",
+      header: "Skills/Technology",
       render: (value) => (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 2).map((skill, idx) => (
@@ -243,7 +257,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
             >
-              {skill.skill || 'Not Provided'}
+              {skill.skill || "Not Provided"}
             </span>
           ))}
           {value.length > 2 && (
@@ -259,43 +273,51 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Table Actions Configuration
   const tableActions = [
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => navigate(
-        isAssessmentView
-          ? `candidate-details/${row._id}`
-          : `view-details/${row._id}`,
-        {
-          state: isAssessmentView
-            ? { from: `/assessment-details/${row?.assessmentId}`, assessmentId: row?.assessmentId }
-            : { from: '/candidate' }
-        }
-      ),
+      onClick: (row) =>
+        navigate(
+          isAssessmentView
+            ? `candidate-details/${row._id}`
+            : `view-details/${row._id}`,
+          {
+            state: isAssessmentView
+              ? {
+                  from: `/assessment-details/${row?.assessmentId}`,
+                  assessmentId: row?.assessmentId,
+                }
+              : { from: "/candidate" },
+          }
+        ),
     },
-    ...(!isAssessmentView ? [
-      {
-        key: '360-view',
-        label: '360° View',
-        icon: <Rotate3d size={24} className='text-custom-blue' />,
-        onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-      },
-      {
-        key: 'edit',
-        label: 'Edit',
-        icon: <Pencil className="w-4 h-4 text-green-600" />,
-        onClick: (row) => navigate(`edit/${row._id}`),
-      },
-    ] : []),
-    ...(isAssessmentView ? [
-      {
-        key: 'resend-link',
-        label: 'Resend Link',
-        icon: <Mail className="w-4 h-4 text-blue-600" />,
-        onClick: (row) => onResendLink(row.id),
-        disabled: (row) => row.status === 'completed',
-      },
-    ] : []),
+    ...(!isAssessmentView
+      ? [
+          {
+            key: "360-view",
+            label: "360° View",
+            icon: <Rotate3d size={24} className="text-custom-blue" />,
+            onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+          },
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
+    ...(isAssessmentView
+      ? [
+          {
+            key: "resend-link",
+            label: "Resend Link",
+            icon: <Mail className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => onResendLink(row.id),
+            disabled: (row) => row.status === "completed",
+          },
+        ]
+      : []),
   ];
 
   // Kanban Columns Configuration
@@ -343,7 +365,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             e.stopPropagation();
             onResendLink(item.id);
           }}
-          disabled={item.status === 'completed'}
+          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           title="Resend Link"
         >
@@ -355,14 +377,20 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   return (
     <div className={isAssessmentView ? "" : "bg-background min-h-screen"}>
-      <main className={isAssessmentView ? "" : "w-full px-9 py-2 sm:mt-20 md:mt-24 sm:px-2 lg:px-8 xl:px-8 2xl:px-8"}>
+      <main
+        className={
+          isAssessmentView
+            ? ""
+            : "w-full px-9 py-2 sm:mt-20 md:mt-24 sm:px-2 lg:px-8 xl:px-8 2xl:px-8"
+        }
+      >
         {!isAssessmentView && (
           <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
             <main className="px-6">
               <div className="sm:px-0">
                 <Header
                   title="Candidates"
-                  onAddClick={() => navigate('new')}
+                  onAddClick={() => navigate("new")}
                   addButtonText="Add Candidate"
                 />
                 <Toolbar
@@ -385,11 +413,17 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             </main>
           </div>
         )}
-        <main className={isAssessmentView ? '' : 'fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background'}>
+        <main
+          className={
+            isAssessmentView
+              ? ""
+              : "fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
+          }
+        >
           <div className="sm:px-0">
             <motion.div className="bg-white">
               <div className="relative w-full">
-                {view === 'table' ? (
+                {view === "table" ? (
                   <div className="w-full">
                     <TableView
                       data={currentFilteredRows}
@@ -402,14 +436,22 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      data={currentFilteredRows.map(candidate => ({
+                      data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate.FirstName || ''} ${candidate.LastName || ''}`,
-                        subtitle: candidate.CurrentRole || candidate.CurrentExperience || 'Not Provided',
-                        avatar: candidate.ImageData ? `http://localhost:5000/${candidate.ImageData.path}` : null,
-                        status: candidate.HigherQualification || 'Not Provided',
-                        isAssessmentView: isAssessmentView
+                        title: `${candidate.FirstName || ""} ${
+                          candidate.LastName || ""
+                        }`,
+                        subtitle:
+                          candidate.CurrentRole ||
+                          candidate.CurrentExperience ||
+                          "Not Provided",
+                        // avatar: candidate.ImageData
+                        //   ? `http://localhost:5000/${candidate.ImageData.path}`
+                        //   : null,
+                        avatar: candidate?.ImageData?.path || null, // Added by Ashok
+                        status: candidate.HigherQualification || "Not Provided",
+                        isAssessmentView: isAssessmentView,
                       }))}
                       columns={kanbanColumns}
                       loading={isLoading}
@@ -431,9 +473,13 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                     <div>
                       <div
                         className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsQualificationOpen(!isQualificationOpen)}
+                        onClick={() =>
+                          setIsQualificationOpen(!isQualificationOpen)
+                        }
                       >
-                        <span className="font-medium text-gray-700">Qualification</span>
+                        <span className="font-medium text-gray-700">
+                          Qualification
+                        </span>
                         {isQualificationOpen ? (
                           <ChevronUp className="text-xl text-gray-700" />
                         ) : (
@@ -450,11 +496,17 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                               >
                                 <input
                                   type="checkbox"
-                                  checked={selectedStatus.includes(q.QualificationName)}
-                                  onChange={() => handleStatusToggle(q.QualificationName)}
+                                  checked={selectedStatus.includes(
+                                    q.QualificationName
+                                  )}
+                                  onChange={() =>
+                                    handleStatusToggle(q.QualificationName)
+                                  }
                                   className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                                 />
-                                <span className="text-sm">{q.QualificationName}</span>
+                                <span className="text-sm">
+                                  {q.QualificationName}
+                                </span>
                               </label>
                             ))
                           ) : (
@@ -472,7 +524,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() => setIsSkillsOpen(!isSkillsOpen)}
                       >
-                        <span className="font-medium text-gray-700">Skills</span>
+                        <span className="font-medium text-gray-700">
+                          Skills
+                        </span>
                         {isSkillsOpen ? (
                           <ChevronUp className="text-xl text-gray-700" />
                         ) : (
@@ -489,15 +543,23 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                               >
                                 <input
                                   type="checkbox"
-                                  checked={selectedTech.includes(skill.SkillName)}
-                                  onChange={() => handleTechToggle(skill.SkillName)}
+                                  checked={selectedTech.includes(
+                                    skill.SkillName
+                                  )}
+                                  onChange={() =>
+                                    handleTechToggle(skill.SkillName)
+                                  }
                                   className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                                 />
-                                <span className="text-sm">{skill.SkillName}</span>
+                                <span className="text-sm">
+                                  {skill.SkillName}
+                                </span>
                               </label>
                             ))
                           ) : (
-                            <span className="text-sm text-gray-500">No skills available</span>
+                            <span className="text-sm text-gray-500">
+                              No skills available
+                            </span>
                           )}
                         </div>
                       )}
@@ -509,7 +571,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() => setIsExperienceOpen(!isExperienceOpen)}
                       >
-                        <span className="font-medium text-gray-700">Experience</span>
+                        <span className="font-medium text-gray-700">
+                          Experience
+                        </span>
                         {isExperienceOpen ? (
                           <ChevronUp className="text-xl text-gray-700" />
                         ) : (
@@ -528,7 +592,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                                 min="0"
                                 max="15"
                                 value={experience.min}
-                                onChange={(e) => handleExperienceChange(e, 'min')}
+                                onChange={(e) =>
+                                  handleExperienceChange(e, "min")
+                                }
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>
@@ -541,7 +607,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                                 min="0"
                                 max="15"
                                 value={experience.max}
-                                onChange={(e) => handleExperienceChange(e, 'max')}
+                                onChange={(e) =>
+                                  handleExperienceChange(e, "max")
+                                }
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>

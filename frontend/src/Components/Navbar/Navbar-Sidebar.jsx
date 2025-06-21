@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import { IoMdInformationCircleOutline, IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import {
+  IoMdInformationCircleOutline,
+  IoIosArrowDown,
+  IoIosArrowUp,
+} from "react-icons/io";
 import { IoHome } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { LiaWalletSolid } from "react-icons/lia";
 import { NavLink, useLocation } from "react-router-dom";
 import axios from "axios";
-import { X } from 'lucide-react';
+import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 // import { useAuth0 } from "@auth0/auth0-react";
 import "./Navbar-Sidebar.scss";
@@ -25,14 +29,13 @@ const Navbar = () => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   // const userName = tokenPayload?.userName;
-    const { userProfile } = useCustomContext();
-  
+  const { userProfile, singlecontact } = useCustomContext();
   // Format name to capitalize first letter of first and last names
   const formatName = (name) => {
-    if (!name) return '';
+    if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
-  
+
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
   const organization = tokenPayload?.organization;
@@ -69,7 +72,7 @@ const Navbar = () => {
 
   // Utility function to close all dropdowns
   const closeAllDropdowns = React.useCallback((openDropdown = null) => {
-    setDropdownState(prevState => ({
+    setDropdownState((prevState) => ({
       assessmentDropdown: openDropdown === "assessmentDropdown",
       interviewDropdown: openDropdown === "interviewDropdown",
       moreDropdown: openDropdown === "moreDropdown",
@@ -88,46 +91,96 @@ const Navbar = () => {
   }, []);
 
   // Toggle functions
-  const toggleAssessmentDropdown = () => closeAllDropdowns(dropdownState.assessmentDropdown ? null : "assessmentDropdown");
-  const toggleInterviewDropdown = () => closeAllDropdowns(dropdownState.interviewDropdown ? null : "interviewDropdown");
-  const toggleMoreDropdown = () => closeAllDropdowns(dropdownState.moreDropdown ? null : "moreDropdown");
-  const toggleOutlineDropdown = () => closeAllDropdowns(dropdownState.outlineDropdown ? null : "outlineDropdown");
-  const toggleProfileDropdown = () => closeAllDropdowns(dropdownState.profileDropdown ? null : "profileDropdown");
-  const toggleSidebar = () => setDropdownState((prev) => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }));
+  const toggleAssessmentDropdown = () =>
+    closeAllDropdowns(
+      dropdownState.assessmentDropdown ? null : "assessmentDropdown"
+    );
+  const toggleInterviewDropdown = () =>
+    closeAllDropdowns(
+      dropdownState.interviewDropdown ? null : "interviewDropdown"
+    );
+  const toggleMoreDropdown = () =>
+    closeAllDropdowns(dropdownState.moreDropdown ? null : "moreDropdown");
+  const toggleOutlineDropdown = () =>
+    closeAllDropdowns(dropdownState.outlineDropdown ? null : "outlineDropdown");
+  const toggleProfileDropdown = () =>
+    closeAllDropdowns(dropdownState.profileDropdown ? null : "profileDropdown");
+  const toggleSidebar = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isSidebarOpen: !prev.isSidebarOpen,
+    }));
 
   // Help & training sub-dropdown toggles
-  const handleGettingToggle = () => setDropdownState((prev) => ({ ...prev, isGettingDropdownOpen: !prev.isGettingDropdownOpen }));
-  const handleDetailToggle = () => setDropdownState((prev) => ({ ...prev, isDetailDropdownOpen: !prev.isDetailDropdownOpen }));
-  const handleQuestionToggle = () => setDropdownState((prev) => ({ ...prev, isQuestionDropdownOpen: !prev.isQuestionDropdownOpen }));
-  const handleFunctionToggle = () => setDropdownState((prev) => ({ ...prev, isFunctionDropdownOpen: !prev.isFunctionDropdownOpen }));
-  const handleContactToggle = () => setDropdownState((prev) => ({ ...prev, isContactDropdownOpen: !prev.isContactDropdownOpen }));
-  const handleAdditionalToggle = () => setDropdownState((prev) => ({ ...prev, isAdditionalDropdownOpen: !prev.isAdditionalDropdownOpen }));
-  const handleLegalToggle = () => setDropdownState((prev) => ({ ...prev, isLegalDropdownOpen: !prev.isLegalDropdownOpen }));
+  const handleGettingToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isGettingDropdownOpen: !prev.isGettingDropdownOpen,
+    }));
+  const handleDetailToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isDetailDropdownOpen: !prev.isDetailDropdownOpen,
+    }));
+  const handleQuestionToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isQuestionDropdownOpen: !prev.isQuestionDropdownOpen,
+    }));
+  const handleFunctionToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isFunctionDropdownOpen: !prev.isFunctionDropdownOpen,
+    }));
+  const handleContactToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isContactDropdownOpen: !prev.isContactDropdownOpen,
+    }));
+  const handleAdditionalToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isAdditionalDropdownOpen: !prev.isAdditionalDropdownOpen,
+    }));
+  const handleLegalToggle = () =>
+    setDropdownState((prev) => ({
+      ...prev,
+      isLegalDropdownOpen: !prev.isLegalDropdownOpen,
+    }));
 
   // Fetch profile image
-  useEffect(() => {
-    const fetchProfileImage = async () => {
-      try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/contacts/${userId}`);
-        const contact = response.data;
-        if (contact.ImageData && contact.ImageData.filename) {
-          const imageUrl = `${config.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, "/")}`;
-          setProfileImage(imageUrl);
-        }
-      } catch (error) {
-        console.error("Error fetching profile image:", error);
-      }
-    };
-    fetchProfileImage();
-  }, [userId]);
+  // useEffect(() => {
+  //   const fetchProfileImage = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/contacts/${userId}`
+  //       );
+  //       const contact = response.data;
+  //       if (contact.ImageData && contact.ImageData.filename) {
+  //         const imageUrl = `${
+  //           config.REACT_APP_API_URL
+  //         }/${contact.ImageData.path.replace(/\\/g, "/")}`;
+  //         setProfileImage(imageUrl);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching profile image:", error);
+  //     }
+  //   };
+  //   fetchProfileImage();
+  // }, [userId]);
 
   // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        [assessmentRef, interviewRef, moreRef, outlineRef, notificationRef, profileRef].every(
-          (ref) => ref.current && !ref.current.contains(event.target)
-        )
+        [
+          assessmentRef,
+          interviewRef,
+          moreRef,
+          outlineRef,
+          notificationRef,
+          profileRef,
+        ].every((ref) => ref.current && !ref.current.contains(event.target))
       ) {
         closeAllDropdowns();
       }
@@ -147,9 +200,14 @@ const Navbar = () => {
   const outlineDropdownContent = (
     <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
-        <h2 className="text-start font-medium text-custom-blue">Help & Training</h2>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={toggleOutlineDropdown}>
-        <X className="w-4 h-4" />
+        <h2 className="text-start font-medium text-custom-blue">
+          Help & Training
+        </h2>
+        <button
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          onClick={toggleOutlineDropdown}
+        >
+          <X className="w-4 h-4" />
         </button>
       </div>
       <div>
@@ -158,13 +216,41 @@ const Navbar = () => {
             <p className="text-black">Introduction</p>
           </div>
           {[
-            { label: "Getting Started", toggle: handleGettingToggle, isOpen: dropdownState.isGettingDropdownOpen },
-            { label: "Detailed Instructions", toggle: handleDetailToggle, isOpen: dropdownState.isDetailDropdownOpen },
-            { label: "FAQs (Frequently Asked Questions)", toggle: handleQuestionToggle, isOpen: dropdownState.isQuestionDropdownOpen },
-            { label: "Search Functionality", toggle: handleFunctionToggle, isOpen: dropdownState.isFunctionDropdownOpen },
-            { label: "Contact Support", toggle: handleContactToggle, isOpen: dropdownState.isContactDropdownOpen },
-            { label: "Additional Resources", toggle: handleAdditionalToggle, isOpen: dropdownState.isAdditionalDropdownOpen },
-            { label: "Legal and Privacy Information", toggle: handleLegalToggle, isOpen: dropdownState.isLegalDropdownOpen },
+            {
+              label: "Getting Started",
+              toggle: handleGettingToggle,
+              isOpen: dropdownState.isGettingDropdownOpen,
+            },
+            {
+              label: "Detailed Instructions",
+              toggle: handleDetailToggle,
+              isOpen: dropdownState.isDetailDropdownOpen,
+            },
+            {
+              label: "FAQs (Frequently Asked Questions)",
+              toggle: handleQuestionToggle,
+              isOpen: dropdownState.isQuestionDropdownOpen,
+            },
+            {
+              label: "Search Functionality",
+              toggle: handleFunctionToggle,
+              isOpen: dropdownState.isFunctionDropdownOpen,
+            },
+            {
+              label: "Contact Support",
+              toggle: handleContactToggle,
+              isOpen: dropdownState.isContactDropdownOpen,
+            },
+            {
+              label: "Additional Resources",
+              toggle: handleAdditionalToggle,
+              isOpen: dropdownState.isAdditionalDropdownOpen,
+            },
+            {
+              label: "Legal and Privacy Information",
+              toggle: handleLegalToggle,
+              isOpen: dropdownState.isLegalDropdownOpen,
+            },
           ].map(({ label, toggle, isOpen }, index) => (
             <div key={index} className="flex justify-between mr-4 mt-2">
               <div className="cursor-pointer">
@@ -173,7 +259,11 @@ const Navbar = () => {
                 </label>
               </div>
               <div className="cursor-pointer" onClick={toggle}>
-                {isOpen ? <FaCaretUp className="ml-10 text-black" /> : <FaCaretDown className="ml-10 text-black" />}
+                {isOpen ? (
+                  <FaCaretUp className="ml-10 text-black" />
+                ) : (
+                  <FaCaretDown className="ml-10 text-black" />
+                )}
               </div>
             </div>
           ))}
@@ -185,14 +275,23 @@ const Navbar = () => {
   const profileDropdownContent = (
     <div className="absolute top-12 border w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
       <div className="p-2 flex items-center">
-        <p className="font-medium text-custom-blue" onClick={toggleProfileDropdown}>
-          {profileImage ? (
-            <img src={profileImage} alt="Profile" className="w-7 h-7 rounded-full" />
+        <p
+          className="font-medium text-custom-blue"
+          onClick={toggleProfileDropdown}
+        >
+          {singlecontact[0]?.imageData?.path ? (
+            <img
+              src={singlecontact[0]?.imageData?.path}
+              alt="Profile"
+              className="w-7 h-7 rounded-full"
+            />
           ) : (
             <CgProfile className="text-custom-blue text-xl" />
           )}
         </p>
-        <span className="font-medium ml-1">{firstName} {lastName}</span>
+        <span className="font-medium ml-1">
+          {firstName} {lastName}
+        </span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
         <button
@@ -218,7 +317,11 @@ const Navbar = () => {
       <div className="px-2 py-1">
         {[
           { to: "/billing", label: "Billing", icon: <CiCreditCard1 /> },
-          { to: "/wallet-transcations", label: "My Wallet", icon: <LiaWalletSolid /> },
+          {
+            to: "/wallet-transcations",
+            label: "My Wallet",
+            icon: <LiaWalletSolid />,
+          },
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
@@ -240,8 +343,14 @@ const Navbar = () => {
       key: "home",
       ref: null,
       content: (
-        <NavLink to="/home" className="text-black" onClick={() => closeAllDropdowns()}>
-          <IoHome className={isActive("/home") ? "text-custom-blue" : "text-black"} />
+        <NavLink
+          to="/home"
+          className="text-black"
+          onClick={() => closeAllDropdowns()}
+        >
+          <IoHome
+            className={isActive("/home") ? "text-custom-blue" : "text-black"}
+          />
         </NavLink>
       ),
       className: "text-xl border rounded-md p-2",
@@ -252,12 +361,21 @@ const Navbar = () => {
       ref: outlineRef,
       content: (
         <div className="relative">
-          <p className="font-medium cursor-pointer" onClick={toggleOutlineDropdown}>
+          <p
+            className="font-medium cursor-pointer"
+            onClick={toggleOutlineDropdown}
+          >
             <IoMdInformationCircleOutline
-              className={dropdownState.outlineDropdown ? "text-custom-blue" : "text-black"}
+              className={
+                dropdownState.outlineDropdown
+                  ? "text-custom-blue"
+                  : "text-black"
+              }
             />
             {/* <div className="absolute top-10 right-0 w-4 h-4 bg-white border-t border-l border-custom-blue rotate-45 z-50"></div> */}
-            {dropdownState.outlineDropdown && <IoIosArrowUp className="absolute top-10 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
+            {dropdownState.outlineDropdown && (
+              <IoIosArrowUp className="absolute top-10 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
+            )}
           </p>
           {dropdownState.outlineDropdown && outlineDropdownContent}
         </div>
@@ -270,13 +388,19 @@ const Navbar = () => {
       ref: notificationRef,
       content: (
         <div className="relative">
-        <NotificationPanel
-          isOpen={dropdownState.isNotificationOpen}
-          setIsOpen={(value) => setDropdownState((prev) => ({ ...prev, isNotificationOpen: value }))}
-          closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
-        />
-        {dropdownState.isNotificationOpen && <IoIosArrowUp className="absolute top-12 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
-        
+          <NotificationPanel
+            isOpen={dropdownState.isNotificationOpen}
+            setIsOpen={(value) =>
+              setDropdownState((prev) => ({
+                ...prev,
+                isNotificationOpen: value,
+              }))
+            }
+            closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
+          />
+          {dropdownState.isNotificationOpen && (
+            <IoIosArrowUp className="absolute top-12 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
+          )}
         </div>
       ),
       className: "text-xl border rounded-md",
@@ -287,24 +411,36 @@ const Navbar = () => {
       ref: profileRef,
       content: (
         <div className="relative">
-          <p className="font-medium cursor-pointer" onClick={toggleProfileDropdown}>
-            {profileImage ? (
+          <p
+            className="font-medium cursor-pointer"
+            onClick={toggleProfileDropdown}
+          >
+            {singlecontact[0]?.imageData?.path ? (
               <img
-                src={profileImage}
+                src={singlecontact[0]?.imageData?.path}
                 alt="Profile"
                 className="w-7 h-7 rounded-full object-cover"
               />
             ) : (
               <CgProfile
-                className={`cursor-pointer ${dropdownState.profileDropdown ? "text-custom-blue" : "text-black"}`}
+                className={`cursor-pointer ${
+                  dropdownState.profileDropdown
+                    ? "text-custom-blue"
+                    : "text-black"
+                }`}
               />
             )}
-            {dropdownState.profileDropdown && <IoIosArrowUp className="absolute top-10 left-0 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />}
+
+            {dropdownState.profileDropdown && (
+              <IoIosArrowUp className="absolute top-10 left-0 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
+            )}
           </p>
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: "text-xl border rounded-md p-2",
+      className: `text-xl border rounded-md ${
+        singlecontact[0]?.imageData?.path ? "p-1" : "p-2"
+      }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
@@ -330,8 +466,11 @@ const Navbar = () => {
               <div className="flex items-center space-x-8 max-w-3xl">
                 <NavLink
                   to="/candidate"
-                  className={`h-full flex items-center relative px-1 ${isActive("/candidate") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                  className={`h-full flex items-center relative px-1 ${
+                    isActive("/candidate")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                  }`}
                   onClick={() => closeAllDropdowns()}
                 >
                   Candidates
@@ -342,8 +481,11 @@ const Navbar = () => {
 
                 <NavLink
                   to="/position"
-                  className={`h-full flex items-center relative px-1 ${isActive("/position") ? "text-custom-blue font-bold" : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                  className={`h-full flex items-center relative px-1 ${
+                    isActive("/position")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                  }`}
                   onClick={() => closeAllDropdowns()}
                 >
                   Positions
@@ -352,17 +494,29 @@ const Navbar = () => {
                   )}
                 </NavLink>
 
-                <div className="relative h-full flex items-center" ref={interviewRef}>
+                <div
+                  className="relative h-full flex items-center"
+                  ref={interviewRef}
+                >
                   <button
-                    className={`flex items-center h-full relative px-1 ${isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
-                      ? "text-custom-blue font-bold"
-                      : "text-gray-600 hover:text-custom-blue"
-                      }`}
+                    className={`flex items-center h-full relative px-1 ${
+                      isActive("/interviewList") ||
+                      isActive("/mockinterview") ||
+                      isActive("/interview-templates")
+                        ? "text-custom-blue font-bold"
+                        : "text-gray-600 hover:text-custom-blue"
+                    }`}
                     onClick={toggleInterviewDropdown}
                   >
                     Interviews
-                    {dropdownState.interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                    {(isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")) && (
+                    {dropdownState.interviewDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
+                    {(isActive("/interviewList") ||
+                      isActive("/mockinterview") ||
+                      isActive("/interview-templates")) && (
                       <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                     )}
                   </button>
@@ -370,14 +524,25 @@ const Navbar = () => {
                     <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                       <div className="space-y-1">
                         {[
-                          { to: "/interview-templates", label: "Interview Templates" },
+                          {
+                            to: "/interview-templates",
+                            label: "Interview Templates",
+                          },
                           { to: "/interviewList", label: "Interviews" },
-                          ...(organization ? [] : [{ to: "/mockinterview", label: "Mock Interviews" }]),
+                          ...(organization
+                            ? []
+                            : [
+                                {
+                                  to: "/mockinterview",
+                                  label: "Mock Interviews",
+                                },
+                              ]),
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                              }`}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                            }`}
                             to={to}
                             onClick={() => closeAllDropdowns()}
                           >
@@ -389,17 +554,26 @@ const Navbar = () => {
                   )}
                 </div>
 
-                <div className="relative h-full flex items-center" ref={assessmentRef}>
+                <div
+                  className="relative h-full flex items-center"
+                  ref={assessmentRef}
+                >
                   <button
-                    className={`flex items-center h-full relative px-1 ${isActive("/assessments") || isActive("/questionBank")
-                      ? "text-custom-blue font-bold"
-                      : "text-gray-600 hover:text-custom-blue"
-                      }`}
+                    className={`flex items-center h-full relative px-1 ${
+                      isActive("/assessments") || isActive("/questionBank")
+                        ? "text-custom-blue font-bold"
+                        : "text-gray-600 hover:text-custom-blue"
+                    }`}
                     onClick={toggleAssessmentDropdown}
                   >
                     Assessments
-                    {dropdownState.assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                    {(isActive("/assessments") || isActive("/questionBank")) && (
+                    {dropdownState.assessmentDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
+                    {(isActive("/assessments") ||
+                      isActive("/questionBank")) && (
                       <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                     )}
                   </button>
@@ -412,8 +586,9 @@ const Navbar = () => {
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                              }`}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                            }`}
                             to={to}
                             onClick={() => closeAllDropdowns()}
                           >
@@ -425,16 +600,24 @@ const Navbar = () => {
                   )}
                 </div>
 
-                <div className="relative h-full flex items-center" ref={moreRef}>
+                <div
+                  className="relative h-full flex items-center"
+                  ref={moreRef}
+                >
                   <button
-                    className={`flex items-center h-full relative px-1 ${isActive("/analytics") || isActive("/support-desk")
-                      ? "text-custom-blue font-bold"
-                      : "text-gray-600 hover:text-custom-blue"
-                      }`}
+                    className={`flex items-center h-full relative px-1 ${
+                      isActive("/analytics") || isActive("/support-desk")
+                        ? "text-custom-blue font-bold"
+                        : "text-gray-600 hover:text-custom-blue"
+                    }`}
                     onClick={toggleMoreDropdown}
                   >
                     More
-                    {dropdownState.moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    {dropdownState.moreDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
                     {(isActive("/analytics") || isActive("/support-desk")) && (
                       <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                     )}
@@ -448,8 +631,9 @@ const Navbar = () => {
                         ].map(({ to, label }) => (
                           <NavLink
                             key={to}
-                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to) ? "bg-gray-100 text-custom-blue" : ""
-                              }`}
+                            className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                              isActive(to) ? "bg-gray-100 text-custom-blue" : ""
+                            }`}
                             to={to}
                             onClick={() => closeAllDropdowns()}
                           >
@@ -468,7 +652,9 @@ const Navbar = () => {
               {icons.map(({ key, ref, content, className, isActive }) => (
                 <div
                   key={key}
-                  className={`${className} ${isActive ? "text-custom-blue" : "text-black"}`}
+                  className={`${className} ${
+                    isActive ? "text-custom-blue" : "text-black"
+                  }`}
                   ref={ref}
                 >
                   {content}
@@ -485,8 +671,11 @@ const Navbar = () => {
               <div className="p-4 space-y-1">
                 <NavLink
                   to="/candidate"
-                  className={`block px-4 py-3 rounded-md ${isActive("/candidate") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                  className={`block px-4 py-3 rounded-md ${
+                    isActive("/candidate")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
                   onClick={() => {
                     closeAllDropdowns();
                     toggleSidebar();
@@ -497,8 +686,11 @@ const Navbar = () => {
 
                 <NavLink
                   to="/position"
-                  className={`block px-4 py-3 rounded-md ${isActive("/position") ? "bg-gray-100 text-custom-blue font-bold" : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                  className={`block px-4 py-3 rounded-md ${
+                    isActive("/position")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
                   onClick={() => {
                     closeAllDropdowns();
                     toggleSidebar();
@@ -509,26 +701,41 @@ const Navbar = () => {
 
                 <div className="relative" ref={interviewRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviewList") || isActive("/mockinterview") || isActive("/interview-templates")
-                      ? "bg-gray-100 text-custom-blue font-bold"
-                      : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
+                      isActive("/interviewList") ||
+                      isActive("/mockinterview") ||
+                      isActive("/interview-templates")
+                        ? "bg-gray-100 text-custom-blue font-bold"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                     onClick={toggleInterviewDropdown}
                   >
                     <span>Interviews</span>
-                    {dropdownState.interviewDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    {dropdownState.interviewDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
                   </button>
                   {dropdownState.interviewDropdown && (
                     <div className="mt-1 ml-4 space-y-1">
                       {[
-                        { to: "/interview-templates", label: "Interview Templates" },
+                        {
+                          to: "/interview-templates",
+                          label: "Interview Templates",
+                        },
                         { to: "/interviewList", label: "Interviews" },
-                        ...(organization ? [{ to: "/mockinterview", label: "Mock Interviews" }] : []),
+                        ...(organization
+                          ? [{ to: "/mockinterview", label: "Mock Interviews" }]
+                          : []),
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}
-                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                            }`}
+                          className={`block px-4 py-2 rounded-md ${
+                            isActive(to)
+                              ? "bg-gray-200 text-custom-blue"
+                              : "hover:bg-gray-100"
+                          }`}
                           to={to}
                           onClick={() => {
                             closeAllDropdowns();
@@ -544,14 +751,19 @@ const Navbar = () => {
 
                 <div className="relative" ref={assessmentRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") || isActive("/questionBank")
-                      ? "bg-gray-100 text-custom-blue font-bold"
-                      : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
+                      isActive("/assessments") || isActive("/questionBank")
+                        ? "bg-gray-100 text-custom-blue font-bold"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                     onClick={toggleAssessmentDropdown}
                   >
                     <span>Assessments</span>
-                    {dropdownState.assessmentDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    {dropdownState.assessmentDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
                   </button>
                   {dropdownState.assessmentDropdown && (
                     <div className="mt-1 ml-4 space-y-1">
@@ -561,8 +773,11 @@ const Navbar = () => {
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}
-                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                            }`}
+                          className={`block px-4 py-2 rounded-md ${
+                            isActive(to)
+                              ? "bg-gray-200 text-custom-blue"
+                              : "hover:bg-gray-100"
+                          }`}
                           to={to}
                           onClick={() => {
                             closeAllDropdowns();
@@ -578,25 +793,33 @@ const Navbar = () => {
 
                 <div className="relative" ref={moreRef}>
                   <button
-                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") || isActive("/support-desk")
-                      ? "bg-gray-100 text-custom-blue font-bold"
-                      : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                    className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
+                      isActive("/analytics") || isActive("/support-desk")
+                        ? "bg-gray-100 text-custom-blue font-bold"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                     onClick={toggleMoreDropdown}
                   >
                     <span>More</span>
-                    {dropdownState.moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    {dropdownState.moreDropdown ? (
+                      <IoIosArrowUp />
+                    ) : (
+                      <IoIosArrowDown />
+                    )}
                   </button>
                   {dropdownState.moreDropdown && (
                     <div className="mt-1 ml-4 space-y-1">
                       {[
                         { to: "/analytics", label: "Analytics" },
-                        { to: "/support-desk", label: "Support Desk"},
+                        { to: "/support-desk", label: "Support Desk" },
                       ].map(({ to, label }) => (
                         <NavLink
                           key={to}
-                          className={`block px-4 py-2 rounded-md ${isActive(to) ? "bg-gray-200 text-custom-blue" : "hover:bg-gray-100"
-                            }`}
+                          className={`block px-4 py-2 rounded-md ${
+                            isActive(to)
+                              ? "bg-gray-200 text-custom-blue"
+                              : "hover:bg-gray-100"
+                          }`}
                           to={to}
                           onClick={() => {
                             closeAllDropdowns();

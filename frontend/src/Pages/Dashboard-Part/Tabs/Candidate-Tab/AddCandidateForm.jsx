@@ -1,20 +1,24 @@
 /* eslint-disable react/prop-types */
-import { useState, useRef, useEffect } from 'react';
-import Modal from 'react-modal';
-import classNames from 'classnames';
+import { useState, useRef, useEffect } from "react";
+import Modal from "react-modal";
+import classNames from "classnames";
 import { format } from "date-fns";
-import { Search } from 'lucide-react';
-import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
-import CustomDatePicker from '../../../../utils/CustomDatePicker';
-import { validateCandidateForm, getErrorMessage, countryCodes } from '../../../../utils/CandidateValidation';
-import Cookies from 'js-cookie';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import { useCandidates } from '../../../../apiHooks/useCandidates';
-import LoadingButton from '../../../../Components/LoadingButton';
-import SkillsField from '../CommonCode-AllTabs/SkillsInput';
-import { useMasterData } from '../../../../apiHooks/useMasterData';
+import { Search } from "lucide-react";
+import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
+import CustomDatePicker from "../../../../utils/CustomDatePicker";
+import {
+  validateCandidateForm,
+  getErrorMessage,
+  countryCodes,
+} from "../../../../utils/CandidateValidation";
+import Cookies from "js-cookie";
+import { useNavigate, useParams } from "react-router-dom";
+import { Minimize, Expand, ChevronDown, X } from "lucide-react";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { useCandidates } from "../../../../apiHooks/useCandidates";
+import LoadingButton from "../../../../Components/LoadingButton";
+import SkillsField from "../CommonCode-AllTabs/SkillsInput";
+import { useMasterData } from "../../../../apiHooks/useMasterData";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -31,7 +35,7 @@ const CustomDropdown = ({
   hideLabel = false,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
   const toggleDropdown = () => {
@@ -42,12 +46,15 @@ const CustomDropdown = ({
     const selectedValue = optionValue ? option[optionValue] : option;
     onChange({ target: { name, value: selectedValue } });
     setShowDropdown(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
-  const filteredOptions = options?.filter(option => {
+  const filteredOptions = options?.filter((option) => {
     const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    return displayValue
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
   });
 
   useEffect(() => {
@@ -57,16 +64,19 @@ const CustomDropdown = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
     <div ref={dropdownRef}>
       {!hideLabel && (
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           {label} <span className="text-red-500">*</span>
         </label>
       )}
@@ -79,7 +89,9 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            error ? "border-red-500" : "border-gray-300"
+          }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -124,21 +136,23 @@ const CustomDropdown = ({
 
 // Main AddCandidateForm Component
 const AddCandidateForm = ({ mode }) => {
+  const { skills, colleges, qualifications, currentRoles } = useMasterData();
 
-    const {
-    skills,
-    colleges,
-    qualifications,
-    currentRoles
-  } = useMasterData();
-
-console.log('currentRoles:', currentRoles);
+  console.log("currentRoles:", currentRoles);
   // Get user token information
-  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
 
-  const { candidateData, isLoading: _isLoading, isQueryLoading: _isQueryLoading, isMutationLoading, isError: _isError, error: _error, addOrUpdateCandidate } = useCandidates();
+  const {
+    candidateData,
+    isLoading: _isLoading,
+    isQueryLoading: _isQueryLoading,
+    isMutationLoading,
+    isError: _isError,
+    error: _error,
+    addOrUpdateCandidate,
+  } = useCandidates();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -148,6 +162,7 @@ console.log('currentRoles:', currentRoles);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
   const [file, setFile] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   // const [imageFile, setImageFile] = useState(null);
   // const [resumeFile, setResumeFile] = useState(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -166,7 +181,7 @@ console.log('currentRoles:', currentRoles);
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
-  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState('');
+  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
@@ -185,20 +200,19 @@ console.log('currentRoles:', currentRoles);
   ];
 
   const [formData, setFormData] = useState({
-    FirstName: '',
-    LastName: '',
-    Email: '',
-    Phone: '',
-    Date_Of_Birth: '',
-    Gender: '',
-    HigherQualification: '',
-    UniversityCollege: '',
-    CurrentExperience: '',
-    RelevantExperience: '',
-    CountryCode: '+91',
+    FirstName: "",
+    LastName: "",
+    Email: "",
+    Phone: "",
+    Date_Of_Birth: "",
+    Gender: "",
+    HigherQualification: "",
+    UniversityCollege: "",
+    CurrentExperience: "",
+    RelevantExperience: "",
+    CountryCode: "+91",
     skills: [],
-    resume: null,
-    CurrentRole: '',
+    CurrentRole: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -207,33 +221,43 @@ console.log('currentRoles:', currentRoles);
   // const userId = tokenPayload?.userId;
 
   useEffect(() => {
-
-    const selectedCandidate = candidateData.find(candidate => candidate._id === id);
+    const selectedCandidate = candidateData.find(
+      (candidate) => candidate._id === id
+    );
 
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
 
       setFormData({
-        FirstName: selectedCandidate.FirstName || '',
-        LastName: selectedCandidate.LastName || '',
-        Email: selectedCandidate.Email || '',
-        Phone: selectedCandidate.Phone || '',
-        Date_Of_Birth: dob ? format(dob, 'MMMM dd, yyyy') : '',
-        Gender: selectedCandidate.Gender || '',
-        HigherQualification: selectedCandidate.HigherQualification || '',
-        UniversityCollege: selectedCandidate.UniversityCollege || '',
-        CurrentExperience: selectedCandidate.CurrentExperience || '',
-        RelevantExperience: selectedCandidate.RelevantExperience || '',
+        FirstName: selectedCandidate.FirstName || "",
+        LastName: selectedCandidate.LastName || "",
+        Email: selectedCandidate.Email || "",
+        Phone: selectedCandidate.Phone || "",
+        Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
+        Gender: selectedCandidate.Gender || "",
+        HigherQualification: selectedCandidate.HigherQualification || "",
+        UniversityCollege: selectedCandidate.UniversityCollege || "",
+        CurrentExperience: selectedCandidate.CurrentExperience || "",
+        RelevantExperience: selectedCandidate.RelevantExperience || "",
         skills: selectedCandidate.skills || [],
-        ImageData: selectedCandidate.imageUrl || null,
+        // ImageData: selectedCandidate.imageUrl || null,
+        ImageData: selectedCandidate.ImageData || null, // Added by Ashok
         resume: selectedCandidate.resume || null,
-        CurrentRole: selectedCandidate.CurrentRole || '',
-        CountryCode: selectedCandidate.CountryCode || '',
+        CurrentRole: selectedCandidate.CurrentRole || "",
+        CountryCode: selectedCandidate.CountryCode || "",
       });
+
+      if (selectedCandidate.ImageData?.filename) {
+        setImagePreview(selectedCandidate.ImageData.path);
+        setSelectedImage(selectedCandidate.ImageData);
+      } else {
+        setImagePreview(null);
+        setSelectedImage(null);
+      }
 
       if (selectedCandidate.resume?.filename) {
         setSelectedResume({
-          url: `/Uploads/${selectedCandidate.resume.filename}`,
+          path: selectedCandidate.resume.path,
           name: selectedCandidate.resume.filename,
         });
       } else {
@@ -242,7 +266,9 @@ console.log('currentRoles:', currentRoles);
 
       setEntries(selectedCandidate.skills || []);
       // Initialize allSelectedSkills with the skills from the candidate being edited
-      setAllSelectedSkills(selectedCandidate.skills?.map(skill => skill.skill) || []);
+      setAllSelectedSkills(
+        selectedCandidate.skills?.map((skill) => skill.skill) || []
+      );
       // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
@@ -255,37 +281,37 @@ console.log('currentRoles:', currentRoles);
   const handleRoleSelect = (role) => {
     // setFormData((prev) => ({ ...prev, CurrentRole: role }));
     // setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole(''); // Clear the search term
+    setSearchTermCurrentRole(""); // Clear the search term
     // setErrors((prev) => ({ ...prev, currentRole: '' }));
 
-    setFormData(prev => ({ ...prev, CurrentRole: role }));
+    setFormData((prev) => ({ ...prev, CurrentRole: role }));
 
     // Clear error if any
-    setErrors(prev => ({ ...prev, CurrentRole: "" }));
+    setErrors((prev) => ({ ...prev, CurrentRole: "" }));
 
     // Optionally close the dropdown
     setShowDropdownCurrentRole(false);
   };
 
-
-  const filteredCurrentRoles = currentRoles?.filter(role =>
+  const filteredCurrentRoles = currentRoles?.filter((role) =>
     role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
   );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (currentRoleDropdownRef.current && !currentRoleDropdownRef.current.contains(event.target)) {
+      if (
+        currentRoleDropdownRef.current &&
+        !currentRoleDropdownRef.current.contains(event.target)
+      ) {
         setShowDropdownCurrentRole(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -293,24 +319,22 @@ console.log('currentRoles:', currentRoles);
     setSelectedSkill("");
   };
 
-
-
   const handleAddEntry = () => {
     if (editingIndex !== null) {
       const oldSkill = entries[editingIndex].skill;
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
-      setAllSelectedSkills(prev => {
-        const newSkills = prev.filter(skill => skill !== oldSkill);
+      setAllSelectedSkills((prev) => {
+        const newSkills = prev.filter((skill) => skill !== oldSkill);
         newSkills.push(selectedSkill);
         return newSkills;
       });
@@ -347,8 +371,6 @@ console.log('currentRoles:', currentRoles);
 
     resetForm();
   };
-
-  
 
   const resetForm = () => {
     setSelectedSkill("");
@@ -390,6 +412,7 @@ console.log('currentRoles:', currentRoles);
     const file = e.target.files[0];
     if (file) {
       setFile(file);
+      setSelectedImage(file);
       // setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
       // setIsImageUploaded(true);
@@ -407,6 +430,7 @@ console.log('currentRoles:', currentRoles);
   const removeImage = () => {
     // setImageFile(null);
     setImagePreview(null);
+    setSelectedImage(null);
   };
 
   const removeResume = () => {
@@ -425,8 +449,8 @@ console.log('currentRoles:', currentRoles);
       }
     }
 
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: errorMessage }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   };
 
   const handleDateChange = (date) => {
@@ -442,33 +466,34 @@ console.log('currentRoles:', currentRoles);
     // navigate('/candidate');
 
     switch (mode) {
-      case 'Edit':
+      case "Edit":
         navigate(`/candidate`);
         break;
-      case 'Candidate Edit':
+      case "Candidate Edit":
         navigate(`/candidate/${id}`);
         break;
       default: // Create mode
-        navigate('/candidate');
+        navigate("/candidate");
     }
-
   };
-
-
 
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
-    console.log('Starting submit process...');
-    const { formIsValid, newErrors } = validateCandidateForm(formData, entries, errors);
+    console.log("Starting submit process...");
+    const { formIsValid, newErrors } = validateCandidateForm(
+      formData,
+      entries,
+      errors
+    );
 
     if (!formIsValid) {
-      console.log('Form validation failed:', newErrors);
+      console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
       return;
     }
 
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log('Current date and time:', currentDateTime);
+    console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -487,29 +512,38 @@ console.log('currentRoles:', currentRoles);
         experience: entry.experience,
         expertise: entry.expertise,
       })),
-      resume: null,
       CurrentRole: formData.CurrentRole,
       ownerId: userId,
       tenantId: orgId,
     };
 
-    console.log('Submitting candidate data:', data);
+    console.log("Submitting candidate data:", data);
 
     try {
-      console.log('Calling addOrUpdateCandidate with:', { id, data, file });
-      await addOrUpdateCandidate({ id, data, file });
+      console.log("Calling addOrUpdateCandidate with:", {
+        id,
+        data,
+        selectedImage,
+        selectedResume,
+      });
+      await addOrUpdateCandidate({
+        id,
+        data,
+        profilePicFile: selectedImage,
+        resumeFile: selectedResume,
+      });
       resetFormData();
       if (!isAddCandidate) {
         setTimeout(() => {
           switch (mode) {
-            case 'Edit':
+            case "Edit":
               navigate(`/candidate`);
               break;
-            case 'Candidate Edit':
+            case "Candidate Edit":
               navigate(`/candidate/${id}`);
               break;
             default:
-              navigate('/candidate');
+              navigate("/candidate");
           }
         }, 500); // Delay navigation to ensure loading state is visible
       }
@@ -518,21 +552,22 @@ console.log('currentRoles:', currentRoles);
       setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
     }
   };
+
   const resetFormData = () => {
     setFormData({
-      FirstName: '',
-      LastName: '',
-      Email: '',
-      Phone: '',
-      Date_Of_Birth: '',
-      Gender: '',
-      HigherQualification: '',
-      UniversityCollege: '',
-      CurrentExperience: '',
-      RelevantExperience: '',
+      FirstName: "",
+      LastName: "",
+      Email: "",
+      Phone: "",
+      Date_Of_Birth: "",
+      Gender: "",
+      HigherQualification: "",
+      UniversityCollege: "",
+      CurrentExperience: "",
+      RelevantExperience: "",
       skills: [],
-      CurrentRole: '',
-      CountryCode: ''
+      CurrentRole: "",
+      CountryCode: "",
     });
 
     setErrors({});
@@ -544,16 +579,16 @@ console.log('currentRoles:', currentRoles);
     setCurrentStep(0);
     removeImage();
     removeResume();
-    setAllSelectedSkills([])
+    setAllSelectedSkills([]);
   };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200',
+    "fixed bg-white shadow-2xl border-l border-gray-200",
     {
-      'overflow-y-auto': !isModalOpen,
-      'overflow-hidden': isModalOpen,
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "overflow-y-auto": !isModalOpen,
+      "overflow-hidden": isModalOpen,
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
@@ -565,7 +600,13 @@ console.log('currentRoles:', currentRoles);
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
-        <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+        <div
+          className={classNames(
+            "h-full",
+            { "max-w-6xl mx-auto px-6": isFullScreen },
+            { "opacity-50": isMutationLoading }
+          )}
+        >
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
@@ -605,11 +646,15 @@ console.log('currentRoles:', currentRoles);
                         alt="Candidate"
                         className="w-full h-full object-cover"
                       />
-                    ) : id && formData?.ImageData?.path ? (
+                    ) : selectedImage?.path ? (
                       <img
-                        src={`http://localhost:5000/${formData.ImageData.path}`}
-                        alt={formData.FirstName || "Candidate"}
-                        onError={(e) => { e.target.src = "/default-profile.png"; }}
+                        // src={`http://localhost:5000/${formData.ImageData.path}`}
+                        src={selectedImage?.path} // Added by Ashok
+                        className="w-full h-full object-cover rounded-lg" // added by Ashok
+                        alt={selectedImage.FirstName || "Candidate"}
+                        onError={(e) => {
+                          e.target.src = "/default-profile.png";
+                        }}
                       />
                     ) : (
                       <>
@@ -640,7 +685,9 @@ console.log('currentRoles:', currentRoles);
                     </button>
                   )}
                 </div>
-                <p className="mt-2 text-sm font-medium text-gray-700">Profile Photo</p>
+                <p className="mt-2 text-sm font-medium text-gray-700">
+                  Profile Photo
+                </p>
                 <p className="text-xs text-gray-500">Click to upload</p>
               </div>
 
@@ -663,7 +710,9 @@ console.log('currentRoles:', currentRoles);
                     ) : (
                       <>
                         <p className="text-xs text-gray-400">Upload Resume</p>
-                        <p className="text-xs text-gray-400">PDF or Word document</p>
+                        <p className="text-xs text-gray-400">
+                          PDF or Word document
+                        </p>
                       </>
                     )}
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
@@ -697,7 +746,9 @@ console.log('currentRoles:', currentRoles);
 
             <form className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                <p className='text-lg font-semibold col-span-2'>Personal Details</p>
+                <p className="text-lg font-semibold col-span-2">
+                  Personal Details
+                </p>
                 {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -714,7 +765,7 @@ console.log('currentRoles:', currentRoles);
                 </div>
                 {/* Last Name */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -722,18 +773,28 @@ console.log('currentRoles:', currentRoles);
                     name="LastName"
                     value={formData.LastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.LastName && 'border-red-500'}`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.LastName && "border-red-500"
+                    }`}
                     placeholder="Enter Last Name"
                   />
-                  {errors.LastName && <p className="text-red-500 text-xs pt-1">{errors.LastName}</p>}
+                  {errors.LastName && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.LastName}
+                    </p>
+                  )}
                 </div>
                 {/* Date of Birth */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700" >
+                  <label className="block text-sm font-medium text-gray-700">
                     Date of Birth
                   </label>
                   <CustomDatePicker
-                    selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
+                    selectedDate={
+                      formData.Date_Of_Birth
+                        ? new Date(formData.Date_Of_Birth)
+                        : null
+                    }
                     onChange={handleDateChange}
                     placeholder="Select date of birth"
                   />
@@ -750,7 +811,9 @@ console.log('currentRoles:', currentRoles);
                   placeholder="Select Gender"
                   disableSearch={true}
                 />
-                <p className='text-lg font-semibold col-span-2'>Contact Details</p>
+                <p className="text-lg font-semibold col-span-2">
+                  Contact Details
+                </p>
 
                 {/* Email */}
                 <div>
@@ -762,19 +825,21 @@ console.log('currentRoles:', currentRoles);
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Email && 'border-red-500'}`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.Email && "border-red-500"
+                    }`}
                     placeholder="Enter email address"
                   />
-                  {errors.Email && <p className="text-red-500 text-xs pt-1">{errors.Email}</p>}
+                  {errors.Email && (
+                    <p className="text-red-500 text-xs pt-1">{errors.Email}</p>
+                  )}
                 </div>
                 {/* Phone */}
                 <div>
-
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone <span className="text-red-500">*</span>
                   </label>
                   <div className="flex  gap-2">
-
                     <div className="w-20">
                       <CustomDropdown
                         hideLabel
@@ -796,22 +861,29 @@ console.log('currentRoles:', currentRoles);
                         name="Phone"
                         value={formData.Phone}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, ''); // remove non-digits
+                          const value = e.target.value.replace(/\D/g, ""); // remove non-digits
                           if (value.length <= 10) {
-                            handleChange({ target: { name: 'Phone', value } });
+                            handleChange({ target: { name: "Phone", value } });
                           }
                         }}
                         maxLength={10}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Phone && 'border-red-500'}`}
+                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                          errors.Phone && "border-red-500"
+                        }`}
                         placeholder="Enter Phone number"
                       />
 
-                      {errors.Phone && <p className="text-red-500 text-xs pt-1">{errors.Phone}</p>}
+                      {errors.Phone && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.Phone}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-                <p className='text-lg font-semibold col-span-2'>Education Details</p>
-
+                <p className="text-lg font-semibold col-span-2">
+                  Education Details
+                </p>
 
                 {/* higher qualification */}
                 <CustomDropdown
@@ -838,10 +910,15 @@ console.log('currentRoles:', currentRoles);
                   optionKey="University_CollegeName"
                   optionValue="University_CollegeName"
                 />
-                <p className='text-lg font-semibold col-span-2'>Experience Details</p>
+                <p className="text-lg font-semibold col-span-2">
+                  Experience Details
+                </p>
                 {/* current experience */}
                 <div>
-                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="CurrentExperience"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Current Experience <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -852,14 +929,25 @@ console.log('currentRoles:', currentRoles);
                     max="15"
                     value={formData.CurrentExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                      errors.CurrentExperience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter current experience"
                   />
-                  {errors.CurrentExperience && <p className="text-red-500 text-xs pt-1">{errors.CurrentExperience}</p>}
+                  {errors.CurrentExperience && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.CurrentExperience}
+                    </p>
+                  )}
                 </div>
                 {/* Relevant Experience */}
                 <div>
-                  <label htmlFor="CurrentExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="CurrentExperience"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Relevant Experience <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -870,16 +958,27 @@ console.log('currentRoles:', currentRoles);
                     max="15"
                     value={formData.RelevantExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                      errors.RelevantExperience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter relevant experience"
                   />
-                  {errors.RelevantExperience && <p className="text-red-500 text-xs pt-1">{errors.RelevantExperience}</p>}
+                  {errors.RelevantExperience && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.RelevantExperience}
+                    </p>
+                  )}
                 </div>
 
                 {/* Current Role */}
 
                 <div ref={currentRoleDropdownRef}>
-                  <label htmlFor="CurrentRole" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="CurrentRole"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Current Role
                     <span className="text-red-500">*</span>
                   </label>
@@ -893,11 +992,18 @@ console.log('currentRoles:', currentRoles);
                       onChange={handleChange}
                       placeholder="Select Current Role"
                       autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                        errors.CurrentRole
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown className="text-lg w-5 h-5" onClick={toggleCurrentRole} />
+                      <ChevronDown
+                        className="text-lg w-5 h-5"
+                        onClick={toggleCurrentRole}
+                      />
                     </div>
                     {showDropdownCurrentRole && (
                       <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
@@ -908,7 +1014,9 @@ console.log('currentRoles:', currentRoles);
                               type="text"
                               placeholder="Search Current Role"
                               value={searchTermCurrentRole}
-                              onChange={(e) => setSearchTermCurrentRole(e.target.value)}
+                              onChange={(e) =>
+                                setSearchTermCurrentRole(e.target.value)
+                              }
                               className="pl-8 focus:border-black focus:outline-none w-full"
                             />
                           </div>
@@ -924,73 +1032,82 @@ console.log('currentRoles:', currentRoles);
                             </div>
                           ))
                         ) : (
-                          <div className="p-2 text-gray-500">No roles found</div>
+                          <div className="p-2 text-gray-500">
+                            No roles found
+                          </div>
                         )}
                       </div>
                     )}
                   </div>
-                  {errors.CurrentRole && <p className="text-red-500 text-xs pt-1">{errors.CurrentRole}</p>}
+                  {errors.CurrentRole && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.CurrentRole}
+                    </p>
+                  )}
                 </div>
-
               </div>
               <div>
-              <SkillsField
-                entries={entries}
-                errors={errors}
-                onAddSkill={(setEditingIndex) => {
-                  setEntries((prevEntries) => {
-                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
-                    setEditingIndex(newEntries.length - 1);
-                    return newEntries;
-                  });
-                  setSelectedSkill("");
-                  setSelectedExp("");
-                  setSelectedLevel("");
-                }}
-                onEditSkill={(index) => {
-                  const entry = entries[index];
-                  setSelectedSkill(entry.skill || "");
-                  setSelectedExp(entry.experience);
-                  setSelectedLevel(entry.expertise);
-                }}
-                onDeleteSkill={(index) => {
-                  const entry = entries[index];
-                  setAllSelectedSkills(
-                    allSelectedSkills.filter((skill) => skill !== entry.skill)
-                  );
-                  setEntries(entries.filter((_, i) => i !== index));
-                }}
-                setIsModalOpen={setIsModalOpen}
-                setEditingIndex={setEditingIndex}
-                isModalOpen={isModalOpen}
-                currentStep={currentStep}
-                setCurrentStep={setCurrentStep}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedSkill={selectedSkill}
-                setSelectedSkill={setSelectedSkill}
-                allSelectedSkills={allSelectedSkills}
-                selectedExp={selectedExp}
-                setSelectedExp={setSelectedExp}
-                selectedLevel={selectedLevel}
-                setSelectedLevel={setSelectedLevel}
-                skills={skills}
-                expertiseOptions={expertiseOptions}
-                experienceOptions={experienceOptions}
-                isNextEnabled={isNextEnabled}
-                handleAddEntry={handleAddEntry}
-                skillpopupcancelbutton={skillpopupcancelbutton}
-                editingIndex={editingIndex}
-              />
+                <SkillsField
+                  entries={entries}
+                  errors={errors}
+                  onAddSkill={(setEditingIndex) => {
+                    setEntries((prevEntries) => {
+                      const newEntries = [
+                        ...prevEntries,
+                        { skill: "", experience: "", expertise: "" },
+                      ];
+                      setEditingIndex(newEntries.length - 1);
+                      return newEntries;
+                    });
+                    setSelectedSkill("");
+                    setSelectedExp("");
+                    setSelectedLevel("");
+                  }}
+                  onEditSkill={(index) => {
+                    const entry = entries[index];
+                    setSelectedSkill(entry.skill || "");
+                    setSelectedExp(entry.experience);
+                    setSelectedLevel(entry.expertise);
+                  }}
+                  onDeleteSkill={(index) => {
+                    const entry = entries[index];
+                    setAllSelectedSkills(
+                      allSelectedSkills.filter((skill) => skill !== entry.skill)
+                    );
+                    setEntries(entries.filter((_, i) => i !== index));
+                  }}
+                  setIsModalOpen={setIsModalOpen}
+                  setEditingIndex={setEditingIndex}
+                  isModalOpen={isModalOpen}
+                  currentStep={currentStep}
+                  setCurrentStep={setCurrentStep}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  selectedSkill={selectedSkill}
+                  setSelectedSkill={setSelectedSkill}
+                  allSelectedSkills={allSelectedSkills}
+                  selectedExp={selectedExp}
+                  setSelectedExp={setSelectedExp}
+                  selectedLevel={selectedLevel}
+                  setSelectedLevel={setSelectedLevel}
+                  skills={skills}
+                  expertiseOptions={expertiseOptions}
+                  experienceOptions={experienceOptions}
+                  isNextEnabled={isNextEnabled}
+                  handleAddEntry={handleAddEntry}
+                  skillpopupcancelbutton={skillpopupcancelbutton}
+                  editingIndex={editingIndex}
+                />
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-6">
                 <button
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   Cancel
                 </button>
