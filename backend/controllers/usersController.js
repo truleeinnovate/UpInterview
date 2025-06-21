@@ -22,14 +22,14 @@ const getUsers = async (req, res) => {
 //     const { ownerId } = req.params;
 //     // Find user by ownerId
 //     const user = await Users.findOne({ _id: ownerId });
-    
+
 //     if (!user) {
 //       return res.status(404).json({
 //         success: false,
 //         message: 'User not found for the given ownerId'
 //       });
 //     }
-    
+
 //     res.status(200).json({
 //       success: true,
 //       data: user
@@ -44,7 +44,7 @@ const getUsers = async (req, res) => {
 // };
 
 
-    
+
 // ashraf's modified code which is using in the home availability interviewers
 // // Helper function to determine availability and next available time
 // const getAvailabilityInfo = async (availabilityIds) => {
@@ -56,7 +56,7 @@ const getUsers = async (req, res) => {
 //   const availabilityData = await Interviewavailability.find({
 //     _id: { $in: availabilityIds },
 //   }).lean();
-    
+
 //   // Current date and time (in IST, as per context: May 27, 2025, 12:21 PM IST)
 //   const now = new Date('2025-05-27T12:21:00+05:30');
 //   const today = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Kolkata' });
@@ -274,12 +274,10 @@ const getInterviewers = async (req, res) => {
 
     // Validate tenantId
     if (!tenantId || tenantId === 'undefined') {
-      console.error('❌ [getInterviewers] Missing or invalid tenantId:', tenantId);
       return res.status(400).json({ error: 'Tenant ID is required' });
     }
 
     if (!mongoose.isValidObjectId(tenantId)) {
-      console.error('❌ [getInterviewers] Invalid tenantId format:', tenantId);
       return res.status(400).json({ error: 'Invalid Tenant ID format' });
     }
 
@@ -300,93 +298,93 @@ const getInterviewers = async (req, res) => {
     }).lean();
     // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
-// Function to process users - modified to skip availability for internal users
-const processUsers = async (users, type) => {
-  if (!users.length) return [];
+    // Function to process users - modified to skip availability for internal users
+    const processUsers = async (users, type) => {
+      if (!users.length) return [];
 
-  const userIds = users.map(user => user._id);
-  
-  // Fetch contacts for all users
-  const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
-  // console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
+      const userIds = users.map(user => user._id);
 
-  if (type === 'internal') {
-    // For internal users, just return the contact info without availability
-    return contacts.map(contact => {
-      const user = users.find(u => u._id.toString() === contact.ownerId?.toString()) || {};
-      return {
-        _id: contact._id,
-        contact: {
-          ...contact,
-          ownerId: user._id,
-          email: user.email,
-          isFreelancer: 'false'
-        },
-        type: 'internal',
-        days: [],
-        nextAvailable: null,
-        __v: 0
-      };
-    });
-  }
+      // Fetch contacts for all users
+      const contacts = await Contacts.find({ ownerId: { $in: userIds } }).lean();
+      // console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
 
-  // For external users, include availability
-  const contactIds = contacts.map(contact => contact._id);
-  const availabilities = await InterviewAvailability.find({
-    contact: { $in: contactIds }
-  }).populate('contact').lean();
-  
-  // console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
+      if (type === 'internal') {
+        // For internal users, just return the contact info without availability
+        return contacts.map(contact => {
+          const user = users.find(u => u._id.toString() === contact.ownerId?.toString()) || {};
+          return {
+            _id: contact._id,
+            contact: {
+              ...contact,
+              ownerId: user._id,
+              email: user.email,
+              isFreelancer: 'false'
+            },
+            type: 'internal',
+            days: [],
+            nextAvailable: null,
+            __v: 0
+          };
+        });
+      }
 
-  return availabilities.map(availability => {
-    const contact = availability.contact || {};
-    const ownerId = contact.ownerId?.toString();
-    const user = users.find(u => u._id.toString() === ownerId) || {};
-    
-    const nextSlot = availability.days?.find(day => 
-      day.timeSlots?.length > 0
-    )?.timeSlots[0];
+      // For external users, include availability
+      const contactIds = contacts.map(contact => contact._id);
+      const availabilities = await InterviewAvailability.find({
+        contact: { $in: contactIds }
+      }).populate('contact').lean();
 
-    return {
-      _id: availability._id,
-      contact: {
-        ...contact,
-        ownerId: user._id,
-        email: user.email,
-        isFreelancer: 'true'
-      },
-      type: 'external',
-      days: availability.days?.map(day => ({
-        day: day.day,
-        timeSlots: day.timeSlots?.map(slot => ({
-          startTime: convertTo12HourFormat(slot.startTime),
-          endTime: convertTo12HourFormat(slot.endTime)
-        })) || []
-      })) || [],
-      nextAvailable: nextSlot ? {
-        day: nextSlot.day,
-        startTime: convertTo12HourFormat(nextSlot.startTime),
-        endTime: convertTo12HourFormat(nextSlot.endTime)
-      } : null,
-      __v: availability.__v
+      // console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
+
+      return availabilities.map(availability => {
+        const contact = availability.contact || {};
+        const ownerId = contact.ownerId?.toString();
+        const user = users.find(u => u._id.toString() === ownerId) || {};
+
+        const nextSlot = availability.days?.find(day =>
+          day.timeSlots?.length > 0
+        )?.timeSlots[0];
+
+        return {
+          _id: availability._id,
+          contact: {
+            ...contact,
+            ownerId: user._id,
+            email: user.email,
+            isFreelancer: 'true'
+          },
+          type: 'external',
+          days: availability.days?.map(day => ({
+            day: day.day,
+            timeSlots: day.timeSlots?.map(slot => ({
+              startTime: convertTo12HourFormat(slot.startTime),
+              endTime: convertTo12HourFormat(slot.endTime)
+            })) || []
+          })) || [],
+          nextAvailable: nextSlot ? {
+            day: nextSlot.day,
+            startTime: convertTo12HourFormat(nextSlot.startTime),
+            endTime: convertTo12HourFormat(nextSlot.endTime)
+          } : null,
+          __v: availability.__v
+        };
+      });
     };
-  });
-};
 
-// Process both internal and external users in parallel
-const [internalResults, externalResults] = await Promise.all([
-  processUsers(internalUsers, 'internal'),
-  processUsers(externalUsers, 'external')
-]);
+    // Process both internal and external users in parallel
+    const [internalResults, externalResults] = await Promise.all([
+      processUsers(internalUsers, 'internal'),
+      processUsers(externalUsers, 'external')
+    ]);
 
-// Combine results
-const allResults = [...internalResults, ...externalResults];
-// console.log('✅ [getInterviewers] Total records:', allResults.length);
+    // Combine results
+    const allResults = [...internalResults, ...externalResults];
+    // console.log('✅ [getInterviewers] Total records:', allResults.length);
 
-return res.json({
-  success: true,
-  data: allResults
-});
+    return res.json({
+      success: true,
+      data: allResults
+    });
 
     // // Combine all users
     // const allUsers = [...internalUsers, ...externalUsers];
@@ -484,14 +482,22 @@ const UpdateUser = async (req, res) => {
 
 const getUsersByTenant = async (req, res) => {
   try {
-    const { tenantId } = req.params;
+    const { userId } = req.params;
 
-    if (!tenantId) {
+    if (!userId) {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
     // Fetch users with minimal fields
-    const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+    const users = await Users.find({ _id: userId })
+      .select('_id roleId label status')
+      .populate({
+        path: 'roleId',
+        select: 'label roleName',
+        model: 'Role'
+      })
+      .lean();
+//     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
@@ -503,19 +509,19 @@ const getUsersByTenant = async (req, res) => {
 
     // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
-      Contacts.find({ tenantId }).populate({
-          path: 'availability',
-          model: 'Interviewavailability',
-          select: 'days -_id' // Only fetch days field, exclude _id
-        }).lean(),
-      Role.find({ tenantId }, 'label roleName').lean(),
+      Contacts.find({ ownerId: userId }).populate({
+        path: 'availability',
+        model: 'Interviewavailability',
+        select: 'days -_id' // Only fetch days field, exclude _id
+      }).lean(),
+      // Role.find({ tenantId }, 'label roleName').lean(),
     ]);
 
     // Create role map for label lookup
-    const roleMap = roles.reduce((acc, role) => {
-      acc[role._id.toString()] = role;
-      return acc;
-    }, {});
+    // const roleMap = roles.reduce((acc, role) => {
+    //   acc[role._id.toString()] = role;
+    //   return acc;
+    // }, {});
 
     // Create contact map by ownerId
     const contactMap = contacts.reduce((acc, contact) => {
@@ -540,7 +546,7 @@ const getUsersByTenant = async (req, res) => {
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
-        roleId: user.roleId || '',
+        roleId: role.roleId || '',
         roleName: role.roleName || '',
         label: role.label || '',
         imageData: contact.imageData || null,
@@ -650,6 +656,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, UpdateUser, getInterviewers, getUsersByTenant, 
-  getUniqueUserByOwnerId 
+module.exports = {
+  getUsers, UpdateUser, getInterviewers, getUsersByTenant,
+  getUniqueUserByOwnerId
 };

@@ -15,6 +15,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload.userId;
+  const organization = tokenPayload.organization;
 
   useEffect(() => {
     const selectedContact = usersId
@@ -164,11 +165,13 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
               <p className="font-medium truncate">{contactData.portfolioUrl}</p>
             </div>
           )}
+          {organization === true && (
+            <div>
+              <p className="text-sm text-gray-500">Role</p>
+              <p className="font-medium truncate">{contactData?.label || 'Not Provided'}</p>
+            </div>
+          )}
 
-          <div>
-            <p className="text-sm text-gray-500">Role</p>
-            <p className="font-medium truncate">{contactData?.label || 'Not Provided'}</p>
-          </div>
 
           {contactData.roleName === 'Internal_Interviewer' && (
             <div>

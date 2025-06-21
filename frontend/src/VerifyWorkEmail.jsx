@@ -139,7 +139,7 @@ const VerifyEmail = () => {
             <p className="text-gray-600">The verification link is missing the required token.</p>
             <button
               onClick={() => navigate('/organization-login')}
-              className="w-full mt-6 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full mt-6 px-6 py-3 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Go to Login Page
             </button>
