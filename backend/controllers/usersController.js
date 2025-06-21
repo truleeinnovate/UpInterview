@@ -490,14 +490,14 @@ const getUsersByTenant = async (req, res) => {
 
     // Fetch users with minimal fields
     const users = await Users.find({ _id: userId })
-      .select('_id roleId label status')
+      .select('_id roleId label status profileId firstName lastName email newEmail')
       .populate({
         path: 'roleId',
         select: 'label roleName',
         model: 'Role'
       })
       .lean();
-//     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+    //     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
@@ -534,7 +534,7 @@ const getUsersByTenant = async (req, res) => {
     // Combine user data, pulling most fields from Contacts
     const combinedUsers = users.map(user => {
       const contact = contactMap[user._id.toString()] || {};
-      const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
+      // const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
 
       return {
         _id: user._id,
@@ -542,13 +542,13 @@ const getUsersByTenant = async (req, res) => {
         firstName: contact.firstName || '',
         lastName: contact.lastName || '',
         email: user.email || '',
-           newEmail: user.newEmail || '',
+        newEmail: user.newEmail || '',
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
-        roleId: role.roleId || '',
-        roleName: role.roleName || '',
-        label: role.label || '',
+        roleId: users.roleId || '',
+        roleName: users.roleName || '',
+        label: users.label || '',
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
         status: user.status || '',
