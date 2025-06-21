@@ -93,7 +93,7 @@ const KanbanView = ({
           </div>
         </div>
       )}
-      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto">
+      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
         {loading ? (
           <div className="col-span-full py-10 text-center">
             <div className="wrapper12">
@@ -229,7 +229,7 @@ const KanbanView = ({
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600">
                     <Briefcase className="w-4 h-4" />
-                    <span>{users?.roleId?.label || "N/A"}</span>
+                    <span>{users?.label || "N/A"}</span>
                   </div>
                 </div>
               </div>
