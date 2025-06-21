@@ -701,6 +701,7 @@ const BasicDetails = ({
   setFilePreview,
   linkedInData,
 }) => {
+  const { useCallback } = React;
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
   const [suggestedProfileIds, setSuggestedProfileIds] = useState('');
@@ -712,12 +713,12 @@ const BasicDetails = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Generate profileId from email
-  const generateProfileId = (email) => {
+  const generateProfileId = useCallback((email) => {
     if (!email) return '';
     return email.split('@')[0]
       .replace(/[^a-zA-Z0-9.]/g, '')
       .toLowerCase();
-  };
+  }, []);
 
   // Real-time email validation
   const handleEmailValidation = async (email) => {
@@ -764,7 +765,7 @@ const BasicDetails = ({
   };
 
   // Real-time profileId validation
-  const handleProfileIdValidation = async (profileId) => {
+  const handleProfileIdValidation = useCallback(async (profileId) => {
     clearTimeout(profileIdTimeoutRef.current);
     setIsCheckingProfileId(true);
 
@@ -801,7 +802,7 @@ const BasicDetails = ({
       setShowSuggestions(suggestions.length > 0);
       setIsCheckingProfileId(false);
     }, 500);
-  };
+  }, [setErrors, setSuggestedProfileIds, setShowSuggestions, setIsCheckingProfileId]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -941,18 +942,17 @@ const BasicDetails = ({
     };
   }, []);
 
+  // Initialize profile ID from email when component mounts or when email changes
   useEffect(() => {
-    if (basicDetailsData.email) {
-      const profileId = basicDetailsData.email.split('@')[0].replace(/[^a-zA-Z0-9.]/g, '');
-
+    if (basicDetailsData.email && !basicDetailsData.profileId) {
+      const generatedProfileId = generateProfileId(basicDetailsData.email);
       setBasicDetailsData(prev => ({
         ...prev,
-        profileId,
+        profileId: generatedProfileId,
       }));
-
-      handleProfileIdValidation(profileId);
+      handleProfileIdValidation(generatedProfileId);
     }
-  }, []);
+  }, [basicDetailsData.email, basicDetailsData.profileId, generateProfileId, handleProfileIdValidation, setBasicDetailsData]);
 
   return (
     <>
@@ -1028,23 +1028,15 @@ const BasicDetails = ({
               </svg>
             </div>
             <input
-              ref={emailInputRef}
               name="email"
               type="text"
               id="email"
               value={basicDetailsData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={`block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+              className="block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm bg-gray-100 cursor-not-allowed"
               placeholder="your.email@example.com"
               autoComplete="email"
+              readOnly
             />
-            {isCheckingEmail && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-              </div>
-            )}
           </div>
           {errors.email && <p className="text-red-500 text-sm sm:text-xs">{errors.email}</p>}
         </div>

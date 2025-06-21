@@ -12,7 +12,6 @@ const suggestedQuestionSchema = new mongoose.Schema({
     skill: [String],
     tags: [String],
     difficultyLevel: String,
-    // score: Number,
     correctAnswer: String,
     options: [String],
     hints: [String],

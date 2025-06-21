@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
+import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 const Logo = () => {
   return (

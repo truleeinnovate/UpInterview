@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 // import { useAuth0 } from "@auth0/auth0-react";
 import "./Navbar-Sidebar.scss";
 import Cookies from "js-cookie";
-import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
+import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
 import { config } from "../../config.js";

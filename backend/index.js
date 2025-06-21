@@ -845,18 +845,18 @@ app.get("/check-email", async (req, res) => {
 // emailCommonRoutes.js
 // app.use('/', Emailrouter)
 
-// app.get('/check-profileId', async (req, res) => {
-//   try {
-//     const { profileId } = req.query;
-//     if (!profileId) {
-//       return res.status(400).json({ message: "Username is required" });
-//     }
-//     const user = await Users.findOne({ profileId });
-//     res.json({ exists: !!user });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error checking username", error: error.message });
-//   }
-// });
+app.get('/check-profileId', async (req, res) => {
+  try {
+    const { profileId } = req.query;
+    if (!profileId) {
+      return res.status(400).json({ message: "profileId is required" });
+    }
+    const user = await Users.findOne({ profileId });
+    res.json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: "Error checking username", error: error.message });
+  }
+});
 
 // app.get('/check-profileId', async (req, res) => {
 //   const { profileId } = req.query;

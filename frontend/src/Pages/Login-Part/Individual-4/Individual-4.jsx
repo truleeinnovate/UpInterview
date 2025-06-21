@@ -12,6 +12,7 @@ import AvailabilityDetails from './AvailabilityDetails.jsx';
 import toast from 'react-hot-toast';
 import { config } from '../../../config.js';
 import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { useIndividualLogin } from '../../../apiHooks/useIndividualLogin';
 
 const FooterButtons = ({
   onNext,
@@ -81,42 +82,30 @@ const MultiStepForm = () => {
     token,
     linkedIn_email,
   } = location.state || {};
+  const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } = location.state || {};
+  console.log("🚀 isProfileCompleteStateOrg:", isProfileCompleteStateOrg)
 
-  const [matchedContact, setMatchedContact] = useState(null);
+  const { matchedContact, loading: contactLoading } = useIndividualLogin(
+    linkedIn_email,
+    isProfileCompleteStateOrg,
+    contactEmailFromOrg
+  );
 
+  const [formLoading, setFormLoading] = useState(false);
+  const loading = contactLoading || formLoading;
+
+  // Keep the form loading state in sync with the contact loading state
   useEffect(() => {
-    const fetchAndMatchContact = async () => {
-      try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
-        const contacts = response.data;
-
-        // 🔍 Find contact whose email matches linkedIn_email
-        const matched = contacts.find(contact => contact.email === linkedIn_email);
-
-        if (matched) {
-          console.log("✅ Matched Contact:", matched);
-          setMatchedContact(matched);
-        } else {
-          console.warn("❌ No contact matched the given LinkedIn email");
-        }
-      } catch (error) {
-        console.error("Error fetching contacts:", error);
-      }
-    };
-
-    if (linkedIn_email) {
-      fetchAndMatchContact();
-    }
-  }, [linkedIn_email]);
-
-  const { isProfileComplete, roleName, contactDataFromOrg } = location.state || {};
+    setFormLoading(contactLoading);
+  }, [contactLoading]);
 
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [errors, setErrors] = useState({});
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [file, setFile] = useState(null);
   const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
-  const [loading, setLoading] = useState(false);
+  // const [formLoading, setFormLoading] = useState(false);
+  // const loading = contactLoading || formLoading;
   const [filePreview, setFilePreview] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
@@ -274,20 +263,7 @@ const MultiStepForm = () => {
     }
   }, [matchedContact, linkedInData]);
 
-  useEffect(() => {
-    if (isProfileComplete && contactDataFromOrg) {
-      setBasicDetailsData((prevData) => ({
-        ...prevData,
-        firstName: contactDataFromOrg.firstName || prevData.firstName,
-        lastName: contactDataFromOrg.lastName || prevData.lastName,
-        profileId: contactDataFromOrg.profileId || prevData.profileId,
-        email: contactDataFromOrg.email || prevData.email,
-        phone: contactDataFromOrg.phone || prevData.phone,
-      }));
-    }
-  }, [isProfileComplete, contactDataFromOrg]);
-
-  const showLimitedSteps = isProfileComplete && roleName !== 'Internal_Interviewer';
+  const showLimitedSteps = isProfileCompleteStateOrg && roleName !== 'Internal_Interviewer';
   const isInternalInterviewer = roleName === 'Internal_Interviewer';
 
   const handleNextStep = async () => {
@@ -351,7 +327,7 @@ const MultiStepForm = () => {
     setCompletionStatus(updatedCompletionStatus);
 
     try {
-      setLoading(true);
+      setFormLoading(true);
 
       const userData = {
         firstName: basicDetailsData.firstName,
@@ -359,11 +335,7 @@ const MultiStepForm = () => {
         profileId: basicDetailsData.profileId,
         isFreelancer: isInternalInterviewer ? false : Freelancer,
         email: basicDetailsData.email,
-        isProfileCompleted: currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1),
-        completionStatus: updatedCompletionStatus,
-        ownerId: userId,
-        tenantId,
-        isInternalInterviewer,
+        ...(isProfileCompleteStateOrg && { isProfileCompleted: currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1) }),
       };
 
       const contactData = {
@@ -408,6 +380,11 @@ const MultiStepForm = () => {
         _id: contactId,
       };
 
+      const tenantData = {
+        isProfileCompletedForTenant: currentStep === (Freelancer ? 3 : 1),
+      };
+      
+
       Object.keys(contactData).forEach((key) => {
         if (contactData[key] === undefined) {
           delete contactData[key];
@@ -433,9 +410,10 @@ const MultiStepForm = () => {
         userData,
         contactData,
         ...(availabilityData.length > 0 && { availabilityData }),
-        Freelancer,
         isInternalInterviewer,
-        isUpdate: !!userId,
+        isProfileCompleteStateOrg,
+        ownerId: matchedContact.ownerId._id,
+        tenantData,
       };
 
       const response = await axios.post(
@@ -490,7 +468,7 @@ const MultiStepForm = () => {
       console.error('Error saving profile:', error);
       toast.error(error.response?.data?.message || 'Failed to save profile. Please try again.');
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
