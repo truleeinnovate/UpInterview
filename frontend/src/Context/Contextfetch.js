@@ -259,7 +259,6 @@ const CustomProvider = ({ children }) => {
       //   });
       // }
 
-      console.log("DAAAAAAAAAAAAAAATA: ", data);
       await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
@@ -411,7 +410,6 @@ console.log('response.data user',response.data);
       // }
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
-      // file, type, entity, entityId
       await uploadFile(file, "image", "contact", response.data.contactId);
 
       // Send welcome email only for new user creation

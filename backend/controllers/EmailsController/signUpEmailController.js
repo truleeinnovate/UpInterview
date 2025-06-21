@@ -119,8 +119,6 @@ exports.sendSignUpEmail = async (req, res) => {
 
 
 
-
-
 // this code will send email for forgot password and also organization new user creation then user can create there password from mail
 // exports.forgotPasswordSendEmail = async (req, res) => {
 //     try {
@@ -499,73 +497,101 @@ exports.resendVerification = async (req, res) => {
 };
 
 
-
-
 //users tab emails 
-
 exports.requestEmailChangeVerification = async (req, res) => {
   try {
     const { oldEmail, newEmail, userId } = req.body;
 
     if (!oldEmail || !newEmail || !userId) {
-      return res.status(400).json({ success: false, message: 'Old email, new email, and user ID are required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Old email, new email, and user ID are required'
+      });
     }
 
-    // Validate new email format
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
       return res.status(400).json({ success: false, message: 'Invalid new email format' });
     }
 
-    // Check if newEmail is already used
-    const existingUser = await Users.findOne({ $or: [{ email: newEmail }, { newEmail: newEmail }] });
+    // Check if newEmail is already in use
+    // const existingUser = await Users.findOne({
+    //   $or: [{ email: newEmail }, { newEmail: newEmail }]
+    // });
+
+    const existingUser = await Users.findOne({
+  email: newEmail
+});
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'New email is already in use' });
     }
 
+    // Get user by ID
     const user = await Users.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Ensure oldEmail matches the current email
     if (user.email !== oldEmail) {
       return res.status(400).json({ success: false, message: 'Old email does not match current email' });
     }
 
-    const organization = await Tenant.findOne({ ownerId: user._id });
-    if (!organization) {
-      return res.status(404).json({ success: false, message: 'Organization not found' });
-    }
-
-    // Store newEmail
+    // Store the new email temporarily
     user.newEmail = newEmail;
     await user.save();
 
-    // Generate verification token
+    // Create JWT token for email change verification
     const verificationToken = jwt.sign(
       { userId: user._id, newEmail },
-      config.JWT_SECRET,
+      // config.JWT_SECRET,
+      process.env.JWT_SECRET,
+      //  const decoded = jwt.verify(token, config.JWT_SECRET);
       { expiresIn: '72h' }
     );
 
-    // Send verification email
-    const emailResult = await sendVerificationEmail({
-      type: 'email_change_verification',
-      to: newEmail,
-      data: {
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        oldEmail,
-        newEmail,
-        actionLink: `${config.REACT_APP_API_URL}/auth/verify-email-change?token=${verificationToken}`
-      }
+    // Create verification link
+    const verificationLink = `${config.REACT_APP_API_URL_FRONTEND}/verify-email-change?token=${verificationToken}`;
+
+    // Fetch the email template for email change
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: 'email_change_verification',
+      isActive: true
     });
 
-    if (!emailResult.success) {
-      return res.status(500).json({ success: false, message: emailResult.message });
+    if (!emailTemplate) {
+      return res.status(500).json({ success: false, message: 'Email template not found' });
     }
+    
+    // Replace placeholders
+    const emailSubject = emailTemplate.subject
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
+
+    // const emailBody = emailTemplate.body
+    //   .replace(/{{firstName}}/g, firstName || '')
+    //   .replace(/{{lastName}}/g, lastName || '')
+    //   .replace(/{{email}}/g, email)
+    //   .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+    //   .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
+
+    // // Send email
+    // const emailResponse = await sendEmail(email, emailSubject, emailBody);
+
+
+    // Replace placeholders in email template
+    const emailBody = emailTemplate.body
+      .replace(/{{firstName}}/g, user.firstName || '')
+      .replace(/{{lastName}}/g, user.lastName || '')
+      .replace(/{{oldEmail}}/g, oldEmail)
+      .replace(/{{newEmail}}/g, newEmail)
+      .replace(/{{verificationLink}}/g, verificationLink);
+
+    // Send email
+    await sendEmail(newEmail, emailSubject, emailBody);
 
     return res.json({ success: true, message: 'Verification email sent for email change' });
+
   } catch (error) {
     console.error('Error in requestEmailChangeVerification:', error);
     return res.status(500).json({
@@ -575,6 +601,84 @@ exports.requestEmailChangeVerification = async (req, res) => {
     });
   }
 };
+
+
+
+// exports.requestEmailChangeVerification = async (req, res) => {
+//   try {
+//     const { oldEmail, newEmail, userId } = req.body;
+
+//     if (!oldEmail || !newEmail || !userId) {
+//       return res.status(400).json({ success: false, message: 'Old email, new email, and user ID are required' });
+//     }
+
+//     // Validate new email format
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(newEmail)) {
+//       return res.status(400).json({ success: false, message: 'Invalid new email format' });
+//     }
+
+//     // Check if newEmail is already used
+//     const existingUser = await Users.findOne({ $or: [{ email: newEmail }, { newEmail: newEmail }] });
+//     if (existingUser) {
+//       return res.status(400).json({ success: false, message: 'New email is already in use' });
+//     }
+
+//     const user = await Users.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: 'User not found' });
+//     }
+
+//     if (user.email !== oldEmail) {
+//       return res.status(400).json({ success: false, message: 'Old email does not match current email' });
+//     }
+
+//     console.log("user._id",user._id);
+    
+
+//     // const organization = await Tenant.findOne({ tenantId: user._id });
+//     // if (!organization) {
+//     //   return res.status(404).json({ success: false, message: 'Organization not found' });
+//     // }
+
+//     // Store newEmail
+//     user.newEmail = newEmail;
+//     await user.save();
+
+//     // Generate verification token
+//     const verificationToken = jwt.sign(
+//       { userId: user._id, newEmail },
+//       config.JWT_SECRET,
+//       { expiresIn: '72h' }
+//     );
+
+//     // Send verification email
+//     const emailResult = await sendVerificationEmail({
+//       type: 'email_change_verification',
+//       to: newEmail,
+//       data: {
+//         firstName: user.firstName || '',
+//         lastName: user.lastName || '',
+//         oldEmail,
+//         newEmail,
+//         actionLink: `${config.REACT_APP_API_URL}/auth/verify-email-change?token=${verificationToken}`
+//       }
+//     });
+
+//     if (!emailResult.success) {
+//       return res.status(500).json({ success: false, message: emailResult.message });
+//     }
+
+//     return res.json({ success: true, message: 'Verification email sent for email change' });
+//   } catch (error) {
+//     console.error('Error in requestEmailChangeVerification:', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Error sending email change verification',
+//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//     });
+//   }
+// };
 
 exports.verifyEmailChange = async (req, res) => {
   try {

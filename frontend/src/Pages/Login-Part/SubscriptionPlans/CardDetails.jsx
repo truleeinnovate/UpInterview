@@ -336,6 +336,8 @@ const CardDetails = () => {
                                                 subscriptionId: orderResponse.data.subscriptionId,
                                                 orderId: response.razorpay_order_id,
                                                 isUpgrading: isUpgrading,
+                                                planName: planDetails.name,
+                                                membershipType: cardDetails.membershipType,
                                                 nextRoute: isUpgrading ? '/account-settings/subscription' : '/home'
                                             }
                                         });
@@ -464,18 +466,18 @@ const CardDetails = () => {
 
 
     return (
-        <div className="flex pt-4 flex-col h-full w-full items-center bg-white">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50  pt-4 ">
             {/* Add ToastContainer to display toast notifications */}
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
             {processing ? (
                 <div className="flex flex-col items-center justify-center h-screen">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                    <p className="mt-4 text-lg font-medium text-gray-700">Processing your Home...</p>
+                    <p className="mt-4 text-lg font-medium text-white">Processing your Home...</p>
                 </div>
             ) : (
                 <form
-                    className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border-2 border-gray-300 rounded-md"
+                    className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"
                     onSubmit={handleSubmit}
                 >
                     <div className="flex items-center justify-between">
@@ -607,7 +609,7 @@ const CardDetails = () => {
                             </div>
 
                             {/* Add-on */}
-                            <label className="block mb-1 text-lg font-medium text-gray-700">
+                            {/* <label className="block mb-1 text-lg font-medium text-gray-700">
                                 Add-ons
                             </label>
                             <div
@@ -648,7 +650,7 @@ const CardDetails = () => {
                                 </div>
 
 
-                            </div>
+                            </div> */}
 
                             {errors.membershipType && (
                                 <p className="text-red-500 text-sm pt-1">{errors.membershipType}</p>

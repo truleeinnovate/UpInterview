@@ -220,11 +220,6 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [selectedRound, setSelectedRound] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
-
-
-  // if (!Array.isArray(interviews)) {
-  // return <div>No interview data available.</div>;
-  // }
   
   const toggleInterview = (id) => {
     setExpandedInterview(expandedInterview === id ? null : id);

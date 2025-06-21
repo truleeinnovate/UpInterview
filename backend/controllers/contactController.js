@@ -1,5 +1,6 @@
 const { Contacts } = require('../models/Contacts');
 const Interviewavailability = require('../models/InterviewAvailability');
+const { Users } = require('../models/Users');
 
 const fetchContacts = async (req, res) => {
     try {
@@ -317,6 +318,22 @@ const updateContactsDetails = async (req, res) => {
                 await session.abortTransaction();
                 return res.status(404).json({ message: 'Contact not found' });
             }
+              // 2. Update user schema if relevant fields are in request
+      const userUpdateFields = {};
+      if (contactData.firstName) userUpdateFields.firstName = contactData.firstName;
+      if (contactData.lastName) userUpdateFields.lastName = contactData.lastName;
+      if (contactData.profileId) userUpdateFields.profileId = contactData.profileId;
+      if (contactData.newEmail) userUpdateFields.newEmail = contactData.newEmail;
+        if (contactData.email) userUpdateFields.email = contactData.newEmail;
+
+      // Only update if there's something to update
+      if (Object.keys(userUpdateFields).length > 0 && updatedContact.ownerId) {
+        await Users.findByIdAndUpdate(
+          updatedContact.ownerId,
+          { $set: userUpdateFields },
+          { session }
+        );
+      }
 
             // Handle availability updates if provided
             if (availability && Array.isArray(availability)) {
