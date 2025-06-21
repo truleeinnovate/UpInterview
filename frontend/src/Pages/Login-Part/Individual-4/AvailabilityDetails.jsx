@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TimezoneSelect from 'react-timezone-select';
 import Availability from '../../Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';
 import InfoBox from './InfoBox.jsx';
@@ -17,6 +17,35 @@ const AvailabilityDetails = ({
   const [selectedOption, setSelectedOption] = useState(
     availabilityDetailsData.preferredDuration || null
   );
+
+  const [isAutoDetecting, setIsAutoDetecting] = useState(true);
+
+  // Function to get user's timezone
+  const detectUserTimezone = useCallback(() => {
+    try {
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (userTimeZone) {
+        setSelectedTimezone(userTimeZone);
+        // Update availability details data with the detected timezone
+        setAvailabilityDetailsData(prev => ({
+          ...prev,
+          timeZone: userTimeZone
+        }));
+        // Clear any existing timezone errors
+        setErrors(prev => ({ ...prev, timeZone: '' }));
+        setIsAutoDetecting(false);
+      }
+    } catch (error) {
+      console.error('Error detecting timezone:', error);
+    } finally {
+      setIsAutoDetecting(false);
+    }
+  }, [setAvailabilityDetailsData, setErrors, setSelectedTimezone]);
+
+  // Auto-detect timezone on component mount
+  useEffect(() => {
+    detectUserTimezone();
+  }, [detectUserTimezone]);
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);
@@ -38,7 +67,7 @@ const AvailabilityDetails = ({
     }));
     setAvailabilityDetailsData((prev) => ({
       ...prev,
-      timeZone: timezone.value,
+      timeZone: timezone.value || timezone,
     }));
   };
 
@@ -69,10 +98,22 @@ const AvailabilityDetails = ({
             Time Zone <span className="text-red-500">*</span>
           </label>
           <div className="w-full">
+            <div className="flex items-center gap-2 mb-1">
+              <button 
+                type="button" 
+                onClick={detectUserTimezone}
+                disabled={isAutoDetecting}
+                className="text-xs text-custom-blue hover:text-custom-blue/80 hover:underline flex items-center gap-1"
+              >
+                {isAutoDetecting ? 'Detecting...' : 'Detect My Timezone'}
+              </button>
+              {isAutoDetecting && <span className="text-xs text-gray-500">Detecting your timezone...</span>}
+            </div>
             <TimezoneSelect
               value={selectedTimezone}
               onChange={handleTimezoneChange}
               className="mt-1 text-sm"
+              isDisabled={isAutoDetecting}
             />
             {errors.timeZone && (
               <p className="text-red-500 text-sm mt-2">{errors.timeZone}</p>

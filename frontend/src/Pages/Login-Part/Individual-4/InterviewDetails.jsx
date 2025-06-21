@@ -436,7 +436,7 @@ const InterviewDetails = ({
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center">
-                                <SkillsIcon className="h-4 w-4 text-purple-500 mr-2" />
+                                    <SkillsIcon className="h-4 w-4 text-purple-500 mr-2" />
                                     <span className="text-sm text-gray-700">
                                         {selectedSkills.length} skill{selectedSkills.length !== 1 ? "s" : ""} selected
                                     </span>
@@ -751,55 +751,96 @@ const InterviewDetails = ({
                         {errors.noShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>}
                     </div>
 
-
                     {/* Professional Title */}
                     <div className="sm:col-span-6 col-span-2">
                         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                            Professional Title
+                            Professional Title <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            id="Professional Title"
-                            name="professionalTitle"
-                            type="text"
-                            value={interviewDetailsData.professionalTitle}
-                            onChange={(e) =>
-                                setInterviewDetailsData((prevData) => ({
-                                    ...prevData,
-                                    professionalTitle: e.target.value,
-                                }))
-                            }
-                            className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            placeholder="Senior Software Engineer"
-                        />
-                        {errors.title && (
-                            <p className="mt-1.5 text-sm text-red-600">{errors.title.message}</p>
-                        )}
+                        <div>
+                            <input
+                                id="Professional Title"
+                                name="professionalTitle"
+                                type="text"
+                                required
+                                value={interviewDetailsData.professionalTitle || ''}
+                                onChange={(e) => {
+                                    setInterviewDetailsData((prevData) => ({
+                                        ...prevData,
+                                        professionalTitle: e.target.value,
+                                    }));
+                                    // Clear error when user starts typing
+                                    if (e.target.value.length >= 50) {
+                                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                    }
+                                }}
+                                onBlur={(e) => {
+                                    const value = e.target.value.trim();
+                                    if (!value) {
+                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                                    } else if (value.length < 50) {
+                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                                    } else if (value.length > 100) {
+                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                                    } else {
+                                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                    }
+                                }}
+                                className={`block w-full px-3 py-2.5 text-gray-900 border ${errors.professionalTitle ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                                placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
+                                minLength={50}
+                                maxLength={100}
+                            />
+                            <div className="flex justify-between mt-2">
+                                {errors.professionalTitle ? (
+                                    <p className="text-sm text-red-600">{errors.professionalTitle}</p>
+                                ) : (
+                                    <p className="text-xs text-gray-500">Min 50 characters</p>
+                                )}
+                                {interviewDetailsData.professionalTitle?.length > 0 && (
+                                    <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle ? 'text-red-500' : 'text-gray-500'}`}>
+                                        {interviewDetailsData.professionalTitle.length}/100
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Professional Bio */}
                     <div className="sm:col-span-6 col-span-2">
                         <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                            Professional Bio
+                            Professional Bio <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                             <textarea
                                 id="bio"
                                 rows="5"
-                                value={interviewDetailsData.bio}
-                                onChange={handleBioChange}
-                                className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                                required
+                                value={interviewDetailsData.bio || ''}
+                                onChange={(e) => {
+                                    handleBioChange(e);
+                                    // Clear error when user starts typing
+                                    if (e.target.value.length >= 150) {
+                                        setErrors(prev => ({ ...prev, bio: '' }));
+                                    }
+                                }}
+                                onBlur={(e) => {
+                                    const value = e.target.value.trim();
+                                    if (!value) {
+                                        setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                                    } else if (value.length < 150) {
+                                        setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
+                                    } else {
+                                        setErrors(prev => ({ ...prev, bio: '' }));
+                                    }
+                                }}
+                                className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.bio ? 'border-red-500' : 'border-gray-300'}`}
+                                placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
+                                minLength={150}
                                 maxLength={500}
                             ></textarea>
                             {bioLength > 0 && (
                                 <p
-                                    className={`absolute -bottom-6 right-0 text-xs ${bioLength > 500
-                                        ? 'text-red-500'
-                                        : bioLength > 400
-                                            ? 'text-yellow-500'
-                                            : 'text-gray-500'
-                                        }`}
+                                    className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio ? 'text-red-500' : bioLength > 450 ? 'text-yellow-500' : 'text-gray-500'}`}
                                 >
                                     {bioLength}/500
                                 </p>
@@ -809,7 +850,7 @@ const InterviewDetails = ({
                             {errors.bio ? (
                                 <p className="text-sm text-red-600">{errors.bio}</p>
                             ) : (
-                                <p className="text-xs text-gray-500">Min 20 characters</p>
+                                <p className="text-xs text-gray-500">Min 150 characters</p>
                             )}
                         </div>
                     </div>

@@ -3,6 +3,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TailSpin } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
 import StepIndicator from './StepIndicator.jsx';
 import BasicDetails from './BasicDetails.jsx';
 import AdditionalDetails from './AdditionalDetails.jsx';
@@ -294,6 +295,18 @@ const MultiStepForm = () => {
         interviewErrors.previousInterviewExperience = 'Previous interview experience is required';
       if (!interviewDetailsData.expertiseLevel_ConductingInterviews)
         interviewErrors.expertiseLevel_ConductingInterviews = 'Expertise level is required';
+      if (!interviewDetailsData.professionalTitle?.trim())
+        interviewErrors.professionalTitle = 'Professional title is required';
+      else if (interviewDetailsData.professionalTitle.length < 50)
+        interviewErrors.professionalTitle = 'Professional title must be at least 50 characters';
+      else if (interviewDetailsData.professionalTitle.length > 100)
+        interviewErrors.professionalTitle = 'Professional title cannot exceed 100 characters';
+      
+      if (!interviewDetailsData.bio?.trim())
+        interviewErrors.bio = 'Professional bio is required';
+      else if (interviewDetailsData.bio.length < 150)
+        interviewErrors.bio = 'Professional bio must be at least 150 characters';
+      
       setErrors({ ...errors, ...interviewErrors });
       isValid = Object.keys(interviewErrors).length === 0;
     } else if (currentStep === 3) {
@@ -458,8 +471,10 @@ const MultiStepForm = () => {
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
         } else {
-          // navigate(response.data.isProfileCompleted ? '/home' : '/subscription-plans');.
-          navigate('/subscription-plans');
+          setTimeout(() => {
+            navigate('/subscription-plans');
+            toast.success('Profile created successfully!');
+          }, 1500);
         }
       }
     } catch (error) {
