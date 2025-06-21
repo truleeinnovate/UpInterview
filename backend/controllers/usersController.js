@@ -491,10 +491,15 @@ const getUsersByTenant = async (req, res) => {
     }
 
     // Fetch users with minimal fields
-    const users = await Users.find({ tenantId }, '_id roleId label status').lean();
+    const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
+
+    //  firstName: { type: String },
+    // lastName: { type: String },
+    // email: { type: String },
+    // newEmail:
 
     // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
@@ -527,44 +532,45 @@ const getUsersByTenant = async (req, res) => {
 
       return {
         _id: user._id,
-        contactId: contact._id || 'N/A',
-        firstName: contact.firstName || 'N/A',
-        lastName: contact.lastName || 'N/A',
-        email: contact.email || 'N/A',
-        countryCode: contact.countryCode || 'N/A',
-        gender: contact.gender || 'N/A',
-        phone: contact.phone || 'N/A',
-        roleId: user.roleId || 'N/A',
-        roleName: role.roleName || 'N/A',
-        label: role.label || 'N/A',
+        contactId: contact._id || '',
+        firstName: contact.firstName || '',
+        lastName: contact.lastName || '',
+        email: user.email || '',
+           newEmail: user.newEmail || '',
+        countryCode: contact.countryCode || '',
+        gender: contact.gender || '',
+        phone: contact.phone || '',
+        roleId: user.roleId || '',
+        roleName: role.roleName || '',
+        label: role.label || '',
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
-        status: user.status || 'N/A',
+        status: user.status || '',
         updatedAt: user.updatedAt || contact.updatedAt,
-        profileId: contact.profileId || 'N/A',
-        linkedinUrl: contact.linkedinUrl || 'N/A',
-        portfolioUrl: contact.portfolioUrl || 'N/A',
-        hourlyRate: contact.hourlyRate || 'N/A',
-        currentRole: contact.currentRole || 'N/A',
-        industry: contact.industry || 'N/A',
-        experienceYears: contact.experienceYears || 'N/A',
-        location: contact.location || 'N/A',
-        resumePdf: contact.resumePdf || 'N/A',
-        coverLetter: contact.coverLetter || 'N/A',
-        coverLetterDescription: contact.coverLetterdescription || 'N/A',
-        professionalTitle: contact.professionalTitle || 'N/A',
-        bio: contact.bio || 'N/A',
+        profileId: contact.profileId || '',
+        linkedinUrl: contact.linkedinUrl || '',
+        portfolioUrl: contact.portfolioUrl || '',
+        hourlyRate: contact.hourlyRate || '',
+        currentRole: contact.currentRole || '',
+        industry: contact.industry || '',
+        experienceYears: contact.experienceYears || '',
+        location: contact.location || '',
+        resumePdf: contact.resumePdf || '',
+        coverLetter: contact.coverLetter || '',
+        coverLetterDescription: contact.coverLetterdescription || '',
+        professionalTitle: contact.professionalTitle || '',
+        bio: contact.bio || '',
         interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-        noShowPolicy: contact.NoShowPolicy || 'N/A',
-        previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || 'N/A',
-        previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || 'N/A',
-        expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || 'N/A',
+        noShowPolicy: contact.NoShowPolicy || '',
+        previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
+        previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
+        expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
         technologies: contact.technologies || [],
         skills: contact.skills || [],
-        timeZone: contact.timeZone || 'N/A',
-        preferredDuration: contact.preferredDuration || 'N/A',
+        timeZone: contact.timeZone || '',
+        preferredDuration: contact.preferredDuration || '',
         availability: contact.availability || [],
-        dateOfBirth: contact.dateOfBirth || 'N/A',
+        dateOfBirth: contact.dateOfBirth || '',
       };
     });
 
