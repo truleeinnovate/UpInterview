@@ -382,7 +382,8 @@ export const Organization = () => {
           <div className="h-full overflow-y-auto">
             <div className="flex items-center justify-center min-h-full px-[20%] md:px-[10%] sm:px-[7%] sm:py-5">
               <div className="w-full">
-                <p className="text-2xl font-semibold mb-7 mt-7 text-center">Welcome Back</p>
+                <p className="text-2xl font-semibold mb-7 mt-7 text-center">{!formSubmitted ? 'Welcome Back' :
+                'Welcome Back. Please verify!'}</p>
                 {!formSubmitted ? (
                   <form onSubmit={handleSubmit}>
                     {/* First Name and Last Name */}
