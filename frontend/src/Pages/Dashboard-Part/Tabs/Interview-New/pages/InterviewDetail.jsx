@@ -273,9 +273,6 @@ const InterviewDetail = () => {
   // Check if all rounds are completed
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
-
-
-
   return (
     <>
       <div className="min-h-screen bg-gray-50">

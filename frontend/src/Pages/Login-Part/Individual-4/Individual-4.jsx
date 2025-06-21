@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { validateSteps } from '../../../utils/IndividualValidation.js';
 import { TailSpin } from 'react-loader-spinner';
 import StepIndicator from './StepIndicator.jsx';
 import BasicDetails from './BasicDetails.jsx';
 import AdditionalDetails from './AdditionalDetails.jsx';
 import InterviewDetails from './InterviewDetails.jsx';
 import AvailabilityDetails from './AvailabilityDetails.jsx';
-import toast from 'react-hot-toast';
 import { config } from '../../../config.js';
 import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { useIndividualLogin } from '../../../apiHooks/useIndividualLogin';
@@ -452,14 +450,10 @@ const MultiStepForm = () => {
               headers: { 'Content-Type': 'multipart/form-data' },
               withCredentials: true,
             });
-            toast.success('Profile picture uploaded successfully!');
           } catch (uploadError) {
             console.error('Error uploading profile picture:', uploadError);
-            toast.error('Failed to upload profile picture. You can update it later.');
           }
         }
-
-        toast.success(response.data.isUpdate ? 'Profile updated successfully!' : 'Profile created successfully!');
 
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
@@ -470,7 +464,6 @@ const MultiStepForm = () => {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to save profile. Please try again.');
     } finally {
       setFormLoading(false);
     }
@@ -498,8 +491,8 @@ const MultiStepForm = () => {
       )}
 
       <form>
-        <div className="bg-slate-50 min-h-screen py-6 px-2">
-          <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <p className="text-2xl font-bold text-gray-900 mb-4">Create Profile</p>
             <div className="bg-white rounded-xl shadow-lg">
               <div className="p-6 sm:p-8">
