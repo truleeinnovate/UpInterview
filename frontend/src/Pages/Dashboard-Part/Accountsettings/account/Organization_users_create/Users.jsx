@@ -263,7 +263,7 @@ const Users = () => {
   ];
 
   return (
-    <div className="h-screen fixed w-full flex">
+    <div className="h-full fixed w-full flex">
       {/* Sidebar spacing from AccountSettingsSidebar */}
       <div className="lg:w-64 xl:w-64 2xl:w-64" />
       {/* Main Content */}
@@ -349,7 +349,9 @@ const Users = () => {
                     loading={usersLoading}
                     setActionViewMore={() => {}}
                     userData={usersRes}
+
                     toggleSidebar={() => navigate("new")}
+
                   />
                 </div>
               )}
@@ -480,6 +482,7 @@ const Users = () => {
           </motion.div>
         </div>
       )}
+
       <ConfirmationModal
         show={showConfirmation}
         userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
@@ -487,6 +490,7 @@ const Users = () => {
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
       />
+
     </div>
   );
 };
