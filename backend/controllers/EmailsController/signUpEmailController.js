@@ -497,3 +497,180 @@ exports.resendVerification = async (req, res) => {
     });
   }
 };
+
+
+
+
+//users tab emails 
+
+exports.requestEmailChangeVerification = async (req, res) => {
+  try {
+    const { oldEmail, newEmail, userId } = req.body;
+
+    if (!oldEmail || !newEmail || !userId) {
+      return res.status(400).json({ success: false, message: 'Old email, new email, and user ID are required' });
+    }
+
+    // Validate new email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).json({ success: false, message: 'Invalid new email format' });
+    }
+
+    // Check if newEmail is already used
+    const existingUser = await Users.findOne({ $or: [{ email: newEmail }, { newEmail: newEmail }] });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'New email is already in use' });
+    }
+
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.email !== oldEmail) {
+      return res.status(400).json({ success: false, message: 'Old email does not match current email' });
+    }
+
+    const organization = await Tenant.findOne({ ownerId: user._id });
+    if (!organization) {
+      return res.status(404).json({ success: false, message: 'Organization not found' });
+    }
+
+    // Store newEmail
+    user.newEmail = newEmail;
+    await user.save();
+
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id, newEmail },
+      config.JWT_SECRET,
+      { expiresIn: '72h' }
+    );
+
+    // Send verification email
+    const emailResult = await sendVerificationEmail({
+      type: 'email_change_verification',
+      to: newEmail,
+      data: {
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        oldEmail,
+        newEmail,
+        actionLink: `${config.REACT_APP_API_URL}/auth/verify-email-change?token=${verificationToken}`
+      }
+    });
+
+    if (!emailResult.success) {
+      return res.status(500).json({ success: false, message: emailResult.message });
+    }
+
+    return res.json({ success: true, message: 'Verification email sent for email change' });
+  } catch (error) {
+    console.error('Error in requestEmailChangeVerification:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error sending email change verification',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+exports.verifyEmailChange = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Verification token is required' });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, config.JWT_SECRET);
+    const { userId, newEmail } = decoded;
+
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.newEmail !== newEmail) {
+      return res.status(400).json({ success: false, message: 'Invalid email change request' });
+    }
+
+    // Update Users collection
+    user.email = newEmail;
+    user.newEmail = null;
+    user.isEmailVerified = true;
+    await user.save();
+
+    // Update Contacts collection
+    await Contact.updateOne(
+      { contactId: userId },
+      { $set: { email: newEmail } }
+    );
+
+    return res.json({ success: true, message: 'Email updated successfully' });
+  } catch (error) {
+    console.error('Error in verifyEmailChange:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error verifying email change',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Reuse your provided resendVerification function
+exports.resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const user = await Users.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const organization = await Tenant.findOne({ ownerId: user._id });
+    if (!organization) {
+      return res.status(404).json({ success: false, message: 'Organization not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ success: false, message: 'Email already verified' });
+    }
+
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id, email },
+      config.JWT_SECRET,
+      { expiresIn: '72h' }
+    );
+
+    // Send verification email
+    const emailResult = await sendVerificationEmail({
+      type: 'initial_email_verification',
+      to: email,
+      data: {
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        actionLink: `${config.REACT_APP_API_URL}/auth/verify-email?token=${verificationToken}`
+      }
+    });
+
+    if (!emailResult.success) {
+      return res.status(500).json({ success: false, message: emailResult.message });
+    }
+
+    return res.json({ success: true, message: 'Verification email resent' });
+  } catch (error) {
+    console.error('Error in resendVerification:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error resending verification',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};

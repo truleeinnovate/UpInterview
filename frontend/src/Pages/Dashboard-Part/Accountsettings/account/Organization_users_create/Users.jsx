@@ -349,9 +349,7 @@ const Users = () => {
                     loading={usersLoading}
                     setActionViewMore={() => {}}
                     userData={usersRes}
-
                     toggleSidebar={() => navigate("new")}
-
                   />
                 </div>
               )}
@@ -482,7 +480,6 @@ const Users = () => {
           </motion.div>
         </div>
       )}
-
       <ConfirmationModal
         show={showConfirmation}
         userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
@@ -490,7 +487,6 @@ const Users = () => {
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
       />
-
     </div>
   );
 };

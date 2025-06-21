@@ -23,6 +23,7 @@ const UsersSchema = new mongoose.Schema({
     firstName: { type: String },
     lastName: { type: String },
     email: { type: String },
+    newEmail: { type: String }, //only when user change email
     password: { type: String, select: true },
     isFreelancer: String,
     isAddedTeam: String,

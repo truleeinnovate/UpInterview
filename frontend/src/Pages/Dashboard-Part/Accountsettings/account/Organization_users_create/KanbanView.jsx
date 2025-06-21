@@ -60,7 +60,6 @@ const KanbanView = ({
   };
 
   return (
-
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -94,9 +93,7 @@ const KanbanView = ({
           </div>
         </div>
       )}
-
       <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto">
-
         {loading ? (
           <div className="col-span-full py-10 text-center">
             <div className="wrapper12">
@@ -241,7 +238,6 @@ const KanbanView = ({
         )}
       </div>
     </motion.div>
-
   );
 };
 

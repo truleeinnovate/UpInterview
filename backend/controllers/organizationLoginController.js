@@ -275,9 +275,6 @@ const organizationUserCreation = async (req, res) => {
       existingUser.email = email;
       existingUser.tenantId = tenantId;
       existingUser.roleId = roleId;
-      existingUser.countryCode = countryCode;
-      existingUser.isProfileCompleted = isProfileCompleted;
-      existingUser.isEmailVerified = isEmailVerified;
 
       const savedUser = await existingUser.save();
 

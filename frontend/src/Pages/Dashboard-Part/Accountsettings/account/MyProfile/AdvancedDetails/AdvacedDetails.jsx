@@ -57,13 +57,13 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
-            <p className="font-medium">{contactData.currentRole || "N/A"}</p>
+            <p className="font-medium">{contactData.currentRole}</p>
           </div>
 
 
           <div>
             <p className="text-sm text-gray-500">Industry</p>
-            <p className="font-medium">{contactData.industry || "N/A"}</p>
+            <p className="font-medium">{contactData.industry}</p>
           </div>
         </div>
 
@@ -71,12 +71,12 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{contactData.experienceYears || "N/A"} Years</p>
+            <p className="font-medium">{contactData.experienceYears} Years</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Location</p>
-            <p className="font-medium">{contactData.location || "N/A"}</p>
+            <p className="font-medium">{contactData.location}</p>
           </div>
 
 
@@ -88,12 +88,12 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Resume PDF </p>
-            <p className="font-medium">{contactData.ResumePdf || "N/A"}</p>
+            <p className="font-medium">{contactData.ResumePdf}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Cover Letter </p>
-            <p className="font-medium">{contactData.coverletter || "N/A"}</p>
+            <p className="font-medium">{contactData.coverletter}</p>
           </div>
 
         </div>
@@ -120,7 +120,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
                 </span>
 
                 <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium">
-                  {contactData.coverLetterdescription || "N/A"}
+                  {contactData.coverLetterdescription}
                 </p>
               </div>
             ) : ""
