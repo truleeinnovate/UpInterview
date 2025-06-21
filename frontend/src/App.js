@@ -253,6 +253,8 @@ const App = () => {
               <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} >
                 <Route index element={null} />
                 <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
+                <Route path="assessment/edit/:id" element={<AssessmentForm />} />
+
               </Route>
 
               <Route path="/assessmenttest" element={<AssessmentTest />} />

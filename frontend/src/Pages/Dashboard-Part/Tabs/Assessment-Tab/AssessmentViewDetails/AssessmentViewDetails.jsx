@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
 import { Tab } from '@headlessui/react';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
+import { Minimize, Expand, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AssessmentsTab from './Assessment-View-AssessmentTab.jsx';
 import AssessmentResultsTab from './AssessmentResultTab.jsx';
@@ -9,6 +8,7 @@ import DetailsTab from './AssessmentDetailTab.jsx';
 import QuestionsTab from './AsseessmentQuestionsTab.jsx';
 import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+import { Pencil } from "lucide-react";
 
 function AssessmentView() {
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
@@ -126,15 +126,22 @@ function AssessmentView() {
             onClick={handleCloseModal}
           />
           <div
-            className={`fixed inset-y-0 right-0 flex max-w-full ${
-              isFullscreen ? 'w-full' : 'w-1/2'
-            } transition-all duration-300`}
+            className={`fixed inset-y-0 right-0 flex max-w-full ${isFullscreen ? 'w-full' : 'w-1/2'
+              } transition-all duration-300`}
           >
             <div className="w-full relative">
               <div className="h-full bg-white shadow-xl flex flex-col">
                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-900">Assessment Template Details</h3>
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => navigate(`/assessment/edit/${assessment._id}`)}
+                      className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+
+
                     <button
                       onClick={toggleFullscreen}
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
@@ -160,10 +167,9 @@ function AssessmentView() {
                         <Tab
                           key={idx}
                           className={({ selected }) =>
-                            `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center ${
-                              selected
-                                ? 'border-custom-blue text-custom-blue'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center ${selected
+                              ? 'border-custom-blue text-custom-blue'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`
                           }
                         >
