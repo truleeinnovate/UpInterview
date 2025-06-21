@@ -167,9 +167,9 @@ const UsersAccountTab = () => {
     navigate(`details/${user._id}`, { state: { userData: user } });
   };
 
-  const handleEdit = (user) => {
-    navigate(`edit/${user._id}`, { state: { userData: user } });
-  };
+  // const handleEdit = (user) => {
+  //   navigate(`edit/${user._id}`, { state: { userData: user } });
+  // };
 
   // Table Columns Configuration
   const tableColumns = [
@@ -217,30 +217,30 @@ const UsersAccountTab = () => {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: 'status',
-      label: (row) => {
-        if (!row.status) return 'Unknown Status';
-        return row.status === 'active' ? 'In Active' : 'Active';
-      },
-      icon: (row) => (
-        <div
-          className="flex items-center justify-center w-6 h-6"
-          title={row.status === 'active' ? 'Deactivate user' : 'Activate user'}
-        >
-          {row.status === 'active' ? (
-            <CheckCircle size={20} className="text-green-500" />
-          ) : row.status === 'inactive' ? (
-            <XCircle size={20} className="text-red-500" />
-          ) : (
-            <Info size={20} className="text-gray-500" />
-          )}
-        </div>
-      ),
-      onClick: (row) => {
-        handleStatusToggleAction(row);
-      },
-    },
+    // {
+    //   key: 'status',
+    //   label: (row) => {
+    //     if (!row.status) return 'Unknown Status';
+    //     return row.status === 'active' ? 'In Active' : 'Active';
+    //   },
+    //   icon: (row) => (
+    //     <div
+    //       className="flex items-center justify-center w-6 h-6"
+    //       title={row.status === 'active' ? 'Deactivate user' : 'Activate user'}
+    //     >
+    //       {row.status === 'active' ? (
+    //         <CheckCircle size={20} className="text-green-500" />
+    //       ) : row.status === 'inactive' ? (
+    //         <XCircle size={20} className="text-red-500" />
+    //       ) : (
+    //         <Info size={20} className="text-gray-500" />
+    //       )}
+    //     </div>
+    //   ),
+    //   onClick: (row) => {
+    //     handleStatusToggleAction(row);
+    //   },
+    // },
 
     {
       key: 'view',
@@ -248,15 +248,16 @@ const UsersAccountTab = () => {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => handleEdit(row),
-    },
+    // {
+    //   key: 'edit',
+    //   label: 'Edit',
+    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //   onClick: (row) => handleEdit(row),
+    // },
   ];
 
   return (
+    <>
     <div className="h-screen fixed w-full flex">
       {/* Sidebar spacing from AccountSettingsSidebar */}
       <div className="" />
@@ -460,14 +461,16 @@ const UsersAccountTab = () => {
           </motion.div>
         </div>
       )}
-      <ConfirmationModal
+
+    </div>
+          <ConfirmationModal
         show={showConfirmation}
         userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
       />
-    </div>
+      </>
   );
 };
 

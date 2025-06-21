@@ -186,7 +186,7 @@ const KanbanView = ({ currentFilteredRows, setActionViewMore, handleUserClick, h
                 </div>
                 {/* Action buttons */}
                 <div className="flex items-center gap-1">
-                  <button
+                  {/* <button
                    className={`p-1.5 ${  users.status === "active" ? 'text-green-600' : 'text-red-600'} hover:bg-blue-50 rounded-lg transition-colors`}
                     // className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
                     onClick={() => handleStatusToggle(users)}
@@ -202,8 +202,8 @@ const KanbanView = ({ currentFilteredRows, setActionViewMore, handleUserClick, h
                           // className='fill-white-400'
                         />
                     }
-                    {/* {users.status === "active" ? "In Active" : "Active"} */}
-                  </button>
+             
+                  </button> */}
                   <button
                     onClick={() => {
                       navigate(`details/${users._id}`, { state: { userData: users } });
