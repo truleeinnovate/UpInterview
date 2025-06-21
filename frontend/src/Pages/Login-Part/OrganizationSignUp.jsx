@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from "react-hot-toast";
@@ -69,7 +69,7 @@ export const Organization = () => {
     if (verified === 'true') {
       toast.success('Email verified successfully!');
       navigate('/organization-login');
-      window.location.reload(); // Reload to clear query params
+      window.location.reload();
     }
   }, [location, navigate]);
 
@@ -96,6 +96,17 @@ export const Organization = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
+
+  const checkProfileIdExists = useCallback(async (profileId) => {
+    if (!profileId) return false;
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
+      return response.data.exists;
+    } catch (error) {
+      console.error("ProfileId check error:", error);
+      return false;
+    }
   }, []);
 
   const handleChange = (field, value) => {
@@ -226,9 +237,34 @@ export const Organization = () => {
       contactType: 'Organization',
     };
 
+    // Validate email format and existence
+    const emailFormatError = validateWorkEmail(selectedEmail);
+    if (emailFormatError) {
+      setErrors((prev) => ({ ...prev, email: emailFormatError }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    const emailExists = await checkEmailExists(selectedEmail);
+    if (emailExists) {
+      setErrors((prev) => ({ ...prev, email: 'Email already registered' }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate profileId
+    const profileIdError = await validateProfileId(selectedProfileId, checkProfileIdExists);
+    if (profileIdError) {
+      setErrors((prev) => ({ ...prev, profileId: profileIdError }));
+      setIsSubmitting(false);
+      return;
+    }
+
     const isValid = await validateOrganizationSignup(
       organizationData,
       setErrors,
+      checkEmailExists,
+      checkProfileIdExists
     );
 
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
@@ -247,30 +283,11 @@ export const Organization = () => {
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
       const { token } = response.data;
 
-      console.log('response ', response)
-
-      // Store JWT in cookies
       setAuthCookies(token);
-
-      // Show toast with message from backend
-      // toast.success(response.data.message || 'Organization created successfully');
-
-      // Send welcome email silently
-      // axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-      //   email: organizationData.email,
-      //   tenantId: response.data.tenantId,
-      //   ownerId: response.data.ownerId,
-      //   lastName: organizationData.lastName,
-      //   firstName: organizationData.firstName
-      // }).catch((err) => console.error('Email error:', err));
-
-      // Set form submitted state and email for verification message
       setEmail(selectedEmail);
       setFormSubmitted(true);
       toast.success('Verification email sent! Please check your inbox.');
       setCountdown(60);
-
-
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong');
     } finally {
@@ -285,6 +302,7 @@ export const Organization = () => {
       const response = await axios.post(`${config.REACT_APP_API_URL}/emails/resend-verification`, { email });
       if (response.data.success) {
         toast.success('Verification email resent!');
+        setCountdown(60);
       } else {
         toast.error(response.data.message || 'Failed to resend verification email');
       }
@@ -325,6 +343,7 @@ export const Organization = () => {
       if (!selectedProfileId) {
         const generatedProfileId = generateProfileId(email);
         setSelectedProfileId(generatedProfileId);
+        handleProfileIdValidation(generatedProfileId);
       }
     }
 
@@ -340,9 +359,23 @@ export const Organization = () => {
     }
 
     setIsCheckingProfileId(true);
-    const { errorMessage, suggestedProfileId } = await validateProfileId(profileId);
-    setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-    setSuggestedProfileId(suggestedProfileId || '');
+    const profileIdError = await validateProfileId(profileId, checkProfileIdExists);
+    setErrors((prev) => ({ ...prev, profileId: profileIdError }));
+    
+    if (profileIdError && profileIdError.includes('already taken')) {
+      const baseProfileId = profileId.replace(/[0-9]+$/, '');
+      let suffix = 1;
+      let newProfileId = `${baseProfileId}${suffix}`;
+      
+      while (await checkProfileIdExists(newProfileId)) {
+        suffix++;
+        newProfileId = `${baseProfileId}${suffix}`;
+      }
+      setSuggestedProfileId(newProfileId);
+    } else {
+      setSuggestedProfileId('');
+    }
+    
     setIsCheckingProfileId(false);
   };
 
@@ -354,13 +387,12 @@ export const Organization = () => {
     if (email && !selectedProfileId) {
       const generatedProfileId = generateProfileId(email);
       setSelectedProfileId(generatedProfileId);
+      handleProfileIdValidation(generatedProfileId);
     }
   };
 
-
   const [countdown, setCountdown] = useState(0);
 
-  // Countdown timer logic
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -373,12 +405,9 @@ export const Organization = () => {
     <>
       <div>
         <div className="grid grid-cols-2 sm:grid-cols-1 h-[calc(100vh-48px)]">
-          {/* Left Column - Slideshow (stays fixed height, not scrollable) */}
           <div className="h-full">
             <Slideshow />
           </div>
-
-          {/* Right Column - Login Form or Verification Message (scrollable only) */}
           <div className="h-full overflow-y-auto">
             <div className="flex items-center justify-center min-h-full px-[20%] md:px-[10%] sm:px-[7%] sm:py-5">
               <div className="w-full">
@@ -386,7 +415,6 @@ export const Organization = () => {
                 'Welcome Back. Please verify!'}</p>
                 {!formSubmitted ? (
                   <form onSubmit={handleSubmit}>
-                    {/* First Name and Last Name */}
                     <div className="flex justify-between gap-3 mb-4">
                       <div className="relative w-1/2">
                         <input
@@ -426,8 +454,6 @@ export const Organization = () => {
                         {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                       </div>
                     </div>
-
-                    {/* Job Title */}
                     <div className="relative mb-4">
                       <input
                         type="text"
@@ -447,14 +473,11 @@ export const Organization = () => {
                       </label>
                       {errors.jobTitle && <p className="text-red-500 text-xs mt-1">{errors.jobTitle}</p>}
                     </div>
-
-                    {/* Work Email */}
                     <div className="relative mb-4">
                       <input
                         type="email"
                         id="Email"
-                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'
-                          } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                         placeholder=" "
                         value={selectedEmail}
                         onInput={handleEmailInput}
@@ -474,15 +497,11 @@ export const Organization = () => {
                       )}
                       {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
-
-                    {/* Phone */}
                     <div className="relative mb-4">
                       <div className="flex gap-2">
-                        {/* Country Code Dropdown */}
                         <div className="relative w-1/4" ref={countryCodeDropdownRef}>
                           <div
-                            className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                              } bg-white px-3 h-11 cursor-pointer`}
+                            className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'} bg-white px-3 h-11 cursor-pointer`}
                             onClick={toggleDropdownCountryCode}
                           >
                             <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
@@ -502,15 +521,12 @@ export const Organization = () => {
                             </div>
                           )}
                         </div>
-
-                        {/* Phone Number Input */}
                         <div className="relative w-3/4">
                           <div className="relative">
                             <input
                               type="tel"
                               id="Phone"
-                              className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                                } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                              className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                               placeholder=" "
                               value={selectedPhone}
                               onChange={(e) => {
@@ -534,8 +550,6 @@ export const Organization = () => {
                         <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
                       )}
                     </div>
-
-                    {/* Company Name */}
                     <div className="relative mb-4">
                       <input
                         type="text"
@@ -555,8 +569,6 @@ export const Organization = () => {
                       </label>
                       {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
                     </div>
-
-                    {/* Employees */}
                     <div className="relative mb-4" ref={employeesDropdownRef}>
                       <div className="relative">
                         <input
@@ -598,8 +610,6 @@ export const Organization = () => {
                       )}
                       {errors.employees && <p className="text-red-500 text-xs mt-1">{errors.employees}</p>}
                     </div>
-
-                    {/* Country */}
                     <div className="relative mb-4" ref={countryDropdownRef}>
                       <div className="relative">
                         <input
@@ -641,8 +651,6 @@ export const Organization = () => {
                       )}
                       {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                     </div>
-
-                    {/* Profile ID Field */}
                     <div className="relative mb-4">
                       <input
                         type="text"
@@ -687,15 +695,12 @@ export const Organization = () => {
                         </p>
                       )}
                     </div>
-
-                    {/* Create Password Field */}
                     <div className="relative mb-4">
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
                           id="create_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? "border-red-500" : "border-gray-300"
-                            } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? "border-red-500" : "border-gray-300"} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                           placeholder=" "
                           value={selectedPassword}
                           onChange={(e) => handleChange("password", e.target.value)}
@@ -720,15 +725,12 @@ export const Organization = () => {
                       </div>
                       {errors.password && <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>}
                     </div>
-
-                    {/* Confirm Password Field */}
                     <div className="relative mb-4">
                       <div className="relative">
                         <input
                           type={showConfirmPassword ? "text" : "password"}
                           id="confirm_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                            } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? "border-red-500" : "border-gray-300"} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
                           placeholder=" "
                           value={selectedConfirmPassword}
                           onChange={(e) => handleChange("confirmPassword", e.target.value)}
@@ -753,21 +755,16 @@ export const Organization = () => {
                       </div>
                       {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                     </div>
-
-                    {/* Login Link */}
                     <div className="flex justify-center">
                       <div className="text-sm mb-4">
                         If already registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-login')}>Login</span>
                       </div>
                     </div>
-
-                    {/* Save Button */}
                     <div className="flex justify-center mb-10">
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`w-full text-sm text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue/80'
-                          }`}
+                        className={`w-full text-sm text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue/80'}`}
                       >
                         {isSubmitting ? (
                           <>
@@ -782,7 +779,6 @@ export const Organization = () => {
                         )}
                       </button>
                     </div>
-
                   </form>
                 ) : (
                   <div className="text-center">
@@ -796,10 +792,7 @@ export const Organization = () => {
                       <button
                         onClick={handleResendVerification}
                         disabled={isResending || countdown > 0}
-                        className={`px-4 py-2 rounded-md transition-colors ${isResending || countdown > 0
-                          ? 'bg-blue-400 cursor-not-allowed'
-                          : 'bg-blue-500 hover:bg-blue-600 text-white'
-                          }`}
+                        className={`px-4 py-2 rounded-md transition-colors ${isResending || countdown > 0 ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
                       >
                         {isResending ? 'Resending...' : countdown > 0 ? `Resend in ${countdown}s` : 'Resend Email'}
                       </button>

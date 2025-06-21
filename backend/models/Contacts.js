@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // const ContactsSchema = new mongoose.Schema({
 //     name: String,
@@ -111,8 +111,8 @@ const mongoose = require('mongoose');
 //     // }
 // },{ timestamps: true,strict: false  });
 
-
-const ContactsSchema = new mongoose.Schema({
+const ContactsSchema = new mongoose.Schema(
+  {
     firstName: String,
     lastName: String,
     countryCode: String,
@@ -127,9 +127,10 @@ const ContactsSchema = new mongoose.Schema({
     experience: { type: String },
     gender: String,
     imageData: {
-        filename: String,
-        path: String,
-        contentType: String,
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String, // added by Ashok
     },
     timeZone: String,
     preferredDuration: String,
@@ -148,7 +149,6 @@ const ContactsSchema = new mongoose.Schema({
     PreviousExperienceConductingInterviewsYears: String,
     ExpertiseLevel_ConductingInterviews: String,
 
-
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
@@ -163,23 +163,25 @@ const ContactsSchema = new mongoose.Schema({
     // interviewerType: String,
     // isAddedTeam: String,
     // interviewType: String,
-    availability: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interviewavailability' }],
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    availability: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Interviewavailability" },
+    ],
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     completionStatus: {
       basicDetails: { type: Boolean, default: false },
       additionalDetails: { type: Boolean, default: false },
       interviewDetails: { type: Boolean, default: false },
-      availabilityDetails: { type: Boolean, default: false }
+      availabilityDetails: { type: Boolean, default: false },
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
-
-
-const Contacts = mongoose.model('Contacts', ContactsSchema);
+const Contacts = mongoose.model("Contacts", ContactsSchema);
 
 module.exports = {
-    Contacts,
+  Contacts,
 };

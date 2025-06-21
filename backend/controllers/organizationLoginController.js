@@ -393,7 +393,7 @@ const loginOrganization = async (req, res) => {
 
     // Fetch contactId where ownerId matches user._id
     const contact = await Contacts.findOne({ ownerId: user._id });
-    const contactDataFromOrg = contact || null;
+    const contactEmailFromOrg = contact?.email || null;
 
     // Generate JWT
     const payload = {
@@ -412,7 +412,7 @@ const loginOrganization = async (req, res) => {
       token,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
-      contactDataFromOrg,
+      contactEmailFromOrg,
       isEmailVerified: user.isEmailVerified,
       status: organization.status
     });

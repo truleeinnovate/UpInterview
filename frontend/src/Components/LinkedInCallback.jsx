@@ -4,11 +4,112 @@ import axios from 'axios';
 import { config } from '../config.js';
 import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
+import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
 const LinkedInCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [filteredContact, setFilteredContact] = useState(null);
+
+  const fetchAndFilterContacts = async (linkedInEmail) => {
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+      const allContacts = response.data;
+      const filteredContacts = allContacts.filter(contact => contact.email === linkedInEmail);
+      
+      if (filteredContacts.length > 0) {
+        setFilteredContact(filteredContacts[0]);
+        return filteredContacts[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      return null;
+    }
+  };
+
+  const determineNavigation = (contact, token, email) => {
+    if (!contact) {
+      // No contact found - new user
+      return navigate('/select-profession', {
+        state: { token, linkedIn_email: email }
+      });
+    }
+
+    const { completionStatus } = contact;
+    
+    if (!completionStatus) {
+      // No completion status - treat as new user
+      return navigate('/select-profession', {
+        state: { token, linkedIn_email: email }
+      });
+    }
+
+    // Check which steps are completed
+    const {
+      basicDetails,
+      additionalDetails,
+      interviewDetails,
+      availabilityDetails
+    } = completionStatus;
+
+    if (!basicDetails) {
+      // Basic details not completed - go to select profession
+      return navigate('/select-profession', {
+        state: { token, linkedIn_email: email }
+      });
+    }
+
+    if (basicDetails && !additionalDetails) {
+      // Only basic details completed - go to complete-profile step 1
+      return navigate('/complete-profile', {
+        state: {
+          token,
+          linkedIn_email: email,
+          currentStep: 1,
+          matchedContact: contact,
+          Freelancer: true // or determine this from contact data
+        }
+      });
+    }
+
+    if (basicDetails && additionalDetails && !interviewDetails) {
+      // Basic and additional completed - go to complete-profile step 2
+      return navigate('/complete-profile', {
+        state: {
+          token,
+          linkedIn_email: email,
+          currentStep: 2,
+          matchedContact: contact,
+          Freelancer: true
+        }
+      });
+    }
+
+    if (basicDetails && additionalDetails && interviewDetails && !availabilityDetails) {
+      // Basic, additional, interview completed - go to complete-profile step 3
+      return navigate('/complete-profile', {
+        state: {
+          token,
+          linkedIn_email: email,
+          currentStep: 3,
+          matchedContact: contact,
+          Freelancer: true
+        }
+      });
+    }
+
+    if (basicDetails && additionalDetails && interviewDetails && availabilityDetails) {
+      // All steps completed - go to subscription plans
+      return navigate('/subscription-plans');
+    }
+
+    // Default fallback
+    return navigate('/select-profession', {
+      state: { token, linkedIn_email: email }
+    });
+  };
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -31,34 +132,22 @@ const LinkedInCallback = () => {
             },
           }
         );
-        console.log('Received response from the backend:', response.data);
 
-        const { existingUser, token, isProfileCompleted, roleName } = response.data;
+        console.log('linkedin callback handleCallback:', response.data);
+
+        const { existingUser, token, email } = response.data;
 
         if (existingUser) {
-          console.log('Existing user detected:', { token, isProfileCompleted, roleName });
-          if (token) {
-            setAuthCookies(token);
-          }
-
-          if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
-            navigate('/home');
-          } else if (isProfileCompleted === false && roleName) {
-            navigate('/complete-profile', {
-              state: { isProfileComplete: true, roleName },
-            });
-          } else {
-            navigate('/home');
-          }
+          // Check if we have a contact for this user
+          const contact = await fetchAndFilterContacts(email);
+          determineNavigation(contact, token, email);
         } else {
-          console.log('New user, navigating to select-profession with state:', {
-            token: response.data.token,
-            linkedIn_email: response.data.email
-          });
+          // New user - go to select profession
+          console.log('New user, navigating to select-profession');
           navigate('/select-profession', {
             state: {
-              linkedIn_email: response.data.email,
-              token: response.data.token
+              linkedIn_email: email,
+              token: token
             },
           });
         }

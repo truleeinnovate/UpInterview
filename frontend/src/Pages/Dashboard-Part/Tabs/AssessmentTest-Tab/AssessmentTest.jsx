@@ -6,7 +6,7 @@ import AssessmentTestPage1 from './Components/AssessmentTestPage1.jsx';
 import AssessmentTestPage2 from './Components/AssessmentTestPage2.jsx';
 import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
 import toast from 'react-hot-toast';
-import logo from "../../../Dashboard-Part/Images/upinterviewLogo.png";
+import logo from "../../../Dashboard-Part/Images/upinterviewLogo.webp";
 import { config } from "../../../../config.js";
 
 
