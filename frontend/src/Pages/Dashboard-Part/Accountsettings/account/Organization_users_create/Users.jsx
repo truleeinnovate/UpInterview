@@ -23,7 +23,7 @@ import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
 import ConfirmationModal from "./ConfirmModel";
 
-const UsersAccountTab = () => {
+const Users = () => {
   const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
     useCustomContext();
   const navigate = useNavigate();
@@ -43,7 +43,6 @@ const UsersAccountTab = () => {
   const [newStatus, setNewStatus] = useState("");
   const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
   const filterIconRef = useRef(null);
-
   // Set view based on screen size
   useEffect(() => {
     const handleResize = () => {
@@ -185,10 +184,10 @@ const UsersAccountTab = () => {
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
-            {row?.imageData?.path ? (
+            {row.imageUrl ? (
               <img
                 className="h-8 w-8 rounded-full object-cover"
-                src={row?.imageData?.path}
+                src={row.imageUrl}
                 alt={`${row.firstName || ""} ${row.lastName || ""}`}
                 onError={(e) => {
                   e.target.src =
@@ -266,7 +265,7 @@ const UsersAccountTab = () => {
   return (
     <div className="h-screen fixed w-full flex">
       {/* Sidebar spacing from AccountSettingsSidebar */}
-      <div className="" />
+      <div className="lg:w-64 xl:w-64 2xl:w-64" />
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-0 h-full overflow-y-auto">
         <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
@@ -331,7 +330,7 @@ const UsersAccountTab = () => {
           />
         </div>
         <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
-          <motion.div className="">
+          <motion.div className="bg-white">
             <div className="relative w-full">
               {view === "table" ? (
                 <div className="w-full">
@@ -492,4 +491,4 @@ const UsersAccountTab = () => {
   );
 };
 
-export default UsersAccountTab;
+export default Users;
