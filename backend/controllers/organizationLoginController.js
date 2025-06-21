@@ -840,6 +840,41 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+
+const verifyEmailChange = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Verification token is required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded.userId || !decoded.newEmail) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+    }
+
+    const user = await Users.findById(decoded.userId);
+    const contacts = await Contacts.findById(decoded.userId);
+    if (!user || user.newEmail !== decoded.newEmail) {
+      return res.status(400).json({ success: false, message: 'Email change verification failed' });
+    }
+
+    // Update email
+    user.email = decoded.newEmail;
+    user.newEmail = null;
+    contacts.email = decoded.newEmail;
+    await user.save();
+
+    return res.json({ success: true, message: 'Email address updated successfully' });
+
+  } catch (error) {
+    console.error('Email change verification error:', error);
+    return res.status(500).json({ success: false, message: 'Error verifying email change' });
+  }
+};
+
+
 module.exports = {
   registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
   updateSubdomain,
@@ -847,5 +882,6 @@ module.exports = {
   activateSubdomain,
   deactivateSubdomain,
   updateBasedIdOrganizations,
-  verifyEmail
+  verifyEmail,
+  verifyEmailChange
 };

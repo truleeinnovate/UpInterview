@@ -229,7 +229,7 @@ const KanbanView = ({
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600">
                     <Briefcase className="w-4 h-4" />
-                    <span>{users.label || "N/A"}</span>
+                    <span>{users?.roleId?.label || "N/A"}</span>
                   </div>
                 </div>
               </div>

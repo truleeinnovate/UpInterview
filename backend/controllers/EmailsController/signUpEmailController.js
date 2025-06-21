@@ -552,7 +552,7 @@ exports.requestEmailChangeVerification = async (req, res) => {
     );
 
     // Create verification link
-    const verificationLink = `${config.REACT_APP_API_URL_FRONTEND}/verify-email-change?token=${verificationToken}`;
+    const verificationLink = `${config.REACT_APP_API_URL_FRONTEND}/verify-user-email?token=${verificationToken}`;
 
     // Fetch the email template for email change
     const emailTemplate = await emailTemplateModel.findOne({
@@ -585,8 +585,11 @@ exports.requestEmailChangeVerification = async (req, res) => {
       .replace(/{{lastName}}/g, user.lastName || '')
       .replace(/{{oldEmail}}/g, oldEmail)
       .replace(/{{newEmail}}/g, newEmail)
-      .replace(/{{verificationLink}}/g, verificationLink);
+      .replace(/{{actionLink}}/g, verificationLink);
 
+
+      // console.log("verificationLink",verificationLink);
+      
     // Send email
     await sendEmail(newEmail, emailSubject, emailBody);
 

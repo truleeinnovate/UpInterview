@@ -6,7 +6,8 @@ const { registerOrganization, loginOrganization,resetPassword,organizationUserCr
   activateSubdomain,
   deactivateSubdomain,
   updateBasedIdOrganizations,
-  verifyEmail
+  verifyEmail,
+  verifyEmailChange
  } = require('../controllers/organizationLoginController');
 
 router.post('/Signup', registerOrganization);
@@ -29,5 +30,6 @@ router.post('/deactivate-subdomain', deactivateSubdomain);
 
 
 router.get('/verify-email', verifyEmail);
+router.get('/verify-user-email',verifyEmailChange)
 
 module.exports = router;
