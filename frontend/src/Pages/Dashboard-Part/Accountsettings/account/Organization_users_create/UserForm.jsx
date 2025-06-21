@@ -196,6 +196,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setFile(null);
       setFilePreview(null);
       setIsImageUploaded(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset input value Added by Ashok
+      }
     }
   };
 
@@ -338,6 +341,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200">
                           <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button
+                              title="Replace Image"
                               type="button"
                               onClick={handleReplaceImage}
                               className="text-white hover:text-blue-400"
@@ -346,6 +350,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                               <RefreshCw className="text-2xl" />
                             </button>
                             <button
+                              title="Delete Image"
                               type="button"
                               onClick={handleDeleteImage}
                               className="text-white hover:text-red-400"

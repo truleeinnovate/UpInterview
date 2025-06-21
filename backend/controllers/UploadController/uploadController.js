@@ -65,6 +65,7 @@ const deleteFromCloudinary = async (publicId, resource_type) => {
 const uploadHandler = async (req, res) => {
   try {
     const file = req.file;
+    console.log('file :',file)
     const { entity, entityId, type, action } = req.body;
 
     // Validation

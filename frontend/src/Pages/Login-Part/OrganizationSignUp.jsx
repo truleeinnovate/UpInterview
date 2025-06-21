@@ -152,27 +152,34 @@ export const Organization = () => {
     }
   };
 
-  const handleBlur = (field, value) => {
-    if (field === 'email') {
-      clearTimeout(emailTimeoutRef.current);
-      handleEmailValidation(value);
-    } else if (field === 'profileId') {
-      clearTimeout(profileIdTimeoutRef.current);
-      handleProfileIdValidation(value);
-    } else if (field === 'password') {
-      const passwordError = validatePassword(value);
-      setErrors((prev) => ({
-        ...prev,
-        password: passwordError,
-        confirmPassword: selectedConfirmPassword && value !== selectedConfirmPassword ? 'Passwords do not match' : ''
-      }));
-    } else if (field === 'confirmPassword') {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: value && value !== selectedPassword ? 'Passwords do not match' : ''
-      }));
-    }
-  };
+const handleBlur = (field, value) => {
+  if (field === 'email') {
+    clearTimeout(emailTimeoutRef.current);
+    handleEmailValidation(value);
+  } else if (field === 'profileId') {
+    clearTimeout(profileIdTimeoutRef.current);
+    handleProfileIdValidation(value);
+  } else if (field === 'password') {
+    const passwordError = validatePassword(value);
+    const confirmPasswordError =
+      selectedConfirmPassword && value !== selectedConfirmPassword
+        ? 'Passwords do not match'
+        : '';
+    setErrors((prev) => ({
+      ...prev,
+      password: passwordError,
+      confirmPassword: confirmPasswordError,
+    }));
+  } else if (field === 'confirmPassword') {
+    const confirmPasswordError =
+      value && value !== selectedPassword ? 'Passwords do not match' : '';
+    setErrors((prev) => ({
+      ...prev,
+      confirmPassword: confirmPasswordError,
+    }));
+  }
+};
+
 
   useEffect(() => {
     return () => {
@@ -695,66 +702,82 @@ export const Organization = () => {
                         </p>
                       )}
                     </div>
-                    <div className="relative mb-4">
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="create_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? "border-red-500" : "border-gray-300"} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                          placeholder=" "
-                          value={selectedPassword}
-                          onChange={(e) => handleChange("password", e.target.value)}
-                          onBlur={(e) => handleBlur("password", e.target.value)}
-                          autoComplete="new-password"
-                          spellCheck="false"
-                        />
-                        <label
-                          htmlFor="create_password"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          Create Password
-                        </label>
-                        <button
-                          type="button"
-                          className="absolute top-3 right-3 flex items-center text-gray-500"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                      </div>
-                      {errors.password && <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>}
-                    </div>
-                    <div className="relative mb-4">
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          id="confirm_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? "border-red-500" : "border-gray-300"} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                          placeholder=" "
-                          value={selectedConfirmPassword}
-                          onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                          onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
-                          autoComplete="new-password"
-                          spellCheck="false"
-                        />
-                        <label
-                          htmlFor="confirm_password"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          Confirm Password
-                        </label>
-                        <button
-                          type="button"
-                          className="absolute top-3 right-3 flex items-center text-gray-500"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
-                    </div>
+                  <div className="relative mb-4">
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      id="create_password"
+      className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${
+        errors.password ? "border-red-500" : "border-gray-300"
+      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+      placeholder=" "
+      value={selectedPassword}
+      onChange={(e) => handleChange("password", e.target.value)}
+      onBlur={(e) => handleBlur("password", e.target.value)}
+      onCopy={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      autoComplete="new-password"
+      spellCheck="false"
+    />
+    <label
+      htmlFor="create_password"
+      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+    >
+      Create Password
+    </label>
+    <button
+      type="button"
+      className="absolute top-3 right-3 flex items-center text-gray-500"
+      onClick={() => setShowPassword(!showPassword)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+    </button>
+  </div>
+  {errors.password && (
+    <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>
+  )}
+</div>
+
+<div className="relative mb-4">
+  <div className="relative">
+    <input
+      type={showConfirmPassword ? "text" : "password"}
+      id="confirm_password"
+      className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${
+        errors.confirmPassword ? "border-red-500" : "border-gray-300"
+      } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
+      placeholder=" "
+      value={selectedConfirmPassword}
+      onChange={(e) => handleChange("confirmPassword", e.target.value)}
+      onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
+      onCopy={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      autoComplete="new-password"
+      spellCheck="false"
+    />
+    <label
+      htmlFor="confirm_password"
+      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
+    >
+      Confirm Password
+    </label>
+    <button
+      type="button"
+      className="absolute top-3 right-3 flex items-center text-gray-500"
+      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+    >
+      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+    </button>
+  </div>
+  {errors.confirmPassword && (
+    <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+  )}
+</div>
+
                     <div className="flex justify-center">
                       <div className="text-sm mb-4">
                         If already registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-login')}>Login</span>

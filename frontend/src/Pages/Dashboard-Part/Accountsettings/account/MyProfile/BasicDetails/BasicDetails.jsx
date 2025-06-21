@@ -9,6 +9,8 @@ import { config } from '../../../../../../config';
 const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
   const { usersRes } = useCustomContext();
   const [contactData, setContactData] = useState({});
+  console.log("contactData",contactData);
+  
   const navigate = useNavigate();
   const location = useLocation();
 

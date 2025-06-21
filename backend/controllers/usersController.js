@@ -489,18 +489,20 @@ const getUsersByTenant = async (req, res) => {
     }
 
     // Fetch users with minimal fields
+
     const users = await Users.find({tenantId})
       .select(
       '_id roleId label status profileId firstName lastName email newEmail'
         // '_id roleId label status'
       )
+
       .populate({
         path: 'roleId',
         select: 'label roleName',
         model: 'Role'
       })
       .lean();
-//     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+    //     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
@@ -545,13 +547,19 @@ const getUsersByTenant = async (req, res) => {
         firstName: contact.firstName || '',
         lastName: contact.lastName || '',
         email: user.email || '',
-           newEmail: user.newEmail || '',
+        newEmail: user.newEmail || '',
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
+// <<<<<<< Ranjith
         roleId: user.roleId || '',
         roleName: user.roleName || '',
         label: user.label || '',
+// =======
+//         roleId: users.roleId || '',
+//         roleName: users.roleName || '',
+//         label: users.label || '',
+// >>>>>>> main
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
         status: user.status || '',

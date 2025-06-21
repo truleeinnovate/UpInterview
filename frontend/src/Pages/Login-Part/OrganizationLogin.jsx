@@ -92,95 +92,94 @@ const OrganizationLogin = () => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-  if (!validateLogin()) return;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!validateLogin()) return;
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    console.log("🔐 Attempting org login...");
-    const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    const {
-      token,
-      isEmailVerified,
-      status,
-      isProfileCompleted,
-      roleName,
-      contactEmailFromOrg,
-      success,
-      message,
-    } = response.data;
+      const {
+        token,
+        isEmailVerified,
+        status,
+        isProfileCompleted,
+        roleName,
+        contactEmailFromOrg,
+      } = response.data;
 
-    if (!success) {
-      throw new Error(message || 'Login failed');
-    }
+      setAuthCookies(token);
 
-    setAuthCookies(token);
-
-    if (!isEmailVerified) {
-      setIsEmailVerified(false);
-      await handleResendVerification();
-      setCountdown(60);
-      toast.error('Please verify your email to continue.');
-      return;
-    }
-
-    // Handle all status cases 
-    switch (status) {
-      case 'submitted':
-      case 'payment_pending':
-        navigate('/subscription-plans');
-        break;
-      case 'active':
-        if (typeof isProfileCompleted === 'undefined' || isProfileCompleted === true) {
-          navigate('/home');
-        } else if (isProfileCompleted === false && roleName) {
-          navigate('/complete-profile', {
-            state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
-          });
-        } else {
-          navigate('/home');
-        }
-        break;
-      default:
-        navigate('/');
-    }
-
-  } catch (error) {
-    setIsLoading(false);
-    console.error('Login error:', error);
-
-    if (error.response?.status === 403) {
-      const data = error.response.data;
-
-      if (data?.isEmailVerified === false) {
+      if (!isEmailVerified) {
         setIsEmailVerified(false);
         await handleResendVerification();
         setCountdown(60);
-        toast.error('Please verify your email to continue.');
         return;
       }
 
-      if (data?.status === 'submitted' || data?.status === 'payment_pending') {
-        navigate('/subscription-plans');
-        return;
+      // Handle successful login cases
+      switch (status) {
+        case 'submitted':
+        case 'payment_pending':
+          navigate('/subscription-plans');
+          break;
+        case 'active':
+          if (isProfileCompleted === false && roleName) {
+            navigate('/complete-profile', {
+              state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
+            });
+          } else {
+            navigate('/home');
+          }
+          break;
+        default:
+          navigate('/');
       }
 
-      toast.error(data?.message || 'Access denied.');
-    } else {
-      toast.error(error.response?.data?.message || 'Login failed. Please try again.');
-      setErrors((prev) => ({
-        ...prev,
-        email: error.response?.data.message || error.message || 'Login failed.',
-      }));
+    } catch (error) {
+      setIsLoading(false);
+
+      // Clear previous errors
+      setErrors({ email: '', password: '' });
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          // Use backend-provided field errors if available
+          if (data.fields) {
+            setErrors(data.fields);
+          }
+          // Fallback for generic invalid credentials message
+          else if (data.message === 'Invalid email or password') {
+            setErrors({
+              email: 'Invalid credentials',
+              password: 'Invalid credentials'
+            });
+          }
+        }
+        else if (status === 403) {
+          if (data.isEmailVerified === false) {
+            setIsEmailVerified(false);
+            await handleResendVerification();
+            setCountdown(60);
+          } else {
+            toast.error(data.message || 'Access denied');
+          }
+        }
+        else if (status >= 500) {
+          toast.error('Login failed. Please try again later.');
+        }
+      } else {
+        toast.error('Network error. Please check your connection.');
+      }
     }
-  }
-};
+  };
 
   return (
     <div>
@@ -240,8 +239,12 @@ const OrganizationLogin = () => {
                 </div>
                 <div className="mb-5">
                   <p
-                    className="text-custom-blue cursor-pointer text-xs"
-                    onClick={() => navigate('/forgetPassword')}
+                    className="text-custom-blue cursor-pointer text-xs hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/forgetPassword');
+                    }}
+                    style={{ display: 'inline-block' }} // Ensures only the text area is clickable
                   >
                     Forgot Password?
                   </p>
@@ -273,7 +276,7 @@ const OrganizationLogin = () => {
                 </div>
                 <div className="flex justify-center mt-4">
                   <p className="text-sm mb-4">
-                    If not registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-signup')}>Sign Up</span>
+                    If not registered | <span className="cursor-pointer text-custom-blue hover:underline" onClick={() => navigate('/organization-signup')}>Sign Up</span>
                   </p>
                 </div>
               </form>

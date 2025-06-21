@@ -265,6 +265,9 @@ const CompanyEditProfile = () => {
   };
 
   const removeLogo = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ""; // Reset input value Added by Ashok
+    }
     setLogoFile(null);
     setLogoPreview("");
     setFormData((prev) => ({ ...prev, logo: "" }));
@@ -300,7 +303,6 @@ const CompanyEditProfile = () => {
       // UPLOADING FILES
       // file, type, entity, entityId
       await uploadFile(logoFile, "logo", "organization", id);
-      console.log("LOGO FILE =============================: ", logoFile);
 
       const updatedData = {
         company: formData.company,
@@ -433,6 +435,7 @@ const CompanyEditProfile = () => {
                   />
                   {logoPreview && (
                     <button
+                      title="Remove Logo"
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
