@@ -13,7 +13,7 @@ import {
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from "react-router-dom";
-import { Minimize, Expand, ChevronDown, X } from "lucide-react";
+import { Minimize, Expand, ChevronDown, X, Trash } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
@@ -215,6 +215,9 @@ const AddCandidateForm = ({ mode }) => {
     CurrentRole: "",
   });
   const [errors, setErrors] = useState({});
+
+  const [isProfilePicRemoved, setIsProfilePicRemoved] = useState(false);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -428,14 +431,22 @@ const AddCandidateForm = ({ mode }) => {
   };
 
   const removeImage = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ""; // Reset input value Added by Ashok
+    }
     // setImageFile(null);
     setImagePreview(null);
     setSelectedImage(null);
+    setIsProfilePicRemoved(true);
   };
 
   const removeResume = () => {
     // setResumeFile(null);
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = ""; // Reset input value Added by Ashok
+    }
     setSelectedResume(null);
+    setIsResumeRemoved(true);
   };
 
   const handleChange = (e) => {
@@ -531,6 +542,8 @@ const AddCandidateForm = ({ mode }) => {
         data,
         profilePicFile: selectedImage,
         resumeFile: selectedResume,
+        isProfilePicRemoved,
+        isResumeRemoved,
       });
       resetFormData();
       if (!isAddCandidate) {
@@ -648,9 +661,8 @@ const AddCandidateForm = ({ mode }) => {
                       />
                     ) : selectedImage?.path ? (
                       <img
-                        // src={`http://localhost:5000/${formData.ImageData.path}`}
-                        src={selectedImage?.path} // Added by Ashok
-                        className="w-full h-full object-cover rounded-lg" // added by Ashok
+                        src={selectedImage?.path}
+                        className="w-full h-full object-cover rounded-lg"
                         alt={selectedImage.FirstName || "Candidate"}
                         onError={(e) => {
                           e.target.src = "/default-profile.png";
@@ -674,6 +686,7 @@ const AddCandidateForm = ({ mode }) => {
                   />
                   {imagePreview && (
                     <button
+                      title="Remove Image"
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -682,6 +695,7 @@ const AddCandidateForm = ({ mode }) => {
                       className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
                       {/* Icon placeholder */}
+                      <Trash className="w-3 h-3" />
                     </button>
                   )}
                 </div>
@@ -728,6 +742,7 @@ const AddCandidateForm = ({ mode }) => {
                   />
                   {selectedResume && (
                     <button
+                      title="Remove Resume"
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -736,6 +751,7 @@ const AddCandidateForm = ({ mode }) => {
                       className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
                       {/* Icon placeholder */}
+                      <Trash className="w-3 h-3" />
                     </button>
                   )}
                 </div>

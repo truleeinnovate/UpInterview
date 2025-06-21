@@ -42,7 +42,14 @@ export const useCandidates = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async ({ id, data, profilePicFile, resumeFile }) => {
+    mutationFn: async ({
+      id,
+      data,
+      profilePicFile,
+      resumeFile,
+      isProfilePicRemoved,
+      isResumeRemoved,
+    }) => {
       const method = id ? "patch" : "post";
       const url = id
         ? `${config.REACT_APP_API_URL}/candidate/${id}`
@@ -52,8 +59,25 @@ export const useCandidates = () => {
       const candidateId = response.data.data._id;
 
       // uploading or updating files profilePic and resume
-      await uploadFile(profilePicFile, "image", "candidate", candidateId);
-      await uploadFile(resumeFile, "resume", "candidate", candidateId);
+      // Delete image if explicitly removed
+      if (isProfilePicRemoved && !profilePicFile) {
+        await uploadFile(null, "image", "candidate", candidateId);
+      }
+
+      // Delete resume if explicitly removed
+      if (isResumeRemoved && !resumeFile) {
+        await uploadFile(null, "resume", "candidate", candidateId);
+      }
+
+      // Upload new image if present
+      if (profilePicFile instanceof File) {
+        await uploadFile(profilePicFile, "image", "candidate", candidateId);
+      }
+
+      // Upload new resume if present
+      if (resumeFile instanceof File) {
+        await uploadFile(resumeFile, "resume", "candidate", candidateId);
+      }
 
       return response.data;
     },
