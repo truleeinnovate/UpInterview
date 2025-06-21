@@ -86,6 +86,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
         ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         : [];
       setNotificationList(sortedNotifications);
+      //console.log("Fetched Notifications:", sortedNotifications); // Debug log
     } catch (err) {
       console.error('Error fetching notifications:', err);
       // setError('Failed to fetch notifications');
@@ -149,6 +150,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
     if (a.unread === b.unread) return 0;
     return a.unread ? -1 : 1;
   });
+  //console.log("Filtered Notifications:", filteredNotifications); // Debug log
 
   const unreadCount = (notificationList || []).filter((n) => n?.unread).length;
 
