@@ -334,6 +334,8 @@ const SubscriptionCardDetails = () => {
                                                 subscriptionId: orderResponse.data.subscriptionId,
                                                 orderId: response.razorpay_order_id,
                                                 isUpgrading: isUpgrading,
+                                                planName: planDetails.name,
+                                                membershipType: cardDetails.membershipType,
                                                 nextRoute: isUpgrading ? '/SubscriptionDetails' : '/account-settings/subscription'
                                             }
                                         });
