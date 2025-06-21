@@ -91,12 +91,12 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
 
     setIsCheckingEmail(true);
 
-    const formatError = validateWorkEmail(email);
-    if (formatError) {
-      setErrors(prev => ({ ...prev, email: formatError }));
-      setIsCheckingEmail(false);
-      return;
-    }
+    // const formatError = validateWorkEmail(email);
+    // if (formatError) {
+    //   setErrors(prev => ({ ...prev, email: formatError }));
+    //   setIsCheckingEmail(false);
+    //   return;
+    // }
 
     const exists = await checkEmailExists(email);
     if (exists) {
@@ -129,11 +129,11 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
 
     // Additional email validation if changed
     if (formData.email !== originalEmail) {
-      const emailFormatError = validateWorkEmail(formData.email);
-      if (emailFormatError) {
-        setErrors(prev => ({ ...prev, email: emailFormatError }));
-        return;
-      }
+      // const emailFormatError = validateWorkEmail(formData.email);
+      // if (emailFormatError) {
+      //   setErrors(prev => ({ ...prev, email: emailFormatError }));
+      //   return;
+      // }
 
       const exists = await checkEmailExists(formData.email);
       if (exists) {
@@ -144,7 +144,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
       // Trigger email change request
       try {
         const response = await axios.post(
-          `${config.REACT_APP_API_URL}/auth/request-email-change`,
+          `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
           {
             oldEmail: originalEmail,
             newEmail: formData.email,
@@ -156,6 +156,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
           alert('Verification email sent to your new email address');
           const cleanFormData = {
             email: originalEmail, // Keep original email until verified
+            // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
             newEmail: formData.email.trim(), // Store new email in newEmail field
             firstName: formData.firstName.trim() || '',
             lastName: formData.lastName.trim() || '',

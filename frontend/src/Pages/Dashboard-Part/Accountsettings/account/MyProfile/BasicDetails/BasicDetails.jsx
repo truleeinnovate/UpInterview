@@ -22,15 +22,31 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       : usersRes.find(user => user?._id === userId);
 
     if (selectedContact) {
+      console.log("selectedContact",selectedContact);
+      
       setContactData(selectedContact);
     }
   }, [usersId, userId, usersRes]);
 
   const handleResendEmailVerification = async () => {
     try {
-      const response = await axios.post(`${config.REACT_APP_API_URL}/auth/resend-verification`, {
-        email: contactData.email
+      const response = await axios.post(
+        // `${config.REACT_APP_API_URL}/auth/resend-verification`
+         `${config.REACT_APP_API_URL}/emails/auth/request-email-change`
+        , {
+           oldEmail: contactData.email,
+            newEmail: contactData.newEmail,
+            userId: contactData._id
+        // email: contactData.email
       });
+
+      // console.log("email data",{
+      //      oldEmail: contactData.email,
+      //       newEmail: contactData.newEmail,
+      //       userId: contactData._id
+      // });
+      
+
       if (response.data.success) {
         alert('Verification email resent successfully');
       } else {
