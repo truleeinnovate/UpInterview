@@ -183,8 +183,12 @@ const App = () => {
             <Route path="/organization-signup" element={<OrganizationSignUp />} />
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
-            <Route path="/payment-details" element={<CardDetails />} />
-            <Route path="/subscription-payment-details" element={<SubscriptionCardDetails />} />
+            <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
+            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar/>
+            <div className="ml-80">
+             <Subscription/>
+             </div>
+             </></>} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />

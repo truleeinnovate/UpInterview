@@ -388,18 +388,18 @@ const SubscriptionCardDetails = () => {
     
 
     return (
-        <div className="flex pt-4 flex-col h-full w-full items-center bg-white">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50  pt-4">
             {/* Add ToastContainer to display toast notifications */}
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
             
             {processing ? (
                 <div className="flex flex-col items-center justify-center h-screen">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                    <p className="mt-4 text-lg font-medium text-gray-700">Processing your Subscription...</p>
+                    <p className="mt-4 text-lg font-medium text-white">Processing your Subscription...</p>
                 </div>
             ) : (
                 <form
-                    className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border-2 border-gray-300 rounded-md"
+                    className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"
                     onSubmit={handleSubmit}
             >
                 <div className="flex items-center justify-between">
@@ -434,7 +434,7 @@ const SubscriptionCardDetails = () => {
                             </div>
                             
                             <div className="mt-3 flex justify-center">
-                                <img alt="VisaCard" className="h-8 mx-1" src="https://dwglogo.com/wp-content/uploads/2016/08/Visa-logo-02.png" />
+                                <img alt="VisaCard" className="h-8 mx-1" src="https://img.icons8.com/?size=100&id=13608&format=png&color=000000" />
                                 <img alt="MasterCard" className="h-8 mx-1" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
                                 <img alt="Razorpay" className="h-8 mx-1" src="https://razorpay.com/assets/razorpay-logo.svg" />
                             </div>
@@ -531,7 +531,7 @@ const SubscriptionCardDetails = () => {
                         </div>
 
                         {/* Add-on */}
-                        <label className="block mb-1 text-lg font-medium text-gray-700">
+                        {/* <label className="block mb-1 text-lg font-medium text-gray-700">
                             Add-ons
                         </label>
                         <div
@@ -572,7 +572,7 @@ const SubscriptionCardDetails = () => {
                             </div>
 
 
-                        </div>
+                        </div> */}
 
                         {errors.membershipType && (
                             <p className="text-red-500 text-sm pt-1">{errors.membershipType}</p>
