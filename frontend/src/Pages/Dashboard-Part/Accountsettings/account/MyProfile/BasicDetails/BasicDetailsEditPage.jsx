@@ -12,6 +12,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
 import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
+import { toast } from 'react-hot-toast';
 
 Modal.setAppElement('#root');
 
@@ -164,7 +165,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
         );
 
         if (response.data.success) {
-          alert('Verification email sent to your new email address');
+          toast.success('Verification email sent to your new email address');
           const cleanFormData = {
             // email: originalEmail, // Keep original email until verified
             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified

@@ -488,47 +488,21 @@ const getUsersByTenant = async (req, res) => {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
-    // Fetch users with minimal fields
-
-    const users = await Users.find({tenantId})
-      .select(
-      '_id roleId label status profileId firstName lastName email newEmail'
-        // '_id roleId label status'
-      )
-
-      .populate({
-        path: 'roleId',
-        select: 'label roleName',
-        model: 'Role'
-      })
-      .lean();
-    //     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+    const users = await Users.find({ tenantId }).lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
 
-    //  firstName: { type: String },
-    // lastName: { type: String },
-    // email: { type: String },
-    // newEmail:
-
-    // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
-      Contacts.find({tenantId}).populate({
-        path: 'availability',
-        model: 'Interviewavailability',
-        select: 'days -_id' // Only fetch days field, exclude _id
-      }).lean(),
-      // Role.find({ tenantId }, 'label roleName').lean(),
+      Contacts.find({ tenantId }).lean(),
+      Role.find({ tenantId }).lean() // ✅ Fix: using correct field
     ]);
 
-    // Create role map for label lookup
-    // const roleMap = roles.reduce((acc, role) => {
-    //   acc[role._id.toString()] = role;
-    //   return acc;
-    // }, {});
+    const roleMap = roles.reduce((acc, role) => {
+      acc[role._id.toString()] = role;
+      return acc;
+    }, {});
 
-    // Create contact map by ownerId
     const contactMap = contacts.reduce((acc, contact) => {
       if (contact.ownerId) {
         acc[contact.ownerId.toString()] = contact;
@@ -536,10 +510,9 @@ const getUsersByTenant = async (req, res) => {
       return acc;
     }, {});
 
-    // Combine user data, pulling most fields from Contacts
     const combinedUsers = users.map(user => {
       const contact = contactMap[user._id.toString()] || {};
-      // const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
+      const role = user.roleId ? roleMap[user.roleId] : {};
 
       return {
         _id: user._id,
@@ -551,15 +524,15 @@ const getUsersByTenant = async (req, res) => {
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
-// <<<<<<< Ranjith
+        // <<<<<<< Ranjith
         roleId: user.roleId || '',
-        roleName: user.roleName || '',
-        label: user.label || '',
-// =======
-//         roleId: users.roleId || '',
-//         roleName: users.roleName || '',
-//         label: users.label || '',
-// >>>>>>> main
+        roleName: role.roleName || '',
+        label: role.label || '',
+        // =======
+        //         roleId: users.roleId || '',
+        //         roleName: users.roleName || '',
+        //         label: users.label || '',
+        // >>>>>>> main
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
         status: user.status || '',
@@ -597,6 +570,107 @@ const getUsersByTenant = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// const getUsersByTenant = async (req, res) => {
+//   try {
+//     const { tenantId } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+//       return res.status(400).json({ message: 'Invalid tenant ID' });
+//     }
+
+//     const users = await Users.find({
+//       tenantId,
+//       $or: [
+//         { roleId: { $exists: true, $ne: null, $ne: "" } },
+//         { roleId: { $exists: false } },
+//       ],
+//     })
+//       .select('_id roleId label status profileId firstName lastName email newEmail')
+//       .populate({
+//         path: 'roleId',
+//         select: 'label roleName',
+//         model: 'Role',
+//         match: { _id: { $ne: null, $ne: "" } },
+//       })
+//       .lean();
+
+//     if (!users || users.length === 0) {
+//       return res.status(200).json([]);
+//     }
+
+//     const contacts = await Contacts.find({ tenantId })
+//       .populate({
+//         path: 'availability',
+//         model: 'Interviewavailability',
+//         select: 'days -_id',
+//       })
+//       .lean();
+
+//     const contactMap = contacts.reduce((acc, contact) => {
+//       if (contact.ownerId) {
+//         acc[contact.ownerId.toString()] = contact;
+//       }
+//       return acc;
+//     }, {});
+
+//     const combinedUsers = users.map(user => {
+//       const contact = contactMap[user._id.toString()] || {};
+//       const role = user.roleId || {};
+
+//       return {
+//         _id: user._id,
+//         contactId: contact._id || '',
+//         firstName: contact.firstName || '',
+//         lastName: contact.lastName || '',
+//         email: user.email || '',
+//         newEmail: user.newEmail || '',
+//         countryCode: contact.countryCode || '',
+//         gender: contact.gender || '',
+//         phone: contact.phone || '',
+//         roleId: role._id || '',
+//         roleName: role.roleName || '',
+//         label: role.label || user.label || '',
+//         imageData: contact.imageData || null,
+//         createdAt: user.createdAt || contact.createdAt,
+//         status: user.status || '',
+//         updatedAt: user.updatedAt || contact.updatedAt,
+//         profileId: contact.profileId || '',
+//         linkedinUrl: contact.linkedinUrl || '',
+//         portfolioUrl: contact.portfolioUrl || '',
+//         hourlyRate: contact.hourlyRate || '',
+//         currentRole: contact.currentRole || '',
+//         industry: contact.industry || '',
+//         experienceYears: contact.experienceYears || '',
+//         location: contact.location || '',
+//         resumePdf: contact.resumePdf || '',
+//         coverLetter: contact.coverLetter || '',
+//         coverLetterDescription: contact.coverLetterdescription || '',
+//         professionalTitle: contact.professionalTitle || '',
+//         bio: contact.bio || '',
+//         interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+//         noShowPolicy: contact.NoShowPolicy || '',
+//         previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
+//         previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
+//         expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
+//         technologies: contact.technologies || [],
+//         skills: contact.skills || [],
+//         timeZone: contact.timeZone || '',
+//         preferredDuration: contact.preferredDuration || '',
+//         availability: contact.availability || [],
+//         dateOfBirth: contact.dateOfBirth || '',
+//       };
+//     });
+
+//     res.status(200).json(combinedUsers);
+//   } catch (error) {
+//     console.error('Error fetching users:', error);
+//     if (error.name === 'CastError') {
+//       return res.status(400).json({ message: 'Invalid roleId in database' });
+//     }
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
 const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
@@ -606,7 +680,19 @@ const getUniqueUserByOwnerId = async (req, res) => {
     }
 
     // Fetch users with minimal fields
-    const users = await Users.findOne({ _id: ownerId }, '_id roleId label status').lean();
+    const users = await Users.find({ tenantId })
+      .select('_id roleId label status profileId firstName lastName email newEmail')
+      .populate({
+        path: 'roleId',
+        select: 'label roleName',
+        model: 'Role',
+        options: { lean: true }
+      })
+      .lean()
+      .catch(err => {
+        console.error('Error populating roleId:', err);
+        return Users.find({ tenantId }).lean(); // fallback without population
+      });
     console.log("users -------------------", users);
 
     if (!users) {
