@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 const SubscriptionSuccess = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { paymentId, subscriptionId, isUpgrading, nextRoute } = location.state || {};
+    const { paymentId, subscriptionId, isUpgrading, planName, membershipType, nextRoute } = location.state || {};
 
     useEffect(() => {
         if (!paymentId || !subscriptionId) {
@@ -60,7 +60,7 @@ const SubscriptionSuccess = () => {
                     </Typography>
 
                     <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                        Your subscription has been {isUpgrading ? 'upgraded' : 'activated'} successfully.
+                        Your subscription has been {isUpgrading ? 'upgraded' + planName + ' ' + membershipType + ' successfully.' : 'activated ' + planName + ' ' + membershipType + ' successfully.'}
                     </Typography>
 
                     <Box sx={{ mb: 2 }}>
