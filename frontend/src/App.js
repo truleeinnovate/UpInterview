@@ -16,6 +16,7 @@ import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
 import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx';
 // import TokenExpirationHandler from './utils/TokenExpirationHandler';
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
+import VerifyUserEmail from './VerifyUserEmail.jsx';
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -406,6 +407,7 @@ const App = () => {
               <Route path="/task" element={<Task />} />
 {/* verify work email */}
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/verify-user-email" element={<VerifyUserEmail />}/>
             </Route>
           </Routes>
         </div>

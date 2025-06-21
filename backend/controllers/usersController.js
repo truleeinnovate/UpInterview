@@ -482,15 +482,20 @@ const UpdateUser = async (req, res) => {
 
 const getUsersByTenant = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { tenantId } = req.params;
 
-    if (!userId) {
+    if (!tenantId) {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
     // Fetch users with minimal fields
-    const users = await Users.find({ _id: userId })
-      .select('_id roleId label status profileId firstName lastName email newEmail')
+
+    const users = await Users.find({tenantId})
+      .select(
+      '_id roleId label status profileId firstName lastName email newEmail'
+        // '_id roleId label status'
+      )
+
       .populate({
         path: 'roleId',
         select: 'label roleName',
@@ -509,7 +514,7 @@ const getUsersByTenant = async (req, res) => {
 
     // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
-      Contacts.find({ ownerId: userId }).populate({
+      Contacts.find({tenantId}).populate({
         path: 'availability',
         model: 'Interviewavailability',
         select: 'days -_id' // Only fetch days field, exclude _id
@@ -546,9 +551,15 @@ const getUsersByTenant = async (req, res) => {
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
-        roleId: users.roleId || '',
-        roleName: users.roleName || '',
-        label: users.label || '',
+// <<<<<<< Ranjith
+        roleId: user.roleId || '',
+        roleName: user.roleName || '',
+        label: user.label || '',
+// =======
+//         roleId: users.roleId || '',
+//         roleName: users.roleName || '',
+//         label: users.label || '',
+// >>>>>>> main
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
         status: user.status || '',

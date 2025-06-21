@@ -12,7 +12,7 @@ router.get('/', getUsers);
 router.get('/owner/:ownerId', getUniqueUserByOwnerId);
 
 
-router.get('/:userId', getUsersByTenant);
+router.get('/:tenantId', getUsersByTenant);
 
 
 

@@ -25,7 +25,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       : usersRes.find(user => user?._id === userId);
 
     if (selectedContact) {
-      console.log("selectedContact",selectedContact);
+      console.log("selectedContact",selectedContact?.roleId?.label);
       
       setContactData(selectedContact);
     }
@@ -83,12 +83,14 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
         {mode === 'users' && (
           <div className="flex gap-2">
+            {contactData.newEmail &&
             <button
               onClick={handleResendEmailVerification}
               className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
             >
               Resend Email Verification
             </button>
+}
             {!contactData.newEmail && (
               <button
                 onClick={handleResendPasswordChange}
@@ -170,7 +172,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
           {organization === true && (
             <div>
               <p className="text-sm text-gray-500">Role</p>
-              <p className="font-medium truncate">{contactData?.label || 'Not Provided'}</p>
+              <p className="font-medium truncate">{contactData?.roleId?.label || 'Not Provided'}</p>
             </div>
           )}
 

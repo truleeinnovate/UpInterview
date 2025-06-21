@@ -218,7 +218,7 @@ const Users = () => {
     },
     { key: "email", header: "Email", render: (value) => value || "N/A" },
     { key: "phone", header: "Phone", render: (value) => value || "N/A" },
-    { key: "label", header: "Role", render: (value) => value || "N/A" },
+    { key: "label", header: "Role", render: (value) => value?.roleId?.label || "N/A" },
   ];
 
   // Table Actions Configuration

@@ -11,6 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
+import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
 
 Modal.setAppElement('#root');
 
@@ -81,6 +82,16 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
       handleEmailValidation(value);
     }
   };
+
+  const handleProfileIdValidation = (profileId) => {
+  const error = validateProfileId(profileId);
+  if (error) {
+    setErrors(prev => ({ ...prev, profileId: error }));
+  } else {
+    setErrors(prev => ({ ...prev, profileId: '' }));
+  }
+};
+
 
   const handleEmailValidation = async (email) => {
     if (!email) {
@@ -155,7 +166,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
         if (response.data.success) {
           alert('Verification email sent to your new email address');
           const cleanFormData = {
-            email: originalEmail, // Keep original email until verified
+            // email: originalEmail, // Keep original email until verified
             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
             newEmail: formData.email.trim(), // Store new email in newEmail field
             firstName: formData.firstName.trim() || '',
@@ -169,6 +180,9 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
             portfolioUrl: formData.portfolioUrl.trim() || '',
             id: formData.id
           };
+
+          console.log("cleanFormData",cleanFormData);
+          
 
           await axios.patch(
             `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
@@ -342,7 +356,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                   type="text"
                   name="profileId"
                   value={formData.profileId || ''}
-                  onChange={handleInputChange}
+                  // onChange={handleInputChange}
+                  onBlur={() => handleProfileIdValidation(formData.profileId)}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
                     errors.profileId ? 'border-red-500' : 'border-gray-300'
                   }`}

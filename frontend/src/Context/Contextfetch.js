@@ -333,12 +333,12 @@ const CustomProvider = ({ children }) => {
     isLoading: usersLoading,
     refetch: refetchUsers,
   } = useQuery({
-    queryKey: ["users", userId],
+    queryKey: ["users", tenantId],
     queryFn: async () => {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/users/${userId}`
+        `${config.REACT_APP_API_URL}/users/${tenantId}`
       );
-console.log('response.data user',response.data);
+// console.log('response.data user',response.data);
 
       // Process image URLs and reverse the array (newest first)
       return response.data
@@ -353,7 +353,7 @@ console.log('response.data user',response.data);
         })
         .reverse();
     },
-    enabled: !!userId,
+    enabled: !!tenantId,
   });
 
   // Mutation for creating/updating users
