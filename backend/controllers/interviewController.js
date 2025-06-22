@@ -479,12 +479,12 @@ const createInterview = async (req, res) => {
 
             let nextNumber = 1;
             if (lastInterview && lastInterview.interviewCode) {
-                const match = lastInterview.interviewCode.match(/INV-(\d+)/);
+                const match = lastInterview.interviewCode.match(/INTV-(\d+)/);
                 if (match) {
                     nextNumber = parseInt(match[1], 10) + 1;
                 }
             }
-            interviewData.interviewCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+            interviewData.interviewCode = `INTV-${String(nextNumber).padStart(5, '0')}`;
             interviewData.createdBy = userId;
 
             interview = new Interview(interviewData);
