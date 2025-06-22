@@ -29,7 +29,17 @@ const LinkedInCallback = () => {
     }
   };
 
-  const determineNavigation = (contact, token, email) => {
+  const fetchTenantByEmail = async (email) => {
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/tenants/email/${email}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tenant:', error);
+      return null;
+    }
+  };
+
+  const determineNavigation = async (contact, token, email) => {
     if (!contact) {
       // No contact found - new user
       return navigate('/select-profession', {
@@ -101,8 +111,16 @@ const LinkedInCallback = () => {
     }
 
     if (basicDetails && additionalDetails && interviewDetails && availabilityDetails) {
-      // All steps completed - go to subscription plans
-      return navigate('/subscription-plans');
+      // All steps completed - check tenant status
+      const tenant = await fetchTenantByEmail(email);
+      
+      if (tenant && (tenant.status === 'submitted' || tenant.status === 'payment_pending')) {
+        // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
+        return navigate('/subscription-plans');
+      } else {
+        // For any other status or if tenant not found, go to home
+        return navigate('/');
+      }
     }
 
     // Default fallback

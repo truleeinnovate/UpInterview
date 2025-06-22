@@ -792,7 +792,7 @@ app.use("/assessment-questions", assessmentQuestionsRoutes);
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use("/schedule-assessment", scheduledAssessmentRouter);
 
-const { Contacts } = require("./models/Contacts.js");
+// const { Contacts } = require("./models/Contacts.js");
 // app.get('/contacts', async (req, res) => {
 //   try {
 //     const contacts = await Contacts.find().populate('availability');
@@ -948,3 +948,7 @@ app.use("/notifications", notificationRoutes);
 // upload route
 const uploadRoute = require("./routes/UploadRoute/uploadRoute.js");
 app.use("/upload", uploadRoute);
+
+// Tenant routes
+const tenantRoutes = require("./routes/tenantRoutes");
+app.use("/api/tenants", tenantRoutes);

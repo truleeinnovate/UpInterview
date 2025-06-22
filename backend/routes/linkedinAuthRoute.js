@@ -139,7 +139,7 @@ router.post('/check-user', async (req, res) => {
       return res.json({
         existingUser: false,
         email: newUser.email,
-        token
+        token,
       });
     }
 
