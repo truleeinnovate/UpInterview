@@ -68,6 +68,7 @@ export const PermissionsProvider = ({ children }) => {
             roleMAster: getObjectPermissions(profileResponse.data[0], 'RoleMAster'),
             industries: getObjectPermissions(profileResponse.data[0], 'Industries'),
             interviewGroup: getObjectPermissions(profileResponse.data[0], 'InterviewGroups'),
+            pushNotification: getObjectPermissions(profileResponse.data[0], 'PushNotification'),
           };
           setObjectPermissions(newObjectPermissions);
 
@@ -82,6 +83,7 @@ export const PermissionsProvider = ({ children }) => {
             interviews: getTabPermissions(profileResponse.data[0], 'Interviews'),
             analytics: getTabPermissions(profileResponse.data[0], 'Analytics'),
             interviewGroup: getTabPermissions(profileResponse.data[0], 'InterviewGroups'),
+            pushNotification: getTabPermissions(profileResponse.data[0], 'PushNotification'),
           };
           setTabPermissions(newTabPermissions);
 
@@ -100,6 +102,7 @@ export const PermissionsProvider = ({ children }) => {
             roleMAster: getSharingPermissions(sharesetting, 'RoleMAster'),
             industries: getSharingPermissions(sharesetting, 'Industries'),
             interviewGroup: getSharingPermissions(sharesetting, 'InterviewGroups'),
+            pushNotification: getSharingPermissions(sharesetting, 'PushNotification'),
           };
           setSharingPermissions(newSharingPermissions);
         }
