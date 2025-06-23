@@ -953,4 +953,4 @@ app.use("/upload", uploadRoute);
 
 // Tenant routes
 const tenantRoutes = require("./routes/tenantRoutes");
-app.use("/api/tenants", tenantRoutes);
+app.use("/tenants", tenantRoutes);
