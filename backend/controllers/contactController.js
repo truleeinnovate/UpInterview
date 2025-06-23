@@ -2,6 +2,7 @@ const { Contacts } = require('../models/Contacts');
 const Interviewavailability = require('../models/InterviewAvailability');
 const { Users } = require('../models/Users');
 
+// Mansoor: for fetching the total contacts to the login pages (Individula-4)
 const getAllContacts = async (req, res) => {
     try {
         const contacts = await Contacts.find().populate('availability');

@@ -4,7 +4,6 @@ import { useCustomContext } from '../../../../Context/Contextfetch.js';
 
 const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
     const { interviewers } = useCustomContext();
-    console.log("interviewers", interviewers);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [slideDirection, setSlideDirection] = useState('right');
 

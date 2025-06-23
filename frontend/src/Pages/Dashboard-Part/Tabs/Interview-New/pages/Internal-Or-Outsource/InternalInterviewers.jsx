@@ -4,8 +4,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
 const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, selectedInterviewers: selectedInterviewersProp = [], }) => {
-  const { interviewers, groups } = useCustomContext();
-  console.log("interviewers", interviewers);
+  const { interviewers, groups, fetchInterviewers } = useCustomContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -14,8 +13,34 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
+  const [selectedRole, setSelectedRole] = useState('all');
+  const roles = [
+    { value: 'all', label: 'All' },
+    { value: 'Admin', label: 'Admin' },
+    { value: 'HR_Manager', label: 'HR Manager' },
+    { value: 'HR_Lead', label: 'HR Lead' },
+    { value: 'Recruiter', label: 'Recruiter' },
+    { value: 'Internal_Interviewer', label: 'Internal Interviewer' },
+  ];
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const roleDropdownRef = useRef(null);
 
-    // console.log("interviewers Data", interviewers);
+  // Fetch all interviewers on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchInterviewers(); // Fetch all interviewers without role filter
+      } catch (error) {
+        console.error('Error fetching interviewers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [fetchInterviewers]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -25,6 +50,9 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
+        setShowRoleDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -33,46 +61,47 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
     };
   }, [onClose]);
 
-  // useEffect(() => {
-  //   setSelectedInterviewers(selectedInterviewersProp);
-  // }, [selectedInterviewersProp]);
-
   const FilteredData = useMemo(() => {
     if (viewType === 'individuals') {
       const interviewersArray = interviewers?.data && Array.isArray(interviewers.data) ? interviewers.data : [];
       return interviewersArray
         .filter((interviewer) => {
+          // Filter by selected role
+          if (selectedRole !== 'all' && interviewer.roleName !== selectedRole) {
+            return false;
+          }
+          
+          // Filter by search query
           const contact = interviewer.contact || {};
-          const isInternal = interviewer.type === 'internal';
           const matchesSearch = [contact.firstName, contact.lastName, contact.email, contact.phone].some(
             (field) => field && field.toString().toLowerCase().includes(searchQuery.toLowerCase())
           );
-          return isInternal && matchesSearch;
+          return matchesSearch;
         })
         .map((interviewer) => ({
           _id: interviewer._id,
-          ...interviewer.contact, // Spread the contact details
+          ...interviewer.contact,
           contactId: interviewer.contact?._id || null,
           type: interviewer.type,
+          roleName: interviewer.roleName, // Include roleName in the mapped data
           availability: interviewer.availability,
-          name:interviewer.firstName + interviewer.lastName
-          // Include any other fields you need
+          name: interviewer.firstName + interviewer.lastName
         }));
     } else {
+      // Groups filtering remains the same
       return Array.isArray(groups)
         ? groups.filter((group) =>
-          [group.name, group.description].some(
-            (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+            [group.name, group.description].some(
+              (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+            )
           )
-        )
         : [];
     }
-  }, [interviewers, groups, searchQuery, viewType]);
+  }, [interviewers, groups, searchQuery, viewType, selectedRole]); // Added selectedRole to dependencies
+  
 
   useEffect(() => {
-    // No need to transform the data as we're already including all necessary fields in the FilteredData
     setFilteredData(FilteredData);
-    console.log("Filtered Interviewers:", FilteredData);
   }, [FilteredData]);
 
   const handleSearchInputChange = (event) => {
@@ -80,7 +109,6 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
   };
 
   const handleSelectClick = (item) => {
-    console.log("Selected interviewer:", item);
     setSelectedInterviewers((prev) => {
       const isAlreadySelected = prev.some(interviewer => interviewer._id === item._id);
       if (isAlreadySelected) {
@@ -92,15 +120,26 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
   };
 
   const handleScheduleClick = () => {
-    console.log("Selected interviewers:", selectedInterviewers);
-    // Pass the complete interviewer data to the parent
     onSelectCandidates(selectedInterviewers);
     onClose();
   };
 
   const isInterviewerSelected = (item) => selectedInterviewers?.some(interviewer => interviewer._id === item._id);
 
-  const toggleDropdown = () => setShowDropdown(!showDropdown);
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+    setShowRoleDropdown(false);
+  };
+
+  const toggleRoleDropdown = () => {
+    setShowRoleDropdown(!showRoleDropdown);
+    setShowDropdown(false);
+  };
+
+  const selectRole = (role) => {
+    setSelectedRole(role);
+    setShowRoleDropdown(false);
+  };
 
   const selectViewType = (type) => {
     setViewType(type);
@@ -146,8 +185,8 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         {/* Fixed Dropdown and Search Section */}
         <div className="px-6 bg-white border-b border-gray-200 z-10">
           <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5">
-            {/* Dropdown */}
-            <div className="w-[30%]" ref={dropdownRef}>
+            {/* View Type Dropdown */}
+            <div className="w-[25%]" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
                 className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -160,7 +199,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
                 )}
               </button>
               {showDropdown && (
-                <div className="absolute z-20 mt-1 w-[25%] bg-white shadow-lg rounded-md py-1 border border-gray-200">
+                <div className="absolute z-20 mt-1 w-[20%] bg-white shadow-lg rounded-md py-1 border border-gray-200">
                   <button
                     onClick={() => selectViewType('individuals')}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -173,6 +212,36 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
                   >
                     Groups
                   </button>
+                </div>
+              )}
+            </div>
+
+            {/* Role Filter Dropdown */}
+            <div className="w-[25%] relative" ref={roleDropdownRef}>
+              <button
+                onClick={toggleRoleDropdown}
+                className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <span>
+                  {roles.find(r => r.value === selectedRole)?.label || 'Select Role'}
+                </span>
+                {showRoleDropdown ? (
+                  <ChevronUp className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+              {showRoleDropdown && (
+                <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
+                  {roles.map((role) => (
+                    <button
+                      key={role.value}
+                      onClick={() => selectRole(role.value)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      {role.label}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -196,7 +265,6 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         {/* Scrollable Data Section */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className={`grid gap-4 ${isFullscreen ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'grid-cols-2'}`}>
-            {console.log("filteredData", filteredData)}
             {filteredData?.map((item) => (
               <div
                 key={item._id}
