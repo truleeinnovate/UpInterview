@@ -173,9 +173,9 @@ const UsersAccountTab = () => {
     navigate(`details/${user._id}`, { state: { userData: user } });
   };
 
-  // const handleEdit = (user) => {
-  //   navigate(`edit/${user._id}`, { state: { userData: user } });
-  // };
+  const handleEdit = (user) => {
+    navigate(`edit/${user._id}`, { state: { userData: user } });
+  };
 
   // Table Columns Configuration
   const tableColumns = [
@@ -255,12 +255,12 @@ const UsersAccountTab = () => {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
-    // {
-    //   key: "edit",
-    //   label: "Edit",
-    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //   onClick: (row) => handleEdit(row),
-    // },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => handleEdit(row),
+    },
   ];
 
   return (
@@ -284,7 +284,7 @@ const UsersAccountTab = () => {
             >
               <Info size={20} />
             </button>
-          </motion.div> */}
+          </motion.div> 
           {/* Header and Toolbar */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
