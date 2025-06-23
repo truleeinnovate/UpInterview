@@ -387,7 +387,7 @@ const Navbar = () => {
       key: "notification",
       ref: notificationRef,
       content: (
-        <div className="relative">
+       
           <NotificationPanel
             isOpen={dropdownState.isNotificationOpen}
             setIsOpen={(value) =>
@@ -398,10 +398,7 @@ const Navbar = () => {
             }
             closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
           />
-          {dropdownState.isNotificationOpen && (
-            <IoIosArrowUp className="absolute top-12 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
-          )}
-        </div>
+       
       ),
       className: "text-xl border rounded-md",
       isActive: dropdownState.isNotificationOpen,

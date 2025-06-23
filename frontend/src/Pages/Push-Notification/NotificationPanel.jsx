@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import {
+  IoIosArrowUp,
+} from "react-icons/io";
 import PropTypes from 'prop-types';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
-import { config } from '../../config';
 import { X } from 'lucide-react';
+import { usePushNotifications } from '../../apiHooks/usePushNotifications';
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
@@ -27,7 +29,7 @@ const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }
                   {notification?.title || 'No Title'}
                 </p>
                 {notification?.unread && (
-                  <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                  <span className="w-2 h-2 bg-custom-blue rounded-full flex-shrink-0" />
                 )}
               </div>
               <div className="space-y-1">
@@ -67,38 +69,20 @@ NotificationList.propTypes = {
 };
 
 export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdowns }) {
-  const [notificationList, setNotificationList] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(null);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      // setError(null);
-      const response = await axios.get(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}`);
-      const sortedNotifications = Array.isArray(response.data)
-        ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-        : [];
-      setNotificationList(sortedNotifications);
-      //console.log("Fetched Notifications:", sortedNotifications); // Debug log
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-      // setError('Failed to fetch notifications');
-      setNotificationList([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [ownerId]);
+  // Use shared hook for data + mutations
+  const { notifications: notificationList = [], isLoading: loading, markAsRead, markAllAsRead } = usePushNotifications(ownerId);
+  // const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+
+
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -106,33 +90,9 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
     }
   }, [isOpen]);
 
-  const markAsRead = async (id) => {
-    if (!id) return;
-    try {
-      await axios.patch(`${config.REACT_APP_API_URL}/push-notifications/${id}/read`);
-      setNotificationList((prevList) =>
-        prevList.map((notification) =>
-          notification._id === id ? { ...notification, unread: false } : notification
-        )
-      );
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
-    }
-  };
 
-  const markAllAsRead = async () => {
-    try {
-      await axios.patch(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}/read-all`);
-      setNotificationList((prevList) =>
-        prevList.map((notification) => ({
-          ...notification,
-          unread: false,
-        }))
-      );
-    } catch (err) {
-      console.error('Error marking all as read:', err);
-    }
-  };
+
+
 
   const typeFilteredNotifications = (notificationList || []).filter((notification) => {
     if (!notification) return false;
@@ -179,7 +139,8 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
       </button>
 
       {isOpen && !showAllNotifications && (
-        <div className="absolute top-14 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
+         <div className="relative">
+        <div className="absolute top-5 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
           <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-gray-200">
             <h3 className="text-base sm:text-lg font-medium text-gray-800">Notifications</h3>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={togglePanel}>
@@ -196,7 +157,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
               <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />
               <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
                 <button
-                  className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium rounded-md px-3 py-1.5"
+                  className="w-full text-sm text-custom-blue hover:text-custom-blue/80 font-medium rounded-md px-3 py-1.5"
                   onClick={() => setShowAllNotifications(true)}
                 >
                   View All Notifications
@@ -205,10 +166,12 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
             </>
           )}
         </div>
+        <IoIosArrowUp className="absolute top-3 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
+        </div>
       )}
 
       {isOpen && showAllNotifications && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6">
           <div className="bg-white rounded-md shadow-lg w-full max-w-2xl max-h-[600px] overflow-hidden">
             <div className="px-4 sm:px-6 py-4 border-b flex justify-between items-center">
               <h2 className="text-lg sm:text-sm font-semibold text-gray-600">All Notifications</h2>
@@ -223,7 +186,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="w-full text-sm border rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-sm border rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-custom-blue"
                   >
                     <option value="all">All</option>
                     <option value="unread">Unread</option>
@@ -237,7 +200,7 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
                 <div className="flex gap-2 w-full sm:w-auto">
                   <button
                     onClick={markAllAsRead}
-                    className="flex-1 sm:flex-none text-sm text-blue-600 hover:text-blue-800 px-3 py-1.5 border border-blue-600 rounded-md hover:bg-blue-50"
+                    className="flex-1 sm:flex-none text-sm text-custom-blue hover:text-custom-blue/80 px-3 py-1.5 border border-custom-blue rounded-md hover:bg-custom-blue/10"
                   >
                     Mark all as read
                   </button>

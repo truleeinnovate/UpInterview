@@ -2,7 +2,7 @@
 const sendEmail = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
-const emailTemplateModel = require("../../models/EmailTemplatemodel");
+const emailTemplateModel = require("../../models/EmailTemplatemodel.js");
 const config = require("../../config");
 const CustomerSubscription = require('../../models/CustomerSubscriptionmodels.js');
 const cron = require('node-cron');
@@ -190,9 +190,10 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
       object: { objectName: "subscription", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
       tenantId,
+      ownerId,
       recipientId: ownerId,
       createdBy: ownerId,
-      modifiedBy: ownerId,
+      updatedBy: ownerId,
     }];
 
     await notificationMiddleware(req, res, () => { });
@@ -256,9 +257,10 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
       object: { objectName: "subscription", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
       tenantId,
+      ownerId,
       recipientId: ownerId,
       createdBy: ownerId,
-      modifiedBy: ownerId,
+      updatedBy: ownerId,
     }];
 
     await notificationMiddleware(req, res, () => { });
@@ -421,9 +423,10 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
           object: { objectName: 'subscription', objectId: subscription.ownerId },
           status: emailResponse.success ? 'Success' : 'Failed',
           tenantId: subscription.tenantId,
+          ownerId: subscription.ownerId,
           recipientId: subscription.ownerId,
           createdBy: subscription.ownerId,
-          modifiedBy: subscription.ownerId,
+          updatedBy: subscription.ownerId,
         }];
 
         await notificationMiddleware({ notificationData }, { json: () => { } }, () => { });

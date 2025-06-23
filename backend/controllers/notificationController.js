@@ -75,8 +75,10 @@ const getAllNotification = async (req, res) => {
       }
       filter.ownerId = ownerId;
     }
+    console.log("Filter:", filter);
 
-    const notifications = await Notifications.find(filter);
+    const notifications = await Notifications.find(filter).sort({ _id: -1 });
+    console.log("Fetched notifications:", notifications);
     res.json(notifications);
 
   } catch (err) {

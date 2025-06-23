@@ -101,9 +101,10 @@ exports.sendSignUpEmail = async (req, res) => {
       object: { objectName: "login", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
       tenantId,
+      ownerId,
       recipientId: ownerId,
       createdBy: ownerId,
-      modifiedBy: ownerId,
+      updatedBy: ownerId,
     }];
 
     await notificationMiddleware(req, res, () => { });
