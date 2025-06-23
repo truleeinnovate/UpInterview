@@ -313,8 +313,6 @@ const CustomProvider = ({ children }) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
-
-      setLoadingInterviewer(false);
       setInterviewers(response.data);
     } catch (err) {
       console.error(err.message);
