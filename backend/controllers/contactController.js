@@ -2,81 +2,91 @@ const { Contacts } = require('../models/Contacts');
 const Interviewavailability = require('../models/InterviewAvailability');
 const { Users } = require('../models/Users');
 
-const fetchContacts = async (req, res) => {
+const getAllContacts = async (req, res) => {
     try {
-        const contacts = await Contacts.find().populate('availability')
-        .populate({
-            path: 'ownerId',
-            select: 'firstName lastName email roleId isFreelancer',
-            model: 'Users', // Explicitly specify model
-            populate: {
-                path: 'roleId',
-                model: 'Role', // Explicitly specify model
-                select: 'roleName'
-            }
-        }).lean();
-
-        //  console.log("contact",contacts);
-
-        //  const transformedContacts = contacts.map(contact => {
-
-
-
-        //     // If ownerId is populated, extract the roleName
-        //     if (contact.ownerId && contact.ownerId.roleId) {
-        //         return {
-        //             ...contact,
-        //             owner: {
-        //                 ...contact.ownerId,
-        //                 roleName: contact.ownerId.roleId?.roleName
-        //             }
-        //         };
-        //     }
-        //     return contact;
-        // });
-
-
-
-        //   const contacts = await Contacts.find().populate('availability');
-    res.status(200).json(contacts);
-
-
-        // console.log("Debugging populated contacts:");
-        // contacts.forEach(contact => {
-        //     if (contact.ownerId) {
-        //         console.log({
-        //             contactId: contact._id,
-        //             ownerId: contact.ownerId._id,
-        //             roleId: contact.ownerId.roleId?._id,
-        //             roleName: contact.ownerId.roleId?.roleName
-        //         });
-        //     }
-        // });
-
-          // 3. Transform data to ensure roleName is accessible
-        //   const transformedContacts = contacts.map(contact => {
-        //     const contactData = { ...contact };
-
-        //     if (contactData.ownerId && contactData.ownerId.roleId) {
-        //         contactData.owner = {
-        //             ...contactData.ownerId,
-        //             roleName: contactData.ownerId.roleId.roleName
-        //         };
-        //         delete contactData.ownerId; // Optional cleanup
-        //     }
-
-        //     return contactData;
-        // });
-
-
-
-        // .populate('ownerId');
-        // res.status(200).json(contacts);
+        const contacts = await Contacts.find().populate('availability');
+        return res.status(200).json(contacts);
     } catch (error) {
-        console.error('Error fetching contacts:', error);
-        res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+        console.error('Error fetching all contacts:', error);
+        return res.status(500).json({ message: 'Server error' });
     }
 };
+
+// const fetchContacts = async (req, res) => {
+//     try {
+//         const contacts = await Contacts.find().populate('availability')
+//         .populate({
+//             path: 'ownerId',
+//             select: 'firstName lastName email roleId isFreelancer',
+//             model: 'Users', // Explicitly specify model
+//             populate: {
+//                 path: 'roleId',
+//                 model: 'Role', // Explicitly specify model
+//                 select: 'roleName'
+//             }
+//         }).lean();
+
+//         //  console.log("contact",contacts);
+
+//         //  const transformedContacts = contacts.map(contact => {
+
+
+
+//         //     // If ownerId is populated, extract the roleName
+//         //     if (contact.ownerId && contact.ownerId.roleId) {
+//         //         return {
+//         //             ...contact,
+//         //             owner: {
+//         //                 ...contact.ownerId,
+//         //                 roleName: contact.ownerId.roleId?.roleName
+//         //             }
+//         //         };
+//         //     }
+//         //     return contact;
+//         // });
+
+
+
+//         //   const contacts = await Contacts.find().populate('availability');
+//     res.status(200).json(contacts);
+
+
+//         // console.log("Debugging populated contacts:");
+//         // contacts.forEach(contact => {
+//         //     if (contact.ownerId) {
+//         //         console.log({
+//         //             contactId: contact._id,
+//         //             ownerId: contact.ownerId._id,
+//         //             roleId: contact.ownerId.roleId?._id,
+//         //             roleName: contact.ownerId.roleId?.roleName
+//         //         });
+//         //     }
+//         // });
+
+//           // 3. Transform data to ensure roleName is accessible
+//         //   const transformedContacts = contacts.map(contact => {
+//         //     const contactData = { ...contact };
+
+//         //     if (contactData.ownerId && contactData.ownerId.roleId) {
+//         //         contactData.owner = {
+//         //             ...contactData.ownerId,
+//         //             roleName: contactData.ownerId.roleId.roleName
+//         //         };
+//         //         delete contactData.ownerId; // Optional cleanup
+//         //     }
+
+//         //     return contactData;
+//         // });
+
+
+
+//         // .populate('ownerId');
+//         // res.status(200).json(contacts);
+//     } catch (error) {
+//         console.error('Error fetching contacts:', error);
+//         res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+//     }
+// };
 
 // const fetchContacts = async (req, res) => {
 //     const contactId = req.params.id;
@@ -318,22 +328,22 @@ const updateContactsDetails = async (req, res) => {
                 await session.abortTransaction();
                 return res.status(404).json({ message: 'Contact not found' });
             }
-              // 2. Update user schema if relevant fields are in request
-      const userUpdateFields = {};
-      if (contactData.firstName) userUpdateFields.firstName = contactData.firstName;
-      if (contactData.lastName) userUpdateFields.lastName = contactData.lastName;
-      if (contactData.profileId) userUpdateFields.profileId = contactData.profileId;
-      if (contactData.newEmail) userUpdateFields.newEmail = contactData.newEmail;
-        // if (contactData.email) userUpdateFields.email = contactData.email;
+            // 2. Update user schema if relevant fields are in request
+            const userUpdateFields = {};
+            if (contactData.firstName) userUpdateFields.firstName = contactData.firstName;
+            if (contactData.lastName) userUpdateFields.lastName = contactData.lastName;
+            if (contactData.profileId) userUpdateFields.profileId = contactData.profileId;
+            if (contactData.newEmail) userUpdateFields.newEmail = contactData.newEmail;
+            // if (contactData.email) userUpdateFields.email = contactData.email;
 
-      // Only update if there's something to update
-      if (Object.keys(userUpdateFields).length > 0 && updatedContact.ownerId) {
-        await Users.findByIdAndUpdate(
-          updatedContact.ownerId,
-          { $set: userUpdateFields },
-          { session }
-        );
-      }
+            // Only update if there's something to update
+            if (Object.keys(userUpdateFields).length > 0 && updatedContact.ownerId) {
+                await Users.findByIdAndUpdate(
+                    updatedContact.ownerId,
+                    { $set: userUpdateFields },
+                    { session }
+                );
+            }
 
             // Handle availability updates if provided
             if (availability && Array.isArray(availability)) {
@@ -432,11 +442,11 @@ const getUniqueContactsByOwnerId = async (req, res) => {
 };
 
 module.exports = {
-    fetchContacts,
+    // fetchContacts,
     createContact,
     updateContact,
     updateContactsDetails,
     getUniqueContactsByOwnerId,
-    getContactsByOwnerId
-
+    getContactsByOwnerId,
+    getAllContacts
 };
