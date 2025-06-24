@@ -2,6 +2,7 @@ const { Contacts } = require('../models/Contacts');
 const Interviewavailability = require('../models/InterviewAvailability');
 const { Users } = require('../models/Users');
 
+
 // Mansoor: for fetching the total contacts to the login pages (Individula-4)
 const getAllContacts = async (req, res) => {
     try {
@@ -13,21 +14,7 @@ const getAllContacts = async (req, res) => {
     }
 };
 
-// const fetchContacts = async (req, res) => {
-//     try {
-//         const contacts = await Contacts.find().populate('availability')
-//         .populate({
-//             path: 'ownerId',
-//             select: 'firstName lastName email roleId isFreelancer',
-//             model: 'Users', // Explicitly specify model
-//             populate: {
-//                 path: 'roleId',
-//                 model: 'Role', // Explicitly specify model
-//                 select: 'roleName'
-//             }
-//         }).lean();
 
-//         //  console.log("contact",contacts);
 
 //         //  const transformedContacts = contacts.map(contact => {
 
@@ -45,6 +32,7 @@ const getAllContacts = async (req, res) => {
 //         //     }
 //         //     return contact;
 //         // });
+
 
 
 
@@ -80,6 +68,33 @@ const getAllContacts = async (req, res) => {
 //         // });
 
 
+//         // console.log("Debugging populated contacts:");
+//         // contacts.forEach(contact => {
+//         //     if (contact.ownerId) {
+//         //         console.log({
+//         //             contactId: contact._id,
+//         //             ownerId: contact.ownerId._id,
+//         //             roleId: contact.ownerId.roleId?._id,
+//         //             roleName: contact.ownerId.roleId?.roleName
+//         //         });
+//         //     }
+//         // });
+
+//           // 3. Transform data to ensure roleName is accessible
+//         //   const transformedContacts = contacts.map(contact => {
+//         //     const contactData = { ...contact };
+
+//         //     if (contactData.ownerId && contactData.ownerId.roleId) {
+//         //         contactData.owner = {
+//         //             ...contactData.ownerId,
+//         //             roleName: contactData.ownerId.roleId.roleName
+//         //         };
+//         //         delete contactData.ownerId; // Optional cleanup
+//         //     }
+
+
+//         //     return contactData;
+//         // });
 
 //         // .populate('ownerId');
 //         // res.status(200).json(contacts);
@@ -89,42 +104,42 @@ const getAllContacts = async (req, res) => {
 //     }
 // };
 
-// const fetchContacts = async (req, res) => {
-//     const contactId = req.params.id;
+const fetchContacts = async (req, res) => {
+    const contactId = req.params.id;
 
-//     try {
-//         const contact = await Contacts.findById(contactId)
-//             .populate('availability')
-//             .populate({
-//                 path: 'ownerId',
-//                 select: 'firstName lastName email roleId isFreelancer',
-//                 model: 'Users',
-//                 populate: {
-//                     path: 'roleId',
-//                     model: 'Role',
-//                     select: 'roleName'
-//                 }
-//             }).lean();
+    try {
+        const contact = await Contacts.findById(contactId)
+            .populate('availability')
+            .populate({
+                path: 'ownerId',
+                select: 'firstName lastName email roleId isFreelancer',
+                model: 'Users',
+                populate: {
+                    path: 'roleId',
+                    model: 'Role',
+                    select: 'roleName'
+                }
+            }).lean();
 
-//         if (!contact) {
-//             return res.status(404).json({ message: 'Contact not found' });
-//         }
+        if (!contact) {
+            return res.status(404).json({ message: 'Contact not found' });
+        }
 
-//         // Optional: transform roleName
-//         if (contact.ownerId && contact.ownerId.roleId) {
-//             contact.owner = {
-//                 ...contact.ownerId,
-//                 roleName: contact.ownerId.roleId.roleName
-//             };
-//             delete contact.ownerId;
-//         }
+        // Optional: transform roleName
+        if (contact.ownerId && contact.ownerId.roleId) {
+            contact.owner = {
+                ...contact.ownerId,
+                roleName: contact.ownerId.roleId.roleName
+            };
+            delete contact.ownerId;
+        }
 
-//         res.status(200).json(contact);
-//     } catch (error) {
-//         console.error('Error fetching contact:', error);
-//         res.status(500).json({ message: 'Error fetching contact', error: error.message });
-//     }
-// }
+        res.status(200).json(contact);
+    } catch (error) {
+        console.error('Error fetching contact:', error);
+        res.status(500).json({ message: 'Error fetching contact', error: error.message });
+    }
+}
 
 const createContact = async (req, res) => {
     try {
@@ -292,6 +307,8 @@ const getContactsByOwnerId = async (req, res) => {
 // PATCH endpoint to update contact details
 // router.patch('/contacts/:id',
 
+
+// updating single user based on owner ID user for my-profile and user tab by - Ranjith
 const updateContactsDetails = async (req, res) => {
     try {
         const contactId = req.params.id;
@@ -301,9 +318,10 @@ const updateContactsDetails = async (req, res) => {
 
         // console.log("updateData", availability,"contactData", contactData);
 
-        if (contactData.timeZone && typeof contactData.timeZone === 'object' && contactData.preferredDuration) {
+        if (contactData.timeZone && typeof contactData.timeZone === 'object' && contactData.preferredDuration && contactData.contactId) {
             contactData.timeZone = contactData.timeZone || ""; // Store only the 'value' (e.g., 'America/Boise')
-            contactData.preferredDuration = contactData.preferredDuration || ""
+            contactData.preferredDuration = contactData.preferredDuration || "",
+                contactData.contactId = contactData.contactId
         }
 
 
@@ -313,8 +331,9 @@ const updateContactsDetails = async (req, res) => {
 
         try {
             // Update contact basic details
-            const updatedContact = await Contacts.findByIdAndUpdate(
-                contactId,
+            // const updatedContact = await Contacts.findByIdAndUpdate(
+            const updatedContact = await Contacts.findOneAndUpdate(
+                { ownerId: contactId },
                 {
                     $set: contactData
                 },
@@ -346,29 +365,63 @@ const updateContactsDetails = async (req, res) => {
                 );
             }
 
+            const avail = availability;
+            // console.log("avail", avail);
+
+
             // Handle availability updates if provided
-            if (availability && Array.isArray(availability)) {
+            if (avail && Array.isArray(avail)) {
                 // First remove existing availability records for this contact
-                await Interviewavailability.deleteMany({ contact: contactId }, { session });
+                await Interviewavailability.deleteMany({ contact: contactData?.contactId }, { session });
 
                 // Create new availability records with valid data
-                const availabilityDocs = availability.map(avail => ({
-                    contact: contactId,
-                    days: avail.days
-                        .filter(day => day && day.day && Array.isArray(day.timeSlots) && day.timeSlots.length > 0)
-                        .map(day => ({
-                            day: day.day,
-                            timeSlots: day.timeSlots
-                                .filter(slot => slot && slot.startTime && slot.endTime)
-                                .map(slot => ({
-                                    startTime: slot.startTime,
-                                    endTime: slot.endTime
-                                }))
-                        }))
-                }));
+                // const availabilityDocs = avail.map(avail => ({
+                //     contact: contactData?.contactId,
+                //     days: avail.days
+                //         .filter(day => day && day.day && Array.isArray(day.timeSlots) && day.timeSlots.length > 0)
+                //         .map(day => ({
+                //             day: day.day,
+                //             timeSlots: day.timeSlots
+                //                 .filter(slot => slot && slot.startTime && slot.endTime)
+                //                 .map(slot => ({
+                //                     startTime: slot.startTime,
+                //                     endTime: slot.endTime
+                //                 }))
+                //         }))
+                // }));
+                const availabilityDocs = [];
+
+                avail.forEach(item => {
+                    if (Array.isArray(item.days)) {
+                        item.days.forEach(dayItem => {
+                            if (
+                                dayItem &&
+                                dayItem.day &&
+                                Array.isArray(dayItem.timeSlots) &&
+                                dayItem.timeSlots.length > 0
+                            ) {
+                                const timeSlots = dayItem.timeSlots
+                                    .filter(slot => slot && slot.startTime && slot.endTime)
+                                    .map(slot => ({
+                                        startTime: slot.startTime,
+                                        endTime: slot.endTime
+                                    }));
+
+                                if (timeSlots.length > 0) {
+                                    availabilityDocs.push({
+                                        contact: contactData?.contactId,
+                                        day: dayItem.day,
+                                        timeSlots
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+
 
                 // Only insert if there are valid records
-                if (availabilityDocs.length > 0 && availabilityDocs[0].days.length > 0) {
+                if (availabilityDocs.length > 0) {
                     const insertedAvailability = await Interviewavailability.insertMany(
                         availabilityDocs,
                         { session }
@@ -383,7 +436,8 @@ const updateContactsDetails = async (req, res) => {
 
 
             // Fetch the updated contact with populated availability
-            const finalContact = await Contacts.findById(contactId)
+            // const finalContact = await Contacts.findById(contactId)
+            const finalContact = await Contacts.findOne({ ownerId: contactId })
                 .populate('availability')
                 .lean();
 

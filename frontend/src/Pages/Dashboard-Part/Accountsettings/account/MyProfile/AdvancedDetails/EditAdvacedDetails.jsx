@@ -9,7 +9,8 @@ import { isEmptyObject, validateAdvancedForm } from '../../../../../../utils/MyP
 import { useNavigate, useParams } from 'react-router-dom';
 import { config } from '../../../../../../config';
 import { useMasterData } from '../../../../../../apiHooks/useMasterData';
-
+import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Skills.svg
 
@@ -17,10 +18,10 @@ Modal.setAppElement('#root');
 
 const EditAdvacedDetails = ({ from,usersId,setAdvacedEditOpen,onSuccess }) => {
   // onSave
-  const {
-    singlecontact,
-    usersRes
-  } = useCustomContext();
+  // const {
+  //   singlecontact,
+  //   usersRes
+  // } = useCustomContext();
 
 
   const {
@@ -39,6 +40,10 @@ const EditAdvacedDetails = ({ from,usersId,setAdvacedEditOpen,onSuccess }) => {
 
 const resolvedId = usersId || id;
 
+  const {userProfile, isLoading, isError, error} = useUserProfile(resolvedId)
+  // const requestEmailChange = useRequestEmailChange();
+  const updateContactDetail = useUpdateContactDetail();
+ const queryClient = useQueryClient();
 
   // Dropdown states
   const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
@@ -67,22 +72,27 @@ const resolvedId = usersId || id;
   useEffect(() => {
 
 
-    const contact = usersRes.find(user => user.contactId === resolvedId);
+    // const contact = usersRes.find(user => user.contactId === resolvedId);
+    // if (!userProfile) return;
+      if (!userProfile || !userProfile._id) return;
 
-    if (contact) {
+  console.log("✅ Latest userProfile loaded", userProfile);
+        // console.log("contact userProfile BasicDetailsEditPage",userProfile )
+
+    if (userProfile) {
       setFormData({
-        currentRole: contact.currentRole || '',
-        industry: contact.industry || '',
-        experience: contact.experienceYears || '',
-        location: contact.location || '',
-        coverLetterdescription: contact.coverLetterdescription || '',
-        id: contact._id
+        currentRole: userProfile.currentRole || '',
+        industry: userProfile.industry || '',
+        experience: userProfile.experienceYears || '',
+        location: userProfile.location || '',
+        coverLetterdescription: userProfile.coverLetterdescription || '',
+        id: userProfile._id
       });
       setErrors({});
     }
 
 
-  }, [resolvedId, usersRes]);
+  }, [resolvedId, userProfile?._id]);
 
 
 
@@ -175,16 +185,21 @@ const resolvedId = usersId || id;
       id: formData._id
     };
 
-    console.log("cleanFormData", cleanFormData);
+    // console.log("cleanFormData", cleanFormData);
 
     // validateAdvancedForm
     try {
 
 
-      const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-        cleanFormData
-      );
+      // const response = await axios.patch(
+      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+      //   cleanFormData
+      // );
+      const response = await updateContactDetail.mutateAsync({
+          resolvedId,
+          data: cleanFormData,
+        });
+        await queryClient.invalidateQueries(["userProfile", resolvedId]); 
 
       console.log("response cleanFormData", response);
 
@@ -193,7 +208,8 @@ const resolvedId = usersId || id;
         // setUserData(prev => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
         handleCloseModal()
-         onSuccess()
+        //  onSuccess()
+             if (usersId) onSuccess();
       } else {
         console.error('Failed to update advanced details:', response.status);
       }
@@ -203,7 +219,7 @@ const resolvedId = usersId || id;
   };
 
 
-  console.log('skills from context:', skills);
+  // console.log('skills from context:', skills);
 
 
   const modalClass = classNames(
