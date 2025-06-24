@@ -427,7 +427,7 @@ const MultiStepForm = () => {
         ...(availabilityData.length > 0 && { availabilityData }),
         isInternalInterviewer,
         isProfileCompleteStateOrg,
-        ownerId: matchedContact.ownerId._id,
+        ownerId: matchedContact.ownerId,
         tenantData,
       };
 

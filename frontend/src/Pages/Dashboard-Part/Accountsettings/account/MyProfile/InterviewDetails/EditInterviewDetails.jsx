@@ -13,6 +13,8 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { useNavigate, useParams } from 'react-router-dom';
 import { config } from '../../../../../../config';
 import { useMasterData } from '../../../../../../apiHooks/useMasterData';
+import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 
@@ -31,6 +33,11 @@ const EditInterviewDetails = ({ from,usersId,setInterviewEditOpen,onSuccess }) =
   const navigate = useNavigate();
 
 const resolvedId = usersId || id;
+
+  const {userProfile, isLoading, isError, error} = useUserProfile(resolvedId)
+  // const requestEmailChange = useRequestEmailChange();
+  const updateContactDetail = useUpdateContactDetail();
+ const queryClient = useQueryClient();
 
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const skillsPopupRef = useRef(null);
@@ -85,42 +92,42 @@ const resolvedId = usersId || id;
   // Changed: Updated useEffect to properly map all backend fields
   useEffect(() => {
    
-        const contact = usersRes.find(user => user.contactId === resolvedId);
+        // const contact = usersRes.find(user => user.contactId === resolvedId);
        
        
-  if (!contact) return;
-        // singlecontact[0];
-        // const user = contacts.find(user => user.ownerId === id);
-        console.log("Edit Interview Details contact", contact);
+  // if (!contact) return;
+   if (!userProfile || !userProfile._id) return;
+       
+        console.log("Edit Interview Details userProfile", userProfile);
         // console.log("user", user);
         setFormData({
-          PreviousExperienceConductingInterviews: contact?.previousExperienceConductingInterviews || '',
-          PreviousExperienceConductingInterviewsYears: contact?.previousExperienceConductingInterviewsYears || '',
-          ExpertiseLevel_ConductingInterviews: contact?.expertiseLevelConductingInterviews || '',
+          PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || '',
+          PreviousExperienceConductingInterviewsYears: userProfile?.previousExperienceConductingInterviewsYears || '',
+          ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || '',
           // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
           // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
           // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
-          Technology: Array.isArray(contact?.technologies) ? contact?.technologies : [],
-          NoShowPolicy: contact?.noShowPolicy || '',
+          Technology: Array.isArray(userProfile?.technologies) ? userProfile?.technologies : [],
+          NoShowPolicy: userProfile?.noShowPolicy || '',
           // ExpectedRateMin: String(user.ExpectedRateMin || ''),
           // ExpectedRateMax: String(user.ExpectedRateMax || ''),
-          skills: Array.isArray(contact?.skills) ? contact?.skills : [],
-          interviewFormatWeOffer: Array.isArray(contact?.interviewFormatWeOffer) ? contact?.interviewFormatWeOffer : [],
-          professionalTitle: contact?.professionalTitle || "",
-          bio: contact?.bio || "",
-          hourlyRate: contact?.hourlyRate,
-          id:contact?._id,
+          skills: Array.isArray(userProfile?.skills) ? userProfile?.skills : [],
+          interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) ? userProfile?.interviewFormatWeOffer : [],
+          professionalTitle: userProfile?.professionalTitle || "",
+          bio: userProfile?.bio || "",
+          hourlyRate: userProfile?.hourlyRate,
+          id:userProfile?._id,
           
         });
-        setSelectedSkills(Array.isArray(contact?.skills) ? contact?.skills : []);
-        setInterviewPreviousExperience(contact?.previousExperienceConductingInterviews || '');
-        setExpertiseLevel(contact?.expertiseLevelConductingInterviews || '');
-        setIsReady(contact?.IsReadyForMockInterviews === 'yes');
-        setSelectedCandidates(contact?.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
+        setSelectedSkills(Array.isArray(userProfile?.skills) ? userProfile?.skills : []);
+        setInterviewPreviousExperience(userProfile?.previousExperienceConductingInterviews || '');
+        setExpertiseLevel(userProfile?.expertiseLevelConductingInterviews || '');
+        setIsReady(userProfile?.IsReadyForMockInterviews === 'yes');
+        setSelectedCandidates(userProfile?.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
         setErrors({});
 
       
-  }, [resolvedId,usersRes]);
+  }, [resolvedId,userProfile?._id]);
 
   const handleBioChange = (e) => {
     const value = e.target.value;
@@ -303,8 +310,7 @@ const resolvedId = usersId || id;
     // console.log("form", formData , typeof Number(formData.hourlyRate));
 
 
-    try {
-      const cleanFormData = {
+ const cleanFormData = {
         PreviousExperienceConductingInterviews: String(formData.PreviousExperienceConductingInterviews?.trim() || '').trim(),
         PreviousExperienceConductingInterviewsYears: String(formData.PreviousExperienceConductingInterviewsYears || '').trim(),
         ExpertiseLevel_ConductingInterviews: String(formData.ExpertiseLevel_ConductingInterviews || '').trim() ,
@@ -323,16 +329,28 @@ const resolvedId = usersId || id;
          id:formData.id
       };
 
-      const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-        cleanFormData
-      );
+    try {
+     
+
+      // const response = await axios.patch(
+      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+      //   cleanFormData
+      // );
+
+        const response = await updateContactDetail.mutateAsync({
+          resolvedId,
+          data: cleanFormData,
+        });
+        await queryClient.invalidateQueries(["userProfile", resolvedId]); 
+
+      console.log("response cleanFormData", response);
 
       if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
       handleCloseModal();
-        onSuccess();
+        // onSuccess();
+             if (usersId) onSuccess();
       }
     } catch (error) {
       console.error('Error updating interview details:', error);

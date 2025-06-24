@@ -15,8 +15,10 @@ const NotificationSchema = new mongoose.Schema({
     },
     status: String,
     createdBy: String,
-    modifiedBy: String,
-}, { timestamps: true,strict: false  });//by using timestamps we can automatically add createdAt and updatedAt fields
+    updatedBy: String,
+    tenantId: String,
+    ownerId: String,
+}, { timestamps: true });//by using timestamps we can automatically add createdAt and updatedAt fields
 
 const Notifications = mongoose.model("Notifications", NotificationSchema);
 module.exports = Notifications;

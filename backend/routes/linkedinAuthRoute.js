@@ -6,6 +6,7 @@ const { Contacts } = require('../models/Contacts');
 const Tenant = require('../models/Tenant');
 const config = require('../config.js');
 
+
 router.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -90,11 +91,6 @@ router.post('/check-user', async (req, res) => {
         timestamp: new Date().toISOString(),
       };
       const token = generateToken(payload);
-      const userData = {
-        isProfileCompleted: existingUser.isProfileCompleted,
-        roleName: existingUser.roleId ? (await Role.findById(existingUser.roleId))?.roleName : null,
-        // Add any other fields you want to send
-      };
       return res.json({
         existingUser: true,
         email: existingUser.email,

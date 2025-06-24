@@ -26,7 +26,7 @@ const Usage = () => {
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full">
               <div
-                className="h-full bg-blue-600 rounded-full"
+                className="h-full bg-custom-blue rounded-full"
                 style={{
                   width: `${(usageMetrics.interviews.total / usageMetrics.interviews.limit) * 100}%`
                 }}
@@ -90,7 +90,7 @@ const Usage = () => {
               </div>
               <div className="h-2 bg-gray-200 rounded-full">
                 <div
-                  className="h-full bg-blue-600 rounded-full"
+                  className="h-full bg-custom-blue rounded-full"
                   style={{
                     width: `${(role.count / usageMetrics.activeUsers.current) * 100}%`
                   }}
@@ -117,7 +117,7 @@ const Usage = () => {
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-blue-600 rounded-full"
+                    className="h-full bg-custom-blue rounded-full"
                     style={{
                       width: `${(day.count / Math.max(...usageMetrics.interviews.breakdown.map(d => d.count))) * 100}%`
                     }}

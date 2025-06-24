@@ -838,9 +838,10 @@ exports.resendAssessmentLink = async (req, res) => {
       },
       status: emailStatus,
       tenantId: organizationId,
+      ownerId: userId,
       recipientId: candidate._id,
       createdBy: userId,
-      modifiedBy: userId,
+      updatedBy: userId,
     }];
 
     req.notificationData = notificationData;
@@ -1048,9 +1049,10 @@ exports.shareAssessment = async (req, res) => {
         },
         status: 'Pending',
         tenantId: organizationId,
+        ownerId: userId,
         recipientId: candidate._id,
         createdBy: userId,
-        modifiedBy: userId,
+        updatedBy: userId,
       });
     }
 

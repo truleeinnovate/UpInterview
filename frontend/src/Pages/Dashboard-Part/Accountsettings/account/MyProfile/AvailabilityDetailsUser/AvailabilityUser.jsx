@@ -7,9 +7,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
+import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
 const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen }) => {
-  const { usersRes } = useCustomContext();
+  // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({})
   const [selectedTimezone, setSelectedTimezone] = useState('');
@@ -28,18 +29,28 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload.userId;
+    const userId = tokenPayload?.userId;
+
+  const ownerId = usersId || userId;
+
+   const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
+    
+  
 
   useEffect(() => {
-    const selectedContact = usersId
-      ? usersRes.find(user => user?.contactId === usersId)
-      : usersRes.find(user => user?._id === userId);
+    // const selectedContact = usersId
+    //   ? usersRes.find(user => user?.contactId === usersId)
+    //   : usersRes.find(user => user?._id === userId);
 
-    if (selectedContact) {
-      setContactData(selectedContact);
+    console.log("contactId", userProfile);
+    
+
+    if (!userProfile || !userProfile._id) return;
+    if (userProfile) {
+      setContactData(userProfile);
       //  console.log("Selected contact:", selectedContact);
     }
-  }, [usersId, userId, usersRes]);
+  }, [ownerId, userProfile]);
 
 
   const fetchData = () => {
@@ -59,7 +70,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
         Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
       };
 
-      const days = contactData?.availability[0].days || [];
+      const days = contactData?.availability || [];
       days.forEach(day => {
         if (day.timeSlots.length > 0 && day.timeSlots[0].startTime !== 'unavailable') {
           updatedTimes[day.day] = day.timeSlots;
@@ -135,7 +146,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
           onClick={() =>
             mode === 'users' ?
               setAvailabilityEditOpen(true)
-              : navigate(`/account-settings/my-profile/availability-edit/${contactData?.contactId}`)
+              : navigate(`/account-settings/my-profile/availability-edit/${contactData?._id}`)
 
           }
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "

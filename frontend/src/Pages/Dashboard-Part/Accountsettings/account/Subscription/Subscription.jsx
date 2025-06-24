@@ -11,9 +11,9 @@ const Subscription = () => {
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
 
-
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
+  console.log("tokenPayload ----", tokenPayload);
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
@@ -186,6 +186,11 @@ const Subscription = () => {
           toast.dismiss('refresh-toast');
           window.location.reload();
         }, 4000);
+        // send email for subscription cancelled
+        // axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/cancelled`, {
+        //   ownerId: user.ownerId,
+        //   tenantId: user.tenantId,
+        // });
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -234,6 +239,12 @@ const Subscription = () => {
           toast.dismiss('refresh-toast');
           window.location.reload();
         }, 4000);
+
+        // // send email for subscription updated
+        // axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/updated`, {
+        //   ownerId: user.ownerId,
+        //   tenantId: user.tenantId,
+        // });
       }
     } catch (error) {
       toast.dismiss('update-toast');
@@ -493,7 +504,7 @@ const Subscription = () => {
       </div>
       {/* Cancel Subscription Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Cancel Subscription</h2>
             <p className="mb-4 text-sm sm:text-base text-gray-600">
@@ -524,15 +535,15 @@ const Subscription = () => {
 
       {/* Upgrade Confirmation Modal */}
       {showUpgradeConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-xl">
             <h3 className="text-lg sm:text-xl font-bold mb-4">Confirm Subscription Update</h3>
             <div className="mb-4">
               <p className="mb-3 text-sm sm:text-base">You are about to update your subscription to <strong>{selectedPlanForUpgrade?.name} ({isAnnual ? 'Annual' : 'Monthly'})</strong>.</p>
 
               <div className="bg-blue-50 p-4 rounded-lg mb-3">
-                <h4 className="font-bold text-blue-800 text-sm sm:text-base mb-2">Important Information:</h4>
-                <ul className="list-disc pl-5 text-blue-800 text-xs sm:text-sm">
+                <h4 className="font-bold text-custom-blue text-sm sm:text-base mb-2">Important Information:</h4>
+                <ul className="list-disc pl-5 text-custom-blue text-xs sm:text-sm">
                   <li className="mb-1">Your subscription plan will be updated immediately</li>
                   <li className="mb-1">No immediate payment will be charged</li>
                   <li className="mb-1">The new pricing will apply at your next billing cycle</li>
@@ -546,13 +557,13 @@ const Subscription = () => {
 
             <div className="flex justify-end space-x-3">
               <button
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
                 onClick={() => setShowUpgradeConfirmModal(false)}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 transition-colors"
                 onClick={() => {
                   setShowUpgradeConfirmModal(false);
                   updateSubscriptionPlan(selectedPlanForUpgrade);

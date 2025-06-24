@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { config } from '../config.js';
 import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
@@ -31,7 +32,9 @@ const LinkedInCallback = () => {
 
   const fetchTenantByEmail = async (email) => {
     try {
+      console.log('Fetching tenant by email...', config.REACT_APP_API_URL);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenants/email/${email}`);
+      console.log('Tenant fetched successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching tenant:', error);
@@ -112,15 +115,39 @@ const LinkedInCallback = () => {
 
     if (basicDetails && additionalDetails && interviewDetails && availabilityDetails) {
       // All steps completed - check tenant status
-      const tenant = await fetchTenantByEmail(email);
-      
-      if (tenant && (tenant.status === 'submitted' || tenant.status === 'payment_pending')) {
-        // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
-        return navigate('/subscription-plans');
-      } else {
-        // For any other status or if tenant not found, go to home
-        return navigate('/');
+      const tenantResponse = await fetchTenantByEmail(email);
+      if (!tenantResponse || !tenantResponse.success) {
+        console.error('Failed to fetch tenant data');
+        return navigate('/select-profession', {
+          state: { token, linkedIn_email: email }
+        });
       }
+      
+      const tenant = tenantResponse.data;
+      console.log('Tenant fetched successfully:', tenant);
+      console.log('Tenant status:', tenant.status);
+      
+      // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
+      if (tenant.status === 'submitted' || tenant.status === 'payment_pending') {
+        console.log('Tenant status is submitted or payment_pending', tenant.status);
+        return navigate('/subscription-plans', {
+          state: { token, linkedIn_email: email },
+          replace: true,
+        });
+      }
+      
+      // // For active users, go to home
+      // if (tenant.status === 'active') {
+      //   console.log('Tenant is active, navigating to home');
+      //   return navigate('/home', { replace: true });
+      // }
+      
+      // For any other status, default to home
+      console.log('Tenant status is', tenant.status, ', defaulting to home');
+      return navigate('/home', {
+        replace: true,
+        state: { token, linkedIn_email: email }
+      });
     }
 
     // Default fallback
@@ -155,10 +182,15 @@ const LinkedInCallback = () => {
 
         const { existingUser, token, email } = response.data;
 
+        // Set the authToken cookie
+        if (token) {
+          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'strict' });
+        }
+
         if (existingUser) {
           // Check if we have a contact for this user
           const contact = await fetchAndFilterContacts(email);
-          determineNavigation(contact, token, email);
+          await determineNavigation(contact, token, email);
         } else {
           // New user - go to select profession
           console.log('New user, navigating to select-profession');
@@ -180,17 +212,17 @@ const LinkedInCallback = () => {
     handleCallback();
   }, [navigate]);
 
-  useEffect(() => {
-    let timer;
-    if (error) {
-      timer = setTimeout(() => {
-        navigate('/', {
-          state: { error: 'LinkedIn login failed. Please try again.' },
-        });
-      }, 5000);
-    }
-    return () => clearTimeout(timer);
-  }, [error, navigate]);
+  // useEffect(() => {
+  //   let timer;
+  //   if (error) {
+  //     timer = setTimeout(() => {
+  //       navigate('/login', {
+  //         state: { error: 'LinkedIn login failed. Please try again.' },
+  //       });
+  //     }, 5000);
+  //   }
+  //   return () => clearTimeout(timer);
+  // }, [error, navigate]);
 
   return (
     <div className="linkedin-callback">

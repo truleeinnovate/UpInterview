@@ -3,9 +3,10 @@ import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
+import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
 const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
-  const { usersRes } = useCustomContext();
+  // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
   const [contactData, setContactData] = useState({})
@@ -13,22 +14,37 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
+
+   const ownerId = usersId || userId;
+
+  
+      const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
+  
 
   // console.log("userId AdvancedDetails", userId);
 
- useEffect(() => {
-   const selectedContact = usersId
-     ? usersRes.find(user => user?.contactId === usersId)
-     : usersRes.find(user => user?._id === userId);
+//  useEffect(() => {
+//    const selectedContact = usersId
+//      ? usersRes.find(user => user?.contactId === usersId)
+//      : usersRes.find(user => user?._id === userId);
  
-   if (selectedContact) {
-     setContactData(selectedContact);
-     console.log("Selected contact:", selectedContact);
-   }
- }, [usersId, userId, usersRes]);
+//    if (selectedContact) {
+//      setContactData(selectedContact);
+//      console.log("Selected contact:", selectedContact);
+//    }
+//  }, [usersId, userId, usersRes]);
 
- console.log("contactData?.contactId", contactData?.contactId);
+    useEffect(() => {
+       if (!userProfile || !userProfile._id) return;
+    if (userProfile) {
+  
+        // console.log("contact userProfile",userProfile )
+      setContactData(userProfile);
+    }
+  }, [userProfile,ownerId,userProfile._id]);
+
+ console.log("contactData?.contactId", contactData);
  
 
   return (
@@ -40,7 +56,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
               mode === 'users' ?
               setAdvacedEditOpen(true)            
                 :
-                navigate(`/account-settings/my-profile/advanced-edit/${contactData?.contactId}`)
+                navigate(`/account-settings/my-profile/advanced-edit/${contactData?._id}`)
             }
           }
           // onClick={() => setIsBasicModalOpen(true)}
@@ -57,13 +73,13 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Current Role</p>
-            <p className="font-medium">{contactData.currentRole}</p>
+            <p className="font-medium">{contactData.currentRole || 'Not Provided'}</p>
           </div>
 
 
           <div>
             <p className="text-sm text-gray-500">Industry</p>
-            <p className="font-medium">{contactData.industry}</p>
+            <p className="font-medium">{contactData.industry || 'Not Provided'}</p>
           </div>
         </div>
 
@@ -71,12 +87,12 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{contactData.experienceYears} Years</p>
+            <p className="font-medium">{contactData.experienceYears ?`${contactData.experienceYears} Years` :  'Not Provided'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Location</p>
-            <p className="font-medium">{contactData.location}</p>
+            <p className="font-medium">{contactData.location || 'Not Provided'}</p>
           </div>
 
 
@@ -88,12 +104,12 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Resume PDF </p>
-            <p className="font-medium">{contactData.ResumePdf}</p>
+            <p className="font-medium">{contactData.ResumePdf || 'No File'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Cover Letter </p>
-            <p className="font-medium">{contactData.coverletter}</p>
+            <p className="font-medium">{contactData.coverletter || 'No File'}</p>
           </div>
 
         </div>
@@ -114,12 +130,14 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
         {
           contactData.coverLetterdescription ?
             (
-              <div className="flex flex-col">
+              // <div className="flex flex-col">
+                <div className={`flex flex-col ${mode === 'users' ? 'w-full' : 'max-w-3xl'} break-words`}>
                 <span className="text-sm text-gray-500">
                   Cover Letter Description
                 </span>
 
-                <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium">
+                {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium"> */}
+                   <p className="text-gray-800 text-sm sm:text-xs mt-1 font-medium whitespace-pre-line break-words">
                   {contactData.coverLetterdescription}
                 </p>
               </div>

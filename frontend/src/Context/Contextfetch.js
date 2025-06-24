@@ -313,8 +313,6 @@ const CustomProvider = ({ children }) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
-
-      setLoadingInterviewer(false);
       setInterviewers(response.data);
     } catch (err) {
       console.error(err.message);
@@ -368,6 +366,7 @@ const CustomProvider = ({ children }) => {
           phone: userData.phone,
           roleId: userData.roleId,
           countryCode: userData.countryCode,
+          status:userData.status,
           isProfileCompleted: false,
           isEmailVerified: true,
           ...(editMode && { _id: userData._id }), // Only include _id in edit mode
@@ -409,8 +408,11 @@ const CustomProvider = ({ children }) => {
       //   );
       // }
 
+      console.log("response.data",response.data);
+      
+
       // UPLOADING FILES LIKE IMAGES AND RESUMES
-      await uploadFile(file, "image", "contact", response.data.contactId);
+      // await uploadFile(file, "image", "contact", response.data.contactId);
 
       // Send welcome email only for new user creation
       if (!editMode) {

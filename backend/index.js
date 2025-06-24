@@ -2,6 +2,7 @@
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
 require("dotenv").config();
+require('./controllers/EmailsController/pushNotificationEmailController');
 const cors = require("cors");
 const express = require("express");
 const app = express();
@@ -261,6 +262,7 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
 
 // this is common code for datautils
 const { Candidate } = require("./models/candidate.js");
@@ -951,4 +953,4 @@ app.use("/upload", uploadRoute);
 
 // Tenant routes
 const tenantRoutes = require("./routes/tenantRoutes");
-app.use("/api/tenants", tenantRoutes);
+app.use("/tenants", tenantRoutes);
