@@ -12,7 +12,11 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
 import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
+
 import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers.js';
+
+import { toast } from 'react-hot-toast';
+
 
 Modal.setAppElement('#root');
 
@@ -174,7 +178,38 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
           userId: formData.id,
         };
 
+
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
+
+      // Trigger email change request
+//       try {
+//         const response = await axios.post(
+//           `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
+//           {
+//             oldEmail: originalEmail,
+//             newEmail: formData.email,
+//             userId: formData.id
+//           }
+//         );
+
+//         if (response.data.success) {
+//           toast.success('Verification email sent to your new email address');
+//           const cleanFormData = {
+//             // email: originalEmail, // Keep original email until verified
+//             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
+//             newEmail: formData.email.trim(), // Store new email in newEmail field
+//             firstName: formData.firstName.trim() || '',
+//             lastName: formData.lastName.trim() || '',
+//             countryCode: formData.countryCode || '',
+//             phone: formData.phone.trim() || '',
+//             profileId: formData.profileId.trim() || '',
+//             dateOfBirth: formData.dateOfBirth || '',
+//             gender: formData.gender || '',
+//             linkedinUrl: formData.linkedinUrl.trim() || '',
+//             portfolioUrl: formData.portfolioUrl.trim() || '',
+//             id: formData.id
+//           };
+
 
         if (res.data.success) {
           alert("Verification email sent to your new email address");

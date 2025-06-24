@@ -82,8 +82,8 @@ const Task = () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
       let filteredTasks = response.data;
       if (organization === true) {
-        filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
-      } else {
+      //   filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
+      // } else {
         filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
       }
       
@@ -91,7 +91,7 @@ const Task = () => {
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  }, [currentUserId, organization, tenantId]);
+  }, [currentUserId, organization]);
 
   useEffect(() => {
     fetchTasks();

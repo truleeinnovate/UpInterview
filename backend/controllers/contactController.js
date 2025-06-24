@@ -2,21 +2,19 @@ const { Contacts } = require('../models/Contacts');
 const Interviewavailability = require('../models/InterviewAvailability');
 const { Users } = require('../models/Users');
 
-// const fetchContacts = async (req, res) => {
-//     try {
-//         const contacts = await Contacts.find().populate('availability')
-//         .populate({
-//             path: 'ownerId',
-//             select: 'firstName lastName email roleId isFreelancer',
-//             model: 'Users', // Explicitly specify model
-//             populate: {
-//                 path: 'roleId',
-//                 model: 'Role', // Explicitly specify model
-//                 select: 'roleName'
-//             }
-//         }).lean();
 
-//         //  console.log("contact",contacts);
+// Mansoor: for fetching the total contacts to the login pages (Individula-4)
+const getAllContacts = async (req, res) => {
+    try {
+        const contacts = await Contacts.find().populate('availability');
+        return res.status(200).json(contacts);
+    } catch (error) {
+        console.error('Error fetching all contacts:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
 
 //         //  const transformedContacts = contacts.map(contact => {
 
@@ -34,6 +32,7 @@ const { Users } = require('../models/Users');
 //         //     }
 //         //     return contact;
 //         // });
+
 
 
 
@@ -69,6 +68,33 @@ const { Users } = require('../models/Users');
 //         // });
 
 
+//         // console.log("Debugging populated contacts:");
+//         // contacts.forEach(contact => {
+//         //     if (contact.ownerId) {
+//         //         console.log({
+//         //             contactId: contact._id,
+//         //             ownerId: contact.ownerId._id,
+//         //             roleId: contact.ownerId.roleId?._id,
+//         //             roleName: contact.ownerId.roleId?.roleName
+//         //         });
+//         //     }
+//         // });
+
+//           // 3. Transform data to ensure roleName is accessible
+//         //   const transformedContacts = contacts.map(contact => {
+//         //     const contactData = { ...contact };
+
+//         //     if (contactData.ownerId && contactData.ownerId.roleId) {
+//         //         contactData.owner = {
+//         //             ...contactData.ownerId,
+//         //             roleName: contactData.ownerId.roleId.roleName
+//         //         };
+//         //         delete contactData.ownerId; // Optional cleanup
+//         //     }
+
+
+//         //     return contactData;
+//         // });
 
 //         // .populate('ownerId');
 //         // res.status(200).json(contacts);
@@ -338,8 +364,10 @@ const updateContactsDetails = async (req, res) => {
                     { session }
                 );
             }
+
             const avail = availability;
             // console.log("avail", avail);
+
 
             // Handle availability updates if provided
             if (avail && Array.isArray(avail)) {
@@ -469,11 +497,11 @@ const getUniqueContactsByOwnerId = async (req, res) => {
 };
 
 module.exports = {
-    fetchContacts,
+    // fetchContacts,
     createContact,
     updateContact,
     updateContactsDetails,
     getUniqueContactsByOwnerId,
-    getContactsByOwnerId
-
+    getContactsByOwnerId,
+    getAllContacts
 };

@@ -10,7 +10,7 @@ const interviewSchema = new mongoose.Schema({
     ownerId: mongoose.Schema.Types.ObjectId,
     tenantId: mongoose.Schema.Types.ObjectId,
     completionReason: String,
-    interviewCode: { type: String, unique: true }, // <-- it will store INV-00001, INV-00002 -->
+    interviewCode: { type: String, unique: true }, // <-- it will store INTV-00001, INTV-00002 -->
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
 }, { timestamps: true });

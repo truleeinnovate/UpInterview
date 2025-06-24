@@ -420,13 +420,14 @@ const MultiStepForm = () => {
             .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
+      console.log("🚀 matchedContact:", matchedContact, 'matchedContact.ownerId._id', matchedContact.ownerId._id)
       const requestData = {
         userData,
         contactData,
         ...(availabilityData.length > 0 && { availabilityData }),
         isInternalInterviewer,
         isProfileCompleteStateOrg,
-        ownerId: matchedContact.ownerId._id,
+        ownerId: matchedContact.ownerId,
         tenantData,
       };
 
@@ -471,10 +472,12 @@ const MultiStepForm = () => {
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
         } else {
+          alert('Profile created successfully!');
+          toast.success('Profile created successfully 1 !');
           setTimeout(() => {
             navigate('/subscription-plans');
-            toast.success('Profile created successfully!');
-          }, 1500);
+          }, 2000); // 2 seconds to allow user to see the toast
+          toast.success('Profile created successfully!');
         }
       }
     } catch (error) {

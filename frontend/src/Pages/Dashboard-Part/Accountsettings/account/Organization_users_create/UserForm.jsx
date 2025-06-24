@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Camera,
   RefreshCw,
@@ -6,8 +6,9 @@ import {
   XCircle,
   Maximize,
   Minimize,
+  X,
+  Trash,
 } from "lucide-react";
-import { X } from "lucide-react";
 import classNames from "classnames";
 import Modal from "react-modal";
 import axios from "axios";
@@ -17,7 +18,6 @@ import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
-import Switch from "react-switch";
 import {
   validateWorkEmail,
   checkEmailExists,
@@ -35,7 +35,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const fileInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
-  console.log("INITIAL USER DATA: ", initialUserData);
 
   // State declarations
   const [file, setFile] = useState(null);
@@ -43,9 +42,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Full page loading state
-  const [status, setStatus] = useState("inactive"); // Status state for toggle
-
+  const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -55,7 +52,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     tenantId: tenantId,
     imageData: "",
     countryCode: "+91",
-    status: "active", // Default status
+    status: "active",
   });
 
   // Role dropdown state
@@ -77,7 +74,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       tenantId: tenantId,
       imageData: "",
       countryCode: "+91",
-      status: "inactive",
+      status: "active",
     });
     setFile(null);
     setFilePreview(null);
@@ -85,7 +82,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     setSelectedCurrentRole("");
     setSelectedCurrentRoleId("");
     setErrors({});
-    setStatus("inactive");
   };
 
   // Handle form field changes
@@ -113,7 +109,8 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
 
     const exists = await checkEmailExists(email);
-    if (exists) {
+    if (exists && !editMode) {
+      // Skip email existence check in edit mode for the same email
       setErrors((prev) => ({ ...prev, email: "Email already registered" }));
     } else {
       setErrors((prev) => ({ ...prev, email: "" }));
@@ -129,16 +126,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
   };
 
-  // Handle status toggle
-  const handleStatusToggle = () => {
-    const newStatus = userData.status === "active" ? "inactive" : "active";
-    setUserData((prev) => ({ ...prev, status: newStatus }));
-  };
   // Initialize form data for edit mode
   useEffect(() => {
     if (editMode && initialUserData) {
       setUserData({
-        _id: initialUserData._id || "", // added by Ashok
+        _id: initialUserData._id || "",
         firstName: initialUserData.firstName || "",
         lastName: initialUserData.lastName || "",
         email: initialUserData.email || "",
@@ -146,14 +138,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         roleId: initialUserData.roleId || "",
         tenantId: tenantId,
         countryCode: initialUserData.countryCode || "+91",
-        status: initialUserData.status || "inactive",
-        contactId: initialUserData.contactId || "", // Added by Ashok
+        status: initialUserData.status || "active",
+        contactId: initialUserData.contactId || "",
       });
       setSelectedCurrentRole(initialUserData.label || "");
       setSelectedCurrentRoleId(initialUserData.roleId || "");
-      // setFilePreview(initialUserData.imageUrl || "");
-      setFilePreview(initialUserData?.imageData?.path); // Added by Ashok
-      setStatus(initialUserData.status || "inactive");
+      setFilePreview(initialUserData?.imageData?.path);
     }
   }, [editMode, initialUserData, tenantId]);
 
@@ -197,7 +187,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setFilePreview(null);
       setIsImageUploaded(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset input value Added by Ashok
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -240,28 +230,44 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   );
 
   // Form submission
-  const handleSubmit = (e) => {
-    console.log("USERS DATA ORIGINAL: ", userData);
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
 
-    // Form validation
-    const newErrors = validateUserForm(userData);
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
     setIsLoading(true);
-    addOrUpdateUser.mutate(
-      { userData, file, editMode },
-      {
-        onSettled: () => {
-          setIsLoading(false);
-          navigate("/account-settings/users");
-        },
+    console.log("Submitting userData:", userData); // Debug log
+
+    try {
+      // Validate form data
+      const newErrors = await validateUserForm(userData, editMode);
+      console.log("Validation errors:", newErrors); // Debug log
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        setIsLoading(false);
+        return;
       }
-    );
+
+      // Proceed with form submission
+      await addOrUpdateUser.mutateAsync(
+        { userData, file, editMode },
+        {
+          onSuccess: () => {
+            console.log("User saved successfully"); // Debug log
+            navigate("/account-settings/users");
+          },
+          onError: (error) => {
+            console.error("Error adding/updating user:", error);
+            setErrors({ form: "Failed to save user. Please try again." });
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Submission error:", error);
+      setErrors({ form: "An unexpected error occurred. Please try again." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -317,61 +323,61 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
           <div className="flex flex-col">
             <div className="flex-1 overflow-y-auto p-4">
-              <form onSubmit={handleSubmit}>
+              <form id="user-form" onSubmit={handleSubmit}>
                 {errors.form && (
                   <p className="text-red-500 text-sm mb-4">{errors.form}</p>
                 )}
+
                 <div className="flex justify-center mb-4">
-                  <div className="w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center relative overflow-hidden group">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    {filePreview ? (
-                      <>
+                  <div className="relative">
+                    <div
+                      className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
+                      onClick={() =>
+                        !isLoading && fileInputRef.current?.click()
+                      }
+                    >
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isLoading}
+                      />
+
+                      {filePreview ? (
                         <img
                           src={filePreview}
                           alt="Preview"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover rounded-full"
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200">
-                          <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button
-                              title="Replace Image"
-                              type="button"
-                              onClick={handleReplaceImage}
-                              className="text-white hover:text-blue-400"
-                              disabled={isLoading}
-                            >
-                              <RefreshCw className="text-2xl" />
-                            </button>
-                            <button
-                              title="Delete Image"
-                              type="button"
-                              onClick={handleDeleteImage}
-                              className="text-white hover:text-red-400"
-                              disabled={isLoading}
-                            >
-                              <XCircle className="text-2xl" />
-                            </button>
-                          </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
+                          <Camera className="text-4xl text-gray-400" />
+                          <span className="text-sm text-gray-500 mt-2">
+                            Upload Photo
+                          </span>
                         </div>
-                      </>
-                    ) : (
+                      )}
+                      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                        {/* Icon placeholder */}
+                      </div>
+                    </div>
+
+                    {/* Delete button outside the circle */}
+                    {filePreview && (
                       <button
+                        title="Remove Image"
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering file input
+                          handleDeleteImage();
+                        }}
+                        className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                         disabled={isLoading}
                       >
-                        <Camera className="text-4xl text-gray-400" />
-                        <span className="text-sm text-gray-500 mt-2">
-                          Upload Photo
-                        </span>
+                        {/* Icon placeholder */}
+                        <Trash className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -399,6 +405,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       }`}
                       disabled={isLoading}
                     />
+                    {errors.firstName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.firstName}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -565,35 +576,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       </p>
                     )}
                   </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      UserStatus
-                    </label>
-                    <div className="flex items-center mt-2">
-                      <Switch
-                        checked={userData.status === "active"}
-                        onChange={(checked) => {
-                          setUserData((prev) => ({
-                            ...prev,
-                            status: checked ? "active" : "inactive",
-                          }));
-                        }}
-                        onColor="#98e6e6"
-                        offColor="#ccc"
-                        handleDiameter={20}
-                        height={20}
-                        width={45}
-                        onHandleColor="#227a8a"
-                        offHandleColor="#9CA3AF"
-                        checkedIcon={false}
-                        uncheckedIcon={false}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {userData.status === "active" ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </form>
             </div>
@@ -609,7 +591,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
               </button>
               <button
                 type="submit"
-                onClick={handleSubmit}
+                form="user-form"
                 className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}

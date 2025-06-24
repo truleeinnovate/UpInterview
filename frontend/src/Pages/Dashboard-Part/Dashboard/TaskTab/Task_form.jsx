@@ -10,12 +10,17 @@ import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
 import {useCandidates} from "../../../../apiHooks/useCandidates.js";
 import {usePositions} from "../../../../apiHooks/usePositions.js";
+import {useAssessments} from "../../../../apiHooks/useAssessments.js";
+import {useInterviews} from "../../../../apiHooks/useInterviews.js";
+import {useMockInterviews} from "../../../../apiHooks/useMockInterviews.js";
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
 
 import "react-datepicker/dist/react-datepicker.css";
+
+
 
 const TaskForm = ({
   onClose,
@@ -32,6 +37,12 @@ const TaskForm = ({
   const organization = tokenPayload?.organization;
   const { candidateData, isMutationLoading } = useCandidates();
   const {positionData} = usePositions();
+  const { assessmentData} = useAssessments();
+  const {interviewData} = useInterviews();
+  const {mockInterviewData} = useMockInterviews();
+  console.log("mockInterviewData:",mockInterviewData)
+
+
   const {usersRes} = useCustomContext();
 
   useEffect(() => {
@@ -229,15 +240,21 @@ const TaskForm = ({
       //     id: team._id 
       //   }));
       case "Interviews":
-        return interviews.map((interview) => ({
-          name: interview.title || interview.name || "Unnamed Interview",
+        return interviewData.map((interview) => ({
+          name: interview.candidateId?.FirstName || interview.name || "Unnamed Interview",
           id: interview._id,
         }));
       case "MockInterviews":
-        return mockInterviews.map((mock) => ({
-          name: mock.title || mock.name || "Unnamed Mock Interview",
+        return (mockInterviewData) ? mockInterviewData.map((mock) => ({
+          name: mock?.rounds?.roundTitle|| mock.name || "Unnamed Mock Interview",
           id: mock._id,
+        })) : [];
+      case "Assessments":
+        return assessmentData.map((assessment) => ({
+          name: assessment.AssessmentTitle || "Unnamed Assessment",
+          id: assessment._id,
         }));
+      
       default:
         return [];
     }

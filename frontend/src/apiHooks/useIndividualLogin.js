@@ -22,6 +22,7 @@ export const useIndividualLogin = (linkedIn_email, isProfileCompleteStateOrg, co
         // Find contact whose email matches linkedIn_email or contactEmailFromOrg
         const emailToMatch = isProfileCompleteStateOrg ? contactEmailFromOrg : linkedIn_email;
         const matched = contacts.find(contact => contact.email === emailToMatch);
+        console.log("🚀 matchedContact in useIndividualLogin:", matchedContact)
 
         if (matched) {
           console.log("✅ Matched Contact:", matched);
