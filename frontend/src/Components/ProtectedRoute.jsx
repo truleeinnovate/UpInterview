@@ -156,26 +156,45 @@ import { PermissionsProvider } from '../Context/PermissionsContext';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = authToken ? decodeJwt(authToken) : null;
+  const { usersData } = useCustomContext() || {};
+  const [finalDomain, setFinalDomain] = useState(null);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const authToken = Cookies.get('authToken');
-
-        if (!authToken) {
+        if (!authToken || !tokenPayload) {
           navigate('/');
           return;
         }
 
-        const tokenPayload = decodeJwt(authToken);
-        if (!tokenPayload) {
-          navigate('/');
-          return;
+        // If we have usersData, we can determine the target domain
+        if (usersData) {
+          const userId = tokenPayload.userId;
+          const currentUserData = usersData.find(user => user._id === userId);
+          const organization = currentUserData?.tenantId;
+          const currentDomain = window.location.hostname;
+          const isLocalhost = currentDomain === 'localhost';
+          
+          let targetDomain = 'app.upinterview.io';
+          if (tokenPayload.organization === true && organization?.subdomain) {
+            targetDomain = `${organization.subdomain}.app.upinterview.io`;
+          }
+
+          setFinalDomain(targetDomain);
+
+          // If we're not on localhost and not on the correct domain, redirect
+          if (!isLocalhost && !currentDomain.includes(targetDomain)) {
+            setIsRedirecting(true);
+            window.location.href = `https://${targetDomain}${location.pathname}`;
+            return;
+          }
         }
 
-        // Defer usersData usage to after CustomProvider
         setIsChecking(false);
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -184,37 +203,22 @@ const ProtectedRoute = ({ children }) => {
     };
 
     checkAuthAndRedirect();
-  }, [navigate, location.pathname]);
+  }, [authToken, tokenPayload, usersData, navigate, location.pathname]);
 
-  if (isChecking) {
-    return <div><Loading /></div>;
+  // Show loading while checking or redirecting
+  if (isChecking || isRedirecting) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your workspace...</p>
+        </div>
+      </div>
+    );
   }
 
   // Component to handle context-dependent logic
   const ProtectedContent = ({ children }) => {
-    const { usersData } = useCustomContext() || {};
-    // console.log('userData in protected route', usersData);
-
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
-    const userId = tokenPayload?.userId;
-    const currentUserData = usersData?.find(user => user._id === userId);
-    const organization = currentUserData?.tenantId;
-
-    const currentDomain = window.location.hostname;
-    const isLocalhost = currentDomain === 'localhost';
-    let targetDomain;
-
-    if (tokenPayload.organization === true && organization?.subdomain) {
-      targetDomain = `${organization.subdomain}.app.upinterview.io`;
-    } else {
-      targetDomain = 'app.upinterview.io';
-    }
-
-    if (!isLocalhost && !currentDomain.includes(targetDomain)) {
-      window.location.href = `https://${targetDomain}${location.pathname}`;
-      return null;
-    }
-
     return children;
   };
 
