@@ -130,7 +130,10 @@ const LinkedInCallback = () => {
       // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
       if (tenant.status === 'submitted' || tenant.status === 'payment_pending') {
         console.log('Tenant status is submitted or payment_pending', tenant.status);
-        return navigate('/subscription-plans', { replace: true });
+        return navigate('/subscription-plans', {
+          state: { token, linkedIn_email: email },
+          replace: true,
+        });
       }
       
       // // For active users, go to home
@@ -141,7 +144,10 @@ const LinkedInCallback = () => {
       
       // For any other status, default to home
       console.log('Tenant status is', tenant.status, ', defaulting to home');
-      return navigate('/home', { replace: true });
+      return navigate('/home', {
+        replace: true,
+        state: { token, linkedIn_email: email }
+      });
     }
 
     // Default fallback
