@@ -11,9 +11,9 @@ const Subscription = () => {
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
 
-
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
+  console.log("tokenPayload ----", tokenPayload);
 
   // Extract user details from token payload
   const userId = tokenPayload?.userId;
