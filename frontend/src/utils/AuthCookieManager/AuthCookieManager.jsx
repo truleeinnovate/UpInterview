@@ -123,9 +123,22 @@ export const logout = (isOrganization = false) => {
   // Determine the redirect path based on user type
   const redirectPath = isOrganization ? '/organization-login' : '/select-user-type';
   
-  // If we're not already on the target path, navigate there
-  if (window.location.pathname !== redirectPath) {
-    // Use window.location.replace to prevent back button from returning to protected routes
-    window.location.replace(redirectPath);
+  // Get the current hostname
+  const currentHost = window.location.hostname;
+  const isLocalhost = currentHost === 'localhost';
+  
+  // If we're not on localhost and the hostname includes 'upinterview.io'
+  if (!isLocalhost && currentHost.includes('upinterview.io')) {
+    // Get the main domain (app.upinterview.io)
+    const mainDomain = 'app.upinterview.io';
+    // Create the full URL with https and the redirect path
+    const fullUrl = `https://${mainDomain}${redirectPath}`;
+    // Redirect to the main domain
+    window.location.href = fullUrl;
+  } else {
+    // For localhost or other domains, use the existing behavior
+    if (window.location.pathname !== redirectPath) {
+      window.location.replace(redirectPath);
+    }
   }
 };
