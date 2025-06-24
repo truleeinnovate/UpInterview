@@ -354,6 +354,7 @@ const updateContactsDetails = async (req, res) => {
             if (contactData.lastName) userUpdateFields.lastName = contactData.lastName;
             if (contactData.profileId) userUpdateFields.profileId = contactData.profileId;
             if (contactData.newEmail) userUpdateFields.newEmail = contactData.newEmail;
+            if (contactData.roleId) userUpdateFields.roleId = contactData.roleId;
             // if (contactData.email) userUpdateFields.email = contactData.email;
 
             // Only update if there's something to update

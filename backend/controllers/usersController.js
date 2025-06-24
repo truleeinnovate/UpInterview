@@ -635,6 +635,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
       _id: users._id,
+      roleId: users?.roleId?._id || '' ,
       roleLabel: users?.roleId?.label || '',
       roleName: users?.roleId?.roleName || '',
       contactId: contact._id || '',

@@ -259,7 +259,7 @@ const CustomProvider = ({ children }) => {
       //   });
       // }
 
-      // await uploadFile(file, "image", "organization", organizationId);
+      await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
     },
@@ -366,6 +366,7 @@ const CustomProvider = ({ children }) => {
           phone: userData.phone,
           roleId: userData.roleId,
           countryCode: userData.countryCode,
+          status:userData.status,
           isProfileCompleted: false,
           isEmailVerified: true,
           ...(editMode && { _id: userData._id }), // Only include _id in edit mode
@@ -407,8 +408,11 @@ const CustomProvider = ({ children }) => {
       //   );
       // }
 
+      console.log("response.data",response.data);
+      
+
       // UPLOADING FILES LIKE IMAGES AND RESUMES
-      await uploadFile(file, "image", "contact", response.data.contactId);
+      // await uploadFile(file, "image", "contact", response.data.contactId);
 
       // Send welcome email only for new user creation
       if (!editMode) {

@@ -14,7 +14,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
 
    const ownerId = usersId || userId;
 
@@ -42,7 +42,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
         // console.log("contact userProfile",userProfile )
       setContactData(userProfile);
     }
-  }, [userProfile,usersId, userId,userProfile._id]);
+  }, [userProfile,ownerId,userProfile._id]);
 
  console.log("contactData?.contactId", contactData);
  
@@ -87,7 +87,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{`${contactData.experienceYears} Years` || 'Not Provided'}</p>
+            <p className="font-medium">{contactData.experienceYears ?`${contactData.experienceYears} Years` :  'Not Provided'}</p>
           </div>
 
           <div>
