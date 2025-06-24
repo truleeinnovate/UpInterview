@@ -254,6 +254,9 @@ const registerOrganization = async (req, res) => {
 
 const organizationUserCreation = async (req, res) => {
   try {
+
+    console.log("req.body User",req.body);
+    
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
@@ -262,45 +265,45 @@ const organizationUserCreation = async (req, res) => {
 
     const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id, isEmailVerified } = UserData;
 
-    if (editMode && _id) {
-      // Update existing user
-      const existingUser = await Users.findById(_id);
-      if (!existingUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
+    // if (editMode && _id) {
+    //   // Update existing user
+    //   const existingUser = await Users.findById(_id);
+    //   if (!existingUser) {
+    //     return res.status(404).json({ message: "User not found" });
+    //   }
 
-      // Update user fields
-      existingUser.firstName = firstName;
-      existingUser.lastName = lastName;
-      existingUser.email = email;
-      existingUser.tenantId = tenantId;
-      existingUser.roleId = roleId;
+    //   // Update user fields
+    //   existingUser.firstName = firstName;
+    //   existingUser.lastName = lastName;
+    //   existingUser.email = email;
+    //   existingUser.tenantId = tenantId;
+    //   existingUser.roleId = roleId;
 
-      const savedUser = await existingUser.save();
+    //   const savedUser = await existingUser.save();
 
-      // Update contact
-      const existingContact = await Contacts.findOne({ ownerId: _id });
-      if (existingContact) {
-        existingContact.firstName = contactData.firstName;
-        existingContact.lastName = contactData.lastName;
-        existingContact.email = contactData.email;
-        existingContact.phone = contactData.phone;
-        existingContact.tenantId = contactData.tenantId;
-        existingContact.countryCode = contactData.countryCode;
-        await existingContact.save();
-      }
+    //   // Update contact
+    //   const existingContact = await Contacts.findOne({ ownerId: _id });
+    //   if (existingContact) {
+    //     existingContact.firstName = contactData.firstName;
+    //     existingContact.lastName = contactData.lastName;
+    //     existingContact.email = contactData.email;
+    //     existingContact.phone = contactData.phone;
+    //     existingContact.tenantId = contactData.tenantId;
+    //     existingContact.countryCode = contactData.countryCode;
+    //     await existingContact.save();
+    //   }
 
-      return res.status(200).json({
-        message: "User updated successfully",
-        userId: savedUser._id,
-        contactId: existingContact?._id
-      });
-    } else {
+    //   return res.status(200).json({
+    //     message: "User updated successfully",
+    //     userId: savedUser._id,
+    //     contactId: existingContact?._id
+    //   });
+    // } else {
       // Create new user
       const existingUser = await Users.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "Email already registered" });
-      }
+      }else{
 
       const newUser = new Users({
         firstName,

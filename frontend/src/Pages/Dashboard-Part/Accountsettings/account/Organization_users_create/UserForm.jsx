@@ -300,7 +300,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           </div>
         )}
         <div className="p-3">
-          <div className="flex justify-between items-center mb-6 mt-2">
+          <div className="flex justify-between items-center mb-20 mt-2">
             <h2 className="text-2xl font-bold text-custom-blue">
               {editMode ? "Edit User" : "New User"}
             </h2>
