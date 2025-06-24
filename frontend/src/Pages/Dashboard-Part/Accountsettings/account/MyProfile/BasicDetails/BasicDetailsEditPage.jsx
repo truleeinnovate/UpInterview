@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Maximize, Minimize, X } from 'lucide-react';
+import { Maximize, Minimize, X, ChevronDown, } from 'lucide-react';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 import DatePicker from 'react-datepicker';
@@ -12,10 +12,11 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
 import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
-
+import Cookies from 'js-cookie';
 import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers.js';
 
 import { toast } from 'react-hot-toast';
+import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode.js';
 
 
 Modal.setAppElement('#root');
@@ -26,6 +27,11 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const navigate = useNavigate();
   const resolvedId = usersId || id;
 
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  // const userId = tokenPayload.userId;
+  const tenantId = tokenPayload.tenantId;
+
   const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
 
@@ -35,15 +41,36 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [originalEmail, setOriginalEmail] = useState('');
+const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
+  // Role dropdown state
+  const [currentRole, setCurrentRole] = useState([]);
+  const [searchTermRole, setSearchTermRole] = useState("");
+  const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
+  const [showDropdownRole, setShowDropdownRole] = useState(false);
+  const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
-  
-      const {userProfile, isLoading, isError, error} = useUserProfile(resolvedId)
 
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
+        );
+        setCurrentRole(response.data);
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    };
+
+    if (tenantId) {
+      fetchRoles();
+    }
+  }, [tenantId]);
 
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     if (!userProfile) return;
-        // console.log("contact userProfile BasicDetailsEditPage",userProfile )
+    console.log("contact userProfile BasicDetailsEditPage",userProfile )
     setFormData({
       email: userProfile.email || '',
       firstName: userProfile.firstName || '',
@@ -55,8 +82,12 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
       gender: userProfile.gender || '',
       linkedinUrl: userProfile.linkedinUrl || '',
       portfolioUrl: userProfile.portfolioUrl || '',
-      id: userProfile._id
+      id: userProfile._id,
+      roleLabel:userProfile?.roleLabel || '',
+       roleId: userProfile?.roleId || ''
     });
+    setSelectedCurrentRole(userProfile?.roleLabel);
+     setSelectedCurrentRoleId(userProfile?.roleId || '');
 
     setOriginalEmail(userProfile.email || '');
 
@@ -69,6 +100,35 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
 
     setErrors({});
   }, [resolvedId, userProfile]);
+
+  const toggleDropdownRole = () => {
+    setShowDropdownRole((prev) => !prev);
+  };
+
+    // Role selection
+  // const handleRoleSelect = (role) => {
+  //   setSelectedCurrentRole(role.label);
+  //   // setSelectedCurrentRoleId(role._id);
+  //   // setUserData((prev) => ({ ...prev, roleId: role._id }));
+  //   setShowDropdownRole(false);
+  //   setErrors((prev) => ({ ...prev, roleId: "" }));
+  // };
+
+  // Update handleRoleSelect to set both label and ID
+const handleRoleSelect = (role) => {
+  setSelectedCurrentRole(role.label);
+  setSelectedCurrentRoleId(role._id); // Set the role ID
+  setShowDropdownRole(false);
+  setErrors((prev) => ({ ...prev, roleId: "" }));
+};
+
+
+    // Filter roles based on search
+  const filteredCurrentRoles = currentRole.filter((role) =>
+    role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
+  );
+
+
 
   const handleDateChange = (date) => {
     if (!date) {
@@ -91,18 +151,18 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
     }
 
     if (name === 'email' && value !== originalEmail) {
-      await  handleEmailValidation(value);
+      await handleEmailValidation(value);
     }
   };
 
   const handleProfileIdValidation = async (profileId) => {
-  const error = await  validateProfileId(profileId);
-  if (error) {
-    setErrors(prev => ({ ...prev, profileId: error }));
-  } else {
-    setErrors(prev => ({ ...prev, profileId: '' }));
-  }
-};
+    const error = await validateProfileId(profileId);
+    if (error) {
+      setErrors(prev => ({ ...prev, profileId: error }));
+    } else {
+      setErrors(prev => ({ ...prev, profileId: '' }));
+    }
+  };
 
 
   const handleEmailValidation = async (email) => {
@@ -159,6 +219,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
       linkedinUrl: formData.linkedinUrl.trim() || '',
       portfolioUrl: formData.portfolioUrl.trim() || '',
       id: formData.id,
+       roleId: selectedCurrentRoleId || formData.roleId 
     };
 
     try {
@@ -181,34 +242,34 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
 
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
-      // Trigger email change request
-//       try {
-//         const response = await axios.post(
-//           `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
-//           {
-//             oldEmail: originalEmail,
-//             newEmail: formData.email,
-//             userId: formData.id
-//           }
-//         );
+        // Trigger email change request
+        //       try {
+        //         const response = await axios.post(
+        //           `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
+        //           {
+        //             oldEmail: originalEmail,
+        //             newEmail: formData.email,
+        //             userId: formData.id
+        //           }
+        //         );
 
-//         if (response.data.success) {
-//           toast.success('Verification email sent to your new email address');
-//           const cleanFormData = {
-//             // email: originalEmail, // Keep original email until verified
-//             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
-//             newEmail: formData.email.trim(), // Store new email in newEmail field
-//             firstName: formData.firstName.trim() || '',
-//             lastName: formData.lastName.trim() || '',
-//             countryCode: formData.countryCode || '',
-//             phone: formData.phone.trim() || '',
-//             profileId: formData.profileId.trim() || '',
-//             dateOfBirth: formData.dateOfBirth || '',
-//             gender: formData.gender || '',
-//             linkedinUrl: formData.linkedinUrl.trim() || '',
-//             portfolioUrl: formData.portfolioUrl.trim() || '',
-//             id: formData.id
-//           };
+        //         if (response.data.success) {
+        //           toast.success('Verification email sent to your new email address');
+        //           const cleanFormData = {
+        //             // email: originalEmail, // Keep original email until verified
+        //             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
+        //             newEmail: formData.email.trim(), // Store new email in newEmail field
+        //             firstName: formData.firstName.trim() || '',
+        //             lastName: formData.lastName.trim() || '',
+        //             countryCode: formData.countryCode || '',
+        //             phone: formData.phone.trim() || '',
+        //             profileId: formData.profileId.trim() || '',
+        //             dateOfBirth: formData.dateOfBirth || '',
+        //             gender: formData.gender || '',
+        //             linkedinUrl: formData.linkedinUrl.trim() || '',
+        //             portfolioUrl: formData.portfolioUrl.trim() || '',
+        //             id: formData.id
+        //           };
 
 
         if (res.data.success) {
@@ -219,6 +280,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
             newEmail: formData.email.trim(),
           };
 
+          
           await useUpdateContactDetail.mutateAsync({
             resolvedId,
             data: dataWithNewEmail,
@@ -233,6 +295,9 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
           }));
         }
       } else {
+
+        
+          // console.log("data With old Email",cleanFormData);
         const response = await updateContactDetail.mutateAsync({
           resolvedId,
           data: cleanFormData,
@@ -313,7 +378,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   //         };
 
   //         console.log("cleanFormData",cleanFormData);
-          
+
 
   //         await axios.patch(
   //           `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
@@ -423,9 +488,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                     onChange={handleInputChange}
                     onBlur={() => formData.email !== originalEmail && handleEmailValidation(formData.email)}
                     disabled={from !== 'users'}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                      errors.email ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.email ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {isCheckingEmail && (
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -445,9 +509,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                   name="firstName"
                   value={formData.firstName || ''}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.firstName ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
               </div>
@@ -461,9 +524,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                   name="lastName"
                   value={formData.lastName || ''}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.lastName ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
               </div>
@@ -494,9 +556,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                   value={formData.profileId || ''}
                   // onChange={handleInputChange}
                   onBlur={() => handleProfileIdValidation(formData.profileId)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.profileId ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.profileId ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.profileId && <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>}
               </div>
@@ -538,9 +599,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                     name="phone"
                     value={formData.phone || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                      errors.phone ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                 </div>
                 {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
@@ -555,11 +615,67 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
                   name="linkedinUrl"
                   value={formData.linkedinUrl || ''}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.linkedinUrl ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.linkedinUrl ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.linkedinUrl && <p className="text-red-500 text-sm mt-1">{errors.linkedinUrl}</p>}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedCurrentRole}
+                    
+                    onClick={toggleDropdownRole}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
+                      }`}
+                        disabled={from !== 'users'}
+                    // disabled={isLoading}
+                  />
+                  <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
+                  {showDropdownRole && (
+                    <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                      <div className="p-2 border-b">
+                        <input
+                          type="text"
+                          placeholder="Search roles..."
+                          
+                          value={searchTermRole}
+                          onChange={(e) =>
+                            setSearchTermRole(e.target.value)
+                          }
+                          className="w-full px-2 py-1 border rounded"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredCurrentRoles.map((role) => (
+                          <div
+                            key={role._id}
+                            onClick={() => handleRoleSelect(role)}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {role.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {errors.roleId && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.roleId}
+                  </p>
+                )}
               </div>
 
               <div>

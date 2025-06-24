@@ -263,7 +263,7 @@ const organizationUserCreation = async (req, res) => {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id, isEmailVerified } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode,status, editMode, _id, isEmailVerified } = UserData;
 
     // if (editMode && _id) {
     //   // Update existing user
@@ -313,6 +313,7 @@ const organizationUserCreation = async (req, res) => {
         roleId,
         countryCode,
         isProfileCompleted,
+        status,
         isEmailVerified: false
       });
 
