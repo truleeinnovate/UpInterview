@@ -727,7 +727,7 @@ const deactivateSubdomain = async (req, res) => {
       return res.status(400).json({ message: 'Invalid organization ID format' });
     }
 
-    const updatedOrganization = await Organization.findByIdAndUpdate(
+    const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
         subdomain: null,
