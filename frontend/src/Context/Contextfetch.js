@@ -259,7 +259,7 @@ const CustomProvider = ({ children }) => {
       //   });
       // }
 
-      await uploadFile(file, "image", "organization", organizationId);
+      // await uploadFile(file, "image", "organization", organizationId);
 
       return response.data;
     },
