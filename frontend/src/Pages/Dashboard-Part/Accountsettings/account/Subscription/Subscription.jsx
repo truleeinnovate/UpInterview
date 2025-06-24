@@ -504,7 +504,7 @@ const Subscription = () => {
       </div>
       {/* Cancel Subscription Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Cancel Subscription</h2>
             <p className="mb-4 text-sm sm:text-base text-gray-600">
@@ -535,7 +535,7 @@ const Subscription = () => {
 
       {/* Upgrade Confirmation Modal */}
       {showUpgradeConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-xl">
             <h3 className="text-lg sm:text-xl font-bold mb-4">Confirm Subscription Update</h3>
             <div className="mb-4">
