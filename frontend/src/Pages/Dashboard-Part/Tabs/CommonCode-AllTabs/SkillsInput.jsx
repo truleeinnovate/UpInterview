@@ -87,7 +87,8 @@ const SkillsField = ({
         <button
           type="button"
           onClick={handleAddClick}
-          className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded"
+          disabled={editingIndex !== null && entries.length > 0}
+          className={`flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded ${editingIndex !== null && entries.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <FaPlus className="mr-1 w-5 h-5" /> Add Rows
         </button>

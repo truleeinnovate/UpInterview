@@ -339,6 +339,17 @@ const SubscriptionCardDetails = () => {
                                                 nextRoute: isUpgrading ? '/SubscriptionDetails' : '/account-settings/subscription'
                                             }
                                         });
+
+                                        axios.post(`${process.env.REACT_APP_API_URL}/emails/send-signup-email`, {
+                                            tenantId: tenantId,
+                                            ownerId: ownerId,
+                                        }).catch((err) => console.error('Email error:', err));
+                                        await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
+                                            ownerId,
+                                            tenantId,
+
+                                            // ccEmail: "shaikmansoor1200@gmail.com",
+                                        });
                                     } else {
                                         setProcessing(false);
                                         toast.error('Payment verification failed');
