@@ -13,9 +13,20 @@ import { usePositions } from '../../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../../Components/LoadingButton';
 import axios from "axios";
 import { config } from "../../../../../config.js";
+import { useCustomContext } from '../../../../../Context/Contextfetch.js';
 
 
 function RoundFormPosition() {
+
+  const { userProfile } = useCustomContext();
+  const formatName = (name) => {
+    if (!name) return "";
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
+
+  const firstName = formatName(userProfile?.firstName);
+  const lastName = formatName(userProfile?.lastName);
+
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { positionData, isMutationLoading, addRounds } = usePositions();
 
@@ -72,21 +83,22 @@ function RoundFormPosition() {
     }));
   };
 
-  const [ownerData, setOwnerData] = useState(null);
+  // const [ownerData, setOwnerData] = useState(null);
 
-  useEffect(() => {
-    const fetchOwnerData = async () => {
-      if (!organization && ownerId) {
-        try {
-          const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
-          setOwnerData(response.data);
-        } catch (error) {
-          console.error('Error fetching owner data:', error);
-        }
-      }
-    };
-    fetchOwnerData();
-  }, [organization, ownerId]);
+  // useEffect(() => {
+  //   const fetchOwnerData = async () => {
+  //     if (!organization && ownerId) {
+  //       try {
+  //         const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
+  //         console.log('ownerData', response.data);
+  //         setOwnerData(response.data);
+  //       } catch (error) {
+  //         console.error('Error fetching owner data:', error);
+  //       }
+  //     }
+  //   };
+  //   fetchOwnerData();
+  // }, [organization, ownerId]);
 
   // const handleAddQuestionToRound = async (question) => {
   //   if (question && question.questionId && question.snapshot) {
@@ -362,17 +374,40 @@ function RoundFormPosition() {
       alert("You need to clear external interviewers before selecting Internal interviewers.");
       return;
     }
-    // Add name property by combining firstName and lastName
-    const interviewersWithFullName = interviewers.map(interviewer => ({
-      ...interviewer,
-      name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
-    }));
 
-    setFormData(prev => ({
-      ...prev,
-      interviewerType: "Internal",
-      interviewers: interviewersWithFullName
-    }));
+    if (organization === false) {
+      // For non-organization users, set the current user as the interviewer
+      const currentUser = {
+        _id: ownerId,
+        firstName: firstName,
+        lastName: lastName,
+        email: tokenPayload?.email || '',
+        name: `${firstName || ''} ${lastName || ''}`.trim()
+      };
+      
+      setFormData(prev => ({
+        ...prev,
+        interviewerType: "Internal",
+        interviewers: [currentUser]
+      }));
+      setInternalInterviews(false);
+    } else {
+      // For organization users, show the internal interviews popup
+      if (interviewers) {
+        const interviewersWithFullName = interviewers.map(interviewer => ({
+          ...interviewer,
+          name: `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim()
+        }));
+
+        setFormData(prev => ({
+          ...prev,
+          interviewerType: "Internal",
+          interviewers: interviewersWithFullName
+        }));
+      } else {
+        setInternalInterviews(true);
+      }
+    }
   };
 
   const handleExternalInterviewerSelect = () => {
@@ -1075,7 +1110,7 @@ function RoundFormPosition() {
                               <Button
                               type="button"
                               onClick={() => {
-                                handleInternalInterviewerSelect([ownerData]);
+                                handleInternalInterviewerSelect();
                                 clearError('interviewerType');
                               }}
                               variant="outline"
