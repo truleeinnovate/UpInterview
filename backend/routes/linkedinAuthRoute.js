@@ -5,6 +5,7 @@ const { Users } = require('../models/Users');
 const { Contacts } = require('../models/Contacts');
 const Tenant = require('../models/Tenant');
 const config = require('../config.js');
+const Role = require('../models/RolesData.js');
 
 router.use((req, res, next) => {
   if (req.method === 'OPTIONS') {

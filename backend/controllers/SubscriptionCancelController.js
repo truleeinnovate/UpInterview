@@ -1,4 +1,5 @@
 require('dotenv').config();
+const Tenant = require('../models/Tenant');
 
 // Initialize Razorpay
 const Razorpay = require('razorpay');
@@ -15,9 +16,9 @@ const razorpay = new Razorpay({
 const cancelSubscription = async (req, res) => {
   try {
     // Extract request data
-    const { subscriptionId, razorpaySubscriptionId } = req.body;
+    const { subscriptionId, razorpaySubscriptionId, ownerId } = req.body;
     
-    if (!subscriptionId || !razorpaySubscriptionId) {
+    if (!subscriptionId || !razorpaySubscriptionId || !ownerId) {
       return res.status(400).json({ message: 'Missing required subscription information' });
     }
     
@@ -30,6 +31,13 @@ const cancelSubscription = async (req, res) => {
       return res.status(400).json({ message: 'Failed to cancel Razorpay subscription' });
     }
     
+    if (res.status === 200 || res.status === 201){
+      const tenant = await Tenant.findOne({ ownerId: ownerId });
+      if(tenant){
+        tenant.status = 'cancelled';
+        await tenant.save();
+    }
+    }
     
     // Return success response
     return res.status(200).json({
