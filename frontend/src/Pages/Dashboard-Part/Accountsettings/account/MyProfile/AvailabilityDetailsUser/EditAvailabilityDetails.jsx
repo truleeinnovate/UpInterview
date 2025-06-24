@@ -15,6 +15,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
+import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 
@@ -30,6 +32,12 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
   const [showPopup, setShowPopup] = useState(false);
 
   const resolvedId = usersId || id;
+
+  
+    const {userProfile, isLoading, isError, error} = useUserProfile(resolvedId)
+    // const requestEmailChange = useRequestEmailChange();
+    const updateContactDetail = useUpdateContactDetail();
+   const queryClient = useQueryClient();
 
   // Initialize form data with all days
   // const initialTimes = {
@@ -56,7 +64,8 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
   const [formData, setFormData] = useState({
     times: times,
     selectedTimezone: '',
-    selectedOption: ''
+    selectedOption: '',
+    contactId:'',
   });
 
 
@@ -78,13 +87,21 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
         //   contact = singlecontact[0];
         // }
 
-         const contact = usersRes.find(user => user.contactId === resolvedId);
+        //  const contact = usersRes.find(user => user.contactId === resolvedId);
+         if (!userProfile || !userProfile._id) return;
 
         
       const updatedTimes = { ...times };
 
+      //     const days = contactData?.availability || [];
+      // days.forEach(day => {
+      //   if (day.timeSlots.length > 0 && day.timeSlots[0].startTime !== 'unavailable') {
+      //     updatedTimes[day.day] = day.timeSlots;
+      //   }
+      // });
+
       // Safely map availability if exists
-      const days = contact?.availability?.[0]?.days;
+      const days = userProfile?.availability || [];
       if (Array.isArray(days)) {
         days.forEach(day => {
           updatedTimes[day.day] = day.timeSlots.map(slot => ({
@@ -98,9 +115,10 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
 
         setFormData({
           // times: updatedTimes, // Deep copy
-          selectedTimezone: contact?.timeZone || "",
-          selectedOption: contact?.preferredDuration || '',
-          id: contact._id
+          selectedTimezone: userProfile?.timeZone || "",
+          selectedOption: userProfile?.preferredDuration || '',
+          id: userProfile?._id,
+          contactId:userProfile?.contactId || "Not Found"
         });
         setErrors({});
 
@@ -110,7 +128,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
 
     }
     fetchData();
-  }, [resolvedId, usersRes]);
+  }, [resolvedId, userProfile]);
 
   // Handler functions from AvailabilityDetails
   const handlePaste = () => {
@@ -254,16 +272,26 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
       // timeZone: formData.selectedTimezone, // Already a string from handleTimezoneChange
       preferredDuration: formData.selectedOption || '',
       availability: formattedAvailability.days.length > 0 ? [formattedAvailability] : [],
+     contactId:userProfile?.contactId || "Not Found"
     };
 
     console.log("cleanFormData", cleanFormData);
 
 
     try {
-      const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-        cleanFormData
-      );
+      // const response = await axios.patch(
+      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+      //   cleanFormData
+      // );
+
+      const response = await updateContactDetail.mutateAsync({
+          resolvedId,
+          data: cleanFormData,
+        });
+        await queryClient.invalidateQueries(["userProfile", resolvedId]); 
+
+      console.log("response cleanFormData", response);
+
 
       if (response.status === 200) {
         handleCloseModal()

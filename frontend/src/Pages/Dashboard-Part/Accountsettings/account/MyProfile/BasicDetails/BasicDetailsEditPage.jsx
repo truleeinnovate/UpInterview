@@ -12,14 +12,18 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
 import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
+import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers.js';
 
 Modal.setAppElement('#root');
 
 const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) => {
-  const { usersRes } = useCustomContext();
+  // const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const resolvedId = usersId || id;
+
+  const requestEmailChange = useRequestEmailChange();
+  const updateContactDetail = useUpdateContactDetail();
 
   const [formData, setFormData] = useState({});
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -28,35 +32,39 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [originalEmail, setOriginalEmail] = useState('');
 
-  useEffect(() => {
-    const contact = usersRes.find(user => user.contactId === resolvedId);
-    if (!contact) return;
+  
+      const {userProfile, isLoading, isError, error} = useUserProfile(resolvedId)
 
+
+  useEffect(() => {
+    // const contact = usersRes.find(user => user.contactId === resolvedId);
+    if (!userProfile) return;
+        // console.log("contact userProfile BasicDetailsEditPage",userProfile )
     setFormData({
-      email: contact.email || '',
-      firstName: contact.firstName || '',
-      lastName: contact.lastName || '',
-      countryCode: contact.countryCode || '+91',
-      phone: contact.phone || '',
-      profileId: contact.profileId || '',
-      dateOfBirth: contact.dateOfBirth || '',
-      gender: contact.gender || '',
-      linkedinUrl: contact.linkedinUrl || '',
-      portfolioUrl: contact.portfolioUrl || '',
-      id: contact._id
+      email: userProfile.email || '',
+      firstName: userProfile.firstName || '',
+      lastName: userProfile.lastName || '',
+      countryCode: userProfile.countryCode || '+91',
+      phone: userProfile.phone || '',
+      profileId: userProfile.profileId || '',
+      dateOfBirth: userProfile.dateOfBirth || '',
+      gender: userProfile.gender || '',
+      linkedinUrl: userProfile.linkedinUrl || '',
+      portfolioUrl: userProfile.portfolioUrl || '',
+      id: userProfile._id
     });
 
-    setOriginalEmail(contact.email || '');
+    setOriginalEmail(userProfile.email || '');
 
-    if (contact.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      const parsedDate = parse(contact.dateOfBirth, 'dd-MM-yyyy', new Date());
+    if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
+      const parsedDate = parse(userProfile.dateOfBirth, 'dd-MM-yyyy', new Date());
       setStartDate(!isNaN(parsedDate.getTime()) ? parsedDate : null);
     } else {
       setStartDate(null);
     }
 
     setErrors({});
-  }, [resolvedId, usersRes]);
+  }, [resolvedId, userProfile]);
 
   const handleDateChange = (date) => {
     if (!date) {
@@ -70,7 +78,7 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
     setStartDate(date);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
@@ -79,12 +87,12 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
     }
 
     if (name === 'email' && value !== originalEmail) {
-      handleEmailValidation(value);
+      await  handleEmailValidation(value);
     }
   };
 
-  const handleProfileIdValidation = (profileId) => {
-  const error = validateProfileId(profileId);
+  const handleProfileIdValidation = async (profileId) => {
+  const error = await  validateProfileId(profileId);
   if (error) {
     setErrors(prev => ({ ...prev, profileId: error }));
   } else {
@@ -130,108 +138,201 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form using validateFormMyProfile
     const validationErrors = validateFormMyProfile(formData);
     setErrors(validationErrors);
 
-    if (!isEmptyObject(validationErrors)) {
-      return;
-    }
+    if (!isEmptyObject(validationErrors)) return;
 
-    // Additional email validation if changed
-    if (formData.email !== originalEmail) {
-      // const emailFormatError = validateWorkEmail(formData.email);
-      // if (emailFormatError) {
-      //   setErrors(prev => ({ ...prev, email: emailFormatError }));
-      //   return;
-      // }
+    const cleanFormData = {
+      email: formData.email.trim() || '',
+      firstName: formData.firstName.trim() || '',
+      lastName: formData.lastName.trim() || '',
+      countryCode: formData.countryCode || '',
+      phone: formData.phone.trim() || '',
+      profileId: formData.profileId.trim() || '',
+      dateOfBirth: formData.dateOfBirth || '',
+      gender: formData.gender || '',
+      linkedinUrl: formData.linkedinUrl.trim() || '',
+      portfolioUrl: formData.portfolioUrl.trim() || '',
+      id: formData.id,
+    };
 
-      const exists = await checkEmailExists(formData.email);
-      if (exists) {
-        setErrors(prev => ({ ...prev, email: 'Email already registered' }));
-        return;
-      }
+    try {
+      if (formData.email !== originalEmail) {
+        const exists = await checkEmailExists(formData.email);
+        if (exists) {
+          setErrors((prev) => ({
+            ...prev,
+            email: "Email already registered",
+          }));
+          return;
+        }
 
-      // Trigger email change request
-      try {
-        const response = await axios.post(
-          `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
-          {
-            oldEmail: originalEmail,
-            newEmail: formData.email,
-            userId: formData.id
-          }
-        );
+        const emailChangePayload = {
+          oldEmail: originalEmail,
+          newEmail: formData.email,
+          userId: formData.id,
+        };
 
-        if (response.data.success) {
-          alert('Verification email sent to your new email address');
-          const cleanFormData = {
-            // email: originalEmail, // Keep original email until verified
-            // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
-            newEmail: formData.email.trim(), // Store new email in newEmail field
-            firstName: formData.firstName.trim() || '',
-            lastName: formData.lastName.trim() || '',
-            countryCode: formData.countryCode || '',
-            phone: formData.phone.trim() || '',
-            profileId: formData.profileId.trim() || '',
-            dateOfBirth: formData.dateOfBirth || '',
-            gender: formData.gender || '',
-            linkedinUrl: formData.linkedinUrl.trim() || '',
-            portfolioUrl: formData.portfolioUrl.trim() || '',
-            id: formData.id
+        const res = await requestEmailChange.mutateAsync(emailChangePayload);
+
+        if (res.data.success) {
+          alert("Verification email sent to your new email address");
+
+          const dataWithNewEmail = {
+            ...cleanFormData,
+            newEmail: formData.email.trim(),
           };
 
-          console.log("cleanFormData",cleanFormData);
-          
+          await useUpdateContactDetail.mutateAsync({
+            resolvedId,
+            data: dataWithNewEmail,
+          });
 
-          await axios.patch(
-            `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-            cleanFormData
-          );
-
-          onSuccess();
+          if (usersId) onSuccess();
           handleCloseModal();
         } else {
-          setErrors(prev => ({ ...prev, email: response.data.message }));
+          setErrors((prev) => ({
+            ...prev,
+            email: res.data.message || "Email change failed",
+          }));
         }
-      } catch (error) {
-        console.error('Error requesting email change:', error);
-        setErrors(prev => ({ ...prev, email: 'Failed to send verification email' }));
-      }
-    } else {
-      // Proceed with normal update if email is unchanged
-      const cleanFormData = {
-        email: formData.email.trim() || '',
-        firstName: formData.firstName.trim() || '',
-        lastName: formData.lastName.trim() || '',
-        countryCode: formData.countryCode || '',
-        phone: formData.phone.trim() || '',
-        profileId: formData.profileId.trim() || '',
-        dateOfBirth: formData.dateOfBirth || '',
-        gender: formData.gender || '',
-        linkedinUrl: formData.linkedinUrl.trim() || '',
-        portfolioUrl: formData.portfolioUrl.trim() || '',
-        id: formData.id
-      };
-
-      try {
-        const response = await axios.patch(
-          `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-          cleanFormData
-        );
+      } else {
+        const response = await updateContactDetail.mutateAsync({
+          resolvedId,
+          data: cleanFormData,
+        });
 
         if (response.status === 200) {
-          onSuccess();
+          if (usersId) onSuccess();
           handleCloseModal();
         } else {
-          setErrors(prev => ({ ...prev, form: 'Failed to save changes' }));
+          setErrors((prev) => ({
+            ...prev,
+            form: "Failed to save changes",
+          }));
         }
-      } catch (error) {
-        console.error('Error saving changes:', error);
-        setErrors(prev => ({ ...prev, form: 'Error saving changes' }));
       }
+    } catch (err) {
+      console.error("Error saving changes:", err);
+      setErrors((prev) => ({
+        ...prev,
+        form: "Error saving changes",
+      }));
     }
   };
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   // Validate form using validateFormMyProfile
+  //   const validationErrors = validateFormMyProfile(formData);
+  //   setErrors(validationErrors);
+
+  //   if (!isEmptyObject(validationErrors)) {
+  //     return;
+  //   }
+
+  //   // Additional email validation if changed
+  //   if (formData.email !== originalEmail) {
+  //     // const emailFormatError = validateWorkEmail(formData.email);
+  //     // if (emailFormatError) {
+  //     //   setErrors(prev => ({ ...prev, email: emailFormatError }));
+  //     //   return;
+  //     // }
+
+  //     const exists = await checkEmailExists(formData.email);
+  //     if (exists) {
+  //       setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+  //       return;
+  //     }
+
+  //     // Trigger email change request
+  //     try {
+  //       const response = await axios.post(
+  //         `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
+  //         {
+  //           oldEmail: originalEmail,
+  //           newEmail: formData.email,
+  //           userId: formData.id
+  //         }
+  //       );
+
+  //       if (response.data.success) {
+  //         alert('Verification email sent to your new email address');
+  //         const cleanFormData = {
+  //           // email: originalEmail, // Keep original email until verified
+  //           // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
+  //           newEmail: formData.email.trim(), // Store new email in newEmail field
+  //           firstName: formData.firstName.trim() || '',
+  //           lastName: formData.lastName.trim() || '',
+  //           countryCode: formData.countryCode || '',
+  //           phone: formData.phone.trim() || '',
+  //           profileId: formData.profileId.trim() || '',
+  //           dateOfBirth: formData.dateOfBirth || '',
+  //           gender: formData.gender || '',
+  //           linkedinUrl: formData.linkedinUrl.trim() || '',
+  //           portfolioUrl: formData.portfolioUrl.trim() || '',
+  //           id: formData.id
+  //         };
+
+  //         console.log("cleanFormData",cleanFormData);
+          
+
+  //         await axios.patch(
+  //           `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+  //           cleanFormData
+  //         );
+
+  //         // onSuccess();
+  //          if (usersId){
+  //         onSuccess();
+  //         }
+  //         handleCloseModal();
+  //       } else {
+  //         setErrors(prev => ({ ...prev, email: response.data.message }));
+  //       }
+  //     } catch (error) {
+  //       console.error('Error requesting email change:', error);
+  //       setErrors(prev => ({ ...prev, email: 'Failed to send verification email' }));
+  //     }
+  //   } else {
+  //     // Proceed with normal update if email is unchanged
+  //     const cleanFormData = {
+  //       email: formData.email.trim() || '',
+  //       firstName: formData.firstName.trim() || '',
+  //       lastName: formData.lastName.trim() || '',
+  //       countryCode: formData.countryCode || '',
+  //       phone: formData.phone.trim() || '',
+  //       profileId: formData.profileId.trim() || '',
+  //       dateOfBirth: formData.dateOfBirth || '',
+  //       gender: formData.gender || '',
+  //       linkedinUrl: formData.linkedinUrl.trim() || '',
+  //       portfolioUrl: formData.portfolioUrl.trim() || '',
+  //       id: formData.id
+  //     };
+
+  //     try {
+  //       const response = await axios.patch(
+  //         `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+  //         cleanFormData
+  //       );
+
+  //       if (response.status === 200) {
+  //         if (usersId){
+  //         onSuccess();
+  //         }
+  //         handleCloseModal();
+  //       } else {
+  //         setErrors(prev => ({ ...prev, form: 'Failed to save changes' }));
+  //       }
+  //     } catch (error) {
+  //       console.error('Error saving changes:', error);
+  //       setErrors(prev => ({ ...prev, form: 'Error saving changes' }));
+  //     }
+  //   }
+  // };
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',

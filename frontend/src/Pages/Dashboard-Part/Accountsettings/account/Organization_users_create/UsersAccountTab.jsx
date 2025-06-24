@@ -177,6 +177,8 @@ const UsersAccountTab = () => {
   //   navigate(`edit/${user._id}`, { state: { userData: user } });
   // };
 
+    console.log("usersRes",usersRes);
+
   // Table Columns Configuration
   const tableColumns = [
     {
@@ -219,6 +221,7 @@ const UsersAccountTab = () => {
     },
     { key: "email", header: "Email", render: (value) => value || "N/A" },
     { key: "phone", header: "Phone", render: (value) => value || "N/A" },
+    {key:"status",header:"Status",render:(value) => value || "N/A"},
     { key: "label", header: "Role", render: (value) => value || "N/A" },
   ];
 

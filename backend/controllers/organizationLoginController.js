@@ -346,29 +346,13 @@ const loginOrganization = async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required',
-        fields: {
-          email: !email ? 'Email is required' : '',
-          password: !password ? 'Password is required' : ''
-        }
-      });
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
     const user = await Users.findOne({ email });
-    // In your backend login controller
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid credentials',
-        fields: {
-          email: 'Invalid credentials',
-          password: ''
-        }
-      });
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
-
     if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
@@ -377,8 +361,14 @@ const loginOrganization = async (req, res) => {
       });
     }
 
+    // Check email verification
     const organization = await Tenant.findOne({ _id: user.tenantId });
+    console.log('organization', organization);
 
+
+
+
+    // Check status
     if (!['active', 'payment_pending'].includes(organization.status)) {
       return res.status(403).json({
         success: false,
@@ -388,17 +378,10 @@ const loginOrganization = async (req, res) => {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid credentials',
-        fields: {
-          email: '',
-          password: 'Invalid credentials'
-        }
-      });
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
+
     let roleName = null;
     if (user?.isProfileCompleted === false && user.roleId) {
       const role = await Role.findById(user.roleId);
@@ -880,7 +863,7 @@ const verifyEmailChange = async (req, res) => {
     // Update email
     user.email = decoded.newEmail;
     user.newEmail = null;
-    contacts.email = decoded.newEmail;
+    contacts.email =  decoded.newEmail;
     await user.save();
 
     return res.json({ success: true, message: 'Email address updated successfully' });

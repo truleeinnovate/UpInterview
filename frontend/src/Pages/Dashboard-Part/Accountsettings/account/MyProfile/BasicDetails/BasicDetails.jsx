@@ -5,9 +5,11 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 import axios from 'axios';
 import { config } from '../../../../../../config';
+import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
 const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
-  const { usersRes } = useCustomContext();
+  // const { usersRes } = useCustomContext();
+
   const [contactData, setContactData] = useState({});
   console.log("contactData",contactData);
   
@@ -17,19 +19,36 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload.userId;
+    // 🟡 Choose ownerId based on context
+  const ownerId = usersId || userId;
   const organization = tokenPayload.organization;
 
-  useEffect(() => {
-    const selectedContact = usersId
-      ? usersRes.find(user => user?.contactId === usersId)
-      : usersRes.find(user => user?._id === userId);
+  console.log("ownerId ownerId",ownerId);
+  
+    const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
 
-    if (selectedContact) {
-      console.log("selectedContact",selectedContact?.roleId?.label);
+  // useEffect(() => {
+  //   const selectedContact = usersId
+  //     ? usersRes.find(user => user?.contactId === usersId)
+  //     : usersRes.find(user => user?._id === userId);
+
+  //   if (selectedContact) {
+  //     console.log("selectedContact",selectedContact?.roleId?.label);
       
-      setContactData(selectedContact);
+  //     setContactData(selectedContact);
+  //   }
+  // }, [usersId, userId, usersRes]);
+
+    // Optional: set it into local state if needed
+  
+
+    useEffect(() => {
+    if (userProfile) {
+  
+        // console.log("contact userProfile",userProfile )
+      setContactData(userProfile);
     }
-  }, [usersId, userId, usersRes]);
+  }, [userProfile,usersId, userId,]);
 
   const handleResendEmailVerification = async () => {
     try {
@@ -105,7 +124,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
           onClick={() => {
             mode === 'users'
               ? setBasicEditOpen(true)
-              : navigate(`/account-settings/my-profile/basic-edit/${contactData?.contactId}`);
+              : navigate(`/account-settings/my-profile/basic-edit/${contactData?._id}`);
           }}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2"
         >
@@ -172,7 +191,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
           {organization === true && (
             <div>
               <p className="text-sm text-gray-500">Role</p>
-              <p className="font-medium truncate">{contactData?.roleId?.label || 'Not Provided'}</p>
+              <p className="font-medium truncate">{contactData?.roleLabel || 'Not Provided'}</p>
             </div>
           )}
 

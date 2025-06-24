@@ -480,6 +480,7 @@ const UpdateUser = async (req, res) => {
   }
 };
 
+
 const getUsersByTenant = async (req, res) => {
   try {
     const { tenantId } = req.params;
@@ -488,47 +489,21 @@ const getUsersByTenant = async (req, res) => {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
-    // Fetch users with minimal fields
-
-    const users = await Users.find({tenantId})
-      .select(
-      '_id roleId label status profileId firstName lastName email newEmail'
-        // '_id roleId label status'
-      )
-
-      .populate({
-        path: 'roleId',
-        select: 'label roleName',
-        model: 'Role'
-      })
-      .lean();
-    //     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+    const users = await Users.find({ tenantId }).lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
 
-    //  firstName: { type: String },
-    // lastName: { type: String },
-    // email: { type: String },
-    // newEmail:
-
-    // Fetch contacts and roles in parallel
     const [contacts, roles] = await Promise.all([
-      Contacts.find({tenantId}).populate({
-        path: 'availability',
-        model: 'Interviewavailability',
-        select: 'days -_id' // Only fetch days field, exclude _id
-      }).lean(),
-      // Role.find({ tenantId }, 'label roleName').lean(),
+      Contacts.find({ tenantId }).lean(),
+      Role.find({ tenantId }).lean() // ✅ Fix: using correct field
     ]);
 
-    // Create role map for label lookup
-    // const roleMap = roles.reduce((acc, role) => {
-    //   acc[role._id.toString()] = role;
-    //   return acc;
-    // }, {});
+    const roleMap = roles.reduce((acc, role) => {
+      acc[role._id.toString()] = role;
+      return acc;
+    }, {});
 
-    // Create contact map by ownerId
     const contactMap = contacts.reduce((acc, contact) => {
       if (contact.ownerId) {
         acc[contact.ownerId.toString()] = contact;
@@ -536,10 +511,10 @@ const getUsersByTenant = async (req, res) => {
       return acc;
     }, {});
 
-    // Combine user data, pulling most fields from Contacts
+
     const combinedUsers = users.map(user => {
       const contact = contactMap[user._id.toString()] || {};
-      // const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
+      const role = user.roleId ? roleMap[user.roleId] : {};
 
       return {
         _id: user._id,
@@ -551,15 +526,16 @@ const getUsersByTenant = async (req, res) => {
         countryCode: contact.countryCode || '',
         gender: contact.gender || '',
         phone: contact.phone || '',
-// <<<<<<< Ranjith
+        status: user.status || '',
+        // <<<<<<< Ranjith
         roleId: user.roleId || '',
-        roleName: user.roleName || '',
-        label: user.label || '',
-// =======
-//         roleId: users.roleId || '',
-//         roleName: users.roleName || '',
-//         label: users.label || '',
-// >>>>>>> main
+        roleName: role.roleName || '',
+        label: role.label || '',
+        // =======
+        //         roleId: users.roleId || '',
+        //         roleName: users.roleName || '',
+        //         label: users.label || '',
+        // >>>>>>> main
         imageData: contact.imageData || null,
         createdAt: user.createdAt || contact.createdAt,
         status: user.status || '',
@@ -597,6 +573,127 @@ const getUsersByTenant = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+// const getUsersByTenant = async (req, res) => {
+//   try {
+//     const { tenantId } = req.params;
+
+//     if (!tenantId) {
+//       return res.status(400).json({ message: 'Invalid tenant ID' });
+//     }
+
+//     // Fetch users with minimal fields
+
+//     const users = await Users.find({tenantId})
+//       .select(
+//       '_id roleId label status profileId firstName lastName email newEmail'
+//         // '_id roleId label status'
+//       )
+
+//       .populate({
+//         path: 'roleId',
+//         select: 'label roleName',
+//         model: 'Role'
+//       })
+//       .lean();
+//     //     const users = await Users.find({ tenantId }, '_id roleId label status profileId firstName lastName email newEmail').lean();
+//     if (!users || users.length === 0) {
+//       return res.status(200).json([]);
+//     }
+
+//     //  firstName: { type: String },
+//     // lastName: { type: String },
+//     // email: { type: String },
+//     // newEmail:
+
+//     // Fetch contacts and roles in parallel
+//     const [contacts, roles] = await Promise.all([
+//       Contacts.find({tenantId}).populate({
+//         path: 'availability',
+//         model: 'Interviewavailability',
+//         select: 'days -_id' // Only fetch days field, exclude _id
+//       }).lean(),
+//       // Role.find({ tenantId }, 'label roleName').lean(),
+//     ]);
+
+//     // Create role map for label lookup
+//     // const roleMap = roles.reduce((acc, role) => {
+//     //   acc[role._id.toString()] = role;
+//     //   return acc;
+//     // }, {});
+
+//     // Create contact map by ownerId
+//     const contactMap = contacts.reduce((acc, contact) => {
+//       if (contact.ownerId) {
+//         acc[contact.ownerId.toString()] = contact;
+//       }
+//       return acc;
+//     }, {});
+
+//     // Combine user data, pulling most fields from Contacts
+//     const combinedUsers = users.map(user => {
+//       const contact = contactMap[user._id.toString()] || {};
+//       // const role = user.roleId ? roleMap[user.roleId.toString()] || {} : {};
+
+//       return {
+//         _id: user._id,
+//         contactId: contact._id || '',
+//         firstName: contact.firstName || '',
+//         lastName: contact.lastName || '',
+//         email: user.email || '',
+//         newEmail: user.newEmail || '',
+//         countryCode: contact.countryCode || '',
+//         gender: contact.gender || '',
+//         phone: contact.phone || '',
+// // <<<<<<< Ranjith
+//         roleId: user.roleId || '',
+//         roleName: user.roleName || '',
+//         label: user.label || '',
+// // =======
+// //         roleId: users.roleId || '',
+// //         roleName: users.roleName || '',
+// //         label: users.label || '',
+// // >>>>>>> main
+//         imageData: contact.imageData || null,
+//         createdAt: user.createdAt || contact.createdAt,
+//         status: user.status || '',
+//         updatedAt: user.updatedAt || contact.updatedAt,
+//         profileId: contact.profileId || '',
+//         linkedinUrl: contact.linkedinUrl || '',
+//         portfolioUrl: contact.portfolioUrl || '',
+//         hourlyRate: contact.hourlyRate || '',
+//         currentRole: contact.currentRole || '',
+//         industry: contact.industry || '',
+//         experienceYears: contact.experienceYears || '',
+//         location: contact.location || '',
+//         resumePdf: contact.resumePdf || '',
+//         coverLetter: contact.coverLetter || '',
+//         coverLetterDescription: contact.coverLetterdescription || '',
+//         professionalTitle: contact.professionalTitle || '',
+//         bio: contact.bio || '',
+//         interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+//         noShowPolicy: contact.NoShowPolicy || '',
+//         previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
+//         previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
+//         expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
+//         technologies: contact.technologies || [],
+//         skills: contact.skills || [],
+//         timeZone: contact.timeZone || '',
+//         preferredDuration: contact.preferredDuration || '',
+//         availability: contact.availability || [],
+//         dateOfBirth: contact.dateOfBirth || '',
+//       };
+//     });
+
+//     res.status(200).json(combinedUsers);
+//   } catch (error) {
+//     console.error('Error fetching users:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+// getting single user based on owner ID user for my-profile and user tab by - Ranjith
 const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
@@ -606,59 +703,80 @@ const getUniqueUserByOwnerId = async (req, res) => {
     }
 
     // Fetch users with minimal fields
-    const users = await Users.findOne({ _id: ownerId }, '_id roleId label status').lean();
-    console.log("users -------------------", users);
+    // const users = await Users.findOne({ _id: ownerId }, '_id  label roleName status').lean();
+
+    // Fetch user and populate role
+    const users = await Users.findOne({ _id: ownerId })
+      .populate({ path: 'roleId', select: '_id label roleName status' })
+      .lean();
+
+
+    // console.log("users -------------------", users);
 
     if (!users) {
       return res.status(200).json({});
     }
 
     // Fetch contacts and roles in parallel
-    const [contact] = await Promise.all([
-      Contacts.findOne({ ownerId: ownerId })
-        .populate({ path: 'availability', model: 'Interviewavailability', select: 'days -_id' })
-        .lean(),
-    ]);
+    // const [contact] = await Promise.all([
+    //   Contacts.findOne({ ownerId: ownerId })
+    //     .populate({ path: 'availability', model: 'Interviewavailability', select: 'day -_id timeSlots' })
+    //     .lean(),
+    // ]);
+    const contact = await Contacts.findOne({ ownerId })
+      .populate({
+        path: 'availability',
+        model: 'Interviewavailability',
+        select: 'day timeSlots -_id',
+      })
+      .lean();
+
 
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
       _id: users._id,
-      contactId: contact._id || 'N/A',
-      firstName: contact.firstName || 'N/A',
-      lastName: contact.lastName || 'N/A',
-      email: contact.email || 'N/A',
-      countryCode: contact.countryCode || 'N/A',
-      gender: contact.gender || 'N/A',
-      phone: contact.phone || 'N/A',
+      roleLabel: users?.roleId?.label || '',
+      roleName: users?.roleId?.roleName || '',
+      contactId: contact._id || '',
+      firstName: contact.firstName || '',
+      lastName: contact.lastName || '',
+      email: contact.email || '',
+      countryCode: contact.countryCode || '',
+      gender: contact.gender || '',
+      phone: contact.phone || '',
       imageData: contact.imageData || null,
       createdAt: users.createdAt || contact.createdAt,
-      status: users.status || 'N/A',
+      status: users.status || '',
       updatedAt: users.updatedAt || contact.updatedAt,
-      profileId: contact.profileId || 'N/A',
-      linkedinUrl: contact.linkedinUrl || 'N/A',
-      portfolioUrl: contact.portfolioUrl || 'N/A',
-      hourlyRate: contact.hourlyRate || 'N/A',
-      currentRole: contact.currentRole || 'N/A',
-      industry: contact.industry || 'N/A',
-      experienceYears: contact.experienceYears || 'N/A',
-      location: contact.location || 'N/A',
-      resumePdf: contact.resumePdf || 'N/A',
-      coverLetter: contact.coverLetter || 'N/A',
-      coverLetterDescription: contact.coverLetterdescription || 'N/A',
-      professionalTitle: contact.professionalTitle || 'N/A',
-      bio: contact.bio || 'N/A',
+      profileId: contact.profileId || '',
+      linkedinUrl: contact.linkedinUrl || '',
+      portfolioUrl: contact.portfolioUrl || '',
+      hourlyRate: contact.hourlyRate || '',
+      currentRole: contact.currentRole || '',
+      industry: contact.industry || '',
+      experienceYears: contact.experienceYears || '',
+      location: contact.location || '',
+      resumePdf: contact.resumePdf || '',
+      coverLetter: contact.coverLetter || '',
+      coverLetterdescription: contact.coverLetterdescription || '',
+      professionalTitle: contact.professionalTitle || '',
+      bio: contact.bio || '',
       interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-      noShowPolicy: contact.NoShowPolicy || 'N/A',
-      previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || 'N/A',
-      previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || 'N/A',
-      expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || 'N/A',
+      noShowPolicy: contact.NoShowPolicy || '',
+      previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
+      previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
+      expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
       technologies: contact.technologies || [],
       skills: contact.skills || [],
-      timeZone: contact.timeZone || 'N/A',
-      preferredDuration: contact.preferredDuration || 'N/A',
+      timeZone: contact.timeZone || '',
+      preferredDuration: contact.preferredDuration || '',
       availability: contact.availability || [],
-      dateOfBirth: contact.dateOfBirth || 'N/A',
+      dateOfBirth: contact.dateOfBirth || '',
+
     };
+
+    // console.log("combinedUser",combinedUser);
+
 
     res.status(200).json(combinedUser);
   } catch (error) {

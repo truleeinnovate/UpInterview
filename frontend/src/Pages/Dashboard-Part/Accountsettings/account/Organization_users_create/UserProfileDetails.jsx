@@ -76,6 +76,8 @@ const UserProfileDetails = () => {
   const [interviewEditOpen, setInterviewEditOpen] = useState(false);
   const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
 
+  console.log("userData",userData);
+  
 
   useEffect(() => {
     document.title = "User Profile Details";
@@ -152,7 +154,7 @@ const UserProfileDetails = () => {
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <BasicDetails mode='users' usersId={userData.contactId} setBasicEditOpen={setBasicEditOpen} />
+        <BasicDetails mode='users' usersId={userData._id} setBasicEditOpen={setBasicEditOpen} />
       </div>
     </div>
   );
@@ -160,7 +162,7 @@ const UserProfileDetails = () => {
   const renderAdvancedDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <AdvancedDetails mode='users' usersId={userData.contactId} setAdvacedEditOpen={setAdvacedEditOpen} />
+        <AdvancedDetails mode='users' usersId={userData._id} setAdvacedEditOpen={setAdvacedEditOpen} />
 
       </div>
     </div>
@@ -169,7 +171,7 @@ const UserProfileDetails = () => {
   const renderInterviewDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <InterviewUserDetails mode='users' usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen} />
+        <InterviewUserDetails mode='users' usersId={userData._id} setInterviewEditOpen={setInterviewEditOpen} />
       </div>
     </div>
   );
@@ -177,7 +179,7 @@ const UserProfileDetails = () => {
   const renderAvailability = () => {
     return (
       <div className={isFullScreen ? "mx-3" : ""}>
-        <AvailabilityUser mode='users' usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen} />
+        <AvailabilityUser mode='users' usersId={userData._id} setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen} />
       </div>
     );
   };
@@ -301,20 +303,20 @@ const UserProfileDetails = () => {
 
 
         {basicEditOpen &&
-          <BasicDetailsEditPage from="users" usersId={userData.contactId} setBasicEditOpen={setBasicEditOpen} onSuccess={handleBasicEditSuccess} />
+          <BasicDetailsEditPage from="users" usersId={userData._id} setBasicEditOpen={setBasicEditOpen} onSuccess={handleBasicEditSuccess} />
         }
 
         {advacedEditOpen &&
-          <EditAdvacedDetails from="users" usersId={userData.contactId} setAdvacedEditOpen={setAdvacedEditOpen} onSuccess={handleAdvacedEditSuccess} />
+          <EditAdvacedDetails from="users" usersId={userData._id} setAdvacedEditOpen={setAdvacedEditOpen} onSuccess={handleAdvacedEditSuccess} />
         }
 
 
         {
-          interviewEditOpen && <EditInterviewDetails from="users" usersId={userData.contactId} setInterviewEditOpen={setInterviewEditOpen} onSuccess={handleInterviewEditSuccess} />
+          interviewEditOpen && <EditInterviewDetails from="users" usersId={userData._id} setInterviewEditOpen={setInterviewEditOpen} onSuccess={handleInterviewEditSuccess} />
         }
 
         {
-          availabilityEditOpen && <EditAvailabilityDetails from="users" usersId={userData.contactId} setAvailabilityEditOpen={setAvailabilityEditOpen} onSuccess={handleInterviewEditSuccess} />
+          availabilityEditOpen && <EditAvailabilityDetails from="users" usersId={userData._id} setAvailabilityEditOpen={setAvailabilityEditOpen} onSuccess={handleInterviewEditSuccess} />
         }
       </Modal>
 

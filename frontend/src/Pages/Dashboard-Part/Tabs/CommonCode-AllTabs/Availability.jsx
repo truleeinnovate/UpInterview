@@ -161,11 +161,11 @@ const Availability = ({
           const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
           return (
             <div key={day} className="mb-4 last:mb-0">
-              <div className="flex gap-2">
+              <div className="flex gap-2 ">
                 <p className="border border-gray-300 rounded items-center w-16 h-9 flex justify-center text-sm font-medium bg-gray-50">
                   {shortDay}
                 </p>
-                <div className="flex-1 flex flex-wrap gap-2 sm:overflow-x-auto sm:pb-2 sm:relative">
+                <div className="flex-1 flex flex-col gap-2 sm:overflow-x-auto sm:pb-2 sm:relative">
                   {(times[shortDay] || []).map((timeSlot, index) => {
                     const showXCircle =
                       from !== 'teamProfileDetails' &&
