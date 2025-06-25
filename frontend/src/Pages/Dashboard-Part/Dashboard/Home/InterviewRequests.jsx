@@ -43,12 +43,16 @@ const InterviewRequests = () => {
         contactId,
         roundId,
       });
-      // Remove the accepted request from the list
-      setRequests(requests.filter((req) => req.id !== requestId));
-      setSelectedRequest(null); // Close the popup if open
-      alert('Interview request accepted successfully!');
+
+      // Update the request status to 'accepted' in the UI
+      setRequests(requests.map(req =>
+        req.id === requestId ? { ...req, status: 'accepted' } : req
+      ));
+
+      setSelectedRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+      console.log('Interview request accepted successfully!');
     } catch (err) {
-      alert('Failed to accept interview request');
+      console.error('Failed to accept interview request', err);
     }
   };
 
@@ -140,12 +144,27 @@ const InterviewRequests = () => {
                   >
                     Details
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
                     className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300"
                   >
                     Accept
-                  </button>
+                  </button> */}
+                  {request.status === 'accepted' ? (
+                    <button
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
+                      disabled
+                    >
+                      Accepted
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300"
+                    >
+                      Accept
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

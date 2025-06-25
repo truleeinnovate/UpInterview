@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Interview = require('../models/Interview.js')
 const InterviewRequest = require('../models/InterviewRequest');
 const { Contacts } = require('../models/Contacts');
-const InterviewRounds = require('../models/InterviewRounds');
+const { InterviewRounds } = require('../models/InterviewRounds');
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -270,34 +270,57 @@ exports.acceptInterviewRequest = async (req, res) => {
   try {
     const { requestId, contactId, roundId } = req.body;
 
+    console.log(`acceptInterviewRequest called with body: ${JSON.stringify(req.body, null, 2)}`);
+
     if (!requestId || !contactId || !roundId) {
+      console.log('acceptInterviewRequest: One or more required params missing');
       return res.status(400).json({ message: 'requestId, contactId, and roundId are required' });
     }
 
     // Update InterviewRounds: Add contactId to interviewers array
     const round = await InterviewRounds.findById(roundId).session(session);
     if (!round) {
+      console.log(`acceptInterviewRequest: Interview round not found for roundId ${roundId}`);
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({ message: 'Interview round not found' });
     }
 
+    console.log(`Found interview round: ${JSON.stringify(round, null, 2)}`);
+
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
-      round.status = 'scheduled'; // Update status to scheduled
+      round.status = 'scheduled';
       await round.save({ session });
+    } else {
+      console.log(`acceptInterviewRequest: Contact ${contactId} already in round ${roundId}`);
     }
 
-    // Delete the interview request for this round
-    await InterviewRequest.deleteOne({ _id: requestId, roundId }).session(session);
+    // Delete all interview requests with the same roundId
+    const deleteResult = await InterviewRequest.deleteMany({ 
+      roundId: roundId,
+      _id: { $ne: requestId } // Don't delete the accepted request
+    }).session(session);
+
+    console.log(`Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`);
+
+    // Update the status of the accepted request
+    await InterviewRequest.findByIdAndUpdate(
+      requestId,
+      { status: 'accepted' },
+      { session, new: true }
+    );
 
     await session.commitTransaction();
     session.endSession();
-    res.status(200).json({ message: 'Interview request accepted and deleted successfully' });
+    res.status(200).json({ 
+      message: 'Interview request accepted and other requests for this round removed',
+      deletedCount: deleteResult.deletedCount
+    });
   } catch (error) {
+    console.error('[acceptInterviewRequest] Error:', error);
     await session.abortTransaction();
     session.endSession();
-    console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
