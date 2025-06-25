@@ -75,6 +75,9 @@ const TenantSchema = new mongoose.Schema(
     subdomainStatus: { type: String },
     subdomainAddedDate: { type: Date },
     subdomainLastVerified: { type: Date },
+    usersBandWidth: { type: Number },
+    totalUsers: { type: Number },
+    
   },
   { timestamps: true }
 );

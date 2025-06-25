@@ -21,6 +21,8 @@ const updateSubscriptionPlan = async (req, res) => {
   console.log('Request body:', req.body);
   const { tenantId, ownerId, userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
 
+  console.log('Received request to update subscriptionupadcontroller:', req.body);
+    
   // Simple validation - essential fields
   if (!razorpaySubscriptionId) {
     return res.status(400).json({ 

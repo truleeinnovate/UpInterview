@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const UsageSchema = new mongoose.Schema({
   usageAttributes: [{
-    entitle: { type: String, required: true },
-    type: { type: String, required: true },
-    utilized: { type: Number, required: true, default: 0 },
-    remaining: { type: Number, required: true }
+    entitled: { type: Number, required: true },// limit
+    type: { type: String, required: true },// Assessment, InternalInterviewer, OutsourceInterviewer
+    utilized: { type: Number, required: true, default: 0 },//
+    remaining: { type: Number, required: true, default: 0 }
   }],
   fromDate: { type: Date, required: true },
   toDate: { type: Date, required: true },

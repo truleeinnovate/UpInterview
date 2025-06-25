@@ -11,6 +11,8 @@ const Tenant = require('../models/Tenant');
 
 // Import helper functions directly from the controller
 const helpers = require('./CustomerSubscriptionInvoiceContollers.js');
+const Usage = require('../models/Usage.js');
+const { inflateRaw } = require('zlib');
 const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
@@ -245,8 +247,6 @@ const verifyPayment = async (req, res) => {
                 }
             });
             await newPayment.save();
-
-
         }
 
         // Process card details and token for recurring payments
@@ -364,8 +364,6 @@ const verifyPayment = async (req, res) => {
             // Continue despite error - focus on subscription and invoice updates
         }
 
-        
-
         // Update existing CustomerSubscription, Invoice
         try {
 
@@ -416,7 +414,6 @@ const verifyPayment = async (req, res) => {
                 }
             }
 
-
             // Get the plan details to access its features (using lean() for better performance)
             const plan = await SubscriptionPlan.findById(planId).lean();
 
@@ -461,7 +458,6 @@ const verifyPayment = async (req, res) => {
                             // Calculate total amount
                             totalAmount = price - discount
 
-
                             console.log(`Price: ${price}, Discount: ${discount}, Total: ${totalAmount}`);
                         }
                     }
@@ -478,7 +474,6 @@ const verifyPayment = async (req, res) => {
                     invoice.lastPaymentId = razorpay_payment_id;
                     invoice.startDate = startDate;
                     invoice.endDate = endDate;
-
 
                     await invoice.save();
                     console.log('Invoice updated to paid status:', invoice._id);
@@ -528,13 +523,18 @@ const verifyPayment = async (req, res) => {
 
                 await customerSubscription.save();
                 console.log('Subscription updated with receipt ID');
-                
-                if (payment.status === 'captured' || payment.status === 'authorized' || payment.status === 'succeeded'){
-                    const tenant = await Tenant.findOne({ ownerId: ownerId });
-                    if(tenant){
-                      tenant.status = 'active';
-                      await tenant.save();
-                    }
+
+                const subscriptionPlan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId);
+
+                if (payment.status === 'captured' || payment.status === 'authorized' || payment.status === 'succeeded') {
+
+                const features = subscriptionPlan.features;
+
+                const tenant = await Tenant.findById(customerSubscription.tenantId);
+                tenant.status = 'active';
+                tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
+                tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
+                await tenant.save();
                 }
 
                 // Update wallet if plan has credits
@@ -1048,9 +1048,6 @@ const handlePaymentFailed = async (payment) => {
             await invoice.save();
         }
 
-
-
-
         // Create a payment record for the failed payment
         // Generate payment code
         const lastPayment = await Payment.findOne({})
@@ -1144,7 +1141,7 @@ const handleSubscriptionHalted = async (subscription) => {
 // Handle subscription.cancelled event from Razorpay webhooks
 const handleSubscriptionCancelled = async (subscription) => {
     try {
-        console.log('Processing subscription cancelled webhook for:', subscription.id);
+        console.log('Processing in razorpay subscription cancelled webhook for:', subscription.id);
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1188,7 +1185,7 @@ const handleSubscriptionCancelled = async (subscription) => {
 // Handle subscription.updated event from Razorpay webhooks
 const handleSubscriptionUpdated = async (subscription) => {
     try {
-        console.log('Processing subscription updated webhook for:', subscription.id);
+        console.log('Processing in razorpay subscription updated webhook for:', subscription.id);
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1430,6 +1427,18 @@ const handleSubscriptionUpdated = async (subscription) => {
                 });
 
                 await receipt.save();
+
+                // Update the tenant record
+                const subscriptionPlan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId);
+
+                const features = subscriptionPlan.features;
+
+                const tenant = await Tenant.findById(customerSubscription.tenantId);
+                tenant.status = 'active';
+                tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
+                tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
+                await tenant.save();
+
                 console.log('Created receipt for subscription update payment');
             } catch (receiptError) {
                 console.error('Error creating receipt for subscription update:', receiptError);
@@ -1741,6 +1750,35 @@ const handleSubscriptionCharged = async (subscription) => {
 
         await customerSubscription.save();
 
+        // create usage
+
+        const features = subscriptionPlan.features;
+        console.log('features:',features);
+        
+        const usage = new Usage({
+                tenantId: customerSubscription.tenantId,
+                usageAttributes: features.map(feature => {
+                    if (feature.name === 'Assessments' || feature.name === 'Internal Interviewers' || feature.name === 'Outsource Interviewers') {
+                        return {
+                            entitled: feature.limit,
+                            type: feature.name
+                        };
+                    }
+                    return null;
+                }).filter(Boolean),
+                fromDate: new Date(),
+                toDate: newEndDate
+            });
+        
+        console.log('usage:',usage);
+
+        try {
+            await usage.save();
+            console.log('Usage data saved successfully');
+        } catch (error) {
+            console.error('Error saving usage data:', error);
+        }
+
         console.log('Successfully processed subscription payment:', paymentId);
         console.log('Next billing date set to:', newEndDate);
 
@@ -1750,7 +1788,6 @@ const handleSubscriptionCharged = async (subscription) => {
         console.error('Error handling subscription charged event:', error);
     }
 };
-
 
 // Create Razorpay customer for recurring subscriptions
 const createCustomer = async (userProfile, ownerId, tenantId) => {
@@ -1915,7 +1952,6 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
     }
 };
 
-
 // Use existing or create a subscription plan in Razorpay
 const getOrCreateSubscriptionPlan = async (planDetails, membershipType) => {
     try {
@@ -1962,7 +1998,6 @@ const createRecurringSubscription = async (req, res) => {
     try {
         const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 
-
         const {
             planDetails,
             ownerId,
@@ -1978,7 +2013,6 @@ const createRecurringSubscription = async (req, res) => {
             planId,
             membershipType
         });
-
 
         // Validate required parameters
         if (!ownerId || !membershipType) {
@@ -2238,8 +2272,6 @@ const createRecurringSubscription = async (req, res) => {
             // Log error but continue with payment creation
         }
 
-
-
         // Create an order for the Razorpay checkout to open properly
         let order;
         try {
@@ -2413,9 +2445,6 @@ const verifySubscription = async (req, res) => {
         });
     }
 };
-
-
-
 
 module.exports = {
     verifyPayment,
