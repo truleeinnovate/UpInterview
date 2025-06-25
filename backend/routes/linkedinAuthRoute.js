@@ -81,6 +81,7 @@ router.post('/check-user', async (req, res) => {
     // Check for existing user
     console.log('Backend: 4. Checking database for existing user');
     const existingUser = await Users.findOne({ email: userInfo.email });
+    console.log('Backend: 4.1. Existing user:', existingUser);
 
     if (existingUser) {
       // Only send user data, not LinkedIn data
@@ -89,6 +90,7 @@ router.post('/check-user', async (req, res) => {
         tenantId: existingUser.tenantId,
         organization: false,
         timestamp: new Date().toISOString(),
+        freelancer: existingUser.isFreelancer
       };
       const token = generateToken(payload);
       return res.json({
@@ -129,7 +131,8 @@ router.post('/check-user', async (req, res) => {
         userId: newUser._id.toString(),
         tenantId: newTenant._id.toString(),
         organization: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        freelancer: newUser.isFreelancer
       });
 
       return res.json({

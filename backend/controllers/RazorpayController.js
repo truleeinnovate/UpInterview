@@ -17,11 +17,11 @@ const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
 
-console.log('Helper functions loaded:', {
-    createInvoice: typeof createInvoice === 'function',
-    createReceipt: typeof createReceipt === 'function',
-    calculateEndDate: typeof calculateEndDate === 'function'
-});
+// console.log('Helper functions loaded:', {
+//     createInvoice: typeof createInvoice === 'function',
+//     createReceipt: typeof createReceipt === 'function',
+//     calculateEndDate: typeof calculateEndDate === 'function'
+// });
 
 // Helper function to generate unique transaction IDs
 const generateTransactionId = () => {
@@ -44,7 +44,7 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-console.log('Razorpay initialized with key_id:', razorpay.key_id);
+// console.log('Razorpay initialized with key_id:', razorpay.key_id);
 
 // Helper function to create Razorpay order
 

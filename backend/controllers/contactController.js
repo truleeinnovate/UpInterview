@@ -2,136 +2,56 @@ const { Contacts } = require("../models/Contacts");
 const Interviewavailability = require("../models/InterviewAvailability");
 const { Users } = require("../models/Users");
 
-// Mansoor: for fetching the total contacts to the login pages (Individula-4)
+// Mansoor: for fetching the total contacts to the login pages (Individual-4)
 const getAllContacts = async (req, res) => {
-  try {
-    const contacts = await Contacts.find().populate("availability");
-    return res.status(200).json(contacts);
-  } catch (error) {
-    console.error("Error fetching all contacts:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
+    try {
+        const contacts = await Contacts.find();
+        return res.status(200).json(contacts);
+    } catch (error) {
+        console.error('Error fetching all contacts:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
 };
 
-//         //  const transformedContacts = contacts.map(contact => {
+// const fetchContacts = async (req, res) => {
+//   const contactId = req.params.id;
 
-//         //     // If ownerId is populated, extract the roleName
-//         //     if (contact.ownerId && contact.ownerId.roleId) {
-//         //         return {
-//         //             ...contact,
-//         //             owner: {
-//         //                 ...contact.ownerId,
-//         //                 roleName: contact.ownerId.roleId?.roleName
-//         //             }
-//         //         };
-//         //     }
-//         //     return contact;
-//         // });
+//   try {
+//     const contact = await Contacts.findById(contactId)
+//       .populate("availability")
+//       .populate({
+//         path: "ownerId",
+//         select: "firstName lastName email roleId isFreelancer",
+//         model: "Users",
+//         populate: {
+//           path: "roleId",
+//           model: "Role",
+//           select: "roleName",
+//         },
+//       })
+//       .lean();
 
-//         //   const contacts = await Contacts.find().populate('availability');
-//     res.status(200).json(contacts);
-
-//         // console.log("Debugging populated contacts:");
-//         // contacts.forEach(contact => {
-//         //     if (contact.ownerId) {
-//         //         console.log({
-//         //             contactId: contact._id,
-//         //             ownerId: contact.ownerId._id,
-//         //             roleId: contact.ownerId.roleId?._id,
-//         //             roleName: contact.ownerId.roleId?.roleName
-//         //         });
-//         //     }
-//         // });
-
-//           // 3. Transform data to ensure roleName is accessible
-//         //   const transformedContacts = contacts.map(contact => {
-//         //     const contactData = { ...contact };
-
-//         //     if (contactData.ownerId && contactData.ownerId.roleId) {
-//         //         contactData.owner = {
-//         //             ...contactData.ownerId,
-//         //             roleName: contactData.ownerId.roleId.roleName
-//         //         };
-//         //         delete contactData.ownerId; // Optional cleanup
-//         //     }
-
-//         //     return contactData;
-//         // });
-
-//         // console.log("Debugging populated contacts:");
-//         // contacts.forEach(contact => {
-//         //     if (contact.ownerId) {
-//         //         console.log({
-//         //             contactId: contact._id,
-//         //             ownerId: contact.ownerId._id,
-//         //             roleId: contact.ownerId.roleId?._id,
-//         //             roleName: contact.ownerId.roleId?.roleName
-//         //         });
-//         //     }
-//         // });
-
-//           // 3. Transform data to ensure roleName is accessible
-//         //   const transformedContacts = contacts.map(contact => {
-//         //     const contactData = { ...contact };
-
-//         //     if (contactData.ownerId && contactData.ownerId.roleId) {
-//         //         contactData.owner = {
-//         //             ...contactData.ownerId,
-//         //             roleName: contactData.ownerId.roleId.roleName
-//         //         };
-//         //         delete contactData.ownerId; // Optional cleanup
-//         //     }
-
-//         //     return contactData;
-//         // });
-
-//         // .populate('ownerId');
-//         // res.status(200).json(contacts);
-//     } catch (error) {
-//         console.error('Error fetching contacts:', error);
-//         res.status(500).json({ message: 'Error fetching contacts', error: error.message });
+//     if (!contact) {
+//       return res.status(404).json({ message: "Contact not found" });
 //     }
+
+//     // Optional: transform roleName
+//     if (contact.ownerId && contact.ownerId.roleId) {
+//       contact.owner = {
+//         ...contact.ownerId,
+//         roleName: contact.ownerId.roleId.roleName,
+//       };
+//       delete contact.ownerId;
+//     }
+
+//     res.status(200).json(contact);
+//   } catch (error) {
+//     console.error("Error fetching contact:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Error fetching contact", error: error.message });
+//   }
 // };
-
-const fetchContacts = async (req, res) => {
-  const contactId = req.params.id;
-
-  try {
-    const contact = await Contacts.findById(contactId)
-      .populate("availability")
-      .populate({
-        path: "ownerId",
-        select: "firstName lastName email roleId isFreelancer",
-        model: "Users",
-        populate: {
-          path: "roleId",
-          model: "Role",
-          select: "roleName",
-        },
-      })
-      .lean();
-
-    if (!contact) {
-      return res.status(404).json({ message: "Contact not found" });
-    }
-
-    // Optional: transform roleName
-    if (contact.ownerId && contact.ownerId.roleId) {
-      contact.owner = {
-        ...contact.ownerId,
-        roleName: contact.ownerId.roleId.roleName,
-      };
-      delete contact.ownerId;
-    }
-
-    res.status(200).json(contact);
-  } catch (error) {
-    console.error("Error fetching contact:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching contact", error: error.message });
-  }
-};
 
 const createContact = async (req, res) => {
   try {

@@ -114,7 +114,7 @@ const InterviewDetail = () => {
             ]} />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
-              <Link to="/interviewList" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
+              <Link to="/interviewList" className="mt-4 inline-block text-custom-blue hover:text-custom-blue/90">
                 Back to Interviews
               </Link>
             </div>
@@ -337,7 +337,7 @@ const InterviewDetail = () => {
                                   // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
                                   onClick={() => handleView(candidate)}
 
-                                  className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                                 >
                                   View Details
                                 </button>
@@ -374,7 +374,7 @@ const InterviewDetail = () => {
                             <button
                               // onClick={() => handleViewEntityDetails(position, 'position', 'sidebar')}
                               onClick={() => handleViewPosition(position)}
-                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                             >
                               View Details
                             </button>
@@ -403,13 +403,13 @@ const InterviewDetail = () => {
                           <>
                             <button
                               onClick={() => handleViewEntityDetails(template, 'template', 'sidebar')}
-                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                             >
                               View Details
                             </button>
                             <button
                               onClick={() => handleViewEntityDetails(template, 'template', 'modal')}
-                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                               title="Open in popup"
                             >
                               <ExternalLink className="h-3 w-3" />
@@ -429,13 +429,13 @@ const InterviewDetail = () => {
                         <span className="text-sm text-gray-900 mr-2">
                           {completedRounds} of {totalRounds} rounds completed
                         </span>
-                        <span className="text-sm font-medium text-blue-700">
+                        <span className="text-sm font-medium text-custom-blue">
                           {progressPercentage.toFixed(0)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                         <div
-                          className="bg-blue-600 h-2.5 rounded-full"
+                          className="bg-custom-blue h-2.5 rounded-full"
                           style={{ width: `${progressPercentage}%` }}
                         ></div>
                       </div>
@@ -450,7 +450,7 @@ const InterviewDetail = () => {
                     <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <div className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                       <span className="font-medium">{internalInterviewerIds.size}</span> Internal
                     </div>
                     <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
@@ -472,7 +472,7 @@ const InterviewDetail = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={toggleViewMode}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                       >
                         {roundsViewMode === 'vertical' ? (
                           <>

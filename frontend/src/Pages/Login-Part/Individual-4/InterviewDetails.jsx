@@ -121,7 +121,6 @@ const InterviewDetails = ({
         setErrors((prevErrors) => {
             const errorMessage =
                 value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
-            console.log("Error Message:", errorMessage);
             return { ...prevErrors, expectedRatePerMockInterview: errorMessage };
         });
     };
@@ -212,7 +211,6 @@ const InterviewDetails = ({
         setErrors((prevErrors) => {
             const errorMessage =
                 value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
-            console.log("Error Message:", errorMessage);
             return { ...prevErrors, hourlyRate: errorMessage };
         });
     };

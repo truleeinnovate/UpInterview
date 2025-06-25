@@ -32,9 +32,7 @@ const LinkedInCallback = () => {
 
   const fetchTenantByEmail = async (email) => {
     try {
-      console.log('Fetching tenant by email...', config.REACT_APP_API_URL);
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenants/email/${email}`);
-      console.log('Tenant fetched successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching tenant:', error);
@@ -124,12 +122,9 @@ const LinkedInCallback = () => {
       }
       
       const tenant = tenantResponse.data;
-      console.log('Tenant fetched successfully:', tenant);
-      console.log('Tenant status:', tenant.status);
       
       // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
       if (tenant.status === 'submitted' || tenant.status === 'payment_pending') {
-        console.log('Tenant status is submitted or payment_pending', tenant.status);
         return navigate('/subscription-plans', {
           state: { token, linkedIn_email: email },
           replace: true,
@@ -143,7 +138,6 @@ const LinkedInCallback = () => {
       // }
       
       // For any other status, default to home
-      console.log('Tenant status is', tenant.status, ', defaulting to home');
       return navigate('/home', {
         replace: true,
         state: { token, linkedIn_email: email }
@@ -178,8 +172,6 @@ const LinkedInCallback = () => {
           }
         );
 
-        console.log('linkedin callback handleCallback:', response.data);
-
         const { existingUser, token, email } = response.data;
 
         // Set the authToken cookie
@@ -193,7 +185,6 @@ const LinkedInCallback = () => {
           await determineNavigation(contact, token, email);
         } else {
           // New user - go to select profession
-          console.log('New user, navigating to select-profession');
           navigate('/select-profession', {
             state: {
               linkedIn_email: email,

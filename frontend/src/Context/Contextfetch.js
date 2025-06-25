@@ -304,26 +304,42 @@ const CustomProvider = ({ children }) => {
     fetchContacts();
   }, [userId]);
 
-  // getting interveiwers and showing it in the home (available interviewers) and interveiwers
+  // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
-  const fetchInterviewers = async () => {
+  
+  const fetchInterviewers = useCallback(async () => {
+    if (!tenantId) return;
+    
+    let isMounted = true;
+    
     try {
       setLoadingInterviewer(true);
+      console.log('Fetching interviewers for tenantId:', tenantId);
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
-      setInterviewers(response.data);
+      
+      if (isMounted) {
+        console.log('Interviewers data received:', response.data);
+        setInterviewers(response.data);
+      }
     } catch (err) {
-      console.error(err.message);
+      console.error('Error fetching interviewers:', err.message);
     } finally {
-      setLoadingInterviewer(false);
+      if (isMounted) {
+        setLoadingInterviewer(false);
+      }
     }
-  };
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [tenantId]);
 
   useEffect(() => {
     fetchInterviewers();
-  }, [tenantId]);
+  }, [fetchInterviewers]);
 
   // Query for fetching users
   const {
