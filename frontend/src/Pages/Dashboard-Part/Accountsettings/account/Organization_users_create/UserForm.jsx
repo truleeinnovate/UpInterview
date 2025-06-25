@@ -23,6 +23,11 @@ import {
   checkEmailExists,
 } from "../../../../../utils/workEmailValidation.js";
 
+import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
+
+import { getOrganizationRoles } from "../../../../../apiHooks/useRoles.js";
+
+
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
@@ -59,9 +64,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
   const [showDropdownRole, setShowDropdownRole] = useState(false);
-  const [currentRole, setCurrentRole] = useState([]);
+ const [currentRole, setCurrentRole] = useState([]);
   const [searchTermRole, setSearchTermRole] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const [fileError, setFileError] = useState("");
 
   // Reset form fields
   const resetForm = () => {
@@ -98,8 +105,10 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setIsCheckingEmail(false);
       return;
     }
-
+//  console.log("response currentRole",currentRole);
     setIsCheckingEmail(true);
+
+      
 
     const formatError = validateWorkEmail(email);
     if (formatError) {
@@ -126,6 +135,21 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
   };
 
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const roles = await getOrganizationRoles();
+        setCurrentRole(roles);
+      } catch (err) {
+        // Optionally handle UI-specific error here
+      }
+    };
+
+    // if (tenantId) {
+      fetchRoles();
+    // }
+  }, []);
+
   // Initialize form data for edit mode
   useEffect(() => {
     if (editMode && initialUserData) {
@@ -147,22 +171,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     }
   }, [editMode, initialUserData, tenantId]);
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
-        );
-        setCurrentRole(response.data);
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-      }
-    };
+   
 
-    if (tenantId) {
-      fetchRoles();
-    }
-  }, [tenantId]);
+
 
   // Clean up timeouts
   useEffect(() => {
@@ -172,9 +183,15 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   }, []);
 
   // File handling functions
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      const error = await validateFile(selectedFile, "image");
+      if (error) {
+        setFileError(error);
+        return;
+      }
+      setFileError("");
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
       setIsImageUploaded(true);
@@ -300,7 +317,9 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           </div>
         )}
         <div className="p-3">
+
           <div className="flex justify-between items-center mb-6 mt-2">
+
             <h2 className="text-2xl font-bold text-custom-blue">
               {editMode ? "Edit User" : "New User"}
             </h2>
@@ -325,10 +344,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
             <div className="flex-1 overflow-y-auto p-4">
               <form id="user-form" onSubmit={handleSubmit}>
                 {errors.form && (
-                  <p className="text-red-500 text-sm mb-4">{errors.form}</p>
+                  <p className="text-red-500 text-sm mb-6 text-center">
+                    {errors.form}
+                  </p>
                 )}
-
-                <div className="flex justify-center mb-4">
+                <div className="flex flex-col justify-center items-center mb-4">
                   <div className="relative">
                     <div
                       className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
@@ -380,6 +400,14 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         <Trash className="w-3 h-3" />
                       </button>
                     )}
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-xs text-gray-500 text-center mb-1">
+                      File must be less than 100KB (200 x 200 recommended)
+                    </p>
+                    <p className="text-red-500 text-sm mb-4 font-medium text-center">
+                      {fileError}
+                    </p>
                   </div>
                 </div>
 
@@ -580,7 +608,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
               </form>
             </div>
 
-            <div className="flex justify-end py-2 px-4">
+            <div className="flex justify-end py-2 mt-10 px-4">
               <button
                 type="button"
                 onClick={handleClose}

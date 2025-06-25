@@ -3,6 +3,7 @@ const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoice = require('../models/Invoicemodels.js');
 const Razorpay = require('razorpay');
 const { calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
+const Tenant = require('../models/Tenant');
 
 // Initialize Razorpay with the same keys used in RazorpayController.js
 const razorpay = new Razorpay({
@@ -20,6 +21,8 @@ const updateSubscriptionPlan = async (req, res) => {
   console.log('Request body:', req.body);
   const { tenantId, ownerId, userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
 
+  console.log('Received request to update subscriptionupadcontroller:', req.body);
+    
   // Simple validation - essential fields
   if (!razorpaySubscriptionId) {
     return res.status(400).json({ 
@@ -219,6 +222,16 @@ const updateSubscriptionPlan = async (req, res) => {
         await customerSubscription.save();
         console.log('Updated subscription with invoice ID');
         
+        
+        if (res.status === 200 || res.status === 201){
+          const tenant = await Tenant.findOne({ ownerId: ownerId });
+          if(tenant){
+            tenant.status = 'active';
+            await tenant.save();
+        }
+      }
+
+        
         // Success response
         return res.status(200).json({
           success: true,
@@ -226,6 +239,7 @@ const updateSubscriptionPlan = async (req, res) => {
           subscriptionId: razorpaySubscriptionId,
           planId: planIdToUse
         });
+        
       } catch (invoiceError) {
         console.error('Error creating invoice:', invoiceError);
         return res.status(400).json({

@@ -6,6 +6,7 @@ const { Contacts } = require('../models/Contacts');
 const Tenant = require('../models/Tenant');
 const config = require('../config.js');
 
+
 router.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

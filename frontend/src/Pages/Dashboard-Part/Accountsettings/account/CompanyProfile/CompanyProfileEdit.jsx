@@ -20,6 +20,7 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
 import { useMasterData } from "../../../../../apiHooks/useMasterData";
 import { uploadFile } from "../../../../../apiHooks/imageApis";
+import { validateFile } from "../../../../../utils/FileValidation/FileValidation";
 
 Modal.setAppElement("#root");
 
@@ -87,6 +88,7 @@ const CompanyEditProfile = () => {
   const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
   const [searchTermIndustry, setSearchTermIndustry] = useState("");
   const industryDropdownRef = useRef(null);
+  const [fileError, setFileError] = useState("");
 
   // Toggle location dropdown
   const toggleLocation = () => {
@@ -252,9 +254,15 @@ const CompanyEditProfile = () => {
     setErrors((prev) => ({ ...prev, [name.split(".")[1] || name]: "" }));
   };
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = await validateFile(file, "image");
+      if (error) {
+        setFileError(error);
+        return;
+      }
+      setFileError("");
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -452,6 +460,9 @@ const CompanyEditProfile = () => {
                 </p>
                 <p className="text-xs text-gray-500">
                   Click to upload (200x200px recommended)
+                </p>
+                <p className="text-xs text-red-500 font-medium mt-1">
+                  {fileError}
                 </p>
               </div>
 

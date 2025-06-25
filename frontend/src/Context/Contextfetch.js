@@ -382,6 +382,7 @@ const CustomProvider = ({ children }) => {
           phone: userData.phone,
           roleId: userData.roleId,
           countryCode: userData.countryCode,
+          status:userData.status,
           isProfileCompleted: false,
           isEmailVerified: true,
           ...(editMode && { _id: userData._id }), // Only include _id in edit mode
@@ -402,26 +403,6 @@ const CustomProvider = ({ children }) => {
         `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
       );
-
-      // Handle image upload if file is present
-      // if (file) {
-      //   const imageData = new FormData();
-      //   imageData.append("file", file);
-      //   imageData.append("type", "profilePic");
-      //   imageData.append("entity", "contact");
-      //   imageData.append("entityId", response.data.contactId);
-
-      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      // }
-
-      // else if (!userData.imageData.path && editMode) {
-      //   // Delete image if no file and no existing image in edit mode
-      //   await axios.delete(
-      //     `${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`
-      //   );
-      // }
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
       await uploadFile(file, "image", "contact", response.data.contactId);
@@ -598,6 +579,8 @@ const CustomProvider = ({ children }) => {
     fetchInterviewRounds();
   }, [fetchInterviewRounds]);
 
+
+
   return (
     <CustomContext.Provider
       value={{
@@ -644,6 +627,7 @@ const CustomProvider = ({ children }) => {
 
         // subscription current plan
         currentPlan,
+        
 
         // teams
         // teamsData,

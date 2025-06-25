@@ -29,9 +29,11 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-  const userId = usersId || userId;
+    const userId = tokenPayload?.userId;
 
-   const {userProfile, isLoading, isError, error} = useUserProfile(userId)
+  const ownerId = usersId || userId;
+
+   const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
     
   
 
@@ -40,7 +42,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     //   ? usersRes.find(user => user?.contactId === usersId)
     //   : usersRes.find(user => user?._id === userId);
 
-    console.log("contactId", userProfile.contactId);
+    console.log("contactId", userProfile);
     
 
     if (!userProfile || !userProfile._id) return;
@@ -48,7 +50,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
       setContactData(userProfile);
       //  console.log("Selected contact:", selectedContact);
     }
-  }, [usersId, userId, userProfile]);
+  }, [ownerId, userProfile]);
 
 
   const fetchData = () => {

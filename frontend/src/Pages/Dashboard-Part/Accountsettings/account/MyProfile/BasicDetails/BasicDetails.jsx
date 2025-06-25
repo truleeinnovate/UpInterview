@@ -18,7 +18,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
   
   const navigate = useNavigate();
   const location = useLocation();
-
+ 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload.userId;
@@ -26,37 +26,22 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
   const ownerId = usersId || userId;
   const organization = tokenPayload.organization;
 
-  console.log("ownerId ownerId",ownerId);
+
+  // console.log("ownerId ownerId",ownerId);
   
     const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
 
-  // useEffect(() => {
-  //   const selectedContact = usersId
-  //     ? usersRes.find(user => user?.contactId === usersId)
-  //     : usersRes.find(user => user?._id === userId);
 
-
-  //   if (selectedContact) {
-  //     console.log("selectedContact",selectedContact?.roleId?.label);
-      
-  //     setContactData(selectedContact);
-  //   }
-  // }, [usersId, userId, usersRes]);
-
-    // Optional: set it into local state if needed
   
 
     useEffect(() => {
     if (userProfile) {
-  
-        // console.log("contact userProfile",userProfile )
       setContactData(userProfile);
-
-//     if (selectedContact) {
-//       setContactData(selectedContact);
-
     }
   }, [userProfile,usersId, userId,]);
+
+
+ 
 
   const handleResendEmailVerification = async () => {
     try {
@@ -102,10 +87,10 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
         {mode === 'users' && (
           <div className="flex gap-2">
-            {contactData.newEmail && (
+            {contactData.newEmail  && (
               <button
                 onClick={handleResendEmailVerification}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"
               >
                 Resend Email Verification
               </button>
@@ -113,7 +98,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
             {!contactData.newEmail && (
               <button
                 onClick={handleResendPasswordChange}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"
               >
                 Resend Password Change
               </button>
@@ -126,7 +111,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
               ? setBasicEditOpen(true)
               : navigate(`/account-settings/my-profile/basic-edit/${contactData?._id}`);
           }}
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 transition-colors"
         >
           Edit
         </button>
@@ -159,7 +144,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Email</p>
-            <p className="font-medium">{contactData.email || 'Not Provided'}</p>
+            <p className="font-medium whitespace-pre-line break-words">{contactData.email || 'Not Provided'}</p>
           </div>
 
           <div>

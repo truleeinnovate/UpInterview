@@ -254,53 +254,56 @@ const registerOrganization = async (req, res) => {
 
 const organizationUserCreation = async (req, res) => {
   try {
+
+    console.log("req.body User",req.body);
+    
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, editMode, _id, isEmailVerified } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode,status, editMode, _id, isEmailVerified } = UserData;
 
-    if (editMode && _id) {
-      // Update existing user
-      const existingUser = await Users.findById(_id);
-      if (!existingUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
+    // if (editMode && _id) {
+    //   // Update existing user
+    //   const existingUser = await Users.findById(_id);
+    //   if (!existingUser) {
+    //     return res.status(404).json({ message: "User not found" });
+    //   }
 
-      // Update user fields
-      existingUser.firstName = firstName;
-      existingUser.lastName = lastName;
-      existingUser.email = email;
-      existingUser.tenantId = tenantId;
-      existingUser.roleId = roleId;
+    //   // Update user fields
+    //   existingUser.firstName = firstName;
+    //   existingUser.lastName = lastName;
+    //   existingUser.email = email;
+    //   existingUser.tenantId = tenantId;
+    //   existingUser.roleId = roleId;
 
-      const savedUser = await existingUser.save();
+    //   const savedUser = await existingUser.save();
 
-      // Update contact
-      const existingContact = await Contacts.findOne({ ownerId: _id });
-      if (existingContact) {
-        existingContact.firstName = contactData.firstName;
-        existingContact.lastName = contactData.lastName;
-        existingContact.email = contactData.email;
-        existingContact.phone = contactData.phone;
-        existingContact.tenantId = contactData.tenantId;
-        existingContact.countryCode = contactData.countryCode;
-        await existingContact.save();
-      }
+    //   // Update contact
+    //   const existingContact = await Contacts.findOne({ ownerId: _id });
+    //   if (existingContact) {
+    //     existingContact.firstName = contactData.firstName;
+    //     existingContact.lastName = contactData.lastName;
+    //     existingContact.email = contactData.email;
+    //     existingContact.phone = contactData.phone;
+    //     existingContact.tenantId = contactData.tenantId;
+    //     existingContact.countryCode = contactData.countryCode;
+    //     await existingContact.save();
+    //   }
 
-      return res.status(200).json({
-        message: "User updated successfully",
-        userId: savedUser._id,
-        contactId: existingContact?._id
-      });
-    } else {
+    //   return res.status(200).json({
+    //     message: "User updated successfully",
+    //     userId: savedUser._id,
+    //     contactId: existingContact?._id
+    //   });
+    // } else {
       // Create new user
       const existingUser = await Users.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "Email already registered" });
-      }
+      }else{
 
       const newUser = new Users({
         firstName,
@@ -310,6 +313,7 @@ const organizationUserCreation = async (req, res) => {
         roleId,
         countryCode,
         isProfileCompleted,
+        status,
         isEmailVerified: false
       });
 
@@ -362,14 +366,24 @@ const loginOrganization = async (req, res) => {
     }
 
     // Check email verification
-    const organization = await Tenant.findOne({ _id: user.tenantId });
-    console.log('organization', organization);
+    // const organization = await Tenant.findOne({ _id: user.tenantId });
+    // console.log('organization', organization);
 
 
 
 
-    // Check status
-    if (!['active', 'payment_pending'].includes(organization.status)) {
+    // // Check status
+    // if (!['active', 'payment_pending'].includes(organization.status)) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Account not active',
+    //     status: organization.status
+    //   });
+    // }
+
+      const organization = await Tenant.findOne({ _id: user.tenantId });
+ 
+    if (organization.status === 'inactive') {
       return res.status(403).json({
         success: false,
         message: 'Account not active',
@@ -724,7 +738,7 @@ const deactivateSubdomain = async (req, res) => {
       return res.status(400).json({ message: 'Invalid organization ID format' });
     }
 
-    const updatedOrganization = await Organization.findByIdAndUpdate(
+    const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
         subdomain: null,

@@ -489,7 +489,9 @@ const getUsersByTenant = async (req, res) => {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
-    const users = await Users.find({ tenantId }).lean();
+    const users = await Users.find({ tenantId })
+    .populate({ path: 'roleId', select: '_id label roleName status' })
+    .lean();
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
@@ -519,6 +521,7 @@ const getUsersByTenant = async (req, res) => {
       return {
         _id: user._id,
         contactId: contact._id || '',
+        isEmailVerified:user.isEmailVerified || false,
         firstName: contact.firstName || '',
         lastName: contact.lastName || '',
         email: user.email || '',
@@ -529,9 +532,9 @@ const getUsersByTenant = async (req, res) => {
         status: user.status || '',
 
         // <<<<<<< Ranjith
-        roleId: user.roleId || '',
-        roleName: role.roleName || '',
-        label: role.label || '',
+        roleId: user?.roleId?.roleId || '',
+        roleName: user?.roleId?.roleName || '',
+        label: user?.roleId?.label || '',
         // =======
         //         roleId: users.roleId || '',
         //         roleName: users.roleName || '',
@@ -635,6 +638,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
       _id: users._id,
+      roleId: users?.roleId?._id || '' ,
       roleLabel: users?.roleId?.label || '',
       roleName: users?.roleId?.roleName || '',
       contactId: contact._id || '',
