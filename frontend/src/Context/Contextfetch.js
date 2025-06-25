@@ -405,7 +405,9 @@ const CustomProvider = ({ children }) => {
       );
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
+      if (file){
       await uploadFile(file, "image", "contact", response.data.contactId);
+      }
 
       // Send welcome email only for new user creation
       if (!editMode) {

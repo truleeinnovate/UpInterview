@@ -176,7 +176,7 @@ const ContactsSchema = new mongoose.Schema(
     // isAddedTeam: String,
     // interviewType: String,
     availability: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Interviewavailability" },
+      { type: mongoose.Schema.Types.ObjectId, ref: "InterviewAvailability" },
     ],
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

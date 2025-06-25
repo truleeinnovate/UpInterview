@@ -151,6 +151,9 @@ const UserProfileDetails = () => {
         { id: "advanced", label: "Advanced Details" },
       ];
 
+      console.log("userData",userData);
+      
+
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
@@ -168,7 +171,7 @@ const UserProfileDetails = () => {
       <div className="bg-white p-6 rounded-lg">
         <AdvancedDetails
           mode="users"
-          usersId={userData._id}
+          usersId={userData?._id}
           setAdvacedEditOpen={setAdvacedEditOpen}
         />
       </div>
