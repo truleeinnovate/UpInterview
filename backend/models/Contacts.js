@@ -130,15 +130,26 @@ const ContactsSchema = new mongoose.Schema(
       filename: String,
       path: String,
       contentType: String,
-      publicId: String, // added by Ashok
+      publicId: String,
     },
     timeZone: String,
     preferredDuration: String,
     location: String,
     introduction: String,
-    resumePdf: String,
-    coverLetter: String,
-
+    // resumePdf: String,
+    resume: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    },
+    // coverLetter: String,
+    coverLetter: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    },
     // ranjith added have to check proeprly
     coverLetterdescription: String,
     professionalTitle: String,
@@ -154,6 +165,7 @@ const ContactsSchema = new mongoose.Schema(
     skills: [String],
     contactType: String,
     experienceYears: String,
+    yearsOfExperience: String,
     previousExperience: String,
     isFreelancer: String,
     expertiseLevel: String,

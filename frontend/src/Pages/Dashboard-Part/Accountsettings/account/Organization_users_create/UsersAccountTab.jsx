@@ -259,12 +259,12 @@ const UsersAccountTab = () => {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => handleEdit(row),
-    },
+    // {
+    //   key: "edit",
+    //   label: "Edit",
+    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //   onClick: (row) => handleEdit(row),
+    // },
   ];
 
   return (

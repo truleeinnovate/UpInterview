@@ -388,31 +388,8 @@ const CustomProvider = ({ children }) => {
         payload
       );
 
-      // Handle image upload if file is present
-      // if (file) {
-      //   const imageData = new FormData();
-      //   imageData.append("file", file);
-      //   imageData.append("type", "profilePic");
-      //   imageData.append("entity", "contact");
-      //   imageData.append("entityId", response.data.contactId);
-
-      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      // }
-
-      // else if (!userData.imageData.path && editMode) {
-      //   // Delete image if no file and no existing image in edit mode
-      //   await axios.delete(
-      //     `${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`
-      //   );
-      // }
-
-      console.log("response.data",response.data);
-      
-
       // UPLOADING FILES LIKE IMAGES AND RESUMES
-      // await uploadFile(file, "image", "contact", response.data.contactId);
+      await uploadFile(file, "image", "contact", response.data.contactId);
 
       // Send welcome email only for new user creation
       if (!editMode) {
