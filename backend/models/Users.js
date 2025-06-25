@@ -29,7 +29,7 @@ const UsersSchema = new mongoose.Schema({
     isAddedTeam: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
     // roleId: { type: String },
-     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
+     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'RolesPermissionObject' },
     profileId: { type: String },
     status: { type: String, enum: ['active', 'inactive',], default: 'inactive' },
     isEmailVerified: { type: Boolean, default: false },
