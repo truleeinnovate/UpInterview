@@ -8,7 +8,7 @@ import { format, parse } from 'date-fns';
 import axios from 'axios';
 import { isEmptyObject, validateFormMyProfile } from '../../../../../../utils/MyProfileValidations';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCustomContext } from '../../../../../../Context/Contextfetch';
+// import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from '../../../../../../config';
 import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
 import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
@@ -18,6 +18,7 @@ import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '.
 import { toast } from 'react-hot-toast';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode.js';
 import { getOrganizationRoles } from '../../../../../../apiHooks/useRoles.js';
+import { useCallback } from 'react';
 
 
 Modal.setAppElement('#root');
@@ -42,7 +43,8 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [originalEmail, setOriginalEmail] = useState('');
-const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
+  const [originalProfileId, setOriginalProfileId] = useState('')
+  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
   const [searchTermRole, setSearchTermRole] = useState("");
@@ -69,25 +71,25 @@ const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
   // }, [tenantId]);
 
 
-    useEffect(() => {
-      const fetchRoles = async () => {
-        try {
-          const roles = await getOrganizationRoles();
-          setCurrentRole(roles);
-        } catch (err) {
-          // Optionally handle UI-specific error here
-        }
-      };
-  
-      // if (tenantId) {
-        fetchRoles();
-      // }
-    }, []);
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const roles = await getOrganizationRoles();
+        setCurrentRole(roles);
+      } catch (err) {
+        // Optionally handle UI-specific error here
+      }
+    };
+
+    // if (tenantId) {
+    fetchRoles();
+    // }
+  }, []);
 
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     if (!userProfile) return;
-    console.log("contact userProfile BasicDetailsEditPage",userProfile )
+    console.log("contact userProfile BasicDetailsEditPage", userProfile)
     setFormData({
       email: userProfile.email || '',
       firstName: userProfile.firstName || '',
@@ -100,14 +102,15 @@ const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
       linkedinUrl: userProfile.linkedinUrl || '',
       portfolioUrl: userProfile.portfolioUrl || '',
       id: userProfile._id,
-      roleLabel:userProfile?.roleLabel || '',
-       roleId: userProfile?.roleId || ''
+      roleLabel: userProfile?.roleLabel || '',
+      roleId: userProfile?.roleId || ''
     });
+
     setSelectedCurrentRole(userProfile?.roleLabel);
-     setSelectedCurrentRoleId(userProfile?.roleId || '');
+    setSelectedCurrentRoleId(userProfile?.roleId || '');
 
     setOriginalEmail(userProfile.email || '');
-
+    setOriginalProfileId(userProfile.profileId || '')
     if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
       const parsedDate = parse(userProfile.dateOfBirth, 'dd-MM-yyyy', new Date());
       setStartDate(!isNaN(parsedDate.getTime()) ? parsedDate : null);
@@ -122,7 +125,7 @@ const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
     setShowDropdownRole((prev) => !prev);
   };
 
-    // Role selection
+  // Role selection
   // const handleRoleSelect = (role) => {
   //   setSelectedCurrentRole(role.label);
   //   // setSelectedCurrentRoleId(role._id);
@@ -132,15 +135,15 @@ const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
   // };
 
   // Update handleRoleSelect to set both label and ID
-const handleRoleSelect = (role) => {
-  setSelectedCurrentRole(role.label);
-  setSelectedCurrentRoleId(role._id); // Set the role ID
-  setShowDropdownRole(false);
-  setErrors((prev) => ({ ...prev, roleId: "" }));
-};
+  const handleRoleSelect = (role) => {
+    setSelectedCurrentRole(role.label);
+    setSelectedCurrentRoleId(role._id); // Set the role ID
+    setShowDropdownRole(false);
+    setErrors((prev) => ({ ...prev, roleId: "" }));
+  };
 
 
-    // Filter roles based on search
+  // Filter roles based on search
   const filteredCurrentRoles = currentRole.filter((role) =>
     role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
   );
@@ -159,6 +162,17 @@ const handleRoleSelect = (role) => {
     setStartDate(date);
   };
 
+  const checkProfileIdExists = useCallback(async (profileId) => {
+    if (!profileId) return false;
+    try {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
+      return response.data.exists;
+    } catch (error) {
+      console.error("ProfileId check error:", error);
+      return false;
+    }
+  }, []);
+
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -167,20 +181,59 @@ const handleRoleSelect = (role) => {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
 
-    if (name === 'email' && value !== originalEmail) {
-      await handleEmailValidation(value);
-    }
-  };
-
-  const handleProfileIdValidation = async (profileId) => {
-    const error = await validateProfileId(profileId);
-    if (error) {
-      setErrors(prev => ({ ...prev, profileId: error }));
+ 
+    
+  //  if (name === 'profileId') {
+  //   if (value !== originalProfileId) {
+  //     const profileIdError = await validateProfileId(value, checkProfileIdExists);
+  //     if (profileIdError) {
+  //       setErrors(prev => ({ ...prev, profileId: profileIdError }));
+  //     }
+  //   }
+  // }
+    if (name === 'profileId') {
+    if (value !== originalProfileId) {
+      const profileIdError = await validateProfileId(value, checkProfileIdExists);
+      setErrors(prev => ({ 
+        ...prev, 
+        profileId: profileIdError || '' 
+      }));
     } else {
+      // Clear error if reverting to original profile ID
       setErrors(prev => ({ ...prev, profileId: '' }));
     }
+  }
+    
+
+    if (name === 'email' && value !== originalEmail) {
+      await handleEmailValidation(value);
+   
+    }
   };
 
+// const handleProfileIdValidation = async (profileId) => {
+
+//   console.log("profileId",profileId);
+  
+//   if (profileId !== originalProfileId) {
+//     const error = await validateProfileId(profileId, checkProfileIdExists);
+//     setErrors(prev => ({ 
+//       ...prev, 
+//       profileId: error || '' 
+//     }));
+//   }
+// };
+
+const handleProfileIdValidation = async (profileId) => {
+  console.log("profileId",profileId);
+  if (profileId !== originalProfileId) {
+    const error = await validateProfileId(profileId, checkProfileIdExists);
+    setErrors(prev => ({ 
+      ...prev, 
+      profileId: error || '' // This ensures the error is cleared when valid
+    }));
+  }
+};
 
   const handleEmailValidation = async (email) => {
     if (!email) {
@@ -191,12 +244,7 @@ const handleRoleSelect = (role) => {
 
     setIsCheckingEmail(true);
 
-    // const formatError = validateWorkEmail(email);
-    // if (formatError) {
-    //   setErrors(prev => ({ ...prev, email: formatError }));
-    //   setIsCheckingEmail(false);
-    //   return;
-    // }
+
 
     const exists = await checkEmailExists(email);
     if (exists) {
@@ -219,8 +267,47 @@ const handleRoleSelect = (role) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+  //   if (formData.profileId !== originalProfileId) {
+  //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
+  //  console.log("profileIdError",profileIdError);
+   
+  //   if (profileIdError) {
+  //     setErrors(prev => ({ ...prev, profileId: profileIdError }));
+  //     return;
+  //   }
+  // }
+
+    if (formData.profileId !== originalProfileId || formData.profileId === '') {
+    const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
+   console.log("profileIdError",profileIdError);
+    if (profileIdError) {
+      
+      setErrors(prev => ({ ...prev, profileId: profileIdError }));
+      return;
+    }
+  }
+
+     // Additional email validation if changed
+
+    if (formData.email !== originalEmail) {
+      const emailFormatError = validateWorkEmail(formData.email);
+      if (emailFormatError) {
+        setErrors(prev => ({ ...prev, email: emailFormatError }));
+        return;
+      }
+
+      const exists = await checkEmailExists(formData.email);
+      if (exists) {
+        setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+        return;
+      }
+    }
+
     const validationErrors = validateFormMyProfile(formData);
     setErrors(validationErrors);
+
+    console.log("validationErrors",validationErrors);
+    
 
     if (!isEmptyObject(validationErrors)) return;
 
@@ -236,7 +323,7 @@ const handleRoleSelect = (role) => {
       linkedinUrl: formData.linkedinUrl.trim() || '',
       portfolioUrl: formData.portfolioUrl.trim() || '',
       id: formData.id,
-       roleId: selectedCurrentRoleId || formData.roleId 
+      roleId: selectedCurrentRoleId || formData.roleId
     };
 
     try {
@@ -297,7 +384,7 @@ const handleRoleSelect = (role) => {
             newEmail: formData.email.trim(),
           };
 
-          
+
           await useUpdateContactDetail.mutateAsync({
             resolvedId,
             data: dataWithNewEmail,
@@ -313,8 +400,8 @@ const handleRoleSelect = (role) => {
         }
       } else {
 
-        
-          // console.log("data With old Email",cleanFormData);
+
+        // console.log("data With old Email",cleanFormData);
         const response = await updateContactDetail.mutateAsync({
           resolvedId,
           data: cleanFormData,
@@ -570,9 +657,11 @@ const handleRoleSelect = (role) => {
                 <input
                   type="text"
                   name="profileId"
+                  // disabled={from === 'users'}
                   value={formData.profileId || ''}
-                  // onChange={handleInputChange}
-                  onBlur={() => handleProfileIdValidation(formData.profileId)}
+                  onChange={handleInputChange}
+                  onBlur={() => formData.profileId !== originalProfileId && handleProfileIdValidation(formData.profileId)}
+                  // onBlur={() => handleProfileIdValidation(formData.profileId)}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.profileId ? 'border-red-500' : 'border-gray-300'
                     }`}
                 />
@@ -650,13 +739,13 @@ const handleRoleSelect = (role) => {
                     type="text"
                     readOnly
                     value={selectedCurrentRole}
-                    
+
                     onClick={toggleDropdownRole}
                     className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
                       } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
                       }`}
-                        disabled={from !== 'users'}
-                    // disabled={isLoading}
+                    disabled={from !== 'users'}
+                  // disabled={isLoading}
                   />
                   <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
                   {showDropdownRole && (
@@ -665,7 +754,7 @@ const handleRoleSelect = (role) => {
                         <input
                           type="text"
                           placeholder="Search roles..."
-                          
+
                           value={searchTermRole}
                           onChange={(e) =>
                             setSearchTermRole(e.target.value)
