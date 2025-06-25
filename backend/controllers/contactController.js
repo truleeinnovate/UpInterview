@@ -1,5 +1,5 @@
 const { Contacts } = require("../models/Contacts");
-const Interviewavailability = require("../models/InterviewAvailability");
+const InterviewAvailability = require("../models/InterviewAvailability");
 const { Users } = require("../models/Users");
 
 // Mansoor: for fetching the total contacts to the login pages (Individual-4)
@@ -294,7 +294,7 @@ const updateContactsDetails = async (req, res) => {
       // Handle availability updates if provided
       if (avail && Array.isArray(avail)) {
         // First remove existing availability records for this contact
-        await Interviewavailability.deleteMany(
+        await InterviewAvailability.deleteMany(
           { contact: contactData?.contactId },
           { session }
         );
@@ -346,7 +346,7 @@ const updateContactsDetails = async (req, res) => {
 
         // Only insert if there are valid records
         if (availabilityDocs.length > 0) {
-          const insertedAvailability = await Interviewavailability.insertMany(
+          const insertedAvailability = await InterviewAvailability.insertMany(
             availabilityDocs,
             { session }
           );

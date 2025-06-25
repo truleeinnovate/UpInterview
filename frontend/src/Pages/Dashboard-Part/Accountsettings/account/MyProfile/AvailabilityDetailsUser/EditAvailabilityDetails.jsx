@@ -161,7 +161,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
   const handleRemoveTimeSlot = (day, index) => {
     setFormData(prev => {
       const newTimes = { ...prev.times };
-      if (newTimes[day].length === 1) {
+      if (newTimes[day]?.length === 1) {
         newTimes[day] = [{ startTime: null, endTime: null }];
       } else {
         newTimes[day] = newTimes[day].filter((_, i) => i !== index);
@@ -262,7 +262,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
               endTime: slot.endTime,
             })),
         }))
-        .filter(day => day.timeSlots.length > 0), // Only include days with valid time slots
+        .filter(day => day.timeSlots?.length > 0), // Only include days with valid time slots
     };
 
     const cleanFormData = {
@@ -271,7 +271,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
         : formData.selectedTimezone,
       // timeZone: formData.selectedTimezone, // Already a string from handleTimezoneChange
       preferredDuration: formData.selectedOption || '',
-      availability: formattedAvailability.days.length > 0 ? [formattedAvailability] : [],
+      availability: formattedAvailability.days?.length > 0 ? [formattedAvailability] : [],
      contactId:userProfile?.contactId || "Not Found"
     };
 

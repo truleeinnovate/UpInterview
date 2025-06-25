@@ -629,10 +629,18 @@ const getUniqueUserByOwnerId = async (req, res) => {
     const contact = await Contacts.findOne({ ownerId })
       .populate({
         path: 'availability',
-        model: 'Interviewavailability',
-        select: 'day timeSlots -_id',
+        // model: 'InterviewAvailability',
+         model: 'InterviewAvailability', // Make sure the casing is correct
+    select: 'availability.day availability.timeSlots',
+        // select: 'day timeSlots -_id',
+        // select: 'availability',
+        select: 'availability.day availability.timeSlots',
       })
+      // .populate("availability")
       .lean();
+
+      // console.log("contact contact",contact);
+      
 
 
     // Combine user data, pulling most fields from Contacts
