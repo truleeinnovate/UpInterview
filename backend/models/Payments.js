@@ -18,7 +18,8 @@ const PaymentSchema = new mongoose.Schema({
     razorpayOrderId: { type: String },
     razorpaySignature: { type: String },
     razorpayCustomerId: { type: String },
-    transactionId: { type: String, sparse: true }, // Added with sparse index to allow multiple null values
+    // transactionId: { type: String, sparse: true },
+    transactionId: { type: String },
     cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'CardPayment' },
     //isRecurring: { type: Boolean, default: false },
     subscriptionId: { type: String }, // For recurring payments

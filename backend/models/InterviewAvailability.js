@@ -1,35 +1,59 @@
 const mongoose = require('mongoose');
 
-// const timeSlotSchema = new mongoose.Schema(
-//     {
-//         startTime: { type: String, required: true },
-//         endTime: { type: String, required: true },
-//     },
-//     { _id: false }
-// );
+const dayAvailabilitySchema = new mongoose.Schema({
+  day: {
+    type: String,
+    enum: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    required: true,
+  },
+  timeSlots: [{
+    startTime: {
+      type: String,
+      required: true,
+    },
+    endTime: {
+      type: String,
+      required: true,
+    },
+  }],
+});
 
-// const daySchema = new mongoose.Schema(
-//     {
-//         day: { type: String, required: true },
-//         timeSlots: [timeSlotSchema],
-//     },
-//     { _id: false }
-// );
+const interviewAvailabilitySchema = new mongoose.Schema({
+  contact: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Contacts',
+    required: true,
+    unique: true, // Ensure one document per contact
+  },
+  availability: [dayAvailabilitySchema],
+}, { timestamps: true });
 
-// const availabilitySchema = new mongoose.Schema({
-//     contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: true },
-//     days: [daySchema],
-// });
+// Add a method to update availability
+interviewAvailabilitySchema.statics.updateOrCreate = async function(contactId, availabilityData) {
+  // Remove empty time slots and days with no time slots
+  const cleanedAvailability = availabilityData
+    .map(dayData => ({
+      day: dayData.day,
+      timeSlots: dayData.timeSlots.filter(slot => 
+        slot.startTime && slot.endTime && slot.startTime !== 'unavailable'
+      )
+    }))
+    .filter(dayData => dayData.timeSlots.length > 0);
 
-const InterviewAvailabilitySchema = new mongoose.Schema({
-    contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' },
-    day: String,
-    timeSlots: [{
-      startTime: String,
-      endTime: String
-    }],
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-  }, { timestamps: true });
+  // Find and update or create the document
+  return this.findOneAndUpdate(
+    { contact: contactId },
+    { 
+      $set: { 
+        availability: cleanedAvailability 
+      } 
+    },
+    { 
+      new: true, 
+      upsert: true,
+      setDefaultsOnInsert: true
+    }
+  );
+};
 
-module.exports = mongoose.model('Interviewavailability', InterviewAvailabilitySchema);
+module.exports = mongoose.model('InterviewAvailability', interviewAvailabilitySchema);

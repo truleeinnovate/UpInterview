@@ -85,7 +85,6 @@ const MultiStepForm = () => {
     linkedIn_email,
   } = location.state || {};
   const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } = location.state || {};
-  console.log("🚀 isProfileCompleteStateOrg:", isProfileCompleteStateOrg)
 
   const { matchedContact, loading: contactLoading } = useIndividualLogin(
     linkedIn_email,
@@ -398,7 +397,6 @@ const MultiStepForm = () => {
         isProfileCompletedForTenant: currentStep === (Freelancer ? 3 : 1),
       };
 
-
       Object.keys(contactData).forEach((key) => {
         if (contactData[key] === undefined) {
           delete contactData[key];
@@ -420,7 +418,6 @@ const MultiStepForm = () => {
             .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
-      console.log("🚀 matchedContact:", matchedContact, 'matchedContact.ownerId._id', matchedContact.ownerId._id)
       const requestData = {
         userData,
         contactData,
@@ -472,12 +469,13 @@ const MultiStepForm = () => {
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
         } else {
-          alert('Profile created successfully!');
-          toast.success('Profile created successfully 1 !');
           setTimeout(() => {
-            navigate('/subscription-plans');
-          }, 2000); // 2 seconds to allow user to see the toast
-          toast.success('Profile created successfully!');
+            if(isProfileCompleteStateOrg){
+              navigate('/home');
+            }else{
+              navigate('/subscription-plans');
+            }
+          }, 2000);
         }
       }
     } catch (error) {

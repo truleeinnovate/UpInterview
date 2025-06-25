@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Interview = require('../models/Interview.js')
 const InterviewRequest = require('../models/InterviewRequest');
-const Contacts = require('../models/Contacts');
+const { Contacts } = require('../models/Contacts');
 const InterviewRounds = require('../models/InterviewRounds');
 
 //old mansoor code i have changed this code because each interviwer send one request
@@ -177,7 +177,6 @@ exports.updateRequestStatus = async (req, res) => {
     }
 };
 
-
 exports.getInterviewRequests = async (req, res) => {
   try {
     const { ownerId } = req.query;
@@ -186,50 +185,81 @@ exports.getInterviewRequests = async (req, res) => {
       return res.status(400).json({ message: 'ownerId is required' });
     }
 
-    // Find the contact where ownerId matches
-    const contact = await Contacts.findOne({ ownerId });
-    if (!contact) {
-      return res.status(404).json({ message: 'Contact not found for this ownerId' });
+    console.log(`ownerId: ${ownerId}`);
+
+    // Find all contacts where ownerId matches
+    const contacts = await Contacts.find({ ownerId });
+
+    if (!contacts || contacts.length === 0) {
+      console.log('No contacts found for ownerId:', ownerId);
+      return res.status(404).json({ message: 'No contacts found for this ownerId' });
     }
+    
+    console.log(`Found ${contacts.length} contacts for ownerId:`, ownerId);
 
-    const contactId = contact._id;
+    // Get all contact IDs for the query
+    console.log('contacts:', contacts);
+    const contactIds = contacts.map(contact => contact._id);
+    console.log('contactIds:', contactIds);
+    
+    // Find interview requests where interviewerId matches any of the contact IDs
+    const query = { interviewerId: { $in: contactIds } };
+    console.log('Querying interview requests with:', JSON.stringify(query, null, 2));
+    
+    // Find all matching interview requests and populate all fields from referenced models
+    const requests = await InterviewRequest.find(query)
+      .populate('candidateId')   // Populate all candidate fields
+      .populate('positionId')    // Populate all position fields
+      .populate('tenantId')      // Populate all tenant fields
+      .populate('roundId')       // Populate all round fields
+      .populate('interviewerId') // Populate all contact fields
+      .lean();
 
-    // Find interview requests where interviewerId matches the contactId
-    const requests = await InterviewRequest.find({ interviewerId: contactId })
-      .populate('candidateId', 'firstName lastName') // Assuming Candidate has these fields
-      .populate('positionId', 'title') // Assuming Position has a title field
-      .populate('tenantId', 'name') // Assuming Organization has a name field
-      .populate('roundId', 'roundTitle interviewType duration dateTime'); // Populate round details
+    console.log(`Found ${requests.length} matching interview requests`);
 
-    const formattedRequests = requests.map((request) => ({
-      id: request._id,
-      candidate: request.candidateId
-        ? `${request.candidateId.firstName} ${request.candidateId.lastName}`
-        : 'Unknown Candidate',
-      position: request.positionId ? request.positionId.title : 'Unknown Position',
-      company: request.tenantId ? request.tenantId.name : 'Unknown Company',
-      type: request.roundId ? request.roundId.interviewType : 'Unknown Type',
-      status: request.status,
-      requestedDate: request.requestedAt.toISOString().split('T')[0],
-      urgency: request.expiryDateTime
-        ? new Date(request.expiryDateTime) < new Date()
-          ? 'High'
-          : 'Medium'
-        : 'Low',
-      roundId: request.roundId ? request.roundId._id : null,
-      roundDetails: request.roundId
-        ? {
-            roundTitle: request.roundId.roundTitle,
-            interviewType: request.roundId.interviewType,
-            duration: request.roundId.duration,
-            dateTime: request.roundId.dateTime,
-          }
-        : {},
-    }));
+    const formattedRequests = requests.map(request => {
+      // Create a new object with all request fields
+      return {
+        ...request, // Spread all original request fields
+        _id: request._id, // Keep the original _id
+        id: request._id, // Also include as id for backward compatibility
+        // Include full populated objects
+        positionId : request.positionId || null,
+        tenantId : request.tenantId || null,
+        roundId : request.roundId || null,
+        contactId : request.interviewerId || null,
+        // Keep existing calculated fields
+        status: request.status,
+        requestedDate: request.requestedAt ? new Date(request.requestedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        urgency: request.expiryDateTime
+          ? new Date(request.expiryDateTime) < new Date()
+            ? 'High'
+            : 'Medium'
+          : 'Low',
+        // For backward compatibility, keep these fields
+        type: request.roundId?.interviewType || 'Unknown Type',
+        roundId: request.roundId?._id || null,
+        roundDetails: request.roundId ? {
+          roundTitle: request.roundId.roundTitle,
+          interviewType: request.roundId.interviewType,
+          duration: request.roundId.duration,
+          dateTime: request.roundId.dateTime,
+        } : null,
+        originalRequest: {
+          dateTime: request.dateTime,
+          duration: request.duration,
+          status: request.status,
+          interviewerType: request.interviewerType,
+          expiryDateTime: request.expiryDateTime
+        }
+      };
+    });
+
+    console.log(`Sending ${formattedRequests.length} formatted requests to frontend`);
 
     res.status(200).json(formattedRequests);
   } catch (error) {
-    console.error(error);
+    console.error('[getInterviewRequests] Error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

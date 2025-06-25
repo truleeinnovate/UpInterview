@@ -41,7 +41,7 @@ const getNotifications = async (req, res) => {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    console.log("Filter:", filter);
+    // console.log("Filter:", filter);
 
     const notifications = await Notifications.find(filter);
     res.json(notifications);
@@ -75,10 +75,10 @@ const getAllNotification = async (req, res) => {
       }
       filter.ownerId = ownerId;
     }
-    console.log("Filter:", filter);
+    // console.log("Filter:", filter);
 
     const notifications = await Notifications.find(filter).sort({ _id: -1 });
-    console.log("Fetched notifications:", notifications);
+    // console.log("Fetched notifications:", notifications);
     res.json(notifications);
 
   } catch (err) {

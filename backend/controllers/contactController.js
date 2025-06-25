@@ -3,10 +3,10 @@ const Interviewavailability = require('../models/InterviewAvailability');
 const { Users } = require('../models/Users');
 
 
-// Mansoor: for fetching the total contacts to the login pages (Individula-4)
+// Mansoor: for fetching the total contacts to the login pages (Individual-4)
 const getAllContacts = async (req, res) => {
     try {
-        const contacts = await Contacts.find().populate('availability');
+        const contacts = await Contacts.find();
         return res.status(200).json(contacts);
     } catch (error) {
         console.error('Error fetching all contacts:', error);
@@ -104,42 +104,42 @@ const getAllContacts = async (req, res) => {
 //     }
 // };
 
-const fetchContacts = async (req, res) => {
-    const contactId = req.params.id;
+// const fetchContacts = async (req, res) => {
+//     const contactId = req.params.id;
 
-    try {
-        const contact = await Contacts.findById(contactId)
-            .populate('availability')
-            .populate({
-                path: 'ownerId',
-                select: 'firstName lastName email roleId isFreelancer',
-                model: 'Users',
-                populate: {
-                    path: 'roleId',
-                    model: 'Role',
-                    select: 'roleName'
-                }
-            }).lean();
+//     try {
+//         const contact = await Contacts.findById(contactId)
+//             .populate('availability')
+//             .populate({
+//                 path: 'ownerId',
+//                 select: 'firstName lastName email roleId isFreelancer',
+//                 model: 'Users',
+//                 populate: {
+//                     path: 'roleId',
+//                     model: 'Role',
+//                     select: 'roleName'
+//                 }
+//             }).lean();
 
-        if (!contact) {
-            return res.status(404).json({ message: 'Contact not found' });
-        }
+//         if (!contact) {
+//             return res.status(404).json({ message: 'Contact not found' });
+//         }
 
-        // Optional: transform roleName
-        if (contact.ownerId && contact.ownerId.roleId) {
-            contact.owner = {
-                ...contact.ownerId,
-                roleName: contact.ownerId.roleId.roleName
-            };
-            delete contact.ownerId;
-        }
+//         // Optional: transform roleName
+//         if (contact.ownerId && contact.ownerId.roleId) {
+//             contact.owner = {
+//                 ...contact.ownerId,
+//                 roleName: contact.ownerId.roleId.roleName
+//             };
+//             delete contact.ownerId;
+//         }
 
-        res.status(200).json(contact);
-    } catch (error) {
-        console.error('Error fetching contact:', error);
-        res.status(500).json({ message: 'Error fetching contact', error: error.message });
-    }
-}
+//         res.status(200).json(contact);
+//     } catch (error) {
+//         console.error('Error fetching contact:', error);
+//         res.status(500).json({ message: 'Error fetching contact', error: error.message });
+//     }
+// }
 
 const createContact = async (req, res) => {
     try {
