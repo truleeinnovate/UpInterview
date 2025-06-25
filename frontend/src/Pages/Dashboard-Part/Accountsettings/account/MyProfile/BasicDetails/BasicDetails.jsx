@@ -87,7 +87,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
         {mode === 'users' && (
           <div className="flex gap-2">
-            {contactData.newEmail && (
+            {contactData.newEmail  && (
               <button
                 onClick={handleResendEmailVerification}
                 className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"

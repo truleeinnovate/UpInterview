@@ -366,14 +366,24 @@ const loginOrganization = async (req, res) => {
     }
 
     // Check email verification
-    const organization = await Tenant.findOne({ _id: user.tenantId });
-    console.log('organization', organization);
+    // const organization = await Tenant.findOne({ _id: user.tenantId });
+    // console.log('organization', organization);
 
 
 
 
-    // Check status
-    if (!['active', 'payment_pending'].includes(organization.status)) {
+    // // Check status
+    // if (!['active', 'payment_pending'].includes(organization.status)) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Account not active',
+    //     status: organization.status
+    //   });
+    // }
+
+      const organization = await Tenant.findOne({ _id: user.tenantId });
+ 
+    if (organization.status === 'inactive') {
       return res.status(403).json({
         success: false,
         message: 'Account not active',

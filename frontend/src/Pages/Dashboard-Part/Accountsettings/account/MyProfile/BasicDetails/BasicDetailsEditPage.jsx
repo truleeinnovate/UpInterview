@@ -17,6 +17,7 @@ import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '.
 
 import { toast } from 'react-hot-toast';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode.js';
+import { getOrganizationRoles } from '../../../../../../apiHooks/useRoles.js';
 
 
 Modal.setAppElement('#root');
@@ -50,22 +51,38 @@ const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
-        );
-        setCurrentRole(response.data);
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchRoles = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
+  //       );
+  //       setCurrentRole(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching roles:", error);
+  //     }
+  //   };
 
-    if (tenantId) {
-      fetchRoles();
-    }
-  }, [tenantId]);
+  //   if (tenantId) {
+  //     fetchRoles();
+  //   }
+  // }, [tenantId]);
+
+
+    useEffect(() => {
+      const fetchRoles = async () => {
+        try {
+          const roles = await getOrganizationRoles();
+          setCurrentRole(roles);
+        } catch (err) {
+          // Optionally handle UI-specific error here
+        }
+      };
+  
+      // if (tenantId) {
+        fetchRoles();
+      // }
+    }, []);
 
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);

@@ -25,7 +25,7 @@ const cancelSubscription = async (req, res) => {
     // Step 1: Cancel subscription in Razorpay
     try {
       await razorpay.subscriptions.cancel(razorpaySubscriptionId);
-      console.log('Razorpay subscription cancelled:', razorpaySubscriptionId);
+      console.log('Razorpay subscription cancelled in subscriptioncancelcontroller:', razorpaySubscriptionId);
     } catch (razorpayError) {
       console.error('Error cancelling Razorpay subscription:', razorpayError);
       return res.status(400).json({ message: 'Failed to cancel Razorpay subscription' });

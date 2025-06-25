@@ -65,6 +65,7 @@ const saveRole = async (req, res) => {
 //   }
 //   };
 const mongoose = require('mongoose');
+const rolesPermissionObject = require('../models/rolesPermissionObject');
 const getRolesByOrganization = async (req, res) => {
     const { tenantId } = req.query;
     if (!tenantId) {
@@ -96,8 +97,26 @@ const getRolesByOrganization = async (req, res) => {
     }
   };
 
+  // GET all role permission objects
+const getAllRoles = async (req, res) => {
+  try {
+    const data = await rolesPermissionObject.find().lean();
+
+    if (!data || data.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching role permissions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
   module.exports = {
     saveRole,
     getRolesByOrganization,
-    updateRole
+    updateRole,
+    getAllRoles
   }

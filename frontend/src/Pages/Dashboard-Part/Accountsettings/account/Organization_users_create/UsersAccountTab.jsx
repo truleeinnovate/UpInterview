@@ -219,10 +219,11 @@ const UsersAccountTab = () => {
         </div>
       ),
     },
-    { key: "email", header: "Email", render: (value) => value || "N/A" },
-    { key: "phone", header: "Phone", render: (value) => value || "N/A" },
-    {key:"status",header:"Status",render:(value) => value || "N/A"},
-    { key: "label", header: "Role", render: (value) => value || "N/A" },
+    { key: "email", header: "Email", render: (value) => value || "Not Provided" },
+    { key: "phone", header: "Phone", render: (value) => value || "Not Provided" },
+   
+    { key: "label", header: "Role", render: (value) => value || "Not Found" },
+     {key:"status",header:"Status",render:(value) => value || "Not Found"},
   ];
 
   // Table Actions Configuration
