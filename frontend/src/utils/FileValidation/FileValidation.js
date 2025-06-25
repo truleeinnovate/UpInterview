@@ -13,8 +13,8 @@ export const validateFile = async (file, type) => {
       return "Only JPG, PNG, or WebP images are allowed.";
     }
 
-    if (file.size > 1 * 1024 * 1024) {
-      return "File is too big. Max file size is 1MB.";
+    if (file.size > 100 * 1024) {
+      return "File is too big. Max file size is 100KB.";
     }
 
     try {
