@@ -36,6 +36,7 @@ const runTaskReminderJob = async () => {
       return;
     }
 
+    
     console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
     // // Fetch email template for task reminder
     // const emailTemplate = await emailTemplateModel.findOne({
