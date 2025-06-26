@@ -1,35 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import { Maximize, Minimize, X, ChevronDown, } from 'lucide-react';
-import classNames from 'classnames';
-import Modal from 'react-modal';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { format, parse } from 'date-fns';
-import axios from 'axios';
-import { isEmptyObject, validateFormMyProfile } from '../../../../../../utils/MyProfileValidations';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from "react";
+import {
+  Maximize,
+  Minimize,
+  X,
+  ChevronDown,
+  Camera,
+  Trash,
+} from "lucide-react";
+
+import classNames from "classnames";
+import Modal from "react-modal";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format, parse } from "date-fns";
+import axios from "axios";
+import {
+  isEmptyObject,
+  validateFormMyProfile,
+} from "../../../../../../utils/MyProfileValidations";
+import { useNavigate, useParams } from "react-router-dom";
 // import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { config } from '../../../../../../config';
-import { validateWorkEmail, checkEmailExists } from '../../../../../../utils/workEmailValidation.js';
-import { validateProfileId } from '../../../../../../utils/OrganizationSignUpValidation.js';
-import Cookies from 'js-cookie';
-import { useRequestEmailChange, useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers.js';
+import { config } from "../../../../../../config";
+import {
+  validateWorkEmail,
+  checkEmailExists,
+} from "../../../../../../utils/workEmailValidation.js";
+import { validateProfileId } from "../../../../../../utils/OrganizationSignUpValidation.js";
+import Cookies from "js-cookie";
+import {
+  useRequestEmailChange,
+  useUpdateContactDetail,
+  useUserProfile,
+} from "../../../../../../apiHooks/useUsers.js";
 
-import { toast } from 'react-hot-toast';
-import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode.js';
-import { getOrganizationRoles } from '../../../../../../apiHooks/useRoles.js';
-import { useCallback } from 'react';
+import { toast } from "react-hot-toast";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { getOrganizationRoles } from "../../../../../../apiHooks/useRoles.js";
+import { useCallback } from "react";
+import { validateFile } from "../../../../../../utils/FileValidation/FileValidation.js";
+import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
+Modal.setAppElement("#root");
 
-
-Modal.setAppElement('#root');
-
-const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) => {
+const BasicDetailsEditPage = ({
+  from,
+  usersId,
+  setBasicEditOpen,
+  onSuccess,
+}) => {
   // const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const resolvedId = usersId || id;
 
-  const authToken = Cookies.get('authToken');
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   // const userId = tokenPayload.userId;
   const tenantId = tokenPayload.tenantId;
@@ -42,9 +65,9 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const [startDate, setStartDate] = useState(null);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [originalEmail, setOriginalEmail] = useState('');
-  const [originalProfileId, setOriginalProfileId] = useState('')
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
+  const [originalEmail, setOriginalEmail] = useState("");
+  const [originalProfileId, setOriginalProfileId] = useState("");
+  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
   const [searchTermRole, setSearchTermRole] = useState("");
@@ -52,6 +75,11 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   const [showDropdownRole, setShowDropdownRole] = useState(false);
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const fileInputRef = useRef(null);
+  const [fileError, setFileError] = useState("");
+  const [isProfileRemoved, setIsProfileRemoved] = useState(false);
 
   // useEffect(() => {
   //   const fetchRoles = async () => {
@@ -70,6 +98,30 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   //   }
   // }, [tenantId]);
 
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      const error = await validateFile(selectedFile, "image");
+      if (error) {
+        setFileError(error);
+        return;
+      }
+      setFileError("");
+      setFile(selectedFile);
+      setFilePreview(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  const handleDeleteImage = () => {
+    if (window.confirm("Remove this image?")) {
+      setFile(null);
+      setFilePreview(null);
+      setIsProfileRemoved(true);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -89,30 +141,35 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     if (!userProfile) return;
-    console.log("contact userProfile BasicDetailsEditPage", userProfile)
+    console.log("contact userProfile BasicDetailsEditPage", userProfile);
     setFormData({
-      email: userProfile.email || '',
-      firstName: userProfile.firstName || '',
-      lastName: userProfile.lastName || '',
-      countryCode: userProfile.countryCode || '+91',
-      phone: userProfile.phone || '',
-      profileId: userProfile.profileId || '',
-      dateOfBirth: userProfile.dateOfBirth || '',
-      gender: userProfile.gender || '',
-      linkedinUrl: userProfile.linkedinUrl || '',
-      portfolioUrl: userProfile.portfolioUrl || '',
+      email: userProfile.email || "",
+      firstName: userProfile.firstName || "",
+      lastName: userProfile.lastName || "",
+      countryCode: userProfile.countryCode || "+91",
+      phone: userProfile.phone || "",
+      profileId: userProfile.profileId || "",
+      dateOfBirth: userProfile.dateOfBirth || "",
+      gender: userProfile.gender || "",
+      linkedinUrl: userProfile.linkedinUrl || "",
+      portfolioUrl: userProfile.portfolioUrl || "",
       id: userProfile._id,
-      roleLabel: userProfile?.roleLabel || '',
-      roleId: userProfile?.roleId || ''
+      roleLabel: userProfile?.roleLabel || "",
+      roleId: userProfile?.roleId || "",
     });
 
+    setFilePreview(userProfile?.imageData?.path);
     setSelectedCurrentRole(userProfile?.roleLabel);
-    setSelectedCurrentRoleId(userProfile?.roleId || '');
+    setSelectedCurrentRoleId(userProfile?.roleId || "");
 
-    setOriginalEmail(userProfile.email || '');
-    setOriginalProfileId(userProfile.profileId || '')
+    setOriginalEmail(userProfile.email || "");
+    setOriginalProfileId(userProfile.profileId || "");
     if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      const parsedDate = parse(userProfile.dateOfBirth, 'dd-MM-yyyy', new Date());
+      const parsedDate = parse(
+        userProfile.dateOfBirth,
+        "dd-MM-yyyy",
+        new Date()
+      );
       setStartDate(!isNaN(parsedDate.getTime()) ? parsedDate : null);
     } else {
       setStartDate(null);
@@ -142,30 +199,29 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
     setErrors((prev) => ({ ...prev, roleId: "" }));
   };
 
-
   // Filter roles based on search
   const filteredCurrentRoles = currentRole.filter((role) =>
     role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
   );
 
-
-
   const handleDateChange = (date) => {
     if (!date) {
-      setFormData(prev => ({ ...prev, dateOfBirth: '' }));
+      setFormData((prev) => ({ ...prev, dateOfBirth: "" }));
       setStartDate(null);
       return;
     }
 
-    const formattedDate = format(date, 'dd-MM-yyyy');
-    setFormData(prevData => ({ ...prevData, dateOfBirth: formattedDate }));
+    const formattedDate = format(date, "dd-MM-yyyy");
+    setFormData((prevData) => ({ ...prevData, dateOfBirth: formattedDate }));
     setStartDate(date);
   };
 
   const checkProfileIdExists = useCallback(async (profileId) => {
     if (!profileId) return false;
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`
+      );
       return response.data.exists;
     } catch (error) {
       console.error("ProfileId check error:", error);
@@ -175,130 +231,129 @@ const BasicDetailsEditPage = ({ from, usersId, setBasicEditOpen, onSuccess }) =>
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
- 
-    
-  //  if (name === 'profileId') {
-  //   if (value !== originalProfileId) {
-  //     const profileIdError = await validateProfileId(value, checkProfileIdExists);
-  //     if (profileIdError) {
-  //       setErrors(prev => ({ ...prev, profileId: profileIdError }));
-  //     }
-  //   }
-  // }
-    if (name === 'profileId') {
-    if (value !== originalProfileId) {
-      const profileIdError = await validateProfileId(value, checkProfileIdExists);
-      setErrors(prev => ({ 
-        ...prev, 
-        profileId: profileIdError || '' 
-      }));
-    } else {
-      // Clear error if reverting to original profile ID
-      setErrors(prev => ({ ...prev, profileId: '' }));
+    //  if (name === 'profileId') {
+    //   if (value !== originalProfileId) {
+    //     const profileIdError = await validateProfileId(value, checkProfileIdExists);
+    //     if (profileIdError) {
+    //       setErrors(prev => ({ ...prev, profileId: profileIdError }));
+    //     }
+    //   }
+    // }
+    if (name === "profileId") {
+      if (value !== originalProfileId) {
+        const profileIdError = await validateProfileId(
+          value,
+          checkProfileIdExists
+        );
+        setErrors((prev) => ({
+          ...prev,
+          profileId: profileIdError || "",
+        }));
+      } else {
+        // Clear error if reverting to original profile ID
+        setErrors((prev) => ({ ...prev, profileId: "" }));
+      }
     }
-  }
-    
 
-    if (name === 'email' && value !== originalEmail) {
+    if (name === "email" && value !== originalEmail) {
       await handleEmailValidation(value);
-   
     }
   };
 
-// const handleProfileIdValidation = async (profileId) => {
+  // const handleProfileIdValidation = async (profileId) => {
 
-//   console.log("profileId",profileId);
-  
-//   if (profileId !== originalProfileId) {
-//     const error = await validateProfileId(profileId, checkProfileIdExists);
-//     setErrors(prev => ({ 
-//       ...prev, 
-//       profileId: error || '' 
-//     }));
-//   }
-// };
+  //   console.log("profileId",profileId);
 
-const handleProfileIdValidation = async (profileId) => {
-  console.log("profileId",profileId);
-  if (profileId !== originalProfileId) {
-    const error = await validateProfileId(profileId, checkProfileIdExists);
-    setErrors(prev => ({ 
-      ...prev, 
-      profileId: error || '' // This ensures the error is cleared when valid
-    }));
-  }
-};
+  //   if (profileId !== originalProfileId) {
+  //     const error = await validateProfileId(profileId, checkProfileIdExists);
+  //     setErrors(prev => ({
+  //       ...prev,
+  //       profileId: error || ''
+  //     }));
+  //   }
+  // };
+
+  const handleProfileIdValidation = async (profileId) => {
+    console.log("profileId", profileId);
+    if (profileId !== originalProfileId) {
+      const error = await validateProfileId(profileId, checkProfileIdExists);
+      setErrors((prev) => ({
+        ...prev,
+        profileId: error || "", // This ensures the error is cleared when valid
+      }));
+    }
+  };
 
   const handleEmailValidation = async (email) => {
     if (!email) {
-      setErrors(prev => ({ ...prev, email: 'Work email is required' }));
+      setErrors((prev) => ({ ...prev, email: "Work email is required" }));
       setIsCheckingEmail(false);
       return;
     }
 
     setIsCheckingEmail(true);
 
-
-
     const exists = await checkEmailExists(email);
     if (exists) {
-      setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+      setErrors((prev) => ({ ...prev, email: "Email already registered" }));
     } else {
-      setErrors(prev => ({ ...prev, email: '' }));
+      setErrors((prev) => ({ ...prev, email: "" }));
     }
 
     setIsCheckingEmail(false);
   };
 
   const handleCloseModal = () => {
-    if (from === 'users') {
+    if (from === "users") {
       setBasicEditOpen(false);
     } else {
-      navigate('/account-settings/my-profile/basic', { replace: true });
+      navigate("/account-settings/my-profile/basic", { replace: true });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-  //   if (formData.profileId !== originalProfileId) {
-  //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
-  //  console.log("profileIdError",profileIdError);
-   
-  //   if (profileIdError) {
-  //     setErrors(prev => ({ ...prev, profileId: profileIdError }));
-  //     return;
-  //   }
-  // }
+    //   if (formData.profileId !== originalProfileId) {
+    //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
+    //  console.log("profileIdError",profileIdError);
 
-    if (formData.profileId !== originalProfileId || formData.profileId === '') {
-    const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
-   console.log("profileIdError",profileIdError);
-    if (profileIdError) {
-      
-      setErrors(prev => ({ ...prev, profileId: profileIdError }));
-      return;
+    //   if (profileIdError) {
+    //     setErrors(prev => ({ ...prev, profileId: profileIdError }));
+    //     return;
+    //   }
+    // }
+
+    if (formData.profileId !== originalProfileId || formData.profileId === "") {
+      const profileIdError = await validateProfileId(
+        formData.profileId,
+        checkProfileIdExists
+      );
+      console.log("profileIdError", profileIdError);
+      if (profileIdError) {
+        setErrors((prev) => ({ ...prev, profileId: profileIdError }));
+        return;
+      }
     }
-  }
 
-     // Additional email validation if changed
+    // Additional email validation if changed
 
     if (formData.email !== originalEmail) {
       const emailFormatError = validateWorkEmail(formData.email);
       if (emailFormatError) {
-        setErrors(prev => ({ ...prev, email: emailFormatError }));
+        setErrors((prev) => ({ ...prev, email: emailFormatError }));
         return;
       }
 
       const exists = await checkEmailExists(formData.email);
       if (exists) {
-        setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+        setErrors((prev) => ({ ...prev, email: "Email already registered" }));
         return;
       }
     }
@@ -306,24 +361,23 @@ const handleProfileIdValidation = async (profileId) => {
     const validationErrors = validateFormMyProfile(formData);
     setErrors(validationErrors);
 
-    console.log("validationErrors",validationErrors);
-    
+    console.log("validationErrors", validationErrors);
 
     if (!isEmptyObject(validationErrors)) return;
 
     const cleanFormData = {
-      email: formData.email.trim() || '',
-      firstName: formData.firstName.trim() || '',
-      lastName: formData.lastName.trim() || '',
-      countryCode: formData.countryCode || '',
-      phone: formData.phone.trim() || '',
-      profileId: formData.profileId.trim() || '',
-      dateOfBirth: formData.dateOfBirth || '',
-      gender: formData.gender || '',
-      linkedinUrl: formData.linkedinUrl.trim() || '',
-      portfolioUrl: formData.portfolioUrl.trim() || '',
+      email: formData.email.trim() || "",
+      firstName: formData.firstName.trim() || "",
+      lastName: formData.lastName.trim() || "",
+      countryCode: formData.countryCode || "",
+      phone: formData.phone.trim() || "",
+      profileId: formData.profileId.trim() || "",
+      dateOfBirth: formData.dateOfBirth || "",
+      gender: formData.gender || "",
+      linkedinUrl: formData.linkedinUrl.trim() || "",
+      portfolioUrl: formData.portfolioUrl.trim() || "",
       id: formData.id,
-      roleId: selectedCurrentRoleId || formData.roleId
+      roleId: selectedCurrentRoleId || formData.roleId,
     };
 
     try {
@@ -342,7 +396,6 @@ const handleProfileIdValidation = async (profileId) => {
           newEmail: formData.email,
           userId: formData.id,
         };
-
 
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
@@ -375,7 +428,6 @@ const handleProfileIdValidation = async (profileId) => {
         //             id: formData.id
         //           };
 
-
         if (res.data.success) {
           alert("Verification email sent to your new email address");
 
@@ -383,7 +435,6 @@ const handleProfileIdValidation = async (profileId) => {
             ...cleanFormData,
             newEmail: formData.email.trim(),
           };
-
 
           await useUpdateContactDetail.mutateAsync({
             resolvedId,
@@ -399,12 +450,21 @@ const handleProfileIdValidation = async (profileId) => {
           }));
         }
       } else {
-
-
         // console.log("data With old Email",cleanFormData);
+
+        const contactId = userProfile.contactId;
+        if (isProfileRemoved && !file) {
+          await uploadFile(null, "image", "contact", contactId);
+        } else if (file instanceof File) {
+          await uploadFile(file, "image", "contact", contactId);
+        }
+
         const response = await updateContactDetail.mutateAsync({
           resolvedId,
           data: cleanFormData,
+          // profilePic: file,
+          // isProfileRemoved,
+          // contactId: userProfile?.contactId,
         });
 
         if (response.status === 200) {
@@ -425,7 +485,6 @@ const handleProfileIdValidation = async (profileId) => {
       }));
     }
   };
-
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -483,7 +542,6 @@ const handleProfileIdValidation = async (profileId) => {
 
   //         console.log("cleanFormData",cleanFormData);
 
-
   //         await axios.patch(
   //           `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
   //           cleanFormData
@@ -539,10 +597,10 @@ const handleProfileIdValidation = async (profileId) => {
   // };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
+    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     {
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
@@ -553,10 +611,16 @@ const handleProfileIdValidation = async (profileId) => {
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+      <div
+        className={classNames("h-full", {
+          "max-w-6xl mx-auto px-6": isFullScreen,
+        })}
+      >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue">Edit Basic Details</h2>
+            <h2 className="text-2xl font-bold text-custom-blue">
+              Edit Basic Details
+            </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsFullScreen(!isFullScreen)}
@@ -578,7 +642,70 @@ const handleProfileIdValidation = async (profileId) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.form && <p className="text-red-500 text-sm mb-4">{errors.form}</p>}
+            {errors.form && (
+              <p className="text-red-500 text-sm mb-4">{errors.form}</p>
+            )}
+
+            <div className="flex flex-col justify-center items-center mb-4">
+              <div className="relative">
+                <div
+                  className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
+                  onClick={() => !isLoading && fileInputRef.current?.click()}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isLoading}
+                  />
+
+                  {filePreview ? (
+                    <img
+                      src={filePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
+                      <Camera className="text-4xl text-gray-400" />
+                      <span className="text-sm text-gray-500 mt-2">
+                        Upload Photo
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                    {/* Icon placeholder */}
+                  </div>
+                </div>
+
+                {/* Delete button outside the circle */}
+                {filePreview && (
+                  <button
+                    title="Remove Image"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering file input
+                      handleDeleteImage();
+                    }}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                    disabled={isLoading}
+                  >
+                    {/* Icon placeholder */}
+                    <Trash className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 text-center">
+                <p className="text-xs text-gray-500 text-center mb-1">
+                  File must be less than 100KB (200 x 200 recommended)
+                </p>
+                <p className="text-red-500 text-sm mb-4 font-medium text-center">
+                  {fileError}
+                </p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -588,12 +715,16 @@ const handleProfileIdValidation = async (profileId) => {
                   <input
                     type="email"
                     name="email"
-                    value={formData.email || ''}
+                    value={formData.email || ""}
                     onChange={handleInputChange}
-                    onBlur={() => formData.email !== originalEmail && handleEmailValidation(formData.email)}
-                    disabled={from !== 'users'}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                    onBlur={() =>
+                      formData.email !== originalEmail &&
+                      handleEmailValidation(formData.email)
+                    }
+                    disabled={from !== "users"}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                   {isCheckingEmail && (
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -601,7 +732,9 @@ const handleProfileIdValidation = async (profileId) => {
                     </div>
                   )}
                 </div>
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -611,12 +744,17 @@ const handleProfileIdValidation = async (profileId) => {
                 <input
                   type="text"
                   name="firstName"
-                  value={formData.firstName || ''}
+                  value={formData.firstName || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.firstName ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.firstName ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -626,16 +764,21 @@ const handleProfileIdValidation = async (profileId) => {
                 <input
                   type="text"
                   name="lastName"
-                  value={formData.lastName || ''}
+                  value={formData.lastName || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.lastName ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date Of Birth</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date Of Birth
+                </label>
                 <DatePicker
                   selected={startDate}
                   onChange={handleDateChange}
@@ -658,21 +801,31 @@ const handleProfileIdValidation = async (profileId) => {
                   type="text"
                   name="profileId"
                   // disabled={from === 'users'}
-                  value={formData.profileId || ''}
+                  value={formData.profileId || ""}
                   onChange={handleInputChange}
-                  onBlur={() => formData.profileId !== originalProfileId && handleProfileIdValidation(formData.profileId)}
+                  onBlur={() =>
+                    formData.profileId !== originalProfileId &&
+                    handleProfileIdValidation(formData.profileId)
+                  }
                   // onBlur={() => handleProfileIdValidation(formData.profileId)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.profileId ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.profileId ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.profileId && <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>}
+                {errors.profileId && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.profileId}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender
+                </label>
                 <select
                   name="gender"
-                  value={formData.gender || ''}
+                  value={formData.gender || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 >
@@ -689,7 +842,7 @@ const handleProfileIdValidation = async (profileId) => {
                 <div className="flex gap-2">
                   <select
                     name="countryCode"
-                    value={formData.countryCode || '+91'}
+                    value={formData.countryCode || "+91"}
                     onChange={handleInputChange}
                     className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                   >
@@ -703,13 +856,16 @@ const handleProfileIdValidation = async (profileId) => {
                   <input
                     type="text"
                     name="phone"
-                    value={formData.phone || ''}
+                    value={formData.phone || ""}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                      errors.phone ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                 </div>
-                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
               </div>
 
               <div>
@@ -719,12 +875,17 @@ const handleProfileIdValidation = async (profileId) => {
                 <input
                   type="text"
                   name="linkedinUrl"
-                  value={formData.linkedinUrl || ''}
+                  value={formData.linkedinUrl || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.linkedinUrl ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.linkedinUrl ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.linkedinUrl && <p className="text-red-500 text-sm mt-1">{errors.linkedinUrl}</p>}
+                {errors.linkedinUrl && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.linkedinUrl}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -739,13 +900,14 @@ const handleProfileIdValidation = async (profileId) => {
                     type="text"
                     readOnly
                     value={selectedCurrentRole}
-
                     onClick={toggleDropdownRole}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
-                      } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
-                      }`}
-                    disabled={from !== 'users'}
-                  // disabled={isLoading}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                      errors.roleId ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue cursor-pointer ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    disabled={from !== "users"}
+                    // disabled={isLoading}
                   />
                   <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
                   {showDropdownRole && (
@@ -754,11 +916,8 @@ const handleProfileIdValidation = async (profileId) => {
                         <input
                           type="text"
                           placeholder="Search roles..."
-
                           value={searchTermRole}
-                          onChange={(e) =>
-                            setSearchTermRole(e.target.value)
-                          }
+                          onChange={(e) => setSearchTermRole(e.target.value)}
                           className="w-full px-2 py-1 border rounded"
                           disabled={isLoading}
                         />
@@ -778,22 +937,26 @@ const handleProfileIdValidation = async (profileId) => {
                   )}
                 </div>
                 {errors.roleId && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.roleId}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Portfolio URL
+                </label>
                 <input
                   type="text"
                   name="portfolioUrl"
-                  value={formData.portfolioUrl || ''}
+                  value={formData.portfolioUrl || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 />
-                {errors.portfolioUrl && <p className="text-red-500 text-sm mt-1">{errors.portfolioUrl}</p>}
+                {errors.portfolioUrl && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.portfolioUrl}
+                  </p>
+                )}
               </div>
             </div>
 
