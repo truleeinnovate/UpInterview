@@ -245,22 +245,6 @@ const CustomProvider = ({ children }) => {
         },
       });
 
-      const organizationId = response.data.data._id;
-
-      // Handle image upload if a file is provided
-      // if (file) {
-      //   const imageData = new FormData();
-      //   imageData.append("image", file);
-      //   imageData.append("type", "organization");
-      //   imageData.append("id", organizationId);
-
-      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      // }
-
-      await uploadFile(file, "image", "organization", organizationId);
-
       return response.data;
     },
     onSuccess: () => {
@@ -304,28 +288,42 @@ const CustomProvider = ({ children }) => {
     fetchContacts();
   }, [userId]);
 
-  // getting interveiwers and showing it in the home (available interviewers) and interveiwers
+  // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
-  const fetchInterviewers = async () => {
+
+  const fetchInterviewers = useCallback(async () => {
+    if (!tenantId) return;
+
+    let isMounted = true;
+
     try {
       setLoadingInterviewer(true);
+      console.log("Fetching interviewers for tenantId:", tenantId);
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
 
-      setLoadingInterviewer(false);
-      setInterviewers(response.data);
+      if (isMounted) {
+        console.log("Interviewers data received:", response.data);
+        setInterviewers(response.data);
+      }
     } catch (err) {
-      console.error(err.message);
+      console.error("Error fetching interviewers:", err.message);
     } finally {
-      setLoadingInterviewer(false);
+      if (isMounted) {
+        setLoadingInterviewer(false);
+      }
     }
-  };
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tenantId]);
 
   useEffect(() => {
     fetchInterviewers();
-  }, [tenantId]);
+  }, [fetchInterviewers]);
 
   // Query for fetching users
   const {
@@ -338,7 +336,7 @@ const CustomProvider = ({ children }) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/${tenantId}`
       );
-// console.log('response.data user',response.data);
+      // console.log('response.data user',response.data);
 
       // Process image URLs and reverse the array (newest first)
       return response.data
@@ -358,7 +356,7 @@ const CustomProvider = ({ children }) => {
 
   // Mutation for creating/updating users
   const addOrUpdateUser = useMutation({
-    mutationFn: async ({ userData, file, editMode }) => {
+    mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
       const payload = {
         UserData: {
           firstName: userData.firstName,
@@ -368,6 +366,7 @@ const CustomProvider = ({ children }) => {
           phone: userData.phone,
           roleId: userData.roleId,
           countryCode: userData.countryCode,
+          status: userData.status,
           isProfileCompleted: false,
           isEmailVerified: true,
           ...(editMode && { _id: userData._id }), // Only include _id in edit mode
@@ -389,28 +388,12 @@ const CustomProvider = ({ children }) => {
         payload
       );
 
-      // Handle image upload if file is present
-      // if (file) {
-      //   const imageData = new FormData();
-      //   imageData.append("file", file);
-      //   imageData.append("type", "profilePic");
-      //   imageData.append("entity", "contact");
-      //   imageData.append("entityId", response.data.contactId);
-
-      //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      // }
-
-      // else if (!userData.imageData.path && editMode) {
-      //   // Delete image if no file and no existing image in edit mode
-      //   await axios.delete(
-      //     `${config.REACT_APP_API_URL}/contact/${response.data.contactId}/image`
-      //   );
-      // }
-
       // UPLOADING FILES LIKE IMAGES AND RESUMES
-      await uploadFile(file, "image", "contact", response.data.contactId);
+      if (isFileRemoved && !file) {
+        await uploadFile(null, "image", "contact", response.data.contactId);
+      } else if (file instanceof File) {
+        await uploadFile(file, "image", "contact", response.data.contactId);
+      }
 
       // Send welcome email only for new user creation
       if (!editMode) {

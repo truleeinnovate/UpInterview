@@ -89,23 +89,23 @@ export const useCandidates = () => {
       const candidateId = response.data.data._id;
 
       // uploading or updating files profilePic and resume
-      // Delete image if explicitly removed
+      // --- Profile Picture ---
+      // Delete profile picture if removed
       if (isProfilePicRemoved && !profilePicFile) {
         await uploadFile(null, "image", "candidate", candidateId);
       }
-
-      // Delete resume if explicitly removed
-      if (isResumeRemoved && !resumeFile) {
-        await uploadFile(null, "resume", "candidate", candidateId);
-      }
-
-      // Upload new image if present
-      if (profilePicFile instanceof File) {
+      // Upload new profile picture
+      else if (profilePicFile instanceof File) {
         await uploadFile(profilePicFile, "image", "candidate", candidateId);
       }
 
-      // Upload new resume if present
-      if (resumeFile instanceof File) {
+      // --- Resume ---
+      // Delete resume if removed
+      if (isResumeRemoved && !resumeFile) {
+        await uploadFile(null, "resume", "candidate", candidateId);
+      }
+      // Upload new resume
+      else if (resumeFile instanceof File) {
         await uploadFile(resumeFile, "resume", "candidate", candidateId);
       }
 

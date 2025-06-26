@@ -8,8 +8,13 @@ import { PermissionsProvider } from '../Context/PermissionsContext';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = authToken ? decodeJwt(authToken) : null;
+  const { usersData } = useCustomContext() || {};
+  const [finalDomain, setFinalDomain] = useState(null);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
@@ -34,7 +39,6 @@ const ProtectedRoute = ({ children }) => {
           return;
         }
 
-        // Defer usersData usage to after CustomProvider
         setIsChecking(false);
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -43,10 +47,18 @@ const ProtectedRoute = ({ children }) => {
     };
 
     checkAuthAndRedirect();
-  }, [navigate, location.pathname]);
+  }, [authToken, tokenPayload, usersData, navigate, location.pathname]);
 
-  if (isChecking) {
-    return <div><Loading /></div>;
+  // Show loading while checking or redirecting
+  if (isChecking || isRedirecting) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your workspace...</p>
+        </div>
+      </div>
+    );
   }
 
   const ProtectedContent = ({ children }) => {

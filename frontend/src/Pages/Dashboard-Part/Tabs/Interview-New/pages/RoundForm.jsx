@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
@@ -8,7 +8,7 @@ import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
 import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
+// import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from '../../../../../utils/interviewRoundValidation.js';
 import { Search, ChevronUp } from 'lucide-react';
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
@@ -46,7 +46,7 @@ const RoundFormInterviews = () => {
 
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
-  const [template, setTemplate] = useState(null);
+  // const [template, setTemplate] = useState(null);
     const [sectionQuestions, setSectionQuestions] = useState({});
     const [questionsLoading, setQuestionsLoading] = useState(false);
   
@@ -74,9 +74,9 @@ const RoundFormInterviews = () => {
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       setRounds(interview?.rounds || []);
-      setTemplate(interview?.templateId || null)
+      // setTemplate(interview?.templateId || null)
     }
-  }, [interview]);
+  }, [interviewData, interview]);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState('');
@@ -86,10 +86,10 @@ const RoundFormInterviews = () => {
   const [instructions, setInstructions] = useState('');
   const [sequence, setSequence] = useState(1);
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] = useState(false);
-  const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
+  // const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
-console.log("interviewQuestionsList",interviewQuestionsList);
+// console.log("interviewQuestionsList",interviewQuestionsList);
 
   const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
   const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
@@ -122,7 +122,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
     return showDate ? `${formattedDate} ${formattedTime}` : formattedTime;
   };
 
-  const updateTimes = (newDuration) => {
+  const updateTimes = useCallback((newDuration) => {
     let start = null;
     let end = null;
 
@@ -151,14 +151,14 @@ console.log("interviewQuestionsList",interviewQuestionsList);
       const formattedEnd = formatDateTime(end, false);
       const combinedDateTime = `${formattedStart} - ${formattedEnd}`;
 
-      console.log("Combined DateTime:", combinedDateTime);
+      // console.log("Combined DateTime:", combinedDateTime);
       setCombinedDateTime(combinedDateTime);
     }
-  };
+  }, [interviewType, scheduledDate]);
 
   useEffect(() => {
     updateTimes(duration);
-  }, [interviewType, scheduledDate, duration]);
+  }, [duration, updateTimes]);
 
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -297,11 +297,12 @@ console.log("interviewQuestionsList",interviewQuestionsList);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
-  console.log("internalInterviewers selected", internalInterviewers);
+  // console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  console.log('externalInterviewers 0000000000000000', externalInterviewers);
 
   const handleInternalInterviewerSelect = (interviewers) => {
-    console.log("Interviewers passed to parent:", interviewers); // Debugging
+    // console.log("Interviewers passed to parent:", interviewers); // Debugging
 
     if (selectedInterviewType === "External") {
       alert("You need to clear external interviewers before selecting Internal interviewers.");
@@ -311,14 +312,14 @@ console.log("interviewQuestionsList",interviewQuestionsList);
     const uniqueInterviewers = interviewers?.filter((newInterviewer) =>
       !internalInterviewers.some((i) => i?._id === newInterviewer?._id)
     );
-    console.log("uniqueInterviewers", uniqueInterviewers);
+    // console.log("uniqueInterviewers", uniqueInterviewers);
 
     // Extract only contactId values
     // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
     // console.log("contactIds", contactIds);
 
     setSelectedInterviewType("Internal");
-    console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
+    // console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
     setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]); // Append new interviewers
   };
 
@@ -327,7 +328,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
       alert("You need to clear Internal interviewers before selecting outsourced interviewers.");
       return;
     }
-    console.log("interviewersselcetd:", interviewers);
+    // console.log("interviewersselcetd:", interviewers);
 
     // Ensure no duplicates and append new interviewers
     const uniqueInterviewers = interviewers.filter(
@@ -370,7 +371,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
   };
 
   const selectedInterviewers = selectedInterviewType === "Internal" ? internalInterviewers : externalInterviewers;
-  console.log("selectedInterviewers", selectedInterviewers);
+  // console.log("selectedInterviewers", selectedInterviewers);
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
 
@@ -382,16 +383,17 @@ console.log("interviewQuestionsList",interviewQuestionsList);
     //   // For external interviewers, access `id` directly
     //   return interviewer._id;
     // }
+    console.log("interviewer 3", interviewer);
     return interviewer; // Fallback for unexpected cases
   }).filter(Boolean);
-  console.log("selectedInterviewersData", selectedInterviewersData);
+  // console.log("selectedInterviewersData", selectedInterviewersData);
 
   // while editing
   const isEditing = !!roundId && roundId !== 'new';
   const roundEditData = isEditing && rounds?.find(r => r._id === roundId);
 
 
-  console.log("roundEditData", roundEditData);
+  // console.log("roundEditData", roundEditData);
 
   // const fetchSectionsAndQuestions = async (assessmentId) => {
   //   try {
@@ -492,22 +494,37 @@ console.log("interviewQuestionsList",interviewQuestionsList);
         : 0;
       setSequence(maxSequence + 1);
     }
-  }, [rounds, isEditing, roundEditData, navigate, assessmentData]);
+  }, [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]);
 
   const handleSubmit = async (e) => {
     console.log("handleSubmit() called");
     e.preventDefault();
 
+    console.log("roundEditData", roundEditData);
+    console.log("interviewId", interviewId);
+    console.log("roundId", roundId);
+    console.log("roundTitle", roundTitle);
+    console.log("interviewMode", interviewMode);
+    console.log("sequence", sequence);
+    console.log("assessmentTemplate", assessmentTemplate);
+    console.log("instructions", instructions);
+    console.log("status", status);
+    console.log("duration", duration);
+    console.log("combinedDateTime", combinedDateTime);
+    console.log("interviewType", interviewType);
+    console.log("selectedInterviewType", selectedInterviewType);
+    console.log("selectedInterviewersData", selectedInterviewersData);
+    console.log("interviewQuestionsList", interviewQuestionsList);
+
     try {
       console.log("Preparing round data for validation");
-      console.log('selectedInterviewType;;;;selectedInterviewersData', selectedInterviewType, selectedInterviewersData);
-
       // Clean interviewers data to remove undefined fields
       const cleanInterviewer = (interviewer) => {
         const { availability, ...rest } = interviewer;
         return rest;
       };
       const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
+      console.log("cleanedInterviewers", cleanedInterviewers);
 
       const roundData = {
         roundTitle,
@@ -557,17 +574,22 @@ console.log("interviewQuestionsList",interviewQuestionsList);
       // Use saveInterviewRound mutation from useInterviews hook
       const response = await saveInterviewRound(payload);
 
+      console.log("Response from selectedInterviewers:", selectedInterviewers);
+      console.log("Response from selectedInterviewType:", selectedInterviewType);
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
         const isInternal = selectedInterviewType === "Internal";
         console.log(`Sending ${selectedInterviewers.length} outsource requests`);
+        console.log("selectedInterviewers", selectedInterviewers);
         for (const interviewer of selectedInterviewers) {
+          console.log("interviewer", interviewer);
+          console.log("interviewer contactId", interviewer.contact?._id);
           const outsourceRequestData = {
             tenantId: orgId,
             ownerId: userId,
             scheduledInterviewId: interviewId,
             interviewerType: selectedInterviewType,
-            interviewerId: organization === false ? interviewer.contactId : interviewer._id,
+            interviewerId: interviewer.contact?._id || interviewer._id,
             status: isInternal ? "accepted" : "inprogress",
             dateTime: combinedDateTime,
             duration,
@@ -1144,12 +1166,12 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                             type="button"
                             onClick={() => setInterviewType("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-blue-500 bg-blue-50"
+                              ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
-                            <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-blue-500" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-blue-700" : "text-gray-900"}`}>
+                            <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-custom-blue/70" : "text-gray-400"}`} />
+                            <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-custom-blue" : "text-gray-900"}`}>
                               Instant Interview
                             </span>
                             <span className="mt-1 text-sm text-gray-500">Starts in 15 minutes</span>
@@ -1159,12 +1181,12 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                             type="button"
                             onClick={() => setInterviewType("scheduled")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-blue-500 bg-blue-50"
+                              ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
-                            <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-blue-500" : "text-gray-400"}`} />
-                            <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-blue-700" : "text-gray-900"}`}>
+                            <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-custom-blue/70" : "text-gray-400"}`} />
+                            <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-900"}`}>
                               Schedule for Later
                             </span>
                             <span className="mt-1 text-sm text-gray-500">Pick date & time</span>
@@ -1184,7 +1206,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                                 value={scheduledDate}
                                 onChange={(e) => setScheduledDate(e.target.value)}
                                 min={new Date().toISOString().slice(0, 16)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
                               />
                             </div>
                           )}
@@ -1198,7 +1220,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                               name="duration"
                               value={duration}
                               onChange={(e) => setDuration(parseInt(e.target.value))}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
                             >
                               <option value="30">30 min</option>
                               <option value="45">45 min</option>
@@ -1212,8 +1234,8 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                         {interviewType === "instant" && (
                           <div className="mt-4 p-4 bg-blue-50 rounded-md">
                             <div className="flex items-center">
-                              <Clock className="h-5 w-5 text-blue-500 mr-2" />
-                              <p className="text-sm text-blue-700">
+                              <Clock className="h-5 w-5 text-custom-blue mr-2" />
+                              <p className="text-sm text-custom-blue">
                                 Interview will start at{" "}
                                 <span className="font-medium">
                                   {new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -1263,7 +1285,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                              disabled={isExternalSelected}
                              title={isExternalSelected ? "Clear external interviewers first" : ""}
                            >
-                             <User className="h-4 w-4 mr-1 text-blue-600" />
+                             <User className="h-4 w-4 mr-1 text-custom-blue" />
                              Select Internal
                            </Button>
                              
@@ -1277,7 +1299,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                             disabled={isExternalSelected}
                             title={isExternalSelected ? "Clear external interviewers first" : ""}
                           >
-                            <User className="h-4 w-4 mr-1 text-blue-600" />
+                            <User className="h-4 w-4 mr-1 text-custom-blue" />
                             Select Internal
                           </Button>
 
@@ -1310,7 +1332,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                                 <span className="text-sm text-gray-700">
                                   {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
                                   {isInternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
                                       Internal
                                     </span>
                                   )}
@@ -1338,16 +1360,16 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                               <div className="mb-3">
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                                 <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                  {console.log("internalInterviewers near shoing place :", internalInterviewers)}
+                                  {/* {console.log("internalInterviewers near shoing place :", internalInterviewers)} */}
                                   {internalInterviewers?.map((interviewer) => (
                                     <div key={interviewer._id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                                       <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-blue-800 truncate">{interviewer.firstName} {interviewer.lastName}</span>
+                                        <span className="ml-2 text-sm text-custom-blue truncate">{interviewer.firstName} {interviewer.lastName}</span>
                                       </div>
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                                        className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-blue-100"
                                         title="Remove interviewer"
                                       >
                                         <X className="h-4 w-4" />
@@ -1363,7 +1385,7 @@ console.log("interviewQuestionsList",interviewQuestionsList);
                               <div>
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {console.log("externalInterviewers near shoing place :", externalInterviewers)}
+                                  {/* {console.log("externalInterviewers near shoing place :", externalInterviewers)} */}
                                   {externalInterviewers?.map((interviewer) => (
                                     <div key={interviewer.id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
                                       <div className="flex items-center">

@@ -3,6 +3,7 @@ const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoice = require('../models/Invoicemodels.js');
 const Razorpay = require('razorpay');
 const { calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
+const Tenant = require('../models/Tenant');
 
 // Initialize Razorpay with the same keys used in RazorpayController.js
 const razorpay = new Razorpay({
@@ -10,7 +11,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET // Note this is KEY_SECRET not SECRET_KEY
 });
 
-console.log('Razorpay initialized with key_id:', razorpay.key_id);
+// console.log('Razorpay initialized with key_id:', razorpay.key_id);
 
 /**
  * Controller to update an existing Razorpay subscription to a new plan
@@ -20,6 +21,8 @@ const updateSubscriptionPlan = async (req, res) => {
   console.log('Request body:', req.body);
   const { tenantId, ownerId, userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
 
+  console.log('Received request to update subscriptionupadcontroller:', req.body);
+    
   // Simple validation - essential fields
   if (!razorpaySubscriptionId) {
     return res.status(400).json({ 
@@ -133,7 +136,7 @@ const updateSubscriptionPlan = async (req, res) => {
       // Prepare parameters for the update call
       const updateParams = {
         plan_id: planIdToUse,
-        schedule_change_at: 'now'
+        schedule_change_at: 'cycle_end'
       };
       
       // If changing between different periods, add the remaining_count parameter
@@ -142,15 +145,15 @@ const updateSubscriptionPlan = async (req, res) => {
         // Set remaining_count based on the target membership type
         if (membershipType === 'annual') {
           updateParams.remaining_count = 12; // 12 months for annual plan
-          console.log('Setting remaining_count to 12 for annual plan');
+          console.log('Setting remaining_count to 1 for annual plan');
         } else {
-          updateParams.remaining_count = 1; // 1 month for monthly plan
+          updateParams.remaining_count = 12; // 1 month for monthly plan
           console.log('Setting remaining_count to 1 for monthly plan');
         }
       }
       
       console.log('Update parameters:', updateParams);
-      
+
       // Make the API call with the appropriate parameters
       const razorpayResponse = await razorpay.subscriptions.update(
         razorpaySubscriptionId,
@@ -219,6 +222,23 @@ const updateSubscriptionPlan = async (req, res) => {
         await customerSubscription.save();
         console.log('Updated subscription with invoice ID');
         
+        
+        // Update the tenant record
+        const subscriptionPlan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId);
+        
+        const features = subscriptionPlan.features;
+
+        if (res.status === 200 || res.status === 201){
+          const tenant = await Tenant.findById(customerSubscription.tenantId);
+          if(tenant){
+            tenant.status = 'active';
+            tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
+            tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
+            await tenant.save();
+        }
+      }
+
+        
         // Success response
         return res.status(200).json({
           success: true,
@@ -226,6 +246,7 @@ const updateSubscriptionPlan = async (req, res) => {
           subscriptionId: razorpaySubscriptionId,
           planId: planIdToUse
         });
+        
       } catch (invoiceError) {
         console.error('Error creating invoice:', invoiceError);
         return res.status(400).json({

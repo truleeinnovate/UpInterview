@@ -79,7 +79,7 @@ const Availability = ({
     const newTimes = { ...times };
     const currentSlots = newTimes[shortDay];
 
-    if (currentSlots.length > 1) {
+    if (currentSlots?.length > 1) {
       newTimes[shortDay] = currentSlots.filter((_, i) => i !== index);
     } else {
       newTimes[shortDay] = [{ startTime: null, endTime: null }];
@@ -161,11 +161,11 @@ const Availability = ({
           const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
           return (
             <div key={day} className="mb-4 last:mb-0">
-              <div className="flex gap-2">
+              <div className="flex gap-2 ">
                 <p className="border border-gray-300 rounded items-center w-16 h-9 flex justify-center text-sm font-medium bg-gray-50">
                   {shortDay}
                 </p>
-                <div className="flex-1 flex flex-wrap gap-2 sm:overflow-x-auto sm:pb-2 sm:relative">
+                <div className="flex-1 flex flex-col gap-2 sm:overflow-x-auto sm:pb-2 sm:relative">
                   {(times[shortDay] || []).map((timeSlot, index) => {
                     const showXCircle =
                       from !== 'teamProfileDetails' &&
@@ -353,7 +353,7 @@ const Availability = ({
                 type="button"
                 onClick={handlePaste}
                 className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                disabled={selectedDays.length === 0}
+                disabled={selectedDays?.length === 0}
               >
                 Duplicate
               </button>

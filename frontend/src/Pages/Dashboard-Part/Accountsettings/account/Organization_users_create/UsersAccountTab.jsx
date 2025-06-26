@@ -177,6 +177,8 @@ const UsersAccountTab = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
+    console.log("usersRes",usersRes);
+
   // Table Columns Configuration
   const tableColumns = [
     {
@@ -217,9 +219,11 @@ const UsersAccountTab = () => {
         </div>
       ),
     },
-    { key: "email", header: "Email", render: (value) => value || "N/A" },
-    { key: "phone", header: "Phone", render: (value) => value || "N/A" },
-    { key: "label", header: "Role", render: (value) => value || "N/A" },
+    { key: "email", header: "Email", render: (value) => value || "Not Provided" },
+    { key: "phone", header: "Phone", render: (value) => value || "Not Provided" },
+   
+    { key: "label", header: "Role", render: (value) => value || "Not Found" },
+     {key:"status",header:"Status",render:(value) => value || "Not Found"},
   ];
 
   // Table Actions Configuration
@@ -255,12 +259,12 @@ const UsersAccountTab = () => {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => handleView(row),
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => handleEdit(row),
-    },
+    // {
+    //   key: "edit",
+    //   label: "Edit",
+    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //   onClick: (row) => handleEdit(row),
+    // },
   ];
 
   return (

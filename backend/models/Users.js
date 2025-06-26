@@ -28,10 +28,15 @@ const UsersSchema = new mongoose.Schema({
     isFreelancer: String,
     isAddedTeam: String,
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
+<<<<<<< HEAD
     roleId: { type: String },
     //newly added for roles
     // roleId: { type: Schema.Types.ObjectId, ref: 'RolesPermissionObject' },
     // roleType: { type: String, enum: ['organization', 'individual', 'global'], required: true },
+=======
+    // roleId: { type: String },
+     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'RolesPermissionObject' },
+>>>>>>> origin/main
     profileId: { type: String },
     status: { type: String, enum: ['active', 'inactive',], default: 'inactive' },
     isEmailVerified: { type: Boolean, default: false },

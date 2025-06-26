@@ -3,12 +3,14 @@ const streamifier = require("streamifier");
 const path = require("path");
 const { Candidate } = require("../../models/candidate");
 const { Contacts } = require("../../models/Contacts");
-const  Tenant  = require("../../models/Tenant");
+const Tenant = require("../../models/Tenant");
+const SupportUser = require("../../models/SupportUser");
 
 const entityModels = {
   candidate: Candidate,
   contact: Contacts,
   organization: Tenant,
+  support: SupportUser,
 };
 
 const fieldMap = {
@@ -18,9 +20,14 @@ const fieldMap = {
   },
   contact: {
     image: { field: "imageData", resourceType: "image" },
+    resume: { field: "resume", resourceType: "raw" },
+    coverLetter: { field: "coverLetter", resourceType: "raw" },
   },
   organization: {
     logo: { field: "branding", resourceType: "image" },
+  },
+  support: {
+    attachment: { field: "attachment", resourceType: "image" },
   },
 };
 

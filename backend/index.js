@@ -2,7 +2,7 @@
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
 require("dotenv").config();
-require('./controllers/EmailsController/pushNotificationEmailController');
+require('./controllers/PushNotificationControllers/pushNotificationTaskController');
 const cors = require("cors");
 const express = require("express");
 const app = express();
@@ -51,13 +51,13 @@ app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
 // Force production mode to avoid webhook issues
-console.log(
-  "process.env.NODE_ENV checking in index.js:-",
-  process.env.NODE_ENV
-);
-console.log(
-  `🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`
-);
+// console.log(
+//   "process.env.NODE_ENV checking in index.js:-",
+//   process.env.NODE_ENV
+// );
+// console.log(
+//   `🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`
+// );
 
 require("dotenv").config();
 
@@ -877,8 +877,7 @@ app.get('/check-profileId', async (req, res) => {
 
 const historyFeedsRoutes = require("./routes/feedsRoutes");
 const WalletRouter = require("./routes/WalletRoutes.js");
-app.use("/feeds", historyFeedsRoutes);
-
+app.use("/api/feeds", historyFeedsRoutes);
 app.use("/wallet", WalletRouter);
 
 // task

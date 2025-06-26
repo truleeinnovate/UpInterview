@@ -476,7 +476,6 @@ const App = () => {
 
                   <Route path="/account-settings/users/details/:id" element={<UsersLayout ><UserProfileDetails /></UsersLayout>} />
                   
-                    
                 )} */}
 
               {/* Billing invoice  */}

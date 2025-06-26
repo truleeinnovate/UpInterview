@@ -130,15 +130,26 @@ const ContactsSchema = new mongoose.Schema(
       filename: String,
       path: String,
       contentType: String,
-      publicId: String, // added by Ashok
+      publicId: String,
     },
     timeZone: String,
     preferredDuration: String,
     location: String,
     introduction: String,
-    resumePdf: String,
-    coverLetter: String,
-
+    // resumePdf: String,
+    resume: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    },
+    // coverLetter: String,
+    coverLetter: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    },
     // ranjith added have to check proeprly
     coverLetterdescription: String,
     professionalTitle: String,
@@ -148,12 +159,13 @@ const ContactsSchema = new mongoose.Schema(
     PreviousExperienceConductingInterviews: String,
     PreviousExperienceConductingInterviewsYears: String,
     ExpertiseLevel_ConductingInterviews: String,
-
+    expectedRatePerMockInterview:String,  //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
     contactType: String,
     experienceYears: String,
+    yearsOfExperience: String,
     previousExperience: String,
     isFreelancer: String,
     expertiseLevel: String,
@@ -164,7 +176,7 @@ const ContactsSchema = new mongoose.Schema(
     // isAddedTeam: String,
     // interviewType: String,
     availability: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Interviewavailability" },
+      { type: mongoose.Schema.Types.ObjectId, ref: "InterviewAvailability" },
     ],
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

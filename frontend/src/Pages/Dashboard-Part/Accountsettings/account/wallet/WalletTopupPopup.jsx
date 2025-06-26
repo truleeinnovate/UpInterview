@@ -7,6 +7,7 @@ import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { useUserProfile } from '../../../../../apiHooks/useUsers.js';
 
 export function WalletTopupPopup({ onClose, onTopup }) {
   const navigate = useNavigate();
@@ -36,27 +37,21 @@ export function WalletTopupPopup({ onClose, onTopup }) {
     }
   }, [])
 
-  const [userProfile, setUserProfile] = useState([])
+   const {userProfile, isLoading, isError} = useUserProfile(ownerId)
+
+  const [userDetails, setUserProfile] = useState([])
   
       // Fetch user profile data from contacts API
       useEffect(() => {
           const fetchUserProfile = async () => {
               try {
-                  if (ownerId) {
-                      const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/owner/${ownerId}`);
-                      
-                      if (response.data && response.data.length > 0) {
-                          const contactData = response.data[0];
-                          // Extract name, email and phone from the response
+                  if (userProfile) {
                           setUserProfile({
-                              name: `${contactData.firstName} ${contactData.lastName}`,
-                              email: contactData.email,
-                              phone: contactData.phone
+                              name: `${userProfile.firstName} ${userProfile.lastName}`,
+                              email: userProfile.email,
+                              phone: userProfile.phone
                           });
-                          console.log('User profile fetched:', contactData);
-                      } else {
-                          console.log('No contact data found for this owner');
-                      }
+                          console.log('User profile fetched:', userProfile);
                   }
               } catch (error) {
                   console.error('Error fetching user profile:', error);
@@ -65,7 +60,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           };
   
           fetchUserProfile();
-      }, [ownerId]);
+      }, [ownerId,userProfile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -156,9 +151,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           }
         },
         prefill: {
-          name: userProfile?.name || "",
-          email: userProfile?.email || "",
-          contact: userProfile?.phone || "",
+          name: userDetails?.name || "",
+          email: userDetails?.email || "",
+          contact: userDetails?.phone || "",
         },
         theme: {
           color: '#3B82F6' // Blue color that matches UI

@@ -110,7 +110,7 @@ const Home = () => {
                 />
               </motion.div>
             </div>
-            {freelancer && <InterviewRequests />}
+            {!isOrganization && freelancer && <InterviewRequests />}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -134,19 +134,19 @@ const Home = () => {
             <TaskList />
             <InterviewerSchedule />
 
-            {!freelancer && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
+            {isOrganization && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
             
-            {!freelancer && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />}
+            {isOrganization && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />}
             
           </motion.div>
         </div>
       </main>
-      {showOutsourcePopup && !freelancer && (
+      {showOutsourcePopup && (
         <OutsourceOption onClose={() => setShowOutsourcePopup(false)} navigatedfrom="dashboard" />
       )}
 
 
-      {isInternalInterviews && !freelancer && (
+      {isInternalInterviews && (
         <InternalInterviews onClose={() => setInternalInterviews(false)} navigatedfrom="dashboard" />
       )}
     </div>

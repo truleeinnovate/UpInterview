@@ -36,7 +36,6 @@ const Profile3 = () => {
             token: location.state?.token,
             linkedIn_email: location.state?.linkedIn_email,
         };
-        console.log('stateToPass:', stateToPass);
         navigate('/complete-profile', {
             state: stateToPass,
         });

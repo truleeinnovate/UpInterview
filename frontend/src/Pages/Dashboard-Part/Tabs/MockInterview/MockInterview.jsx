@@ -142,6 +142,18 @@ console.log("mockinterviewData:", mockinterviewData);
 
   const tableColumns = [
     {
+      key: 'mockInterviewCode',
+      header: 'Interview ID',
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => navigate(`/mockinterview-details/${row._id}`)}
+        >
+          {row?.mockInterviewCode || 'N/A'}
+        </div>
+      ),
+    },
+    {
       key: 'title',
       header: 'Interview Title',
       render: (value, row) => (

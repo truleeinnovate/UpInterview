@@ -1,31 +1,30 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, Pencil } from 'lucide-react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import KanbanView from './KanbanView';
-import { FilterPopup } from '../../Components/Shared/FilterPopup/FilterPopup.jsx';
-import Header from '../../Components/Shared/Header/Header.jsx';
-import Toolbar from '../../Components/Shared/Toolbar/Toolbar.jsx';
-import TableView from '../../Components/Shared/Table/TableView.jsx';
-import { ReactComponent as MdKeyboardArrowUp } from '../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../icons/MdKeyboardArrowDown.svg';
-import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates.js';
-import { useMediaQuery } from 'react-responsive';
-
+import { useState, useMemo, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Eye, Pencil } from "lucide-react";
+import { Outlet, useNavigate } from "react-router-dom";
+import KanbanView from "./KanbanView";
+import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
+import Header from "../../Components/Shared/Header/Header.jsx";
+import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
+import TableView from "../../Components/Shared/Table/TableView.jsx";
+import { ReactComponent as MdKeyboardArrowUp } from "../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArrowDown.svg";
+import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates.js";
+import { useMediaQuery } from "react-responsive";
 
 const InterviewTemplates = () => {
   const { templatesData, isLoading } = useInterviewTemplates();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-    useEffect(() => {
-      if (isTablet) {
-        setView('kanban');
-      } else {
-        setView('table');
-      }
-    }, [isTablet]);
+  useEffect(() => {
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
   const navigate = useNavigate();
-  const [view, setView] = useState('table');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState("table");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -74,7 +73,9 @@ const InterviewTemplates = () => {
       const matchesStatus =
         selectedFilters.status.length === 0 ||
         selectedFilters.status.includes(
-          template.status ? template.status.charAt(0).toUpperCase() + template.status.slice(1) : 'Active'
+          template.status
+            ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
+            : "Active"
         );
       return matchesSearchQuery && matchesStatus;
     });
@@ -82,7 +83,10 @@ const InterviewTemplates = () => {
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredTemplates.length);
+  const endIndex = Math.min(
+    startIndex + itemsPerPage,
+    filteredTemplates.length
+  );
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
@@ -98,7 +102,7 @@ const InterviewTemplates = () => {
   };
 
   const formatRelativeDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
@@ -106,66 +110,80 @@ const InterviewTemplates = () => {
     const diffMonths = Math.floor(diffDays / 30);
     const diffYears = Math.floor(diffDays / 365);
 
-    if (date.toDateString() === now.toDateString()) return 'Today';
+    if (date.toDateString() === now.toDateString()) return "Today";
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
-    return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    if (diffMonths < 12)
+      return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+    return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
   };
 
   const tableColumns = [
     {
-      key: 'templateName',
-      header: 'Template Name',
+      key: "interviewTemplateCode",
+      header: "Template ID",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/interview-templates/${row._id}`)}
         >
-          {value || 'N/A'}
+          {value || "N/A"}
         </div>
       ),
     },
     {
-      key: 'rounds',
-      header: 'Rounds',
-      render: (value) => (value?.length || 0),
+      key: "templateName",
+      header: "Template Name",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => navigate(`/interview-templates/${row._id}`)}
+        >
+          {value || "N/A"}
+        </div>
+      ),
     },
     {
-      key: 'status',
-      header: 'Status',
+      key: "rounds",
+      header: "Rounds",
+      render: (value) => value?.length || 0,
+    },
+    {
+      key: "status",
+      header: "Status",
       render: (value) => (
         <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${value === 'active'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-              : value === 'inactive'
-                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                : 'bg-slate-50 text-slate-700 border border-slate-200/60'
-            }`}
+          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
+            value === "active"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+              : value === "inactive"
+              ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+              : "bg-slate-50 text-slate-700 border border-slate-200/60"
+          }`}
         >
-          {value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Active'}
+          {value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active"}
         </span>
       ),
     },
     {
-      key: 'updatedAt',
-      header: 'Last Modified',
-      render: (value) => formatRelativeDate(value) || 'N/A',
+      key: "updatedAt",
+      header: "Last Modified",
+      render: (value) => formatRelativeDate(value) || "N/A",
     },
   ];
 
   const tableActions = [
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => navigate(`/interview-templates/${row._id}`),
     },
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
@@ -178,7 +196,7 @@ const InterviewTemplates = () => {
           <div className="sm:px-0">
             <Header
               title="Interview Templates"
-              onAddClick={() => navigate('new')}
+              onAddClick={() => navigate("new")}
               addButtonText="New Template"
             />
             <Toolbar
@@ -203,11 +221,8 @@ const InterviewTemplates = () => {
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           <motion.div className="bg-white">
-            {view === 'kanban' ? (
-              <KanbanView templates={paginatedTemplates}
-              loading={isLoading}
-
-               />
+            {view === "kanban" ? (
+              <KanbanView templates={paginatedTemplates} loading={isLoading} />
             ) : (
               <TableView
                 data={paginatedTemplates}
@@ -240,7 +255,7 @@ const InterviewTemplates = () => {
                   </div>
                   {isStatusOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                      {['Archived', 'Draft', 'Active'].map((status) => (
+                      {["Archived", "Draft", "Active"].map((status) => (
                         <label
                           key={status}
                           className="flex items-center space-x-2"

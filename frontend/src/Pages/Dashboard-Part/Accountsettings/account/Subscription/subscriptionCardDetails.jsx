@@ -73,7 +73,7 @@ const SubscriptionCardDetails = () => {
         const fetchUserProfile = async () => {
             try {
                 if (ownerId) {
-                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/uniqe-contacts/owner/${ownerId}`);
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`);
                     
                     if (response.data && response.data.length > 0) {
                         const contactData = response.data[0];
@@ -338,6 +338,17 @@ const SubscriptionCardDetails = () => {
                                                 membershipType: cardDetails.membershipType,
                                                 nextRoute: isUpgrading ? '/SubscriptionDetails' : '/account-settings/subscription'
                                             }
+                                        });
+
+                                        axios.post(`${process.env.REACT_APP_API_URL}/emails/send-signup-email`, {
+                                            tenantId: tenantId,
+                                            ownerId: ownerId,
+                                        }).catch((err) => console.error('Email error:', err));
+                                        await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
+                                            ownerId,
+                                            tenantId,
+
+                                            // ccEmail: "shaikmansoor1200@gmail.com",
                                         });
                                     } else {
                                         setProcessing(false);

@@ -37,12 +37,10 @@
 // models/RolesPermissionObject.js
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 const PermissionGroupSchema = new Schema({
   objectName: { type: String, required: true },
   permissions: { type: Map, of: Boolean, required: true }
 });
-
 const RolesPermissionObjectSchema = new Schema({
   label: { type: String, required: true },
   roleName: { type: String, required: true },

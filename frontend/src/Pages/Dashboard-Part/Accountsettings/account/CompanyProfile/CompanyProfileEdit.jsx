@@ -20,6 +20,7 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
 import { useMasterData } from "../../../../../apiHooks/useMasterData";
 import { uploadFile } from "../../../../../apiHooks/imageApis";
+import { validateFile } from "../../../../../utils/FileValidation/FileValidation";
 
 Modal.setAppElement("#root");
 
@@ -87,6 +88,8 @@ const CompanyEditProfile = () => {
   const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
   const [searchTermIndustry, setSearchTermIndustry] = useState("");
   const industryDropdownRef = useRef(null);
+  const [fileError, setFileError] = useState("");
+  const [isLogoRemoved, setIsLogoRemoved] = useState(false);
 
   // Toggle location dropdown
   const toggleLocation = () => {
@@ -252,9 +255,15 @@ const CompanyEditProfile = () => {
     setErrors((prev) => ({ ...prev, [name.split(".")[1] || name]: "" }));
   };
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = await validateFile(file, "image");
+      if (error) {
+        setFileError(error);
+        return;
+      }
+      setFileError("");
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -268,6 +277,7 @@ const CompanyEditProfile = () => {
     if (imageInputRef.current) {
       imageInputRef.current.value = ""; // Reset input value Added by Ashok
     }
+    setIsLogoRemoved(true);
     setLogoFile(null);
     setLogoPreview("");
     setFormData((prev) => ({ ...prev, logo: "" }));
@@ -282,27 +292,15 @@ const CompanyEditProfile = () => {
     console.log("validationErrors", validationErrors);
 
     try {
-      //   let logoUrl = formData?.logo || "";
-
-      //   if (logoFile) {
-      //     const formDataUpload = new FormData();
-      //     formDataUpload.append("file", logoFile);
-      //     formDataUpload.append("type", "organization");
-      //     formDataUpload.append("id", id);
-
-      //     const uploadResponse = await axios.post(
-      //       `${config.REACT_APP_API_URL}/upload`,
-      //       formDataUpload,
-      //       { headers: { "Content-Type": "multipart/form-data" } }
-      //     );
-      //     logoUrl = uploadResponse.data.url;
-      //   }
-
-      // Common upload function
-
       // UPLOADING FILES
-      // file, type, entity, entityId
-      await uploadFile(logoFile, "logo", "organization", id);
+      if (isLogoRemoved && !logoFile) {
+        // Case 1: User wants to delete the logo
+        await uploadFile(null, "logo", "organization", id);
+      } else if (logoFile instanceof File) {
+        // Case 2: User uploaded a new logo
+        await uploadFile(logoFile, "logo", "organization", id);
+      }
+      // Case 3: No action taken (no file selected, not removed)
 
       const updatedData = {
         company: formData.company,
@@ -338,7 +336,6 @@ const CompanyEditProfile = () => {
       const response = await addOrUpdateOrganization.mutateAsync({
         id: id, // Pass `undefined` or null for new
         data: updatedData, // JSON data for org details
-        // file: selectedImageFile,
       });
 
       console.log("response response", response);
@@ -452,6 +449,9 @@ const CompanyEditProfile = () => {
                 </p>
                 <p className="text-xs text-gray-500">
                   Click to upload (200x200px recommended)
+                </p>
+                <p className="text-xs text-red-500 font-medium mt-1">
+                  {fileError}
                 </p>
               </div>
 
