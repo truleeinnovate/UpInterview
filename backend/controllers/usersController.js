@@ -530,7 +530,7 @@ const getUsersByTenant = async (req, res) => {
         gender: contact.gender || '',
         phone: contact.phone || '',
         status: user.status || '',
-
+ expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
         roleId: user?.roleId?.roleId || '',
         roleName: user?.roleId?.roleName || '',
@@ -584,9 +584,18 @@ const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
 
-    if (!ownerId) {
+
+  if (!ownerId || ownerId === 'undefined') {
       return res.status(400).json({ message: 'Invalid owner ID' });
     }
+
+    if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+      return res.status(400).json({ message: 'Invalid ObjectId format' });
+    }
+
+    // if (!ownerId) {
+    //   return res.status(400).json({ message: 'Invalid owner ID' });
+    // }
 
     // Fetch users with minimal fields
 
@@ -631,7 +640,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
         path: 'availability',
         // model: 'InterviewAvailability',
          model: 'InterviewAvailability', // Make sure the casing is correct
-    select: 'availability.day availability.timeSlots',
+    select: 'availability.day availability.timeSlots _id',
         // select: 'day timeSlots -_id',
         // select: 'availability',
         select: 'availability.day availability.timeSlots',
@@ -684,6 +693,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       preferredDuration: contact.preferredDuration || '',
       availability: contact.availability || [],
       dateOfBirth: contact.dateOfBirth || '',
+      expectedRatePerMockInterview:contact.expectedRatePerMockInterview || ''
 
     };
 
