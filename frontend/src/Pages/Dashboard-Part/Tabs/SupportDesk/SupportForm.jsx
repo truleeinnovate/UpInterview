@@ -55,8 +55,13 @@ const SupportForm = () => {
     formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
+
   //console.log(`contact ------- ${JSON.stringify(contact)}`);
   const [organization, setOrganization] = useState("");
+
+  console.log(`contact ------- ${JSON.stringify(contact)}`);
+  const [organization, setOrganization] = useState('');
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -208,6 +213,7 @@ const SupportForm = () => {
       editMode,
       contact,
       ownerId,
+
       tenantId,
       organization,
     ]
@@ -269,6 +275,33 @@ const SupportForm = () => {
       isAttachmentFileRemoved,
     ]
   );
+      organization: organization,
+      createdByUserId: ownerId,
+    })
+  }), [selectedIssue, otherIssue, description, file, editMode, contact, ownerId, tenantId, organization]);
+
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    setErrors({ issueType: '', description: '' });
+
+    if (!validateForm()) return;
+
+    const formData = createFormData();
+
+    try {
+      console.log("formData---", formData);
+      await submitTicket({
+        data: formData,
+        editMode,
+        ticketId: initialTicketData?._id,
+      });
+
+      setFormState(initialFormState);
+      navigate('/support-desk');
+    } catch (error) {
+      // Error is already handled in mutation's onError
+    }
+  }, [validateForm, createFormData, submitTicket, editMode, initialTicketData?._id, initialFormState, navigate]);
 
   const renderIssueOptions = useCallback(
     () =>

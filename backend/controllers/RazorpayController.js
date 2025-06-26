@@ -1753,7 +1753,7 @@ const handleSubscriptionCharged = async (subscription) => {
         // create usage
 
         const features = subscriptionPlan.features;
-        console.log('features:',features);
+        //console.log('features:',features);
         
         const usage = new Usage({
                 tenantId: customerSubscription.tenantId,
@@ -1770,7 +1770,7 @@ const handleSubscriptionCharged = async (subscription) => {
                 toDate: newEndDate
             });
         
-        console.log('usage:',usage);
+        //console.log('usage:',usage);
 
         try {
             await usage.save();

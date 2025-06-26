@@ -182,70 +182,144 @@ export const validateAdvancedForm = (formData) => {
   //   return errors;
   // };
 
+// export const validateInterviewForm = (formData, isReady) => {
+//     const errors = {};
+  
+//     // Technology validation - checks if at least one technology is selected
+//     if (!formData.Technology || formData.Technology.length === 0) {
+//       errors.Technology = "At least one technology is required";
+//     }
+  
+//     // Skills validation - checks if at least one skill is selected
+//     if (!formData.skills || formData.skills.length === 0) {
+//       errors.skills = "At least one skill is required";
+//     }
+  
+//     // Previous Experience validation - checks if option is selected
+//     if (!formData.PreviousExperienceConductingInterviews) {
+//       errors.PreviousExperienceConductingInterviews = "Please select an option";
+//     } else if (formData.PreviousExperienceConductingInterviews === "yes") {
+//       // Additional validation if 'yes' is selected
+//       if (!formData.PreviousExperienceConductingInterviewsYears) {
+//         errors.PreviousExperienceConductingInterviewsYears = "Years of experience is required";
+//       } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) || 
+//                Number(formData.PreviousExperienceConductingInterviewsYears) < 1 || 
+//                Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
+//         errors.PreviousExperienceConductingInterviewsYears = "Enter a number between 1 and 15";
+//       }
+//     }
+  
+//     // Expertise Level validation
+//     if (!formData.ExpertiseLevel_ConductingInterviews) {
+//       errors.ExpertiseLevel_ConductingInterviews = "Please select an expertise level";
+//     }
+  
+//     // Hourly Rate validation - checks range and presence
+//     if (!formData.hourlyRate) {
+//       errors.hourlyRate = "Hourly rate is required";
+//     } else if (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500) {
+//       errors.hourlyRate = "Hourly rate must be between $20 and $500";
+//     }
+  
+//     // No-Show Policy validation
+//     if (!formData.NoShowPolicy) {
+//       errors.NoShowPolicy = "Please select a no-show policy";
+//     }
+  
+//     // Professional Bio validation (optional but with length constraints)
+//     if (formData.bio) {
+//       if (formData.bio.length < 20) {
+//         errors.bio = "Bio must be at least 20 characters";
+//       } else if (formData.bio.length > 500) {
+//         errors.bio = "Bio cannot exceed 500 characters";
+//       }
+//     }
+  
+//     // Mock Interview validation (only if mock is selected)
+//     // if (formData.interviewFormatWeOffer?.includes("mock")) {
+//     //   if (!formData.expectedRatePerMockInterview) {
+//     //     errors.expectedRatePerMockInterview = "Expected rate is required for mock interviews";
+//     //   } else if (Number(formData.expectedRatePerMockInterview) < 1) {
+//     //     errors.expectedRatePerMockInterview = "Rate must be a positive number";
+//     //   }
+//     // }
+  
+//     return errors;
+//   };
+
 export const validateInterviewForm = (formData, isReady) => {
-    const errors = {};
-  
-    // Technology validation - checks if at least one technology is selected
-    if (!formData.Technology || formData.Technology.length === 0) {
-      errors.Technology = "At least one technology is required";
+  const errors = {};
+
+  // Technology validation - checks if at least one technology is selected
+  if (!formData.Technology || formData.Technology.length === 0) {
+    errors.Technology = "At least one technology is required";
+  }
+
+  // Skills validation - checks if at least one skill is selected
+  if (!formData.skills || formData.skills.length === 0) {
+    errors.skills = "At least one skill is required";
+  }
+
+  // Previous Experience validation - checks if option is selected
+  if (!formData.PreviousExperienceConductingInterviews) {
+    errors.PreviousExperienceConductingInterviews = "Please select an option";
+  } else if (formData.PreviousExperienceConductingInterviews === "yes") {
+    // Additional validation if 'yes' is selected
+    if (!formData.PreviousExperienceConductingInterviewsYears) {
+      errors.PreviousExperienceConductingInterviewsYears = "Years of experience is required";
+    } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) || 
+             Number(formData.PreviousExperienceConductingInterviewsYears) < 1 || 
+             Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
+      errors.PreviousExperienceConductingInterviewsYears = "Enter a number between 1 and 15";
     }
-  
-    // Skills validation - checks if at least one skill is selected
-    if (!formData.skills || formData.skills.length === 0) {
-      errors.skills = "At least one skill is required";
+  }
+
+  // Expertise Level validation
+  if (!formData.ExpertiseLevel_ConductingInterviews) {
+    errors.ExpertiseLevel_ConductingInterviews = "Please select an expertise level";
+  }
+
+  // Hourly Rate validation - checks range and presence
+  if (!formData.hourlyRate) {
+    errors.hourlyRate = "Hourly rate is required";
+  } else if (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500) {
+    errors.hourlyRate = "Hourly rate must be between $20 and $500";
+  }
+
+  // No-Show Policy validation
+  if (!formData.NoShowPolicy) {
+    errors.NoShowPolicy = "Please select a no-show policy";
+  }
+
+  // Professional Title validation
+  if (!formData.professionalTitle) {
+    errors.professionalTitle = "Professional title is required";
+  } else if (formData.professionalTitle.length < 50) {
+    errors.professionalTitle = "Professional title must be at least 50 characters";
+  } else if (formData.professionalTitle.length > 100) {
+    errors.professionalTitle = "Professional title cannot exceed 100 characters";
+  }
+
+  // Professional Bio validation
+  if (!formData.bio) {
+    errors.bio = "Professional bio is required";
+  } else if (formData.bio.length < 150) {
+    errors.bio = "Bio must be at least 150 characters";
+  } else if (formData.bio.length > 500) {
+    errors.bio = "Bio cannot exceed 500 characters";
+  }
+
+  // Mock Interview validation (only if mock is selected)
+  if (formData.interviewFormatWeOffer?.includes("mock")) {
+    if (!formData.expectedRatePerMockInterview) {
+      errors.expectedRatePerMockInterview = "Expected rate is required for mock interviews";
+    } else if (Number(formData.expectedRatePerMockInterview) < 1) {
+      errors.expectedRatePerMockInterview = "Rate must be a positive number";
     }
-  
-    // Previous Experience validation - checks if option is selected
-    if (!formData.PreviousExperienceConductingInterviews) {
-      errors.PreviousExperienceConductingInterviews = "Please select an option";
-    } else if (formData.PreviousExperienceConductingInterviews === "yes") {
-      // Additional validation if 'yes' is selected
-      if (!formData.PreviousExperienceConductingInterviewsYears) {
-        errors.PreviousExperienceConductingInterviewsYears = "Years of experience is required";
-      } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) || 
-               Number(formData.PreviousExperienceConductingInterviewsYears) < 1 || 
-               Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
-        errors.PreviousExperienceConductingInterviewsYears = "Enter a number between 1 and 15";
-      }
-    }
-  
-    // Expertise Level validation
-    if (!formData.ExpertiseLevel_ConductingInterviews) {
-      errors.ExpertiseLevel_ConductingInterviews = "Please select an expertise level";
-    }
-  
-    // Hourly Rate validation - checks range and presence
-    if (!formData.hourlyRate) {
-      errors.hourlyRate = "Hourly rate is required";
-    } else if (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500) {
-      errors.hourlyRate = "Hourly rate must be between $20 and $500";
-    }
-  
-    // No-Show Policy validation
-    if (!formData.NoShowPolicy) {
-      errors.NoShowPolicy = "Please select a no-show policy";
-    }
-  
-    // Professional Bio validation (optional but with length constraints)
-    if (formData.bio) {
-      if (formData.bio.length < 20) {
-        errors.bio = "Bio must be at least 20 characters";
-      } else if (formData.bio.length > 500) {
-        errors.bio = "Bio cannot exceed 500 characters";
-      }
-    }
-  
-    // Mock Interview validation (only if mock is selected)
-    // if (formData.interviewFormatWeOffer?.includes("mock")) {
-    //   if (!formData.expectedRatePerMockInterview) {
-    //     errors.expectedRatePerMockInterview = "Expected rate is required for mock interviews";
-    //   } else if (Number(formData.expectedRatePerMockInterview) < 1) {
-    //     errors.expectedRatePerMockInterview = "Rate must be a positive number";
-    //   }
-    // }
-  
-    return errors;
-  };
+  }
+
+  return errors;
+};
 
   // validations.js
 export const validateAvailabilityForm = (formData,times) => {

@@ -17,6 +17,8 @@ const SupportViewPage = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   //const [openForm, setOpenForm] = useState(false);
 
+  console.log("ticketData",ticketData);
+
   useEffect(() => {
     document.title = "Support Ticket Details";
   }, []);

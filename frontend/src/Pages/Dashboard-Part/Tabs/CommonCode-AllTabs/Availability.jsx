@@ -79,7 +79,7 @@ const Availability = ({
     const newTimes = { ...times };
     const currentSlots = newTimes[shortDay];
 
-    if (currentSlots.length > 1) {
+    if (currentSlots?.length > 1) {
       newTimes[shortDay] = currentSlots.filter((_, i) => i !== index);
     } else {
       newTimes[shortDay] = [{ startTime: null, endTime: null }];
@@ -353,7 +353,7 @@ const Availability = ({
                 type="button"
                 onClick={handlePaste}
                 className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                disabled={selectedDays.length === 0}
+                disabled={selectedDays?.length === 0}
               >
                 Duplicate
               </button>

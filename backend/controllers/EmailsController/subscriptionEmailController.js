@@ -181,11 +181,26 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
     const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
 
     // Step 6: Save Notification
+    // req.notificationData = [{
+    //   toAddress: user.email,
+    //   fromAddress: process.env.EMAIL_FROM,
+    //   title: "Subscription Plan Activated",
+    //   body: `Subscription for ${planName} has been activated successfully.`,
+    //   notificationType: "email",
+    //   object: { objectName: "subscription", objectId: ownerId },
+    //   status: emailResponse.success ? "Success" : "Failed",
+    //   tenantId,
+    //   ownerId,
+    //   recipientId: ownerId,
+    //   createdBy: ownerId,
+    //   updatedBy: ownerId,
+    // }];
+
     req.notificationData = [{
       toAddress: user.email,
       fromAddress: process.env.EMAIL_FROM,
-      title: "Subscription Plan Activated",
-      body: `Subscription for ${planName} has been activated successfully.`,
+      title: emailSubject,
+      body: emailBody,
       notificationType: "email",
       object: { objectName: "subscription", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
@@ -195,6 +210,7 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
       createdBy: ownerId,
       updatedBy: ownerId,
     }];
+
 
     await notificationMiddleware(req, res, () => { });
 
@@ -248,11 +264,26 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
     const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
 
     // Save notification
+    // req.notificationData = [{
+    //   toAddress: user.email,
+    //   fromAddress: process.env.EMAIL_FROM,
+    //   title: "Free Plan Activated",
+    //   body: `You've subscribed to the Free Plan. Upgrade anytime to unlock more features!`,
+    //   notificationType: "email",
+    //   object: { objectName: "subscription", objectId: ownerId },
+    //   status: emailResponse.success ? "Success" : "Failed",
+    //   tenantId,
+    //   ownerId,
+    //   recipientId: ownerId,
+    //   createdBy: ownerId,
+    //   updatedBy: ownerId,
+    // }];
+
     req.notificationData = [{
       toAddress: user.email,
       fromAddress: process.env.EMAIL_FROM,
-      title: "Free Plan Activated",
-      body: `You've subscribed to the Free Plan. Upgrade anytime to unlock more features!`,
+      title: emailSubject,
+      body: emailBody,
       notificationType: "email",
       object: { objectName: "subscription", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",
@@ -414,11 +445,26 @@ const planName = (subscription.subscriptionPlanId?.name || subscription.selected
         const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
 
         // Save notification
+        // const notificationData = [{
+        //   toAddress: user.email,
+        //   fromAddress: process.env.EMAIL_FROM,
+        //   title: 'Upcoming Payment Reminder',
+        //   body: `Your ${planName} subscription will renew on ${formattedBillingDate}.`,
+        //   notificationType: 'email',
+        //   object: { objectName: 'subscription', objectId: subscription.ownerId },
+        //   status: emailResponse.success ? 'Success' : 'Failed',
+        //   tenantId: subscription.tenantId,
+        //   ownerId: subscription.ownerId,
+        //   recipientId: subscription.ownerId,
+        //   createdBy: subscription.ownerId,
+        //   updatedBy: subscription.ownerId,
+        // }];
+
         const notificationData = [{
           toAddress: user.email,
           fromAddress: process.env.EMAIL_FROM,
-          title: 'Upcoming Payment Reminder',
-          body: `Your ${planName} subscription will renew on ${formattedBillingDate}.`,
+          title: emailSubject,
+          body: emailBody,
           notificationType: 'email',
           object: { objectName: 'subscription', objectId: subscription.ownerId },
           status: emailResponse.success ? 'Success' : 'Failed',

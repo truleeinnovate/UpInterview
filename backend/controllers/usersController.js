@@ -530,7 +530,7 @@ const getUsersByTenant = async (req, res) => {
         gender: contact.gender || '',
         phone: contact.phone || '',
         status: user.status || '',
-
+ expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
         roleId: user?.roleId?.roleId || '',
         roleName: user?.roleId?.roleName || '',
@@ -583,10 +583,21 @@ const getUsersByTenant = async (req, res) => {
 const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
+    console.log('req.params---',req.params);
 
-    if (!ownerId) {
+
+  if (!ownerId || ownerId === 'undefined') {
       return res.status(400).json({ message: 'Invalid owner ID' });
     }
+
+
+    if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+      return res.status(400).json({ message: 'Invalid ObjectId format' });
+    }
+
+    // if (!ownerId) {
+    //   return res.status(400).json({ message: 'Invalid owner ID' });
+    // }
 
     // Fetch users with minimal fields
 
@@ -597,41 +608,14 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .populate({ path: 'roleId', select: '_id label roleName status' })
       .lean();
 
+    console.log('users---',users);
 
-    // console.log("users -------------------", users);
-
-//     const users = await Users.find({ tenantId })
-//       .select('_id roleId label status profileId firstName lastName email newEmail')
-//       .populate({
-//         path: 'roleId',
-//         select: 'label roleName',
-//         model: 'Role',
-//         options: { lean: true }
-//       })
-//       .lean()
-//       .catch(err => {
-//         console.error('Error populating roleId:', err);
-//         return Users.find({ tenantId }).lean(); // fallback without population
-//       });
-//     console.log("users -------------------", users);
-
-
-    if (!users) {
-      return res.status(200).json({});
-    }
-
-    // Fetch contacts and roles in parallel
-    // const [contact] = await Promise.all([
-    //   Contacts.findOne({ ownerId: ownerId })
-    //     .populate({ path: 'availability', model: 'Interviewavailability', select: 'day -_id timeSlots' })
-    //     .lean(),
-    // ]);
     const contact = await Contacts.findOne({ ownerId })
       .populate({
         path: 'availability',
         // model: 'InterviewAvailability',
          model: 'InterviewAvailability', // Make sure the casing is correct
-    select: 'availability.day availability.timeSlots',
+    select: 'availability.day availability.timeSlots _id',
         // select: 'day timeSlots -_id',
         // select: 'availability',
         select: 'availability.day availability.timeSlots',
@@ -639,8 +623,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
       // .populate("availability")
       .lean();
 
-      // console.log("contact contact",contact);
-      
+
+    console.log('contact---',contact);
 
 
     // Combine user data, pulling most fields from Contacts
@@ -684,10 +668,11 @@ const getUniqueUserByOwnerId = async (req, res) => {
       preferredDuration: contact.preferredDuration || '',
       availability: contact.availability || [],
       dateOfBirth: contact.dateOfBirth || '',
+      expectedRatePerMockInterview:contact.expectedRatePerMockInterview || ''
 
     };
 
-    // console.log("combinedUser",combinedUser);
+    console.log("for supportDesk combinedUser:",combinedUser);
 
 
     res.status(200).json(combinedUser);

@@ -159,7 +159,7 @@ const ContactsSchema = new mongoose.Schema(
     PreviousExperienceConductingInterviews: String,
     PreviousExperienceConductingInterviewsYears: String,
     ExpertiseLevel_ConductingInterviews: String,
-
+    expectedRatePerMockInterview:String,  //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],

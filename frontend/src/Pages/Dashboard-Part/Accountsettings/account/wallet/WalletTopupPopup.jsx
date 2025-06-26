@@ -46,24 +46,12 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           const fetchUserProfile = async () => {
               try {
                   if (userProfile) {
-                      // const response = await axios.get(`${process.env.REACT_APP_API_URL}/contacts/owner/${ownerId}`);
-                      
-                      // console.log("response.data",response.data);
-                      
-
-
-                      // if (response.data && response.data.length > 0) {
-                          // const contactData = response.data[0];
-                          // Extract name, email and phone from the response
                           setUserProfile({
                               name: `${userProfile.firstName} ${userProfile.lastName}`,
                               email: userProfile.email,
                               phone: userProfile.phone
                           });
                           console.log('User profile fetched:', userProfile);
-                      // } else {
-                          console.log('No contact data found for this owner');
-                      // }
                   }
               } catch (error) {
                   console.error('Error fetching user profile:', error);

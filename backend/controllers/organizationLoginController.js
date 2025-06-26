@@ -398,7 +398,7 @@ const loginOrganization = async (req, res) => {
 
     let roleName = null;
     if (user?.isProfileCompleted === false && user.roleId) {
-      const role = await Role.findById(user.roleId);
+      const role = await RolesPermissionObject.findById(user.roleId);
       roleName = role?.roleName;
     }
 
