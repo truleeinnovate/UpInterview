@@ -306,20 +306,21 @@ const CustomProvider = ({ children }) => {
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
+  console.log("interviewers data :", interviewers);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
-  
+
   const fetchInterviewers = useCallback(async () => {
     if (!tenantId) return;
-    
+
     let isMounted = true;
-    
+
     try {
       setLoadingInterviewer(true);
       console.log('Fetching interviewers for tenantId:', tenantId);
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
-      
+
       if (isMounted) {
         console.log('Interviewers data received:', response.data);
         setInterviewers(response.data);
