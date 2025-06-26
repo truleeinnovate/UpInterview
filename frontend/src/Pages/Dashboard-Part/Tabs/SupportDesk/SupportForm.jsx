@@ -46,7 +46,7 @@ const SupportForm = () => {
   const { otherIssueFlag, otherIssue, selectedIssue, file, description } = formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
-  //console.log(`contact ------- ${JSON.stringify(contact)}`);
+  console.log(`contact ------- ${JSON.stringify(contact)}`);
   const [organization, setOrganization] = useState('');
 
   useEffect(() => {

@@ -826,11 +826,29 @@ exports.resendAssessmentLink = async (req, res) => {
       }
     });
 
+    // const notificationData = [{
+    //   toAddress: emails,
+    //   fromAddress: process.env.EMAIL_FROM,
+    //   title: `Assessment Email ${emailStatus}`,
+    //   body: `Email ${emailStatus} for candidate ${candidate.LastName}.`,
+    //   notificationType: 'email',
+    //   object: {
+    //     objectName: 'assessment',
+    //     objectId: candidateAssessment.scheduledAssessmentId.assessmentId,
+    //   },
+    //   status: emailStatus,
+    //   tenantId: organizationId,
+    //   ownerId: userId,
+    //   recipientId: candidate._id,
+    //   createdBy: userId,
+    //   updatedBy: userId,
+    // }];
+
     const notificationData = [{
       toAddress: emails,
       fromAddress: process.env.EMAIL_FROM,
-      title: `Assessment Email ${emailStatus}`,
-      body: `Email ${emailStatus} for candidate ${candidate.LastName}.`,
+      title: emailSubject,
+      body: emailBody,
       notificationType: 'email',
       object: {
         objectName: 'assessment',
@@ -1037,11 +1055,29 @@ exports.shareAssessment = async (req, res) => {
         )
       );
 
+      // notifications.push({
+      //   toAddress: emails,
+      //   fromAddress: process.env.EMAIL_FROM,
+      //   title: `Assessment Invitation`,
+      //   body: `Assessment invitation sent to ${candidateName}`,
+      //   notificationType: 'email',
+      //   object: {
+      //     objectName: 'assessment',
+      //     objectId: assessmentId,
+      //   },
+      //   status: 'Pending',
+      //   tenantId: organizationId,
+      //   ownerId: userId,
+      //   recipientId: candidate._id,
+      //   createdBy: userId,
+      //   updatedBy: userId,
+      // });
+
       notifications.push({
         toAddress: emails,
         fromAddress: process.env.EMAIL_FROM,
-        title: `Assessment Invitation`,
-        body: `Assessment invitation sent to ${candidateName}`,
+        title: emailSubject,
+        body: emailBody,
         notificationType: 'email',
         object: {
           objectName: 'assessment',
