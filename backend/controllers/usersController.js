@@ -583,49 +583,19 @@ const getUsersByTenant = async (req, res) => {
 const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
+    console.log('req.params---',req.params);
 
     if (!ownerId) {
       return res.status(400).json({ message: 'Invalid owner ID' });
     }
-
-    // Fetch users with minimal fields
-
-    // const users = await Users.findOne({ _id: ownerId }, '_id  label roleName status').lean();
 
     // Fetch user and populate role
     const users = await Users.findOne({ _id: ownerId })
       .populate({ path: 'roleId', select: '_id label roleName status' })
       .lean();
 
+    console.log('users---',users);
 
-    // console.log("users -------------------", users);
-
-//     const users = await Users.find({ tenantId })
-//       .select('_id roleId label status profileId firstName lastName email newEmail')
-//       .populate({
-//         path: 'roleId',
-//         select: 'label roleName',
-//         model: 'Role',
-//         options: { lean: true }
-//       })
-//       .lean()
-//       .catch(err => {
-//         console.error('Error populating roleId:', err);
-//         return Users.find({ tenantId }).lean(); // fallback without population
-//       });
-//     console.log("users -------------------", users);
-
-
-    if (!users) {
-      return res.status(200).json({});
-    }
-
-    // Fetch contacts and roles in parallel
-    // const [contact] = await Promise.all([
-    //   Contacts.findOne({ ownerId: ownerId })
-    //     .populate({ path: 'availability', model: 'Interviewavailability', select: 'day -_id timeSlots' })
-    //     .lean(),
-    // ]);
     const contact = await Contacts.findOne({ ownerId })
       .populate({
         path: 'availability',
@@ -634,6 +604,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       })
       .lean();
 
+    console.log('contact---',contact);
 
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
@@ -679,7 +650,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
 
     };
 
-    // console.log("combinedUser",combinedUser);
+    console.log("for supportDesk combinedUser:",combinedUser);
 
 
     res.status(200).json(combinedUser);
