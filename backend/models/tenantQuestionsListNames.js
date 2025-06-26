@@ -8,4 +8,4 @@ const listSchema = new mongoose.Schema({
   tenantId: String,
 });
 
-module.exports = mongoose.model('TenantQuestionsListNames', listSchema);
+module.exports = mongoose.models.TenantQuestionsListNames || mongoose.model('TenantQuestionsListNames', listSchema);

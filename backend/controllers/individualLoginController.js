@@ -4,6 +4,7 @@ const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require('../utils/jwt');
 const Tenant = require("../models/Tenant");
+const RolesPermissionObject = require('../models/RolesPermissionObject');
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -20,15 +21,48 @@ exports.individualLogin = async (req, res) => {
     console.log('[individualLogin] Step 2.7: ownerId:', ownerId);
 
     let savedUser, savedContact, savedTenant;
+     let updatedUserData = { ...userData };
+
+    // Only handle role assignment if profile is not complete for organization
+    if (isProfileCompleteStateOrg === false || isProfileCompleteStateOrg === undefined) {
+      console.log('[individualLogin] Profile not complete for organization - handling role assignment');
+      
+      // Find the appropriate role based on freelancer status
+      let role;
+      console.log("Role",role);
+      
+      if (userData.isFreelancer) {
+        role = await RolesPermissionObject.findOne({ 
+          
+          roleName: 'Individual_Freelancer', 
+          roleType: 'individual' 
+        });
+          console.log("role1", role);
+
+      } else {
+        role = await RolesPermissionObject.findOne({ 
+          roleName: 'Individual', 
+          roleType: 'individual' 
+        });
+          console.log("role2", role);
+
+      }
+
+      if (!role) {
+        throw new Error('Role not found for the specified criteria');
+      }
+      // Add roleId to userData only when isProfileCompleteStateOrg is false
+      updatedUserData.roleId = role._id;
+    }
 
     // Update User
     savedUser = await Users.findOneAndUpdate(
       { _id: ownerId },
-      userData,
+      updatedUserData,
       { new: true }
     );
 
-    console.log('[individualLogin] Step 3: User updated:', savedUser);
+    // console.log('[individualLogin] Step 3: User updated:', savedUser);
 
     // 🔁 Update Contact by ownerId match
     savedContact = await Contacts.findOneAndUpdate(
@@ -36,7 +70,7 @@ exports.individualLogin = async (req, res) => {
       contactData,
       { new: true }
     );
-    console.log('[individualLogin] Step 4: Contact updated:', savedContact);
+    // console.log('[individualLogin] Step 4: Contact updated:', savedContact);
 
     // 🔁 Update Tenant by ownerId match if needed
     if (isProfileCompleteStateOrg === undefined) {
@@ -49,14 +83,14 @@ exports.individualLogin = async (req, res) => {
       }
 
       const tenantExists = await Tenant.findOne({ ownerId });
-      console.log('[individualLogin] 🔍 Does tenant exist:', tenantExists);
+      // console.log('[individualLogin] 🔍 Does tenant exist:', tenantExists);
 
       savedTenant = await Tenant.findOneAndUpdate(
         { ownerId: ownerId },
         updateData,
         { new: true }
       );
-      console.log('[individualLogin] Step 5.2: Tenant updated:', savedTenant);
+      // console.log('[individualLogin] Step 5.2: Tenant updated:', savedTenant);
     }
 
 
@@ -107,19 +141,19 @@ exports.individualLogin = async (req, res) => {
         currency: 'USD'
       });
       await newInterviewer.save();
-      console.log('[individualLogin] Step 8: Saved outsource interviewer');
+      // console.log('[individualLogin] Step 8: Saved outsource interviewer');
     }
     // <-----------------------OutsourceInterviewer------------------------------->
     const payload = {
       userId: savedUser._id.toString(),
-      ...(isProfileCompleteStateOrg && { tenantId: savedUser.tenantId }),
+       tenantId: savedUser.tenantId,
       organization: isProfileCompleteStateOrg === true,
       timestamp: new Date().toISOString(),
       freelancer: userData.isFreelancer
     };
 
     const token = generateToken(payload);
-    console.log('[individualLogin] Step 9: Generated token');
+    // console.log('[individualLogin] Step 9: Generated token');
 
     res.status(200).json({
       success: true,
@@ -129,7 +163,7 @@ exports.individualLogin = async (req, res) => {
       ...(isProfileCompleteStateOrg && { tenantId: savedUser.tenantId }),
       token: token
     });
-    console.log('[individualLogin] Step 10: Sent response');
+    // console.log('[individualLogin] Step 10: Sent response');
 
   } catch (error) {
     console.error("Error in individual login:", error);

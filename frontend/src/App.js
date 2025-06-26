@@ -7,7 +7,7 @@ import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import Loading from './Components/Loading';
-import { PermissionsProvider } from './Context/PermissionsContext';
+import { usePermissions } from './Context/PermissionsContext';
 import { CustomProvider } from './Context/Contextfetch';
 import PageSetter from './Components/PageSetter';
 import BillingSubtabs from './Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx';
@@ -17,6 +17,8 @@ import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/Subscripti
 // import TokenExpirationHandler from './utils/TokenExpirationHandler';
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
 import VerifyUserEmail from './VerifyUserEmail.jsx';
+
+
 
 // Lazy-loaded components
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -99,41 +101,124 @@ const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewR
 const Task = lazy(() => import('./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx'));
 const VerifyEmail = lazy(() => import('./VerifyWorkEmail.jsx'));
 
+
+
+
+
+
+
+
+
+
+// <------  SUPER ADMIN -------------------------------------------------
+// const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
+// const SuperAdminDashboard = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/Dashboard.jsx")
+// );
+
+// // tenants
+// const TenantsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/TenantsPage.jsx")
+// );
+
+// const AddTenantForm = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx")
+// );
+// const TenantDetailsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
+// );
+// const CandidatesPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
+// );
+// const PositionsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
+// );
+// const InterviewsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
+// );
+// const AssessmentsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
+// );
+// const OutsourceRequestsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
+// );
+// const OutsourceInterviewersPage = lazy(
+//   () =>
+//     import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+//   // import("./Pages/SuperAdmin-Part/OutsourceInterviewersPage.jsx") // super admin part
+// );
+// const InterviewerRequestsPage = lazy(
+//   () => import("./Pages/Interview-Request/InterviewRequest.jsx")
+//   // import("./Pages/SuperAdmin-Part/InterviewerRequestsPage.jsx") // super admin part
+// );
+// const BillingPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/BillingPage.jsx")
+// );
+// const AddInvoiceForm = lazy(() =>
+//   import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
+// );
+
+// // const SupportTicketsPage = lazy(() =>
+// //   import("./Pages/SuperAdmin-Part/SupportTicketsPage.jsx")
+// // );
+
+// const SupportTicketsPage = lazy(() =>
+//   import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+// );
+// const AddSupportForm = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
+// );
+// const SettingsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+// );
+// const LoginPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+// );
+// const NotFoundPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/NotFoundPage.jsx")
+// );
+// const InternalLogsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx")
+// );
+// const IntegrationsPage = lazy(() =>
+//   import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
+// );
+// const ContactProfileDetails = lazy(() =>
+//   import(
+//     "./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"
+//   )
+// );
+
+
+// ---------------------------------------------------------->
+
 // Custom Suspense component to track loading state
 const SuspenseWithLoading = ({
   fallback,
   children
-  // onLoadingChange
 }) => {
-
-  // useEffect(() => {
-  // onLoadingChange(true);
-  // return () => onLoadingChange(false);
-  // }, [onLoadingChange]);
-
   return <Suspense fallback={fallback}>{children}</Suspense>;
 };
 
 const App = () => {
+  const { effectivePermissions,
+    superAdminPermissions,
+    inheritedRoleIds,
+    isImpersonating,
+    roleType,
+    roleLevel,
+    tenants,
+    users,
+    selectedTenant,
+    setSelectedTenant, } = usePermissions();
+  console.log("effectivePermissions", effectivePermissions);
+
+
 
   const location = useLocation();
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
-  // const [isLoading, setIsLoading] = useState(false);
-
-  // Define paths for conditional rendering
-  // const noNavbarPaths = useMemo(() => [
-  //   '/',
-  //   '/select-user-type',
-  //   '/select-profession',
-  //   '/complete-profile',
-  //   '/organization-login',
-  //   '/organization-signup',
-  //   '/subscription-plans',
-  //   '/payment-details',
-  //   '/callback',
-  // ], []);
 
   const showLogoPaths = useMemo(() => [
     '/organization-signup',
@@ -146,29 +231,21 @@ const App = () => {
     '/verify-email'
   ], []);
 
-  // const settingsSidebarPaths = useMemo(() => [
-  //   '/account-settings/profile',
-  //   '/account-settings/my-profile',
-  //   '/account-settings/wallet',
-  //   '/account-settings/interviewer-groups',
-  //   '/account-settings/users',
-  //   '/account-settings/email-settings',
-  //   '/account-settings/billing',
-  //   '/account-settings/subscription',
-  //   '/account-settings/security',
-  //   '/account-settings/notifications',
-  //   '/account-settings/usage',
-  //   '/account-settings/roles',
-  //   '/account-settings/sharing',
-  //   '/account-settings/sub-domain',
-  //   '/account-settings/webhooks',
-  //   '/account-settings/hrms-ats',
-  // ], []);
 
   const showLogo = showLogoPaths.includes(location.pathname);
 
   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans', '/verify-email'].includes(location.pathname);
 
+
+  // Helper function to check if a tab should be accessible
+  const canAccessTab = (objectName, permissionType = 'View') => {
+    // Check superAdminPermissions first (for super admin tabs)
+    if (superAdminPermissions && superAdminPermissions.SuperAdmin) {
+      return superAdminPermissions.SuperAdmin.ViewTenants || false;
+    }
+    // Fallback to effectivePermissions for regular tabs
+    return effectivePermissions[objectName]?.[permissionType] || false;
+  };
   return (
     <ErrorBoundary>
       <SuspenseWithLoading fallback={<div><Loading /></div>}>
@@ -185,11 +262,11 @@ const App = () => {
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
-            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar/>
-            <div className="ml-80">
-             <Subscription/>
-             </div>
-             </></>} />
+            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar />
+              <div className="ml-80">
+                <Subscription />
+              </div>
+            </></>} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />
@@ -198,13 +275,11 @@ const App = () => {
             <Route
               element={
                 <ProtectedRoute>
-                  <PermissionsProvider>
-                    <CustomProvider>
-                      <PageSetter />
-                      {shouldRenderNavbar && <Navbar />}
-                      <Outlet />
-                    </CustomProvider>
-                  </PermissionsProvider>
+                  <CustomProvider>
+                    <PageSetter />
+                    {shouldRenderNavbar && <Navbar />}
+                    <Outlet />
+                  </CustomProvider>
                 </ProtectedRoute>
               }
             >
@@ -214,7 +289,7 @@ const App = () => {
               <Route path="/outsource-interview-request" element={<InterviewRequest />} />
 
               {/* Candidate Routes */}
-              <Route path="/candidate" element={<CandidateTab />}>
+              {/* <Route path="/candidate" element={<CandidateTab />}>
                 <Route index element={null} />
                 <Route path="new" element={<AddCandidateForm mode="Create" />} />
                 <Route path="view-details/:id" element={<CandidateDetails />} />
@@ -226,13 +301,58 @@ const App = () => {
               </Route>
               <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
 
-              {/* Position Routes */}
+             
               <Route path="/position" element={<Position />} />
               <Route path="/position/new-position" element={<PositionForm />} />
               <Route path="/position/edit-position/:id" element={<PositionForm />} />
               <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
               <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
-              <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+              <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} /> */}
+
+              {/* Candidate Routes */}
+              {canAccessTab('Candidates') && (
+                <Route path="/candidate" element={<CandidateTab />}>
+                  <Route index element={null} />
+                  {canAccessTab('Candidates', 'Create') && (
+                    <Route path="new" element={<AddCandidateForm mode="Create" />} />
+                  )}
+                  <Route path="view-details/:id" element={<CandidateDetails />} />
+                  {canAccessTab('Candidates', 'Edit') && (
+                    <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
+                  )}
+                </Route>
+              )}
+              {canAccessTab('Candidates') && (
+                <Route path="/candidate/:id" element={<CandidateTabDetails />}>
+                  <Route index element={null} />
+                  {canAccessTab('Candidates', 'Edit') && (
+                    <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
+                  )}
+                </Route>
+              )}
+              {canAccessTab('Candidates') && (
+                <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
+              )}
+
+              {/* Position Routes (to be removed later as per your note) */}
+              {canAccessTab('Positions') && (
+                <Route path="/position" element={<Position />} />
+              )}
+              {canAccessTab('Positions', 'Create') && (
+                <Route path="/position/new-position" element={<PositionForm />} />
+              )}
+              {canAccessTab('Positions', 'Edit') && (
+                <Route path="/position/edit-position/:id" element={<PositionForm />} />
+              )}
+              {canAccessTab('Positions') && (
+                <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
+              )}
+              {canAccessTab('Positions', 'Create') && (
+                <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
+              )}
+              {canAccessTab('Positions', 'Edit') && (
+                <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+              )}
 
               {/* Mock Interview Routes */}
               <Route path="/mockinterview" element={<MockInterview />} />
@@ -322,28 +442,10 @@ const App = () => {
                     <Route path="new" element={<UserForm mode="create" />} />
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
                     <Route path="details/:id" element={<UserProfileDetails />} />
-                    {/* <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="users" />} /> */}
-                    {/* <Route path="details/:id/basic-edit" element={<BasicDetailsEditPage from="users" />} /> */}
-
-                    {/* <Route path="details/:id/advanced-edit" element={<EditAdvacedDetails   from="users"/>} /> */}
-                    {/* <Route path="details/:id/interview-edit" element={<EditInterviewDetails from="users"/>} /> */}
-                    {/* <Route path="details/:id/availability-edit" element={<EditAvailabilityDetails from="users"/>} /> */}
-                    {/* <Route path="basic" element={<BasicDetails />} /> */}
                   </Route>
                 )}
 
                 <Route path="email-settings" element={<EmailTemplate />} />
-
-
-                {/* BillingSubtabs */}
-                {/* <Route path="billing-details" element={<BillingSubtabs />} >
-                   <Route index element={<Navigate to="billing" replace />} />
-                    <Route path="billing" element={<BillingDetails />} />
-                  <Route path="invoice" element={<InvoiceDetails />} />
-                  <Route path="receipts" element={<ReceiptsTab />} />
-                  <Route path="payments" element={<PaymentDetailsTab />} />
-
-                </Route> */}
                 <Route path="billing-details" element={<BillingSubtabs />} >
                   <Route index element={null} />
                   <Route path="details/:id" element={<UserInvoiceDetails />} />
@@ -405,9 +507,120 @@ const App = () => {
               <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
               {/* task */}
               <Route path="/task" element={<Task />} />
-{/* verify work email */}
+              {/* verify work email */}
               <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-user-email" element={<VerifyUserEmail />}/>
+              <Route path="/verify-user-email" element={<VerifyUserEmail />} />
+
+
+
+
+
+
+
+
+
+
+
+              {/* <----------------- SUPER ADMIN --------------- */}
+
+              {/* <Route
+                index
+                path="/admin-dashboard"
+                element={<SuperAdminDashboard />}
+              />
+           
+              <Route path="/tenants" element={<TenantsPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<AddTenantForm mode="Create" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddTenantForm mode="Edit" />}
+                />
+              </Route>
+              <Route path="tenants/:id" element={<TenantDetailsPage />} />
+              <Route
+                path="outsource-requests"
+                element={<OutsourceRequestsPage />}
+              />
+              <Route
+                path="outsource-interviewers"
+                element={<OutsourceInterviewersPage />}
+              />
+              <Route
+                path="interviewer-requests"
+                element={<InterviewerRequestsPage />}
+              />
+
+             
+          
+              <Route path="admin-billing" element={<BillingPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<AddInvoiceForm mode="Create" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddInvoiceForm mode="Edit" />}
+                />
+              </Route>
+
+              
+              <Route path="/support-tickets" element={<SupportTicketsPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<AddSupportForm mode="Create" />} />
+                <Route
+                  path="edit/:id"
+                  element={<AddSupportForm mode="Edit" />}
+                />
+              </Route>
+              <Route path="support/:id" element={<SupportDetails />} />
+
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="internal-logs" element={<InternalLogsPage />} />
+              <Route path="integrations" element={<IntegrationsPage />} />
+              <Route
+                path="contact-profile-details"
+                element={<ContactProfileDetails />}
+              /> */}
+
+
+              {/* Super Admin Routes */}
+              {/* {canAccessTab('SuperAdmin') && (
+                <>
+                  <Route index path="/admin-dashboard" element={<SuperAdminDashboard />} />
+                  <Route path="/tenants" element={<TenantsPage />}>
+                    <Route index element={null} />
+                    {superAdminPermissions?.SuperAdmin?.CreateTenants && (
+                      <Route path="new" element={<AddTenantForm mode="Create" />} />
+                    )}
+                    {superAdminPermissions?.SuperAdmin?.CreateTenants && (
+                      <Route path="edit/:id" element={<AddTenantForm mode="Edit" />} />
+                    )}
+                  </Route>
+                  <Route path="tenants/:id" element={<TenantDetailsPage />} />
+                  <Route path="outsource-requests" element={<OutsourceRequestsPage />} />
+                  <Route path="outsource-interviewers" element={<OutsourceInterviewersPage />} />
+                  <Route path="interviewer-requests" element={<InterviewerRequestsPage />} />
+                  <Route path="admin-billing" element={<BillingPage />}>
+                    <Route index element={null} />
+                    {superAdminPermissions?.Billing?.Manage && (
+                      <Route path="new" element={<AddInvoiceForm mode="Create" />} />
+                    )}
+                    {superAdminPermissions?.Billing?.Manage && (
+                      <Route path="edit/:id" element={<AddInvoiceForm mode="Edit" />} />
+                    )}
+                  </Route>
+                  <Route path="support-tickets" element={<SupportTicketsPage />}>
+                    <Route index element={null} />
+                    <Route path="new" element={<AddSupportForm mode="Create" />} />
+                    <Route path="edit/:id" element={<AddSupportForm mode="Edit" />} />
+                  </Route>
+                  <Route path="support/:id" element={<SupportDetails />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="internal-logs" element={<InternalLogsPage />} />
+                  <Route path="integrations" element={<IntegrationsPage />} />
+                  <Route path="contact-profile-details" element={<ContactProfileDetails />} />
+                </>
+              )} */}
+
             </Route>
           </Routes>
         </div>

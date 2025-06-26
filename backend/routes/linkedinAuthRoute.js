@@ -6,6 +6,7 @@ const { Contacts } = require('../models/Contacts');
 const Tenant = require('../models/Tenant');
 const config = require('../config.js');
 
+
 router.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -80,6 +81,7 @@ router.post('/check-user', async (req, res) => {
     // Check for existing user
     console.log('Backend: 4. Checking database for existing user');
     const existingUser = await Users.findOne({ email: userInfo.email });
+    console.log('Backend: 4.1. Existing user:', existingUser);
 
     if (existingUser) {
       // Only send user data, not LinkedIn data
@@ -88,13 +90,9 @@ router.post('/check-user', async (req, res) => {
         tenantId: existingUser.tenantId,
         organization: false,
         timestamp: new Date().toISOString(),
+        freelancer: existingUser.isFreelancer
       };
       const token = generateToken(payload);
-      const userData = {
-        isProfileCompleted: existingUser.isProfileCompleted,
-        roleName: existingUser.roleId ? (await Role.findById(existingUser.roleId))?.roleName : null,
-        // Add any other fields you want to send
-      };
       return res.json({
         existingUser: true,
         email: existingUser.email,
@@ -102,17 +100,22 @@ router.post('/check-user', async (req, res) => {
       });
     } else {
       // Create new User
-      const newUser = await Users.create({
-        ...userInfo // includes firstName, lastName, email, pictureUrl, profileUrl
-      });
+
 
       // Create new Tenant
       const newTenant = await Tenant.create({
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         email: userInfo.email,
-        ownerId: newUser._id, // who is created this tenant
       });
+
+      const newUser = await Users.create({
+        ...userInfo,
+        tenantId: newTenant._id
+      });
+
+      newTenant.ownerId = newUser._id;
+      await newTenant.save();
 
       // Create new Contact
       await Contacts.create({
@@ -133,7 +136,8 @@ router.post('/check-user', async (req, res) => {
         userId: newUser._id.toString(),
         tenantId: newTenant._id.toString(),
         organization: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        freelancer: newUser.isFreelancer
       });
 
       return res.json({

@@ -16,241 +16,241 @@ const { sendVerificationEmail } = require('../controllers/EmailsController/signU
 
 
 
-const registerOrganization = async (req, res) => {
-  let savedTenant = null;
-  try {
-    console.log('Starting organization registration process...');
-    const {
-      firstName, lastName, email, phone, countryCode, profileId, jobTitle,
-      company, employees, country, password
-    } = req.body;
-    console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
+// const registerOrganization = async (req, res) => {
+//   let savedTenant = null;
+//   try {
+//     console.log('Starting organization registration process...');
+//     const {
+//       firstName, lastName, email, phone, countryCode, profileId, jobTitle,
+//       company, employees, country, password
+//     } = req.body;
+//     console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
 
-    // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
-    }
+//     // Validate required fields
+//     if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
+//       return res.status(400).json({ message: 'All fields are required' });
+//     }
 
-    // Validate work email
-    const domain = email.split('@')[1]?.toLowerCase();
-    const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
-    if (personalDomains.includes(domain)) {
-      return res.status(400).json({ message: 'Please use your company email address' });
-    }
+//     // Validate work email
+//     const domain = email.split('@')[1]?.toLowerCase();
+//     const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+//     if (personalDomains.includes(domain)) {
+//       return res.status(400).json({ message: 'Please use your company email address' });
+//     }
 
-    // Fetch tabs and objects data from DB
-    console.log('Fetching tabs and objects data from database...');
-    const tabsData = await Tabs.findOne({});
-    const objectsData = await Objects.findOne({});
-    console.log('Tabs data:', tabsData ? 'Found' : 'Not found');
-    console.log('Objects data:', objectsData ? 'Found' : 'Not found');
+//     // Fetch tabs and objects data from DB
+//     console.log('Fetching tabs and objects data from database...');
+//     const tabsData = await Tabs.findOne({});
+//     const objectsData = await Objects.findOne({});
+//     console.log('Tabs data:', tabsData ? 'Found' : 'Not found');
+//     console.log('Objects data:', objectsData ? 'Found' : 'Not found');
 
-    if (!tabsData || !objectsData) {
-      console.log('Tabs or Objects data not found in database');
-      return res.status(500).json({ message: 'Tabs or Objects data not found' });
-    }
+//     if (!tabsData || !objectsData) {
+//       console.log('Tabs or Objects data not found in database');
+//       return res.status(500).json({ message: 'Tabs or Objects data not found' });
+//     }
 
-    // Hash password
-    console.log('Hashing password...');
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log('Password hashed successfully');
+//     // Hash password
+//     console.log('Hashing password...');
+//     const hashedPassword = await bcrypt.hash(password, saltRounds);
+//     console.log('Password hashed successfully');
 
-    // Create new organization
-    console.log('Creating new organization...');
-    const tenant = new Tenant({
-      firstName, lastName, email, phone, profileId, jobTitle,
-      company, employees, country, password: hashedPassword,
-      status: 'submitted',
-      type: 'organization',
-    });
+//     // Create new organization
+//     console.log('Creating new organization...');
+//     const tenant = new Tenant({
+//       firstName, lastName, email, phone, profileId, jobTitle,
+//       company, employees, country, password: hashedPassword,
+//       status: 'submitted',
+//       type: 'organization',
+//     });
 
-    // savedOrganization = await organization.save();
-    const savedTenant = await tenant.save();
-    console.log('Organization saved successfully with ID:', savedTenant._id);
-
-
-
-    // Create new user
-    console.log('Creating new user...');
-    const newUser = new Users({
-      lastName,
-      firstName,
-      email,
-      profileId,
-      phone,
-      tenantId: savedTenant._id,
-      password: hashedPassword,
-      isEmailVerified: false
-    });
-    console.log('New user object:', JSON.stringify(newUser, null, 2));
-    const savedUser = await newUser.save();
-    console.log('User saved successfully with ID:', savedUser._id);
-
-    // Update the organization with ownerId (user's _id)
-    await Tenant.findByIdAndUpdate(savedTenant._id, {
-      ownerId: savedUser._id
-    });
-    console.log('Organization updated with ownerId:', savedUser._id);
-
-    // Create new contact
-    console.log('Creating new contact...');
-    const contact = new Contacts({
-      lastName,
-      firstName,
-      email,
-      phone,
-      profileId,
-      currentRole: jobTitle,
-      company: company,
-      employees: employees,
-      countryCode: countryCode,
-      tenantId: savedTenant._id,
-      ownerId: savedUser._id
-    });
-
-    const savedContact = await contact.save();
-    console.log('Contact saved successfully with ID:', savedContact._id);
+//     // savedOrganization = await organization.save();
+//     const savedTenant = await tenant.save();
+//     console.log('Organization saved successfully with ID:', savedTenant._id);
 
 
-    //sending email verification
-    const emailResult = await sendVerificationEmail(email, savedUser._id, firstName, lastName);
-    if (!emailResult.success) {
-      throw new Error(emailResult.message);
-    }
 
-    // Create default sharing settings
-    console.log('Creating default sharing settings...');
-    const accessBody = objectsData.objects.map(obj => ({
-      ObjName: obj,
-      Access: 'Public',
-      GrantAccess: false
-    }));
+//     // Create new user
+//     console.log('Creating new user...');
+//     const newUser = new Users({
+//       lastName,
+//       firstName,
+//       email,
+//       profileId,
+//       phone,
+//       tenantId: savedTenant._id,
+//       password: hashedPassword,
+//       isEmailVerified: false
+//     });
+//     console.log('New user object:', JSON.stringify(newUser, null, 2));
+//     const savedUser = await newUser.save();
+//     console.log('User saved successfully with ID:', savedUser._id);
 
-    const sharingSettings = new SharingSettings({
-      Name: 'sharingSettingDefaultName',
-      organizationId: savedTenant._id,
-      accessBody
-    });
+//     // Update the organization with ownerId (user's _id)
+//     await Tenant.findByIdAndUpdate(savedTenant._id, {
+//       ownerId: savedUser._id
+//     });
+//     console.log('Organization updated with ownerId:', savedUser._id);
 
-    await sharingSettings.save();
-    console.log('Sharing settings saved successfully');
+//     // Create new contact
+//     console.log('Creating new contact...');
+//     const contact = new Contacts({
+//       lastName,
+//       firstName,
+//       email,
+//       phone,
+//       profileId,
+//       currentRole: jobTitle,
+//       company: company,
+//       employees: employees,
+//       countryCode: countryCode,
+//       tenantId: savedTenant._id,
+//       ownerId: savedUser._id
+//     });
 
-    // Create default profiles
-    console.log('Creating default profiles...');
-    const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
-    let adminProfileId = "";
+//     const savedContact = await contact.save();
+//     console.log('Contact saved successfully with ID:', savedContact._id);
 
-    for (let profileName of profileNames) {
-      const profileTabs = tabsData.tabs.map(tab => ({
-        name: tab,
-        status: profileName === "Admin" ? 'Visible' : 'Hidden'
-      }));
 
-      const profileObjects = objectsData.objects.map(object => ({
-        name: object,
-        permissions: {
-          View: true,
-          Create: true,
-          Edit: true,
-          Delete: profileName === "Admin"
-        }
-      }));
+//     //sending email verification
+//     const emailResult = await sendVerificationEmail(email, savedUser._id, firstName, lastName);
+//     if (!emailResult.success) {
+//       throw new Error(emailResult.message);
+//     }
 
-      const profile = new Profile({
-        label: profileName,
-        Name: profileName,
-        Description: `Default profile description for ${profileName}`,
-        Tabs: profileTabs,
-        Objects: profileObjects,
-        organizationId: savedTenant._id
-      });
+//     // Create default sharing settings
+//     console.log('Creating default sharing settings...');
+//     const accessBody = objectsData.objects.map(obj => ({
+//       ObjName: obj,
+//       Access: 'Public',
+//       GrantAccess: false
+//     }));
 
-      const savedProfile = await profile.save();
-      if (profileName === "Admin") {
-        adminProfileId = savedProfile._id;
-      }
-    }
+//     const sharingSettings = new SharingSettings({
+//       Name: 'sharingSettingDefaultName',
+//       organizationId: savedTenant._id,
+//       accessBody
+//     });
 
-    // Create default roles from RolesPermissionObject
-    console.log('Creating default roles from RolesPermissionObject...');
-    const rolesPermissionObjects = await RolesPermissionObject.find({});
-    let roleIds = {};
+//     await sharingSettings.save();
+//     console.log('Sharing settings saved successfully');
 
-    for (let roleObj of rolesPermissionObjects) {
-      const { label, roleName, objects, level } = roleObj;
+//     // Create default profiles
+//     console.log('Creating default profiles...');
+//     const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
+//     let adminProfileId = "";
 
-      const roleObjects = objects.map(obj => ({
-        objectName: obj.objectName,
-        permissions: obj.permissions
-      }));
+//     for (let profileName of profileNames) {
+//       const profileTabs = tabsData.tabs.map(tab => ({
+//         name: tab,
+//         status: profileName === "Admin" ? 'Visible' : 'Hidden'
+//       }));
 
-      const newRole = new Role({
-        label,
-        roleName,
-        description: `Default role description for ${roleName}`,
-        tenantId: savedTenant._id,
-        objects: roleObjects,
-        level,
-        inherits: [],
-        isDefault: true
-      });
+//       const profileObjects = objectsData.objects.map(object => ({
+//         name: object,
+//         permissions: {
+//           View: true,
+//           Create: true,
+//           Edit: true,
+//           Delete: profileName === "Admin"
+//         }
+//       }));
 
-      const savedRole = await newRole.save();
-      roleIds[roleName] = savedRole._id;
-    }
+//       const profile = new Profile({
+//         label: profileName,
+//         Name: profileName,
+//         Description: `Default profile description for ${profileName}`,
+//         Tabs: profileTabs,
+//         Objects: profileObjects,
+//         organizationId: savedTenant._id
+//       });
 
-    // Assign Admin Role and Profile to the User
-    console.log('Assigning Admin role and profile to user:', savedUser._id);
-    await Users.findByIdAndUpdate(savedUser._id, {
-      roleId: roleIds["Admin"],
-      ProfileId: adminProfileId
-    });
-    console.log('Admin role and profile assigned successfully');
+//       const savedProfile = await profile.save();
+//       if (profileName === "Admin") {
+//         adminProfileId = savedProfile._id;
+//       }
+//     }
 
-    // Generate JWT
-    const payload = {
-      userId: savedUser._id.toString(),
-      tenantId: savedTenant._id.toString(),
-      organization: true,
-      timestamp: new Date().toISOString(),
-    };
-    const token = generateToken(payload);
+//     // Create default roles from RolesPermissionObject
+//     console.log('Creating default roles from RolesPermissionObject...');
+//     const rolesPermissionObjects = await RolesPermissionObject.find({});
+//     let roleIds = {};
 
-    // Set JWT token in HTTP-only cookie
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+//     for (let roleObj of rolesPermissionObjects) {
+//       const { label, roleName, objects, level } = roleObj;
 
-    console.log('Organization registration completed successfully');
-    res.status(201).json({
-      message: "Organization created successfully",
-      tenantId: savedTenant._id,
-      ownerId: savedUser._id,
-      organization: savedTenant,
-      token
-    });
+//       const roleObjects = objects.map(obj => ({
+//         objectName: obj.objectName,
+//         permissions: obj.permissions
+//       }));
 
-  } catch (error) {
-    console.error('Error in organization registration:', error);
-    if (error.code === 11000) {
-      console.log('Duplicate key error detected:', error.message);
-      if (savedTenant) {
-        console.log('Cleaning up organization with ID:', savedTenant._id);
-        await Organization.deleteOne({ _id: savedTenant._id });
-      }
-      return res.status(400).json({ message: 'Duplicate key error' });
-    }
-    console.error('Unexpected error:', error.message, error.stack);
-    if (savedTenant) {
-      console.log('Cleaning up organization with ID:', savedTenant._id);
-      await Organization.deleteOne({ _id: savedTenant._id });
-    }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-};
+//       const newRole = new Role({
+//         label,
+//         roleName,
+//         description: `Default role description for ${roleName}`,
+//         tenantId: savedTenant._id,
+//         objects: roleObjects,
+//         level,
+//         inherits: [],
+//         isDefault: true
+//       });
+
+//       const savedRole = await newRole.save();
+//       roleIds[roleName] = savedRole._id;
+//     }
+
+//     // Assign Admin Role and Profile to the User
+//     console.log('Assigning Admin role and profile to user:', savedUser._id);
+//     await Users.findByIdAndUpdate(savedUser._id, {
+//       roleId: roleIds["Admin"],
+//       ProfileId: adminProfileId
+//     });
+//     console.log('Admin role and profile assigned successfully');
+
+//     // Generate JWT
+//     const payload = {
+//       userId: savedUser._id.toString(),
+//       tenantId: savedTenant._id.toString(),
+//       organization: true,
+//       timestamp: new Date().toISOString(),
+//     };
+//     const token = generateToken(payload);
+
+//     // Set JWT token in HTTP-only cookie
+//     res.cookie('jwt', token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === 'production',
+//       sameSite: 'strict',
+//       maxAge: 24 * 60 * 60 * 1000, // 1 day
+//     });
+
+//     console.log('Organization registration completed successfully');
+//     res.status(201).json({
+//       message: "Organization created successfully",
+//       tenantId: savedTenant._id,
+//       ownerId: savedUser._id,
+//       organization: savedTenant,
+//       token
+//     });
+
+//   } catch (error) {
+//     console.error('Error in organization registration:', error);
+//     if (error.code === 11000) {
+//       console.log('Duplicate key error detected:', error.message);
+//       if (savedTenant) {
+//         console.log('Cleaning up organization with ID:', savedTenant._id);
+//         await Organization.deleteOne({ _id: savedTenant._id });
+//       }
+//       return res.status(400).json({ message: 'Duplicate key error' });
+//     }
+//     console.error('Unexpected error:', error.message, error.stack);
+//     if (savedTenant) {
+//       console.log('Cleaning up organization with ID:', savedTenant._id);
+//       await Organization.deleteOne({ _id: savedTenant._id });
+//     }
+//     res.status(500).json({ message: 'Internal server error', error: error.message });
+//   }
+// };
 
 const organizationUserCreation = async (req, res) => {
   try {
@@ -377,15 +377,26 @@ const loginOrganization = async (req, res) => {
       });
     }
 
+    // const organization = await Tenant.findOne({ _id: user.tenantId });
+
+    // if (!['active', 'payment_pending'].includes(organization.status)) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Account not active',
+    //     status: organization.status
+    //   });
+    // }
+
     const organization = await Tenant.findOne({ _id: user.tenantId });
 
-    if (!['active', 'payment_pending'].includes(organization.status)) {
+    if (organization.status === 'inactive') {
       return res.status(403).json({
         success: false,
         message: 'Account not active',
         status: organization.status
       });
     }
+
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -888,6 +899,154 @@ const verifyEmailChange = async (req, res) => {
   } catch (error) {
     console.error('Email change verification error:', error);
     return res.status(500).json({ success: false, message: 'Error verifying email change' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const registerOrganization = async (req, res) => {
+  let savedTenant = null;
+  try {
+    console.log('Starting organization registration process...');
+    const {
+      firstName, lastName, email, phone, countryCode, profileId, jobTitle,
+      company, employees, country, password
+    } = req.body;
+    console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate work email
+    const domain = email.split('@')[1]?.toLowerCase();
+    const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+    if (personalDomains.includes(domain)) {
+      return res.status(400).json({ message: 'Please use your company email address' });
+    }
+
+    // Hash password
+    console.log('Hashing password...');
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log('Password hashed successfully');
+
+    // Create new organization
+    console.log('Creating new organization...');
+    const tenant = new Tenant({
+      firstName, lastName, email, phone, profileId, jobTitle,
+      company, employees, country,
+      status: 'submitted',
+      type: 'organization'
+    });
+
+    savedTenant = await tenant.save();
+    console.log('Organization saved successfully with ID:', savedTenant._id);
+
+    // Fetch Admin role
+    const adminRole = await RolesPermissionObject.findOne({ roleName: 'Admin', roleType: 'organization' });
+    if (!adminRole) {
+      throw new Error('Admin role template not found');
+    }
+
+    // Create new user
+    console.log('Creating new user...');
+    const newUser = new Users({
+      lastName,
+      firstName,
+      email,
+      profileId,
+      phone,
+      roleId: adminRole._id,
+      tenantId: savedTenant._id,
+      password: hashedPassword,
+      isEmailVerified: false
+    });
+    const savedUser = await newUser.save();
+    console.log('User saved successfully with ID:', savedUser._id);
+
+    // Update organization with ownerId
+    await Tenant.findByIdAndUpdate(savedTenant._id, { ownerId: savedUser._id });
+    console.log('Organization updated with ownerId:', savedUser._id);
+
+    // Create new contact
+    console.log('Creating new contact...');
+    const contact = new Contacts({
+      lastName,
+      firstName,
+      email,
+      phone,
+      profileId,
+      currentRole: jobTitle,
+      company: company,
+      employees: employees,
+      countryCode: countryCode,
+      tenantId: savedTenant._id,
+      ownerId: savedUser._id
+    });
+    const savedContact = await contact.save();
+    console.log('Contact saved successfully with ID:', savedContact._id);
+
+    // Send email verification
+    const emailResult = await sendVerificationEmail(email, savedUser._id, firstName, lastName);
+    if (!emailResult.success) {
+      throw new Error(emailResult.message);
+    }
+
+    // Generate JWT
+    const payload = {
+      userId: savedUser._id.toString(),
+      tenantId: savedTenant._id.toString(),
+      organization: true,
+      timestamp: new Date().toISOString()
+    };
+    const token = generateToken(payload);
+
+    // Set JWT token in HTTP-only cookie
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
+    console.log('Organization registration completed successfully');
+    res.status(201).json({
+      message: 'Organization created successfully',
+      tenantId: savedTenant._id,
+      ownerId: savedUser._id,
+      organization: savedTenant,
+      token
+    });
+  } catch (error) {
+    console.error('Error in organization registration:', error);
+    if (error.code === 11000) {
+      console.log('Duplicate key error detected:', error.message);
+      if (savedTenant) {
+        console.log('Cleaning up organization with ID:', savedTenant._id);
+        await Tenant.deleteOne({ _id: savedTenant._id });
+      }
+      return res.status(400).json({ message: 'Duplicate key error' });
+    }
+    if (savedTenant) {
+      console.log('Cleaning up organization with ID:', savedTenant._id);
+      await Tenant.deleteOne({ _id: savedTenant._id });
+    }
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
