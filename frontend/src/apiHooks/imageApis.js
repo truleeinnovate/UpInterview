@@ -15,7 +15,6 @@ export const uploadFile = async (file, type, entity, entityId) => {
       headers: { "Content-Type": "multipart/form-data" },
     });
   }
-
   // Delete file if null
   else if (file === null) {
     formData.append("action", "delete");

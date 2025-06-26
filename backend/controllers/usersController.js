@@ -668,7 +668,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       industry: contact.industry || '',
       experienceYears: contact.experienceYears || '',
       location: contact.location || '',
-      resumePdf: contact.resumePdf || '',
+      resume: contact.resume || '', // updated by Ashok
       coverLetter: contact.coverLetter || '',
       coverLetterdescription: contact.coverLetterdescription || '',
       professionalTitle: contact.professionalTitle || '',

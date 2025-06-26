@@ -27,7 +27,6 @@ import { validateFile } from "../../../../../utils/FileValidation/FileValidation
 
 import { getOrganizationRoles } from "../../../../../apiHooks/useRoles.js";
 
-
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
@@ -64,10 +63,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
   const [showDropdownRole, setShowDropdownRole] = useState(false);
- const [currentRole, setCurrentRole] = useState([]);
+  const [currentRole, setCurrentRole] = useState([]);
   const [searchTermRole, setSearchTermRole] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const [isFileRemoved, setIsFileRemoved] = useState(false);
   const [fileError, setFileError] = useState("");
 
   // Reset form fields
@@ -105,10 +105,8 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setIsCheckingEmail(false);
       return;
     }
-//  console.log("response currentRole",currentRole);
+    //  console.log("response currentRole",currentRole);
     setIsCheckingEmail(true);
-
-      
 
     const formatError = validateWorkEmail(email);
     if (formatError) {
@@ -146,7 +144,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     };
 
     // if (tenantId) {
-      fetchRoles();
+    fetchRoles();
     // }
   }, []);
 
@@ -170,10 +168,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setFilePreview(initialUserData?.imageData?.path);
     }
   }, [editMode, initialUserData, tenantId]);
-
-   
-
-
 
   // Clean up timeouts
   useEffect(() => {
@@ -203,6 +197,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setFile(null);
       setFilePreview(null);
       setIsImageUploaded(false);
+      setIsFileRemoved(true);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -267,7 +262,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
       // Proceed with form submission
       await addOrUpdateUser.mutateAsync(
-        { userData, file, editMode },
+        { userData, file, isFileRemoved, editMode },
         {
           onSuccess: () => {
             console.log("User saved successfully"); // Debug log
@@ -317,9 +312,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           </div>
         )}
         <div className="p-3">
-
           <div className="flex justify-between items-center mb-6 mt-2">
-
             <h2 className="text-2xl font-bold text-custom-blue">
               {editMode ? "Edit User" : "New User"}
             </h2>
