@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, ArrowLeft, Edit2, Minus, Minimize, Expand } from 'lucide-react';
-import Modal from 'react-modal';
-import classNames from 'classnames';
-import maleImage from '../../../Images/man.png';
-import femaleImage from '../../../Images/woman.png';
-import genderlessImage from '../../../Images/transgender.png';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { X, ArrowLeft, Edit2, Minus, Minimize, Expand } from "lucide-react";
+import Modal from "react-modal";
+import classNames from "classnames";
+import maleImage from "../../../Images/man.png";
+import femaleImage from "../../../Images/woman.png";
+import genderlessImage from "../../../Images/transgender.png";
+import { useCustomContext } from "../../../../../Context/Contextfetch";
 import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
 import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
 import InterviewUserDetails from "../MyProfile/InterviewDetails/InterviewDetails";
@@ -24,7 +24,7 @@ const ConfirmationModal = ({
   userName,
   newStatus,
   onCancel,
-  onConfirm
+  onConfirm,
 }) => {
   if (!show) return null;
 
@@ -33,7 +33,11 @@ const ConfirmationModal = ({
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
         <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
         <p className="mb-2">
-          Are you sure you want to change the status of <span className="font-bold">{userName} to {newStatus}</span>?
+          Are you sure you want to change the status of{" "}
+          <span className="font-bold">
+            {userName} to {newStatus}
+          </span>
+          ?
         </p>
         <div className="flex justify-end space-x-3">
           <button
@@ -54,10 +58,8 @@ const ConfirmationModal = ({
   );
 };
 
-
-
 // Set app element for accessibility
-Modal.setAppElement('#root');
+Modal.setAppElement("#root");
 
 const UserProfileDetails = () => {
   const navigate = useNavigate();
@@ -65,10 +67,10 @@ const UserProfileDetails = () => {
   const userData = location.state?.userData;
   const { toggleUserStatus, refetchUsers } = useCustomContext();
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [newStatus, setNewStatus] = useState(userData?.status || 'active');
+  const [newStatus, setNewStatus] = useState(userData?.status || "active");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [basicEditOpen, setBasicEditOpen] = useState(false);
@@ -76,24 +78,22 @@ const UserProfileDetails = () => {
   const [interviewEditOpen, setInterviewEditOpen] = useState(false);
   const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
 
-  console.log("userData",userData);
-  
+  console.log("userData", userData);
 
   useEffect(() => {
     document.title = "User Profile Details";
   }, []);
 
   const handleBasicEditSuccess = () => {
-    refetchUsers() // Refresh the users data in context
+    refetchUsers(); // Refresh the users data in context
   };
 
-
   const handleAdvacedEditSuccess = () => {
-    refetchUsers() // Refresh the users data in context
+    refetchUsers(); // Refresh the users data in context
   };
 
   const handleInterviewEditSuccess = () => {
-    refetchUsers() // Refresh the users data in context
+    refetchUsers(); // Refresh the users data in context
   };
 
   // useEffect(() => {
@@ -110,7 +110,7 @@ const UserProfileDetails = () => {
   };
 
   const handleStatusToggle = () => {
-    const updatedStatus = newStatus === 'active' ? 'inactive' : 'active';
+    const updatedStatus = newStatus === "active" ? "inactive" : "active";
     setNewStatus(updatedStatus);
     setShowConfirmation(true);
     setIsModalOpen(true);
@@ -134,27 +134,34 @@ const UserProfileDetails = () => {
   };
 
   if (!userData) {
-    navigate('/users');
+    navigate("/users");
     return null;
   }
 
-  const isInternalInterviewer = userData.roleName === 'Internal_Interviewer';
+  const isInternalInterviewer = userData.roleName === "Internal_Interviewer";
   const tabs = isInternalInterviewer
     ? [
-      { id: 'basic', label: 'Basic Details' },
-      { id: 'advanced', label: 'Advanced Details' },
-      { id: 'interview', label: 'Interview Details' },
-      { id: 'availability', label: 'Availability' },
-    ]
+        { id: "basic", label: "Basic Details" },
+        { id: "advanced", label: "Advanced Details" },
+        { id: "interview", label: "Interview Details" },
+        { id: "availability", label: "Availability" },
+      ]
     : [
-      { id: 'basic', label: 'Basic Details' },
-      { id: 'advanced', label: 'Advanced Details' },
-    ];
+        { id: "basic", label: "Basic Details" },
+        { id: "advanced", label: "Advanced Details" },
+      ];
+
+      console.log("userData",userData);
+      
 
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <BasicDetails mode='users' usersId={userData._id} setBasicEditOpen={setBasicEditOpen} />
+        <BasicDetails
+          mode="users"
+          usersId={userData?._id}
+          setBasicEditOpen={setBasicEditOpen}
+        />
       </div>
     </div>
   );
@@ -162,8 +169,11 @@ const UserProfileDetails = () => {
   const renderAdvancedDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <AdvancedDetails mode='users' usersId={userData._id} setAdvacedEditOpen={setAdvacedEditOpen} />
-
+        <AdvancedDetails
+          mode="users"
+          usersId={userData?._id}
+          setAdvacedEditOpen={setAdvacedEditOpen}
+        />
       </div>
     </div>
   );
@@ -171,7 +181,11 @@ const UserProfileDetails = () => {
   const renderInterviewDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
       <div className="bg-white p-6 rounded-lg">
-        <InterviewUserDetails mode='users' usersId={userData._id} setInterviewEditOpen={setInterviewEditOpen} />
+        <InterviewUserDetails
+          mode="users"
+          usersId={userData?._id}
+          setInterviewEditOpen={setInterviewEditOpen}
+        />
       </div>
     </div>
   );
@@ -179,18 +193,23 @@ const UserProfileDetails = () => {
   const renderAvailability = () => {
     return (
       <div className={isFullScreen ? "mx-3" : ""}>
-        <AvailabilityUser mode='users' usersId={userData._id} setAvailabilityEditOpen={setAvailabilityEditOpen} isFullScreen={isFullScreen} />
+        <AvailabilityUser
+          mode="users"
+          usersId={userData?._id}
+          setAvailabilityEditOpen={setAvailabilityEditOpen}
+          isFullScreen={isFullScreen}
+        />
       </div>
     );
   };
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200',
+    "fixed bg-white shadow-2xl border-l border-gray-200",
     {
-      'overflow-y-auto': !isModalOpen,
-      'overflow-hidden': isModalOpen,
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "overflow-y-auto": !isModalOpen,
+      "overflow-hidden": isModalOpen,
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
@@ -202,10 +221,16 @@ const UserProfileDetails = () => {
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
-        <div className={classNames('h-full', { 'max-w-7xl mx-auto px-2': isFullScreen })}>
+        <div
+          className={classNames("h-full", {
+            "max-w-7xl mx-auto px-2": isFullScreen,
+          })}
+        >
           <div>
             <div className="flex justify-between items-center mb-2 mx-3 mt-3">
-              <h2 className="text-xl font-bold text-custom-blue">User Profile</h2>
+              <h2 className="text-xl font-bold text-custom-blue">
+                User Profile
+              </h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsFullScreen(!isFullScreen)}
@@ -230,11 +255,18 @@ const UserProfileDetails = () => {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
-                    src={userData.imageData?.path ||
-                      (userData.gender === "Male" ? maleImage :
-                        userData.gender === "Female" ? femaleImage : genderlessImage)}
+                    src={
+                      userData.imageData?.path ||
+                      (userData.gender === "Male"
+                        ? maleImage
+                        : userData.gender === "Female"
+                        ? femaleImage
+                        : genderlessImage)
+                    }
                     alt={userData?.firstName || "User"}
-                    onError={(e) => { e.target.src = genderlessImage; }}
+                    onError={(e) => {
+                      e.target.src = genderlessImage;
+                    }}
                     className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                   />
                 </div>
@@ -242,18 +274,25 @@ const UserProfileDetails = () => {
                   <h3 className="text-xl font-bold text-gray-900">
                     {userData.firstName} {userData.lastName}
                   </h3>
-                  <p className="text-gray-600">{userData.currentRole || userData.label || "N/A"}</p>
+                  <p className="text-gray-600">
+                    {userData.currentRole || userData.label || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${newStatus === 'active' ? 'text-custom-blue' : 'text-gray-500'
-                  }`}>
-                  {newStatus === 'active' ? 'Active' : 'Inactive'}
+                <span
+                  className={`text-sm font-medium ${
+                    newStatus === "active"
+                      ? "text-custom-blue"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {newStatus === "active" ? "Active" : "Inactive"}
                 </span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={newStatus === 'active'}
+                    checked={newStatus === "active"}
                     onChange={handleStatusToggle}
                     className="sr-only peer"
                   />
@@ -269,10 +308,10 @@ const UserProfileDetails = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={classNames(
-                    'px-4 py-2 text-sm font-medium',
+                    "px-4 py-2 text-sm font-medium",
                     activeTab === tab.id
-                      ? 'border-b-2 border-custom-blue text-custom-blue'
-                      : 'text-gray-500 hover:text-custom-blue'
+                      ? "border-b-2 border-custom-blue text-custom-blue"
+                      : "text-gray-500 hover:text-custom-blue"
                   )}
                 >
                   {tab.label}
@@ -281,12 +320,12 @@ const UserProfileDetails = () => {
             </div>
 
             {/* Tab Content */}
-            <div style={{ maxHeight: 'calc(100vh - 230px)' }}>
+            <div style={{ maxHeight: "calc(100vh - 230px)" }}>
               <>
-                {activeTab === 'basic' && renderBasicDetails()}
-                {activeTab === 'advanced' && renderAdvancedDetails()}
-                {activeTab === 'interview' && renderInterviewDetails()}
-                {activeTab === 'availability' && renderAvailability()}
+                {activeTab === "basic" && renderBasicDetails()}
+                {activeTab === "advanced" && renderAdvancedDetails()}
+                {activeTab === "interview" && renderInterviewDetails()}
+                {activeTab === "availability" && renderAvailability()}
 
                 <ConfirmationModal
                   show={showConfirmation}
@@ -296,30 +335,46 @@ const UserProfileDetails = () => {
                   onConfirm={confirmStatusChange}
                 />
               </>
-
             </div>
           </div>
         </div>
 
+        {basicEditOpen && (
+          <BasicDetailsEditPage
+            from="users"
+            usersId={userData._id}
+            setBasicEditOpen={setBasicEditOpen}
+            onSuccess={handleBasicEditSuccess}
+          />
+        )}
 
-        {basicEditOpen &&
-          <BasicDetailsEditPage from="users" usersId={userData._id} setBasicEditOpen={setBasicEditOpen} onSuccess={handleBasicEditSuccess} />
-        }
+        {advacedEditOpen && (
+          <EditAdvacedDetails
+            from="users"
+            usersId={userData._id}
+            setAdvacedEditOpen={setAdvacedEditOpen}
+            onSuccess={handleAdvacedEditSuccess}
+          />
+        )}
 
-        {advacedEditOpen &&
-          <EditAdvacedDetails from="users" usersId={userData._id} setAdvacedEditOpen={setAdvacedEditOpen} onSuccess={handleAdvacedEditSuccess} />
-        }
+        {interviewEditOpen && (
+          <EditInterviewDetails
+            from="users"
+            usersId={userData._id}
+            setInterviewEditOpen={setInterviewEditOpen}
+            onSuccess={handleInterviewEditSuccess}
+          />
+        )}
 
-
-        {
-          interviewEditOpen && <EditInterviewDetails from="users" usersId={userData._id} setInterviewEditOpen={setInterviewEditOpen} onSuccess={handleInterviewEditSuccess} />
-        }
-
-        {
-          availabilityEditOpen && <EditAvailabilityDetails from="users" usersId={userData._id} setAvailabilityEditOpen={setAvailabilityEditOpen} onSuccess={handleInterviewEditSuccess} />
-        }
+        {availabilityEditOpen && (
+          <EditAvailabilityDetails
+            from="users"
+            usersId={userData._id}
+            setAvailabilityEditOpen={setAvailabilityEditOpen}
+            onSuccess={handleInterviewEditSuccess}
+          />
+        )}
       </Modal>
-
     </>
   );
 };

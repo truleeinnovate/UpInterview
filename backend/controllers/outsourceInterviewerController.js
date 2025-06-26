@@ -9,7 +9,7 @@ exports.getAllInterviewers = async (req, res) => {
                 path: 'contactId',
                 populate: {
                     path: 'availability',
-                    model: 'Interviewavailability'
+                    model: 'InterviewAvailability'
                 }
             });
 

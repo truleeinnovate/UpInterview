@@ -7,23 +7,29 @@ const PushNotification = require('../../models/PushNotifications');
 //const { sendEmail } = require('../../utils/sendEmail'); // Adjust path as per your structure
 //const emailTemplateModel = require('../../models/EmailTemplatemodel'); // Adjust path as per your structure
 
+
 console.log('pushNotificationEmailController.js LOADED at', new Date().toISOString(), ' - If you see this, the file is being executed.');
 
 // Function to manually test the task reminder logic
 function testTaskReminder() {
   console.log('Manually testing task reminder logic at', new Date().toISOString());
+
   runTaskReminderJob();
 }
 
 // The actual cron job logic extracted for reuse
 const runTaskReminderJob = async () => {
+
   console.log('Running automated task email reminder job at', new Date().toISOString());
+
 
   try {
     // Find tasks due in the next 24 hours
     const now = moment();
     const dueIn24Hours = moment(now).add(24, 'hours');
+
     console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
+
     const tasks = await Task.find({
       dueDate: {
         $gte: now.toDate(),
@@ -36,8 +42,10 @@ const runTaskReminderJob = async () => {
       return;
     }
 
+
     
     console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
+
     // // Fetch email template for task reminder
     // const emailTemplate = await emailTemplateModel.findOne({
     //   category: 'task_due_reminder',
@@ -92,13 +100,17 @@ const runTaskReminderJob = async () => {
 
     for (const task of tasks) {
       if (!task.ownerId) {
+
         console.warn(`Task ${task._id} has no ownerId.`);
+
         continue;
       }
 
       const userId = task.ownerId.toString();
       if (!mongoose.Types.ObjectId.isValid(task.ownerId)) {
+
         console.warn(`Invalid user ObjectId ${userId} for task ${task._id}`);
+
         continue;
       }
 
@@ -110,7 +122,9 @@ const runTaskReminderJob = async () => {
       }
 
       if (!user || !user.email) {
+
         console.warn(`No valid user/email for task ${task._id}`);
+
         continue;
       }
       const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
@@ -135,6 +149,7 @@ const runTaskReminderJob = async () => {
           unread: true
         });
         await notification.save();
+
         console.log(`Task reminder notification stored for user ${user.email} and task ${task._id}`);
       } else {
         console.log(`Task reminder notification already exists for user ${user.email} and task ${task._id}, skipping save.`);
@@ -142,6 +157,7 @@ const runTaskReminderJob = async () => {
     }
 
     console.log('Automated task email reminder job completed successfully.');
+
   } catch (error) {
     console.error('Automated Task Email Reminder Job Error:', error);
   }
@@ -151,6 +167,7 @@ const runTaskReminderJob = async () => {
 cron.schedule('* * * * *', async () => {
   runTaskReminderJob();
 });
+
 
 console.log('Task reminder cron job scheduled to run every minute for testing.');
 

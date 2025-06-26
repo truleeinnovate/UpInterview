@@ -19,6 +19,7 @@ import { useCandidates } from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
+import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -218,6 +219,8 @@ const AddCandidateForm = ({ mode }) => {
 
   const [isProfilePicRemoved, setIsProfilePicRemoved] = useState(false);
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [resumeError, setResumeError] = useState("");
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -411,9 +414,16 @@ const AddCandidateForm = ({ mode }) => {
     return false;
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = await validateFile(file, "image");
+      if (error) {
+        setFileError(error);
+        return;
+      }
+
+      setFileError("");
       setFile(file);
       setSelectedImage(file);
       // setImageFile(file);
@@ -422,9 +432,15 @@ const AddCandidateForm = ({ mode }) => {
     }
   };
 
-  const handleResumeChange = (e) => {
+  const handleResumeChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = await validateFile(file, "resume");
+      if (error) {
+        setResumeError(error);
+        return;
+      }
+      setResumeError("");
       // setResumeFile(file);
       setSelectedResume(file);
     }
@@ -702,7 +718,12 @@ const AddCandidateForm = ({ mode }) => {
                 <p className="mt-2 text-sm font-medium text-gray-700">
                   Profile Photo
                 </p>
-                <p className="text-xs text-gray-500">Click to upload</p>
+                <p className="text-xs text-gray-500">
+                  Maximum file size: 100KB, (200×200 recommended).
+                </p>
+                <p className="text-xs text-red-500 font-medium text-center mt-1">
+                  {fileError}
+                </p>
               </div>
 
               {/* Resume Upload */}
@@ -718,7 +739,10 @@ const AddCandidateForm = ({ mode }) => {
                           {selectedResume.name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {(selectedResume.size / 1024 / 1024).toFixed(2)} MB
+                          {selectedResume?.size &&
+                            `${(selectedResume.size / 1024 / 1024).toFixed(
+                              2
+                            )} MB`}
                         </p>
                       </div>
                     ) : (
@@ -756,7 +780,10 @@ const AddCandidateForm = ({ mode }) => {
                   )}
                 </div>
                 <p className="mt-2 text-sm font-medium text-gray-700">Resume</p>
-                <p className="text-xs text-gray-500">Maximum file size: 10MB</p>
+                <p className="text-xs text-gray-500">Maximum file size: 4MB</p>
+                <p className="text-xs text-red-500 font-medium text-center">
+                  {resumeError}
+                </p>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require('../utils/jwt');
 const Tenant = require("../models/Tenant");
+const mongoose = require('mongoose');
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ exports.individualLogin = async (req, res) => {
 
     console.log('[individualLogin] Step 3: User updated:', savedUser);
 
-    // 🔁 Update Contact by ownerId match
+    // Update Contact by ownerId match
     savedContact = await Contacts.findOneAndUpdate(
       { ownerId: ownerId },
       contactData,
@@ -38,7 +39,7 @@ exports.individualLogin = async (req, res) => {
     );
     console.log('[individualLogin] Step 4: Contact updated:', savedContact);
 
-    // 🔁 Update Tenant by ownerId match if needed
+    // Update Tenant by ownerId match if needed
     if (isProfileCompleteStateOrg === undefined) {
       const updateData = {};
 
@@ -49,7 +50,7 @@ exports.individualLogin = async (req, res) => {
       }
 
       const tenantExists = await Tenant.findOne({ ownerId });
-      console.log('[individualLogin] 🔍 Does tenant exist:', tenantExists);
+      console.log('[individualLogin] Does tenant exist:', tenantExists);
 
       savedTenant = await Tenant.findOneAndUpdate(
         { ownerId: ownerId },
@@ -59,34 +60,19 @@ exports.individualLogin = async (req, res) => {
       console.log('[individualLogin] Step 5.2: Tenant updated:', savedTenant);
     }
 
-
-    // else {
-    //   // Create new user
-    //   const newUser = new Users(userData);
-    //   savedUser = await newUser.save();
-    //   console.log('[individualLogin] Step 5: Created new user with id:', savedUser._id);
-
-    //   // Create new contact
-    //   const newContact = new Contacts({
-    //     ...contactData,
-    //     ownerId: savedUser._id
-    //   });
-    //   savedContact = await newContact.save();
-    //   console.log('[individualLogin] Step 6: Created new contact with id:', savedContact._id);
-    // }
-
     // Save availability if freelancer or internal interviewer
-    // if (Freelancer || isInternalInterviewer) {
-    //   const mockReq = { body: { contact: savedContact._id, days: availabilityData } };
-    //   const mockRes = {
-    //     status: (code) => ({
-    //       json: (data) => console.log("Availability response:", data),
-    //     }),
-    //   };
-    //   await availabilityController.createOrUpdateInterviewAvailability(mockReq, mockRes);
-    //   console.log('[individualLogin] Step 7: Saved availability');
-    // }
-    // <-----------------------OutsourceInterviewer------------------------------->
+    if (availabilityData && availabilityData.length > 0 && (userData.isFreelancer || isInternalInterviewer)) {
+      try {
+        console.log('[individualLogin] Step 7: Saving availability data');
+        
+        // Use the updateOrCreate method to save all availability in one document
+        await InterviewAvailability.updateOrCreate(savedContact._id, availabilityData);
+        console.log('[individualLogin] Step 7.1: Saved availability data');
+      } catch (error) {
+        console.error('[individualLogin] Error saving availability:', error);
+        // Don't fail the whole request if availability save fails
+      }
+    }
 
     // Save outsource interviewer if freelancer
     if (userData.isFreelancer) {
@@ -129,7 +115,7 @@ exports.individualLogin = async (req, res) => {
       ...(isProfileCompleteStateOrg && { tenantId: savedUser.tenantId }),
       token: token
     });
-    console.log('[individualLogin] Step 10: Sent response');
+    console.log('[individualLogin] Step 9: Sent response');
 
   } catch (error) {
     console.error("Error in individual login:", error);

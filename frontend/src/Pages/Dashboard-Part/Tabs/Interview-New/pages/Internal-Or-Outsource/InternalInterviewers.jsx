@@ -4,7 +4,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
 const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, selectedInterviewers: selectedInterviewersProp = [], }) => {
-  const { interviewers, groups, fetchInterviewers } = useCustomContext();
+  const { interviewers, groups } = useCustomContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -23,24 +23,24 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
     { value: 'Internal_Interviewer', label: 'Internal Interviewer' },
   ];
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const roleDropdownRef = useRef(null);
 
-  // Fetch all interviewers on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        await fetchInterviewers(); // Fetch all interviewers without role filter
-      } catch (error) {
-        console.error('Error fetching interviewers:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // // Fetch all interviewers on component mount
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       await fetchInterviewers(); // Fetch all interviewers without role filter
+  //     } catch (error) {
+  //       console.error('Error fetching interviewers:', error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
     
-    fetchData();
-  }, [fetchInterviewers]);
+  //   fetchData();
+  // }, [fetchInterviewers]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

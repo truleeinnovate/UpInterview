@@ -101,7 +101,8 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
       // });
 
       // Safely map availability if exists
-      const days = userProfile?.availability || [];
+      // const days = userProfile?.availability || [];
+            const days = userProfile?.availability?.[0]?.availability || [];
       if (Array.isArray(days)) {
         days.forEach(day => {
           updatedTimes[day.day] = day.timeSlots.map(slot => ({
@@ -130,79 +131,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
     fetchData();
   }, [resolvedId, userProfile]);
 
-  // Handler functions from AvailabilityDetails
-  const handlePaste = () => {
-    const copiedTimes = formData.times[selectedDay];
-    setFormData(prev => ({
-      ...prev,
-      times: {
-        ...prev.times,
-        ...selectedDays.reduce((acc, day) => ({
-          ...acc,
-          [day]: copiedTimes.map(time => ({ ...time }))
-        }), {})
-      }
-    }));
-    setShowPopup(false);
-    setSelectedDay(null);
-    setSelectedDays([]);
-  };
-
-  const handleAddTimeSlot = (day) => {
-    setFormData(prev => ({
-      ...prev,
-      times: {
-        ...prev.times,
-        [day]: [...prev.times[day], { startTime: null, endTime: null }]
-      }
-    }));
-  };
-
-  const handleRemoveTimeSlot = (day, index) => {
-    setFormData(prev => {
-      const newTimes = { ...prev.times };
-      if (newTimes[day].length === 1) {
-        newTimes[day] = [{ startTime: null, endTime: null }];
-      } else {
-        newTimes[day] = newTimes[day].filter((_, i) => i !== index);
-      }
-      const hasValidSlot = Object.values(newTimes).some(daySlots =>
-        daySlots.some(slot => slot.startTime && slot.endTime && slot.startTime < slot.endTime)
-      );
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        TimeSlot: hasValidSlot ? "" : prevErrors.TimeSlot
-      }));
-      return { ...prev, times: newTimes };
-    });
-  };
-
-  //   const handleRemoveTimeSlot = (day, index) => {
-  //     setFormData(prev => {
-  //         const newTimes = { ...prev.times };
-  //         if (newTimes[day].length === 1) {
-  //             newTimes[day] = [{ startTime: null, endTime: null }];
-  //         } else {
-  //             newTimes[day] = newTimes[day].filter((_, i) => i !== index);
-  //         }
-  //         return { ...prev, times: newTimes };
-  //     });
-  // };
-
-  const handleTimeChange = (day, index, key, date) => {
-    setFormData(prev => {
-      const newTimes = { ...prev.times };
-      newTimes[day][index][key] = date && !isNaN(date.getTime()) ? date : null;
-
-      if (newTimes[day][index].startTime && newTimes[day][index].endTime) {
-        setErrors(prevErrors => ({
-          ...prevErrors,
-          TimeSlot: ""
-        }));
-      }
-      return { ...prev, times: newTimes };
-    });
-  };
+  
 
   const handleOptionClick = (option) => {
     setFormData(prev => ({
@@ -262,7 +191,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
               endTime: slot.endTime,
             })),
         }))
-        .filter(day => day.timeSlots.length > 0), // Only include days with valid time slots
+        .filter(day => day.timeSlots?.length > 0), // Only include days with valid time slots
     };
 
     const cleanFormData = {
@@ -271,7 +200,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
         : formData.selectedTimezone,
       // timeZone: formData.selectedTimezone, // Already a string from handleTimezoneChange
       preferredDuration: formData.selectedOption || '',
-      availability: formattedAvailability.days.length > 0 ? [formattedAvailability] : [],
+      availability: formattedAvailability.days?.length > 0 ? [formattedAvailability] : [],
      contactId:userProfile?.contactId || "Not Found"
     };
 
@@ -294,8 +223,8 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
 
 
       if (response.status === 200) {
-        handleCloseModal()
-         onSuccess();
+         if (usersId) onSuccess();
+          handleCloseModal()
         // navigate('/account-settings/my-profile/availability')
         // Update parent states
         // setParentTimes(formData.times);

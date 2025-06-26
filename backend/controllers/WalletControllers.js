@@ -1,12 +1,12 @@
-const mongoose = require('mongoose');
-const WalletTopup = require('../models/WalletTopup');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
+const mongoose = require("mongoose");
+const WalletTopup = require("../models/WalletTopup");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // Get wallet by owner ID
@@ -16,7 +16,7 @@ const getWalletByOwnerId = async (req, res) => {
 
     // Validate ownerId
     if (!ownerId) {
-      return res.status(400).json({ error: 'ownerId is required' });
+      return res.status(400).json({ error: "ownerId is required" });
     }
 
     // Find or create wallet
@@ -26,30 +26,46 @@ const getWalletByOwnerId = async (req, res) => {
       wallet = await WalletTopup.create({
         ownerId,
         balance: 0,
-        transactions: []
+        transactions: [],
       });
     }
 
     res.status(200).json({ walletDetials: [wallet] });
   } catch (error) {
-    console.error('Error fetching wallet:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error fetching wallet:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
 // Create Razorpay order for wallet top-up
 const createTopupOrder = async (req, res) => {
   try {
-    const { amount, currency = 'USD', ownerId, tenantId } = req.body;
-    
+    const { amount, currency = "USD", ownerId, tenantId } = req.body;
+
     // Validate inputs
     if (!amount || amount <= 0) {
-      return res.status(400).json({ error: 'Valid amount is required' });
+      return res.status(400).json({ error: "Valid amount is required" });
     }
-    
+
     if (!ownerId) {
-      return res.status(400).json({ error: 'ownerId is required' });
+      return res.status(400).json({ error: "ownerId is required" });
     }
+
+    // Generate walletCode like "WLT-00001"
+    const lastTopup = await WalletTopup.findOne({})
+      .sort({ _id: -1 })
+      .select("walletCode")
+      .lean();
+
+    let nextWalletNumber = 1;
+    if (lastTopup && lastTopup.walletCode) {
+      const match = lastTopup.walletCode.match(/WLT-(\d+)/);
+      if (match) {
+        nextWalletNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    const walletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
 
     // Convert amount to smallest currency unit (cents)
     const amountInSmallestUnit = Math.round(amount * 100);
@@ -59,58 +75,65 @@ const createTopupOrder = async (req, res) => {
     const timestamp = Date.now().toString().slice(-10);
     const shortOwnerId = ownerId.slice(-6);
     const receipt = `wallet-${timestamp}-${shortOwnerId}`;
-    
+
     // Make sure receipt is not longer than 40 chars
     const finalReceipt = receipt.slice(0, 39);
-    
+
     // Create Razorpay order
     const order = await razorpay.orders.create({
       amount: amountInSmallestUnit,
       currency: currency,
       receipt: finalReceipt,
       notes: {
-        type: 'wallet_topup',
+        type: "wallet_topup",
         ownerId,
-        tenantId: tenantId || 'default'
-      }
+        tenantId: tenantId || "default",
+      },
+      walletCode,
     });
 
     res.status(200).json({
       orderId: order.id,
       amount: amount,
       currency: currency,
-      key_id: process.env.RAZORPAY_KEY_ID
+      key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error('Error creating topup order:', error);
-    res.status(500).json({ error: 'Failed to create topup order' });
+    console.error("Error creating topup order:", error);
+    res.status(500).json({ error: "Failed to create topup order" });
   }
 };
 
 // Verify payment and update wallet balance
 const walletVerifyPayment = async (req, res) => {
   try {
-    console.log('Payment verification request received:', req.body);
-    
-    const { 
-      razorpay_payment_id, 
-      razorpay_order_id, 
+    console.log("Payment verification request received:", req.body);
+
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
       razorpay_signature,
       ownerId,
       tenantId,
       amount,
-      description = 'Wallet Top-up via Razorpay'
+      description = "Wallet Top-up via Razorpay",
     } = req.body;
 
     // Validate required fields
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-      console.error('Missing required Razorpay fields', { razorpay_payment_id, razorpay_order_id, razorpay_signature });
-      return res.status(400).json({ error: 'Missing required Razorpay verification fields' });
+      console.error("Missing required Razorpay fields", {
+        razorpay_payment_id,
+        razorpay_order_id,
+        razorpay_signature,
+      });
+      return res
+        .status(400)
+        .json({ error: "Missing required Razorpay verification fields" });
     }
 
     if (!ownerId) {
-      console.error('Missing ownerId');
-      return res.status(400).json({ error: 'Owner ID is required' });
+      console.error("Missing ownerId");
+      return res.status(400).json({ error: "Owner ID is required" });
     }
 
     // Verify signature
@@ -123,11 +146,14 @@ const walletVerifyPayment = async (req, res) => {
     const isSignatureValid = expectedSignature === razorpay_signature;
 
     if (!isSignatureValid) {
-      console.error('Invalid signature', { expected: expectedSignature, received: razorpay_signature });
-      return res.status(400).json({ error: 'Invalid payment signature' });
+      console.error("Invalid signature", {
+        expected: expectedSignature,
+        received: razorpay_signature,
+      });
+      return res.status(400).json({ error: "Invalid payment signature" });
     }
 
-    console.log('Signature validated successfully');
+    console.log("Signature validated successfully");
 
     // Get payment details from Razorpay - Make this optional
     // If we can't get payment details, we'll trust the signature verification
@@ -135,26 +161,30 @@ const walletVerifyPayment = async (req, res) => {
     try {
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
       if (payment && payment.status) {
-        console.log('Payment details fetched:', payment.status);
-        
-        if (payment.status === 'captured' || payment.status === 'authorized') {
+        console.log("Payment details fetched:", payment.status);
+
+        if (payment.status === "captured" || payment.status === "authorized") {
           paymentVerified = true;
         } else {
-          console.log(`Payment status is ${payment.status}, continuing with signature verification only`);
+          console.log(
+            `Payment status is ${payment.status}, continuing with signature verification only`
+          );
         }
       } else {
-        console.log('Payment details incomplete, continuing with signature verification only');
+        console.log(
+          "Payment details incomplete, continuing with signature verification only"
+        );
       }
     } catch (razorpayError) {
-      console.error('Error fetching payment from Razorpay:', razorpayError);
-      console.log('Continuing with signature verification only');
+      console.error("Error fetching payment from Razorpay:", razorpayError);
+      console.log("Continuing with signature verification only");
       // Instead of returning an error, we'll continue with signature verification
       // This makes our process more robust in case Razorpay API has issues
     }
-    
+
     // Since the signature is valid, we'll proceed with the payment processing
     // The signature verification is our primary method of validating payments
-    console.log('Proceeding based on valid signature verification');
+    console.log("Proceeding based on valid signature verification");
 
     // Find or create wallet
     let wallet;
@@ -162,78 +192,82 @@ const walletVerifyPayment = async (req, res) => {
       wallet = await WalletTopup.findOne({ ownerId });
 
       if (!wallet) {
-        console.log('Creating new wallet for owner:', ownerId);
+        console.log("Creating new wallet for owner:", ownerId);
         wallet = await WalletTopup.create({
           ownerId,
-          tenantId: tenantId || 'default',
+          tenantId: tenantId || "default",
           balance: 0,
-          transactions: []
+          transactions: [],
         });
       }
     } catch (dbError) {
-      console.error('Database error when finding/creating wallet:', dbError);
-      return res.status(500).json({ error: 'Database error when accessing wallet' });
+      console.error("Database error when finding/creating wallet:", dbError);
+      return res
+        .status(500)
+        .json({ error: "Database error when accessing wallet" });
     }
 
     // Parse amount as number and validate
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      console.error('Invalid amount:', amount);
-      return res.status(400).json({ error: 'Invalid amount provided' });
+      console.error("Invalid amount:", amount);
+      return res.status(400).json({ error: "Invalid amount provided" });
     }
 
     // Add transaction - ensure lowercase transaction type and maintain compatibility with existing data structure
     const transaction = {
-      type: 'credit', // Explicitly lowercase
+      type: "credit", // Explicitly lowercase
       amount: parsedAmount,
       description,
       relatedInvoiceId: razorpay_order_id, // Using relatedInvoiceId for compatibility
-      status: 'completed',
+      status: "completed",
       metadata: {
         paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id
+        orderId: razorpay_order_id,
       },
-      createdDate: new Date()
+      createdDate: new Date(),
     };
 
     // Check if this payment has already been processed
     const existingTransaction = wallet.transactions.find(
-      txn => txn.metadata && txn.metadata.paymentId === razorpay_payment_id
+      (txn) => txn.metadata && txn.metadata.paymentId === razorpay_payment_id
     );
 
     if (existingTransaction) {
-      console.log('Payment already processed, returning success');
+      console.log("Payment already processed, returning success");
       return res.status(200).json({
         success: true,
         wallet,
         transaction: existingTransaction,
-        message: 'Payment already processed'
+        message: "Payment already processed",
       });
     }
-    
+
     // Update wallet balance and add transaction
     try {
       // Credit transactions always increase the available balance immediately
       wallet.balance += parsedAmount;
       wallet.transactions.push(transaction);
       await wallet.save();
-      console.log('Wallet updated successfully', { balance: wallet.balance });
+      console.log("Wallet updated successfully", { balance: wallet.balance });
     } catch (saveError) {
-      console.error('Error saving wallet:', saveError);
-      return res.status(500).json({ error: 'Failed to update wallet', details: saveError.message });
+      console.error("Error saving wallet:", saveError);
+      return res
+        .status(500)
+        .json({ error: "Failed to update wallet", details: saveError.message });
     }
 
     res.status(200).json({
       success: true,
       wallet,
-      transaction
+      transaction,
     });
   } catch (error) {
-    console.error('Error verifying payment:', error);
+    console.error("Error verifying payment:", error);
     res.status(500).json({
-      error: 'Failed to verify payment', 
-      message: error.message || 'Unknown error',
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: "Failed to verify payment",
+      message: error.message || "Unknown error",
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
@@ -245,10 +279,10 @@ const walletVerifyPayment = async (req, res) => {
 //     console.log('============== WALLET WEBHOOK RECEIVED ==============');
 //     console.log('Timestamp:', new Date().toISOString());
 //     console.log('Event:', req.body.event);
-    
+
 //     const signature = req.headers['x-razorpay-signature'];
 //     const secret = process.env.RAZORPAY_Wallet_WEBHOOK_SECRET;
-    
+
 //     // If we don't have a webhook secret configured, use a fallback verification
 //     if (!secret) {
 //       console.log('Using entire webhook body as fallback');
@@ -264,7 +298,7 @@ const walletVerifyPayment = async (req, res) => {
 
 //     const event = req.body.event;
 //     console.log('Full webhook body:', JSON.stringify(req.body).substring(0, 200) + '...');
-    
+
 //     // Extract payment entity - handle different event types
 //     let payload;
 //     try {
@@ -278,7 +312,7 @@ const walletVerifyPayment = async (req, res) => {
 //         // Try to find payment data in the payload
 //         payload = req.body.payload.entity || req.body.payload;
 //       }
-      
+
 //       console.log('Extracted payload entity:', payload ? 'Found' : 'Not found');
 //       if (payload) {
 //         console.log('Payment ID:', payload.id);
@@ -292,10 +326,10 @@ const walletVerifyPayment = async (req, res) => {
 //     // Handle different events
 //     if ((event === 'payment.captured' || event === 'payment.authorized') && payload) {
 //       console.log('Payment status updated from webhook for payment ID:', payload.id);
-      
+
 //       // Extract notes from payment
 //       const notes = payload.notes || {};
-      
+
 //       if (notes.type === 'wallet_topup') {
 //         try {
 //           const ownerId = notes.ownerId;
@@ -342,7 +376,7 @@ const walletVerifyPayment = async (req, res) => {
 //             // Update wallet with payment info
 //             wallet.lastUpdated = new Date();
 //             wallet.transactions.push(transaction);
-            
+
 //             try {
 //               await wallet.save();
 //               console.log(`Wallet updated via webhook. New balance: ${wallet.balance}`);
@@ -392,7 +426,7 @@ const walletVerifyPayment = async (req, res) => {
 //   return digest === signature;
 // }
 
-module.exports = { 
+module.exports = {
   getWalletByOwnerId,
   createTopupOrder,
   walletVerifyPayment,

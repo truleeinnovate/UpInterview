@@ -91,7 +91,7 @@ function OutsourcedInterviewerModal({
   console.log('navigatedfrom:', navigatedfrom);
 
   const { interviewers } = useCustomContext();
-  // console.log('interviewers in the outsource:', interviewers);
+  console.log('interviewers in the outsource:', interviewers);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [rateRange, setRateRange] = useState([0, 250]);
@@ -286,8 +286,10 @@ function OutsourcedInterviewerModal({
 
         console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
 
-        setBaseInterviewers(skillFilteredInterviewers);
-        setFilteredInterviewers(skillFilteredInterviewers);
+        // setBaseInterviewers(skillFilteredInterviewers);
+        setBaseInterviewers(externalInterviewers);
+        // setFilteredInterviewers(skillFilteredInterviewers);
+        setFilteredInterviewers(externalInterviewers);
       } catch (error) {
         console.error("Error processing interviewers:", error);
       }
