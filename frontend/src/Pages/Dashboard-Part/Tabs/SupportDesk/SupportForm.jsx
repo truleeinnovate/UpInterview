@@ -159,6 +159,7 @@ const SupportForm = () => {
     const formData = createFormData();
 
     try {
+      console.log("formData---", formData);
       await submitTicket({
         data: formData,
         editMode,
