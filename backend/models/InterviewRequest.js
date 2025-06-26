@@ -28,11 +28,11 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema({
         type: String 
     },
     candidateId: { 
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         ref : 'Candidate'
     },
     positionId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Position'
     },
     status: { 

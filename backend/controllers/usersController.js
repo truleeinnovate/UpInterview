@@ -530,7 +530,7 @@ const getUsersByTenant = async (req, res) => {
         gender: contact.gender || '',
         phone: contact.phone || '',
         status: user.status || '',
-
+ expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
         roleId: user?.roleId?.roleId || '',
         roleName: user?.roleId?.roleName || '',
@@ -585,9 +585,23 @@ const getUniqueUserByOwnerId = async (req, res) => {
     const { ownerId } = req.params;
     console.log('req.params---',req.params);
 
-    if (!ownerId) {
+
+  if (!ownerId || ownerId === 'undefined') {
       return res.status(400).json({ message: 'Invalid owner ID' });
     }
+
+
+    if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+      return res.status(400).json({ message: 'Invalid ObjectId format' });
+    }
+
+    // if (!ownerId) {
+    //   return res.status(400).json({ message: 'Invalid owner ID' });
+    // }
+
+    // Fetch users with minimal fields
+
+    // const users = await Users.findOne({ _id: ownerId }, '_id  label roleName status').lean();
 
     // Fetch user and populate role
     const users = await Users.findOne({ _id: ownerId })
@@ -599,12 +613,19 @@ const getUniqueUserByOwnerId = async (req, res) => {
     const contact = await Contacts.findOne({ ownerId })
       .populate({
         path: 'availability',
-        model: 'Interviewavailability',
-        select: 'day timeSlots -_id',
+        // model: 'InterviewAvailability',
+         model: 'InterviewAvailability', // Make sure the casing is correct
+    select: 'availability.day availability.timeSlots _id',
+        // select: 'day timeSlots -_id',
+        // select: 'availability',
+        select: 'availability.day availability.timeSlots',
       })
+      // .populate("availability")
       .lean();
 
+
     console.log('contact---',contact);
+
 
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
@@ -631,7 +652,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       industry: contact.industry || '',
       experienceYears: contact.experienceYears || '',
       location: contact.location || '',
-      resumePdf: contact.resumePdf || '',
+      resume: contact.resume || '', // updated by Ashok
       coverLetter: contact.coverLetter || '',
       coverLetterdescription: contact.coverLetterdescription || '',
       professionalTitle: contact.professionalTitle || '',
@@ -647,6 +668,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       preferredDuration: contact.preferredDuration || '',
       availability: contact.availability || [],
       dateOfBirth: contact.dateOfBirth || '',
+      expectedRatePerMockInterview:contact.expectedRatePerMockInterview || ''
 
     };
 

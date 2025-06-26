@@ -169,6 +169,18 @@ const { assessmentData, isLoading } = useAssessments();
 
   const tableColumns = [
     {
+      key: "AssessmentCode",
+      header: "Assessment ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value || "Not Provided"}
+        </div>
+      ),
+    },
+    {
       key: "AssessmentTitle",
       header: "Assessment Name",
       render: (value, row) => (

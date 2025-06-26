@@ -21,7 +21,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
  
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload.userId;
+  const userId = tokenPayload?.userId;
     // 🟡 Choose ownerId based on context
   const ownerId = usersId || userId;
   const organization = tokenPayload.organization;

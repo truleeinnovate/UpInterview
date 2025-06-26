@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET // Note this is KEY_SECRET not SECRET_KEY
 });
 
-console.log('Razorpay initialized with key_id:', razorpay.key_id);
+// console.log('Razorpay initialized with key_id:', razorpay.key_id);
 
 /**
  * Controller to update an existing Razorpay subscription to a new plan

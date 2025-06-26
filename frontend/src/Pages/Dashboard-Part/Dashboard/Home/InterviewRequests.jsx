@@ -20,9 +20,11 @@ const InterviewRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        console.log("ownerId of interview requests :-", ownerId);
         const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
           params: { ownerId },
         });
+        console.log("response of interview requests :-", response.data);
         setRequests(response.data);
         setLoading(false);
       } catch (err) {
@@ -41,12 +43,16 @@ const InterviewRequests = () => {
         contactId,
         roundId,
       });
-      // Remove the accepted request from the list
-      setRequests(requests.filter((req) => req.id !== requestId));
-      setSelectedRequest(null); // Close the popup if open
-      alert('Interview request accepted successfully!');
+
+      // Update the request status to 'accepted' in the UI
+      setRequests(requests.map(req =>
+        req.id === requestId ? { ...req, status: 'accepted' } : req
+      ));
+
+      setSelectedRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+      console.log('Interview request accepted successfully!');
     } catch (err) {
-      alert('Failed to accept interview request');
+      console.error('Failed to accept interview request', err);
     }
   };
 
@@ -62,22 +68,22 @@ const InterviewRequests = () => {
 
   return (
     <div className="mt-8">
+
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-gray-800">Interview Requests</h3>
+          <h3 className="text-xl font-semibold">Interview Requests</h3>
           <p className="text-gray-500 text-sm mt-1">Recent interview requests from candidates</p>
         </div>
-        <button className="flex items-center space-x-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
+        <button className="flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-custom-blue/5 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
           <span>View All Requests</span>
           <ChevronRight size={16} />
-
         </button>
       </div>
 
       {requests.length === 0 ? (
         <div className="flex flex-col items-center justify-center bg-white/80 backdrop-blur-lg p-8 rounded-xl border border-gray-200 text-center">
           <Inbox size={48} className="text-gray-400 mb-4" />
-          <h4 className="text-lg font-semibold text-gray-800">No Requests Yet</h4>
+          <h4 className="text-lg font-semibold">No Requests Yet</h4>
           <p className="text-gray-500 text-sm mt-2">Looks good! You have no pending interview requests at the moment.</p>
         </div>
       ) : (
@@ -89,12 +95,12 @@ const InterviewRequests = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 rounded-lg">
-                    <User size={18} className="text-indigo-600" />
+                  <div className="p-2 bg-custom-blue/5 rounded-lg">
+                    <User size={18} className="text-custom-blue" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900">{request.candidate}</h4>
-                    <p className="text-xs text-gray-600">{request.position}</p>
+                    <h4 className="text-sm font-semibold text-gray-900">{request.contactId.firstName + " " + request.contactId.lastName}</h4>
+                    <p className="text-xs text-gray-600">{request.positionId.title}</p>
                   </div>
                 </div>
                 <span
@@ -112,7 +118,7 @@ const InterviewRequests = () => {
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="flex items-center gap-1.5">
                   <Building size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-600 truncate">{request.company}</span>
+                  <span className="text-xs text-gray-600 truncate">{request.positionId.companyname}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Video size={14} className="text-gray-400" />
@@ -126,7 +132,7 @@ const InterviewRequests = () => {
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span
-                  className={`px-2 py-0.5 rounded-lg text-xs font-medium ${request.status === 'scheduled' ? 'bg-blue-100 text-blue-600' : 'bg-yellow-100 text-yellow-600'
+                  className={`px-2 py-0.5 rounded-lg text-xs font-medium ${request.status === 'scheduled' ? 'bg-blue-100 text-custom-blue' : 'bg-yellow-100 text-yellow-600'
                     }`}
                 >
                   {request.status}
@@ -138,12 +144,27 @@ const InterviewRequests = () => {
                   >
                     Details
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
-                    className="px-2.5 py-1 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+                    className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300"
                   >
                     Accept
-                  </button>
+                  </button> */}
+                  {request.status === 'accepted' ? (
+                    <button
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
+                      disabled
+                    >
+                      Accepted
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300"
+                    >
+                      Accept
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -201,7 +222,7 @@ const InterviewRequests = () => {
               </button>
               <button
                 onClick={() => handleAccept(selectedRequest.id, selectedRequest.interviewerId, selectedRequest.roundId)}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80"
               >
                 Accept
               </button>
