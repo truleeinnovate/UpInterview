@@ -2,7 +2,7 @@
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
 require("dotenv").config();
-require('./controllers/EmailsController/pushNotificationEmailController');
+require('./controllers/PushNotificationControllers/pushNotificationTaskController');
 const cors = require("cors");
 const express = require("express");
 const app = express();
