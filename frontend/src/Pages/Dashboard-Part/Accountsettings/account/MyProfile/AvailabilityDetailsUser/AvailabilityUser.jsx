@@ -70,9 +70,10 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
         Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
       };
 
-      const days = contactData?.availability || [];
-      days.forEach(day => {
-        if (day.timeSlots.length > 0 && day.timeSlots[0].startTime !== 'unavailable') {
+      // const days = contactData?.availability || [];
+      const days = contactData?.availability?.[0]?.availability || [];
+      days?.forEach(day => {
+        if (day?.timeSlots.length > 0 && day?.timeSlots[0].startTime !== 'unavailable') {
           updatedTimes[day.day] = day.timeSlots;
         }
       });
@@ -139,7 +140,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
   return (
     <div className="space-y-6">
-      <div className={`flex  items-center  ${mode === 'users' ? 'justify-end' : "justify-between mt-4"}`}>
+      <div className={`flex  items-center  ${mode === 'users' ? 'justify-end mt-4 mr-6' : "justify-between mt-4"}`}>
         <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Availability</h3>
 
         <button

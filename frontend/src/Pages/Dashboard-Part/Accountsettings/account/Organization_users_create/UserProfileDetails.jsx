@@ -159,7 +159,7 @@ const UserProfileDetails = () => {
       <div className="bg-white p-6 rounded-lg">
         <BasicDetails
           mode="users"
-          usersId={userData._id}
+          usersId={userData?._id}
           setBasicEditOpen={setBasicEditOpen}
         />
       </div>
@@ -183,7 +183,7 @@ const UserProfileDetails = () => {
       <div className="bg-white p-6 rounded-lg">
         <InterviewUserDetails
           mode="users"
-          usersId={userData._id}
+          usersId={userData?._id}
           setInterviewEditOpen={setInterviewEditOpen}
         />
       </div>
@@ -195,7 +195,7 @@ const UserProfileDetails = () => {
       <div className={isFullScreen ? "mx-3" : ""}>
         <AvailabilityUser
           mode="users"
-          usersId={userData._id}
+          usersId={userData?._id}
           setAvailabilityEditOpen={setAvailabilityEditOpen}
           isFullScreen={isFullScreen}
         />
