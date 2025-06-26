@@ -299,7 +299,6 @@ const RoundFormInterviews = () => {
   const [internalInterviewers, setInternalInterviewers] = useState([]);
   // console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
-  console.log('externalInterviewers 0000000000000000', externalInterviewers);
 
   const handleInternalInterviewerSelect = (interviewers) => {
     // console.log("Interviewers passed to parent:", interviewers); // Debugging
@@ -383,7 +382,6 @@ const RoundFormInterviews = () => {
     //   // For external interviewers, access `id` directly
     //   return interviewer._id;
     // }
-    console.log("interviewer 3", interviewer);
     return interviewer; // Fallback for unexpected cases
   }).filter(Boolean);
   // console.log("selectedInterviewersData", selectedInterviewersData);

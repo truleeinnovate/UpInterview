@@ -334,16 +334,42 @@ const getInterviewers = async (req, res) => {
         contact: { $in: contactIds }
       }).populate('contact').lean();
 
-      // console.log(`✅ [getInterviewers] External availabilities fetched:`, availabilities.length);
+      console.log(`✅ [getInterviewers] External availabilities raw data:`, JSON.stringify(availabilities, null, 2));
 
       return availabilities.map(availability => {
         const contact = availability.contact || {};
         const ownerId = contact.ownerId?.toString();
         const user = users.find(u => u._id.toString() === ownerId) || {};
 
-        const nextSlot = availability.days?.find(day =>
-          day.timeSlots?.length > 0
-        )?.timeSlots[0];
+        // Get the first available time slot for nextAvailable
+        let nextAvailable = null;
+        const daysWithSlots = [];
+
+        // Process each day's availability
+        if (availability.availability && Array.isArray(availability.availability)) {
+          availability.availability.forEach(dayData => {
+            if (dayData.timeSlots && dayData.timeSlots.length > 0) {
+              // Add to days array
+              daysWithSlots.push({
+                day: dayData.day,
+                timeSlots: dayData.timeSlots.map(slot => ({
+                  startTime: convertTo12HourFormat(slot.startTime),
+                  endTime: convertTo12HourFormat(slot.endTime)
+                }))
+              });
+
+              // Set nextAvailable to the first available slot if not set
+              if (!nextAvailable && dayData.timeSlots[0]) {
+                nextAvailable = {
+                  day: dayData.day,
+                  startTime: convertTo12HourFormat(dayData.timeSlots[0].startTime),
+                  endTime: convertTo12HourFormat(dayData.timeSlots[0].endTime)
+                };
+              }
+            }
+          });
+        }
+
 
         return {
           _id: availability._id,
@@ -354,18 +380,8 @@ const getInterviewers = async (req, res) => {
             isFreelancer: 'true'
           },
           type: 'external',
-          days: availability.days?.map(day => ({
-            day: day.day,
-            timeSlots: day.timeSlots?.map(slot => ({
-              startTime: convertTo12HourFormat(slot.startTime),
-              endTime: convertTo12HourFormat(slot.endTime)
-            })) || []
-          })) || [],
-          nextAvailable: nextSlot ? {
-            day: nextSlot.day,
-            startTime: convertTo12HourFormat(nextSlot.startTime),
-            endTime: convertTo12HourFormat(nextSlot.endTime)
-          } : null,
+          days: daysWithSlots,
+          nextAvailable: nextAvailable,
           __v: availability.__v
         };
       });
@@ -379,7 +395,9 @@ const getInterviewers = async (req, res) => {
 
     // Combine results
     const allResults = [...internalResults, ...externalResults];
-    // console.log('✅ [getInterviewers] Total records:', allResults.length);
+    
+    // Debug log to check the final data being sent
+    console.log('✅ [getInterviewers] Final data being sent:', JSON.stringify(allResults, null, 2));
 
     return res.json({
       success: true,
@@ -479,7 +497,6 @@ const UpdateUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
-
 
 const getUsersByTenant = async (req, res) => {
   try {
