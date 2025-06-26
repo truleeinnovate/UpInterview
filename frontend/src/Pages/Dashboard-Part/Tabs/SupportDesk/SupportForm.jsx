@@ -49,19 +49,13 @@ const SupportForm = () => {
     []
   );
 
-
   const [formState, setFormState] = useState(initialFormState);
   const { otherIssueFlag, otherIssue, selectedIssue, file, description } =
     formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
 
-  //console.log(`contact ------- ${JSON.stringify(contact)}`);
   const [organization, setOrganization] = useState("");
-
-  console.log(`contact ------- ${JSON.stringify(contact)}`);
-  const [organization, setOrganization] = useState('');
-
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -82,7 +76,6 @@ const SupportForm = () => {
 
     fetchUsers();
   }, [ownerId, tenantId]);
-
 
   useEffect(() => {
     if (editMode && initialTicketData) {
@@ -229,26 +222,7 @@ const SupportForm = () => {
       const formData = createFormData();
 
       try {
-        // if (
-        //   isAttachmentFileRemoved &&
-        //   !attachmentFile &&
-        //   initialTicketData?._id
-        // ) {
-        //   await uploadFile(
-        //     null,
-        //     "attachment",
-        //     "support",
-        //     initialTicketData?._id
-        //   );
-        // } else if (attachmentFile instanceof File && initialTicketData?._id) {
-        //   await uploadFile(
-        //     attachmentFile,
-        //     "attachment",
-        //     "support",
-        //     initialTicketData?._id
-        //   );
-        // }
-
+        console.log("formData---", formData);
         await submitTicket({
           data: formData,
           editMode,
@@ -271,37 +245,10 @@ const SupportForm = () => {
       initialTicketData?._id,
       initialFormState,
       navigate,
-      attachmentFile,
       isAttachmentFileRemoved,
+      attachmentFile,
     ]
   );
-      organization: organization,
-      createdByUserId: ownerId,
-    })
-  }), [selectedIssue, otherIssue, description, file, editMode, contact, ownerId, tenantId, organization]);
-
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    setErrors({ issueType: '', description: '' });
-
-    if (!validateForm()) return;
-
-    const formData = createFormData();
-
-    try {
-      console.log("formData---", formData);
-      await submitTicket({
-        data: formData,
-        editMode,
-        ticketId: initialTicketData?._id,
-      });
-
-      setFormState(initialFormState);
-      navigate('/support-desk');
-    } catch (error) {
-      // Error is already handled in mutation's onError
-    }
-  }, [validateForm, createFormData, submitTicket, editMode, initialTicketData?._id, initialFormState, navigate]);
 
   const renderIssueOptions = useCallback(
     () =>
