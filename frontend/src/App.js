@@ -187,12 +187,12 @@ const App = () => {
             <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
             <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar />
 
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-user-email" element={<VerifyUserEmail />} />
               <div className="ml-80">
                 <Subscription />
               </div>
             </></>} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-user-email" element={<VerifyUserEmail />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />
