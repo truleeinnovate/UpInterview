@@ -32,11 +32,10 @@ const FooterButtons = ({
           type="button"
           onClick={onPrev}
           disabled={isSubmitting}
-          className={`border ${
-            isSubmitting
+          className={`border ${isSubmitting
               ? "border-gray-300 text-gray-400 cursor-not-allowed"
               : "border-custom-blue text-custom-blue hover:bg-gray-50"
-          } rounded px-6 sm:px-3 py-1`}
+            } rounded px-6 sm:px-3 py-1`}
         >
           Prev
         </button>
@@ -46,11 +45,10 @@ const FooterButtons = ({
       <button
         onClick={onNext}
         disabled={isSubmitting}
-        className={`px-6 sm:px-3 py-1 rounded text-white flex items-center justify-center ${
-          isSubmitting
+        className={`px-6 sm:px-3 py-1 rounded text-white flex items-center justify-center ${isSubmitting
             ? "bg-custom-blue/70 cursor-not-allowed"
             : "bg-custom-blue hover:bg-custom-blue/90"
-        }`}
+          }`}
         type="button"
       >
         {isSubmitting ? (
@@ -212,6 +210,7 @@ const MultiStepForm = () => {
         dateOfBirth: matchedContact.dateOfBirth || "",
         gender: matchedContact.gender || "",
       });
+      console.log("matchedContact", matchedContact);
 
       setAdditionalDetailsData({
         currentRole: matchedContact.currentRole || "",
@@ -381,10 +380,10 @@ const MultiStepForm = () => {
       currentStep === 0
         ? "basicDetails"
         : currentStep === 1
-        ? "additionalDetails"
-        : currentStep === 2
-        ? "interviewDetails"
-        : "availabilityDetails";
+          ? "additionalDetails"
+          : currentStep === 2
+            ? "interviewDetails"
+            : "availabilityDetails";
 
     const updatedCompletionStatus = {
       ...completionStatus,
@@ -469,21 +468,21 @@ const MultiStepForm = () => {
       const availabilityData =
         (isInternalInterviewer || Freelancer) && currentStep === 3
           ? Object.keys(times)
-              .map((day) => ({
-                day,
-                timeSlots: times[day]
-                  .filter(
-                    (slot) =>
-                      slot.startTime &&
-                      slot.endTime &&
-                      slot.startTime !== "unavailable"
-                  )
-                  .map((slot) => ({
-                    startTime: slot.startTime,
-                    endTime: slot.endTime,
-                  })),
-              }))
-              .filter((dayData) => dayData.timeSlots.length > 0)
+            .map((day) => ({
+              day,
+              timeSlots: times[day]
+                .filter(
+                  (slot) =>
+                    slot.startTime &&
+                    slot.endTime &&
+                    slot.startTime !== "unavailable"
+                )
+                .map((slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                })),
+            }))
+            .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
       const requestData = {
