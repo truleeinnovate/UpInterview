@@ -196,6 +196,12 @@ const MultiStepForm = () => {
     availability: "",
   });
 
+  const [resumeFile, setResumeFile] = useState(null);
+  const [coverLetterFile, setCoverLetterFile] = useState(null);
+  const [isProfileRemoved, setIsProfileRemoved] = useState(false);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
+
   // Populate fields with matched contact data, falling back to LinkedIn data or defaults
   useEffect(() => {
     if (matchedContact) {
@@ -258,7 +264,9 @@ const MultiStepForm = () => {
 
       if (matchedContact.imageData?.path) {
         setFilePreview(matchedContact.imageData.path);
-      } else if (linkedInData?.pictureUrl) {
+      }
+
+      if (linkedInData?.pictureUrl) {
         setFilePreview(linkedInData.pictureUrl);
       }
 
@@ -510,71 +518,64 @@ const MultiStepForm = () => {
       if (response.data.token) {
         setAuthCookies(response.data.token);
 
-        // Update file upload to use existing contactId
+        // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
         if (
           currentStep === 0 &&
-          (file || (linkedInData?.pictureUrl && !filePreview))
+          (file ||
+            isProfileRemoved ||
+            (linkedInData?.pictureUrl && !filePreview))
         ) {
-          // const imageData = new FormData();
           let profileFile = null;
-          if (file) {
-            // imageData.append("image", file);
-            profileFile = file;
-          } else {
-            const imageResponse = await fetch(linkedInData.pictureUrl);
-            const blob = await imageResponse.blob();
-            const imageFile = new File([blob], "linkedin-profile.jpg", {
-              type: "image/jpeg",
-            });
-            // imageData.append("image", imageFile);
-            profileFile = imageFile;
-          }
 
-          // Profile upload
+          if (file) {
+            profileFile = file;
+          } else if (
+            linkedInData?.pictureUrl &&
+            !filePreview &&
+            !isProfileRemoved
+          ) {
+            try {
+              const imageResponse = await fetch(linkedInData.pictureUrl);
+              const blob = await imageResponse.blob();
+              profileFile = new File([blob], "linkedin-profile.jpg", {
+                type: "image/jpeg",
+              });
+            } catch (err) {
+              console.error("Failed to fetch LinkedIn image", err);
+            }
+          }
 
           const newContactId = contactId || response.data.contactId;
 
-          if (profileFile) {
-            await uploadFile(profileFile, "image", "contact", newContactId);
+          if (isProfileRemoved && !profileFile) {
+            await uploadFile(null, "image", "contact", newContactId); // DELETE
+          } else if (profileFile instanceof File) {
+            await uploadFile(profileFile, "image", "contact", newContactId); // UPLOAD
           }
-          // imageData.append("type", "contact");
-          // imageData.append("id", contactId || response.data.contactId);
-
-          // try {
-          //   await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          //     headers: { 'Content-Type': 'multipart/form-data' },
-          //     withCredentials: true,
-          //   });
-          // } catch (uploadError) {
-          //   console.error('Error uploading profile picture:', uploadError);
-          // }
         }
 
-        // Upload resume and cover letter
+        // RESUME AND COVER LETTER UPLOAD
         if (currentStep === 1) {
-
-          // Profile upload
           const newContactId = contactId || response.data.contactId;
 
-          const resume = additionalDetailsData?.resume;
-          if (resume instanceof File) {
-            // Case 1: Upload or update
-            await uploadFile(resume, "resume", "contact", newContactId);
-          } else if (resume === null) {
-            // Case 2: Delete
-            await uploadFile(null, "resume", "contact", newContactId);
-          }
-          // Case 3: If resume is undefined → skip (no API call)
-
-          const coverLetter = additionalDetailsData?.coverLetter;
-          if (coverLetter instanceof File) {
-            // Case 1: Upload or update
-            await uploadFile(coverLetter, "coverLetter", "contact", newContactId);
-          } else if (coverLetter === null) {
-            // Case 2: Delete
-            await uploadFile(null, "coverLetter", "contact", newContactId);
+          // Resume
+          if (isResumeRemoved && !resumeFile) {
+            await uploadFile(null, "resume", "contact", newContactId); // DELETE
+          } else if (resumeFile instanceof File) {
+            await uploadFile(resumeFile, "resume", "contact", newContactId);
           }
 
+          // Cover Letter
+          if (isCoverLetterRemoved && !coverLetterFile) {
+            await uploadFile(null, "coverLetter", "contact", newContactId); // DELETE
+          } else if (coverLetterFile instanceof File) {
+            await uploadFile(
+              coverLetterFile,
+              "coverLetter",
+              "contact",
+              newContactId
+            );
+          }
         }
 
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
@@ -645,6 +646,7 @@ const MultiStepForm = () => {
                     filePreview={filePreview}
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
+                    setIsProfileRemoved={setIsProfileRemoved}
                   />
                 )}
 
@@ -654,6 +656,10 @@ const MultiStepForm = () => {
                     setErrors={setErrors}
                     additionalDetailsData={additionalDetailsData}
                     setAdditionalDetailsData={setAdditionalDetailsData}
+                    setResumeFile={setResumeFile}
+                    setIsResumeRemoved={setIsResumeRemoved}
+                    setIsCoverLetterRemoved={setIsCoverLetterRemoved}
+                    setCoverLetterFile={setCoverLetterFile}
                   />
                 )}
 

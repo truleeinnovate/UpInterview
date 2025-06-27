@@ -700,6 +700,7 @@ const BasicDetails = ({
   filePreview,
   setFilePreview,
   linkedInData,
+  setIsProfileRemoved,
 }) => {
   const { useCallback } = React;
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -712,7 +713,6 @@ const BasicDetails = ({
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [profileError, setProfileError] = useState("");
-  const [isProfileRemoved, setIsProfileRemoved] = useState(false);
 
   // Generate profileId from email
   const generateProfileId = useCallback((email) => {
@@ -910,6 +910,7 @@ const BasicDetails = ({
     }
     setFile(null);
     setFilePreview(linkedInData?.pictureUrl || null);
+    setIsProfileRemoved(true);
   };
 
   const handleInputChange = (e, fieldName) => {

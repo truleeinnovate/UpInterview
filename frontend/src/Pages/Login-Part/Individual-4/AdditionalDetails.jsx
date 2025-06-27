@@ -10,23 +10,29 @@ const AdditionalDetails = ({
   setErrors,
   additionalDetailsData,
   setAdditionalDetailsData,
+  setResumeFile,
+  setIsResumeRemoved,
+  setCoverLetterFile,
+  setIsCoverLetterRemoved,
 }) => {
   const { locations, industries, currentRoles } = useMasterData();
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
-  const [coverLetterName, setCoverLetterName] = useState(additionalDetailsData?.coverLetter?.filename || "");
+  const [coverLetterName, setCoverLetterName] = useState(
+    additionalDetailsData?.coverLetter?.filename || ""
+  );
   const [searchTermLocation, setSearchTermLocation] = useState("");
   const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
   const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
   const [showDropdownLocation, setShowDropdownLocation] = useState(false);
   const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
   const [searchTermIndustry, setSearchTermIndustry] = useState("");
-  const [resumeName, setResumeName] = useState(additionalDetailsData?.resume?.filename || "");
+  const [resumeName, setResumeName] = useState(
+    additionalDetailsData?.resume?.filename || ""
+  );
 
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
-  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
 
   const handleFileUpload = async (e, fieldName) => {
     const file = e.target.files[0];
@@ -36,13 +42,9 @@ const AdditionalDetails = ({
         setResumeError(error);
         return;
       }
+      setResumeFile(file);
       setResumeError("");
       setResumeName(file.name);
-      setAdditionalDetailsData((prev) => ({
-        ...prev,
-        [fieldName]: file,
-        isResumeRemoved,
-      }));
     }
   };
 
@@ -50,12 +52,9 @@ const AdditionalDetails = ({
     if (resumeInputRef.current) {
       resumeInputRef.current.value = "";
     }
+    setResumeFile(null);
     setIsResumeRemoved(true);
     setResumeName("");
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      resume: null,
-    }));
   };
 
   const toggleCurrentRole = () => {
@@ -162,6 +161,7 @@ const AdditionalDetails = ({
         setCoverLetterError(error);
         return;
       }
+      setCoverLetterFile(file);
       setCoverLetterError("");
       setCoverLetterName(file.name);
       setAdditionalDetailsData((prev) => ({
@@ -175,13 +175,9 @@ const AdditionalDetails = ({
     if (coverLetterInputRef.current) {
       coverLetterInputRef.current.value = "";
     }
+    setCoverLetterFile(null);
     setIsCoverLetterRemoved(true);
     setCoverLetterName("");
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      coverLetter: null,
-      isCoverLetterRemoved,
-    }));
   };
 
   const currentRoleDropdownRef = useRef(null); // Ref for currentRole dropdown
