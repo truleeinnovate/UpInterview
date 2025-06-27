@@ -1,20 +1,24 @@
-const bcrypt = require('bcrypt');
-const Tenant = require('../models/Tenant');
-const { Users } = require('../models/Users');
-const { Contacts } = require('../models/Contacts');
-const SharingSettings = require('../models/SharingSettings');
-const Profile = require('../models/Profile');
-const Role = require('../models/RolesData.js');
-const Tabs = require('../models/Tabs');
-const Objects = require('../models/Objects');
+const bcrypt = require("bcrypt");
+const Tenant = require("../models/Tenant");
+const { Users } = require("../models/Users");
+const { Contacts } = require("../models/Contacts");
+const SharingSettings = require("../models/SharingSettings");
+const Profile = require("../models/Profile");
+const Role = require("../models/RolesData.js");
+const Tabs = require("../models/Tabs");
+const Objects = require("../models/Objects");
 const jwt = require("jsonwebtoken");
-const RolesPermissionObject = require('../models/rolesPermissionObject');
-const { generateToken, generateEmailVerificationToken, verifyEmailToken } = require('../utils/jwt');
+const RolesPermissionObject = require("../models/rolesPermissionObject");
+const {
+  generateToken,
+  generateEmailVerificationToken,
+  verifyEmailToken,
+} = require("../utils/jwt");
 const saltRounds = 10;
-const mongoose = require('mongoose');
-const { sendVerificationEmail } = require('../controllers/EmailsController/signUpEmailController.js');
-
-
+const mongoose = require("mongoose");
+const {
+  sendVerificationEmail,
+} = require("../controllers/EmailsController/signUpEmailController.js");
 
 // const registerOrganization = async (req, res) => {
 //   let savedTenant = null;
@@ -254,16 +258,31 @@ const { sendVerificationEmail } = require('../controllers/EmailsController/signU
 
 const organizationUserCreation = async (req, res) => {
   try {
+    console.log("req.body User", req.body);
 
     console.log("req.body User", req.body);
 
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
-      return res.status(400).json({ message: "User and Contact data are required" });
+      return res
+        .status(400)
+        .json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, status, editMode, _id, isEmailVerified } = UserData;
+    const {
+      firstName,
+      lastName,
+      email,
+      tenantId,
+      roleId,
+      isProfileCompleted,
+      countryCode,
+      status,
+      editMode,
+      _id,
+      isEmailVerified,
+    } = UserData;
 
     // if (editMode && _id) {
     //   // Update existing user
@@ -304,7 +323,6 @@ const organizationUserCreation = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     } else {
-
       const newUser = new Users({
         firstName,
         lastName,
@@ -314,7 +332,7 @@ const organizationUserCreation = async (req, res) => {
         countryCode,
         isProfileCompleted,
         status,
-        isEmailVerified: false
+        isEmailVerified: false,
       });
 
       const savedUser = await newUser.save();
@@ -326,7 +344,7 @@ const organizationUserCreation = async (req, res) => {
 
       const newContact = new Contacts({
         ...contactData,
-        ownerId: savedUserId
+        ownerId: savedUserId,
       });
 
       const savedContact = await newContact.save();
@@ -334,12 +352,14 @@ const organizationUserCreation = async (req, res) => {
       return res.status(201).json({
         message: "User and Contact created successfully",
         userId: savedUserId,
-        contactId: savedContact._id
+        contactId: savedContact._id,
       });
     }
   } catch (error) {
     console.error("Error in organization registration:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -436,18 +456,22 @@ const loginOrganization = async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
     }
 
     const user = await Users.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
     if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: 'Email not verified',
-        isEmailVerified: false
+        message: "Email not verified",
+        isEmailVerified: false,
       });
     }
 
@@ -495,7 +519,9 @@ const loginOrganization = async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     // Fetch contactId where ownerId matches user._id
@@ -513,7 +539,7 @@ const loginOrganization = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       ownerId: user._id,
       tenantId: user.tenantId,
       token,
@@ -521,12 +547,11 @@ const loginOrganization = async (req, res) => {
       roleName,
       contactEmailFromOrg,
       isEmailVerified: user.isEmailVerified,
-      status: organization.status
+      status: organization.status,
     });
-
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error during login:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -536,17 +561,19 @@ const getRolesByTenant = async (req, res) => {
     const roles = await Role.find({ tenantId });
     res.status(200).json(roles);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
-// reset password 
+// reset password
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: "Invalid request" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid request" });
     }
 
     // Verify token and extract id and type
@@ -554,7 +581,9 @@ const resetPassword = async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired token" });
     }
 
     const { id, type } = decoded;
@@ -562,7 +591,9 @@ const resetPassword = async (req, res) => {
     // Find the user
     const user = await Users.findById(id).select("+password"); // In case password is select: false
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Check if password already exists
@@ -587,14 +618,14 @@ const resetPassword = async (req, res) => {
       user.isEmailVerified = true;
     }
 
-
     await user.save();
 
     return res.json({ success: true, message: "Password reset successful" });
-
   } catch (error) {
     console.error("Reset Password Error:", error);
-    return res.status(500).json({ success: false, message: "Something went wrong" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -605,25 +636,23 @@ const getBasedIdOrganizations = async (req, res) => {
     // console.log("Requested Organization ID:", id);
 
     if (!id) {
-      return res.status(400).json({ message: 'Organization ID is required.' });
+      return res.status(400).json({ message: "Organization ID is required." });
     }
 
     // ✅ Fetch the organization by _id
     const organization = await Tenant.findById(id).lean();
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found.' });
+      return res.status(404).json({ message: "Organization not found." });
     }
 
     // ✅ Respond with the full organization object
     return res.status(200).json(organization);
-
   } catch (error) {
-    console.error('Error fetching organization:', error);
-    return res.status(500).json({ message: 'An error occurred.', error });
+    console.error("Error fetching organization:", error);
+    return res.status(500).json({ message: "An error occurred.", error });
   }
 };
-
 
 //related to subdomain
 
@@ -633,7 +662,7 @@ const checkSubdomainAvailability = async (req, res) => {
     const { subdomain } = req.body;
 
     if (!subdomain) {
-      return res.status(400).json({ message: 'Subdomain is required' });
+      return res.status(400).json({ message: "Subdomain is required" });
     }
 
     // Validate subdomain format
@@ -641,7 +670,8 @@ const checkSubdomainAvailability = async (req, res) => {
     if (!subdomainRegex.test(subdomain)) {
       return res.status(400).json({
         available: false,
-        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+        message:
+          "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.",
       });
     }
 
@@ -651,32 +681,45 @@ const checkSubdomainAvailability = async (req, res) => {
     if (existingOrganization) {
       return res.status(200).json({
         available: false,
-        message: `${subdomain} is already taken`
+        message: `${subdomain} is already taken`,
       });
     }
 
     return res.status(200).json({
       available: true,
-      message: `${subdomain} is available`
+      message: `${subdomain} is available`,
     });
   } catch (error) {
-    console.error('Error checking subdomain availability:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error checking subdomain availability:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
 // Update organization subdomain
 const updateSubdomain = async (req, res) => {
   try {
-    const { organizationId, subdomain, baseDomain, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+    const {
+      organizationId,
+      subdomain,
+      baseDomain,
+      subdomainStatus,
+      subdomainAddedDate,
+      subdomainLastVerified,
+    } = req.body;
 
     if (!organizationId || !subdomain) {
-      return res.status(400).json({ message: 'Organization ID and subdomain are required' });
+      return res
+        .status(400)
+        .json({ message: "Organization ID and subdomain are required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     // Validate subdomain format
@@ -684,25 +727,26 @@ const updateSubdomain = async (req, res) => {
     if (!subdomainRegex.test(subdomain)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.'
+        message:
+          "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens. Must start and end with alphanumeric characters.",
       });
     }
 
     // Check if subdomain already exists for other organizations
     const existingOrganization = await Tenant.findOne({
       subdomain,
-      _id: { $ne: organizationId }
+      _id: { $ne: organizationId },
     });
 
     if (existingOrganization) {
       return res.status(400).json({
         success: false,
-        message: `${subdomain} is already taken by another organization`
+        message: `${subdomain} is already taken by another organization`,
       });
     }
 
     // Update organization with new subdomain
-    const fullDomain = `${subdomain}.${baseDomain || 'app.upinterview.io'}`;
+    const fullDomain = `${subdomain}.${baseDomain || "app.upinterview.io"}`;
     const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
@@ -710,31 +754,32 @@ const updateSubdomain = async (req, res) => {
         fullDomain,
         subdomainStatus,
         subdomainAddedDate,
-        subdomainLastVerified
-
+        subdomainLastVerified,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain updated successfully',
+      message: "Subdomain updated successfully",
       organization: {
         //id: updatedOrganization._id,
         subdomain: updatedOrganization.subdomain,
         fullDomain: updatedOrganization.fullDomain,
         subdomainStatus: updatedOrganization.subdomainStatus,
         subdomainAddedDate: updatedOrganization.subdomainAddedDate,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error updating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error updating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -744,18 +789,20 @@ const getOrganizationSubdomain = async (req, res) => {
     const { organizationId } = req.params;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const organization = await Tenant.findById(organizationId);
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
@@ -766,55 +813,66 @@ const getOrganizationSubdomain = async (req, res) => {
         fullDomain: organization.fullDomain || null,
         subdomainStatus: organization.subdomainStatus || null,
         subdomainAddedDate: organization.subdomainAddedDate || null,
-        subdomainLastVerified: organization.subdomainLastVerified || null
-      }
+        subdomainLastVerified: organization.subdomainLastVerified || null,
+      },
     });
   } catch (error) {
-    console.error('Error getting organization subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error getting organization subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
 // Activate subdomain
 const activateSubdomain = async (req, res) => {
   try {
-    const { organizationId, subdomainStatus, subdomainAddedDate, subdomainLastVerified } = req.body;
+    const {
+      organizationId,
+      subdomainStatus,
+      subdomainAddedDate,
+      subdomainLastVerified,
+    } = req.body;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const updatedOrganization = await Tenant.findByIdAndUpdate(
       organizationId,
       {
         subdomainStatus,
-        subdomainLastVerified
+        subdomainLastVerified,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain activated successfully',
+      message: "Subdomain activated successfully",
       organization: {
         //id: updatedOrganization._id,
 
         subdomainStatus: updatedOrganization.subdomainStatus,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error activating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error activating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -824,12 +882,14 @@ const deactivateSubdomain = async (req, res) => {
     const { organizationId } = req.body;
 
     if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
+      return res.status(400).json({ message: "Organization ID is required" });
     }
 
     // Validate organizationId
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
-      return res.status(400).json({ message: 'Invalid organization ID format' });
+      return res
+        .status(400)
+        .json({ message: "Invalid organization ID format" });
     }
 
     const updatedOrganization = await Tenant.findByIdAndUpdate(
@@ -839,34 +899,36 @@ const deactivateSubdomain = async (req, res) => {
         fullDomain: null,
         subdomainStatus: null,
         subdomainAddedDate: null,
-        subdomainLastVerified: null
+        subdomainLastVerified: null,
       },
       { new: true }
     );
 
     if (!updatedOrganization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subdomain deactivated successfully',
+      message: "Subdomain deactivated successfully",
       organization: {
         //id: updatedOrganization._id,
         subdomain: updatedOrganization.subdomain,
         fullDomain: updatedOrganization.fullDomain,
         subdomainStatus: updatedOrganization.subdomainStatus,
         subdomainAddedDate: updatedOrganization.subdomainAddedDate,
-        subdomainLastVerified: updatedOrganization.subdomainLastVerified
-      }
+        subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+      },
     });
   } catch (error) {
-    console.error('Error deactivating subdomain:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error deactivating subdomain:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
-// patch organization details 
+// patch organization details
 
 const updateBasedIdOrganizations = async (req, res) => {
   try {
@@ -875,7 +937,7 @@ const updateBasedIdOrganizations = async (req, res) => {
 
     // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid organization ID' });
+      return res.status(400).json({ message: "Invalid organization ID" });
     }
 
     // Update the organization
@@ -884,25 +946,24 @@ const updateBasedIdOrganizations = async (req, res) => {
       { $set: updateData },
       {
         new: true, // Return the updated document
-        runValidators: true // Run schema validators
+        runValidators: true, // Run schema validators
       }
     );
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
-    res.status(200).json(
-      {
-        status: 'success',
-        message: 'Organization updated success',
-        data: organization
-      });
+    res.status(200).json({
+      status: "success",
+      message: "Organization updated success",
+      data: organization,
+    });
   } catch (error) {
-    console.error('Error updating organization:', error);
+    console.error("Error updating organization:", error);
     res.status(500).json({
-      message: 'Error updating organization',
-      error: error.message
+      message: "Error updating organization",
+      error: error.message,
     });
   }
 };
@@ -914,7 +975,7 @@ const verifyEmail = async (req, res) => {
     if (!token) {
       return res.status(400).json({
         success: false,
-        message: 'Verification token is required'
+        message: "Verification token is required",
       });
     }
 
@@ -922,7 +983,7 @@ const verifyEmail = async (req, res) => {
     if (!decoded) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token'
+        message: "Invalid or expired verification token",
       });
     }
 
@@ -937,35 +998,43 @@ const verifyEmail = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Email verified successfully'
+      message: "Email verified successfully",
     });
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error("Email verification error:", error);
     res.status(500).json({
       success: false,
-      message: 'Error verifying email'
+      message: "Error verifying email",
     });
   }
 };
-
 
 const verifyEmailChange = async (req, res) => {
   try {
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).json({ success: false, message: 'Verification token is required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Verification token is required" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded || !decoded.userId || !decoded.newEmail) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid or expired verification token",
+        });
     }
 
     const user = await Users.findById(decoded.userId);
     const contacts = await Contacts.findById(decoded.userId);
     if (!user || user.newEmail !== decoded.newEmail) {
-      return res.status(400).json({ success: false, message: 'Email change verification failed' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email change verification failed" });
     }
 
     // Update email
@@ -974,14 +1043,58 @@ const verifyEmailChange = async (req, res) => {
     contacts.email = decoded.newEmail;
     await user.save();
 
-    return res.json({ success: true, message: 'Email address updated successfully' });
-
+    return res.json({
+      success: true,
+      message: "Email address updated successfully",
+    });
   } catch (error) {
-    console.error('Email change verification error:', error);
-    return res.status(500).json({ success: false, message: 'Error verifying email change' });
+    console.error("Email change verification error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error verifying email change" });
   }
 };
 
+// SUPER ADMIN added by Ashok ---------------------------------------------------->
+const getAllOrganizations = async (req, res) => {
+  try {
+    const userCounts = await Users.aggregate([
+      {
+        $group: {
+          _id: "$tenantId",
+          userCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const userCountMap = {};
+    userCounts.forEach(({ _id, userCount }) => {
+      userCountMap[_id?.toString()] = userCount;
+    });
+
+    const organizations = await Organization.find();
+
+    const enrichedOrganizations = organizations.map((org) => {
+      const orgId = org._id.toString();
+      return {
+        ...org.toObject(),
+        usersCount: userCountMap[orgId] || 0,
+      };
+    });
+
+    return res.status(200).json({
+      organizations: enrichedOrganizations,
+      totalOrganizations: organizations.length,
+      status: true,
+    });
+  } catch (error) {
+    console.log("Error in get organizations controller:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", status: false });
+  }
+};
+// ------------------------------------------------------------------------------->
 
 
 
@@ -1132,12 +1245,19 @@ const registerOrganization = async (req, res) => {
 
 
 module.exports = {
-  registerOrganization, loginOrganization, resetPassword, organizationUserCreation, getRolesByTenant, getBasedIdOrganizations, checkSubdomainAvailability,
+  registerOrganization,
+  loginOrganization,
+  resetPassword,
+  organizationUserCreation,
+  getRolesByTenant,
+  getBasedIdOrganizations,
+  checkSubdomainAvailability,
   updateSubdomain,
   getOrganizationSubdomain,
   activateSubdomain,
   deactivateSubdomain,
   updateBasedIdOrganizations,
   verifyEmail,
-  verifyEmailChange
+  verifyEmailChange,
+  getAllOrganizations, // SUPER ADMIN added by Ashok
 };

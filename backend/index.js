@@ -957,3 +957,32 @@ app.use("/upload", uploadRoute);
 // Tenant routes
 const tenantRoutes = require("./routes/tenantRoutes");
 app.use("/tenants", tenantRoutes);
+
+
+
+// <==================================================================================
+const InvoiceRouter = require("./routes/InvoiceRoutes.js");
+const PaymentsRoute = require("./routes/paymentsRoutes.js"); // SUPER ADMIN added by Ashok
+const ReceiptsRoute = require("./routes/receiptsRoute.js"); // SUPER ADMIN added by Ashok
+
+
+// SUPER ADMIN added by Ashok
+// invoices
+app.use("/invoices", InvoiceRouter);
+
+// SUPER ADMIN added by Ashok
+// payments
+app.use("/payments", PaymentsRoute);
+
+// SUPER ADMIN added by Ashok
+// receipts
+app.use("/receipts", ReceiptsRoute);
+
+
+
+// integration logs Added by Ashok
+// const integrationLogRoutes = require("./routes/integrationLogRoutes");
+// app.use("/api/integration-logs", integrationLogRoutes); // original one
+// app.use("/integration-logs", integrationLogRoutes); // added by Ashok
+
+// ==================================================================================>

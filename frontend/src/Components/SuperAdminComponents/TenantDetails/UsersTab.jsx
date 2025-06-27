@@ -1,0 +1,719 @@
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import StatusBadge from "../common/StatusBadge";
+import {
+  AiOutlineUser,
+  AiOutlineLock,
+  AiOutlineMail,
+  AiOutlineKey,
+  AiOutlineClose,
+  AiOutlineWarning,
+} from "react-icons/ai";
+
+import Header from "../../Shared/Header/Header.jsx";
+import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
+import { useMediaQuery } from "react-responsive";
+import Loading from "../../SuperAdminComponents/Loading/Loading.jsx";
+import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
+import {
+  Eye,
+  Mail,
+  UserCircle,
+  Pencil,
+  Phone,
+  GraduationCap,
+  School,
+  // ExternalLink,
+  // X,
+  Briefcase,
+  User,
+  Calendar,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import TableView from "../../Shared/Table/TableView.jsx";
+import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
+import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
+import { LiaGenderlessSolid } from "react-icons/lia";
+
+function UsersTab({ users }) {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const [view, setView] = useState("table");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  // const [editModeOn, setEditModeOn] = useState(false);
+  // const [showAddForm, setShowAddForm] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    tech: [],
+    experience: { min: "", max: "" },
+  });
+  const navigate = useNavigate();
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  const filterIconRef = useRef(null); // Ref for filter icon
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  // get user by ID
+  useEffect(() => {
+    if (selectedUserId && users?.length) {
+      const foundUser = users.find((user) => user._id === selectedUserId);
+      setSelectedUser(foundUser || null);
+    }
+  }, [selectedUserId, users]);
+
+  useEffect(() => {
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
+
+  const handleFilterChange = (filters) => {
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 ||
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
+    );
+  };
+
+  const dataToUse = users;
+
+  const handleFilterIconClick = () => {
+    if (dataToUse?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
+  };
+
+  const FilteredData = () => {
+    if (!Array.isArray(dataToUse)) return [];
+    return dataToUse.filter((organization) => {
+      const fieldsToSearch = [
+        organization.lastName,
+        organization.email,
+        organization.phone,
+      ].filter((field) => field !== null && field !== undefined);
+
+      const matchesStatus =
+        selectedFilters?.status.length === 0 ||
+        selectedFilters.status.includes(organization.HigherQualification);
+      const matchesTech =
+        selectedFilters.tech.length === 0 ||
+        organization.skills?.some((skill) =>
+          selectedFilters.tech.includes(skill.skill)
+        );
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return matchesSearchQuery && matchesStatus && matchesTech;
+    });
+  };
+
+  const rowsPerPage = 10;
+  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const nextPage = () => {
+    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  const startIndex = currentPage * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
+
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(0); // Reset to first page on search
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (!users) {
+    return <div>No Users found.</div>;
+  }
+
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  const handleLogin = (user) => {
+    setSelectedUser(user);
+    setShowLoginModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowLoginModal(false);
+    setSelectedUser(null);
+  };
+
+  const tableColumns = [
+    {
+      key: "name",
+      header: "Name",
+      render: (value, row) => (
+        <div>
+          <div className="font-medium text-gray-900">
+            {row?.firstName || row?.FirstName}
+          </div>
+          <div className="text-gray-500">{row?.email || row?.Email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      render: (value, row) => (
+        <div className="text-gray-500">
+          {row?.contact || row?.Contact || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "role",
+      header: "Role",
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          <Mail className="w-4 h-4" />
+          <span>{row.status || "N/A"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "lastLogin",
+      header: "Last Login",
+      render: (value, row) =>
+        new Date(row.lastLogin).toLocaleDateString() || "N/A",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => <StatusBadge status={row.status} /> || "N/A",
+    },
+  ];
+
+  // Table Actions Configuration
+  const tableActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+    // },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
+  ];
+
+  // Kanban Columns Configuration
+  const kanbanColumns = [];
+
+  // Render Actions for Kanban
+  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedUserId(item._id);
+          setIsPopupOpen(true);
+        }}
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        title="View Details"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      {!isLoading ? (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              item?._id && navigate(`/candidate/${item._id}`);
+            }}
+            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            title="360° View"
+          >
+            <UserCircle className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`edit/${item._id}`);
+            }}
+            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onResendLink(item.id);
+          }}
+          disabled={item.status === "completed"}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Resend Link"
+        >
+          <Mail className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+
+  // Render Popup content
+  const renderPopupContent = (user) => {
+    return (
+      <div className="px-4">
+        <div className="rounded-sm px-4 w-full">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-2">
+              <div className="flex justify-center items-center  gap-4 mb-4">
+                <div className="relative">
+                  {user?.ImageData ? (
+                    <img
+                      src={`http://localhost:5000/${user?.ImageData?.path}`}
+                      alt={user?.FirstName || user?.firstName}
+                      onError={(e) => {
+                        e.target.src = "/default-profile.png";
+                      }}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                      {user?.firstName?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                user?.Status === 'active' ? 'bg-green-100 text-green-800' :
+                user?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {user?.Status ? user?.Status.charAt(0).toUpperCase() + user?.Status.slice(1) : "?"}
+
+              </span> */}
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {user?.firstName ? user.firstName : "N/A"}
+                  </h3>
+
+                  <p className="text-gray-600 mt-1">
+                    {user.CurrentRole || "position"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Personal Details
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <User className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Name</p>
+                            <p className="text-gray-700">
+                              {user?.firstName || "N/A"} {user?.lastName || ""}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Calendar className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Date of Birth
+                            </p>
+                            <p className="text-gray-700">
+                              {new Date(
+                                user?.Date_Of_Birth
+                              ).toLocaleDateString() || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-custom-bg rounded-lg">
+                              <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Gender</p>
+                              <p className="text-gray-700">
+                                {user?.Gender || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Contact Information
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Mail className="w-5 h-5 text-gray-500" />
+                          </div>
+
+                          <span className="text-gray-700">
+                            {user?.email || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Phone className="w-5 h-5 text-gray-500" />
+                          </div>
+
+                          <span className="text-gray-700">{user?.Phone}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Professional Details
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Qualification
+                            </p>
+
+                            <p className="text-gray-700">
+                              {user?.HigherQualification || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <School className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">University</p>
+                            <p className="text-gray-700">
+                              {user?.UniversityCollege || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Briefcase className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Experience</p>
+                            <p className="text-gray-700">
+                              {user?.CurrentExperience || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Briefcase className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Relevant Experience
+                            </p>
+                            <p className="text-gray-700">
+                              {user?.RelevantExperience || "N/A"}{" "}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                    Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {user?.skills ? (
+                      user.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
+                        >
+                          {skill.skill}
+                        </span>
+                      ))
+                    ) : (
+                      <span>No skills found</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* have to add these feilds show case here later  */}
+                {user.interviews && user.interviews.length > 0 && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Latest Interview
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">
+                          {user.interviews[0].company}
+                        </span>
+                        <span className="text-gray-500">
+                          {user.interviews[0].position}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Latest round: {user.interviews[0].rounds[0].round}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="absolute md:mt-0 sm:mt-0 top-0 left-0 right-0 bg-background">
+        {/* <div className="px-4 pt-4">
+          <h1 className="text-lg font-semibold">Users({users?.length})</h1>
+        </div> */}
+        <div className="flex justify-between items-center mb-4">
+          {/* Header and Tool bar */}
+          <div className="md:mt-4 sm:mt-4 w-full">
+            <main className="px-4">
+              <div className="sm:px-0">
+                <Header
+                  title="Users"
+                  onAddClick={() => navigate("/tenants/add")}
+                  addButtonText="Add User"
+                />
+                <Toolbar
+                  view={view}
+                  setView={setView}
+                  searchQuery={searchQuery}
+                  onSearch={handleSearch}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPrevPage={prevPage}
+                  onNextPage={nextPage}
+                  onFilterClick={handleFilterIconClick}
+                  isFilterPopupOpen={isFilterPopupOpen}
+                  isFilterActive={isFilterActive}
+                  dataLength={dataToUse?.length}
+                  searchPlaceholder="Search Tenants..."
+                  filterIconRef={filterIconRef}
+                />
+              </div>
+            </main>
+          </div>
+        </div>
+
+        {/* New table */}
+        <main>
+          <div className="sm:px-0">
+            {!users ? (
+              <Loading />
+            ) : (
+              <motion.div className="bg-white">
+                <div className="relative w-full">
+                  {view === "table" ? (
+                    <div className="w-full">
+                      <TableView
+                        data={currentFilteredRows}
+                        columns={tableColumns}
+                        loading={isLoading}
+                        actions={tableActions}
+                        emptyState="No users found."
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <KanbanView
+                        data={currentFilteredRows.map((user) => ({
+                          ...user,
+                          id: user._id,
+                          title: `${user.FirstName || ""} ${
+                            user.LastName || ""
+                          }`,
+                          subtitle:
+                            user.CurrentRole || user.CurrentExperience || "N/A",
+                          avatar: "",
+                          status: "active",
+                          isAssessmentView: <p>Is assignment view</p>,
+                        }))}
+                        columns={kanbanColumns}
+                        loading={isLoading}
+                        renderActions={renderKanbanActions}
+                        emptyState="No Users found."
+                      />
+                    </div>
+                  )}
+
+                  <FilterPopup
+                    isOpen={isFilterPopupOpen}
+                    onClose={() => setFilterPopupOpen(false)}
+                    onApply={handleFilterChange}
+                    initialFilters={selectedFilters}
+                    filterIconRef={filterIconRef} // Pass ref to FilterPopup
+                  />
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {showLoginModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Login as {selectedUser.name}
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <span className="sr-only">Close</span>
+                <AiOutlineClose size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                  <AiOutlineUser />
+                  <span>User Details</span>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-gray-500">Name:</div>
+                    <div className="font-medium">{selectedUser.name}</div>
+                    <div className="text-gray-500">Email:</div>
+                    <div className="font-medium">{selectedUser.email}</div>
+                    <div className="text-gray-500">Role:</div>
+                    <div className="font-medium">{selectedUser.role}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                  <AiOutlineLock />
+                  <span>Login Options</span>
+                </div>
+                <div className="space-y-3">
+                  <button className="w-full btn-primary flex items-center justify-center space-x-2">
+                    <AiOutlineUser />
+                    <span>Login as User</span>
+                  </button>
+                  <button className="w-full btn-secondary flex items-center justify-center space-x-2">
+                    <AiOutlineMail />
+                    <span>Send Login Link</span>
+                  </button>
+                  <button className="w-full btn-secondary flex items-center justify-center space-x-2">
+                    <AiOutlineKey />
+                    <span>Generate Temporary Password</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                <div className="flex items-start space-x-2">
+                  <AiOutlineWarning className="flex-shrink-0 mt-0.5" />
+                  <p>
+                    Logging in as another user will be logged in the audit
+                    trail. Use this feature responsibly.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button onClick={handleCloseModal} className="btn-secondary">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Popup */}
+      <div>
+        {isPopupOpen && selectedUser && (
+          <SidebarPopup
+            title="User"
+            subTitle={selectedUserId}
+            onClose={() => setIsPopupOpen(false)}
+          >
+            {renderPopupContent(selectedUser)}
+          </SidebarPopup>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default UsersTab;
