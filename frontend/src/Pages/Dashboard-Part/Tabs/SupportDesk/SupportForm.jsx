@@ -50,7 +50,7 @@ const SupportForm = () => {
   );
 
   const [formState, setFormState] = useState(initialFormState);
-  const { otherIssueFlag, otherIssue, selectedIssue, file, description } =
+  const { otherIssueFlag, otherIssue, selectedIssue, description } =
     formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
