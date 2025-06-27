@@ -18,6 +18,7 @@ const BasicDetails = ({
   filePreview,
   setFilePreview,
   linkedInData,
+  setIsProfileRemoved,
 }) => {
   const { useCallback } = React;
 
@@ -38,6 +39,11 @@ const BasicDetails = ({
   const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
+
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [profileError, setProfileError] = useState("");
+
   const genderDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
   
@@ -57,6 +63,7 @@ const BasicDetails = ({
       setSelectedGender('');
     }
   }, [basicDetailsData.dateOfBirth, basicDetailsData.gender]);
+
 
   // Generate profileId from email
   const generateProfileId = useCallback((email) => {
@@ -260,6 +267,7 @@ const BasicDetails = ({
     }
     setFile(null);
     setFilePreview(linkedInData?.pictureUrl || null);
+    setIsProfileRemoved(true);
   };
 
   const handleInputChange = (e, fieldName) => {
