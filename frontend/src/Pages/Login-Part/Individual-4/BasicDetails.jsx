@@ -28,28 +28,26 @@ const BasicDetails = ({
   const [startDate, setStartDate] = useState(
     basicDetailsData.dateOfBirth ? new Date(basicDetailsData.dateOfBirth) : null
   );
-  const [selectedGender, setSelectedGender] = useState(basicDetailsData.gender || '');
+  const [selectedGender, setSelectedGender] = useState(
+    basicDetailsData.gender || ""
+  );
   const [showDropdowngender, setShowDropdownGender] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [profileError, setProfileError] = useState("");
   // const [isProfileRemoved, setIsProfileRemoved] = useState(false);
-  
+
   // // Refs
   // const emailInputRef = useRef(null);
   const profileIdInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
 
-
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [profileError, setProfileError] = useState("");
-
   const genderDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
-  
+
   // Constants
   const genders = ["Male", "Female", "Others"];
-  
+
   // Update local state when basicDetailsData changes
   useEffect(() => {
     if (basicDetailsData.dateOfBirth) {
@@ -60,10 +58,9 @@ const BasicDetails = ({
     if (basicDetailsData.gender) {
       setSelectedGender(basicDetailsData.gender);
     } else {
-      setSelectedGender('');
+      setSelectedGender("");
     }
   }, [basicDetailsData.dateOfBirth, basicDetailsData.gender]);
-
 
   // Generate profileId from email
   const generateProfileId = useCallback((email) => {
@@ -235,7 +232,7 @@ const BasicDetails = ({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       clearTimeout(emailTimeoutRef.current);
