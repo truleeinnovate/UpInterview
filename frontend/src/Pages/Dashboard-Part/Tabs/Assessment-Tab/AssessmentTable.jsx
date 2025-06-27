@@ -1,182 +1,366 @@
-import React, { useRef, useState } from 'react';
-import { FaEye, FaPencilAlt, FaShareAlt } from 'react-icons/fa';
-import { ReactComponent as FiMoreHorizontal } from '../../../../icons/FiMoreHorizontal.svg';
-import { Menu } from '@headlessui/react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  EyeIcon,
+  PencilSquareIcon,
+  ClockIcon,
+  UserIcon,
+  AcademicCapIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  ShareIcon,
+} from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
 import PropTypes from 'prop-types';
 import Tooltip from '@mui/material/Tooltip';
 
-const AssessmentTable = ({ assessments, onView, onEdit, onShare, assessmentSections }) => {
-  const scrollContainerRef = useRef(null);
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
-  const [openUpwards, setOpenUpwards] = useState(false);
-  const menuButtonRefs = useRef([]);
+const AssessmentKanban = ({ 
+  assessments, 
+  onView, 
+  onEdit, 
+  onShare, 
+  assessmentSections,
+  loading = false,
+  effectivePermissions
+}) => {
+  const [columns, setColumns] = useState({
+    active: { title: 'Active', items: [] },
+    inactive: { title: 'Inactive', items: [] }
+  });
 
-  const handleMenuOpen = (index) => {
-    setOpenMenuIndex(index);
-    const container = scrollContainerRef.current;
-    const button = menuButtonRefs.current[index];
+  useEffect(() => {
+    setColumns({
+      active: {
+        title: 'Active',
+        items: assessments.filter((a) => a.status === 'Active')
+      },
+      inactive: {
+        title: 'Inactive',
+        items: assessments.filter((a) => a.status === 'Inactive')
+      }
+    });
+  }, [assessments]);
 
-    if (container && button) {
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = button.getBoundingClientRect();
-      const dropdownHeight = 120;
-      const spaceBelow = containerRect.bottom - buttonRect.bottom;
-      setOpenUpwards(spaceBelow < dropdownHeight);
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const { source, destination } = result;
+
+    if (source.droppableId !== destination.droppableId) {
+      const sourceColumn = columns[source.droppableId];
+      const destColumn = columns[destination.droppableId];
+      const sourceItems = [...sourceColumn.items];
+      const destItems = [...destColumn.items];
+      const [movedItem] = sourceItems.splice(source.index, 1);
+      destItems.splice(destination.index, 0, movedItem);
+
+      setColumns({
+        ...columns,
+        [source.droppableId]: { ...sourceColumn, items: sourceItems },
+        [destination.droppableId]: { ...destColumn, items: destItems }
+      });
+    } else {
+      const column = columns[source.droppableId];
+      const copiedItems = [...column.items];
+      const [movedItem] = copiedItems.splice(source.index, 1);
+      copiedItems.splice(destination.index, 0, movedItem);
+
+      setColumns({
+        ...columns,
+        [source.droppableId]: { ...column, items: copiedItems }
+      });
     }
   };
 
-  return (
-    <div className="w-full h-[calc(100vh-12rem)] flex flex-col">
-      <div className="hidden lg:flex xl:flex 2xl:flex flex-col flex-1">
-        <div className="overflow-x-auto">
-          <div className="inline-block min-w-full align-middle">
-            <div className="border border-t border-b">
-              <div
-                className="h-[calc(100vh-12rem)] overflow-y-auto pb-6"
-                ref={scrollContainerRef}
-              >
-                <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                  <thead className="bg-gray-50 border-b sticky top-0 z-10">
-                    <tr>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[18%]">Assessment Name</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[10%]">No.of Sections</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">No.of Questions</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Difficulty Level</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Total Score</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[18%]">Pass Score (Number / %)</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[10%]">Duration</th>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[8%]">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {assessments.map((assessment, index) => (
-                      <tr
-                        key={index}
-                        className={`hover:bg-gray-50 ${index === assessments.length - 1 ? 'mb-6' : ''}`}
-                      >
-                        <td className="px-6 py-1 text-sm text-custom-blue cursor-pointer" onClick={() => onView(assessment)}>
-                          {assessment.AssessmentTitle}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-600">{assessmentSections[assessment._id] ?? 0}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600">{assessment.NumberOfQuestions}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600">{assessment.DifficultyLevel}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600">{assessment.totalScore}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600">
-                          {assessment.passScore} {assessment.passScoreType === 'Percentage' ? '%' : 'Number'}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-600">{assessment.Duration}</td>
-                        <td className="px-6 py-2 text-sm text-gray-600">
-                          <Menu as="div" className="relative">
-                            <Menu.Button
-                              ref={(el) => (menuButtonRefs.current[index] = el)}
-                              onClick={() => handleMenuOpen(index)}
-                              className="p-1 hover:bg-gray-100 rounded-lg"
-                            >
-                              <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
-                            </Menu.Button>
-                            {openMenuIndex === index && (
-                              <Menu.Items
-                                className={`absolute w-48 bg-white rounded-lg shadow-lg border py-1 z-50 ${
-                                  openUpwards ? 'bottom-full mb-2 right-0' : 'top-full mt-2 right-0'
-                                }`}
-                              >
-                                <Menu.Item>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={() => onView(assessment)}
-                                      className={`${
-                                        active ? 'bg-gray-50' : ''
-                                      } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
-                                    >
-                                      <FaEye className="w-4 h-4 text-blue-600" />
-                                      View Details
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                                <Menu.Item>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={() => onEdit(assessment)}
-                                      className={`${
-                                        active ? 'bg-gray-50' : ''
-                                      } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
-                                    >
-                                      <FaPencilAlt className="w-4 h-4 text-green-600" />
-                                      Edit
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                                <Menu.Item>
-                                  {({ active }) => (
-                                    <Tooltip
-                                      title={
-                                        (assessmentSections[assessment._id] ?? 0) === 0
-                                          ? 'No questions added'
-                                          : 'Share'
-                                      }
-                                      enterDelay={300}
-                                      leaveDelay={100}
-                                      arrow
-                                    >
-                                      <span>
-                                        <button
-                                          onClick={() => onShare(assessment)}
-                                          className={`${
-                                            active ? 'bg-gray-50' : ''
-                                          } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 ${
-                                            (assessmentSections[assessment._id] ?? 0) === 0
-                                              ? 'cursor-not-allowed opacity-50'
-                                              : ''
-                                          }`}
-                                          disabled={(assessmentSections[assessment._id] ?? 0) === 0}
-                                        >
-                                          <FaShareAlt
-                                            className={`w-4 h-4 ${
-                                              (assessmentSections[assessment._id] ?? 0) === 0
-                                                ? 'text-gray-400'
-                                                : 'text-green-600'
-                                            }`}
-                                          />
-                                          Share
-                                        </button>
-                                      </span>
-                                    </Tooltip>
-                                  )}
-                                </Menu.Item>
-                              </Menu.Items>
-                            )}
-                          </Menu>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+  const getStatusColor = (status) => {
+    return status === 'Active'
+      ? 'bg-green-100 text-green-800'
+      : 'bg-red-100 text-red-800';
+  };
+
+  if (loading) {
+    return (
+      <motion.div 
+        className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex items-center justify-end mb-4">
+          <div className="h-8 w-32 bg-gray-200 animate-pulse rounded-lg"></div>
         </div>
-      </div>
-    </div>
+        <div className="flex sm:flex-col flex-row gap-6 pb-6">
+          {['active', 'inactive'].map((columnId, colIndex) => (
+            <motion.div
+              key={columnId}
+              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: colIndex * 0.1 }}
+            >
+              <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded mb-4"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, index) => (
+                  <motion.div
+                    key={index}
+                    className="bg-white rounded-lg shadow p-4 space-y-3 border border-gray-200"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                    <div className="flex justify-between pt-2">
+                      <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                      <div className="h-4 w-12 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div 
+        className="flex items-center justify-end mb-4"
+        initial={{ x: 20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
+          {assessments.length} {assessments.length === 1 ? 'Assessment' : 'Assessments'}
+        </span>
+      </motion.div>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex sm:flex-col flex-row gap-6 pb-6">
+          {Object.entries(columns).map(([columnId, column], colIndex) => (
+            <motion.div
+              key={columnId}
+              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: colIndex * 0.1 }}
+            >
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                {column.title} ({column.items.length})
+              </h2>
+              <Droppable droppableId={columnId}>
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4"
+                  >
+                    {column.items.map((assessment, index) => (
+                      <Draggable
+                        key={assessment._id}
+                        draggableId={assessment._id}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <motion.div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="bg-white rounded-lg shadow p-4 space-y-3 relative group border border-gray-200"
+                            whileHover={{ y: -5 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.05 }}
+                            onClick={() => effectivePermissions.Assessments?.View && onView(assessment)}
+                          >
+                            <motion.div 
+                              className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              {effectivePermissions.Assessments?.View && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => onView(assessment)}
+                                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                  title="View"
+                                >
+                                  <EyeIcon className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              {effectivePermissions.Assessments?.Edit && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => onEdit(assessment)}
+                                  className="p-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                  title="Edit"
+                                >
+                                  <PencilSquareIcon className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              {effectivePermissions.Assessments?.Share && (
+                                <Tooltip
+                                  title={
+                                    (assessmentSections[assessment._id] ?? 0) === 0
+                                      ? 'No questions added'
+                                      : 'Share'
+                                  }
+                                  enterDelay={300}
+                                  leaveDelay={100}
+                                  arrow
+                                >
+                                  <motion.span
+                                    whileHover={{ scale: 1.05 }}
+                                  >
+                                    <button
+                                      onClick={() => onShare(assessment)}
+                                      className={`p-1 text-gray-500 rounded ${
+                                        (assessmentSections[assessment._id] ?? 0) === 0
+                                          ? 'cursor-not-allowed opacity-50'
+                                          : 'hover:text-green-600 hover:bg-green-50'
+                                      }`}
+                                      disabled={(assessmentSections[assessment._id] ?? 0) === 0}
+                                    >
+                                      <ShareIcon className="w-5 h-5" />
+                                    </button>
+                                  </motion.span>
+                                </Tooltip>
+                              )}
+                            </motion.div>
+                            <motion.div 
+                              className="flex items-start"
+                              whileHover={{ x: 2 }}
+                            >
+                              <h3 
+                                className="font-medium text-lg text-custom-blue pr-20 cursor-pointer"
+                                onClick={() => effectivePermissions.Assessments?.View && onView(assessment)}
+                              >
+                                {assessment.AssessmentTitle}
+                              </h3>
+                            </motion.div>
+                            <div className="space-y-2 text-sm text-gray-600">
+                              {assessment.Position && (
+                                <motion.div 
+                                  className="flex items-center gap-2"
+                                  whileHover={{ x: 2 }}
+                                >
+                                  <UserIcon className="w-4 h-4" />
+                                  {assessment.Position}
+                                </motion.div>
+                              )}
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <ClockIcon className="w-4 h-4" />
+                                {assessment.Duration}
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <AcademicCapIcon className="w-4 h-4" />
+                                {assessment.DifficultyLevel}
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <DocumentTextIcon className="w-4 h-4" />
+                                {assessment.NumberOfQuestions} Questions
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <CalendarIcon className="w-4 h-4" />
+                                {format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy')}
+                              </motion.div>
+                            </div>
+                            <div className="flex items-center justify-between pt-2">
+                              <motion.span
+                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                                  assessment.status
+                                )}`}
+                                whileHover={{ scale: 1.05 }}
+                              >
+                                {assessment.status}
+                              </motion.span>
+                              <span className="text-xs text-gray-500">
+                                {assessmentSections[assessment._id] ?? 0} Sections
+                              </span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {column.items.length === 0 && (
+                      <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
+                        <DocumentTextIcon className="w-12 h-12 text-gray-300 mb-3" />
+                        <h3 className="text-lg font-medium text-gray-700 mb-1">
+                          No {column.title.toLowerCase()} assessments found
+                        </h3>
+                        <p className="text-gray-500 text-center max-w-md text-sm">
+                          {column.title === 'Active' 
+                            ? 'There are no active assessments to display.'
+                            : 'There are no inactive assessments at the moment.'}
+                        </p>
+                      </div>
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </motion.div>
+          ))}
+        </div>
+      </DragDropContext>
+    </motion.div>
   );
 };
 
-AssessmentTable.propTypes = {
+AssessmentKanban.propTypes = {
   assessments: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
       AssessmentTitle: PropTypes.string.isRequired,
-      NumberOfQuestions: PropTypes.number,
-      DifficultyLevel: PropTypes.string,
-      totalScore: PropTypes.number,
-      passScore: PropTypes.number,
-      passScoreType: PropTypes.string,
+      status: PropTypes.oneOf(['Active', 'Inactive']).isRequired,
+      Position: PropTypes.string,
       Duration: PropTypes.string,
+      DifficultyLevel: PropTypes.string,
+      NumberOfQuestions: PropTypes.number,
+      ExpiryDate: PropTypes.string
     })
   ).isRequired,
   onView: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
   onShare: PropTypes.func.isRequired,
   assessmentSections: PropTypes.object.isRequired,
+  loading: PropTypes.bool,
+  effectivePermissions: PropTypes.object.isRequired
 };
 
-export default AssessmentTable;
+AssessmentKanban.defaultProps = {
+  loading: false
+};
+
+export default AssessmentKanban;

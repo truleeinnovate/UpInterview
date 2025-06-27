@@ -211,22 +211,22 @@ export const PermissionsProvider = ({ children }) => {
 
   const [effectivePermissions, setEffectivePermissions] = useState({});
   const [superAdminPermissions, setSuperAdminPermissions] = useState(null);
-  const [inheritedRoleIds, setInheritedRoleIds] = useState([]);
-  const [isImpersonating, setIsImpersonating] = useState(false);
-  const [roleType, setRoleType] = useState(null);
-  const [roleLevel, setRoleLevel] = useState(null);
-  const [tenants, setTenants] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [selectedTenant, setSelectedTenant] = useState(null);
+  // const [inheritedRoleIds, setInheritedRoleIds] = useState([]);
+  // const [isImpersonating, setIsImpersonating] = useState(false);
+  // const [roleType, setRoleType] = useState(null);
+  // const [roleLevel, setRoleLevel] = useState(null);
+  // const [tenants, setTenants] = useState([]);
+  // const [users, setUsers] = useState([]);
+  // const [selectedTenant, setSelectedTenant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
   console.log('effectivePermissions', effectivePermissions);
   console.log('superAdminPermissions', superAdminPermissions);
-  console.log('inheritedRoleIds', inheritedRoleIds);
-  console.log('isImpersonating', isImpersonating);
-  console.log('roleType', roleType);
-  console.log('roleLevel', roleLevel);
+  // console.log('inheritedRoleIds', inheritedRoleIds);
+  // console.log('isImpersonating', isImpersonating);
+  // console.log('roleType', roleType);
+  // console.log('roleLevel', roleLevel);
 
 
   const refreshPermissions = async () => {
@@ -234,18 +234,18 @@ export const PermissionsProvider = ({ children }) => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { withCredentials: true });
       setEffectivePermissions(response.data.effectivePermissions || {});
       setSuperAdminPermissions(response.data.superAdminPermissions || null);
-      setInheritedRoleIds(response.data.inheritedRoleIds || []);
-      setIsImpersonating(response.data.isImpersonating || false);
-      setRoleType(response.data.roleType || null);
+      // setInheritedRoleIds(response.data.inheritedRoleIds || []);
+      // setIsImpersonating(response.data.isImpersonating || false);
+      // setRoleType(response.data.roleType || null);
       // setRoleLevel(response.data.roleLevel || null);
       setAuthError(null);
     } catch (error) {
       console.error('Error refreshing permissions:', error);
       setEffectivePermissions({});
       setSuperAdminPermissions(null);
-      setInheritedRoleIds([]);
-      setIsImpersonating(false);
-      setRoleType(null);
+      // setInheritedRoleIds([]);
+      // setIsImpersonating(false);
+      // setRoleType(null);
       // setRoleLevel(null);
       setAuthError('Failed to load permissions');
     }
@@ -254,9 +254,6 @@ export const PermissionsProvider = ({ children }) => {
   useEffect(() => {
     const initialize = async () => {
       await refreshPermissions();
-      // if (superAdminPermissions) {
-      //   await fetchTenants();
-      // }
       setLoading(false);
     };
     initialize();
@@ -264,17 +261,16 @@ export const PermissionsProvider = ({ children }) => {
 
   return (
     <PermissionsContext.Provider value={{
-      // permissions, roleLevel, isImpersonating, roleType, refreshPermissions
       effectivePermissions,
       superAdminPermissions,
-      inheritedRoleIds,
-      isImpersonating,
-      roleType,
-      roleLevel,
-      tenants,
-      users,
-      selectedTenant,
-      setSelectedTenant,
+      // inheritedRoleIds,
+      // isImpersonating,
+      // roleType,
+      // roleLevel,
+      // tenants,
+      // users,
+      // selectedTenant,
+      // setSelectedTenant,
       // fetchUsers,
       // startImpersonation,
       // endImpersonation,

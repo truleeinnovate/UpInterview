@@ -1,4 +1,3 @@
-// Candidate.jsx
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,8 +15,10 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
+  const { effectivePermissions } = usePermissions();
   const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -44,9 +45,8 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  const filterIconRef = useRef(null); // Ref for filter icon
+  const filterIconRef = useRef(null);
 
-  // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
@@ -184,8 +184,10 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+    setCurrentPage(0);
   };
+  const kanbanColumns = [];
+
 
   // Table Columns Configuration
   const tableColumns = [
@@ -198,8 +200,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             {row?.ImageData ? (
               <img
                 className="h-8 w-8 rounded-full object-cover"
-                // src={`http://localhost:5000/${row?.ImageData?.path}`}
-                src={row?.ImageData?.path || null} // Added by Ashok
+                src={row?.ImageData?.path || null}
                 alt={row?.FirstName || "Candidate"}
                 onError={(e) => {
                   e.target.src = "/default-profile.png";
@@ -214,7 +215,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           <div className="ml-3">
             <div
               className="text-sm font-medium text-custom-blue cursor-pointer"
-              onClick={() => navigate(`view-details/${row._id}`)}
+              onClick={() => effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)}
             >
               {(row?.FirstName || "") + " " + (row.LastName || "")}
             </div>
@@ -272,25 +273,29 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) =>
-        navigate(
-          isAssessmentView
-            ? `candidate-details/${row._id}`
-            : `view-details/${row._id}`,
+    ...(effectivePermissions.Candidates?.View
+      ? [
           {
-            state: isAssessmentView
-              ? {
-                  from: `/assessment-details/${row?.assessmentId}`,
-                  assessmentId: row?.assessmentId,
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) =>
+              navigate(
+                isAssessmentView
+                  ? `candidate-details/${row._id}`
+                  : `view-details/${row._id}`,
+                {
+                  state: isAssessmentView
+                    ? {
+                        from: `/assessment-details/${row?.assessmentId}`,
+                        assessmentId: row?.assessmentId,
+                      }
+                    : { from: "/candidate" },
                 }
-              : { from: "/candidate" },
-          }
-        ),
-    },
+              ),
+          },
+        ]
+      : []),
     ...(!isAssessmentView
       ? [
           {
@@ -299,12 +304,16 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             icon: <Rotate3d size={24} className="text-custom-blue" />,
             onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
           },
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
+          ...(effectivePermissions.Candidates?.Edit
+            ? [
+                {
+                  key: "edit",
+                  label: "Edit",
+                  icon: <Pencil className="w-4 h-4 text-green-600" />,
+                  onClick: (row) => navigate(`edit/${row._id}`),
+                },
+              ]
+            : []),
         ]
       : []),
     ...(isAssessmentView
@@ -320,22 +329,21 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       : []),
   ];
 
-  // Kanban Columns Configuration
-  const kanbanColumns = [];
-
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`view-details/${item._id}`);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
+      {effectivePermissions.Candidates?.View && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`view-details/${item._id}`);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
       {!isAssessmentView ? (
         <>
           <button
@@ -348,16 +356,18 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           >
             <UserCircle className="w-4 h-4" />
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
+          {effectivePermissions.Candidates?.Edit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`edit/${item._id}`);
+              }}
+              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
         </>
       ) : (
         <button
@@ -392,6 +402,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   title="Candidates"
                   onAddClick={() => navigate("new")}
                   addButtonText="Add Candidate"
+                  canCreate={effectivePermissions.Candidates?.Create}
                 />
                 <Toolbar
                   view={view}
@@ -446,10 +457,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                           candidate.CurrentRole ||
                           candidate.CurrentExperience ||
                           "Not Provided",
-                        // avatar: candidate.ImageData
-                        //   ? `http://localhost:5000/${candidate.ImageData.path}`
-                        //   : null,
-                        avatar: candidate?.ImageData?.path || null, // Added by Ashok
+                        avatar: candidate?.ImageData?.path || null,
                         status: candidate.HigherQualification || "Not Provided",
                         isAssessmentView: isAssessmentView,
                       }))}
@@ -460,7 +468,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                     />
                   </div>
                 )}
-                {/* Render FilterPopup */}
                 <FilterPopup
                   isOpen={isFilterPopupOpen}
                   onClose={() => setFilterPopupOpen(false)}
@@ -469,7 +476,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   filterIconRef={filterIconRef}
                 >
                   <div className="space-y-3">
-                    {/* Qualification Section */}
                     <div>
                       <div
                         className="flex justify-between items-center cursor-pointer"
@@ -517,8 +523,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         </div>
                       )}
                     </div>
-
-                    {/* Skills Section */}
                     <div>
                       <div
                         className="flex justify-between items-center cursor-pointer"
@@ -564,8 +568,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                         </div>
                       )}
                     </div>
-
-                    {/* Experience Section */}
                     <div>
                       <div
                         className="flex justify-between items-center cursor-pointer"

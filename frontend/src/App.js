@@ -203,15 +203,18 @@ const SuspenseWithLoading = ({
 const App = () => {
   const { effectivePermissions,
     superAdminPermissions,
-    inheritedRoleIds,
-    isImpersonating,
-    roleType,
-    roleLevel,
-    tenants,
-    users,
-    selectedTenant,
-    setSelectedTenant, } = usePermissions();
+    // inheritedRoleIds,
+    // isImpersonating,
+    // roleType,
+    // roleLevel,
+    // tenants,
+    // users,
+    // selectedTenant,
+    // setSelectedTenant,
+   } = usePermissions();
   console.log("effectivePermissions", effectivePermissions);
+  console.log("superAdminPermissions", superAdminPermissions);
+
 
 
 
@@ -238,13 +241,32 @@ const App = () => {
 
 
   // Helper function to check if a tab should be accessible
-  const canAccessTab = (objectName, permissionType = 'View') => {
-    // Check superAdminPermissions first (for super admin tabs)
-    if (superAdminPermissions && superAdminPermissions.SuperAdmin) {
-      return superAdminPermissions.SuperAdmin.ViewTenants || false;
+  // const canAccessTab = (objectName, permissionType = 'View') => {
+  //   // Check superAdminPermissions first (for super admin tabs)
+  //   if (superAdminPermissions && superAdminPermissions.SuperAdmin) {
+  //     return superAdminPermissions.SuperAdmin.ViewTenants || false;
+  //   }
+  //   // Fallback to effectivePermissions for regular tabs
+  //   return effectivePermissions[objectName]?.[permissionType] || false;
+  // };
+
+  // Check if user is Super Admin
+  const isSuperAdmin = superAdminPermissions?.SuperAdmin;
+
+  // Permission check function
+  const hasPermission = (objectName, permissionType = 'View') => {
+    // For Super Admin - has all permissions
+    if (isSuperAdmin) return true;
+    
+    // For regular users - check effectivePermissions
+    if (effectivePermissions?.[objectName]) {
+      // Handle both boolean and object permission structures
+      if (typeof effectivePermissions[objectName] === 'boolean') {
+        return effectivePermissions[objectName];
+      }
+      return effectivePermissions[objectName][permissionType] ?? false;
     }
-    // Fallback to effectivePermissions for regular tabs
-    return effectivePermissions[objectName]?.[permissionType] || false;
+    return false;
   };
   return (
     <ErrorBoundary>
@@ -310,47 +332,47 @@ const App = () => {
               <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} /> */}
 
               {/* Candidate Routes */}
-              {canAccessTab('Candidates') && (
+              {hasPermission('Candidates') && (
                 <Route path="/candidate" element={<CandidateTab />}>
                   <Route index element={null} />
-                  {canAccessTab('Candidates', 'Create') && (
+                  {hasPermission('Candidates', 'Create') && (
                     <Route path="new" element={<AddCandidateForm mode="Create" />} />
                   )}
                   <Route path="view-details/:id" element={<CandidateDetails />} />
-                  {canAccessTab('Candidates', 'Edit') && (
+                  {hasPermission('Candidates', 'Edit') && (
                     <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
                   )}
                 </Route>
               )}
-              {canAccessTab('Candidates') && (
+              {hasPermission('Candidates') && (
                 <Route path="/candidate/:id" element={<CandidateTabDetails />}>
                   <Route index element={null} />
-                  {canAccessTab('Candidates', 'Edit') && (
+                  {hasPermission('Candidates', 'Edit') && (
                     <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
                   )}
                 </Route>
               )}
-              {canAccessTab('Candidates') && (
+              {hasPermission('Candidates') && (
                 <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
               )}
 
               {/* Position Routes (to be removed later as per your note) */}
-              {canAccessTab('Positions') && (
+              {hasPermission('Positions') && (
                 <Route path="/position" element={<Position />} />
               )}
-              {canAccessTab('Positions', 'Create') && (
+              {hasPermission('Positions', 'Create') && (
                 <Route path="/position/new-position" element={<PositionForm />} />
               )}
-              {canAccessTab('Positions', 'Edit') && (
+              {hasPermission('Positions', 'Edit') && (
                 <Route path="/position/edit-position/:id" element={<PositionForm />} />
               )}
-              {canAccessTab('Positions') && (
+              {hasPermission('Positions') && (
                 <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
               )}
-              {canAccessTab('Positions', 'Create') && (
+              {hasPermission('Positions', 'Create') && (
                 <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
               )}
-              {canAccessTab('Positions', 'Edit') && (
+              {hasPermission('Positions', 'Edit') && (
                 <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
               )}
 
@@ -582,7 +604,7 @@ const App = () => {
 
 
               {/* Super Admin Routes */}
-              {/* {canAccessTab('SuperAdmin') && (
+              {/* {hasPermission('SuperAdmin') && (
                 <>
                   <Route index path="/admin-dashboard" element={<SuperAdminDashboard />} />
                   <Route path="/tenants" element={<TenantsPage />}>

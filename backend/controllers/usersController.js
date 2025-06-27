@@ -482,100 +482,100 @@ const UpdateUser = async (req, res) => {
 
 
 const getUsersByTenant = async (req, res) => {
-  // try {
-  //   const { tenantId } = req.params;
+  try {
+    const { tenantId } = req.params;
 
-  // if (!tenantId) {
-  //   return res.status(400).json({ message: 'Invalid tenant ID' });
-  // }
-
-  const users = await Users.find({ tenantId })
-    .populate({ path: 'roleId', select: '_id label roleName status' })
-    .lean();
-  if (!users || users.length === 0) {
-    return res.status(200).json([]);
-  }
-
-  // const [contacts, roles] = await Promise.all([
-  //   Contacts.find({ tenantId }).lean(),
-  //   Role.find({ tenantId }).lean() // ✅ Fix: using correct field
-  // ]);
-
-  // const roleMap = roles.reduce((acc, role) => {
-  //   acc[role._id.toString()] = role;
-  //   return acc;
-  // }, {});
-
-  const contactMap = contacts.reduce((acc, contact) => {
-    if (contact.ownerId) {
-      acc[contact.ownerId.toString()] = contact;
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Invalid tenant ID' });
     }
-    return acc;
-  }, {});
+
+    const users = await Users.find({ tenantId })
+      .populate({ path: 'roleId', select: '_id label roleName status' })
+      .lean();
+    if (!users || users.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const [contacts, roles] = await Promise.all([
+      Contacts.find({ tenantId }).lean(),
+      Role.find({ tenantId }).lean() // ✅ Fix: using correct field
+    ]);
+
+    const roleMap = roles.reduce((acc, role) => {
+      acc[role._id.toString()] = role;
+      return acc;
+    }, {});
+
+    const contactMap = contacts.reduce((acc, contact) => {
+      if (contact.ownerId) {
+        acc[contact.ownerId.toString()] = contact;
+      }
+      return acc;
+    }, {});
 
 
-  // const combinedUsers = users.map(user => {
-  //   const contact = contactMap[user._id.toString()] || {};
-  //   const role = user.roleId ? roleMap[user.roleId] : {};
+    const combinedUsers = users.map(user => {
+      const contact = contactMap[user._id.toString()] || {};
+      const role = user.roleId ? roleMap[user.roleId] : {};
 
-  return {
-    _id: user._id,
-    contactId: contact._id || '',
-    isEmailVerified: user.isEmailVerified || false,
-    firstName: contact.firstName || '',
-    lastName: contact.lastName || '',
-    email: user.email || '',
-    newEmail: user.newEmail || '',
-    countryCode: contact.countryCode || '',
-    gender: contact.gender || '',
-    phone: contact.phone || '',
-    status: user.status || '',
-    expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
-    // <<<<<<< Ranjith
-    roleId: user?.roleId?.roleId || '',
-    roleName: user?.roleId?.roleName || '',
-    label: user?.roleId?.label || '',
-    // =======
-    //         roleId: users.roleId || '',
-    //         roleName: users.roleName || '',
-    //         label: users.label || '',
-    // >>>>>>> main
-    imageData: contact.imageData || null,
-    createdAt: user.createdAt || contact.createdAt,
-    status: user.status || '',
-    updatedAt: user.updatedAt || contact.updatedAt,
-    profileId: contact.profileId || '',
-    linkedinUrl: contact.linkedinUrl || '',
-    portfolioUrl: contact.portfolioUrl || '',
-    hourlyRate: contact.hourlyRate || '',
-    currentRole: contact.currentRole || '',
-    industry: contact.industry || '',
-    experienceYears: contact.experienceYears || '',
-    location: contact.location || '',
-    resumePdf: contact.resumePdf || '',
-    coverLetter: contact.coverLetter || '',
-    coverLetterDescription: contact.coverLetterdescription || '',
-    professionalTitle: contact.professionalTitle || '',
-    bio: contact.bio || '',
-    interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-    noShowPolicy: contact.NoShowPolicy || '',
-    previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
-    previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
-    expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
-    technologies: contact.technologies || [],
-    skills: contact.skills || [],
-    timeZone: contact.timeZone || '',
-    preferredDuration: contact.preferredDuration || '',
-    availability: contact.availability || [],
-    dateOfBirth: contact.dateOfBirth || '',
-  };
-});
+      return {
+        _id: user._id,
+        contactId: contact._id || '',
+        isEmailVerified: user.isEmailVerified || false,
+        firstName: contact.firstName || '',
+        lastName: contact.lastName || '',
+        email: user.email || '',
+        newEmail: user.newEmail || '',
+        countryCode: contact.countryCode || '',
+        gender: contact.gender || '',
+        phone: contact.phone || '',
+        status: user.status || '',
+        expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
+        // <<<<<<< Ranjith
+        roleId: user?.roleId?.roleId || '',
+        roleName: user?.roleId?.roleName || '',
+        label: user?.roleId?.label || '',
+        // =======
+        //         roleId: users.roleId || '',
+        //         roleName: users.roleName || '',
+        //         label: users.label || '',
+        // >>>>>>> main
+        imageData: contact.imageData || null,
+        createdAt: user.createdAt || contact.createdAt,
+        status: user.status || '',
+        updatedAt: user.updatedAt || contact.updatedAt,
+        profileId: contact.profileId || '',
+        linkedinUrl: contact.linkedinUrl || '',
+        portfolioUrl: contact.portfolioUrl || '',
+        hourlyRate: contact.hourlyRate || '',
+        currentRole: contact.currentRole || '',
+        industry: contact.industry || '',
+        experienceYears: contact.experienceYears || '',
+        location: contact.location || '',
+        resumePdf: contact.resumePdf || '',
+        coverLetter: contact.coverLetter || '',
+        coverLetterDescription: contact.coverLetterdescription || '',
+        professionalTitle: contact.professionalTitle || '',
+        bio: contact.bio || '',
+        interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+        noShowPolicy: contact.NoShowPolicy || '',
+        previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || '',
+        previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || '',
+        expertiseLevelConductingInterviews: contact.ExpertiseLevel_ConductingInterviews || '',
+        technologies: contact.technologies || [],
+        skills: contact.skills || [],
+        timeZone: contact.timeZone || '',
+        preferredDuration: contact.preferredDuration || '',
+        availability: contact.availability || [],
+        dateOfBirth: contact.dateOfBirth || '',
+      };
+    });
 
-  //   res.status(200).json(combinedUsers);
-  // } catch (error) {
-  //   console.error('Error fetching users:', error);
-  //   res.status(500).json({ message: 'Internal server error' });
-  // }
+    res.status(200).json(combinedUsers);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 

@@ -13,12 +13,11 @@ import KanbanBoard from '../components/KanbanBoard.jsx';
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
 
 function InterviewList() {
-  const {
-    interviewData,
-    isLoading,
-  } = useInterviews();
+  const { effectivePermissions } = usePermissions();
+  const { interviewData, isLoading } = useInterviews();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -55,14 +54,28 @@ function InterviewList() {
   }, [isFilterPopupOpen, selectedFilters]);
 
   const handleView = (candidate) => {
-    if (candidate?._id) {
+    if (effectivePermissions.Candidates?.View && candidate?._id) {
       navigate(`/candidate/view-details/${candidate._id}`);
     }
   };
 
   const handleViewPosition = (position) => {
-    setSelectedPosition(position);
-    setSelectPositionView(true);
+    if (effectivePermissions.Positions?.View) {
+      setSelectedPosition(position);
+      setSelectPositionView(true);
+    }
+  };
+
+  const handleViewInterview = (interview) => {
+    if (effectivePermissions.Interviews?.View) {
+      navigate(`/interviews/${interview._id}`);
+    }
+  };
+
+  const handleEditInterview = (interview) => {
+    if (effectivePermissions.Interviews?.Edit) {
+      navigate(`/interviews/${interview._id}/edit`);
+    }
   };
 
   const handleFilterChange = useCallback((filters) => {
@@ -164,7 +177,7 @@ function InterviewList() {
 
       const matchesStatus =
         selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(interview.status); // Updated to use interview.status
+        selectedFilters.status.includes(interview.status);
 
       const matchesTech =
         selectedFilters.tech.length === 0 ||
@@ -202,14 +215,13 @@ function InterviewList() {
   const tableColumns = [
     {
       key: 'order',
-      header: "Interview ID",
-      // render: (value, row) => (row.interviewCode ? row.interviewCode : '-') || row.interviewCode || '-',
+      header: 'Interview ID',
       render: (value, row) => (
         <div className="flex items-center">
           <div className="ml-3">
             <div
               className="text-sm font-medium text-custom-blue cursor-pointer"
-              onClick={() => navigate(`/interviews/${row._id}`)}
+              onClick={() => effectivePermissions.Interviews?.View && handleViewInterview(row)}
             >
               {(row.interviewCode || '')}
             </div>
@@ -377,18 +389,22 @@ function InterviewList() {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: 'view',
-      label: 'View Details',
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => navigate(`/interviews/${row._id}`),
-    },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`/interviews/${row._id}/edit`),
-    },
+    ...(effectivePermissions.Interviews?.View
+      ? [{
+          key: 'view',
+          label: 'View Details',
+          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          onClick: handleViewInterview,
+        }]
+      : []),
+    ...(effectivePermissions.Interviews?.Edit
+      ? [{
+          key: 'edit',
+          label: 'Edit',
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: handleEditInterview,
+        }]
+      : []),
   ];
 
   return (
@@ -400,6 +416,7 @@ function InterviewList() {
               title="Interviews"
               onAddClick={() => navigate('/interviews/new')}
               addButtonText="New Interview"
+              canCreate={effectivePermissions.Interviews?.Create}
             />
             <Toolbar
               view={viewMode}
@@ -426,14 +443,15 @@ function InterviewList() {
             <div className="relative w-full">
               {viewMode === 'kanban' ? (
                 <div className="w-full">
-                  {
-                    <KanbanBoard
-                      interviews={currentFilteredRows}
-                      onView={handleView}
-                      loading={isLoading}
-                      onViewPosition={handleViewPosition}
-                    />
-                  }
+                  <KanbanBoard
+                    interviews={currentFilteredRows}
+                    onView={handleView}
+                    onViewInterview={handleViewInterview}
+                    onEditInterview={handleEditInterview}
+                    onViewPosition={handleViewPosition}
+                    effectivePermissions={effectivePermissions}
+                    loading={isLoading}
+                  />
                 </div>
               ) : (
                 <>
@@ -452,7 +470,6 @@ function InterviewList() {
                   {/* Mobile Card View */}
                   <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
                     {isLoading ? (
-                      // Render placeholder cards with animate-pulse when loading
                       Array(3).fill(0).map((_, index) => (
                         <motion.div
                           key={`placeholder-${index}`}
@@ -490,7 +507,6 @@ function InterviewList() {
                         </motion.div>
                       ))
                     ) : (
-                      // Render actual cards when not loading
                       currentFilteredRows.map((interview) => {
                         const candidate = interview.candidateId;
                         const position = interview.positionId;
@@ -534,12 +550,14 @@ function InterviewList() {
                                     <div className="text-base font-medium text-gray-700">
                                       {(candidate?.FirstName || '') + ' ' + (candidate?.LastName || '')}
                                     </div>
-                                    <button
-                                      onClick={() => handleView(candidate)}
-                                      className="ml-2 text-custom-blue hover:text-custom-blue/80"
-                                    >
-                                      <ExternalLink className="h-3 w-3" />
-                                    </button>
+                                    {effectivePermissions.Candidates?.View && (
+                                      <button
+                                        onClick={() => handleView(candidate)}
+                                        className="ml-2 text-custom-blue hover:text-custom-blue/80"
+                                      >
+                                        <ExternalLink className="h-3 w-3" />
+                                      </button>
+                                    )}
                                   </div>
                                   <div className="text-sm text-gray-500">{candidate?.Email || 'No email'}</div>
                                 </div>
@@ -554,12 +572,14 @@ function InterviewList() {
                                     <div className="text-sm font-medium text-gray-700">
                                       {position?.title || 'Unknown'}
                                     </div>
-                                    <button
-                                      onClick={() => handleViewPosition(position)}
-                                      className="ml-2 text-custom-blue hover:text-custom-blue/80"
-                                    >
-                                      <ExternalLink className="h-3 w-3" />
-                                    </button>
+                                    {effectivePermissions.Positions?.View && (
+                                      <button
+                                        onClick={() => handleViewPosition(position)}
+                                        className="ml-2 text-custom-blue hover:text-custom-blue/80"
+                                      >
+                                        <ExternalLink className="h-3 w-3" />
+                                      </button>
+                                    )}
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {interview.createdAt ? new Date(interview.createdAt).toLocaleDateString() : 'N/A'}
@@ -634,13 +654,15 @@ function InterviewList() {
                                 ) : (
                                   <div className="text-sm text-gray-500">No upcoming rounds</div>
                                 )}
-                                <button
-                                  onClick={() => navigate(`/interviews/${interview._id}`)}
-                                  className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                  View Full Details
-                                  <ArrowRight className="ml-1 h-4 w-4" />
-                                </button>
+                                {effectivePermissions.Interviews?.View && (
+                                  <button
+                                    onClick={() => handleViewInterview(interview)}
+                                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                  >
+                                    View Full Details
+                                    <ArrowRight className="ml-1 h-4 w-4" />
+                                  </button>
+                                )}
                               </div>
                             )}
                           </motion.div>
@@ -687,7 +709,6 @@ function InterviewList() {
               </FilterPopup>
             </div>
           </motion.div>
-
         </div>
       </main>
       {selectPositionView && (

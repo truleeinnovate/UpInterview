@@ -11,8 +11,10 @@ import PositionForm from './Position-Form';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import { usePositions } from '../../../../apiHooks/usePositions';
 import { useMasterData } from '../../../../apiHooks/useMasterData';
+import { usePermissions } from '../../../../Context/PermissionsContext';
 
 const PositionTab = () => {
+  const { effectivePermissions } = usePermissions();
   const { skills } = useMasterData();
   const { positionData, isLoading } = usePositions();
   const navigate = useNavigate();
@@ -39,7 +41,6 @@ const PositionTab = () => {
   const [experience, setExperience] = useState({ min: '', max: '' });
   const filterIconRef = useRef(null);
 
-  // Set view based on screen size
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -53,7 +54,6 @@ const PositionTab = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedLocation(selectedFilters.location);
@@ -135,7 +135,6 @@ const PositionTab = () => {
     setCurrentPage(0);
   };
 
-  // Get unique locations for filter options
   const uniqueLocations = [
     ...new Set(positionData?.map((position) => position.Location).filter(Boolean)),
   ];
@@ -188,16 +187,19 @@ const PositionTab = () => {
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const handleView = (position) => {
-    navigate(`/position/view-details/${position._id}`, {
-      state: { from: location.pathname },
-    });
+    if (effectivePermissions.Positions?.View) {
+      navigate(`/position/view-details/${position._id}`, {
+        state: { from: location.pathname },
+      });
+    }
   };
 
   const handleEdit = (position) => {
-    navigate(`/position/edit-position/${position._id}`);
+    if (effectivePermissions.Positions?.Edit) {
+      navigate(`/position/edit-position/${position._id}`);
+    }
   };
 
-  // Table Columns Configuration
   const tableColumns = [
     {
       key: 'title',
@@ -256,20 +258,27 @@ const PositionTab = () => {
     },
   ];
 
-  // Table Actions Configuration
   const tableActions = [
-    {
-      key: 'view',
-      label: 'View Details',
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => handleView(row),
-    },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => handleEdit(row),
-    },
+    ...(effectivePermissions.Positions?.View
+      ? [
+        {
+          key: 'view',
+          label: 'View Details',
+          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
+      : []),
+    ...(effectivePermissions.Positions?.Edit
+      ? [
+        {
+          key: 'edit',
+          label: 'Edit',
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
+      : []),
   ];
 
   if (showAddForm) {
@@ -296,6 +305,7 @@ const PositionTab = () => {
               title="Positions"
               onAddClick={() => navigate('/position/new-position')}
               addButtonText="Add Position"
+              canCreate={effectivePermissions.Positions?.Create}
             />
             <Toolbar
               view={view}
@@ -337,6 +347,7 @@ const PositionTab = () => {
                     loading={isLoading}
                     onView={handleView}
                     onEdit={handleEdit}
+                    effectivePermissions={effectivePermissions} // Pass permissions
                   />
                 </div>
               )}
@@ -348,7 +359,6 @@ const PositionTab = () => {
                 filterIconRef={filterIconRef}
               >
                 <div className="space-y-3">
-                  {/* Location Section */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
@@ -386,8 +396,6 @@ const PositionTab = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Skills/Technology Section */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
@@ -423,8 +431,6 @@ const PositionTab = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Experience Section */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"

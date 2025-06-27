@@ -1,23 +1,13 @@
-/* eslint-disable react/prop-types */
 import { motion } from 'framer-motion';
 import { Calendar, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
 
-const KanbanView = ({ templates, loading = false }) => {
+const KanbanView = ({ templates, loading = false, effectivePermissions, onView, onEdit }) => {
   const navigate = useNavigate();
-
-  const handleView = (template) => {
-    navigate(`/interview-templates/${template._id}`);
-  };
-
-  const handleEdit = (template) => {
-    navigate(`/interview-templates/edit/${template._id}`);
-  };
 
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';
-    
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
@@ -28,21 +18,17 @@ const KanbanView = ({ templates, loading = false }) => {
     if (date.toDateString() === now.toDateString()) {
       return 'Today';
     }
-
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     }
-
     if (diffDays < 30) {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
-
     if (diffMonths < 12) {
       return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
     }
-
     return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
   };
 
@@ -58,7 +44,6 @@ const KanbanView = ({ templates, loading = false }) => {
           <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded"></div>
           <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {[...Array(6)].map((_, index) => (
             <motion.div
@@ -79,7 +64,6 @@ const KanbanView = ({ templates, loading = false }) => {
                   <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
                 </div>
               </div>
-
               <div className="mt-auto space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -94,7 +78,6 @@ const KanbanView = ({ templates, loading = false }) => {
                   </div>
                   <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
                 </div>
-
                 <div className="space-y-2">
                   <div className="h-8 bg-gray-200 animate-pulse rounded-lg"></div>
                   <div className="h-8 bg-gray-200 animate-pulse rounded-lg"></div>
@@ -125,7 +108,6 @@ const KanbanView = ({ templates, loading = false }) => {
           {templates.length} {templates.length === 1 ? 'Template' : 'Templates'}
         </span>
       </motion.div>
-
       {templates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {templates.map((template, index) => (
@@ -138,11 +120,12 @@ const KanbanView = ({ templates, loading = false }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
               whileHover={{ y: -5 }}
+              onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
             >
               <div className="flex justify-between items-start mb-4 gap-2">
                 <motion.div
                   className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => handleView(template)}
+                  onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
                   whileHover={{ x: 2 }}
                 >
                   <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
@@ -153,27 +136,30 @@ const KanbanView = ({ templates, loading = false }) => {
                   </p>
                 </motion.div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleView(template)}
-                    className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
-                    title="View"
-                  >
-                    <FaEye className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleEdit(template)}
-                    className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
-                    title="Edit"
-                  >
-                    <FaPencilAlt className="w-4 h-4" />
-                  </motion.button>
+                  {effectivePermissions.InterviewTemplates?.View && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => onView(template)}
+                      className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
+                      title="View"
+                    >
+                      <FaEye className="w-4 h-4" />
+                    </motion.button>
+                  )}
+                  {effectivePermissions.InterviewTemplates?.Edit && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => onEdit(template)}
+                      className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
+                      title="Edit"
+                    >
+                      <FaPencilAlt className="w-4 h-4" />
+                    </motion.button>
+                  )}
                 </div>
               </div>
-
               <div className="mt-auto">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">

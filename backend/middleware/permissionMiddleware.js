@@ -359,19 +359,21 @@ const permissionMiddleware = async (req, res, next) => {
     // Handle impersonated user (impersonatedUserId) logic
     if (impersonatedUserId) {
       const impersonatedUser = await Users.findById(impersonatedUserId).populate('roleId');
+      console.log('impersonatedUser:', impersonatedUser);
+
       if (!impersonatedUser) {
         console.error(`Impersonated user not found for impersonatedUserId: ${impersonatedUserId}`);
         return res.status(404).json({ error: 'Impersonated user not found' });
       }
 
-      if (impersonatedUser.roleId?.roleType !== 'internal') {
-        console.error('Impersonated user is not a Super Admin');
-        return res.status(403).json({ error: 'Unauthorized: impersonatedUserId must be a Super Admin' });
-      }
+      // if (impersonatedUser.roleId?.roleType !== 'internal') {
+      //   console.error('Impersonated user is not a Super Admin');
+      //   return res.status(403).json({ error: 'Unauthorized: impersonatedUserId must be a Super Admin' });
+      // }
 
       isImpersonating = true;
       effectiveUser = impersonatedUser;
-      effectiveTenantId = impersonatedUser.tenantId || effectiveTenantId;
+      // effectiveTenantId = impersonatedUser.tenantId || effectiveTenantId;
       roleType = impersonatedUser.roleId?.roleType || null;
       roleLevel = impersonatedUser.roleLevel || null; // Assuming Users schema has roleLevel
 
@@ -393,18 +395,23 @@ const permissionMiddleware = async (req, res, next) => {
 
     // Set request and locals properties
     req.superAdminPermissions = superAdminPermissions;
-    req.inheritedRoleIds = inheritedRoleIds;
-    req.tenantId = effectiveTenantId;
-    req.userId = effectiveUser?._id;
-    req.isImpersonating = isImpersonating;
-    req.currentUserId = userId;
+    // req.inheritedRoleIds = inheritedRoleIds;
+    // req.tenantId = effectiveTenantId;
+    // req.userId = effectiveUser?._id;
+    // req.isImpersonating = isImpersonating;
+    // req.currentUserId = userId;
 
     res.locals.effectivePermissions = req.effectivePermissions;
     res.locals.superAdminPermissions = req.superAdminPermissions;
-    res.locals.inheritedRoleIds = req.inheritedRoleIds;
-    res.locals.isImpersonating = req.isImpersonating;
-    res.locals.roleType = roleType;
-    res.locals.roleLevel = roleLevel;
+    // res.locals.inheritedRoleIds = req.inheritedRoleIds;
+    // res.locals.isImpersonating = req.isImpersonating;
+    // res.locals.roleType = roleType;
+    // res.locals.roleLevel = roleLevel;
+
+    console.log('req.effectivePermissions', req.effectivePermissions);
+    console.log('req.superAdminPermissions', req.superAdminPermissions);
+    
+    
 
     next();
   } catch (error) {

@@ -255,15 +255,15 @@ const { sendVerificationEmail } = require('../controllers/EmailsController/signU
 const organizationUserCreation = async (req, res) => {
   try {
 
-    console.log("req.body User",req.body);
-    
+    console.log("req.body User", req.body);
+
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
       return res.status(400).json({ message: "User and Contact data are required" });
     }
 
-    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode,status, editMode, _id, isEmailVerified } = UserData;
+    const { firstName, lastName, email, tenantId, roleId, isProfileCompleted, countryCode, status, editMode, _id, isEmailVerified } = UserData;
 
     // if (editMode && _id) {
     //   // Update existing user
@@ -299,11 +299,11 @@ const organizationUserCreation = async (req, res) => {
     //     contactId: existingContact?._id
     //   });
     // } else {
-      // Create new user
-      const existingUser = await Users.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
-      }else{
+    // Create new user
+    const existingUser = await Users.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    } else {
 
       const newUser = new Users({
         firstName,
@@ -343,6 +343,92 @@ const organizationUserCreation = async (req, res) => {
   }
 };
 
+// const loginOrganization = async (req, res) => {
+//   try {
+//     let { email, password } = req.body;
+//     email = email?.trim().toLowerCase();
+//     password = password?.trim();
+
+//     if (!email || !password) {
+//       return res.status(400).json({ success: false, message: 'Email and password are required' });
+//     }
+
+//     const user = await Users.findOne({ email });
+//     if (!user) {
+//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//     }
+//     if (!user.isEmailVerified) {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'Email not verified',
+//         isEmailVerified: false
+//       });
+//     }
+
+//     // const organization = await Tenant.findOne({ _id: user.tenantId });
+
+//     // if (!['active', 'payment_pending'].includes(organization.status)) {
+//     //   return res.status(403).json({
+//     //     success: false,
+//     //     message: 'Account not active',
+//     //     status: organization.status
+//     //   });
+//     // }
+
+//     const organization = await Tenant.findOne({ _id: user.tenantId });
+
+//     if (organization.status === 'inactive') {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'Account not active',
+//         status: organization.status
+//       });
+//     }
+
+
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//     }
+
+//     let roleName = null;
+//     if (user?.isProfileCompleted === false && user.roleId) {
+//       const role = await RolesPermissionObject.findById(user.roleId);
+//       roleName = role?.roleName;
+//     }
+
+//     // Fetch contactId where ownerId matches user._id
+//     const contact = await Contacts.findOne({ ownerId: user._id });
+//     const contactEmailFromOrg = contact?.email || null;
+
+//     // Generate JWT
+//     const payload = {
+//       userId: user._id.toString(),
+//       tenantId: user.tenantId,
+//       organization: true,
+//       timestamp: new Date().toISOString(),
+//     };
+//     const token = generateToken(payload);
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Login successful',
+//       ownerId: user._id,
+//       tenantId: user.tenantId,
+//       token,
+//       isProfileCompleted: user?.isProfileCompleted,
+//       roleName,
+//       contactEmailFromOrg,
+//       isEmailVerified: user.isEmailVerified,
+//       status: organization.status
+//     });
+
+//   } catch (error) {
+//     console.error('Error during login:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   }
+// };
+
 const loginOrganization = async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -365,43 +451,58 @@ const loginOrganization = async (req, res) => {
       });
     }
 
-    // const organization = await Tenant.findOne({ _id: user.tenantId });
+    // Check user role
+    let roleName = null;
+    let roleType = null;
+    if (user.roleId) {
+      const role = await RolesPermissionObject.findById(user.roleId);
+      roleName = role?.roleName;
+      roleType = role?.roleType;
+    }
 
-    // if (!['active', 'payment_pending'].includes(organization.status)) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Account not active',
-    //     status: organization.status
-    //   });
-    // }
+    // For internal roleType, skip tenant checks and modify token
+    if (roleType === 'internal') {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      }
+      // Generate JWT for internal user
+      const payload = {
+        impersonatedUserId: user._id.toString(),
+        timestamp: new Date().toISOString(),
+      };
+      const token = generateToken(payload);
 
-    const organization = await Tenant.findOne({ _id: user.tenantId });
-
-    if (organization.status === 'inactive') {
-      return res.status(403).json({
-        success: false,
-        message: 'Account not active',
-        status: organization.status
+      return res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        ownerId: user._id,
+        token,
+        roleType,
+        isEmailVerified: user.isEmailVerified,
       });
     }
 
+    // For non-internal users, proceed with tenant checks
+    const organization = await Tenant.findOne({ _id: user.tenantId });
+    if (!organization || organization.status === 'inactive') {
+      return res.status(403).json({
+        success: false,
+        message: 'Account not active',
+        status: organization?.status || 'not found'
+      });
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
 
-    let roleName = null;
-    if (user?.isProfileCompleted === false && user.roleId) {
-      const role = await RolesPermissionObject.findById(user.roleId);
-      roleName = role?.roleName;
-    }
-
     // Fetch contactId where ownerId matches user._id
     const contact = await Contacts.findOne({ ownerId: user._id });
     const contactEmailFromOrg = contact?.email || null;
 
-    // Generate JWT
+    // Generate JWT for non-internal users
     const payload = {
       userId: user._id.toString(),
       tenantId: user.tenantId,
@@ -428,8 +529,6 @@ const loginOrganization = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-
 
 const getRolesByTenant = async (req, res) => {
   try {
@@ -872,7 +971,7 @@ const verifyEmailChange = async (req, res) => {
     // Update email
     user.email = decoded.newEmail;
     user.newEmail = null;
-    contacts.email =  decoded.newEmail;
+    contacts.email = decoded.newEmail;
     await user.save();
 
     return res.json({ success: true, message: 'Email address updated successfully' });

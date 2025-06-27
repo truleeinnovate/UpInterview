@@ -111,6 +111,7 @@ const OrganizationLogin = () => {
         isProfileCompleted,
         roleName,
         contactEmailFromOrg,
+        roleType,//only check for super admin comes here
       } = response.data;
 
       setAuthCookies(token);
@@ -119,6 +120,12 @@ const OrganizationLogin = () => {
         setIsEmailVerified(false);
         await handleResendVerification();
         setCountdown(60);
+        return;
+      }
+
+      // Check if user is internal based on roleType
+      if (roleType === 'internal') {
+        navigate('/super-admin');
         return;
       }
 
