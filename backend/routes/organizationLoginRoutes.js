@@ -7,7 +7,8 @@ const { registerOrganization, loginOrganization,resetPassword,organizationUserCr
   deactivateSubdomain,
   updateBasedIdOrganizations,
   verifyEmail,
-  verifyEmailChange
+  verifyEmailChange,
+  getAllOrganizations, // SUPER ADMIN added by Ashok
  } = require('../controllers/organizationLoginController');
 
 router.post('/Signup', registerOrganization);
@@ -31,5 +32,9 @@ router.post('/deactivate-subdomain', deactivateSubdomain);
 
 router.get('/verify-email', verifyEmail);
 router.get('/verify-user-email',verifyEmailChange)
+
+// SUPER ADMIN all-organizations added by Ashok ------------------------------->
+router.get("/all-organizations", getAllOrganizations);
+// ---------------------------------------------------------------------------->
 
 module.exports = router;
