@@ -40,7 +40,7 @@ const ShareAssessment = ({
   const fetchAssignedCandidates = async () => {
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedule`
       );
       const assigned = response.data.flatMap((schedule) =>
         schedule.candidates.map((candidate) => ({
