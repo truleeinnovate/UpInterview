@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react'
-import DataTable from '../components/common/DataTable'
-import StatusBadge from '../components/common/StatusBadge'
-import { AiOutlineFilter, AiOutlineEye, AiOutlinePlayCircle, AiOutlineBug } from 'react-icons/ai'
+import { useState, useEffect } from "react";
+import DataTable from "../../Components/SuperAdminComponents/common/DataTable";
+import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
+import {
+  AiOutlineFilter,
+  AiOutlineEye,
+  AiOutlinePlayCircle,
+  AiOutlineBug,
+} from "react-icons/ai";
 
 function InterviewsPage() {
   useEffect(() => {
-    document.title = 'Interviews | Admin Portal'
-  }, [])
+    document.title = "Interviews | Admin Portal";
+  }, []);
 
   const [interviews, setInterviews] = useState([
     {
@@ -18,7 +23,7 @@ function InterviewsPage() {
       scheduledFor: "2025-06-03T13:00:00Z",
       duration: 45,
       status: "scheduled",
-      recordingAvailable: true
+      recordingAvailable: true,
     },
     {
       id: 2,
@@ -29,7 +34,7 @@ function InterviewsPage() {
       scheduledFor: "2025-06-02T15:30:00Z",
       duration: 60,
       status: "completed",
-      recordingAvailable: true
+      recordingAvailable: true,
     },
     {
       id: 3,
@@ -40,7 +45,7 @@ function InterviewsPage() {
       scheduledFor: "2025-06-03T11:00:00Z",
       duration: 60,
       status: "scheduled",
-      recordingAvailable: false
+      recordingAvailable: false,
     },
     {
       id: 4,
@@ -51,7 +56,7 @@ function InterviewsPage() {
       scheduledFor: "2025-06-02T10:00:00Z",
       duration: 45,
       status: "completed",
-      recordingAvailable: true
+      recordingAvailable: true,
     },
     {
       id: 5,
@@ -62,7 +67,7 @@ function InterviewsPage() {
       scheduledFor: "2025-06-02T14:00:00Z",
       duration: 60,
       status: "completed",
-      recordingAvailable: false
+      recordingAvailable: false,
     },
     {
       id: 6,
@@ -73,7 +78,7 @@ function InterviewsPage() {
       scheduledFor: "2025-05-30T13:00:00Z",
       duration: 45,
       status: "cancelled",
-      recordingAvailable: false
+      recordingAvailable: false,
     },
     {
       id: 7,
@@ -84,78 +89,80 @@ function InterviewsPage() {
       scheduledFor: "2025-06-03T16:00:00Z",
       duration: 60,
       status: "scheduled",
-      recordingAvailable: false
-    }
-  ])
+      recordingAvailable: false,
+    },
+  ]);
 
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }
-    return new Date(dateString).toLocaleDateString('en-US', options)
-  }
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
 
   const getStatusDisplay = (status) => {
     switch (status) {
-      case 'scheduled':
-        return 'pending'
-      case 'completed':
-        return 'success'
-      case 'cancelled':
-        return 'error'
-      case 'in_progress':
-        return 'warning'
+      case "scheduled":
+        return "pending";
+      case "completed":
+        return "success";
+      case "cancelled":
+        return "error";
+      case "in_progress":
+        return "warning";
       default:
-        return 'neutral'
+        return "neutral";
     }
-  }
+  };
 
   const columns = [
     {
-      field: 'id',
-      header: 'ID',
+      field: "id",
+      header: "ID",
       render: (row) => (
-        <span className="font-mono text-xs">INT-{row.id.toString().padStart(4, '0')}</span>
-      )
+        <span className="font-mono text-xs">
+          INT-{row.id.toString().padStart(4, "0")}
+        </span>
+      ),
     },
     {
-      field: 'tenant',
-      header: 'Tenant'
+      field: "tenant",
+      header: "Tenant",
     },
     {
-      field: 'position',
-      header: 'Position'
+      field: "position",
+      header: "Position",
     },
     {
-      field: 'candidate',
-      header: 'Candidate'
+      field: "candidate",
+      header: "Candidate",
     },
     {
-      field: 'interviewer',
-      header: 'Interviewer'
+      field: "interviewer",
+      header: "Interviewer",
     },
     {
-      field: 'scheduledFor',
-      header: 'Scheduled For',
-      render: (row) => formatDate(row.scheduledFor)
+      field: "scheduledFor",
+      header: "Scheduled For",
+      render: (row) => formatDate(row.scheduledFor),
     },
     {
-      field: 'status',
-      header: 'Status',
+      field: "status",
+      header: "Status",
       render: (row) => (
-        <StatusBadge 
-          status={getStatusDisplay(row.status)} 
-          text={row.status.charAt(0).toUpperCase() + row.status.slice(1)} 
+        <StatusBadge
+          status={getStatusDisplay(row.status)}
+          text={row.status.charAt(0).toUpperCase() + row.status.slice(1)}
         />
-      )
+      ),
     },
     {
-      field: 'actions',
-      header: 'Actions',
+      field: "actions",
+      header: "Actions",
       sortable: false,
       render: (row) => (
         <div className="flex space-x-2">
@@ -171,9 +178,9 @@ function InterviewsPage() {
             <AiOutlineBug size={18} />
           </button>
         </div>
-      )
-    }
-  ]
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -186,7 +193,7 @@ function InterviewsPage() {
           </button>
         </div>
       </div>
-      
+
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">All Interviews</div>
@@ -194,22 +201,30 @@ function InterviewsPage() {
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">Scheduled</div>
-          <div className="text-xl font-semibold">{interviews.filter(i => i.status === 'scheduled').length}</div>
+          <div className="text-xl font-semibold">
+            {interviews.filter((i) => i.status === "scheduled").length}
+          </div>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">Completed</div>
-          <div className="text-xl font-semibold">{interviews.filter(i => i.status === 'completed').length}</div>
+          <div className="text-xl font-semibold">
+            {interviews.filter((i) => i.status === "completed").length}
+          </div>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">Cancelled</div>
-          <div className="text-xl font-semibold">{interviews.filter(i => i.status === 'cancelled').length}</div>
+          <div className="text-xl font-semibold">
+            {interviews.filter((i) => i.status === "cancelled").length}
+          </div>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">With Recording</div>
-          <div className="text-xl font-semibold">{interviews.filter(i => i.recordingAvailable).length}</div>
+          <div className="text-xl font-semibold">
+            {interviews.filter((i) => i.recordingAvailable).length}
+          </div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-card overflow-hidden">
         <DataTable
           columns={columns}
@@ -219,7 +234,7 @@ function InterviewsPage() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default InterviewsPage
+export default InterviewsPage;

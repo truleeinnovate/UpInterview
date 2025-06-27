@@ -101,3 +101,32 @@ exports.deleteLog = async (req, res) => {
         });
     }
 };
+
+
+// SUPER ADMIN added by Ashok ------------------------------------->
+exports.getLogsSummary = async (req, res) => {
+  try {
+    const logs = await InternalLog.find();
+
+    const totalLogs = logs.length;
+    const errorLogs = logs.filter((log) => log.status === "error").length;
+    const warningLogs = logs.filter((log) => log.status === "warning").length;
+    const successLogs = logs.filter((log) => log.status === "success").length;
+
+    res.status(200).json({
+      totalLogs,
+      errorLogs,
+      warningLogs,
+      successLogs,
+      logs,
+    });
+  } catch (error) {
+    console.error("Error fetching log summary:", error);
+    res.status(500).json({
+      message: "Server error while fetching logs",
+      details: error.message,
+    });
+  }
+};
+
+// ----------------------------------------------------------------->

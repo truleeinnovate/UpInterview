@@ -1,128 +1,533 @@
-import { useState, useEffect } from 'react'
-import DataTable from '../components/common/DataTable'
-import StatusBadge from '../components/common/StatusBadge'
-import { 
-  AiOutlinePlus, 
-  AiOutlineFilter, 
-  AiOutlineEye, 
-  AiOutlineCheck, 
-  AiOutlineClose,
-  AiOutlineExpandAlt,
-  AiOutlineCloseCircle,
-  AiOutlinePauseCircle,
-  AiOutlineMail,
-  AiOutlinePhone,
-  AiOutlineCalendar,
-  AiOutlineDollar,
-  AiOutlineClockCircle
-} from 'react-icons/ai'
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
+import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
+
+import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
+import { useMediaQuery } from "react-responsive";
+import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
+import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
+import { motion } from "framer-motion";
+import TableView from "../../Components/Shared/Table/TableView.jsx";
+import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
+import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
 
 function InterviewerRequestsPage() {
-  useEffect(() => {
-    document.title = 'Interviewer Requests | Admin Portal'
-  }, [])
+  const [view, setView] = useState("table");
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectCandidateView, setSelectCandidateView] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editModeOn, setEditModeOn] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    tech: [],
+    experience: { min: "", max: "" },
+  });
+  const navigate = useNavigate();
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  const filterIconRef = useRef(null); // Ref for filter icon
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [selectedRequest, setSelectedRequest] = useState(null)
-  const [isExpanded, setIsExpanded] = useState(false)
+  useEffect(() => {
+    document.title = "Interviewer Requests | Admin Portal";
+  }, []);
+
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [requests, setRequests] = useState([
     {
-      id: 'REQ-001',
-      name: 'Sarah Chen',
-      email: 'sarah.chen@example.com',
-      phone: '+1 (555) 123-4567',
-      expertise: ['React', 'Node.js', 'System Design'],
+      id: "REQ-001",
+      name: "Sarah Chen",
+      email: "sarah.chen@example.com",
+      phone: "+1 (555) 123-4567",
+      expertise: ["React", "Node.js", "System Design"],
       yearsOfExperience: 8,
       preferredRate: 150,
-      availability: 'Full-time',
-      status: 'pending',
-      appliedDate: '2025-06-02T10:00:00Z',
-      resume: 'https://example.com/resume.pdf',
-      linkedIn: 'https://linkedin.com/in/sarahchen',
-      github: 'https://github.com/sarahchen',
-      timezone: 'UTC-7',
-      languages: ['English', 'Mandarin'],
-      preferredInterviewTypes: ['Technical', 'System Design'],
-      notes: 'Previously worked at major tech companies. Specialized in frontend architecture and distributed systems.',
+      availability: "Full-time",
+      status: "pending",
+      appliedDate: "2025-06-02T10:00:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/sarahchen",
+      github: "https://github.com/sarahchen",
+      timezone: "UTC-7",
+      languages: ["English", "Mandarin"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Previously worked at major tech companies. Specialized in frontend architecture and distributed systems.",
       references: [
-        { name: 'John Smith', company: 'TechCorp', position: 'Engineering Manager', contact: 'john@techcorp.com' },
-        { name: 'Emily Brown', company: 'StartupInc', position: 'CTO', contact: 'emily@startupinc.com' }
-      ]
+        {
+          name: "John Smith",
+          company: "TechCorp",
+          position: "Engineering Manager",
+          contact: "john@techcorp.com",
+        },
+        {
+          name: "Emily Brown",
+          company: "StartupInc",
+          position: "CTO",
+          contact: "emily@startupinc.com",
+        },
+      ],
     },
     {
-      id: 'REQ-002',
-      name: 'Michael Brown',
-      email: 'michael.brown@example.com',
-      phone: '+1 (555) 234-5678',
-      expertise: ['Python', 'Machine Learning', 'Data Science'],
+      id: "REQ-002",
+      name: "Michael Brown",
+      email: "michael.brown@example.com",
+      phone: "+1 (555) 234-5678",
+      expertise: ["Python", "Machine Learning", "Data Science"],
       yearsOfExperience: 10,
       preferredRate: 175,
-      availability: 'Part-time',
-      status: 'approved',
-      appliedDate: '2025-06-01T15:30:00Z',
-      resume: 'https://example.com/resume.pdf',
-      linkedIn: 'https://linkedin.com/in/michaelbrown',
-      github: 'https://github.com/michaelbrown',
-      timezone: 'UTC-5',
-      languages: ['English', 'Spanish'],
-      preferredInterviewTypes: ['Technical', 'ML Systems'],
-      notes: 'PhD in Machine Learning. Published author in AI conferences.',
+      availability: "Part-time",
+      status: "approved",
+      appliedDate: "2025-06-01T15:30:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/michaelbrown",
+      github: "https://github.com/michaelbrown",
+      timezone: "UTC-5",
+      languages: ["English", "Spanish"],
+      preferredInterviewTypes: ["Technical", "ML Systems"],
+      notes: "PhD in Machine Learning. Published author in AI conferences.",
       references: [
-        { name: 'Alice Johnson', company: 'AI Labs', position: 'Research Director', contact: 'alice@ailabs.com' }
-      ]
+        {
+          name: "Alice Johnson",
+          company: "AI Labs",
+          position: "Research Director",
+          contact: "alice@ailabs.com",
+        },
+      ],
     },
     {
-      id: 'REQ-003',
-      name: 'Emily Rodriguez',
-      email: 'emily.r@example.com',
-      phone: '+1 (555) 345-6789',
-      expertise: ['Java', 'Spring Boot', 'Microservices'],
+      id: "REQ-003",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
       yearsOfExperience: 12,
       preferredRate: 160,
-      availability: 'Weekends',
-      status: 'rejected',
-      appliedDate: '2025-05-30T09:15:00Z',
-      resume: 'https://example.com/resume.pdf',
-      linkedIn: 'https://linkedin.com/in/emilyrodriguez',
-      github: 'https://github.com/emilyrodriguez',
-      timezone: 'UTC-4',
-      languages: ['English', 'Portuguese'],
-      preferredInterviewTypes: ['Technical', 'System Design'],
-      notes: 'Enterprise architecture specialist with focus on scalable systems.',
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
       references: [
-        { name: 'David Lee', company: 'Enterprise Co', position: 'VP Engineering', contact: 'david@enterprise.com' }
-      ]
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-004",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-005",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-006",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-008",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-009",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-0010",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-0011",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-0012",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-0013",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+    {
+      id: "REQ-0014",
+      name: "Emily Rodriguez",
+      email: "emily.r@example.com",
+      phone: "+1 (555) 345-6789",
+      expertise: ["Java", "Spring Boot", "Microservices"],
+      yearsOfExperience: 12,
+      preferredRate: 160,
+      availability: "Weekends",
+      status: "rejected",
+      appliedDate: "2025-05-30T09:15:00Z",
+      resume: "https://example.com/resume.pdf",
+      linkedIn: "https://linkedin.com/in/emilyrodriguez",
+      github: "https://github.com/emilyrodriguez",
+      timezone: "UTC-4",
+      languages: ["English", "Portuguese"],
+      preferredInterviewTypes: ["Technical", "System Design"],
+      notes:
+        "Enterprise architecture specialist with focus on scalable systems.",
+      references: [
+        {
+          name: "David Lee",
+          company: "Enterprise Co",
+          position: "VP Engineering",
+          contact: "david@enterprise.com",
+        },
+      ],
+    },
+  ]);
+
+  useEffect(() => {
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
     }
-  ])
+  }, [isTablet]);
+
+  const handleFilterChange = (filters) => {
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(
+      filters.status.length > 0 ||
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
+    );
+  };
+
+  const dataToUse = requests;
+
+  const handleFilterIconClick = () => {
+    if (dataToUse?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
+  };
+
+  const FilteredData = () => {
+    if (!Array.isArray(dataToUse)) return [];
+    return dataToUse.filter((request) => {
+      const fieldsToSearch = [
+        request.lastName,
+        request.firstName,
+        request.email,
+      ].filter((field) => field !== null && field !== undefined);
+
+      const matchesStatus =
+        selectedFilters?.status.length === 0 ||
+        selectedFilters.status.includes(request.HigherQualification);
+      const matchesTech =
+        selectedFilters.tech.length === 0 ||
+        request.skills?.some((skill) =>
+          selectedFilters.tech.includes(skill.skill)
+        );
+      const matchesExperience =
+        (!selectedFilters.experience.min ||
+          request.CurrentExperience >= selectedFilters.experience.min) &&
+        (!selectedFilters.experience.max ||
+          request.CurrentExperience <= selectedFilters.experience.max);
+
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return (
+        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
+      );
+    });
+  };
+
+  const rowsPerPage = 10;
+  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const nextPage = () => {
+    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  const startIndex = currentPage * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
+
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(0); // Reset to first page on search
+  };
 
   const handleStatusChange = (requestId, newStatus) => {
-    setRequests(requests.map(request => 
-      request.id === requestId 
-        ? { ...request, status: newStatus }
-        : request
-    ))
-    setSelectedRequest(null)
-  }
+    setRequests(
+      requests.map((request) =>
+        request.id === requestId ? { ...request, status: newStatus } : request
+      )
+    );
+    setSelectedRequest(null);
+  };
 
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
-    return new Date(dateString).toLocaleDateString('en-US', options)
-  }
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
 
-  const columns = [
+  const tableColumns = [
     {
-      field: 'name',
-      header: 'Name',
-      render: (row) => (
+      key: "name",
+      header: "Name",
+      render: (vale, row) => (
         <div>
           <div className="font-medium text-gray-900">{row.name}</div>
           <div className="text-sm text-gray-500">{row.email}</div>
         </div>
-      )
+      ),
     },
     {
-      field: 'expertise',
-      header: 'Expertise',
-      render: (row) => (
+      key: "expertise",
+      header: "Expertise",
+      render: (value, row) => (
         <div className="flex flex-wrap gap-1">
           {row.expertise.map((skill, index) => (
             <span
@@ -133,262 +538,238 @@ function InterviewerRequestsPage() {
             </span>
           ))}
         </div>
-      )
+      ),
     },
     {
-      field: 'yearsOfExperience',
-      header: 'Experience',
-      render: (row) => `${row.yearsOfExperience} years`
+      key: "yearsOfExperience",
+      header: "Experience",
+      render: (value, row) => `${row.yearsOfExperience} years`,
     },
     {
-      field: 'preferredRate',
-      header: 'Rate',
-      render: (row) => `$${row.preferredRate}/hr`
+      key: "preferredRate",
+      header: "Rate",
+      render: (value, row) => `$${row.preferredRate}/hr`,
     },
     {
-      field: 'availability',
-      header: 'Availability'
+      key: "availability",
+      header: "Availability",
+      render: (value, row) => (
+        <StatusBadge
+          status={row.status === "success" ? "success" : "warning"}
+          text={row.status.toUpperCase()}
+        />
+      ),
     },
     {
-      field: 'status',
-      header: 'Status',
-      render: (row) => <StatusBadge status={row.status} />
+      key: "status",
+      header: "Status",
+      render: (value, row) => <StatusBadge status={row.status} />,
     },
     {
-      field: 'appliedDate',
-      header: 'Applied Date',
-      render: (row) => formatDate(row.appliedDate)
+      key: "appliedDate",
+      header: "Applied Date",
+      render: (value, row) => formatDate(row.appliedDate),
+    },
+  ];
+
+  // Table Actions Configuration
+  const tableActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     },
     {
-      field: 'actions',
-      header: 'Actions',
-      sortable: false,
-      render: (row) => (
-        <div className="flex space-x-2">
-          <button 
-            className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50"
-            onClick={() => setSelectedRequest(row)}
+      key: "360-view",
+      label: "360° View",
+      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+      onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    {
+      key: "resend-link",
+      label: "Resend Link",
+      icon: <Mail className="w-4 h-4 text-blue-600" />,
+      disabled: (row) => row.status === "completed",
+    },
+  ];
+
+  // Kanban Columns Configuration
+  const kanbanColumns = [];
+
+  // Render Actions for Kanban
+  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`view-details/${item._id}`);
+        }}
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        title="View Details"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      {!isLoading ? (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              item?._id && navigate(`/candidate/${item._id}`);
+            }}
+            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            title="360° View"
           >
-            <AiOutlineEye size={18} />
+            <UserCircle className="w-4 h-4" />
           </button>
-        </div>
-      )
-    }
-  ]
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`edit/${item._id}`);
+            }}
+            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onResendLink(item.id);
+          }}
+          disabled={item.status === "completed"}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Resend Link"
+        >
+          <Mail className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Interviewer Requests</h1>
-        <div className="flex space-x-2">
-          <button className="btn-secondary">
-            <AiOutlineFilter className="mr-2" />
-            Filter
-          </button>
+    <div className="space-y-6 min-h-screen">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
+          <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+            <div className="text-xs text-gray-500">Total Requests</div>
+            <div className="text-xl font-semibold">{requests.length}</div>
+          </div>
+          <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+            <div className="text-xs text-gray-500">Pending</div>
+            <div className="text-xl font-semibold">
+              {requests.filter((r) => r.status === "pending").length}
+            </div>
+          </div>
+          <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+            <div className="text-xs text-gray-500">Approved</div>
+            <div className="text-xl font-semibold">
+              {requests.filter((r) => r.status === "approved").length}
+            </div>
+          </div>
+          <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+            <div className="text-xs text-gray-500">Rejected</div>
+            <div className="text-xl font-semibold">
+              {requests.filter((r) => r.status === "rejected").length}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Total Requests</div>
-          <div className="text-xl font-semibold">{requests.length}</div>
+        <div className="flex justify-between items-center px-4">
+          <h1 className="text-2xl font-bold text-custom-blue">
+            Interviewer Requests
+          </h1>
         </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Pending</div>
-          <div className="text-xl font-semibold">
-            {requests.filter(r => r.status === 'pending').length}
-          </div>
-        </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Approved</div>
-          <div className="text-xl font-semibold">
-            {requests.filter(r => r.status === 'approved').length}
-          </div>
-        </div>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-xs text-gray-500">Rejected</div>
-          <div className="text-xl font-semibold">
-            {requests.filter(r => r.status === 'rejected').length}
-          </div>
-        </div>
-      </div>
 
-      <div className="flex">
-        <div className={`transition-all duration-300 ${selectedRequest ? 'w-1/2' : 'w-full'}`}>
-          <div className="bg-white rounded-lg shadow-card overflow-hidden">
-            <DataTable
-              columns={columns}
-              data={requests}
-              searchable={true}
-              pagination={true}
+        {/* Toolbar */}
+        <div className="fixed top-18 left-0 right-0 bg-background">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden px-4">
+            <Toolbar
+              view={view}
+              setView={setView}
+              searchQuery={searchQuery}
+              onSearch={handleSearch}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterPopupOpen={isFilterPopupOpen}
+              isFilterActive={isFilterActive}
+              dataLength={dataToUse?.length}
+              searchPlaceholder="Search invoices..."
+              filterIconRef={filterIconRef}
             />
           </div>
         </div>
 
-        {selectedRequest && (
-          <div className={`fixed top-0 right-0 h-screen bg-white shadow-lg overflow-y-auto transition-all duration-300 ${isExpanded ? 'w-3/4' : 'w-1/2'}`} style={{ marginTop: '4rem' }}>
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedRequest.name}</h2>
-                  <p className="text-gray-500">{selectedRequest.email}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                    onClick={() => setIsExpanded(!isExpanded)}
-                  >
-                    <AiOutlineExpandAlt size={20} />
-                  </button>
-                  <button
-                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                    onClick={() => setSelectedRequest(null)}
-                  >
-                    <AiOutlineClose size={20} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center">
-                        <AiOutlineMail className="text-gray-400 mr-2" />
-                        <span>{selectedRequest.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <AiOutlinePhone className="text-gray-400 mr-2" />
-                        <span>{selectedRequest.phone}</span>
-                      </div>
+        {/* New table content */}
+        <main className="fixed top-60 lg lg:top-71 xl:top-71 2xl:top-71 left-0 right-0 bg-background">
+          <div className="sm:px-0">
+            {requests.length === 0 ? (
+              <Loading />
+            ) : (
+              <motion.div className="bg-white">
+                <div className="relative w-full">
+                  {view === "table" ? (
+                    <div className="w-full">
+                      <TableView
+                        data={currentFilteredRows}
+                        columns={tableColumns}
+                        loading={isLoading}
+                        actions={tableActions}
+                        emptyState="No requests found."
+                      />
                     </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Availability</h3>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center">
-                        <AiOutlineCalendar className="text-gray-400 mr-2" />
-                        <span>{selectedRequest.availability}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <AiOutlineClockCircle className="text-gray-400 mr-2" />
-                        <span>Timezone: {selectedRequest.timezone}</span>
-                      </div>
+                  ) : (
+                    <div className="w-full">
+                      <KanbanView
+                        data={currentFilteredRows.map((request) => ({
+                          ...requests,
+                          id: request.id,
+                          title: `${request.FirstName || ""} ${
+                            request.LastName || ""
+                          }`,
+                          subtitle:
+                            request.CurrentRole ||
+                            request.CurrentExperience ||
+                            "N/A",
+                          avatar: "",
+                          status: "active",
+                          isAssessmentView: <p>Is assignment view</p>,
+                        }))}
+                        columns={kanbanColumns}
+                        loading={isLoading}
+                        renderActions={renderKanbanActions}
+                        emptyState="No requests found."
+                      />
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Rate & Experience</h3>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center">
-                        <AiOutlineDollar className="text-gray-400 mr-2" />
-                        <span>${selectedRequest.preferredRate}/hr</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span>{selectedRequest.yearsOfExperience} years of experience</span>
-                      </div>
-                    </div>
-                  </div>
+                  <FilterPopup
+                    isOpen={isFilterPopupOpen}
+                    onClose={() => setFilterPopupOpen(false)}
+                    onApply={handleFilterChange}
+                    initialFilters={selectedFilters}
+                    filterIconRef={filterIconRef}
+                  />
                 </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Expertise</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedRequest.expertise.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Languages</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedRequest.languages.map((language, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-                        >
-                          {language}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Interview Types</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedRequest.preferredInterviewTypes.map((type, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
-                        >
-                          {type}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Notes</h3>
-                  <p className="text-gray-700">{selectedRequest.notes}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">References</h3>
-                  <div className="space-y-3">
-                    {selectedRequest.references.map((ref, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                        <div className="font-medium">{ref.name}</div>
-                        <div className="text-sm text-gray-500">{ref.position} at {ref.company}</div>
-                        <div className="text-sm text-gray-500">{ref.contact}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {selectedRequest.status === 'pending' && (
-                  <div className="flex space-x-3 pt-6 border-t">
-                    <button
-                      onClick={() => handleStatusChange(selectedRequest.id, 'approved')}
-                      className="flex-1 btn-success"
-                    >
-                      <AiOutlineCheck className="mr-2" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(selectedRequest.id, 'hold')}
-                      className="flex-1 btn-warning"
-                    >
-                      <AiOutlinePauseCircle className="mr-2" />
-                      Hold
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(selectedRequest.id, 'rejected')}
-                      className="flex-1 btn-danger"
-                    >
-                      <AiOutlineCloseCircle className="mr-2" />
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+              </motion.div>
+            )}
           </div>
-        )}
+        </main>
       </div>
+      <Outlet />
     </div>
-  )
+  );
 }
 
-export default InterviewerRequestsPage
+export default InterviewerRequestsPage;

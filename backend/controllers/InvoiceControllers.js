@@ -129,4 +129,50 @@ const createInvoice = async (req, res) => {
   }
 };
 
-module.exports = { createInvoice, getInvoice };
+// SUPER ADMIN added by Ashok ----------------------------------->
+const getInvoices = async (req, res) => {
+  try {
+    const invoices = await Invoice.find();
+
+    // Calculate aggregates
+    const totalInvoices = invoices.length;
+
+    const totalAmount = invoices.reduce(
+      (sum, invoice) => sum + (invoice.totalAmount || 0),
+      0
+    );
+    const totalPaid = invoices.reduce(
+      (sum, invoice) => sum + (invoice.amountPaid || 0),
+      0
+    );
+    const totalOutstanding = invoices.reduce(
+      (sum, invoice) => sum + (invoice.outstandingAmount || 0),
+      0
+    );
+
+    // Avoid division by zero
+    const collectionRate =
+      totalAmount > 0 ? ((totalPaid / totalAmount) * 100).toFixed(2) : "0.00";
+
+    res.status(200).json({
+      totalInvoices,
+      totalAmount,
+      totalOutstanding,
+      collectionRate: `${collectionRate}%`,
+      invoices,
+    });
+  } catch (error) {
+    console.error("Detailed error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
+};
+// --------------------------------------------------------------->
+
+module.exports = { createInvoice, getInvoice, getInvoices };
