@@ -5,12 +5,14 @@ const { Candidate } = require("../../models/candidate");
 const { Contacts } = require("../../models/Contacts");
 const Tenant = require("../../models/Tenant");
 const SupportUser = require("../../models/SupportUser");
+const { MockInterview } = require("../../models/mockinterview");
 
 const entityModels = {
   candidate: Candidate,
   contact: Contacts,
   organization: Tenant,
   support: SupportUser,
+  mockInterview: MockInterview,
 };
 
 const fieldMap = {
@@ -28,6 +30,9 @@ const fieldMap = {
   },
   support: {
     attachment: { field: "attachment", resourceType: "image" },
+  },
+  mockInterview: {
+    resume: { field: "resume", resourceType: "raw" },
   },
 };
 
