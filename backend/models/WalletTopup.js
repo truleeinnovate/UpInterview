@@ -45,7 +45,6 @@ const WalletSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-    walletCode: { type: String, unique: true }, // it will store WLT-00001, WLT-00002
   },
   { timestamps: true }
 );

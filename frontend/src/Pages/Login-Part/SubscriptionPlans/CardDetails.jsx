@@ -9,6 +9,7 @@ import axios from "axios";
 import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js";
 //import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
+import { useUserProfile } from "../../../apiHooks/useUsers.js";
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -67,36 +68,30 @@ const CardDetails = () => {
         annually: 0,
     });
 
-    const [userProfile, setUserProfile] = useState([])
+
+    const {userProfile, isLoading, isError} = useUserProfile(ownerId)
+    const [userProfileData, setUserProfile] = useState([])
 
     // Fetch user profile data from contacts API
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            try {
-                if (ownerId) {
-                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`);
-
-                    if (response.data && response.data.length > 0) {
-                        const contactData = response.data[0];
-                        // Extract name, email and phone from the response
-                        setUserProfile({
-                            name: `${contactData.firstName} ${contactData.lastName}`,
-                            email: contactData.email,
-                            phone: contactData.phone
-                        });
-                        console.log('User profile fetched:', contactData);
-                    } else {
-                        console.log('No contact data found for this owner');
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching user profile:', error);
-                toast.error('Failed to fetch user profile data');
-            }
-        };
-
-        fetchUserProfile();
-    }, [ownerId]);
+   useEffect(() => {
+                 const fetchUserProfile = async () => {
+                     try {
+                         if (userProfile) {
+                                 setUserProfile({
+                                     name: `${userProfile.firstName} ${userProfile.lastName}`,
+                                     email: userProfile.email,
+                                     phone: userProfile.phone
+                                 });
+                                 console.log('User profile fetched:', userProfile);
+                         }
+                     } catch (error) {
+                         console.error('Error fetching user profile:', error);
+                         toast.error('Failed to fetch user profile data');
+                     }
+                 };
+         
+                 fetchUserProfile();
+             }, [ownerId,userProfile]);
 
     useEffect(() => {
         if (planDetails) {
@@ -277,9 +272,9 @@ const CardDetails = () => {
                             description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
                             image: "https://upinterview.io/logo.png",
                             prefill: {
-                                name: userProfile?.name || "",
-                                email: userProfile?.email || "",
-                                contact: userProfile?.phone || "",
+                                name: userProfileData?.name || "",
+                                email: userProfileData?.email || "",
+                                contact: userProfileData?.phone || "",
                             },
                             notes: {
                                 ownerId: ownerId,

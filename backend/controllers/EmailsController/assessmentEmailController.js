@@ -1017,8 +1017,10 @@ exports.shareAssessment = async (req, res) => {
       if (!candidateAssessment) continue;
 
       const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
-      const link = `${config.REACT_APP_API_URL_FRONTEND}assessmenttest?candidateAssessmentId=${encryptedId}`;
-
+      console.log("encryptedId", encryptedId)
+      console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
+      const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
+      console.log("link", link)
       await CandidateAssessment.findByIdAndUpdate(
         candidateAssessment._id,
         { assessmentLink: link },
@@ -1039,12 +1041,12 @@ exports.shareAssessment = async (req, res) => {
 
       const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
       const emailBody = emailTemplate.body
-        .replace(/{{candidateName}}/g, candidateName)
-        .replace(/{{companyName}}/g, companyName)
-        .replace(/{{expiryDate}}/g, formattedExpiryDate)
-        .replace(/{{assessmentLink}}/g, link)
-        .replace(/{{assessmentDuration}}/g, assessmentDuration)
-        .replace(/{{supportEmail}}/g, supportEmail);
+        .replace('{{candidateName}}', candidateName)
+        .replace('{{companyName}}', companyName)
+        .replace('{{expiryDate}}', formattedExpiryDate)
+        .replace('{{assessmentLink}}', link)
+        .replace('{{assessmentDuration}}', assessmentDuration)
+        .replace('{{supportEmail}}', supportEmail);
 
       // Queue email sends
       emailPromises.push(

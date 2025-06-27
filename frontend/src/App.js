@@ -185,15 +185,19 @@ const App = () => {
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
-            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar/>
-            <div className="ml-80">
-             <Subscription/>
-             </div>
-             </></>} />
+            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar />
+
+              <div className="ml-80">
+                <Subscription />
+              </div>
+            </></>} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-user-email" element={<VerifyUserEmail />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
 
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
+            <Route path="/assessmenttest" element={<AssessmentTest />} />
 
             <Route
               element={
@@ -262,7 +266,6 @@ const App = () => {
 
               </Route>
 
-              <Route path="/assessmenttest" element={<AssessmentTest />} />
 
               {/*Wallet */}
               <Route path="/wallet-transcations" element={<Wallet />}></Route>
@@ -404,9 +407,8 @@ const App = () => {
               <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
               {/* task */}
               <Route path="/task" element={<Task />} />
-{/* verify work email */}
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-user-email" element={<VerifyUserEmail />}/>
+              {/* verify work email */}
+
             </Route>
           </Routes>
         </div>
