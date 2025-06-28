@@ -1,3 +1,4 @@
+/* eslint-disable no-lone-blocks */
 // import PropTypes from 'prop-types';
 import { motion } from "framer-motion";
 import {
@@ -108,7 +109,7 @@ const KanbanView = ({
         ) : userData.length === 0 ? (
           <div className="col-span-full py-10 text-center">
             <div className="flex flex-col items-center justify-center p-5">
-              <p className="text-9xl rotate-180 text-blue-500">
+              <p className="text-9xl rotate-180 text-custom-blue">
                 <Info />
               </p>
               <p className="text-center text-lg font-normal">
@@ -116,7 +117,7 @@ const KanbanView = ({
               </p>
               <p
                 onClick={toggleSidebar}
-                className="mt-3 cursor-pointer text-white bg-blue-400 px-4 py-1 rounded-md"
+                className="mt-3 cursor-pointer text-white bg-custom-blue px-4 py-1 rounded-md"
               >
                 Add Users
               </p>
@@ -197,7 +198,7 @@ const KanbanView = ({
                         state: { userData: users },
                       });
                     }}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                     title="View Details"
                   >
                     <Eye className="w-4 h-4" />
@@ -244,7 +245,7 @@ const KanbanView = ({
 export default KanbanView;
 
 
-     {/* Confirmation Popup */}
+{/* Confirmation Popup */}
       {/* {showConfirmation && (
         // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-20">

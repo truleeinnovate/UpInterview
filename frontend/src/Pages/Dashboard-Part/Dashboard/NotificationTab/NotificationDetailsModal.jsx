@@ -123,8 +123,8 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
             {/* Message Body */}
             <div className="bg-white rounded-xl">
               <div className="prose max-w-none">
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {formatMessageBody(notification.message)}
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line" dangerouslySetInnerHTML={{__html: notification.message}}>
+            
                 </div>
               </div>
             </div>

@@ -16,6 +16,7 @@ import BasicDetailsEditPage from "../MyProfile/BasicDetails/BasicDetailsEditPage
 import EditAdvacedDetails from "../MyProfile/AdvancedDetails/EditAdvacedDetails";
 import EditInterviewDetails from "../MyProfile/InterviewDetails/EditInterviewDetails";
 import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 // import ConfirmationModal from './ConfirmModel';
 
 //this is already have common code but due to z index i have added here
@@ -237,10 +238,10 @@ const UserProfileDetails = () => {
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
                 >
                   {isFullScreen ? (
-                    <Minimize className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <Expand className="w-5 h-5 text-gray-500" />
-                  )}
+                <ArrowsPointingInIcon className="h-5 w-5" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-5 w-5" />
+              )}
                 </button>
                 <button
                   onClick={handleClose}

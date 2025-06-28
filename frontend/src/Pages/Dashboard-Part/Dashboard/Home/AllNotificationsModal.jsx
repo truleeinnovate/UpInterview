@@ -225,7 +225,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         {notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{notification.message}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2 " >{notification.message}</p>
                     {notification.type === 'email' && (
                       <div className="flex flex-col space-y-1 text-xs text-gray-500">
                         <div className="flex items-center space-x-2">

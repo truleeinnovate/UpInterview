@@ -31,7 +31,12 @@ const Sharing = () => {
           >
             Share New Content
           </button>
-          <EditButton onClick={() => setIsEditingSettings(true)} />
+          <button
+            onClick={() => setIsEditingSettings(true)}
+            className="px-2 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+          >
+            <EditButton className="text-white hover:text-white"/>
+          </button>
         </div>
       </div>
 
