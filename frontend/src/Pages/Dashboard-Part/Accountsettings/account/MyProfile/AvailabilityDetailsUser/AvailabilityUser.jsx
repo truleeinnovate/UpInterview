@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
-
 import { Clock, Globe, MapPin } from 'lucide-react';
 import Cookies from "js-cookie";
 import "react-datepicker/dist/react-datepicker.css";
-
 import { useNavigate } from 'react-router-dom';
-import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 import { useUserProfile } from '../../../../../../apiHooks/useUsers';
+import { useInterviewAvailability } from '../../../../../../apiHooks/useInterviewAvailability';
 
 const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen }) => {
   // const { usersRes } = useCustomContext();
@@ -16,34 +14,38 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
   const [selectedTimezone, setSelectedTimezone] = useState('');
   const [selectedOption, setSelectedOption] = useState(null);
   const [times, setTimes] = useState({
-    Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Mon: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Tue: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Wed: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Thu: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Fri: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-    Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-
+    Sun: [{ startTime: null, endTime: null }],
+    Mon: [{ startTime: null, endTime: null }],
+    Tue: [{ startTime: null, endTime: null }],
+    Wed: [{ startTime: null, endTime: null }],
+    Thu: [{ startTime: null, endTime: null }],
+    Fri: [{ startTime: null, endTime: null }],
+    Sat: [{ startTime: null, endTime: null }]
   });
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
-    const userId = tokenPayload?.userId;
+  const userId = tokenPayload?.userId;
 
   const ownerId = usersId || userId;
 
-   const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
-    
-  
+  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+  const { availability, loading: isAvailabilityLoading, error: availabilityError } = useInterviewAvailability(userProfile?.contactId || userProfile?._id);
+  console.log("availability", availability);
+
+  useEffect(() => {
+    // console.log('User Profile:', userProfile); // Check if userProfile has the expected data
+    // console.log('Contact ID:', userProfile?.contactId || userProfile?._id); // Check the ID being used
+  }, [userProfile]);
 
   useEffect(() => {
     // const selectedContact = usersId
     //   ? usersRes.find(user => user?.contactId === usersId)
     //   : usersRes.find(user => user?._id === userId);
 
-    console.log("contactId", userProfile);
-    
+    // console.log("contactId", userProfile);
+
 
     if (!userProfile || !userProfile._id) return;
     if (userProfile) {
@@ -51,6 +53,37 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
       //  console.log("Selected contact:", selectedContact);
     }
   }, [ownerId, userProfile]);
+
+  useEffect(() => {
+    if (!availability) return;
+  
+    // Transform the availability data to match the times state structure
+    const transformedTimes = {
+      Sun: [{ startTime: null, endTime: null }],
+      Mon: [{ startTime: null, endTime: null }],
+      Tue: [{ startTime: null, endTime: null }],
+      Wed: [{ startTime: null, endTime: null }],
+      Thu: [{ startTime: null, endTime: null }],
+      Fri: [{ startTime: null, endTime: null }],
+      Sat: [{ startTime: null, endTime: null }]
+    };
+  
+    // If we have availability data, update the times state
+    if (availability.availability && availability.availability.length > 0) {
+      // console.log('Processing availability data:', availability.availability); // Add this line
+      availability.availability.forEach(dayData => {
+        if (dayData.day && dayData.timeSlots && transformedTimes[dayData.day]) {
+          transformedTimes[dayData.day] = dayData.timeSlots.map(slot => ({
+            startTime: slot.startTime || null,
+            endTime: slot.endTime || null
+          }));
+        }
+      });
+    }
+  
+    // console.log('Transformed times:', transformedTimes); // Add this line
+    setTimes(transformedTimes);
+  }, [availability]);
 
 
   const fetchData = () => {
@@ -115,22 +148,42 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     const dayAvailability = times[dayOfWeek];
 
-    if (!dayAvailability || dayAvailability[0]?.startTime === 'unavailable') return false;
+    // console.log('times:', JSON.parse(JSON.stringify(times)));
+    // console.log('dayOfWeek:', dayOfWeek);
+    // console.log('dayAvailability:', dayAvailability);
+
+    // If no availability data or first slot is explicitly unavailable
+    if (!dayAvailability || !dayAvailability[0] || !dayAvailability[0].startTime) {
+      return false;
+    }
 
     return dayAvailability.some(slot => {
-      if (slot.startTime === 'unavailable') return false;
+      // Skip if slot is invalid or has null/undefined times
+      if (!slot || !slot.startTime || !slot.endTime) {
+        return false;
+      }
 
-      const [startHour, startMin] = slot.startTime.split(':').map(Number);
-      const [endHour, endMin] = slot.endTime.split(':').map(Number);
+      // Handle 'unavailable' case
+      if (slot.startTime === 'unavailable' || slot.endTime === 'unavailable') {
+        return false;
+      }
 
-      const slotStart = startHour * 60 + startMin;
-      const slotEnd = endHour * 60 + endMin;
+      try {
+        const [startHour, startMin] = slot.startTime.split(':').map(Number);
+        const [endHour, endMin] = slot.endTime.split(':').map(Number);
 
-      const currentHourStart = hour * 60;
-      const currentHourEnd = (hour + 1) * 60;
+        const slotStart = startHour * 60 + (startMin || 0);
+        const slotEnd = endHour * 60 + (endMin || 0);
 
-      // Check if any part of the slot overlaps with this hour
-      return slotStart < currentHourEnd && slotEnd > currentHourStart;
+        const currentHourStart = hour * 60;
+        const currentHourEnd = (hour + 1) * 60;
+
+        // Check if any part of the slot overlaps with this hour
+        return slotStart < currentHourEnd && slotEnd > currentHourStart;
+      } catch (error) {
+        console.error('Error processing time slot:', error, slot);
+        return false;
+      }
     });
   };
 

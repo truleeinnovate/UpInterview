@@ -646,8 +646,6 @@ const getUsersByTenant = async (req, res) => {
 const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
-    console.log('req.params---',req.params);
-
 
   if (!ownerId || ownerId === 'undefined') {
       return res.status(400).json({ message: 'Invalid owner ID' });
@@ -657,21 +655,12 @@ const getUniqueUserByOwnerId = async (req, res) => {
       return res.status(400).json({ message: "Invalid ObjectId format" });
     }
 
-    // if (!ownerId) {
-    //   return res.status(400).json({ message: 'Invalid owner ID' });
-    // }
-
-    // Fetch users with minimal fields
-
-    // const users = await Users.findOne({ _id: ownerId }, '_id  label roleName status').lean();
-
     // Fetch user and populate role
     const users = await Users.findOne({ _id: ownerId })
       .populate({ path: "roleId", select: "_id label roleName status" })
       .lean();
 
-    console.log('users---',users);
-
+    // Fetch user and populate availability
     const contact = await Contacts.findOne({ ownerId })
       .populate({
         path: "availability",
@@ -685,14 +674,9 @@ const getUniqueUserByOwnerId = async (req, res) => {
       // .populate("availability")
       .lean();
 
-
-    console.log('contact---',contact);
-
-
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
       _id: users._id,
-// <<<<<<< Ranjith
       roleId: users?.roleId?._id || '' ,
       roleLabel: users?.roleId?.label || '',
       roleName: users?.roleId?.roleName || '',
@@ -700,22 +684,10 @@ const getUniqueUserByOwnerId = async (req, res) => {
       firstName: contact.firstName || '',
       lastName: contact.lastName || '',
       email: users.email || '',
-      newEmail:users.newEmail || "",
+      newEmail: users.newEmail || "",
       countryCode: contact.countryCode || '',
       gender: contact.gender || '',
       phone: contact.phone || '',
-// =======
-//       roleId: users?.roleId?._id || "",
-//       roleLabel: users?.roleId?.label || "",
-//       roleName: users?.roleId?.roleName || "",
-//       contactId: contact._id || "",
-//       firstName: contact.firstName || "",
-//       lastName: contact.lastName || "",
-//       email: contact.email || "",
-//       countryCode: contact.countryCode || "",
-//       gender: contact.gender || "",
-//       phone: contact.phone || "",
-// >>>>>>> main
       imageData: contact.imageData || null,
       createdAt: users.createdAt || contact.createdAt,
       status: users.status || "",
@@ -728,7 +700,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       industry: contact.industry || "",
       experienceYears: contact.experienceYears || "",
       location: contact.location || "",
-      resume: contact.resume || "", // updated by Ashok
+      resume: contact.resume || "",
       coverLetter: contact.coverLetter || "",
       coverLetterdescription: contact.coverLetterdescription || "",
       professionalTitle: contact.professionalTitle || "",
@@ -751,12 +723,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
 
     };
 
-    console.log("for supportDesk combinedUser:",combinedUser);
-
-
     res.status(200).json(combinedUser);
   } catch (error) {
-    console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

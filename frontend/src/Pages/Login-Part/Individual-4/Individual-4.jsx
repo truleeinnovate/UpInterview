@@ -33,8 +33,8 @@ const FooterButtons = ({
           onClick={onPrev}
           disabled={isSubmitting}
           className={`border ${isSubmitting
-              ? "border-gray-300 text-gray-400 cursor-not-allowed"
-              : "border-custom-blue text-custom-blue hover:bg-gray-50"
+            ? "border-gray-300 text-gray-400 cursor-not-allowed"
+            : "border-custom-blue text-custom-blue hover:bg-gray-50"
             } rounded px-6 sm:px-3 py-1`}
         >
           Prev
@@ -46,8 +46,8 @@ const FooterButtons = ({
         onClick={onNext}
         disabled={isSubmitting}
         className={`px-6 sm:px-3 py-1 rounded text-white flex items-center justify-center ${isSubmitting
-            ? "bg-custom-blue/70 cursor-not-allowed"
-            : "bg-custom-blue hover:bg-custom-blue/90"
+          ? "bg-custom-blue/70 cursor-not-allowed"
+          : "bg-custom-blue hover:bg-custom-blue/90"
           }`}
         type="button"
       >
@@ -133,6 +133,7 @@ const MultiStepForm = () => {
   const [previousInterviewExperience, setPreviousInterviewExperience] =
     useState("");
   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
+  const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
 
   const [completionStatus, setCompletionStatus] = useState({
     basicDetails: false,
@@ -181,9 +182,9 @@ const MultiStepForm = () => {
     previousInterviewExperienceYears: "",
     expertiseLevel_ConductingInterviews: "",
     hourlyRate: "",
-    interviewFormatWeOffer: [],
+    interviewFormatWeOffer: [], // This will be mapped to InterviewFormatWeOffer in the backend
     expectedRatePerMockInterview: "",
-    noShowPolicy: "",
+    noShowPolicy: "", // This will be mapped to NoShowPolicy in the backend
     bio: "",
     professionalTitle: "",
   });
@@ -342,29 +343,44 @@ const MultiStepForm = () => {
       isValid = Object.keys(professionalErrors).length === 0;
     } else if (currentStep === 2) {
       const interviewErrors = {};
-      if (!interviewDetailsData.skills.length)
+      const validSkills = interviewDetailsData.skills?.filter(skill => skill !== null) || [];
+      if (validSkills.length === 0) {
         interviewErrors.skills = "Skills are required";
-      if (!interviewDetailsData.previousInterviewExperience)
-        interviewErrors.previousInterviewExperience =
-          "Previous interview experience is required";
-      if (!interviewDetailsData.expertiseLevel_ConductingInterviews)
-        interviewErrors.expertiseLevel_ConductingInterviews =
-          "Expertise level is required";
-      if (!interviewDetailsData.professionalTitle?.trim())
+      }
+      if (!interviewDetailsData.technologies?.length) {
+        interviewErrors.technologies = "Technologies are required";
+      }
+      if (!interviewDetailsData.previousInterviewExperience) {
+        interviewErrors.previousInterviewExperience = "Previous interview experience is required";
+      }
+      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      }
+      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
+      }
+      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      }
+      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
+      }
+      if (!interviewDetailsData.noShowPolicy) {
+        interviewErrors.noShowPolicy = "No-show policy is required";
+      }
+      if (!interviewDetailsData.professionalTitle?.trim()) {
         interviewErrors.professionalTitle = "Professional title is required";
-      else if (interviewDetailsData.professionalTitle.length < 50)
-        interviewErrors.professionalTitle =
-          "Professional title must be at least 50 characters";
-      else if (interviewDetailsData.professionalTitle.length > 100)
-        interviewErrors.professionalTitle =
-          "Professional title cannot exceed 100 characters";
-
-      if (!interviewDetailsData.bio?.trim())
+      } else if (interviewDetailsData.professionalTitle.length < 50) {
+        interviewErrors.professionalTitle = "Professional title must be at least 50 characters";
+      } else if (interviewDetailsData.professionalTitle.length > 100) {
+        interviewErrors.professionalTitle = "Professional title cannot exceed 100 characters";
+      }
+      if (!interviewDetailsData.bio?.trim()) {
         interviewErrors.bio = "Professional bio is required";
-      else if (interviewDetailsData.bio.length < 150)
-        interviewErrors.bio =
-          "Professional bio must be at least 150 characters";
-
+      } else if (interviewDetailsData.bio.length < 150) {
+        interviewErrors.bio = "Professional bio must be at least 150 characters";
+      }
+  
       setErrors({ ...errors, ...interviewErrors });
       isValid = Object.keys(interviewErrors).length === 0;
     } else if (currentStep === 3) {
@@ -493,15 +509,29 @@ const MultiStepForm = () => {
             .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
-      const requestData = {
-        userData,
-        contactData,
-        ...(availabilityData.length > 0 && { availabilityData }),
-        isInternalInterviewer,
-        isProfileCompleteStateOrg,
-        ownerId: matchedContact.ownerId,
-        tenantData,
-      };
+          const requestData = {
+            userData,
+            contactData: {
+              ...contactData,
+              // Map frontend field names to backend field names
+              skills: interviewDetailsData.skills.filter(skill => skill !== null),
+              technologies: interviewDetailsData.technologies,
+              PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
+              PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
+              ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
+              hourlyRate: interviewDetailsData.hourlyRate,
+              InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
+              expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
+              NoShowPolicy: interviewDetailsData.noShowPolicy,
+              bio: interviewDetailsData.bio,
+              professionalTitle: interviewDetailsData.professionalTitle,
+            },
+            ...(availabilityData.length > 0 && { availabilityData }),
+            isInternalInterviewer,
+            isProfileCompleteStateOrg,
+            ownerId: matchedContact.ownerId,
+            tenantData,
+          };
 
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,
@@ -668,18 +698,14 @@ const MultiStepForm = () => {
                       <InterviewDetails
                         errors={errors}
                         setErrors={setErrors}
-                        selectedTechnologyies={selectedCandidates}
-                        setSelectedTechnologyies={setSelectedCandidates}
+                        selectedTechnologyies={selectedTechnologyies}  // Change from selectedCandidates
+                        setSelectedTechnologyies={setSelectedTechnologyies}  // Add this line
                         interviewDetailsData={interviewDetailsData}
                         setInterviewDetailsData={setInterviewDetailsData}
                         selectedSkills={selectedSkills}
                         setSelectedSkills={setSelectedSkills}
-                        previousInterviewExperience={
-                          previousInterviewExperience
-                        }
-                        setPreviousInterviewExperience={
-                          setPreviousInterviewExperience
-                        }
+                        previousInterviewExperience={previousInterviewExperience}
+                        setPreviousInterviewExperience={setPreviousInterviewExperience}
                         isMockInterviewSelected={isMockInterviewSelected}
                         setIsMockInterviewSelected={setIsMockInterviewSelected}
                       />

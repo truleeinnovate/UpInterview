@@ -986,3 +986,10 @@ app.use("/receipts", ReceiptsRoute);
 // app.use("/integration-logs", integrationLogRoutes); // added by Ashok
 
 // ==================================================================================>
+
+
+
+
+// <================ getting the availability by contact id to show in the account settings user profile ==============>
+const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");
+app.use("/interview-availability", interviewAvailabilityRoutes);

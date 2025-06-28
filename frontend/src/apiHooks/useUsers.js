@@ -15,7 +15,7 @@ export const useUserProfile = (ownerId) => {
       if (!ownerId) return null;
       const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
       
-      console.log("response.data",response.data);
+      // console.log("response.data",response.data);
 
       return response.data || null;
     },
