@@ -770,10 +770,14 @@ const App = () => {
   const location = useLocation();
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
+  console.log('tokenPayload:', tokenPayload);
+  
   const organization = tokenPayload?.organization;
 
   const impersonationToken = Cookies.get('impersonationToken');
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
+  console.log('impersonationPayload:', impersonationPayload);
+  
 
   // Combine permissions into a single object
   const combinedPermissions = useMemo(() => {
