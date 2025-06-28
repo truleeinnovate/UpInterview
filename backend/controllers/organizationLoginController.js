@@ -363,6 +363,8 @@ const organizationUserCreation = async (req, res) => {
   }
 };
 
+
+
 // const loginOrganization = async (req, res) => {
 //   try {
 //     let { email, password } = req.body;
@@ -370,58 +372,79 @@ const organizationUserCreation = async (req, res) => {
 //     password = password?.trim();
 
 //     if (!email || !password) {
-//       return res.status(400).json({ success: false, message: 'Email and password are required' });
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Email and password are required" });
 //     }
 
 //     const user = await Users.findOne({ email });
 //     if (!user) {
-//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid email or password" });
 //     }
 //     if (!user.isEmailVerified) {
 //       return res.status(403).json({
 //         success: false,
-//         message: 'Email not verified',
-//         isEmailVerified: false
+//         message: "Email not verified",
+//         isEmailVerified: false,
 //       });
 //     }
 
-//     // const organization = await Tenant.findOne({ _id: user.tenantId });
+//     // Check user role
+//     let roleName = null;
+//     let roleType = null;
+//     if (user.roleId) {
+//       const role = await RolesPermissionObject.findById(user.roleId);
+//       roleName = role?.roleName;
+//       roleType = role?.roleType;
+//     }
 
-//     // if (!['active', 'payment_pending'].includes(organization.status)) {
-//     //   return res.status(403).json({
-//     //     success: false,
-//     //     message: 'Account not active',
-//     //     status: organization.status
-//     //   });
-//     // }
+//     // For internal roleType, skip tenant checks and modify token
+//     if (roleType === 'internal') {
+//       const isPasswordValid = await bcrypt.compare(password, user.password);
+//       if (!isPasswordValid) {
+//         return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//       }
+//       // Generate JWT for internal user
+//       const payload = {
+//         impersonatedUserId: user._id.toString(),
+//         timestamp: new Date().toISOString(),
+//       };
+//       const token = generateToken(payload);
 
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Login successful',
+//         ownerId: user._id,
+//         token,
+//         roleType,
+//         isEmailVerified: user.isEmailVerified,
+//       });
+//     }
+
+//     // For non-internal users, proceed with tenant checks
 //     const organization = await Tenant.findOne({ _id: user.tenantId });
-
-//     if (organization.status === 'inactive') {
+//     if (!organization || organization.status === 'inactive') {
 //       return res.status(403).json({
 //         success: false,
 //         message: 'Account not active',
-//         status: organization.status
+//         status: organization?.status || 'not found'
 //       });
 //     }
 
-
 //     const isPasswordValid = await bcrypt.compare(password, user.password);
 //     if (!isPasswordValid) {
-//       return res.status(400).json({ success: false, message: 'Invalid email or password' });
-//     }
-
-//     let roleName = null;
-//     if (user?.isProfileCompleted === false && user.roleId) {
-//       const role = await RolesPermissionObject.findById(user.roleId);
-//       roleName = role?.roleName;
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid email or password" });
 //     }
 
 //     // Fetch contactId where ownerId matches user._id
 //     const contact = await Contacts.findOne({ ownerId: user._id });
 //     const contactEmailFromOrg = contact?.email || null;
 
-//     // Generate JWT
+//     // Generate JWT for non-internal users
 //     const payload = {
 //       userId: user._id.toString(),
 //       tenantId: user.tenantId,
@@ -432,7 +455,7 @@ const organizationUserCreation = async (req, res) => {
 
 //     res.status(200).json({
 //       success: true,
-//       message: 'Login successful',
+//       message: "Login successful",
 //       ownerId: user._id,
 //       tenantId: user.tenantId,
 //       token,
@@ -440,14 +463,14 @@ const organizationUserCreation = async (req, res) => {
 //       roleName,
 //       contactEmailFromOrg,
 //       isEmailVerified: user.isEmailVerified,
-//       status: organization.status
+//       status: organization.status,
 //     });
-
 //   } catch (error) {
-//     console.error('Error during login:', error);
-//     res.status(500).json({ success: false, message: 'Internal server error' });
+//     console.error("Error during login:", error);
+//     res.status(500).json({ success: false, message: "Internal server error" });
 //   }
 // };
+
 
 const loginOrganization = async (req, res) => {
   try {
@@ -456,21 +479,17 @@ const loginOrganization = async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    const user = await Users.findOne({ email });
+    const user = await Users.findOne({ email }).select('+password');
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid email or password" });
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
     if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Email not verified",
+        message: 'Email not verified',
         isEmailVerified: false,
       });
     }
@@ -484,26 +503,28 @@ const loginOrganization = async (req, res) => {
       roleType = role?.roleType;
     }
 
-    // For internal roleType, skip tenant checks and modify token
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    // For internal roleType (super admin)
     if (roleType === 'internal') {
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        return res.status(400).json({ success: false, message: 'Invalid email or password' });
-      }
-      // Generate JWT for internal user
       const payload = {
         impersonatedUserId: user._id.toString(),
+        // role: 'superadmin',
         timestamp: new Date().toISOString(),
       };
-      const token = generateToken(payload);
+      const impersonationToken = generateToken(payload, { expiresIn: '7h' });
 
       return res.status(200).json({
         success: true,
         message: 'Login successful',
-        ownerId: user._id,
-        token,
+        impersonatedUserId: user._id.toString(),
+        impersonationToken,
         roleType,
         isEmailVerified: user.isEmailVerified,
+        redirect: '/admin-dashboard',
       });
     }
 
@@ -513,15 +534,8 @@ const loginOrganization = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Account not active',
-        status: organization?.status || 'not found'
+        status: organization?.status || 'not found',
       });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid email or password" });
     }
 
     // Fetch contactId where ownerId matches user._id
@@ -531,18 +545,18 @@ const loginOrganization = async (req, res) => {
     // Generate JWT for non-internal users
     const payload = {
       userId: user._id.toString(),
-      tenantId: user.tenantId,
+      tenantId: user.tenantId.toString(),
       organization: true,
       timestamp: new Date().toISOString(),
     };
-    const token = generateToken(payload);
+    const authToken = generateToken(payload, { expiresIn: '7h' });
 
     res.status(200).json({
       success: true,
-      message: "Login successful",
-      ownerId: user._id,
-      tenantId: user.tenantId,
-      token,
+      message: 'Login successful',
+      ownerId: user._id.toString(),
+      tenantId: user.tenantId.toString(),
+      authToken,
       isProfileCompleted: user?.isProfileCompleted,
       roleName,
       contactEmailFromOrg,
@@ -550,8 +564,8 @@ const loginOrganization = async (req, res) => {
       status: organization.status,
     });
   } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error('Error during login:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -1072,7 +1086,7 @@ const getAllOrganizations = async (req, res) => {
       userCountMap[_id?.toString()] = userCount;
     });
 
-    const organizations = await Organization.find();
+    const organizations = await Tenant.find();
 
     const enrichedOrganizations = organizations.map((org) => {
       const orgId = org._id.toString();
@@ -1092,6 +1106,77 @@ const getAllOrganizations = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Internal server error", status: false });
+  }
+};
+
+const getOrganizationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
+    const users = await Users.find({ tenantId: id });
+
+    const organization = await Tenant.findById(id);
+
+    const tenant = {
+      tenant: organization,
+      users,
+    };
+
+    return res.status(200).json({ organization: tenant });
+  } catch (error) {
+    console.log("Error fetching organization:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//ashraf
+
+const superAdminLoginAsUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+
+    const user = await Users.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const tenant = await Tenant.findById(user.tenantId);
+    if (!tenant) {
+      return res.status(404).json({ success: false, message: 'Tenant not found' });
+    }
+
+    const isOrganization = tenant.type === 'organization';
+
+    const payload = {
+      userId: user._id.toString(),
+      tenantId: user.tenantId.toString(),
+      organization: isOrganization,
+      timestamp: new Date().toISOString(),
+    };
+    const authToken = generateToken(payload, { expiresIn: '7h' });
+    console.log('Generated authToken:', authToken);
+    console.log('Generated payload:', payload);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login as user successful',
+      authToken,
+      userId: user._id.toString(),
+      tenantId: user.tenantId.toString(),
+      isOrganization,
+      redirect: '/home',
+    });
+  } catch (error) {
+    console.error('Error during super admin login as user:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 // ------------------------------------------------------------------------------->
@@ -1260,4 +1345,6 @@ module.exports = {
   verifyEmail,
   verifyEmailChange,
   getAllOrganizations, // SUPER ADMIN added by Ashok
+  getOrganizationById,
+  superAdminLoginAsUser
 };

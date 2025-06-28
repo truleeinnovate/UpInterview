@@ -90,6 +90,7 @@ export const fetchFilterData = async (endpoint) => {
   try {
     const authToken = Cookies.get('authToken') ?? '';
     const tokenPayload = authToken ? decodeJwt(authToken) : {};
+    
 
     const userId = tokenPayload?.userId;
     const tenantId = tokenPayload?.tenantId;

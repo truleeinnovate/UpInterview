@@ -9,6 +9,8 @@ const { registerOrganization, loginOrganization,resetPassword,organizationUserCr
   verifyEmail,
   verifyEmailChange,
   getAllOrganizations, // SUPER ADMIN added by Ashok
+  getOrganizationById,
+  superAdminLoginAsUser
  } = require('../controllers/organizationLoginController');
 
 router.post('/Signup', registerOrganization);
@@ -35,6 +37,12 @@ router.get('/verify-user-email',verifyEmailChange)
 
 // SUPER ADMIN all-organizations added by Ashok ------------------------------->
 router.get("/all-organizations", getAllOrganizations);
+router.get("/:id", getOrganizationById);
+
+//ashraf
+
+// Super Admin login as user route
+router.post('/login-as-user', superAdminLoginAsUser);
 // ---------------------------------------------------------------------------->
 
 module.exports = router;

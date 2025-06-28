@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import { setAuthCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies,clearAllCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { config } from "../../config";
 import { validateWorkEmail } from '../../utils/workEmailValidation.js';
 import toast from "react-hot-toast";
@@ -92,6 +92,104 @@ const OrganizationLogin = () => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateLogin()) return;
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
+  //       email: email.trim().toLowerCase(),
+  //       password,
+  //     });
+
+  //     const {
+  //       token,
+  //       isEmailVerified,
+  //       status,
+  //       isProfileCompleted,
+  //       roleName,
+  //       contactEmailFromOrg,
+  //       roleType,//only check for super admin comes here
+  //     } = response.data;
+
+  //     setAuthCookies(token);
+
+  //     if (!isEmailVerified) {
+  //       setIsEmailVerified(false);
+  //       await handleResendVerification();
+  //       setCountdown(60);
+  //       return;
+  //     }
+
+  //     // Check if user is internal based on roleType
+  //     if (roleType === 'internal') {
+  //       navigate('/admin-dashboard');
+  //       return;
+  //     }
+
+  //     // Handle successful login cases
+  //     switch (status) {
+  //       case 'submitted':
+  //       case 'payment_pending':
+  //         navigate('/subscription-plans');
+  //         break;
+  //       case 'active':
+  //         if (isProfileCompleted === false && roleName) {
+  //           navigate('/complete-profile', {
+  //             state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
+  //           });
+  //         } else {
+  //           navigate('/home');
+  //         }
+  //         break;
+  //       default:
+  //         navigate('/');
+  //     }
+
+  //   } catch (error) {
+  //     setIsLoading(false);
+
+  //     // Clear previous errors
+  //     setErrors({ email: '', password: '' });
+
+  //     if (error.response) {
+  //       const { status, data } = error.response;
+
+  //       if (status === 400) {
+  //         // Use backend-provided field errors if available
+  //         if (data.fields) {
+  //           setErrors(data.fields);
+  //         }
+  //         // Fallback for generic invalid credentials message
+  //         else if (data.message === 'Invalid email or password') {
+  //           setErrors({
+  //             email: 'Invalid credentials',
+  //             password: 'Invalid credentials'
+  //           });
+  //         }
+  //       }
+  //       else if (status === 403) {
+  //         if (data.isEmailVerified === false) {
+  //           setIsEmailVerified(false);
+  //           await handleResendVerification();
+  //           setCountdown(60);
+  //         } else {
+  //           toast.error(data.message || 'Access denied');
+  //         }
+  //       }
+  //       else if (status >= 500) {
+  //         toast.error('Login failed. Please try again later.');
+  //       }
+  //     } else {
+  //       toast.error('Network error. Please check your connection.');
+  //     }
+  //   }
+  // };
+
+
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
@@ -99,78 +197,74 @@ const OrganizationLogin = () => {
     setIsLoading(true);
 
     try {
+      // Clear all cookies before setting new ones
+      clearAllCookies();
+
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
         email: email.trim().toLowerCase(),
         password,
-      });
+      }, { withCredentials: true });
 
       const {
-        token,
+        authToken,
+        impersonationToken,
+        impersonatedUserId,
+        ownerId,
+        tenantId,
         isEmailVerified,
         status,
         isProfileCompleted,
         roleName,
         contactEmailFromOrg,
-        roleType,//only check for super admin comes here
+        roleType,
       } = response.data;
 
-      setAuthCookies(token);
-
-      if (!isEmailVerified) {
-        setIsEmailVerified(false);
-        await handleResendVerification();
-        setCountdown(60);
-        return;
-      }
-
-      // Check if user is internal based on roleType
       if (roleType === 'internal') {
-        navigate('/super-admin');
-        return;
-      }
+        setAuthCookies({ impersonationToken, impersonatedUserId });
+        navigate('/admin-dashboard');
+      } else {
+        setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
+        if (!isEmailVerified) {
+          setIsEmailVerified(false);
+          await handleResendVerification();
+          setCountdown(60);
+          return;
+        }
 
-      // Handle successful login cases
-      switch (status) {
-        case 'submitted':
-        case 'payment_pending':
-          navigate('/subscription-plans');
-          break;
-        case 'active':
-          if (isProfileCompleted === false && roleName) {
-            navigate('/complete-profile', {
-              state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
-            });
-          } else {
-            navigate('/home');
-          }
-          break;
-        default:
-          navigate('/');
+        switch (status) {
+          case 'submitted':
+          case 'payment_pending':
+            navigate('/subscription-plans');
+            break;
+          case 'active':
+            if (isProfileCompleted === false && roleName) {
+              navigate('/complete-profile', {
+                state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
+              });
+            } else {
+              navigate('/home');
+            }
+            break;
+          default:
+            navigate('/');
+        }
       }
-
     } catch (error) {
       setIsLoading(false);
-
-      // Clear previous errors
       setErrors({ email: '', password: '' });
 
       if (error.response) {
         const { status, data } = error.response;
-
         if (status === 400) {
-          // Use backend-provided field errors if available
           if (data.fields) {
             setErrors(data.fields);
-          }
-          // Fallback for generic invalid credentials message
-          else if (data.message === 'Invalid email or password') {
+          } else if (data.message === 'Invalid email or password') {
             setErrors({
               email: 'Invalid credentials',
-              password: 'Invalid credentials'
+              password: 'Invalid credentials',
             });
           }
-        }
-        else if (status === 403) {
+        } else if (status === 403) {
           if (data.isEmailVerified === false) {
             setIsEmailVerified(false);
             await handleResendVerification();
@@ -178,16 +272,16 @@ const OrganizationLogin = () => {
           } else {
             toast.error(data.message || 'Access denied');
           }
-        }
-        else if (status >= 500) {
+        } else if (status >= 500) {
           toast.error('Login failed. Please try again later.');
         }
       } else {
         toast.error('Network error. Please check your connection.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
-
   return (
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-1 items-center">

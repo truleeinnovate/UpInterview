@@ -210,7 +210,7 @@
 
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../../Context/AuthContext";
+// import { useAuth } from "../../../Context/AuthContext";
 
 import {
   AiOutlineHome,
@@ -226,10 +226,10 @@ import {
   AiOutlineUp,
 } from "react-icons/ai";
 import { CgDetailsMore } from "react-icons/cg";
-import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.png";
+import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 function Sidebar({ open, onClose }) {
-  const { user, logout } = useAuth();
+  // const { user, logout } = useAuth();
   const [showMore, setShowMore] = useState(false);
 
   const navigation = [
@@ -307,7 +307,9 @@ function Sidebar({ open, onClose }) {
         </div>
 
         {/* User info */}
-        {user && (
+
+        {/* //we need to do it later */}
+        {/* {user && (
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <img
@@ -323,7 +325,7 @@ function Sidebar({ open, onClose }) {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-4 overflow-y-auto">
@@ -396,7 +398,7 @@ function Sidebar({ open, onClose }) {
         <div className="absolute bottom-0 left-0 px-4 py-4 border-t border-gray-200 w-full">
           <button
             onClick={() => {
-              logout();
+              // logout();
               onClose();
             }}
             className="w-full flex items-center justify-center px-4 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition-colors"

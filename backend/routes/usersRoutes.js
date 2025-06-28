@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-const { getUsers,getInterviewers,UpdateUser,getUsersByTenant,getUniqueUserByOwnerId } = require('../controllers/usersController.js');
-
+const {
+  getUsers,
+  getInterviewers,
+  UpdateUser,
+  getUsersByTenant,
+  getUniqueUserByOwnerId,
+  getPlatformUsers, // SUPER ADMIN added by Ashok
+} = require("../controllers/usersController.js");
 
 // routes/userRoutes.js
 const Users = require('../models/Users');

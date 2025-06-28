@@ -9,7 +9,6 @@ import {
   AiOutlineClose,
   AiOutlineWarning,
 } from "react-icons/ai";
-
 import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
@@ -23,8 +22,6 @@ import {
   Phone,
   GraduationCap,
   School,
-  // ExternalLink,
-  // X,
   Briefcase,
   User,
   Calendar,
@@ -34,16 +31,16 @@ import TableView from "../../Shared/Table/TableView.jsx";
 import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 import { LiaGenderlessSolid } from "react-icons/lia";
+import { config } from "../../../config.js";
+import { setAuthCookies, getImpersonationToken } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { toast } from 'react-toastify';
+
 
 function UsersTab({ users }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-
   const [view, setView] = useState("table");
-
   const [searchQuery, setSearchQuery] = useState("");
-  // const [editModeOn, setEditModeOn] = useState(false);
-  // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -54,13 +51,12 @@ function UsersTab({ users }) {
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  const filterIconRef = useRef(null); // Ref for filter icon
+  const filterIconRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // get user by ID
+  // Get user by ID
   useEffect(() => {
     if (selectedUserId && users?.length) {
       const foundUser = users.find((user) => user._id === selectedUserId);
@@ -68,6 +64,7 @@ function UsersTab({ users }) {
     }
   }, [selectedUserId, users]);
 
+  // Set view based on device
   useEffect(() => {
     if (isTablet) {
       setView("kanban");
@@ -81,9 +78,9 @@ function UsersTab({ users }) {
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      filters.experience.max
     );
   };
 
@@ -135,12 +132,52 @@ function UsersTab({ users }) {
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+    setCurrentPage(0);
+  };
+
+  // Common function for Login as User API call
+const handleLoginAsUser = async (userId) => {
+    try {
+      const impersonationToken = getImpersonationToken();
+      if (!impersonationToken) {
+        toast.error('Super admin session expired. Please log in again.');
+        navigate('/organization-login');
+        return;
+      }
+
+      const response = await fetch(`${config.REACT_APP_API_URL}/Organization/login-as-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${impersonationToken}`,
+        },
+        body: JSON.stringify({ userId }),
+        credentials: 'include',
+      });
+      console.log('Login as user response:', response);
+
+      const data = await response.json();
+      if (data.success) {
+        setAuthCookies({
+          authToken: data.authToken,
+          userId: data.userId,
+          tenantId: data.tenantId,
+          organization: data.isOrganization,
+        });
+        localStorage.setItem('authToken', data.authToken);
+        navigate('/home');
+      } else {
+        console.error('Login failed:', data.message);
+        toast.error(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Error during login as user:', error);
+      toast.error('An error occurred during login');
+    }
   };
 
   if (isLoading) {
@@ -165,6 +202,31 @@ function UsersTab({ users }) {
     setShowLoginModal(false);
     setSelectedUser(null);
   };
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    {
+      key: "login-as-user",
+      label: "Login as User",
+      icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => handleLoginAsUser(row._id),
+    },
+  ];
 
   const tableColumns = [
     {
@@ -191,7 +253,7 @@ function UsersTab({ users }) {
     {
       key: "role",
       header: "Role",
-      render: (value, row) => (
+      render: (_, row) => (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
           <span>{row.status || "N/A"}</span>
@@ -211,90 +273,22 @@ function UsersTab({ users }) {
     },
   ];
 
-  // Table Actions Configuration
-  const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedUserId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-    // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
-  ];
-
-  // Kanban Columns Configuration
-  const kanbanColumns = [];
-
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedUserId(item._id);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
 
@@ -305,7 +299,7 @@ function UsersTab({ users }) {
         <div className="rounded-sm px-4 w-full">
           <div className="flex-1 overflow-y-auto">
             <div className="p-2">
-              <div className="flex justify-center items-center  gap-4 mb-4">
+              <div className="flex justify-center items-center gap-4 mb-4">
                 <div className="relative">
                   {user?.ImageData ? (
                     <img
@@ -321,20 +315,11 @@ function UsersTab({ users }) {
                       {user?.firstName?.charAt(0)?.toUpperCase() || "?"}
                     </div>
                   )}
-                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
-                user?.Status === 'active' ? 'bg-green-100 text-green-800' :
-                user?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {user?.Status ? user?.Status.charAt(0).toUpperCase() + user?.Status.slice(1) : "?"}
-
-              </span> */}
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
                     {user?.firstName ? user.firstName : "N/A"}
                   </h3>
-
                   <p className="text-gray-600 mt-1">
                     {user.CurrentRole || "position"}
                   </p>
@@ -404,7 +389,6 @@ function UsersTab({ users }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Mail className="w-5 h-5 text-gray-500" />
                           </div>
-
                           <span className="text-gray-700">
                             {user?.email || "N/A"}
                           </span>
@@ -413,7 +397,6 @@ function UsersTab({ users }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Phone className="w-5 h-5 text-gray-500" />
                           </div>
-
                           <span className="text-gray-700">{user?.Phone}</span>
                         </div>
                       </div>
@@ -430,12 +413,10 @@ function UsersTab({ users }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <GraduationCap className="w-5 h-5" />
                           </div>
-
                           <div>
                             <p className="text-sm text-gray-500">
                               Qualification
                             </p>
-
                             <p className="text-gray-700">
                               {user?.HigherQualification || "N/A"}
                             </p>
@@ -448,12 +429,11 @@ function UsersTab({ users }) {
                           <div>
                             <p className="text-sm text-gray-500">University</p>
                             <p className="text-gray-700">
-                              {user?.UniversityCollege || "N/A"}{" "}
+                              {user?.UniversityCollege || "N/A"}
                             </p>
                           </div>
                         </div>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
@@ -462,7 +442,7 @@ function UsersTab({ users }) {
                           <div>
                             <p className="text-sm text-gray-500">Experience</p>
                             <p className="text-gray-700">
-                              {user?.CurrentExperience || "N/A"}{" "}
+                              {user?.CurrentExperience || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -475,7 +455,7 @@ function UsersTab({ users }) {
                               Relevant Experience
                             </p>
                             <p className="text-gray-700">
-                              {user?.RelevantExperience || "N/A"}{" "}
+                              {user?.RelevantExperience || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -504,7 +484,6 @@ function UsersTab({ users }) {
                   </div>
                 </div>
 
-                {/* have to add these feilds show case here later  */}
                 {user.interviews && user.interviews.length > 0 && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">
@@ -536,11 +515,7 @@ function UsersTab({ users }) {
   return (
     <div className="space-y-6">
       <div className="absolute md:mt-0 sm:mt-0 top-0 left-0 right-0 bg-background">
-        {/* <div className="px-4 pt-4">
-          <h1 className="text-lg font-semibold">Users({users?.length})</h1>
-        </div> */}
         <div className="flex justify-between items-center mb-4">
-          {/* Header and Tool bar */}
           <div className="md:mt-4 sm:mt-4 w-full">
             <main className="px-4">
               <div className="sm:px-0">
@@ -570,7 +545,6 @@ function UsersTab({ users }) {
           </div>
         </div>
 
-        {/* New table */}
         <main>
           <div className="sm:px-0">
             {!users ? (
@@ -584,7 +558,7 @@ function UsersTab({ users }) {
                         data={currentFilteredRows}
                         columns={tableColumns}
                         loading={isLoading}
-                        actions={tableActions}
+                        actions={actions}
                         emptyState="No users found."
                       />
                     </div>
@@ -594,16 +568,13 @@ function UsersTab({ users }) {
                         data={currentFilteredRows.map((user) => ({
                           ...user,
                           id: user._id,
-                          title: `${user.FirstName || ""} ${
-                            user.LastName || ""
-                          }`,
-                          subtitle:
-                            user.CurrentRole || user.CurrentExperience || "N/A",
+                          title: `${user.FirstName || ""} ${user.LastName || ""}`,
+                          subtitle: user.CurrentRole || user.CurrentExperience || "N/A",
                           avatar: "",
                           status: "active",
                           isAssessmentView: <p>Is assignment view</p>,
                         }))}
-                        columns={kanbanColumns}
+                        columns={[]}
                         loading={isLoading}
                         renderActions={renderKanbanActions}
                         emptyState="No Users found."
@@ -616,7 +587,7 @@ function UsersTab({ users }) {
                     onClose={() => setFilterPopupOpen(false)}
                     onApply={handleFilterChange}
                     initialFilters={selectedFilters}
-                    filterIconRef={filterIconRef} // Pass ref to FilterPopup
+                    filterIconRef={filterIconRef}
                   />
                 </div>
               </motion.div>
@@ -665,7 +636,10 @@ function UsersTab({ users }) {
                   <span>Login Options</span>
                 </div>
                 <div className="space-y-3">
-                  <button className="w-full btn-primary flex items-center justify-center space-x-2">
+                  <button
+                    className="w-full btn-primary flex items-center justify-center space-x-2"
+                    onClick={() => handleLoginAsUser(selectedUser._id)}
+                  >
                     <AiOutlineUser />
                     <span>Login as User</span>
                   </button>
@@ -700,18 +674,15 @@ function UsersTab({ users }) {
         </div>
       )}
 
-      {/* View Details Popup */}
-      <div>
-        {isPopupOpen && selectedUser && (
-          <SidebarPopup
-            title="User"
-            subTitle={selectedUserId}
-            onClose={() => setIsPopupOpen(false)}
-          >
-            {renderPopupContent(selectedUser)}
-          </SidebarPopup>
-        )}
-      </div>
+      {isPopupOpen && selectedUser && (
+        <SidebarPopup
+          title="User"
+          subTitle={selectedUserId}
+          onClose={() => setIsPopupOpen(false)}
+        >
+          {renderPopupContent(selectedUser)}
+        </SidebarPopup>
+      )}
     </div>
   );
 }

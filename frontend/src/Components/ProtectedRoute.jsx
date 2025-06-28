@@ -12,42 +12,54 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const authToken = Cookies.get('authToken');
+  const impersonationToken = Cookies.get('impersonationToken');
   const tokenPayload = authToken ? decodeJwt(authToken) : null;
+  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
   const [finalDomain, setFinalDomain] = useState(null);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const authToken = Cookies.get('authToken');
-
-        if (!authToken) {
-          navigate('/organization-login'); // Changed from '/' to '/organization-log'
+        // Check for either authToken or impersonationToken
+        if (!authToken && !impersonationToken) {
+          navigate('/organization-login');
           return;
         }
 
-        const tokenPayload = decodeJwt(authToken);
-        if (!tokenPayload) {
-          navigate('/organization-login'); // Changed from '/' to '/organization-log'
-          return;
-        }
-
-        // Check if token is expired
+        // Validate tokens
         const currentTime = Date.now() / 1000;
-        if (tokenPayload.exp && tokenPayload.exp < currentTime) {
-          navigate('/organization-login'); // Added token expiration check
+        if (authToken && tokenPayload?.exp && tokenPayload.exp < currentTime) {
+          navigate('/organization-login');
+          return;
+        }
+        if (impersonationToken && impersonationPayload?.exp && impersonationPayload.exp < currentTime) {
+          navigate('/organization-login');
+          return;
+        }
+
+        // Super admin check
+        if (impersonationToken && impersonationPayload?.impersonatedUserId) {
+          // Allow super admins to proceed (e.g., to /admin-dashboard)
+          setIsChecking(false);
+          return;
+        }
+
+        // Normal user check
+        if (!tokenPayload) {
+          navigate('/organization-login');
           return;
         }
 
         setIsChecking(false);
       } catch (error) {
         console.error('Auth check failed:', error);
-        navigate('/organization-login'); // Changed from '/' to '/organization-log'
+        navigate('/organization-login');
       }
     };
 
     checkAuthAndRedirect();
-  }, [authToken, tokenPayload, usersData, navigate, location.pathname]);
+  }, [authToken, impersonationToken, tokenPayload, impersonationPayload, usersData, navigate, location.pathname]);
 
   // Show loading while checking or redirecting
   if (isChecking || isRedirecting) {
@@ -64,7 +76,8 @@ const ProtectedRoute = ({ children }) => {
   const ProtectedContent = ({ children }) => {
     const { usersData } = useCustomContext() || {};
 
-    const tokenPayload = decodeJwt(Cookies.get('authToken'));
+    const authToken = Cookies.get('authToken');
+    const tokenPayload = authToken ? decodeJwt(authToken) : null;
     const userId = tokenPayload?.userId;
     const currentUserData = usersData?.find(user => user._id === userId);
     const organization = currentUserData?.tenantId;
@@ -73,7 +86,8 @@ const ProtectedRoute = ({ children }) => {
     const isLocalhost = currentDomain === 'localhost';
     let targetDomain;
 
-    if (tokenPayload.organization === true && organization?.subdomain) {
+    // Only apply domain redirect for normal users (with authToken and organization)
+    if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
       targetDomain = `${organization.subdomain}.app.upinterview.io`;
     } else {
       targetDomain = 'app.upinterview.io';

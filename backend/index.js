@@ -951,7 +951,7 @@ const notificationRoutes = require("./routes/notificationRoutes.js");
 app.use("/notifications", notificationRoutes);
 
 // upload route
-const uploadRoute = require("./routes/UploadRoute/uploadRoute.js");
+const uploadRoute = require("./routes/UploadRoute/uploadRoute.js"); 
 app.use("/upload", uploadRoute);
 
 // Tenant routes
