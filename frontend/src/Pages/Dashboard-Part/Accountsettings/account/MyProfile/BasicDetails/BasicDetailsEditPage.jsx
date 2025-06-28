@@ -399,50 +399,33 @@ const BasicDetailsEditPage = ({
 
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
-        // Trigger email change request
-        //       try {
-        //         const response = await axios.post(
-        //           `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
-        //           {
-        //             oldEmail: originalEmail,
-        //             newEmail: formData.email,
-        //             userId: formData.id
-        //           }
-        //         );
-
-        //         if (response.data.success) {
-        //           toast.success('Verification email sent to your new email address');
-        //           const cleanFormData = {
-        //             // email: originalEmail, // Keep original email until verified
-        //             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
-        //             newEmail: formData.email.trim(), // Store new email in newEmail field
-        //             firstName: formData.firstName.trim() || '',
-        //             lastName: formData.lastName.trim() || '',
-        //             countryCode: formData.countryCode || '',
-        //             phone: formData.phone.trim() || '',
-        //             profileId: formData.profileId.trim() || '',
-        //             dateOfBirth: formData.dateOfBirth || '',
-        //             gender: formData.gender || '',
-        //             linkedinUrl: formData.linkedinUrl.trim() || '',
-        //             portfolioUrl: formData.portfolioUrl.trim() || '',
-        //             id: formData.id
-        //           };
 
         if (res.data.success) {
-          alert("Verification email sent to your new email address");
+          toast.success("Verification email sent to your new email address");
 
           const dataWithNewEmail = {
             ...cleanFormData,
             newEmail: formData.email.trim(),
           };
 
-          await useUpdateContactDetail.mutateAsync({
+          const response =  await updateContactDetail.mutateAsync({
             resolvedId,
             data: dataWithNewEmail,
           });
 
+          // if (usersId) onSuccess();
+          // handleCloseModal();
+            if (response.status === 200) {
           if (usersId) onSuccess();
           handleCloseModal();
+        } else {
+          console.log("falied to save changes");
+          
+          setErrors((prev) => ({
+            ...prev,
+            form: "Failed to save changes",
+          }));
+        }
         } else {
           setErrors((prev) => ({
             ...prev,

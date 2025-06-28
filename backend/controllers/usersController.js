@@ -4,6 +4,7 @@ const { Contacts } = require('../models/Contacts');
 const InterviewAvailability = require('../models/InterviewAvailability');
 const mongoose = require('mongoose');
 const { format, parse, parseISO } = require('date-fns');
+const rolesPermissionObject = require('../models/rolesPermissionObject');
 
 // Controller to fetch all users with populated tenantId
 const getUsers = async (req, res) => {
@@ -285,17 +286,17 @@ const getInterviewers = async (req, res) => {
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
-    const internalRoles = await Role.find({
+    const internalRoles = await rolesPermissionObject.find({
       roleName: 'Internal_Interviewer',
-      tenantId,
-    }).select('_id').lean();
+      // tenantId,
+    }).select('_id label').lean();
 
     const internalRoleIds = internalRoles.map((role) => role._id.toString());
 
     // Fetch internal interviewers
     const internalUsers = await Users.find({
       roleId: internalRoleIds,
-    }).lean();
+    }).populate({ path: 'roleId', select: 'label' }).lean();
     // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
     // Function to process users - modified to skip availability for internal users
@@ -320,6 +321,7 @@ const getInterviewers = async (req, res) => {
               email: user.email,
               isFreelancer: 'false'
             },
+            roleLabel: user?.roleId?.label || '',
             type: 'internal',
             days: [],
             nextAvailable: null,
@@ -489,9 +491,18 @@ const getUsersByTenant = async (req, res) => {
       return res.status(400).json({ message: 'Invalid tenant ID' });
     }
 
-    const users = await Users.find({ tenantId })
-    .populate({ path: 'roleId', select: '_id label roleName status' })
-    .lean();
+    // const users = await Users.find({ tenantId })
+    // .populate({ path: 'roleId', select: '_id label roleName status' })
+    // .lean();
+
+     const users = await Users.find({ tenantId })
+      .populate({
+        path: 'roleId',
+        select: '_id label roleName status' // Only fetch needed fields
+      })
+      .lean();
+
+
     if (!users || users.length === 0) {
       return res.status(200).json([]);
     }
@@ -516,7 +527,10 @@ const getUsersByTenant = async (req, res) => {
 
     const combinedUsers = users.map(user => {
       const contact = contactMap[user._id.toString()] || {};
-      const role = user.roleId ? roleMap[user.roleId] : {};
+      // const role = user.roleId ? roleMap[user.roleId] : {};
+       const role = user.roleId || {};
+      // console.log("user",role);
+      
 
       return {
         _id: user._id,
@@ -532,9 +546,9 @@ const getUsersByTenant = async (req, res) => {
         status: user.status || '',
  expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
-        roleId: user?.roleId?.roleId || '',
-        roleName: user?.roleId?.roleName || '',
-        label: user?.roleId?.label || '',
+        roleId: role?._id || '',
+        roleName: role?.roleName || '',
+        label: role?.label || '',
         // =======
         //         roleId: users.roleId || '',
         //         roleName: users.roleName || '',
@@ -661,7 +675,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
       contactId: contact._id || '',
       firstName: contact.firstName || '',
       lastName: contact.lastName || '',
-      email: contact.email || '',
+      email: users.email || '',
+      newEmail:users.newEmail || "",
       countryCode: contact.countryCode || '',
       gender: contact.gender || '',
       phone: contact.phone || '',

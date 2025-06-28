@@ -870,15 +870,37 @@ const verifyEmailChange = async (req, res) => {
 
     const user = await Users.findById(decoded.userId);
     const contacts = await Contacts.findById(decoded.userId);
-    if (!user || user.newEmail !== decoded.newEmail) {
-      return res.status(400).json({ success: false, message: 'Email change verification failed' });
-    }
+    // if (!user || user.newEmail !== decoded.newEmail) {
+    //   return res.status(400).json({ success: false, message: 'Email change verification failed' });
+    // }
 
+    if (!user || user.newEmail !== decoded.newEmail) {
+  return res.status(400).json({ success: false, message: 'Email change verification failed' });
+}
+
+// Optional: log more context
+console.log("Decoded token:", decoded);
+console.log("User found:", user);
+console.log("Contacts found:", contacts);
+
+console.log("user user",user);
+console.log("decoded",decoded);
+
+
+    console.log("decoded.newEmail",decoded.newEmail);
+    
     // Update email
     user.email = decoded.newEmail;
-    user.newEmail = null;
-    contacts.email =  decoded.newEmail;
+    user.newEmail = '';
+
+    if (contacts) {
+  contacts.email = decoded.newEmail;
+  await contacts.save();
+}
+    // contacts.email =  decoded.newEmail;
     await user.save();
+
+    // await contacts.save();
 
     return res.json({ success: true, message: 'Email address updated successfully' });
 

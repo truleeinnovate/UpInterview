@@ -138,7 +138,56 @@ const CompanyProfile = () => {
         </div>
 
         {/* Offices */}
-        {companyProfile?.offices && companyProfile.offices.length > 0 && (
+        {/* Show office section only if offices exist and have valid fields */}
+
+<div className="bg-white p-6 rounded-lg shadow">
+      <h3 className="text-lg font-medium mb-4">Office Locations</h3>
+{Array.isArray(companyProfile?.offices) &&
+  companyProfile.offices.filter(
+    (office) =>
+      office.address?.trim() &&
+      office.city?.trim() &&
+      office.state?.trim() &&
+      office.country?.trim() &&
+      office.phone?.trim() &&
+      office.zip?.trim()
+  ).length > 0 ? (
+    
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+        {companyProfile.offices
+          .filter(
+            (office) =>
+              office.address?.trim() &&
+              office.city?.trim() &&
+              office.state?.trim() &&
+              office.country?.trim() &&
+              office.phone?.trim() &&
+              office.zip?.trim()
+          )
+          .map((office) => (
+            <div key={office._id} className="border p-4 rounded-lg">
+              <div className="flex justify-between items-start">
+                <h4 className="font-medium">{office.type}</h4>
+                <span className="text-sm text-gray-500">{office.phone}</span>
+              </div>
+              <p className="mt-2 text-gray-600">
+                {office.address}
+                <br />
+                {office.city}, {office.state} {office.zip}
+                <br />
+                {office.country}
+              </p>
+            </div>
+          ))}
+      </div>
+   
+) : 
+ <p className="text-gray-500 text-sm text-center italic">No valid office locations found.</p>
+
+}
+ </div>
+
+        {/* {companyProfile?.offices && companyProfile.offices.length > 0 && (
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-medium mb-4">Office Locations</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
@@ -161,7 +210,7 @@ const CompanyProfile = () => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* {isEditing && (
         <CompanyEditProfile 

@@ -47,6 +47,8 @@ const interviewRoundSchema = new mongoose.Schema({
     duration:  { type: String },
     instructions:  { type: String },
     dateTime:  { type: String },
+    interviewerViewType:{ type: String },
+    interviewerGroupName: { type: String },
     interviewers: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
     ],

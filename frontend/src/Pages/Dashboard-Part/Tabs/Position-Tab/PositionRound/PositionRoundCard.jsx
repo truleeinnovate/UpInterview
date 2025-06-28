@@ -72,35 +72,35 @@ const PositionRoundCard = ({
   //   fetchQuestionsForAssessment(round.assessmentId)
   // }, [round.assessmentId])
 
-    const [sectionQuestions, setSectionQuestions] = useState({});
-    const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
 
   useEffect(() => {
-      if (showQuestions && round?.assessmentId) {
-        // const data = fetchAssessmentQuestions(round.assessmentId);
-        // setSectionQuestions(data)
-        setQuestionsLoading(true)
-        fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
-          if (data) {
-            setQuestionsLoading(false)
-            setSectionQuestions(data?.sections);
-            // Only initialize toggleStates if it's empty or length doesn't match sections
-            // setToggleStates((prev) => {
-            //   if (prev.length !== data.sections.length) {
-            //     return new Array(data.sections.length).fill(false);
-            //   }
-            //   return prev; // Preserve existing toggle states
-            // });
-          } else {
-            console.error('Error fetching assessment questions:', error);
-            setQuestionsLoading(false)
-          }
-        });
-      }
-    }, [showQuestions, round?.assessmentId]);
+    if (showQuestions && round?.assessmentId) {
+      // const data = fetchAssessmentQuestions(round.assessmentId);
+      // setSectionQuestions(data)
+      setQuestionsLoading(true)
+      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        if (data) {
+          setQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+          // Only initialize toggleStates if it's empty or length doesn't match sections
+          // setToggleStates((prev) => {
+          //   if (prev.length !== data.sections.length) {
+          //     return new Array(data.sections.length).fill(false);
+          //   }
+          //   return prev; // Preserve existing toggle states
+          // });
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setQuestionsLoading(false)
+        }
+      });
+    }
+  }, [showQuestions, round?.assessmentId]);
 
 
-console.log("round",round);
+  console.log("round", round);
 
 
 
@@ -281,8 +281,11 @@ console.log("round",round);
                   : <div>
                     <div className="flex justify-between items-center ">
                       <h4 className="text-sm font-medium text-gray-700"> {showInterviewers &&
-                      <span>{round?.interviewerType || ""}</span>
-                    } Interviewers </h4>
+                        <>
+                          <span>{round?.interviewerType || ""}</span>
+                          <span>{round?.interviewerGroupName ? " Group" : ""}</span>
+                        </>
+                      } Interviewers </h4>
                       <button
                         onClick={() => {
                           setShowInterviewers(!showInterviewers)
@@ -295,19 +298,29 @@ console.log("round",round);
                       </button>
                     </div>
 
-                   
+
 
                     {showInterviewers && round?.interviewers && (
                       <div className="space-y-2">
                         {internalInterviewers.length > 0 && (
-                          <div>
-                            <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
+                          <div >
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 mt-1">
+                             <span className ='flex items-center'>
                               <User className="h-3 w-3 mr-1" />
                               <span>
+                               
                                 {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
+                                {round?.interviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
                               </span>
+                              </span>
+                                    {round?.interviewerGroupName &&
+                              <div className="flex items-center   gap-1 text-xs text-gray-500 ">
+                                <span>Group Name: </span>
+                                <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
+                              </div>
+                            }
                             </div>
+                      
                             {showInterviewers && round.interviewers && (
                               <div className="flex flex-wrap gap-2">
                                 {round?.interviewers.map((interviewer, index) => (
@@ -316,7 +329,7 @@ console.log("round",round);
                                     <span className="ml-1 text-xs text-gray-600">
                                       {interviewer?.firstName + " " + interviewer?.lastName}
                                     </span>
-                               
+
                                   </div>
                                 ))}
                               </div>
@@ -337,18 +350,18 @@ console.log("round",round);
                                   <span className="ml-1 text-xs text-gray-600">
                                     {interviewer.name}
                                   </span>
-                               
+
                                 </div>
                               ))}
                             </div>
                           </div>
 
                         )
-                      }
+                        }
 
-                      {externalInterviewers.length === 0 &&  round?.interviewerType === "External" &&
-                      <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
-                      }
+                        {externalInterviewers.length === 0 && round?.interviewerType === "External" &&
+                          <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
+                        }
                       </div>
                     )}
                   </div>
@@ -642,7 +655,7 @@ console.log("round",round);
         </div>
       )}
 
-{showDeleteConfirmModal && (
+      {showDeleteConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">

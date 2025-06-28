@@ -10,7 +10,9 @@ const getAllGroups = async (req, res) => {
         }
         const groups = await Group.find({ tenantId })
             .populate({
-                path: 'users',
+                // path: 'Contacts',
+                 path: 'users',        // This is the field in your schema
+                model: 'Contacts',    // Optional: explicitly tells Mongoose the model to use
                  select: 'firstName lastName _id'
                 // select: 'UserName _id'  // Added _id to get user IDs
             });
@@ -27,6 +29,7 @@ const getAllGroups = async (req, res) => {
             // usersNames: group.users.map(user => user.UserName), // Array of usernames
             userIds: group.users.map(user => user._id)// Add user IDs
         }));
+            console.log("formattedGroups",formattedGroups);
             
         res.status(200).json(formattedGroups);
     } catch (error) {
@@ -63,7 +66,7 @@ const createGroup = async (req, res) => {
         // Populate the users data after saving
         // const populatedGroup = await Group.findById(group._id)
         //     .populate({
-        //         path: 'users',
+        //         path: 'Contacts',
         //         select: 'firstName lastName _id' 
         //         // select: 'UserName _id'  // Added _id to get user IDs
         //     });
@@ -123,7 +126,20 @@ const updateGroup = async (req, res) => {
 const getGroupById = async (req, res) => {
     try {
         const group = await Group.findById(req.params.id)
-            .populate('users', 'name email');
+       .populate({
+                // path: 'Contacts',
+                 path: 'users',        // This is the field in your schema
+                 model: 'Contacts',    // Optional: explicitly tells Mongoose the model to use
+                 select: 'firstName lastName _id'
+                // select: 'UserName _id'  // Added _id to get user IDs
+            });
+        // .populate('users', 'name email');
+    // const groups = await Group.find({ tenantId })
+    //         .populate({
+    //             path: 'Contacts',
+    //              select: 'firstName lastName _id'
+    //             // select: 'UserName _id'  // Added _id to get user IDs
+    //         });
             
         if (!group) {
             return res.status(404).json({

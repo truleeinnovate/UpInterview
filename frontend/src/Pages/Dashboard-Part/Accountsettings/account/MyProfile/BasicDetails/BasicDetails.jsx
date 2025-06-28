@@ -81,6 +81,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       toast.error('Failed to send password reset email');
     }
   };
+console.log("contactData handleResendPasswordChange",contactData);
 
   return (
     <div>
@@ -144,7 +145,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Email</p>
-            <p className="font-medium whitespace-pre-line break-words">{contactData.email || 'Not Provided'}</p>
+            <p className="font-medium whitespace-pre-line break-words">{contactData.newEmail ? "Not Verified" :contactData.email || 'Not Provided'}</p>
           </div>
 
           <div>

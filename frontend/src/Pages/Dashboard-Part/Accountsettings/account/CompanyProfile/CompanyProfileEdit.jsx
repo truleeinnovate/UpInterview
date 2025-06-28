@@ -494,9 +494,8 @@ const CompanyEditProfile = () => {
                         autoComplete="off"
                         onClick={toggleIndustry}
                         readOnly
-                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          errors.industry ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? "border-red-500" : "border-gray-300"
+                          }`}
                       />
                       <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                         <ChevronDown
@@ -911,9 +910,25 @@ const CompanyEditProfile = () => {
                           type="tel"
                           name="headquarters.phone"
                           value={formData.headquarters.phone}
-                          onChange={handleInputChange}
+                          // onChange={handleInputChange}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                            if (value.length <= 10) {
+                              handleInputChange({
+                                target: {
+                                  name: "headquarters.phone",
+                                  value
+                                },
+                              });
+                            }
+                          }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
+                        {errors.headquarters?.phone && (
+                          <span className="text-red-500 text-xs">
+                            {errors.headquarters.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -998,9 +1013,25 @@ const CompanyEditProfile = () => {
                           type="tel"
                           name="regionalOffice.phone"
                           value={formData.regionalOffice.phone}
-                          onChange={handleInputChange}
+                          // onChange={handleInputChange}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                            if (value.length <= 10) {
+                              handleInputChange({
+                                target: {
+                                  name: "regionalOffice.phone",
+                                  value
+                                },
+                              });
+                            }
+                          }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
+                        {errors.regionalOffice?.phone && (
+                          <span className="text-red-500 text-xs">
+                            {errors.regionalOffice.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
