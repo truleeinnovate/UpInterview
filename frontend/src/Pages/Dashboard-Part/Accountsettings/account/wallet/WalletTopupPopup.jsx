@@ -197,7 +197,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
       <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
-        <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
+        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
           <h2 className="text-2xl font-semibold text-custom-blue">Wallet Top-up</h2>
           <div className="flex items-center space-x-2">
             <button
@@ -248,7 +248,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+                    className="w-full pl-8 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     placeholder="Enter amount"
                     min="1"
                     step="0.01"

@@ -178,7 +178,12 @@ const RoundCard = ({
                 <div className="flex justify-between items-center">
                   <h4 className="text-sm font-medium text-gray-700">
                     {showInterviewers &&
-                      <span>{round?.interviewerType || ""}</span>} Interviewers</h4>
+                    <>
+                      <span>{round?.interviewerType || ""}</span>
+                      <span>{round?.interviewerGroupName ? " Group" : ""}</span>
+                      </>
+                      } Interviewers</h4>
+                      
                   <button
                     onClick={() => setShowInterviewers(!showInterviewers)}
                     className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
@@ -192,12 +197,20 @@ const RoundCard = ({
                   <div className="space-y-2">
                     {internalInterviewers.length > 0 && (
                       <div>
-                        <div className="flex items-center text-xs text-gray-500 mb-2 mt-1">
+                        <div className="flex items-center text-xs gap-2 text-gray-500 mb-2 mt-1">
+                            <span className ='flex items-center'>
                           <User className="h-3 w-3 mr-1" />
                           <span>
                             {/* Internal ({round?.interviewers.length}) */}
-                            {round?.interviewers.length} interviewer {round?.interviewers.length !== 1 ? 's' : ''}
+                            {round?.interviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
                           </span>
+                          </span>
+                           {round?.interviewerGroupName &&
+                              <div className="flex items-center   gap-1 text-xs text-gray-500 ">
+                                <span>Group Name: </span>
+                                <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
+                              </div>
+                            }
                         </div>
                         {showInterviewers && round.interviewers && (
                           <div className="flex flex-wrap gap-2">
@@ -205,7 +218,8 @@ const RoundCard = ({
                               <div key={index} className="flex items-center">
                                 <InterviewerAvatar interviewer={interviewer} size="sm" />
                                 <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer.name}
+                                  {/* {interviewer.name} */}
+                                      {interviewer?.firstName + " " + interviewer?.lastName}
                                 </span>
 
                               </div>

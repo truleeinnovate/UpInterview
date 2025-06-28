@@ -3,16 +3,17 @@ import { Search, X, ChevronDown, ChevronUp, Minimize, Expand } from 'lucide-reac
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 
-const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, selectedInterviewers: selectedInterviewersProp = [], }) => {
+const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, selectedInterviewers: selectedInterviewersProp = [], defaultViewType = 'individuals',selectedGroupName = '' }) => {
   const { interviewers, groups } = useCustomContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalRef = useRef(null);
-  const [viewType, setViewType] = useState('individuals');
+  // const [viewType, setViewType] = useState(defaultViewType);
+  const [viewType, setViewType] = useState(defaultViewType);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-  const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
+  // const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
   const [selectedRole, setSelectedRole] = useState('all');
   const roles = [
     { value: 'all', label: 'All' },
@@ -22,25 +23,27 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
     { value: 'Recruiter', label: 'Recruiter' },
     { value: 'Internal_Interviewer', label: 'Internal Interviewer' },
   ];
+
+    const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
+    // If we're editing a group, find the matching group in the groups list
+    if (defaultViewType === 'groups' && selectedGroupName) {
+      const matchingGroup = groups?.find(group => group.name === selectedGroupName);
+      return matchingGroup ? [matchingGroup] : [];
+    }
+    return selectedInterviewersProp;
+  });
+
+
+
+//   useEffect(() => {
+//   setSelectedInterviewers([]);
+// }, [viewType]);
+
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   // const [isLoading, setIsLoading] = useState(false);
   const roleDropdownRef = useRef(null);
 
-  // // Fetch all interviewers on component mount
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       await fetchInterviewers(); // Fetch all interviewers without role filter
-  //     } catch (error) {
-  //       console.error('Error fetching interviewers:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-    
-  //   fetchData();
-  // }, [fetchInterviewers]);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,7 +73,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
           if (selectedRole !== 'all' && interviewer.roleName !== selectedRole) {
             return false;
           }
-          
+
           // Filter by search query
           const contact = interviewer.contact || {};
           const matchesSearch = [contact.firstName, contact.lastName, contact.email, contact.phone].some(
@@ -89,16 +92,35 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         }));
     } else {
       // Groups filtering remains the same
-      return Array.isArray(groups)
-        ? groups.filter((group) =>
-            [group.name, group.description].some(
-              (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-          )
-        : [];
+      
+       return Array.isArray(groups)
+      ? groups.filter((group) => {
+          // Filter by search query
+          const matchesSearch = [group.name, group.description].some(
+            (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          
+          // For editing - check if this group matches the selected group name
+        
+           const isSelectedGroup = selectedGroupName 
+              ? group.name === selectedGroupName
+              : selectedInterviewersProp.some(selected => selected._id === group._id);
+            
+          
+          return matchesSearch || isSelectedGroup;
+        })
+      : [];
+      
+      // return Array.isArray(groups)
+      //   ? groups.filter((group) =>
+      //     [group.name, group.description,].some(
+      //       (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+      //     )
+      //   )
+      //   : [];
     }
-  }, [interviewers, groups, searchQuery, viewType, selectedRole]); // Added selectedRole to dependencies
-  
+  }, [interviewers, groups, searchQuery, viewType, selectedRole,selectedGroupName]); // Added selectedRole to dependencies
+
 
   useEffect(() => {
     setFilteredData(FilteredData);
@@ -109,22 +131,55 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
   };
 
   const handleSelectClick = (item) => {
-    setSelectedInterviewers((prev) => {
-      const isAlreadySelected = prev.some(interviewer => interviewer._id === item._id);
-      if (isAlreadySelected) {
-        return prev.filter(interviewer => interviewer._id !== item._id);
-      } else {
-        return [...prev, item];
-      }
-    });
+    if (viewType === 'groups') {
+      // const isAlreadySelected = selectedInterviewers.some(group => group._id === item._id);
+      // if (isAlreadySelected) {
+      //   setSelectedInterviewers([]);
+      // } else {
+      //  const groupName = selectedInterviewers[0]?.name || '';
+      setSelectedInterviewers([item]);
+      //  onSelectCandidates([item], viewType, item.name);
+      // setSelectedInterviewers([...item]);
+      // }
+    } else {
+      setSelectedInterviewers((prev) => {
+
+        const isAlreadySelected = prev.some(interviewer => interviewer._id === item._id);
+        if (isAlreadySelected) {
+          return prev.filter(interviewer => interviewer._id !== item._id);
+        } else {
+          return [...prev, item];
+        }
+      });
+    }
   };
 
+  // const handleScheduleClick = () => {
+  //   const groupName = selectedInterviewers[0]?.name || '';
+  //   onSelectCandidates(selectedInterviewers,viewType,groupName);
+  //   onClose();
+  // };
+
   const handleScheduleClick = () => {
-    onSelectCandidates(selectedInterviewers);
+    if (viewType === 'groups' && selectedInterviewers.length > 0) {
+      // For groups, pass the group name along with the selected group
+      const groupName = selectedInterviewers[0]?.name || '';
+      onSelectCandidates(selectedInterviewers, viewType, groupName);
+    } else {
+      // For individuals, just pass the selected interviewers and view type
+      onSelectCandidates(selectedInterviewers, viewType);
+    }
     onClose();
   };
 
-  const isInterviewerSelected = (item) => selectedInterviewers?.some(interviewer => interviewer._id === item._id);
+  // const isInterviewerSelected = (item) => selectedInterviewers?.some(interviewer => interviewer._id === item._id);
+
+  const isInterviewerSelected = (item) => {
+  if (viewType === 'groups') {
+    return selectedInterviewers.some(interviewer => interviewer.name === item.name);
+  }
+  return selectedInterviewers.some(interviewer => interviewer._id === item._id);
+};
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
@@ -145,7 +200,11 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
     setViewType(type);
     setSelectedInterviewers([]);
     setShowDropdown(false);
+    onSelectCandidates([], type, '');
   };
+
+  console.log("filteredData", filteredData);
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
@@ -157,10 +216,10 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200 bg-white z-10">
           <div>
             <h2 className="text-2xl font-semibold text-custom-blue">
-              Select Internal {viewType === 'individuals' ? 'Interviewers' : 'Groups'}
+              Select Internal {viewType === 'individuals' ? 'Individuals' : 'Groups'}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              {selectedInterviewers.length} {viewType === 'individuals' ? 'interviewer' : 'group'}
+              {selectedInterviewers.length} {viewType === 'individuals' ? 'Individual' : 'group'}
               {selectedInterviewers.length !== 1 ? 's' : ''} selected
             </p>
           </div>
@@ -186,7 +245,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         <div className="px-6 bg-white border-b border-gray-200 z-10">
           <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5">
             {/* View Type Dropdown */}
-            <div className="w-[25%]" ref={dropdownRef}>
+            <div className="w-[25%] relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
                 className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -199,7 +258,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
                 )}
               </button>
               {showDropdown && (
-                <div className="absolute z-20 mt-1 w-[20%] bg-white shadow-lg rounded-md py-1 border border-gray-200">
+                <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
                   <button
                     onClick={() => selectViewType('individuals')}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -217,7 +276,7 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
             </div>
 
             {/* Role Filter Dropdown */}
-            <div className="w-[25%] relative" ref={roleDropdownRef}>
+            <div className={`w-[25%] relative ${viewType === 'groups' && 'hidden'}`}  ref={roleDropdownRef}>
               <button
                 onClick={toggleRoleDropdown}
                 className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -315,7 +374,14 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
                       </div>
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-900">{item.name || 'no name available'}</p>
-                        <p className="text-xs text-gray-500">{item.description || 'No description available'}</p>
+                        <p className="text-xs text-gray-500">
+                          {Array.isArray(item.usersNames) && item.usersNames.length > 0
+                            ? item.usersNames.join(', ')
+                            : 'No users available'}
+                        </p>
+                        {/* <span>{item?.usersNames?.firstName || item?.contact?.lastName ?`
+                              ${item?.contact?.firstName + " " + item?.contact?.lastName}` : "Not Provided"}</span> */}
+                        {/* <p className="text-xs text-gray-500">{item.description || 'No description available'}</p> */}
                       </div>
                     </>
                   )}

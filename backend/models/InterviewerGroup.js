@@ -38,7 +38,7 @@ const groupSchema = new mongoose.Schema({
     },
     users: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users'
+        ref: 'Contacts'
     }],
     description:{type:String},
     status: {type: String},

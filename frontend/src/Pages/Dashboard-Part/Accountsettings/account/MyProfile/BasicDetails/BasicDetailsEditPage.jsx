@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
-  Maximize,
+  Expand,
   Minimize,
   X,
   ChevronDown,
@@ -400,51 +400,34 @@ const BasicDetailsEditPage = ({
 
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
-        // Trigger email change request
-        //       try {
-        //         const response = await axios.post(
-        //           `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
-        //           {
-        //             oldEmail: originalEmail,
-        //             newEmail: formData.email,
-        //             userId: formData.id
-        //           }
-        //         );
-
-        //         if (response.data.success) {
-        //           toast.success('Verification email sent to your new email address');
-        //           const cleanFormData = {
-        //             // email: originalEmail, // Keep original email until verified
-        //             // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
-        //             newEmail: formData.email.trim(), // Store new email in newEmail field
-        //             firstName: formData.firstName.trim() || '',
-        //             lastName: formData.lastName.trim() || '',
-        //             countryCode: formData.countryCode || '',
-        //             phone: formData.phone.trim() || '',
-        //             profileId: formData.profileId.trim() || '',
-        //             dateOfBirth: formData.dateOfBirth || '',
-        //             gender: formData.gender || '',
-        //             linkedinUrl: formData.linkedinUrl.trim() || '',
-        //             portfolioUrl: formData.portfolioUrl.trim() || '',
-        //             id: formData.id
-        //           };
 
         if (res.data.success) {
-          alert("Verification email sent to your new email address");
+          toast.success("Verification email sent to your new email address");
 
           const dataWithNewEmail = {
             ...cleanFormData,
             newEmail: formData.email.trim(),
           };
 
-          await useUpdateContactDetail.mutateAsync({
+          const response =  await updateContactDetail.mutateAsync({
             resolvedId,
             data: dataWithNewEmail,
           });
 
+          // if (usersId) onSuccess();
+          // handleCloseModal();
+            if (response.status === 200) {
           if (usersId) onSuccess();
           setLoading(false);
           handleCloseModal();
+        } else {
+          console.log("falied to save changes");
+          
+          setErrors((prev) => ({
+            ...prev,
+            form: "Failed to save changes",
+          }));
+        }
         } else {
           setErrors((prev) => ({
             ...prev,
@@ -638,7 +621,7 @@ const BasicDetailsEditPage = ({
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
@@ -724,6 +707,7 @@ const BasicDetailsEditPage = ({
                   <input
                     type="email"
                     name="email"
+                    placeholder="Email"
                     value={formData.email || ""}
                     onChange={handleInputChange}
                     onBlur={() =>
@@ -753,6 +737,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="firstName"
+                  placeholder="First Name"
                   value={formData.firstName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -773,6 +758,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="lastName"
+                  placeholder="Last Name"
                   value={formData.lastName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -792,6 +778,7 @@ const BasicDetailsEditPage = ({
                   selected={startDate}
                   onChange={handleDateChange}
                   dateFormat="dd-MM-yyyy"
+                  placeholderText="Select Date of Birth"
                   maxDate={new Date()}
                   showYearDropdown
                   showMonthDropdown
@@ -809,6 +796,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="profileId"
+                  placeholder="Profile ID"
                   // disabled={from === 'users'}
                   value={formData.profileId || ""}
                   onChange={handleInputChange}
@@ -851,6 +839,7 @@ const BasicDetailsEditPage = ({
                 <div className="flex gap-2">
                   <select
                     name="countryCode"
+                    placeholder="Country Code"
                     value={formData.countryCode || "+91"}
                     onChange={handleInputChange}
                     className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
@@ -865,6 +854,7 @@ const BasicDetailsEditPage = ({
                   <input
                     type="text"
                     name="phone"
+                    placeholder="Phone"
                     value={formData.phone || ""}
                     onChange={handleInputChange}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -884,6 +874,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="linkedinUrl"
+                  placeholder="LinkedIn URL"
                   value={formData.linkedinUrl || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -957,6 +948,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="portfolioUrl"
+                  placeholder="Portfolio URL"
                   value={formData.portfolioUrl || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"

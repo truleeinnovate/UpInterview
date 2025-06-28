@@ -256,7 +256,7 @@ const UsersAccountTab = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleView(row),
     },
     // {
@@ -439,7 +439,7 @@ const UsersAccountTab = () => {
 
               <div className="mt-6 space-y-4 text-sm text-gray-700">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 h-5 w-5 text-blue-500 mt-0.5">
+                  <div className="flex-shrink-0 h-5 w-5 text-custom-blue mt-0.5">
                     <Info size={20} />
                   </div>
                   <p className="ml-3">
@@ -449,23 +449,23 @@ const UsersAccountTab = () => {
 
                 <ul className="space-y-3 pl-8">
                   <li className="flex items-start">
-                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
                       Create and manage interviewer accounts
                     </span>
                   </li>
                   <li className="flex items-start">
-                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">Set user roles and permissions</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
                       Configure interview availability and expertise
                     </span>
                   </li>
                   <li className="flex items-start">
-                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-blue-500 rounded-full"></span>
+                    <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
                       Track interviewer performance and ratings
                     </span>
@@ -476,7 +476,7 @@ const UsersAccountTab = () => {
               <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
                 <button
                   onClick={() => setShowUserManagementPopup(false)}
-                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   Got it
                 </button>

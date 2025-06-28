@@ -136,7 +136,7 @@ const NotificationsSection = () => {
                         {notification.priority?.charAt(0).toUpperCase() + notification.priority?.slice(1) || 'Normal'} Priority
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{notification.message}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2" dangerouslySetInnerHTML={{__html: notification.message}}></p>
                     
                     {/* Attachments Preview */}
                     {notification.attachments && notification.attachments.length > 0 && (

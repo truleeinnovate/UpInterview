@@ -1,11 +1,10 @@
 const cloudinary = require("../../utils/cloudinary");
-const streamifier = require("streamifier");
-const path = require("path");
 const { Candidate } = require("../../models/candidate");
 const { Contacts } = require("../../models/Contacts");
 const Tenant = require("../../models/Tenant");
 const SupportUser = require("../../models/SupportUser");
 const { MockInterview } = require("../../models/mockinterview");
+const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
 const entityModels = {
   candidate: Candidate,
@@ -34,31 +33,6 @@ const fieldMap = {
   mockInterview: {
     resume: { field: "resume", resourceType: "raw" },
   },
-};
-
-// Upload to Cloudinary with stream
-const uploadToCloudinary = (buffer, originalname, folder) => {
-  const ext = path.extname(originalname).toLowerCase();
-  const resource_type = [".pdf", ".doc", ".docx"].includes(ext)
-    ? "raw"
-    : "image";
-
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type,
-        public_id: path.basename(originalname, ext),
-        overwrite: true,
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
 };
 
 // Delete file from Cloudinary

@@ -1,23 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-
-import { Maximize, Minimize, Search, X, ChevronDown } from "lucide-react";
+import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
 import classNames from "classnames";
 import Modal from "react-modal";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
-import axios from "axios";
+// import { useCustomContext } from "../../../../../../Context/Contextfetch";
+// import axios from "axios";
 import {
   isEmptyObject,
   validateAdvancedForm,
 } from "../../../../../../utils/MyProfileValidations";
 import { useNavigate, useParams } from "react-router-dom";
-import { config } from "../../../../../../config";
+// import { config } from "../../../../../../config";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 import {
-  useRequestEmailChange,
+  // useRequestEmailChange,
   useUpdateContactDetail,
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  // useQuery,
+  //  useMutation,
+  useQueryClient
+} from "@tanstack/react-query";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
 
@@ -37,7 +40,11 @@ const EditAdvacedDetails = ({
   //   usersRes
   // } = useCustomContext();
 
-  const { skills, locations, industries, currentRoles } = useMasterData();
+  const {
+    // skills, 
+    locations,
+    industries,
+    currentRoles } = useMasterData();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -46,7 +53,12 @@ const EditAdvacedDetails = ({
 
   const resolvedId = usersId || id;
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
+  const {
+    userProfile,
+     isLoading, 
+    //  isError, 
+    //  error 
+  } = useUserProfile(resolvedId);
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -183,7 +195,6 @@ const EditAdvacedDetails = ({
   // API call to save all changes
   const handleSave = async (e) => {
     e.preventDefault(); // Added to prevent form submission issues
-    setLoading(true); // loading
 
     const validationErrors = validateAdvancedForm(formData); // Validate form
     setErrors(validationErrors);
@@ -269,21 +280,21 @@ const EditAdvacedDetails = ({
     }));
     setShowDropdownIndustry(false);
     setSearchTermIndustry("");
-    // setErrors((prev) => ({ ...prev, industry: '' }));
+    setErrors((prev) => ({ ...prev, industry: '' }));
   };
 
   const handleLocationSelect = (location) => {
     setFormData((prev) => ({ ...prev, location: location.LocationName || "" }));
     setShowDropdownLocation(false);
     setSearchTermLocation("");
-    // setErrors((prev) => ({ ...prev, location: '' }));
+    setErrors((prev) => ({ ...prev, location: '' }));
   };
 
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, currentRole: role.RoleName || "" }));
     setShowDropdownCurrentRole(false);
     setSearchTermCurrentRole("");
-    // setErrors((prev) => ({ ...prev, currentRole: '' }));
+    setErrors((prev) => ({ ...prev, currentRole: '' }));
   };
 
   const toggleCurrentRole = () =>
@@ -291,25 +302,25 @@ const EditAdvacedDetails = ({
   // Filter dropdown options
   const filteredIndustries = Array.isArray(industries)
     ? industries.filter((industry) =>
-        industry?.IndustryName?.toLowerCase()?.includes(
-          searchTermIndustry.toLowerCase() || ""
-        )
+      industry?.IndustryName?.toLowerCase()?.includes(
+        searchTermIndustry.toLowerCase() || ""
       )
+    )
     : [];
   const filteredLocations = Array.isArray(locations)
     ? locations.filter((location) =>
-        location?.LocationName?.toLowerCase()?.includes(
-          searchTermLocation.toLowerCase() || ""
-        )
+      location?.LocationName?.toLowerCase()?.includes(
+        searchTermLocation.toLowerCase() || ""
       )
+    )
     : [];
 
   const filteredCurrentRoles = Array.isArray(currentRoles)
     ? currentRoles.filter((role) =>
-        role?.RoleName?.toLowerCase()?.includes(
-          searchTermCurrentRole.toLowerCase() || ""
-        )
+      role?.RoleName?.toLowerCase()?.includes(
+        searchTermCurrentRole.toLowerCase() || ""
       )
+    )
     : [];
 
   // Handle input changes for text fields
@@ -332,7 +343,7 @@ const EditAdvacedDetails = ({
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
-        {isLoading && (
+        {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
           </div>
@@ -350,7 +361,7 @@ const EditAdvacedDetails = ({
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
@@ -441,6 +452,7 @@ const EditAdvacedDetails = ({
                     autoComplete="off"
                     onClick={() =>
                       setShowDropdownIndustry(!showDropdownIndustry)
+                      
                     }
                     className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
                     readOnly
@@ -499,6 +511,7 @@ const EditAdvacedDetails = ({
                 <input
                   type="text"
                   name="experience"
+                  placeholder="Years of Experience"
                   value={formData.experience}
                   onChange={handleInputChange}
                   className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
@@ -597,7 +610,7 @@ const EditAdvacedDetails = ({
                     />
                     <button
                       type="button"
-                      className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                      className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
                       onClick={() => resumeInputRef.current.click()}
                     >
                       {resumeName ? "Uploaded" : "Upload Resume"}
@@ -645,7 +658,7 @@ const EditAdvacedDetails = ({
                     />
                     <button
                       type="button"
-                      className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                      className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
                       onClick={() => coverLetterInputRef.current.click()}
                     >
                       {coverLetterName ? "Uploaded" : "Upload Cover Letter"}
@@ -682,6 +695,7 @@ const EditAdvacedDetails = ({
               <textarea
                 name="coverLetterdescription"
                 value={formData.coverLetterdescription}
+                placeholder="Please provide a brief description of your cover letter, including any relevant job titles, companies, or accomplishments."
                 onChange={handleInputChange}
                 autoComplete="off"
                 rows={5}

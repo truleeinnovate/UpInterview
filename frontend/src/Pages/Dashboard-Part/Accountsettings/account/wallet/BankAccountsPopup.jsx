@@ -63,8 +63,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.accountName}
+            placeholder="Account Holder Name"
             onChange={(e) => setNewAccount({ ...newAccount, accountName: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
           <p className="mt-1 text-sm text-gray-500">Enter the name exactly as it appears on your bank account</p>
@@ -81,8 +82,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.bankName}
+            placeholder="Bank Name"
             onChange={(e) => setNewAccount({ ...newAccount, bankName: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -94,7 +96,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <select
             value={newAccount.accountType}
             onChange={(e) => setNewAccount({ ...newAccount, accountType: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
           >
             <option value="checking">Checking</option>
             <option value="savings">Savings</option>
@@ -108,8 +110,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.accountNumber}
+            placeholder="Account Number"
             onChange={(e) => setNewAccount({ ...newAccount, accountNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -121,8 +124,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.confirmAccountNumber}
+            placeholder="Confirm Account Number"
             onChange={(e) => setNewAccount({ ...newAccount, confirmAccountNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -134,8 +138,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.routingNumber}
+            placeholder="Routing Number"
             onChange={(e) => setNewAccount({ ...newAccount, routingNumber: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
             required
           />
         </div>
@@ -147,8 +152,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <input
             type="text"
             value={newAccount.swiftCode}
+            placeholder="SWIFT/BIC Code"
             onChange={(e) => setNewAccount({ ...newAccount, swiftCode: e.target.value })}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
           />
           <p className="mt-1 text-sm text-gray-500">Required for international transfers</p>
         </div>
@@ -249,8 +255,8 @@ export function BankAccountsPopup({ onClose, onSave }) {
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}> 
-        <div className="p-4 sm:p-6 flex justify-between items-center mb-6 bg-white z-50 pb-4">
+      <div className={classNames('h-full overflow-y-auto', { 'w-full px-32': isFullScreen })}> 
+        <div className="sticky top-0 px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
           <h2 className="text-2xl font-semibold text-custom-blue">Bank Accounts</h2>
           <div className="flex items-center space-x-2">
             <button
@@ -271,8 +277,8 @@ export function BankAccountsPopup({ onClose, onSave }) {
             </button>
           </div>
         </div>
-        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
-          <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-6">
+          
             <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
               <p className="text-sm text-custom-blue">
                 Add your bank account details to receive payments for completed interviews. Payments are processed within 2-3 business days.
@@ -280,7 +286,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
             </div>
 
             {isAddingAccount ? renderAccountForm() : renderAccountsList()}
-          </div>
+         
         </div>
       </div>
     </Modal>

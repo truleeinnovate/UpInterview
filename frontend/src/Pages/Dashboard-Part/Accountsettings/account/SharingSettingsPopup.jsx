@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Minimize, Expand } from 'lucide-react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline';
 
 export function SharingSettingsPopup({ settings, onSave, onClose }) {
   const [formData, setFormData] = useState({
@@ -50,9 +51,9 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
                     >
                       {isFullScreen ? (
-                        <Minimize className="w-5 h-5 text-gray-500" />
+                        <ArrowsPointingInIcon className="w-5 h-5 text-gray-500" />
                       ) : (
-                        <Expand className="w-5 h-5 text-gray-500" />
+                        <ArrowsPointingOutIcon className="w-5 h-5 text-gray-500" />
                       )}
                     </button>
                     <button
@@ -144,7 +145,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         allowedDomains: e.target.value.split('\n').filter(Boolean)
                       }
                     }))}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+                    className="w-full px-2 py-2 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
                     placeholder="Enter domains (one per line)"
                   />
@@ -162,7 +163,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                         blockList: e.target.value.split('\n').filter(Boolean)
                       }
                     }))}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+                    className="w-full px-2 py-2 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
                     placeholder="Enter domains (one per line)"
                   />
@@ -175,7 +176,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:text-gray-900"
             >
               Cancel
             </button>
