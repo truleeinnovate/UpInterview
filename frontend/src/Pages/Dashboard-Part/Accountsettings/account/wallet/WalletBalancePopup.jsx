@@ -1,4 +1,4 @@
-import { Maximize, Minimize, X } from 'lucide-react';
+import { Expand, Minimize, X } from 'lucide-react';
 import classNames from 'classnames';
 import { useState } from 'react';
 import Modal from 'react-modal';
@@ -81,7 +81,7 @@ const WalletBalancePopup = ({ walletBalance }) => {
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button

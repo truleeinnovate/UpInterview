@@ -506,7 +506,7 @@ const Subscription = () => {
       {showCancelModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Cancel Subscription</h2>
+            <h2 className="text-xl font-semibold mb-4 text-custom-blue">Cancel Subscription</h2>
             <p className="mb-4 text-sm sm:text-base text-gray-600">
               Are you sure you want to cancel your <span className="font-medium">{subscriptionData?.planName || 'current'} with {subscriptionData?.membershipType || 'monthly'} </span> subscription?
             </p>

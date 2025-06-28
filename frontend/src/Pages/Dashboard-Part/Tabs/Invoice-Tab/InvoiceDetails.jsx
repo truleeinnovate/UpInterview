@@ -59,98 +59,74 @@ const UserInvoiceDetails = () => {
 
     return (
         <Modal
-            isOpen={true}
-            onRequestClose={() => navigate('/account-settings/billing-details')}
-            className={modalClass}
-            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-        // className={modalClass}
-
-        >
-            <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
-                <div>
-
-                    <div className="p-6  ">
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center space-x-4">
-                                {/* <button className="text-white hover:bg-white hover:text-custom-blue rounded-full p-2" onClick={() => navigate(-1)}>
-              <ArrowLeft className="text-2xl" />
-            </button> */}
-                                <h2 className="text-2xl font-bold text-custom-blue">Invoice Details</h2>
-                            </div>
-                            <div className="flex items-center space-x-2">
-
-                                {!isFullScreen && (
-                                    <button
-                                        onClick={() => navigate(-1)}
-                                        className="text-gray-500  hover:text-custom-blue rounded-full p-2"
-                                    >
-                                        <X className="text-2xl" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* {content} */}
-
-                        <div >
-
-
-                            <div className="text-center mb-4">
-                                <h3 className="text-2xl font-bold text-gray-900">{invoiceData.lastName || ''} </h3>
-                            </div>
-
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 space-y-6">
-                                {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> Information</h4> */}
-                                <div className="grid sm:grid-cols-1 grid-cols-2 ">
-                                    <div className="flex flex-col items-center ">
-
-                                        <span className="text-gray-700"> Payment Id</span>
-                                        <p className='text-black font-medium'>{invoiceData?.paymentId || ''}</p>
-
-                                    </div>
-                                    <div className="flex flex-col items-center ">
-                                        <span className="text-gray-700">Invoice Id</span>
-                                        <p className='text-black font-medium'>{invoiceData?.invoiceNumber || ""}</p>
-                                    </div>
-                                </div>
-
-
-                                <div className="grid sm:grid-cols-1 grid-cols-2 ">
-                                    <div className="flex flex-col items-center ">
-                                        <span className="text-gray-700">Payment Service</span>
-                                        <p className='text-black font-medium'>{invoiceData?.type || ""}</p>
-                                    </div>
-                                    <div className="flex flex-col items-center ">
-                                        <span className="text-gray-700">Plan Name</span>
-                                        <p className='text-black font-medium'>{invoiceData?.plan || ""}</p>
-                                    </div>
-                                </div>
-
-                                      <div className="grid sm:grid-cols-1 grid-cols-2 ">
-                                    <div className="flex flex-col items-center ">
-                                        <span className="text-gray-700">Status</span>
-                                        <p className='text-black font-medium'>{invoiceData?.status || ""}</p>
-                                    </div>
-                                    <div className="flex flex-col items-center ">
-                                        <span className="text-gray-700">Total Amount</span>
-                                        <p className='text-black font-medium'>$ {invoiceData?.amount?.paid || 0}</p>
-                                    </div>
-                                </div>
-
-
-
-
-                            </div>
-
-
-
-
-                        </div>
-                    </div>
+        isOpen={true}
+        onRequestClose={() => navigate('/account-settings/billing-details')}
+        className={modalClass}
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+      >
+        <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+          <div>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-4">
+                  <h2 className="text-2xl font-bold text-custom-blue">Invoice Details</h2>
                 </div>
+                <div className="flex items-center space-x-2">
+                  {!isFullScreen && (
+                    <button
+                      onClick={() => navigate(-1)}
+                      className="text-gray-500 hover:text-custom-blue rounded-full p-2"
+                    >
+                      <X className="text-2xl" />
+                    </button>
+                  )}
+                </div>
+              </div>
+      
+              <div className="text-left">  {/* Added text-left here */}
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900">{invoiceData.lastName || ''}</h3>
+                </div>
+      
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 space-y-6">
+                  <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">  {/* Added gap-4 */}
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Payment Id</span>
+                      <p className='text-black font-medium'>{invoiceData?.paymentId || ''}</p>
+                    </div>
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Invoice Id</span>
+                      <p className='text-black font-medium'>{invoiceData?.invoiceNumber || ""}</p>
+                    </div>
+                  </div>
+      
+                  <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">  {/* Added gap-4 */}
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Payment Service</span>
+                      <p className='text-black font-medium'>{invoiceData?.type || ""}</p>
+                    </div>
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Plan Name</span>
+                      <p className='text-black font-medium'>{invoiceData?.plan || ""}</p>
+                    </div>
+                  </div>
+      
+                  <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">  {/* Added gap-4 */}
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Status</span>
+                      <p className='text-black font-medium'>{invoiceData?.status || ""}</p>
+                    </div>
+                    <div className="flex flex-col items-start">  {/* Changed from items-center to items-start */}
+                      <span className="text-gray-700">Total Amount</span>
+                      <p className='text-black font-medium'>$ {invoiceData?.amount?.paid || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-
-        </Modal>
+          </div>
+        </div>
+      </Modal>
     );
 };
 

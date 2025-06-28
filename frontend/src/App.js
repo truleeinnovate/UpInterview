@@ -164,6 +164,7 @@ const App = () => {
   //   '/account-settings/webhooks',
   //   '/account-settings/hrms-ats',
   // ], []);
+  
 
   const showLogo = showLogoPaths.includes(location.pathname);
 

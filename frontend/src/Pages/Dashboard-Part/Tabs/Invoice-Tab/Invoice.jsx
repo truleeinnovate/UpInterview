@@ -237,7 +237,7 @@ const InvoiceTab = () => {
         {
             key: 'view',
             label: 'View Details',
-            icon: <FileText className="w-4 h-4 text-blue-600" />,
+            icon: <FileText className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => navigate(`details/${row.id}`, { state: { invoiceData: row } }),
         },
     ];
@@ -334,7 +334,7 @@ const InvoiceTab = () => {
                             isFilterPopupOpen={isFilterPopupOpen}
                             isFilterActive={isFilterActive}
                             dataLength={billingData.length}
-                            searchPlaceholder="Search by Status, InvoiceId..."
+                            searchPlaceholder="Search by Status, Inv..."
                             filterIconRef={filterIconRef}
                         />
                     </div>

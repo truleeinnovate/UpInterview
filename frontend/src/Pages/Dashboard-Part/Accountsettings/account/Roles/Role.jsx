@@ -12,13 +12,13 @@ const Role = () => {
   // const [editingRole, setEditingRole] = useState(null)
   // const [isCreating, setIsCreating] = useState(false)
   const [roles, setRoles] = useState([])
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
   const tenantId = tokenPayload.tenantId;
   console.log("tokenPayload in role", tokenPayload);
-console.log("tenantId in role", tenantId);
+  console.log("tenantId in role", tenantId);
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -70,16 +70,14 @@ console.log("tenantId in role", tenantId);
               <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
+              <span className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
                 {role.canAssign?.length || 0} Assignable Roles
               </span>
-              <EditButton 
-               onClick={() =>{
-                navigate(`/account-settings/roles/role-edit/${role._id}`)}
-          
-   }
-              // onClick={() => setEditingRole(role)} 
-              
+              <EditButton
+                onClick={() => {
+                  navigate(`/account-settings/roles/role-edit/${role._id}`)
+                }}
+              // onClick={() => setEditingRole(role)}
               />
             </div>
           </div>
@@ -111,7 +109,7 @@ console.log("tenantId in role", tenantId);
                   // Handle both ID strings and object references
                   const inheritedRoleId = typeof inheritedRole === 'string' ? inheritedRole : inheritedRole._id;
                   let label;
-                  
+
                   if (typeof inheritedRole === 'object' && inheritedRole.label) {
                     // If it's an object with label, use that directly
                     label = inheritedRole.label;
@@ -120,7 +118,7 @@ console.log("tenantId in role", tenantId);
                     const foundRole = roles.find(r => r._id === inheritedRoleId);
                     label = foundRole ? foundRole.label : inheritedRoleId;
                   }
-                  
+
                   return (
                     <span key={inheritedRoleId} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
                       {label}
@@ -139,7 +137,7 @@ console.log("tenantId in role", tenantId);
                   // Handle both ID strings and object references
                   const assignableRoleId = typeof assignableRole === 'string' ? assignableRole : assignableRole._id;
                   let label;
-                  
+
                   if (typeof assignableRole === 'object' && assignableRole.label) {
                     // If it's an object with label, use that directly
                     label = assignableRole.label;
@@ -148,7 +146,7 @@ console.log("tenantId in role", tenantId);
                     const foundRole = roles.find(r => r._id === assignableRoleId);
                     label = foundRole ? foundRole.label : assignableRoleId;
                   }
-                  
+
                   return (
                     <span key={assignableRoleId} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
                       {label}
@@ -172,29 +170,29 @@ console.log("tenantId in role", tenantId);
 
   return (
     <>
-    <div className="space-y-6 mb-4">
-      <div className="flex justify-between items-center mt-3 px-3">
-        <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
-        {/* <button 
+      <div className="space-y-6 mb-4">
+        <div className="flex justify-between items-center mt-3 px-3">
+          <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
+          {/* <button 
           onClick={() => setIsCreating(true)}
           className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
         >
           Create New Role
         </button> */}
-      </div>
+        </div>
 
-      {/* Role Hierarchy */}
-      <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
-        <h3 className="text-lg font-medium mb-4">Role Hierarchy</h3>
-        <div className="space-y-2">
-          {roles
-            .sort((a, b) => a.level - b.level)
-            .map(role => renderRoleCard(role))}
+        {/* Role Hierarchy */}
+        <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
+          <h3 className="text-lg font-medium mb-4">Role Hierarchy</h3>
+          <div className="space-y-2">
+            {roles
+              .sort((a, b) => a.level - b.level)
+              .map(role => renderRoleCard(role))}
+          </div>
         </div>
       </div>
-    </div>
-     {/* Role Form Popup */}
-     {/* {(editingRole || isCreating) && (
+      {/* Role Form Popup */}
+      {/* {(editingRole || isCreating) && (
         <RoleFormPopup
           role={editingRole}
           onSave={editingRole ? handleEditRole : handleCreateRole}
@@ -205,7 +203,7 @@ console.log("tenantId in role", tenantId);
         />
       )} */}
 
-<Outlet />
+      <Outlet />
     </>
   )
 }

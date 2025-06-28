@@ -1,23 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-
-import { Maximize, Minimize, Search, X, ChevronDown } from "lucide-react";
+import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
 import classNames from "classnames";
 import Modal from "react-modal";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
-import axios from "axios";
+// import { useCustomContext } from "../../../../../../Context/Contextfetch";
+// import axios from "axios";
 import {
   isEmptyObject,
   validateAdvancedForm,
 } from "../../../../../../utils/MyProfileValidations";
 import { useNavigate, useParams } from "react-router-dom";
-import { config } from "../../../../../../config";
+// import { config } from "../../../../../../config";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 import {
-  useRequestEmailChange,
+  // useRequestEmailChange,
   useUpdateContactDetail,
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  // useQuery,
+  //  useMutation,
+  useQueryClient
+} from "@tanstack/react-query";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
 
@@ -37,7 +40,11 @@ const EditAdvacedDetails = ({
   //   usersRes
   // } = useCustomContext();
 
-  const { skills, locations, industries, currentRoles } = useMasterData();
+  const {
+    // skills, 
+    locations,
+    industries,
+    currentRoles } = useMasterData();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -46,7 +53,12 @@ const EditAdvacedDetails = ({
 
   const resolvedId = usersId || id;
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
+  const {
+    userProfile,
+    //  isLoading, 
+    //  isError, 
+    //  error 
+  } = useUserProfile(resolvedId);
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -291,25 +303,25 @@ const EditAdvacedDetails = ({
   // Filter dropdown options
   const filteredIndustries = Array.isArray(industries)
     ? industries.filter((industry) =>
-        industry?.IndustryName?.toLowerCase()?.includes(
-          searchTermIndustry.toLowerCase() || ""
-        )
+      industry?.IndustryName?.toLowerCase()?.includes(
+        searchTermIndustry.toLowerCase() || ""
       )
+    )
     : [];
   const filteredLocations = Array.isArray(locations)
     ? locations.filter((location) =>
-        location?.LocationName?.toLowerCase()?.includes(
-          searchTermLocation.toLowerCase() || ""
-        )
+      location?.LocationName?.toLowerCase()?.includes(
+        searchTermLocation.toLowerCase() || ""
       )
+    )
     : [];
 
   const filteredCurrentRoles = Array.isArray(currentRoles)
     ? currentRoles.filter((role) =>
-        role?.RoleName?.toLowerCase()?.includes(
-          searchTermCurrentRole.toLowerCase() || ""
-        )
+      role?.RoleName?.toLowerCase()?.includes(
+        searchTermCurrentRole.toLowerCase() || ""
       )
+    )
     : [];
 
   // Handle input changes for text fields
@@ -350,7 +362,7 @@ const EditAdvacedDetails = ({
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
@@ -597,7 +609,7 @@ const EditAdvacedDetails = ({
                     />
                     <button
                       type="button"
-                      className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                      className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
                       onClick={() => resumeInputRef.current.click()}
                     >
                       {resumeName ? "Uploaded" : "Upload Resume"}
@@ -645,7 +657,7 @@ const EditAdvacedDetails = ({
                     />
                     <button
                       type="button"
-                      className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                      className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
                       onClick={() => coverLetterInputRef.current.click()}
                     >
                       {coverLetterName ? "Uploaded" : "Upload Cover Letter"}
