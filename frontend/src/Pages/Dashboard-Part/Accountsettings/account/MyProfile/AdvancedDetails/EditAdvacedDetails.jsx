@@ -78,6 +78,7 @@ const EditAdvacedDetails = ({
 
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // console.log("userId AdvacedDetails", from);
 
@@ -109,18 +110,6 @@ const EditAdvacedDetails = ({
     const file = e.target.files[0];
 
     if (file) {
-      // // Only allow PDF files
-      // if (file.type !== 'application/pdf') {
-      //   alert('Please upload a PDF file.');
-      //   return;
-      // }
-
-      // // Limit file size to 4MB
-      // if (file.size > 4 * 1024 * 1024) {
-      //   alert('File size should be less than 4MB.');
-      //   return;
-      // }
-
       // Set the file name based on the type (Resume or CoverLetter)
       if (type === "resume") {
         const error = await validateFile(file, "resume");
@@ -194,6 +183,7 @@ const EditAdvacedDetails = ({
   // API call to save all changes
   const handleSave = async (e) => {
     e.preventDefault(); // Added to prevent form submission issues
+    setLoading(true); // loading
 
     const validationErrors = validateAdvancedForm(formData); // Validate form
     setErrors(validationErrors);
@@ -249,12 +239,15 @@ const EditAdvacedDetails = ({
         // setIsBasicModalOpen(false);
         handleCloseModal();
         //  onSuccess()
+        setLoading(false);
         if (usersId) onSuccess();
       } else {
         console.error("Failed to update advanced details:", response.status);
       }
     } catch (error) {
       console.error("Error updating advanced details:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -339,10 +332,15 @@ const EditAdvacedDetails = ({
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
+        {isLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+          </div>
+        )}
         <div className="p-6  ">
           <div className="flex justify-between items-center mb-6 ">
             <h2 className="text-2xl font-bold text-custom-blue">
-              Edit Advaced Details
+              Edit Advanced Details
             </h2>
             <div className="flex items-center gap-2">
               <button

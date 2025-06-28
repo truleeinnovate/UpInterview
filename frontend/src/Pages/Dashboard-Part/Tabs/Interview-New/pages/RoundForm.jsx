@@ -430,6 +430,7 @@ const RoundFormInterviews = () => {
         setAssessmentTemplate(newAssessmentTemplate);
       }
 
+
       // Update other states only if different
       if (roundTitle !== roundEditData.roundTitle) setRoundTitle(roundEditData.roundTitle);
       if (interviewType !== roundEditData.interviewType) setInterviewType(roundEditData.interviewType);
@@ -457,6 +458,13 @@ const RoundFormInterviews = () => {
           lastName: interviewer.lastName,
           email: interviewer.email,
         }));
+// =======
+//   const [showDropdown, setShowDropdown] = useState(false);
+//   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+//   const [internalInterviewers, setInternalInterviewers] = useState([]);
+//   // console.log("internalInterviewers selected", internalInterviewers);
+//   const [externalInterviewers, setExternalInterviewers] = useState([]);
+// >>>>>>> main
 
         if (roundEditData.interviewerType === "Internal") {
           if (JSON.stringify(internalInterviewers) !== JSON.stringify(normalizedInterviewers)) {
@@ -610,6 +618,7 @@ const RoundFormInterviews = () => {
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
 
+
   // const selectedInterviewersData = selectedInterviewers.map((interviewer) => {
   //   // if (isInternalSelected) {
   //   //   // For internal interviewers, access `contactId._id`
@@ -621,6 +630,7 @@ const RoundFormInterviews = () => {
   //   console.log("interviewer 3", interviewer);
   //   return interviewer; // Fallback for unexpected cases
   // }).filter(Boolean);
+
   // console.log("selectedInterviewersData", selectedInterviewersData);
 
 

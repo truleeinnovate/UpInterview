@@ -119,8 +119,8 @@ function AvailabilityCalendar({ availabilities }) {
                                     <div
                                         key={`${hour}-${dateIndex}`}
                                         className={`h-12 border border-gray-100 rounded-md ${isAvailable(date, hour)
-                                                ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
-                                                : 'bg-gray-50'
+                                            ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
+                                            : 'bg-gray-50'
                                             }`}
                                     >
                                         {isAvailable(date, hour) && (
@@ -154,9 +154,9 @@ function TabButton({ isActive, onClick, children }) {
     return (
         <button
             onClick={onClick}
-            className={`relative px-4 py-4 text-sm font-medium transition-colors focus:outline-none ${isActive
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-gray-300'
+            className={`relative px-4 py-3 text-sm font-medium transition-colors focus:outline-none ${isActive
+                ? 'text-custom-blue border-b-2 border-custom-blue'
+                : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-gray-300'
                 }`}
         >
             {children}
@@ -165,6 +165,7 @@ function TabButton({ isActive, onClick, children }) {
 }
 
 function InterviewerDetailsModal({ interviewer, onClose }) {
+    console.log("interviewer details modal", interviewer.contact);
     const [activeTab, setActiveTab] = useState('about');
 
     if (!interviewer) return null;
@@ -172,7 +173,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
     // Process availability data from the interviewer object
     const processAvailability = () => {
         const availabilityMap = {};
-        interviewer.availability?.forEach(availability => {
+        interviewer.contact.availability?.forEach(availability => {
             availability.days?.forEach(day => {
                 const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
                     .indexOf(day.day);
@@ -192,47 +193,47 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
         switch (activeTab) {
             case 'about':
                 return (
-                    <div key="about" className="space-y-6">
+                    <div key="about" className="space-y-3">
                         <div>
                             <h3 className="text-lg font-medium text-gray-900">About</h3>
-                            <p className="mt-2 text-gray-600">{interviewer.introduction || 'No introduction available.'}</p>
+                            <p className="text-gray-600 text-sm">{interviewer.contact.introduction || 'No introduction available.'}</p>
                         </div>
 
                         {/* Interview Experience & Rates */}
-                        <div className="bg-blue-50 rounded-lg p-4">
-                            <h3 className="text-lg font-medium text-blue-900 mb-3">Professional Details</h3>
+                        <div className="bg-custom-blue/5 rounded-lg p-4">
+                            <h3 className="text-lg font-medium text-custom-blue mb-3">Professional Details</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h4 className="text-sm font-medium text-blue-800 mb-2">Experience & Rates</h4>
+                                    <h4 className="text-sm font-medium text-custom-blue/80 mb-2">Experience & Rates</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-blue-700">Years of Experience</span>
-                                            <span className="text-sm font-medium text-blue-900">
-                                                {interviewer.minexperience || '0'} - {interviewer.maxexperience || '0'} years
+                                            <span className="text-sm text-custom-blue/70">Years of Experience</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.yearsOfExperience} years
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-blue-700">Interview Rate</span>
-                                            <span className="text-sm font-medium text-blue-900">
-                                                ${interviewer.hourlyRate || '00'}/hour
+                                            <span className="text-sm text-custom-blue/70">Interview Rate</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                ${interviewer.contact.hourlyRate || '00'}/hour
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-sm font-medium text-blue-800 mb-2">Company & Location</h4>
+                                    <h4 className="text-sm font-medium text-custom-blue/80 mb-2">Company & Location</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-blue-700">Current Company</span>
-                                            <span className="text-sm font-medium text-blue-900">
-                                                {interviewer.CompanyName || 'Not specified'}
+                                            <span className="text-sm text-custom-blue/70">Current Company</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.companyName || 'Not specified'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-blue-700">Location</span>
-                                            <span className="text-sm font-medium text-blue-900">
-                                                {interviewer.location || 'Remote'}
+                                            <span className="text-sm text-custom-blue/70">Location</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.location || 'Remote'}
                                             </span>
                                         </div>
                                     </div>
@@ -248,7 +249,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                                     <div className="ml-3">
                                         <p className="text-sm font-medium text-gray-500">Email</p>
                                         <p className="text-sm text-gray-900 break-all">
-                                            {interviewer.email || 'Not available'}
+                                            {interviewer.contact.email || 'Not available'}
                                         </p>
                                     </div>
                                 </div>
@@ -257,7 +258,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                                     <div className="ml-3">
                                         <p className="text-sm font-medium text-gray-500">Phone</p>
                                         <p className="text-sm text-gray-900">
-                                            {interviewer.phone ? `${interviewer.CountryCode} ${interviewer.phone}` : 'Not available'}
+                                            {interviewer.contact.phone ? `${interviewer.contact.countryCode} ${interviewer.contact.phone}` : 'Not available'}
                                         </p>
                                     </div>
                                 </div>
@@ -268,19 +269,21 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
 
             case 'expertise':
                 return (
-                    <div key="expertise" className="space-y-6">
+                    <div key="expertise" className="space-y-3">
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">Technical Expertise</h3>
+                            <h3 className="text-lg font-medium text-gray-900">Technical Expertise</h3>
                             <div className="flex flex-wrap gap-2">
-                                {interviewer.skills?.map((skill, index) => (
+                                {console.log(interviewer.contact.skills)}
+                                {interviewer.contact.skills?.map((skill, index) => (
                                     <span
                                         key={index}
-                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-custom-blue/10 text-custom-blue"
                                     >
-                                        {skill.skill}
+                                        {typeof skill === 'string' ? skill : skill.skill}
                                     </span>
                                 ))}
-                                {interviewer.technology?.map((tech, index) => (
+                                {console.log(interviewer.contact.technologies)}
+                                {interviewer.contact.technologies?.map((tech, index) => (
                                     <span
                                         key={`tech-${index}`}
                                         className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
@@ -292,7 +295,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                         </div>
 
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">Interview Focus Areas</h3>
+                            <h3 className="text-lg font-medium text-gray-900">Interview Focus Areas</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Technical Evaluation</h4>
@@ -322,15 +325,15 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900">Availability Schedule</h3>
                                 <p className="text-sm text-gray-500">
-                                    Timezone: {interviewer.timeZone || 'Not specified'}
+                                    Timezone: {interviewer.contact.timeZone || 'Not specified'}
                                 </p>
                             </div>
                         </div>
                         <AvailabilityCalendar availabilities={processAvailability()} />
-                        <div className="mt-6 bg-blue-50 p-4 rounded-lg">
-                            <h4 className="text-sm font-medium text-blue-900 mb-2">Scheduling Notes</h4>
-                            <div className="space-y-2 text-sm text-blue-800">
-                                <p>• Preferred interview duration: {interviewer.preferredDuration || 60} minutes</p>
+                        <div className="mt-6 bg-custom-blue/5 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-custom-blue mb-2">Scheduling Notes</h4>
+                            <div className="space-y-2 text-sm text-custom-blue/80">
+                                <p>• Preferred interview duration: {interviewer.contact.preferredDuration || 60} minutes</p>
                                 <p>• Typically responds within 2-4 business hours</p>
                             </div>
                         </div>
@@ -343,38 +346,38 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[50]">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-                <div className="flex justify-between items-start p-6 border-b border-gray-200">
-                    <div className="flex items-center">
-                        <InterviewerAvatar interviewer={interviewer} size="lg" />
-                        <div className="ml-4">
-                            <h2 className="text-xl font-semibold text-gray-900">{interviewer.name}</h2>
-                            <p className="text-sm text-gray-500">{interviewer.currentRole}</p>
-                            <div className="mt-1 flex items-center">
-                                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                                <span className="ml-1 text-sm font-medium text-gray-700">
-                                    {interviewer.rating || 'N/A'} Rating
+                <div className=" border-b border-gray-200 px-4 py-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <InterviewerAvatar interviewer={interviewer} size="lg" />
+                            <h2 className="text-xl font-semibold text-gray-900 mx-2">{interviewer.contact.firstName + ' ' + interviewer.contact.lastName}</h2>
+                            <p className="text-sm text-gray-500">{interviewer.professionalTitle}</p>
+                            <Star className="h-4 w-4 text-custom-blue fill-custom-blue/20" />
+                            {interviewer.contact.rating ? (
+                                <span className="mx-1 text-sm font-medium text-custom-blue">
+                                    {interviewer.contact.rating} Rating
                                 </span>
-                                <span className="mx-2">•</span>
-                                <span className="text-sm font-medium text-gray-700">
-                                    {interviewer.interviewerType} Interviewer
-                                </span>
-                            </div>
+                            ) : (
+                                <span className="mx-1 text-sm font-medium text-custom-blue">Not Rated</span>
+                            )}
+                            <span className="mx-2">•</span>
+                            <span className="text-sm font-medium text-gray-700">
+                                {interviewer.interviewerType} Interviewer
+                            </span>
+                        </div>
+                        <div className="flex items-center">
+                            <button onClick={onClose}>
+                                <X className="text-gray-500 hover:text-red-500" />
+                            </button>
                         </div>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
                 </div>
 
 
                 <div className="border-b border-gray-200">
-                    <nav className="flex space-x-8 px-6" role="tablist">
+                    <nav className="flex space-x-8 px-4" role="tablist">
                         <TabButton
                             isActive={activeTab === 'about'}
                             onClick={() => setActiveTab('about')}
@@ -382,8 +385,8 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             aria-selected={activeTab === 'about'}
                         >
                             <div className="flex items-center">
-                                <User className="h-4 w-4 mr-2" />
-                                About
+                                <User className="h-4 w-4 mr-2 text-custom-blue" />
+                                <span className={activeTab === 'about' ? 'text-custom-blue' : ''}>About</span>
                             </div>
                         </TabButton>
                         <TabButton
@@ -393,8 +396,8 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             aria-selected={activeTab === 'expertise'}
                         >
                             <div className="flex items-center">
-                                <FileText className="h-4 w-4 mr-2" />
-                                Expertise
+                                <FileText className="h-4 w-4 mr-2 text-custom-blue" />
+                                <span className={activeTab === 'expertise' ? 'text-custom-blue' : ''}>Expertise</span>
                             </div>
                         </TabButton>
                         <TabButton
@@ -404,26 +407,29 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             aria-selected={activeTab === 'availability'}
                         >
                             <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Availability
+                                <Calendar className="h-4 w-4 mr-2 text-custom-blue" />
+                                <span className={activeTab === 'availability' ? 'text-custom-blue' : ''}>Availability</span>
                             </div>
                         </TabButton>
                     </nav>
                 </div>
 
-                <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+                <div className="px-4 py-2 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
                     {renderTabContent()}
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <div className="flex justify-end">
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                        >
-                            Close
-                        </Button>
-                    </div>
+                <div className="flex justify-end space-x-3 px-4 py-2 border-t border-gray-200">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-1 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Close
+                    </button>
+                    <button
+                        className="bg-custom-blue hover:bg-custom-blue/90 text-white px-4 py-1 border border-transparent rounded-md"
+                    >
+                        Schedule Interview
+                    </button>
                 </div>
             </div>
         </div>

@@ -8,7 +8,7 @@ function InterviewerAvatar({ interviewer, size = 'md', className = '' }) {
       case 'sm':
         return 'h-6 w-6 text-xs';
       case 'lg':
-        return 'h-12 w-12 text-base';
+        return 'h-9 w-9 text-base';
       case 'md':
       default:
         return 'h-8 w-8 text-sm';
@@ -26,7 +26,7 @@ function InterviewerAvatar({ interviewer, size = 'md', className = '' }) {
   if (!interviewer) {
     return (
       <div className={`${sizeClasses} rounded-full bg-gray-200 flex items-center justify-center ${className}`}>
-        <User className={`${size === 'sm' ? 'h-3 w-3' : size === 'lg' ? 'h-6 w-6' : 'h-4 w-4'} text-gray-500`} />
+        <User className={`${size === 'sm' ? 'h-2 w-2' : size === 'lg' ? 'h-4 w-4' : 'h-2 w-2'} text-gray-500`} />
       </div>
     );
   }
@@ -36,13 +36,13 @@ function InterviewerAvatar({ interviewer, size = 'md', className = '' }) {
     return (
       <div
         className={`${sizeClasses} rounded-full ${
-          isExternal ? 'bg-orange-100 border-orange-300' : 'bg-blue-100 border-blue-300'
+          isExternal ? 'bg-orange-100 border-orange-300' : 'bg-blue-100 border-custom-blue/10'
         } flex items-center justify-center border ${className}`}
         title={`${name}${isExternal ? ' (Outsourced)' : ''}`}
       >
         <User
-          className={`${size === 'sm' ? 'h-3 w-3' : size === 'lg' ? 'h-6 w-6' : 'h-4 w-4'} ${
-            isExternal ? 'text-orange-500' : 'text-blue-500'
+          className={`${size === 'sm' ? 'h-2 w-2' : size === 'lg' ? 'h-4 w-4' : 'h-2 w-2'} ${
+            isExternal ? 'text-orange-500' : 'text-custom-blue'
           }`}
         />
       </div>
@@ -53,7 +53,7 @@ function InterviewerAvatar({ interviewer, size = 'md', className = '' }) {
   return (
     <div
       className={`${sizeClasses} rounded-full overflow-hidden border ${
-        isExternal ? 'border-orange-300' : 'border-blue-300'
+        isExternal ? 'border-orange-300' : 'border-custom-blue/10'
       } ${className}`}
       title={`${name}${isExternal ? ' (Outsourced)' : ''}`}
     >

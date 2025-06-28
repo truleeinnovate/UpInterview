@@ -92,11 +92,26 @@ exports.sendSignUpEmail = async (req, res) => {
     const emailResponse = await sendEmail(email, emailSubject, emailBody);
 
     // Save notification
+    // req.notificationData = [{
+    //   toAddress: email,
+    //   fromAddress: process.env.EMAIL_FROM,
+    //   title: "Welcome Email Sent",
+    //   body: `Welcome ${firstName} ${lastName}`,
+    //   notificationType: "email",
+    //   object: { objectName: "login", objectId: ownerId },
+    //   status: emailResponse.success ? "Success" : "Failed",
+    //   tenantId,
+    //   ownerId,
+    //   recipientId: ownerId,
+    //   createdBy: ownerId,
+    //   updatedBy: ownerId,
+    // }];
+
     req.notificationData = [{
       toAddress: email,
       fromAddress: process.env.EMAIL_FROM,
-      title: "Welcome Email Sent",
-      body: `Welcome ${firstName} ${lastName}`,
+      title: emailSubject,
+      body: emailBody,
       notificationType: "email",
       object: { objectName: "login", objectId: ownerId },
       status: emailResponse.success ? "Success" : "Failed",

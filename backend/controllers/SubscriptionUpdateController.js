@@ -136,7 +136,7 @@ const updateSubscriptionPlan = async (req, res) => {
       // Prepare parameters for the update call
       const updateParams = {
         plan_id: planIdToUse,
-        schedule_change_at: 'now'
+        schedule_change_at: 'cycle_end'
       };
       
       // If changing between different periods, add the remaining_count parameter
@@ -145,15 +145,15 @@ const updateSubscriptionPlan = async (req, res) => {
         // Set remaining_count based on the target membership type
         if (membershipType === 'annual') {
           updateParams.remaining_count = 12; // 12 months for annual plan
-          console.log('Setting remaining_count to 12 for annual plan');
+          console.log('Setting remaining_count to 1 for annual plan');
         } else {
-          updateParams.remaining_count = 1; // 1 month for monthly plan
+          updateParams.remaining_count = 12; // 1 month for monthly plan
           console.log('Setting remaining_count to 1 for monthly plan');
         }
       }
       
       console.log('Update parameters:', updateParams);
-      
+
       // Make the API call with the appropriate parameters
       const razorpayResponse = await razorpay.subscriptions.update(
         razorpaySubscriptionId,
@@ -223,10 +223,17 @@ const updateSubscriptionPlan = async (req, res) => {
         console.log('Updated subscription with invoice ID');
         
         
+        // Update the tenant record
+        const subscriptionPlan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId);
+        
+        const features = subscriptionPlan.features;
+
         if (res.status === 200 || res.status === 201){
-          const tenant = await Tenant.findOne({ ownerId: ownerId });
+          const tenant = await Tenant.findById(customerSubscription.tenantId);
           if(tenant){
             tenant.status = 'active';
+            tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
+            tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
             await tenant.save();
         }
       }

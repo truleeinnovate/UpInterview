@@ -58,7 +58,12 @@ const mockInterviewSchema = new mongoose.Schema(
         dateTime: String,
       },
     ],
-    resume: String, //in future we have to work on resume saving functionality
+    resume: { // Added by Ashok
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+    }, //in future we have to work on resume saving functionality
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: String,

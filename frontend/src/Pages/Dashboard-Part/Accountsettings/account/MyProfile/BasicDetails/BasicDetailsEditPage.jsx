@@ -80,6 +80,7 @@ const BasicDetailsEditPage = ({
   const fileInputRef = useRef(null);
   const [fileError, setFileError] = useState("");
   const [isProfileRemoved, setIsProfileRemoved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // useEffect(() => {
   //   const fetchRoles = async () => {
@@ -319,7 +320,7 @@ const BasicDetailsEditPage = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
     //  console.log("profileIdError",profileIdError);
@@ -417,6 +418,7 @@ const BasicDetailsEditPage = ({
           // handleCloseModal();
             if (response.status === 200) {
           if (usersId) onSuccess();
+          setLoading(false);
           handleCloseModal();
         } else {
           console.log("falied to save changes");
@@ -466,6 +468,8 @@ const BasicDetailsEditPage = ({
         ...prev,
         form: "Error saving changes",
       }));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -599,6 +603,11 @@ const BasicDetailsEditPage = ({
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
+        {loading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+          </div>
+        )}
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-custom-blue">

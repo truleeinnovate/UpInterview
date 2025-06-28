@@ -1,18 +1,31 @@
-
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
-import { useNavigate, useParams } from 'react-router-dom';
-import { validatemockForm, getErrorMessage, validatePage1 } from '../../../../utils/mockinterviewValidation.js';
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  validatemockForm,
+  getErrorMessage,
+  validatePage1,
+} from "../../../../utils/mockinterviewValidation.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import { X, Users, User, Trash2, Clock, Calendar, Search, ChevronDown } from 'lucide-react';
+import {
+  X,
+  Users,
+  User,
+  Trash2,
+  Clock,
+  Calendar,
+  Search,
+  ChevronDown,
+} from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
+import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
-import LoadingButton from '../../../../Components/LoadingButton';
+import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
+import { validateFile } from "../../../../utils/FileValidation/FileValidation.js";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -29,7 +42,7 @@ const CustomDropdown = ({
   hideLabel = false,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
   const toggleDropdown = () => {
@@ -40,12 +53,15 @@ const CustomDropdown = ({
     const selectedValue = optionValue ? option[optionValue] : option;
     onChange({ target: { name, value: selectedValue } });
     setShowDropdown(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
-  const filteredOptions = options?.filter(option => {
+  const filteredOptions = options?.filter((option) => {
     const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    return displayValue
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
   });
 
   useEffect(() => {
@@ -55,16 +71,19 @@ const CustomDropdown = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
     <div ref={dropdownRef}>
       {!hideLabel && (
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           {label} <span className="text-red-500">*</span>
         </label>
       )}
@@ -77,7 +96,9 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'}`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            error ? "border-red-500" : "border-gray-300"
+          }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -145,8 +166,10 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const { singlecontact } = useCustomContext();
-  const { qualifications, technologies, skills, currentRoles, contacts } = useMasterData();
-  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
+  const { qualifications, technologies, skills, currentRoles, contacts } =
+    useMasterData();
+  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
+    useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -157,7 +180,7 @@ const MockSchedulelater = () => {
     currentExperience: "",
     technology: "",
     jobDescription: "",
-    Role: '',
+    Role: "",
     rounds: {
       roundTitle: "",
       interviewMode: "",
@@ -209,7 +232,7 @@ const MockSchedulelater = () => {
     setShowDropdownRole(false);
   };
 
-  const filteredSkills = skills.filter(skill =>
+  const filteredSkills = skills.filter((skill) =>
     skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -219,7 +242,9 @@ const MockSchedulelater = () => {
       const contact = singlecontact[0];
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
+        candidateName: `${contact.firstName || ""} ${
+          contact.lastName || ""
+        }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.Experience || "",
         technology: contact.technologies?.[0] || "",
@@ -232,21 +257,34 @@ const MockSchedulelater = () => {
   // Populate formData for edit mode
   useEffect(() => {
     if (id && mockinterviewData.length > 0) {
-      const MockEditData = mockinterviewData.find(moc => moc._id === id);
+      const MockEditData = mockinterviewData.find((moc) => moc._id === id);
       if (MockEditData) {
         setMockEdit(true);
         // Map interviewers to externalInterviewers format
-        const formattedInterviewers = MockEditData.rounds?.[0]?.interviewers?.map(interviewer => ({
-          _id: interviewer._id,
-          name: interviewer.contact?.Name || `${interviewer.contact?.firstName || ''} ${interviewer.contact?.lastName || ''}`.trim()
-        })) || [];
+        const formattedInterviewers =
+          MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
+            _id: interviewer._id,
+            name:
+              interviewer.contact?.Name ||
+              `${interviewer.contact?.firstName || ""} ${
+                interviewer.contact?.lastName || ""
+              }`.trim(),
+          })) || [];
 
         setExternalInterviewers(formattedInterviewers);
-        setSelectedInterviewType(formattedInterviewers.length > 0 ? 'external' : 'scheduled');
+        setSelectedInterviewType(
+          formattedInterviewers.length > 0 ? "external" : "scheduled"
+        );
 
-        console.log('Edit Mode - MockEditData:', MockEditData);
-        console.log('Edit Mode - Formatted Interviewers:', formattedInterviewers);
-        console.log('Edit Mode - Selected Interview Type:', formattedInterviewers.length > 0 ? 'external' : 'scheduled');
+        console.log("Edit Mode - MockEditData:", MockEditData);
+        console.log(
+          "Edit Mode - Formatted Interviewers:",
+          formattedInterviewers
+        );
+        console.log(
+          "Edit Mode - Selected Interview Type:",
+          formattedInterviewers.length > 0 ? "external" : "scheduled"
+        );
 
         setFormData({
           skills: MockEditData.skills || [],
@@ -261,35 +299,45 @@ const MockSchedulelater = () => {
             interviewMode: MockEditData.rounds?.[0]?.interviewMode || "",
             duration: MockEditData.rounds?.[0]?.duration || "30",
             instructions: MockEditData.rounds?.[0]?.instructions || "",
-            interviewType: MockEditData.rounds?.[0]?.interviewType || "scheduled",
-            interviewers: MockEditData.rounds?.[0]?.interviewers?.map(i => i._id) || [],
+            interviewType:
+              MockEditData.rounds?.[0]?.interviewType || "scheduled",
+            interviewers:
+              MockEditData.rounds?.[0]?.interviewers?.map((i) => i._id) || [],
             status: MockEditData.rounds?.[0]?.status || "Pending",
             dateTime: MockEditData.rounds?.[0]?.dateTime || "",
           },
         });
+        setFileName(MockEditData?.resume?.filename);
 
-        setInterviewType(MockEditData.rounds?.[0]?.interviewType || "scheduled");
+        setInterviewType(
+          MockEditData.rounds?.[0]?.interviewType || "scheduled"
+        );
         if (MockEditData.rounds?.[0]?.dateTime) {
-          const [startStr, endStr] = MockEditData.rounds[0].dateTime.split(" - ");
+          const [startStr, endStr] =
+            MockEditData.rounds[0].dateTime.split(" - ");
           const startDate = parseCustomDateTime(startStr);
           if (startDate && !isNaN(startDate.getTime())) {
             setScheduledDate(startDate.toISOString().slice(0, 16));
             setStartTime(startDate.toISOString());
-            const endDate = endStr ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`) : null;
-            setEndTime(endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : "");
+            const endDate = endStr
+              ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`)
+              : null;
+            setEndTime(
+              endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : ""
+            );
             setCombinedDateTime(MockEditData.rounds[0].dateTime);
           }
         }
 
         // Populate skills entries
         if (MockEditData.skills?.length > 0) {
-          const skillEntries = MockEditData.skills.map(skill => ({
-            skill: skill.skill || '',
-            experience: skill.experience || '',
-            expertise: skill.expertise || ''
+          const skillEntries = MockEditData.skills.map((skill) => ({
+            skill: skill.skill || "",
+            experience: skill.experience || "",
+            expertise: skill.expertise || "",
           }));
           setEntries(skillEntries);
-          setAllSelectedSkills(skillEntries.map(entry => entry.skill));
+          setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
         }
       }
     } else {
@@ -302,10 +350,10 @@ const MockSchedulelater = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let errorMessage = getErrorMessage(name, value);
-    if (name === 'currentExperience') {
+    if (name === "currentExperience") {
       const numValue = parseInt(value, 10);
       if (isNaN(numValue) || numValue < 1 || numValue > 15) {
-        errorMessage = 'Experience must be between 1 and 15';
+        errorMessage = "Experience must be between 1 and 15";
       }
     } else {
       errorMessage = getErrorMessage(name, value);
@@ -324,15 +372,20 @@ const MockSchedulelater = () => {
   };
 
   const handleExperienceKeyDown = (e) => {
-    if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
-        (e.keyCode === 65 && e.ctrlKey === true) ||
-        (e.keyCode === 67 && e.ctrlKey === true) ||
-        (e.keyCode === 86 && e.ctrlKey === true) ||
-        (e.keyCode === 88 && e.ctrlKey === true) ||
-        (e.keyCode >= 35 && e.keyCode <= 39)) {
+    if (
+      [46, 8, 9, 27, 13].includes(e.keyCode) ||
+      (e.keyCode === 65 && e.ctrlKey === true) ||
+      (e.keyCode === 67 && e.ctrlKey === true) ||
+      (e.keyCode === 86 && e.ctrlKey === true) ||
+      (e.keyCode === 88 && e.ctrlKey === true) ||
+      (e.keyCode >= 35 && e.keyCode <= 39)
+    ) {
       return;
     }
-    if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+    if (
+      (e.keyCode < 48 || e.keyCode > 57) &&
+      (e.keyCode < 96 || e.keyCode > 105)
+    ) {
       e.preventDefault();
     }
   };
@@ -346,7 +399,11 @@ const MockSchedulelater = () => {
     console.log("External Interviewers:", externalInterviewers);
     console.log("Selected Interview Type:", selectedInterviewType);
 
-    const { formIsValid, newErrors } = validatemockForm(formData, entries, errors);
+    const { formIsValid, newErrors } = validatemockForm(
+      formData,
+      entries,
+      errors
+    );
     setErrors(newErrors);
 
     if (!formIsValid) {
@@ -356,11 +413,11 @@ const MockSchedulelater = () => {
     }
 
     const interviewerIds = externalInterviewers
-      .filter(interviewer => interviewer && interviewer._id)
-      .map(interviewer => interviewer._id);
+      .filter((interviewer) => interviewer && interviewer._id)
+      .map((interviewer) => interviewer._id);
 
     if (selectedInterviewType === "external" && interviewerIds.length === 0) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         interviewers: "At least one interviewer must be selected",
       }));
@@ -374,8 +431,9 @@ const MockSchedulelater = () => {
       rounds: {
         ...formData.rounds,
         interviewers: interviewerIds,
-        interviewType: selectedInterviewType === "external" ? "external" : interviewType,
-        dateTime: combinedDateTime
+        interviewType:
+          selectedInterviewType === "external" ? "external" : interviewType,
+        dateTime: combinedDateTime,
       },
       entries,
       combinedDateTime,
@@ -383,47 +441,52 @@ const MockSchedulelater = () => {
 
     console.log("Updated form data with interviewers:", updatedFormData);
 
-    await addOrUpdateMockInterview({
-      formData: updatedFormData,
-      id: mockEdit ? id : undefined,
-      isEdit: mockEdit,
-      userId,
-      organizationId
-    }, {
-      onSuccess: () => {
-        navigate('/mockinterview');
-        setFormData({
-          skills: [],
-          candidateName: "",
-          higherQualification: "",
-          currentExperience: "",
-          technology: "",
-          jobDescription: "",
-          Role: "",
-          rounds: {
-            roundTitle: "",
-            interviewMode: "",
-            duration: "30",
-            instructions: "",
-            interviewType: "scheduled",
-            interviewers: [],
-            status: "Pending",
-            dateTime: "",
-          },
-        });
-        setExternalInterviewers([]);
-        setSelectedInterviewType(null);
-        console.groupEnd();
+    await addOrUpdateMockInterview(
+      {
+        formData: updatedFormData,
+        id: mockEdit ? id : undefined,
+        isEdit: mockEdit,
+        userId,
+        organizationId,
+        resume,
+        isResumeRemoved,
       },
-      onError: (error) => {
-        console.error("Error saving mock interview:", error);
-        setErrors(prev => ({
-          ...prev,
-          submit: "Failed to save interview. Please try again.",
-        }));
-        console.groupEnd();
+      {
+        onSuccess: () => {
+          navigate("/mockinterview");
+          setFormData({
+            skills: [],
+            candidateName: "",
+            higherQualification: "",
+            currentExperience: "",
+            technology: "",
+            jobDescription: "",
+            Role: "",
+            rounds: {
+              roundTitle: "",
+              interviewMode: "",
+              duration: "30",
+              instructions: "",
+              interviewType: "scheduled",
+              interviewers: [],
+              status: "Pending",
+              dateTime: "",
+            },
+          });
+          setExternalInterviewers([]);
+          setSelectedInterviewType(null);
+          console.groupEnd();
+        },
+        onError: (error) => {
+          console.error("Error saving mock interview:", error);
+          setErrors((prev) => ({
+            ...prev,
+            submit: "Failed to save interview. Please try again.",
+          }));
+          console.groupEnd();
+        },
       }
-    });
+    );
   };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -450,23 +513,41 @@ const MockSchedulelater = () => {
     };
   }, [sidebarOpen, handleOutsideClick]);
 
-  const [showDropdownQualification, setShowDropdownQualification] = useState(false);
+  const [showDropdownQualification, setShowDropdownQualification] =
+    useState(false);
 
   const toggleDropdownQualification = () => {
     setShowDropdownQualification(!showDropdownQualification);
   };
 
   const [fileName, setFileName] = useState("");
+  const inputRef = useRef();
+  const [resume, setResume] = useState(null);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [resumeError, setResumeError] = useState("");
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = await validateFile(file, "resume");
+      if (error) {
+        setResumeError(error);
+        return;
+      }
+      setResumeError("");
+      setResume(file);
       setFileName(file.name);
     }
   };
 
   const handleRemoveFile = () => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    setResume(null);
     setFileName("");
+    setIsResumeRemoved(true);
+    setResumeError("");
   };
 
   const experienceOptions = [
@@ -490,16 +571,16 @@ const MockSchedulelater = () => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
-      setAllSelectedSkills(prev => {
-        const newSkills = prev.filter(skill => skill !== oldSkill);
+      setAllSelectedSkills((prev) => {
+        const newSkills = prev.filter((skill) => skill !== oldSkill);
         newSkills.push(selectedSkill);
         return newSkills;
       });
@@ -585,7 +666,9 @@ const MockSchedulelater = () => {
     if (endHour >= 24) endHour %= 24;
     const formattedEndHour = endHour % 12 || 12;
     const ampm = endHour >= 12 ? "PM" : "AM";
-    return `${formattedEndHour}:${endMinute.toString().padStart(2, "0")} ${ampm}`;
+    return `${formattedEndHour}:${endMinute
+      .toString()
+      .padStart(2, "0")} ${ampm}`;
   };
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
@@ -595,9 +678,16 @@ const MockSchedulelater = () => {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const calculatedEndTime = calculateEndTime(startTime, formData.rounds.duration);
+    const calculatedEndTime = calculateEndTime(
+      startTime,
+      formData.rounds.duration
+    );
     setEndTime(calculatedEndTime);
-    setDateTime(`${formatDate(selectedDate)} ${formatTime(startTime)} - ${calculatedEndTime}`);
+    setDateTime(
+      `${formatDate(selectedDate)} ${formatTime(
+        startTime
+      )} - ${calculatedEndTime}`
+    );
   }, [startTime, formData.rounds.duration, selectedDate]);
 
   const formatTime = (time) => {
@@ -611,14 +701,24 @@ const MockSchedulelater = () => {
   const handleStartTimeChange = (e) => {
     const selectedStartTime = e.target.value;
     setStartTime(selectedStartTime);
-    const calculatedEndTime = calculateEndTime(selectedStartTime, formData.rounds.duration);
+    const calculatedEndTime = calculateEndTime(
+      selectedStartTime,
+      formData.rounds.duration
+    );
     setEndTime(calculatedEndTime);
   };
 
   const handleConfirm = () => {
-    const calculatedEndTime = calculateEndTime(startTime, formData.rounds.duration);
+    const calculatedEndTime = calculateEndTime(
+      startTime,
+      formData.rounds.duration
+    );
     setEndTime(calculatedEndTime);
-    setDateTime(`${formatDate(selectedDate)} ${formatTime(startTime)} - ${calculatedEndTime}`);
+    setDateTime(
+      `${formatDate(selectedDate)} ${formatTime(
+        startTime
+      )} - ${calculatedEndTime}`
+    );
   };
 
   const formatDate = (dateString) => {
@@ -692,7 +792,10 @@ const MockSchedulelater = () => {
       setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
       setFormData((prev) => ({
         ...prev,
-        rounds: { ...prev.rounds, dateTime: `${formattedStart} - ${formattedEnd}` },
+        rounds: {
+          ...prev.rounds,
+          dateTime: `${formattedStart} - ${formattedEnd}`,
+        },
       }));
     }
   };
@@ -714,15 +817,21 @@ const MockSchedulelater = () => {
   }, [interviewType]);
 
   const handleExternalInterviewerSelect = (newInterviewers) => {
-    const formattedInterviewers = newInterviewers.map(interviewer => ({
+    const formattedInterviewers = newInterviewers.map((interviewer) => ({
       _id: interviewer._id,
-      name: interviewer.contact?.Name || `${interviewer.contact?.firstName || ''} ${interviewer.contact?.lastName || ''}`.trim()
+      name:
+        interviewer.contact?.Name ||
+        `${interviewer.contact?.firstName || ""} ${
+          interviewer.contact?.lastName || ""
+        }`.trim(),
     }));
 
     // Merge new interviewers with existing ones, avoiding duplicates
-    setExternalInterviewers(prev => {
-      const existingIds = prev.map(i => i._id);
-      const uniqueNewInterviewers = formattedInterviewers.filter(i => !existingIds.includes(i._id));
+    setExternalInterviewers((prev) => {
+      const existingIds = prev.map((i) => i._id);
+      const uniqueNewInterviewers = formattedInterviewers.filter(
+        (i) => !existingIds.includes(i._id)
+      );
       return [...prev, ...uniqueNewInterviewers];
     });
 
@@ -730,12 +839,16 @@ const MockSchedulelater = () => {
   };
 
   const handleRemoveExternalInterviewer = (interviewerId) => {
-    setExternalInterviewers(prev => prev.filter(i => i._id !== interviewerId));
-    setFormData(prev => ({
+    setExternalInterviewers((prev) =>
+      prev.filter((i) => i._id !== interviewerId)
+    );
+    setFormData((prev) => ({
       ...prev,
       rounds: {
         ...prev.rounds,
-        interviewers: prev.rounds.interviewers.filter(id => id !== interviewerId),
+        interviewers: prev.rounds.interviewers.filter(
+          (id) => id !== interviewerId
+        ),
       },
     }));
     if (externalInterviewers.length === 1) {
@@ -745,7 +858,7 @@ const MockSchedulelater = () => {
 
   const handleClearAllInterviewers = () => {
     setExternalInterviewers([]);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       rounds: {
         ...prev.rounds,
@@ -755,7 +868,8 @@ const MockSchedulelater = () => {
     setSelectedInterviewType("scheduled");
   };
 
-  const selectedInterviewers = selectedInterviewType === "external" ? externalInterviewers : [];
+  const selectedInterviewers =
+    selectedInterviewType === "external" ? externalInterviewers : [];
 
   return (
     <div className="flex items-center justify-center">
@@ -769,7 +883,11 @@ const MockSchedulelater = () => {
         <div className="px-[13%] sm:px-[5%] md:px-[5%]">
           <div className="bg-white rounded-lg shadow-md border">
             <div className="flex justify-between items-center px-5 pt-4">
-              <h2 className="text-lg font-semibold sm:text-md">{currentPage === 1 ? "Candidate Details:" : "Interview Details:"}</h2>
+              <h2 className="text-lg font-semibold sm:text-md">
+                {currentPage === 1
+                  ? "Candidate Details:"
+                  : "Interview Details:"}
+              </h2>
             </div>
 
             <div className="px-6 pt-3">
@@ -792,7 +910,11 @@ const MockSchedulelater = () => {
                             type="text"
                             id="CandidateName"
                             readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.candidateName ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                              errors.candidateName
+                                ? "border-red-500 focus:ring-red-500"
+                                : "border-gray-300"
+                            }`}
                           />
                           {errors.candidateName && (
                             <p className="text-red-500 text-sm mt-1">
@@ -830,7 +952,11 @@ const MockSchedulelater = () => {
                               type="text"
                               id="Technology"
                               readOnly
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.technology ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                                errors.technology
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : "border-gray-300"
+                              }`}
                             />
                             {errors.technology && (
                               <p className="text-red-500 text-sm mt-1">
@@ -844,7 +970,9 @@ const MockSchedulelater = () => {
                                 <div
                                   key={index}
                                   className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleTechnologySelect(technology)}
+                                  onClick={() =>
+                                    handleTechnologySelect(technology)
+                                  }
                                 >
                                   {technology.TechnologyMasterName}
                                 </div>
@@ -859,7 +987,8 @@ const MockSchedulelater = () => {
                             htmlFor="currentExperience"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            Current Experience <span className="text-red-500">*</span>
+                            Current Experience{" "}
+                            <span className="text-red-500">*</span>
                           </label>
                         </div>
                         <div className="flex-grow">
@@ -873,7 +1002,11 @@ const MockSchedulelater = () => {
                             max="15"
                             autoComplete="off"
                             onKeyDown={handleExperienceKeyDown}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.currentExperience ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                              errors.currentExperience
+                                ? "border-red-500 focus:ring-red-500"
+                                : "border-gray-300"
+                            }`}
                           />
                           {errors.currentExperience && (
                             <p className="text-red-500 text-sm mt-1">
@@ -899,7 +1032,11 @@ const MockSchedulelater = () => {
                             type="text"
                             id="Role"
                             readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.Role ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                              errors.Role
+                                ? "border-red-500 focus:ring-red-500"
+                                : "border-gray-300"
+                            }`}
                           />
                           {errors.Role && (
                             <p className="text-red-500 text-sm mt-1">
@@ -928,7 +1065,10 @@ const MockSchedulelater = () => {
                         errors={errors}
                         onAddSkill={(setEditingIndex) => {
                           setEntries((prevEntries) => {
-                            const newEntries = [...prevEntries, { skill: '', experience: "", expertise: "" }];
+                            const newEntries = [
+                              ...prevEntries,
+                              { skill: "", experience: "", expertise: "" },
+                            ];
                             setEditingIndex(newEntries.length - 1);
                             return newEntries;
                           });
@@ -945,7 +1085,9 @@ const MockSchedulelater = () => {
                         onDeleteSkill={(index) => {
                           const entry = entries[index];
                           setAllSelectedSkills(
-                            allSelectedSkills.filter((skill) => skill !== entry.skill)
+                            allSelectedSkills.filter(
+                              (skill) => skill !== entry.skill
+                            )
                           );
                           setEntries(entries.filter((_, i) => i !== index));
                         }}
@@ -998,13 +1140,16 @@ const MockSchedulelater = () => {
                         <div className="flex-grow">
                           <div className="flex items-center mt-3">
                             <button
-                              onClick={() => document.getElementById('fileUpload').click()}
+                              onClick={() =>
+                                document.getElementById("fileUpload").click()
+                              }
                               className="bg-custom-blue text-white px-4 py-1 rounded cursor-pointer"
                               type="button"
                             >
                               Upload File
                             </button>
                             <input
+                              ref={inputRef}
                               type="file"
                               id="fileUpload"
                               style={{ display: "none" }}
@@ -1020,16 +1165,23 @@ const MockSchedulelater = () => {
                             )}
                             {fileName && (
                               <button
+                                type="button"
+                                title="Remove Resume"
                                 onClick={handleRemoveFile}
-                                className="text-gray-500 text-sm ml-5"
+                                className="text-red-500 text-sm ml-3"
                               >
                                 <X />
                               </button>
                             )}
                           </div>
-                          {errors.Resume && (
-                            <p className="text-red-500 text-sm">{errors.Resume}</p>
-                          )}
+                          {/* {errors.Resume && (
+                            <p className="text-red-500 text-sm">
+                              {errors.Resume}
+                            </p>
+                          )} */}
+                          <p className="text-red-500 text-sm font-semibold mt-2">
+                            {resumeError}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1039,7 +1191,10 @@ const MockSchedulelater = () => {
                   <>
                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                       <div>
-                        <label htmlFor="rounds.roundTitle" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="rounds.roundTitle"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Round Title *
                         </label>
                         <input
@@ -1047,15 +1202,24 @@ const MockSchedulelater = () => {
                           name="rounds.roundTitle"
                           value={formData.rounds.roundTitle}
                           onChange={handleChange}
-                          className={`mt-1 block w-full border ${errors["rounds.roundTitle"] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          className={`mt-1 block w-full border ${
+                            errors["rounds.roundTitle"]
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           required
                         />
                         {errors["rounds.roundTitle"] && (
-                          <p className="mt-1 text-sm text-red-500">{errors["rounds.roundTitle"]}</p>
+                          <p className="mt-1 text-sm text-red-500">
+                            {errors["rounds.roundTitle"]}
+                          </p>
                         )}
                       </div>
                       <div>
-                        <label htmlFor="rounds.interviewMode" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="rounds.interviewMode"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Interview Mode *
                         </label>
                         <select
@@ -1076,7 +1240,11 @@ const MockSchedulelater = () => {
                               [name]: value ? "" : "This field is required",
                             }));
                           }}
-                          className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${errors.interviewMode ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                          className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
+                            errors.interviewMode
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                           required
                         >
                           <option value="">Select Interview Mode</option>
@@ -1084,7 +1252,9 @@ const MockSchedulelater = () => {
                           <option value="Virtual">Virtual</option>
                         </select>
                         {errors["rounds.interviewMode"] && (
-                          <p className="mt-1 text-sm text-red-500">{errors["rounds.interviewMode"]}</p>
+                          <p className="mt-1 text-sm text-red-500">
+                            {errors["rounds.interviewMode"]}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1095,31 +1265,88 @@ const MockSchedulelater = () => {
                       <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
                         <button
                           type="button"
-                          onClick={() => { setInterviewType("instant"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "instant" } })); }}
-                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant" ? "border-custom-blue bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
+                          onClick={() => {
+                            setInterviewType("instant");
+                            setFormData((prev) => ({
+                              ...prev,
+                              rounds: {
+                                ...prev.rounds,
+                                interviewType: "instant",
+                              },
+                            }));
+                          }}
+                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                            interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
                         >
-                          <Clock className={`h-6 w-6 ${interviewType === "instant" ? "text-custom-blue" : "text-gray-400"}`} />
-                          <span className={`mt-2 font-medium ${interviewType === "instant" ? "text-custom-blue" : "text-gray-900"}`}>
+                          <Clock
+                            className={`h-6 w-6 ${
+                              interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                            }`}
+                          />
+                          <span
+                            className={`mt-2 font-medium ${
+                              interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                            }`}
+                          >
                             Instant Interview
                           </span>
-                          <span className="mt-1 text-sm text-gray-500">Starts in 15 minutes</span>
+                          <span className="mt-1 text-sm text-gray-500">
+                            Starts in 15 minutes
+                          </span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => { setInterviewType("scheduled"); setFormData(prev => ({ ...prev, rounds: { ...prev.rounds, interviewType: "scheduled" } })); }}
-                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled" ? "border-custom-blue bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
+                          onClick={() => {
+                            setInterviewType("scheduled");
+                            setFormData((prev) => ({
+                              ...prev,
+                              rounds: {
+                                ...prev.rounds,
+                                interviewType: "scheduled",
+                              },
+                            }));
+                          }}
+                          className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                            interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
                         >
-                          <Calendar className={`h-6 w-6 ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-400"}`} />
-                          <span className={`mt-2 font-medium ${interviewType === "scheduled" ? "text-custom-blue" : "text-gray-900"}`}>
+                          <Calendar
+                            className={`h-6 w-6 ${
+                              interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                            }`}
+                          />
+                          <span
+                            className={`mt-2 font-medium ${
+                              interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                            }`}
+                          >
                             Schedule for Later
                           </span>
-                          <span className="mt-1 text-sm text-gray-500">Pick date & time</span>
+                          <span className="mt-1 text-sm text-gray-500">
+                            Pick date & time
+                          </span>
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-2">
                         {interviewType === "scheduled" && (
                           <div className="mt-4">
-                            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+                            <label
+                              htmlFor="scheduledDate"
+                              className="block text-sm font-medium text-gray-700"
+                            >
                               Scheduled Date & Time
                             </label>
                             <input
@@ -1134,7 +1361,10 @@ const MockSchedulelater = () => {
                           </div>
                         )}
                         <div className="mt-4">
-                          <label htmlFor="rounds.duration" className="block text-sm font-medium text-gray-700">
+                          <label
+                            htmlFor="rounds.duration"
+                            className="block text-sm font-medium text-gray-700"
+                          >
                             Duration (minutes)
                           </label>
                           <select
@@ -1159,11 +1389,17 @@ const MockSchedulelater = () => {
                             <p className="text-sm text-custom-blue">
                               Interview will start at{" "}
                               <span className="font-medium">
-                                {new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {new Date(startTime).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </span>{" "}
                               and end at{" "}
                               <span className="font-medium">
-                                {new Date(endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {new Date(endTime).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </span>
                             </p>
                           </div>
@@ -1188,14 +1424,18 @@ const MockSchedulelater = () => {
                       )}
                     </div>
                     <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium text-gray-700">Interviewers</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Interviewers
+                      </label>
                       <div className="flex space-x-2">
                         <Button
                           type="button"
                           onClick={() => setShowOutsourcePopup(true)}
                           variant="outline"
                           size="sm"
-                          className={`${selectedInterviewType === "external" ? "" : ""}`}
+                          className={`${
+                            selectedInterviewType === "external" ? "" : ""
+                          }`}
                           disabled={false}
                           title=""
                         >
@@ -1206,14 +1446,20 @@ const MockSchedulelater = () => {
                     </div>
                     <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
                       {selectedInterviewers.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                        <p className="text-sm text-gray-500 text-center">
+                          No interviewers selected
+                        </p>
                       ) : (
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center">
                               <Users className="h-4 w-4 text-gray-500 mr-2" />
                               <span className="text-sm text-gray-700">
-                                {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
+                                {selectedInterviewers.length} interviewer
+                                {selectedInterviewers.length !== 1
+                                  ? "s"
+                                  : ""}{" "}
+                                selected
                                 <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                   Outsourced
                                 </span>
@@ -1231,10 +1477,15 @@ const MockSchedulelater = () => {
                             )}
                           </div>
                           <div className="mb-3">
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Outsourced Interviewers</h4>
+                            <h4 className="text-xs font-medium text-gray-500 mb-2">
+                              Outsourced Interviewers
+                            </h4>
                             <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
                               {externalInterviewers.map((interviewer) => (
-                                <div key={interviewer._id} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                                <div
+                                  key={interviewer._id}
+                                  className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                >
                                   <div className="flex items-center">
                                     <span className="ml-2 text-sm text-orange-800 truncate">
                                       {interviewer.name}
@@ -1242,7 +1493,11 @@ const MockSchedulelater = () => {
                                   </div>
                                   <button
                                     type="button"
-                                    onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
+                                    onClick={() =>
+                                      handleRemoveExternalInterviewer(
+                                        interviewer._id
+                                      )
+                                    }
                                     className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                     title="Remove interviewer"
                                   >
@@ -1255,9 +1510,16 @@ const MockSchedulelater = () => {
                         </div>
                       )}
                     </div>
-                    {errors.interviewers && <p className="text-red-500 text-sm -mt-5">{errors.interviewers}</p>}
+                    {errors.interviewers && (
+                      <p className="text-red-500 text-sm -mt-5">
+                        {errors.interviewers}
+                      </p>
+                    )}
                     <div>
-                      <label htmlFor="rounds.instructions" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="rounds.instructions"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Instructions
                       </label>
                       <textarea
@@ -1279,7 +1541,7 @@ const MockSchedulelater = () => {
             <div className="flex justify-end gap-4 mt-5 mb-4">
               <button
                 className="border border-custom-blue p-3 rounded py-1"
-                onClick={() => navigate('/mockinterview')}
+                onClick={() => navigate("/mockinterview")}
               >
                 Cancel
               </button>
@@ -1304,7 +1566,9 @@ const MockSchedulelater = () => {
                 isLoading={isMutationLoading}
                 loadingText={mockEdit ? "Updating..." : "Saving..."}
               >
-                {formData.rounds.interviewType === 'instant' ? 'Save & Schedule' : 'Save'}
+                {formData.rounds.interviewType === "instant"
+                  ? "Save & Schedule"
+                  : "Save"}
               </LoadingButton>
             </div>
           )}
