@@ -143,13 +143,13 @@ const InterviewDetails = ({
         setPreviousInterviewExperience(value);
         setInterviewDetailsData((prev) => ({
             ...prev,
-            previousInterviewExperience: value,
+            previousInterviewExperience: value,  // This is what's currently being set
             previousInterviewExperienceYears: value === "no" ? "" : prev.previousInterviewExperienceYears,
         }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
+        // Clear any previous errors
+        setErrors((prev) => ({
+            ...prev,
             previousInterviewExperience: "",
-            previousInterviewExperienceYears: value === "no" ? "" : prevErrors.previousInterviewExperienceYears,
         }));
     };
 
@@ -182,14 +182,15 @@ const InterviewDetails = ({
     const handleNoShow = (event) => {
         const { value } = event.target;
         setInterviewDetailsData((prevData) => ({
-            ...prevData,
-            noShowPolicy: value,
+          ...prevData,
+          noShowPolicy: value,
         }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            noShowPolicy: "",
+        // Clear any previous errors
+        setErrors((prev) => ({
+          ...prev,
+          noShowPolicy: "",
         }));
-    };
+      };
 
     const handleBioChange = (e) => {
         const value = e.target.value;
@@ -218,23 +219,31 @@ const InterviewDetails = ({
     const handleInterviewFormatChange = (event) => {
         const { value, checked } = event.target;
         setInterviewDetailsData((prevData) => {
-            let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
-                ? [...prevData.interviewFormatWeOffer]
-                : [];
-            if (checked) {
-                updatedFormats.push(value);
-            } else {
-                updatedFormats = updatedFormats.filter((format) => format !== value);
-            }
-            return {
-                ...prevData,
-                interviewFormatWeOffer: updatedFormats,
-            };
+          let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
+            ? [...prevData.interviewFormatWeOffer]
+            : [];
+          
+          if (checked) {
+            updatedFormats = [...updatedFormats, value];
+          } else {
+            updatedFormats = updatedFormats.filter((format) => format !== value);
+          }
+          
+          return {
+            ...prevData,
+            interviewFormatWeOffer: updatedFormats,
+          };
         });
-
+      
         if (value === "mock") {
-            setIsMockInterviewSelected(checked);
+          setIsMockInterviewSelected(checked);
         }
+        
+        // Clear any previous errors
+        setErrors((prev) => ({
+          ...prev,
+          interviewFormatWeOffer: "",
+        }));
     };
 
     const filteredTechnologies = technologies?.filter((tech) =>

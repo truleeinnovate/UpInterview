@@ -20,7 +20,7 @@ function testTaskReminder() {
 // The actual cron job logic extracted for reuse
 const runTaskReminderJob = async () => {
 
-  console.log('Running automated task email reminder job at', new Date().toISOString());
+  // console.log('Running automated task email reminder job at', new Date().toISOString());
 
 
   try {
@@ -38,7 +38,7 @@ const runTaskReminderJob = async () => {
     });
 
     if (tasks.length === 0) {
-      console.log('No tasks due in the next 24 hours.');
+      // console.log('No tasks due in the next 24 hours.');
       return;
     }
 
