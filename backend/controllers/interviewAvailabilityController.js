@@ -50,4 +50,34 @@ const updateInterviewAvailability = async (req, res) => {
     }
 };
 
-module.exports = { createOrUpdateInterviewAvailability, updateInterviewAvailability };
+
+// ========================================================================================
+// for getting availability by contact id to show in the account settings user profile
+// ========================================================================================
+// In interviewAvailabilityController.js
+const getAvailabilityByContactId = async (req, res) => {
+
+    try {
+      const { contactId } = req.params;
+
+      const availability = await InterviewAvailability.findOne({ contact: contactId });
+
+      if (!availability) {
+        return res.status(200).json({
+          availability: [], // Return empty array instead of 404
+          message: 'No availability found for this contact'
+        });
+      }
+
+      res.status(200).json(availability);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  };
+
+// At the bottom of the file, update the exports to:
+module.exports = { 
+    createOrUpdateInterviewAvailability, 
+    updateInterviewAvailability, 
+    getAvailabilityByContactId 
+  };

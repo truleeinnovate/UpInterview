@@ -290,7 +290,7 @@ const CustomProvider = ({ children }) => {
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
-  console.log("interviewers data :", interviewers);
+  // console.log("interviewers data :", interviewers);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
 
   const fetchInterviewers = useCallback(async () => {
@@ -300,17 +300,17 @@ const CustomProvider = ({ children }) => {
 
     try {
       setLoadingInterviewer(true);
-      console.log("Fetching interviewers for tenantId:", tenantId);
+      // console.log("Fetching interviewers for tenantId:", tenantId);
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
       );
 
       if (isMounted) {
-        console.log("Interviewers data received:", response.data);
+        // console.log("Interviewers data received:", response.data);
         setInterviewers(response.data);
       }
     } catch (err) {
-      console.error("Error fetching interviewers:", err.message);
+      // console.error("Error fetching interviewers:", err.message);
     } finally {
       if (isMounted) {
         setLoadingInterviewer(false);
