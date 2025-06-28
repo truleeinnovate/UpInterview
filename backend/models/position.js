@@ -8,6 +8,9 @@ const roundSchema = new mongoose.Schema(
     interviewerType: String, // internal or external
     duration: Number,
     instructions: String,
+    interviewerGroupName:{ type: String },
+
+    interviewerViewType:{ type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }

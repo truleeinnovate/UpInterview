@@ -44,10 +44,10 @@ const RoundCard = ({
   //   setSectionQuestions,
   // } = useCustomContext();
   const { deleteRoundMutation } = useInterviews();
-  const {fetchAssessmentQuestions} = useAssessments()
+  const { fetchAssessmentQuestions } = useAssessments()
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
@@ -65,40 +65,40 @@ const RoundCard = ({
 
   // }, [round.assessmentId])
 
-      const [sectionQuestions, setSectionQuestions] = useState({});
-      const [questionsLoading, setQuestionsLoading] = useState(false);
-  
-    useEffect(() => {
-        if (showQuestions && round?.assessmentId) {
-          // const data = fetchAssessmentQuestions(round.assessmentId);
-          // setSectionQuestions(data)
-          setQuestionsLoading(true)
-          fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
-            if (data) {
-              setQuestionsLoading(false)
-              setSectionQuestions(data?.sections);
-              // Only initialize toggleStates if it's empty or length doesn't match sections
-              // setToggleStates((prev) => {
-              //   if (prev.length !== data.sections.length) {
-              //     return new Array(data.sections.length).fill(false);
-              //   }
-              //   return prev; // Preserve existing toggle states
-              // });
-            } else {
-              console.error('Error fetching assessment questions:', error);
-              setQuestionsLoading(false)
-            }
-          });
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+
+  useEffect(() => {
+    if (showQuestions && round?.assessmentId) {
+      // const data = fetchAssessmentQuestions(round.assessmentId);
+      // setSectionQuestions(data)
+      setQuestionsLoading(true)
+      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        if (data) {
+          setQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+          // Only initialize toggleStates if it's empty or length doesn't match sections
+          // setToggleStates((prev) => {
+          //   if (prev.length !== data.sections.length) {
+          //     return new Array(data.sections.length).fill(false);
+          //   }
+          //   return prev; // Preserve existing toggle states
+          // });
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setQuestionsLoading(false)
         }
-      }, [showQuestions, round?.assessmentId]);
-  
-  
-  console.log("round",round);
+      });
+    }
+  }, [showQuestions, round?.assessmentId]);
+
+
+  console.log("round", round);
 
   const toggleSection = async (sectionId) => {
 
-      if (expandedSections[sectionId]) {
-      const newExpandedQuestions = {...expandedQuestions};
+    if (expandedSections[sectionId]) {
+      const newExpandedQuestions = { ...expandedQuestions };
       const section = sectionQuestions[sectionId];
       if (section && section.questions) {
         section.questions.forEach(question => {
@@ -108,7 +108,7 @@ const RoundCard = ({
       setExpandedQuestions(newExpandedQuestions);
     }
 
-    
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -130,7 +130,7 @@ const RoundCard = ({
     }
   };
 
-    const toggleShowQuestions = () => {
+  const toggleShowQuestions = () => {
     if (showQuestions) {
       // Collapse all when hiding
       setExpandedSections({});
@@ -164,7 +164,7 @@ const RoundCard = ({
   //   }
   // };
 
- 
+
 
 
   const interview = interviewData;
@@ -318,34 +318,46 @@ const RoundCard = ({
 
                 <div>
                   {round.roundTitle !== "Assessment" &&
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">{
-                      showInterviewers && round?.interviewerType
-                      } Interviewers</h4>
-                    <button
-                      onClick={() => setShowInterviewers(!showInterviewers)}
-                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                    >
-                      {showInterviewers ? 'Hide' : 'Show'}
-                      {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-                    </button>
-                  </div>
-}
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        <>
+                          <span>{showInterviewers && round?.interviewerType}</span>
+                          <span>{showInterviewers && round?.interviewerGroupName ? " Group " : " "}</span>
+                        </>
+                        Interviewers</h4>
+                      <button
+                        onClick={() => setShowInterviewers(!showInterviewers)}
+                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        {showInterviewers ? 'Hide' : 'Show'}
+                        {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                      </button>
+                    </div>
+                  }
 
                   {showInterviewers && (
                     <div className="space-y-2">
                       {internalInterviewers.length > 0 && (
                         <div>
-                          <div className="flex items-center text-xs text-gray-500 mb-1">
-                            <User className="h-3 w-3 mr-1" />
-                            <span>Internal ({internalInterviewers.length})</span>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                            <span className='flex items-center'>
+                              <User className="h-3 w-3 mr-1" />
+                              <span> {internalInterviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                              </span>
+                            </span>
+                            {round?.interviewerGroupName &&
+                              <div className="flex items-center   gap-1 text-xs text-gray-500 ">
+                                <span> Group Name: </span>
+                                <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
+                              </div>
+                            }
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {internalInterviewers.map(interviewer => (
                               <div key={interviewer._id} className="flex items-center">
                                 <InterviewerAvatar interviewer={interviewer} size="sm" />
                                 <span className="ml-1 text-xs text-gray-600">
-                                {interviewer?.firstName || "" + interviewer.lastName || ""}
+                                  {interviewer?.firstName || "" + interviewer.lastName || ""}
                                 </span>
                                 {/* {isRoundActive && canEdit && (
                                   <button
@@ -416,9 +428,9 @@ const RoundCard = ({
                   )}
                 </div>
               )} */}
-{
-  questions?.length > 0  && 
-  <div className="mt-4">
+              {
+                questions?.length > 0 &&
+                <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
                     <button
@@ -461,9 +473,9 @@ const RoundCard = ({
 
 
                 </div>
-}
+              }
 
-              {( round.assessmentId) && (
+              {(round.assessmentId) && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">Assessment Questions</h4>
@@ -721,15 +733,15 @@ const RoundCard = ({
                     </>
                   )}
                   {canEdit && (
-                  <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirmModal(true)}
-                  className="flex items-center"
-                  >
-                  <XCircle className="h-4 w-4 mr-1" />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteConfirmModal(true)}
+                      className="flex items-center"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
                       Delete Round
-                  </Button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -758,23 +770,23 @@ const RoundCard = ({
         </div>
       )}
 
-    {showDeleteConfirmModal && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-              <div className="bg-white p-5 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-3">
-                  Are you sure you want to delete this round?
-                </h3>
-                <div className="flex justify-end space-x-3">
-                  <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant="destructive" onClick={handleDeleteRound}>
-                    Delete
-                  </Button>
-                </div>
-              </div>
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+          <div className="bg-white p-5 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-3">
+              Are you sure you want to delete this round?
+            </h3>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteRound}>
+                Delete
+              </Button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
 
       {showRejectionModal && (

@@ -45,5 +45,20 @@ export const validateCompanyProfile = (formData) => {
         errors.facebook = "Invalid Facebook URL";
     }
 
+    // In your validateCompanyProfile function
+    // const phoneRegex = /^\d{10}$/;
+
+    // Headquarters phone validation
+    if (formData.headquarters.phone && !phoneRegex.test(formData.headquarters.phone)) {
+        errors.headquarters = errors.headquarters || {};
+        errors.headquarters.phone = "Phone must be exactly 10 digits";
+    }
+
+    // Regional office phone validation
+    if (formData.regionalOffice.phone && !phoneRegex.test(formData.regionalOffice.phone)) {
+        errors.regionalOffice = errors.regionalOffice || {};
+        errors.regionalOffice.phone = "Phone must be exactly 10 digits";
+    }
+
     return errors;
 };

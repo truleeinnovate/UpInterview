@@ -989,15 +989,31 @@ const verifyEmailChange = async (req, res) => {
 
     const user = await Users.findById(decoded.userId);
     const contacts = await Contacts.findById(decoded.userId);
+    // if (!user || user.newEmail !== decoded.newEmail) {
+    //   return res.status(400).json({ success: false, message: 'Email change verification failed' });
+    // }
+
     if (!user || user.newEmail !== decoded.newEmail) {
+
       return res
         .status(400)
         .json({ success: false, message: "Email change verification failed" });
     }
 
+
+
+    console.log("decoded.newEmail",decoded.newEmail);
+    
     // Update email
     user.email = decoded.newEmail;
-    user.newEmail = null;
+    user.newEmail = '';
+
+  
+   if (contacts) {
+  contacts.email = decoded.newEmail;
+  await contacts.save();
+}
+//     user.newEmail = null;
     contacts.email = decoded.newEmail;
     await user.save();
 
@@ -1005,6 +1021,7 @@ const verifyEmailChange = async (req, res) => {
       success: true,
       message: "Email address updated successfully",
     });
+
   } catch (error) {
     console.error("Email change verification error:", error);
     return res

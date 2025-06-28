@@ -12,7 +12,7 @@ import { config } from '../../../../../config';
 Modal.setAppElement('#root');
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
-  const { groups } = useCustomContext();
+  const { groups, interviewers } = useCustomContext();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -31,7 +31,7 @@ const InterviewerGroupFormPopup = () => {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
 
-  console.log("tenantId InterviewerGroupFormPopup", tenantId);
+  // console.log("tenantId InterviewerGroupFormPopup", tenantId);
 
   useEffect(() => {
     const fetchData = () => {
@@ -41,12 +41,12 @@ const InterviewerGroupFormPopup = () => {
         const group = groups.find(group => group._id === id);
         console.log('InterviewerGroupFormPopup group:', group);
 
-      if (group) {
+        if (group) {
           // Map the API data to our form structure
-        setFormData({
-          name: group.name || '',
-          description: group.description || '',
-          status: group.status || 'active',
+          setFormData({
+            name: group.name || '',
+            description: group.description || '',
+            status: group.status || 'active',
             members: group.userIds || [] // Changed from userIds to members
           });
         }
@@ -67,26 +67,17 @@ const InterviewerGroupFormPopup = () => {
   }, [id, groups]);
 
 
-
+  // interviewers
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/org-users`,
-          {
-            params: {
-              tenantId: tenantId
-            }
-          }
+    console.log("interviewers", interviewers?.data);
 
-        )
-        // console.log('Fetched users:', response.data);
-        setUsers(response.data);
-      } catch (error) {
-        // console.error('Error fetching users:', error)
-      }
+    if (interviewers?.data) {
+      setUsers(interviewers?.data || []);
+    } else {
+      setUsers([])
     }
-    fetchUsers()
-  }, [tenantId])
+
+  }, [tenantId, interviewers?.data])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -251,7 +242,7 @@ const InterviewerGroupFormPopup = () => {
 
                   />
                   {formErrors.name && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                    <p className="text-red-500 text-sm ">{formErrors.name}</p>
                   )}
                 </div>
 
@@ -267,7 +258,7 @@ const InterviewerGroupFormPopup = () => {
 
                   />
                   {formErrors.description && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
+                    <p className="text-red-500 text-sm ">{formErrors.description}</p>
                   )}
                 </div>
 
@@ -297,7 +288,7 @@ const InterviewerGroupFormPopup = () => {
                 )}
                 <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 ">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Select
@@ -308,48 +299,52 @@ const InterviewerGroupFormPopup = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Expertise
-                        </th>
+                        </th> */}
                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Rating
                     </th> */}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map(member => (
-                        <tr key={member._id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={formData.members.includes(member._id)}
-                              onChange={() => handleMemberToggle(member._id)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="font-medium text-gray-900">{member.name || "N/A"}</div>
-                              <div className="text-sm text-gray-500">{member.email || "N/A"}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {member.role || "N/A"}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-wrap gap-1">
-                              {/* {member.expertise.map((skill, index) => (
+                    <tbody className="bg-white divide-y  divide-gray-200">
+                      {users.length > 0 ?
+                        users.map((member, index) => (
+                          <tr key={member._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={formData.members.includes(member?.contact?._id)}
+                                onChange={() => handleMemberToggle(member?.contact?._id)}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="font-medium text-gray-900">{member?.contact?.firstName || member?.contact?.lastName ? `
+                              ${member?.contact?.firstName + " " + member?.contact?.lastName}` : "Not Provided"}</div>
+                                <div className="text-sm text-gray-500">{member?.contact?.email || "Not Provided"}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {member?.roleLabel || "Not Provided"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-wrap gap-1">
+                                {/* {member.expertise.map((skill, index) => (
                             <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                               {skill || "N/A"}
                             </span>
                           ))} */}
-                            </div>
-                          </td>
-                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              </div>
+                            </td>
+                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {member.rating || "N/A"}
                       </td> */}
-                        </tr>
-                      ))}
+                          </tr>
+                        ))
+                        : <p className='flex w-full justify-center items-center mx-auto p-4'>No Interviwers Found</p>
+                      }
                     </tbody>
                   </table>
                 </div>

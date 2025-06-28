@@ -458,7 +458,7 @@ const sendVerificationEmail = async (email, userId, firstName, lastName) => {
 
     // Send email
     await sendEmail(email, emailTemplate.subject, emailBody);
-    console.log(`Verification email sent to ${email}`);
+    // console.log(`Verification email sent to ${email}`);
     return { success: true, message: 'Verification email sent' };
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -478,14 +478,14 @@ exports.resendVerification = async (req, res) => {
     }
 
     const user = await Users.findOne({ email });
-    console.log('user', user);
+    // console.log('user', user);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     const organization = await Tenant.findOne({ ownerId: user._id });
-    console.log('organization', organization);
+    // console.log('organization', organization);
 
     if (!organization) {
       return res.status(404).json({ success: false, message: 'Organization not found' });
@@ -569,6 +569,9 @@ exports.requestEmailChangeVerification = async (req, res) => {
 
     // Create verification link
     const verificationLink = `${config.REACT_APP_API_URL_FRONTEND}/verify-user-email?token=${verificationToken}`;
+
+    console.log("verificationLink",verificationLink);
+    
 
     // Fetch the email template for email change
     const emailTemplate = await emailTemplateModel.findOne({

@@ -78,21 +78,25 @@ exports.getAllTemplates = async (req, res) => {
     // Populate only firstName and lastName for interviewers
     const templates = await InterviewTemplate.find(filter).populate({
       path: "rounds.interviewers",
-      select: "firstName lastName", // limit fields
+       model: "Contacts",
+      select: "firstName lastName email",
+      // select: "firstName lastName _id", // limit fields
     });
 
     // Transform output: map interviewers to a single "name" field
     const transformedTemplates = templates.map((template) => {
       const templateObj = template.toObject();
-      templateObj.rounds = templateObj.rounds.map((round) => {
-        if (Array.isArray(round.interviewers)) {
-          round.interviewers = round.interviewers.map((interviewer) => ({
-            _id: interviewer._id,
-            name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
-          }));
-        }
-        return round;
-      });
+      // templateObj.rounds = templateObj.rounds.map((round) => {
+      //   if (Array.isArray(round.interviewers)) {
+      //     round.interviewers = round.interviewers.map((interviewer) => ({
+      //       _id: interviewer._id,
+      //       name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
+      //     }));
+      //   }
+      //   return round;
+      // });
+      
+      
       return templateObj;
     });
 

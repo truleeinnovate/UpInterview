@@ -24,22 +24,34 @@ const VerifyUserEmail = () => {
           `${config.REACT_APP_API_URL}/Organization/verify-user-email?token=${token}`
         );
 
+        console.log("response.data",response.data);
+        
+
         if (response.data.success) {
           setVerificationStatus('success');
           toast.success('Email verified successfully!');
           // Redirect after 3 seconds
-          setTimeout(() => {
-            navigate('/organization-login');
-          }, 3000);
+          // setTimeout(() => {
+          //   // navigate('/organization-login');
+          // }, 5000);
         } else {
           setVerificationStatus('failed');
           toast.error(response.data.message || 'Verification failed');
         }
-      } catch (error) {
-        console.error('Verification error:', error);
-        setVerificationStatus('failed');
-        toast.error(error.response?.data?.message || 'Verification failed. Please try again.');
       }
+      catch (error) {
+  console.error('Verification error:', error);
+  setVerificationStatus('failed');
+  toast.error(
+    error.response?.data?.message || 'Verification failed. Please try again.'
+  );
+}
+
+      // } catch (error) {
+      //   console.error('Verification error:', error);
+      //   setVerificationStatus('failed');
+      //   toast.error(error.response?.data?.message || 'Verification failed. Please try again.');
+      // }
     };
 
     verifyEmailToken();

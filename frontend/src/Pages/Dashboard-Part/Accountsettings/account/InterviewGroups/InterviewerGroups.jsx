@@ -44,9 +44,9 @@ const InterviewerGroups = () => {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
 
-  console.log("tenantId InterviewerGroups", tenantId);
+  // console.log("tenantId InterviewerGroups", tenantId);
 
-  console.log("organizationId", tenantId, groups);
+  // console.log("organizationId", tenantId, groups);
 
 
   // useEffect(() => {
