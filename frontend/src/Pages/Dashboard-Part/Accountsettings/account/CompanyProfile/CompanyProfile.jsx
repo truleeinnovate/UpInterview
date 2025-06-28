@@ -84,20 +84,20 @@ const CompanyProfile = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Company Name
                   </label>
-                  <p>{companyProfile?.company || "N/A"}</p>
+                  <p>{companyProfile?.company || "not provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Industry
                   </label>
 
-                  <p>{companyProfile?.industry || "N/A"}</p>
+                  <p>{companyProfile?.industry || "not provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Company Size
                   </label>
-                  <p>{companyProfile?.employees || "N/A"}</p>
+                  <p>{companyProfile?.employees || "not provided"}</p>
                 </div>
               </div>
             </div>
@@ -110,7 +110,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-2" />
-                    <p>{companyProfile?.website || "N/A"}</p>
+                    <p>{companyProfile?.website || "not provided"}</p>
                   </div>
                 </div>
                 <div>
@@ -119,7 +119,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <Globe className="h-5 w-5 text-gray-400 mr-2" />
-                    <p> {companyProfile?.country || "N/A"}</p>
+                    <p> {companyProfile?.country || "not provided"}</p>
                   </div>
                 </div>
 
@@ -129,7 +129,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <MapPin className="h-5 w-5 text-gray-400 mr-2" />
-                    <p> {companyProfile?.location || "N/A"}</p>
+                    <p> {companyProfile?.location || "not provided"}</p>
                   </div>
                 </div>
               </div>

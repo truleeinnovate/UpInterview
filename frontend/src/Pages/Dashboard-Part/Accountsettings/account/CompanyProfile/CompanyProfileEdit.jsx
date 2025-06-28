@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";
 import axios from "axios";
-import Cookies from "js-cookie";
+// import Cookies from "js-cookie";
 import {
   X,
   Camera,
   Trash,
   Minimize,
-  Maximize,
+  Expand,
   ChevronDown,
   Search,
 } from "lucide-react";
@@ -386,7 +386,7 @@ const CompanyEditProfile = () => {
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
