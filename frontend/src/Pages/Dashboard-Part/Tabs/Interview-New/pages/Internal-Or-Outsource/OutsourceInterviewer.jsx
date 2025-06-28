@@ -257,31 +257,31 @@ function OutsourcedInterviewerModal({
 
         console.log("externalInterviewer Available External Interviewers after time check:", availableInterviewers);
 
-        const experienceFilteredInterviewers = availableInterviewers.filter(interviewer => {
-          const interviewerMinExp = parseInt(interviewer.contact?.minexperience || '0');
-          const interviewerMaxExp = parseInt(interviewer.contact?.maxexperience || '0');
-          const minExp = positionData?.minexperience || 0;
-          const maxExp = positionData?.maxexperience || Infinity;
+        // const experienceFilteredInterviewers = availableInterviewers.filter(interviewer => {
+        //   const interviewerMinExp = parseInt(interviewer.contact?.minexperience || '0');
+        //   const interviewerMaxExp = parseInt(interviewer.contact?.maxexperience || '0');
+        //   const minExp = positionData?.minexperience || 0;
+        //   const maxExp = positionData?.maxexperience || Infinity;
 
-          console.log(`Interviewer: ${interviewer.contact?.firstName + " " + interviewer.contact?.lastName || 'Unknown'}, Experience: ${interviewerMinExp}-${interviewerMaxExp} years, Required: ${minExp}-${maxExp} years`);
+        //   console.log(`Interviewer: ${interviewer.contact?.firstName + " " + interviewer.contact?.lastName || 'Unknown'}, Experience: ${interviewerMinExp}-${interviewerMaxExp} years, Required: ${minExp}-${maxExp} years`);
 
-          return interviewerMinExp >= minExp && interviewerMaxExp <= maxExp;
-        });
+        //   return interviewerMinExp >= minExp && interviewerMaxExp <= maxExp;
+        // });
 
-        console.log("Experience Filtered External Interviewers:", experienceFilteredInterviewers);
+        // console.log("Experience Filtered External Interviewers:", experienceFilteredInterviewers);
 
-        const skillFilteredInterviewers = experienceFilteredInterviewers.filter((interviewer, index) => {
-          // console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.contact?.UserName || 'Unknown');
-          // console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
+        const skillFilteredInterviewers = availableInterviewers.filter((interviewer, index) => {
+          console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.contact?.UserName || 'Unknown');
+          console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
 
           if (!positionSkills || !Array.isArray(positionSkills)) {
-            // console.log("⚠️ positionSkills is invalid or not an array:", positionSkills);
+            console.log("⚠️ positionSkills is invalid or not an array:", positionSkills);
             return false;
           }
 
           const interviewerSkills = interviewer.contact?.skills || [];
-          // console.log("Interviewer's Skills 1:", interviewerSkills);
-          // console.log("Position Skills 1:", positionSkills);
+          console.log("Interviewer's Skills 1:", interviewerSkills);
+          console.log("Position Skills 1:", positionSkills);
 
           const matchingSkills = interviewerSkills.filter(interviewerSkill =>
             positionSkills.some(positionSkill =>
@@ -289,13 +289,13 @@ function OutsourcedInterviewerModal({
             )
           );
 
-          // console.log("🎯 Matching Skills Found:", matchingSkills);
+          console.log("🎯 Matching Skills Found:", matchingSkills);
           const hasMatchingSkills = matchingSkills.length > 0;
-          // console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkills}`);
+          console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkills}`);
           return hasMatchingSkills;
         });
 
-        // console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
+        console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
 
         setBaseInterviewers(skillFilteredInterviewers);
         // setBaseInterviewers(externalInterviewers);

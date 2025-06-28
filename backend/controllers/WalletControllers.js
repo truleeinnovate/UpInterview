@@ -88,8 +88,8 @@ const createTopupOrder = async (req, res) => {
         type: "wallet_topup",
         ownerId,
         tenantId: tenantId || "default",
+        walletCode: walletCode,
       },
-      walletCode,
     });
 
     res.status(200).json({

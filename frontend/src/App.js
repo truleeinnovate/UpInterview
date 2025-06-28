@@ -878,13 +878,17 @@ const App = () => {
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
             <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar />
+
               <div className="ml-80">
                 <Subscription />
               </div>
             </></>} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-user-email" element={<VerifyUserEmail />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
+            <Route path="/assessmenttest" element={<AssessmentTest />} />
 
             {/* Protected Routes */}
             <Route
@@ -976,7 +980,6 @@ const App = () => {
                 <Route path="assessment/edit/:id" element={<AssessmentForm />} />
               </Route>
 
-              <Route path="/assessmenttest" element={<AssessmentTest />} />
 
               {/* Wallet */}
               <Route path="/wallet-transcations" element={<Wallet />}></Route>
@@ -1086,11 +1089,6 @@ const App = () => {
 
               {/* Task */}
               <Route path="/task" element={<Task />} />
-
-              {/* Verify Work Email */}
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-user-email" element={<VerifyUserEmail />} />
-
               {/* Super Admin Routes */}
               {/* {hasPermission('SuperAdmin') && ( */}
               <>
