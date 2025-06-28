@@ -5,7 +5,7 @@ exports.createInterviewTemplate = async (req, res) => {
   try {
     // Generate custom code like ASMT-TPL-00001
     const lastTemplate = await InterviewTemplate.findOne({})
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .select("interviewTemplateCode")
       .lean();
 
