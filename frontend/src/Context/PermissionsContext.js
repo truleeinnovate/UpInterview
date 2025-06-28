@@ -277,7 +277,8 @@ export const PermissionsProvider = ({ children }) => {
       // login,
       // logout,
       loading,
-      authError
+      authError,
+      refreshPermissions
     }}>
       {children}
     </PermissionsContext.Provider>

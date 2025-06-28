@@ -34,9 +34,12 @@ import { LiaGenderlessSolid } from "react-icons/lia";
 import { config } from "../../../config.js";
 import { setAuthCookies, getImpersonationToken } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { toast } from 'react-toastify';
+import { usePermissions } from '../../../Context/PermissionsContext';
 
 
 function UsersTab({ users }) {
+    const { refreshPermissions } = usePermissions();
+  
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [view, setView] = useState("table");
@@ -168,7 +171,7 @@ const handleLoginAsUser = async (userId) => {
           tenantId: data.tenantId,
           organization: data.isOrganization,
         });
-        localStorage.setItem('authToken', data.authToken);
+        await refreshPermissions();
         navigate('/home');
       } else {
         console.error('Login failed:', data.message);

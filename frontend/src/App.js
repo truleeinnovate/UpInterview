@@ -644,7 +644,7 @@ import { Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
-import SuperAdminNavbar from './Components/Navbar/SuperAdminNavbar/Header.jsx'; // Import SuperAdminNavbar
+import SuperAdminNavbar from './Components/Navbar/SuperAdminNavbar/Header.jsx';
 import Logo from './Pages/Login-Part/Logo';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
@@ -760,7 +760,7 @@ const InternalLogsPage = lazy(() => import("./Pages/SuperAdmin-Part/InternalLogs
 const IntegrationsPage = lazy(() => import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx"));
 const ContactProfileDetails = lazy(() => import("./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"));
 
-// Custom Suspense component to track loading state
+// Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => {
   return <Suspense fallback={fallback}>{children}</Suspense>;
 };
@@ -771,16 +771,15 @@ const App = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
-  console.log('tokenPayload', tokenPayload);
-
-
 
   const impersonationToken = Cookies.get('impersonationToken');
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
-  const impersonatedUserId = impersonationPayload?.impersonatedUserId;
 
-  console.log('impersonationPayload', impersonationPayload);
-
+  // Combine permissions into a single object
+  const combinedPermissions = useMemo(() => {
+    const combined = { ...effectivePermissions, ...superAdminPermissions };
+    return combined;
+  }, [effectivePermissions, superAdminPermissions]);
 
   // Define Super Admin routes
   const superAdminPaths = useMemo(() => [
@@ -814,10 +813,10 @@ const App = () => {
     '/complete-profile',
     '/subscription-plans',
     '/payment-details',
-    '/verify-email'
+    '/verify-email',
   ], []);
 
-  // Define paths where no navbar (neither regular nor Super Admin) should be shown
+  // Define paths where no navbar should be shown
   const noNavbarPaths = useMemo(() => [
     '/',
     '/select-user-type',
@@ -835,30 +834,23 @@ const App = () => {
     '/organization',
     '/payment-details',
     '/subscription-plans',
-    '/verify-email'
+    '/verify-email',
   ], []);
 
   const showLogo = showLogoPaths.includes(location.pathname);
-
-  // Determine if the current route is a Super Admin route
-  const isSuperAdminRoute = superAdminPaths.some(path => {
+  const isSuperAdminRoute = superAdminPaths.some((path) => {
     const regex = new RegExp(`^${path.replace(/:id/, '[^/]+')}$`);
     return regex.test(location.pathname);
   });
-
-  // Check if the regular Navbar or SuperAdminNavbar should be rendered
   const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
 
   // Permission check function
-  const hasPermission = (objectName, permissionType = 'View') => {
-    if (superAdminPermissions?.SuperAdmin) return true;
-    if (effectivePermissions?.[objectName]) {
-      if (typeof effectivePermissions[objectName] === 'boolean') {
-        return effectivePermissions[objectName];
-      }
-      return effectivePermissions[objectName][permissionType] ?? false;
+  const hasPermission = (objectName, permissionType = 'ViewTab') => {
+    if (!combinedPermissions[objectName]) return false;
+    if (typeof combinedPermissions[objectName] === 'boolean') {
+      return combinedPermissions[objectName];
     }
-    return false;
+    return combinedPermissions[objectName][permissionType] ?? false;
   };
 
   return (
@@ -876,13 +868,18 @@ const App = () => {
             <Route path="/organization-signup" element={<OrganizationSignUp />} />
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/callback" element={<LinkedInCallback />} />
-            <Route path="/payment-details" element={<><CardDetails /> <SubscriptionPlan /> </>} />
-            <Route path="/subscription-payment-details" element={<><SubscriptionCardDetails /> <><AccountSettingsSidebar />
-
-              <div className="ml-80">
-                <Subscription />
-              </div>
-            </></>} />
+            <Route path="/payment-details" element={<><CardDetails /><SubscriptionPlan /></>} />
+            <Route
+              path="/subscription-payment-details"
+              element={
+                <>
+                  <AccountSettingsSidebar />
+                  <div className="ml-80">
+                    <Subscription />
+                  </div>
+                </>
+              }
+            />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-user-email" element={<VerifyUserEmail />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
@@ -897,7 +894,11 @@ const App = () => {
                   <CustomProvider>
                     <PageSetter />
                     {shouldRenderNavbar && (
-                      isSuperAdminRoute ? <SuperAdminNavbar /> : <Navbar />
+                      isSuperAdminRoute ? (
+                        <SuperAdminNavbar />
+                      ) : (
+                        <Navbar />
+                      )
                     )}
                     <Outlet />
                   </CustomProvider>
@@ -905,8 +906,6 @@ const App = () => {
               }
             >
               <Route path="/home" element={<Home />} />
-              <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
-              <Route path="/outsource-interview-request" element={<InterviewRequest />} />
 
               {/* Candidate Routes */}
               {hasPermission('Candidates') && (
@@ -954,74 +953,109 @@ const App = () => {
               )}
 
               {/* Mock Interview Routes */}
-              <Route path="/mockinterview" element={<MockInterview />} />
-              <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-              <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-              <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+              {hasPermission('MockInterviews') && (
+                <>
+                  <Route path="/mockinterview" element={<MockInterview />} />
+                       {hasPermission('MockInterviews', 'Create') && (
+                  <Route path="/mockinterview-create" element={<MockSchedulelater />} />
+                )}
+                     {hasPermission('MockInterviews', 'Edit') && (
+                  <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
+                )}
+                     {hasPermission('MockInterviews', 'View') && (
+                  <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+                )}
+                </>
+              )}
 
               {/* Interview Routes */}
-              <Route path="/interviewList" element={<InterviewList />} />
-              <Route path="/interviews/new" element={<InterviewForm />} />
-              <Route path="/interviews/:id" element={<InterviewDetail />} />
-              <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
+              {hasPermission('Interviews') && (
+                <>
+                  <Route path="/interviewList" element={<InterviewList />} />
+                       {hasPermission('Interviews', 'Create') && (
+                  <Route path="/interviews/new" element={<InterviewForm />} />
+                )}
+                     {hasPermission('Interviews', 'View') && (
+                  <Route path="/interviews/:id" element={<InterviewDetail />} />
+                )}
+                     {hasPermission('Interviews', 'Edit') && (
+                  <Route path="/interviews/:id/edit" element={<InterviewForm />} />
+                )}
+                  <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
+                </>
+              )}
 
               {/* Question Bank */}
-              <Route path="/questionBank" element={<QuestionBank />} />
+              {hasPermission('QuestionBank') && (
+                <Route path="/questionBank" element={<QuestionBank />} />
+              )}
 
               {/* Assessment */}
-              <Route path="/assessments" element={<Assessment />} />
-              <Route path="/assessment/new" element={<AssessmentForm />} />
-              <Route path="/assessment-details" element={<AssessmentDetails />} />
-              <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
-              <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} >
-                <Route index element={null} />
-                <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
-                <Route path="assessment/edit/:id" element={<AssessmentForm />} />
-              </Route>
-
+              {hasPermission('Assessments') && (
+                <>
+                  <Route path="/assessments" element={<Assessment />} />
+                  {hasPermission('Assessments', 'Create') && (
+                    <Route path="/assessment/new" element={<AssessmentForm />} />
+                  )}
+                  {hasPermission('Assessments', 'View') && (
+                    <Route path="/assessment-details" element={<AssessmentDetails />} />
+                  )}
+                  {hasPermission('Assessments', 'Edit') && (
+                    <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
+                  )}
+                  <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>}>
+                    <Route index element={null} />
+                    <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
+                    {hasPermission('Assessments', 'Edit') && (
+                      <Route path="assessment/edit/:id" element={<AssessmentForm />} />
+                    )}
+                  </Route>
+                </>
+              )}
 
               {/* Wallet */}
-              <Route path="/wallet-transcations" element={<Wallet />}></Route>
+              {hasPermission('Wallet') && (
+                <Route path="/wallet-transcations" element={<Wallet />}>
+                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
+                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+                </Route>
+              )}
 
               {/* Account Settings Routes */}
               <Route path="/account-settings" element={<AccountSettingsSidebar />}>
-                <Route index element={
-                  organization ? (
-                    <>
-                      <Navigate to="profile" replace />
+                <Route
+                  index
+                  element={
+                    organization ? (
+                      <>
+                        <Navigate to="profile" replace />
+                        <Navigate to="my-profile/basic" replace />
+                      </>
+                    ) : (
                       <Navigate to="my-profile/basic" replace />
-                    </>
-                  ) : (
-                    <Navigate to="my-profile/basic" replace />
-                  )
-                } />
-                {organization && (
+                    )
+                  }
+                />
+                {organization && hasPermission('CompanyProfile') && (
                   <Route path="profile" element={<CompanyProfile />}>
                     <Route index element={null} />
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
-
-                {/* My Profile */}
-                <Route path="my-profile" element={<MyProfile />}>
-                  <Route index element={<Navigate to="basic" replace />} />
-                  <Route path="basic" element={<BasicDetails />} />
-                  <Route path="advanced" element={<AdvancedDetails />} />
-                  <Route path="interview" element={<InterviewUserDetails />} />
-                  <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="my-profile" />} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
-                  <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
-                  <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
-                </Route>
-
-                <Route path="wallet" element={<Wallet />}>
-                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
-                </Route>
-
-                {organization && (
+                {hasPermission('MyProfile') && (
+                  <Route path="my-profile" element={<MyProfile />}>
+                    <Route index element={<Navigate to="basic" replace />} />
+                    <Route path="basic" element={<BasicDetails />} />
+                    <Route path="advanced" element={<AdvancedDetails />} />
+                    <Route path="interview" element={<InterviewUserDetails />} />
+                    <Route path="availability" element={<AvailabilityUser />} />
+                    <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="my-profile" />} />
+                    <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
+                    <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
+                    <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+                  </Route>
+                )}
+                {hasPermission('InterviewerGroups') && (
                   <Route path="interviewer-groups" element={<InterviewerGroups />}>
                     <Route index element={null} />
                     <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
@@ -1029,104 +1063,180 @@ const App = () => {
                     <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
                   </Route>
                 )}
-                {organization && (
+                {hasPermission('Users') && (
                   <Route path="users" element={<UsersLayout />}>
+                {hasPermission('Users', 'Create') && (
+                    
                     <Route path="new" element={<UserForm mode="create" />} />
+                  )}
+                {hasPermission('Users', 'Edit') && (
+
                     <Route path="edit/:id" element={<UserForm mode="edit" />} />
+                  )}
+                {hasPermission('Users', 'View') && (
+
                     <Route path="details/:id" element={<UserProfileDetails />} />
+                  )}
                   </Route>
                 )}
-
-                <Route path="email-settings" element={<EmailTemplate />} />
-                <Route path="billing-details" element={<BillingSubtabs />} >
-                  <Route index element={null} />
-                  <Route path="details/:id" element={<UserInvoiceDetails />} />
-                </Route>
-
-                <Route path="subscription" element={<Subscription />} />
-                <Route path="security" element={<Security />} />
-                <Route path="notifications" element={<NotificationsDetails />} />
-                <Route path="usage" element={<Usage />} />
-                {organization && (
-                  <>
-                    <Route path="roles" element={<Role />}>
-                      <Route index element={null} />
-                      <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-                    </Route>
-                    <Route path="sharing" element={<Sharing />} />
-                    <Route path="sub-domain" element={<DomainManagement />} />
-                    <Route path="webhooks" element={<Webhooks />} />
-                    <Route path="hrms-ats" element={<HrmsAtsApi />} />
-                  </>
+                {hasPermission('Billing') && (
+                  <Route path="billing-details" element={<BillingSubtabs />}>
+                    <Route index element={null} />
+                    <Route path="details/:id" element={<UserInvoiceDetails />} />
+                  </Route>
                 )}
+                {hasPermission('Subscription') && (
+                  <Route path="subscription" element={<Subscription />} />
+                )}
+                {hasPermission('Security') && (
+                  <Route path="security" element={<Security />} />
+                )}
+                {hasPermission('NotificationsSettings') && (
+                  <Route path="notifications" element={<NotificationsDetails />} />
+                )}
+
+                  <Route path="email-settings" element={<EmailTemplate />} />
+                {hasPermission('Usage') && (
+                  <Route path="usage" element={<Usage />} />
+                )}
+                {hasPermission('Roles') && (
+                  <Route path="roles" element={<Role />}>
+                    <Route index element={null} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                  </Route>
+                )}
+                {hasPermission('Sharing') && (
+                  <Route path="sharing" element={<Sharing />} />
+                )}
+                {hasPermission('Subdomain') && (
+                  <Route path="sub-domain" element={<DomainManagement />} />
+                )}
+                <Route path="webhooks" element={<Webhooks />} />
+                <Route path="hrms-ats" element={<HrmsAtsApi />} />
               </Route>
 
               {/* Billing Invoice */}
-              <Route path="/billing" element={<InvoiceTab />} >
-                <Route index element={null} />
-                <Route path="details/:id" element={<UserInvoiceDetails />} />
-              </Route>
+              {hasPermission('Billing') && (
+                <Route path="/billing" element={<InvoiceTab />}>
+                  <Route index element={null} />
+                  <Route path="details/:id" element={<UserInvoiceDetails />} />
+                </Route>
+              )}
 
               {/* Interview Templates */}
-              <Route path="/interview-templates" element={<InterviewTemplates />}>
-                <Route index element={null} />
-                <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
-                <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
-              </Route>
-              <Route path="/interview-templates/:id" element={<TemplateDetail />}>
-                <Route index element={null} />
-                <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
-              </Route>
-              <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
-              <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+              {hasPermission('InterviewTemplates') && (
+                <Route path="/interview-templates" element={<InterviewTemplates />}>
+                  <Route index element={null} />
+                  {hasPermission('InterviewTemplates', 'Create') && (
+                    <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
+                  )}
+                  <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
+                </Route>
+              )}
+              {hasPermission('InterviewTemplates', 'Edit') && (
+                <Route path="/interview-templates/:id" element={<TemplateDetail />}>
+                  <Route index element={null} />
+                  <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
+                </Route>
+              )}
+              {hasPermission('InterviewTemplates') && (
+                <>
+                  <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
+                  <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+                </>
+              )}
 
               {/* Support Desk */}
-              <Route path="/support-desk" element={<SupportDesk />} />
-              <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
-              <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+              {hasPermission('SupportDesk') && (
+                <>
+                  <Route path="/support-desk" element={<SupportDesk />} />
+              {hasPermission('SupportDesk', 'View') && (
+                  <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
+              )}
+              {hasPermission('SupportDesk', 'Create') && (
+
+                  <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
+              )}
+              {hasPermission('SupportDesk', 'Edit') && (
+
+                  <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
+              )}
+              {hasPermission('SupportDesk', 'View') && (
+
+                  <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+              )}
+                </>
+              )}
 
               {/* Task */}
-              <Route path="/task" element={<Task />} />
+              {hasPermission('Tasks') && (
+                <Route path="/task" element={<Task />} />
+              )}
+
+              {/* Outsource Interviewer Request */}
+              {hasPermission('OutsourceInterviewerRequest') && (
+                <Route path="/outsource-interviewers-request" element={<OutsourceInterviewerRequest />} />
+              )}
+
+              {/* Interview Request */}
+              {hasPermission('InterviewRequest') && (
+                <Route path="/outsource-interview-request" element={<InterviewRequest />} />
+              )}
+
               {/* Super Admin Routes */}
-              {/* {hasPermission('SuperAdmin') && ( */}
-              <>
-                <Route index path="/admin-dashboard" element={<SuperAdminDashboard />} />
+              {hasPermission('Tenants') && (
                 <Route path="/tenants" element={<TenantsPage />}>
                   <Route index element={null} />
-                  {superAdminPermissions?.SuperAdmin?.CreateTenants && (
+                  {hasPermission('Tenants', 'Create') && (
                     <Route path="new" element={<AddTenantForm mode="Create" />} />
                   )}
-                  {superAdminPermissions?.SuperAdmin?.CreateTenants && (
+                  {hasPermission('Tenants', 'Edit') && (
                     <Route path="edit/:id" element={<AddTenantForm mode="Edit" />} />
                   )}
                 </Route>
+              )}
+              {hasPermission('Tenants') && (
                 <Route path="/tenants/:id" element={<TenantDetailsPage />} />
+              )}
+              {hasPermission('OutsourceInterviewerRequest') && (
                 <Route path="/outsource-requests" element={<OutsourceRequestsPage />} />
+              )}
+              {hasPermission('OutsourceInterviewerRequest') && (
                 <Route path="/outsource-interviewers" element={<OutsourceInterviewersPage />} />
+              )}
+              {hasPermission('InterviewRequest') && (
                 <Route path="/interviewer-requests" element={<InterviewerRequestsPage />} />
+              )}
+              {hasPermission('Billing') && (
                 <Route path="/admin-billing" element={<BillingPage />}>
                   <Route index element={null} />
-                  {superAdminPermissions?.Billing?.Manage && (
+                  {hasPermission('Billing', 'Manage') && (
                     <Route path="new" element={<AddInvoiceForm mode="Create" />} />
                   )}
-                  {superAdminPermissions?.Billing?.Manage && (
+                  {hasPermission('Billing', 'Manage') && (
                     <Route path="edit/:id" element={<AddInvoiceForm mode="Edit" />} />
                   )}
                 </Route>
+              )}
+              {hasPermission('SupportDesk') && (
                 <Route path="/support-tickets" element={<SupportTicketsPage />}>
                   <Route index element={null} />
-                  <Route path="new" element={<AddSupportForm mode="Create" />} />
-                  <Route path="edit/:id" element={<AddSupportForm mode="Edit" />} />
+                  {hasPermission('SupportDesk', 'Create') && (
+                    <Route path="new" element={<AddSupportForm mode="Create" />} />
+                  )}
+                  {hasPermission('SupportDesk', 'Edit') && (
+                    <Route path="edit/:id" element={<AddSupportForm mode="Edit" />} />
+                  )}
                 </Route>
+              )}
+              {hasPermission('SupportDesk', 'View') && (
                 <Route path="/support/:id" element={<SupportDetails />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/internal-logs" element={<InternalLogsPage />} />
-                <Route path="/integrations" element={<IntegrationsPage />} />
-                <Route path="/contact-profile-details" element={<ContactProfileDetails />} />
-              </>
-              {/* // )} */}
+              )}
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/internal-logs" element={<InternalLogsPage />} />
+              <Route path="/integrations" element={<IntegrationsPage />} />
+              <Route path="/contact-profile-details" element={<ContactProfileDetails />} />
+              <Route path="/admin-dashboard" element={<SuperAdminDashboard />} />
             </Route>
           </Routes>
         </div>

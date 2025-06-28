@@ -176,8 +176,6 @@ export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId
       sameSite: isLocalhost ? 'Lax' : 'None',
       domain,
     });
-    localStorage.setItem('authToken', authToken);
-    localStorage.setItem('tokenExpiration', expirationTime.toString());
   }
 
   // Set impersonationToken for super admin
@@ -200,8 +198,6 @@ export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId
       sameSite: isLocalhost ? 'Lax' : 'None',
       domain,
     });
-    localStorage.setItem('impersonationToken', impersonationToken);
-    localStorage.setItem('tokenExpiration', expirationTime.toString());
   }
 
   // Set user-specific cookies
@@ -223,7 +219,7 @@ export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId
     });
   }
 
-  if (typeof isOrganization !== 'undefined') {
+  if (typeof organization !== 'undefined') {
     Cookies.set('organization', organization.toString(), {
       expires: expirationDate,
       secure: !isLocalhost,
@@ -239,7 +235,6 @@ export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId
       sameSite: isLocalhost ? 'Lax' : 'None',
       domain,
     });
-    localStorage.setItem('impersonatedUserId', impersonatedUserId);
   }
 
   return expirationTime;
@@ -264,14 +259,14 @@ export const clearAllCookies = ({ preserveSuperAdmin = false } = {}) => {
     }
   });
 
-  const preservedItems = preserveSuperAdmin ? ['impersonationToken', 'impersonatedUserId'] : [];
-  const localStorageItems = { ...localStorage };
-  localStorage.clear();
-  preservedItems.forEach(item => {
-    if (localStorageItems[item]) {
-      localStorage.setItem(item, localStorageItems[item]);
-    }
-  });
+  // const preservedItems = preserveSuperAdmin ? ['impersonationToken', 'impersonatedUserId'] : [];
+  // const localStorageItems = { ...localStorage };
+  // localStorage.clear();
+  // preservedItems.forEach(item => {
+  //   if (localStorageItems[item]) {
+  //     localStorage.setItem(item, localStorageItems[item]);
+  //   }
+  // });
 
   sessionStorage.clear();
 };
@@ -280,7 +275,6 @@ export const clearAllCookies = ({ preserveSuperAdmin = false } = {}) => {
 export const getAuthToken = () => {
   if (window.location.pathname === '/') {
     clearAllCookies();
-    localStorage.removeItem('tokenExpiration');
     return null;
   }
 
@@ -289,12 +283,11 @@ export const getAuthToken = () => {
     return null;
   }
 
-  const tokenExpiration = Cookies.get('tokenExpiration') || localStorage.getItem('tokenExpiration');
+  const tokenExpiration = Cookies.get('tokenExpiration');
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (tokenExpiration && currentTime >= parseInt(tokenExpiration, 10)) {
     clearAllCookies({ preserveSuperAdmin: true });
-    localStorage.removeItem('tokenExpiration');
     return null;
   }
 
@@ -305,7 +298,6 @@ export const getAuthToken = () => {
 export const getImpersonationToken = () => {
   if (window.location.pathname === '/') {
     clearAllCookies();
-    localStorage.removeItem('tokenExpiration');
     return null;
   }
 
@@ -314,12 +306,11 @@ export const getImpersonationToken = () => {
     return null;
   }
 
-  const tokenExpiration = Cookies.get('tokenExpiration') || localStorage.getItem('tokenExpiration');
+  const tokenExpiration = Cookies.get('tokenExpiration');
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (tokenExpiration && currentTime >= parseInt(tokenExpiration, 10)) {
     clearAllCookies();
-    localStorage.removeItem('tokenExpiration');
     return null;
   }
 
@@ -332,14 +323,11 @@ export const isAuthenticated = () => {
 };
 
 // Logout function
-export const logout = (isOrganization = false) => {
+export const logout = (organization = false) => {
   const isImpersonating = !!Cookies.get('impersonationToken');
   clearAllCookies({ preserveSuperAdmin: isImpersonating });
 
-  localStorage.removeItem('tokenExpiration');
-  localStorage.removeItem('authToken');
-
-  const redirectPath = isImpersonating ? '/admin-dashboard' : isOrganization ? '/organization-login' : '/select-user-type';
+  const redirectPath = isImpersonating ? '/admin-dashboard' : organization ? '/organization-login' : '/select-user-type';
   const currentHost = window.location.hostname;
   const isLocalhost = currentHost === 'localhost';
 

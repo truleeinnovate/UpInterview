@@ -3,12 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import { setAuthCookies,clearAllCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { config } from "../../config";
 import { validateWorkEmail } from '../../utils/workEmailValidation.js';
 import toast from "react-hot-toast";
+import { usePermissions } from '../../Context/PermissionsContext';
 
 const OrganizationLogin = () => {
+  const { refreshPermissions } = usePermissions();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -230,6 +233,8 @@ const OrganizationLogin = () => {
           setCountdown(60);
           return;
         }
+        await refreshPermissions();
+
 
         switch (status) {
           case 'submitted':

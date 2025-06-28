@@ -22,6 +22,8 @@ import axios from "axios";
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
+import { clearAllCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
+
 
 function Header() {
   // const { user, hasRole } = useAuth();
@@ -313,8 +315,10 @@ function Header() {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
+
             // logout(organization);
-            navigate("/");
+            clearAllCookies();
+            navigate("/organization-login");
           }}
         >
           Log Out

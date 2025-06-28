@@ -293,10 +293,12 @@ const Navbar = () => {
       </div>
       <div className="px-2 py-1">
         {[
-          ...(effectivePermissions.Billing?.View
-            ? [{ to: "/billing", label: "Billing", icon: <CiCreditCard1 /> }]
+          ...(effectivePermissions.Billing?.ViewTab
+            ? [{ to: "/account-settings/billing-details", label: "Billing", icon: <CiCreditCard1 /> }]
             : []),
-          { to: "/wallet-transcations", label: "My Wallet", icon: <LiaWalletSolid /> },
+          ...(effectivePermissions.Wallet?.ViewTab
+            ? [{ to: "/account-settings/wallet", label: "My Wallet", icon: <LiaWalletSolid /> }]
+            : []),
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
@@ -430,7 +432,7 @@ const Navbar = () => {
             {/* Desktop navigation */}
             <nav className="hidden lg:flex xl:flex 2xl:flex items-center justify-center flex-1">
               <div className="flex items-center space-x-8 max-w-3xl">
-                {effectivePermissions.Candidates?.View && (
+                {effectivePermissions.Candidates?.ViewTab && (
                   <NavLink
                     to="/candidate"
                     className={`h-full flex items-center relative px-1 ${isActive("/candidate")
@@ -446,7 +448,7 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {effectivePermissions.Positions?.View && (
+                {effectivePermissions.Positions?.ViewTab && (
                   <NavLink
                     to="/position"
                     className={`h-full flex items-center relative px-1 ${isActive("/position")
@@ -462,9 +464,9 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {(effectivePermissions.Interviews?.View ||
-                  effectivePermissions.MockInterviews?.View ||
-                  effectivePermissions.InterviewTemplates?.View) && (
+                {(effectivePermissions.Interviews?.ViewTab ||
+                  effectivePermissions.MockInterviews?.ViewTab ||
+                  effectivePermissions.InterviewTemplates?.ViewTab) && (
                     <div
                       className="relative h-full flex items-center"
                       ref={interviewRef}
@@ -494,7 +496,7 @@ const Navbar = () => {
                         <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                           <div className="space-y-1">
                             {[
-                              ...(effectivePermissions.InterviewTemplates?.View
+                              ...(effectivePermissions.InterviewTemplates?.ViewTab
                                 ? [
                                   {
                                     to: "/interview-templates",
@@ -502,11 +504,11 @@ const Navbar = () => {
                                   },
                                 ]
                                 : []),
-                              ...(effectivePermissions.Interviews?.View
+                              ...(effectivePermissions.Interviews?.ViewTab
                                 ? [{ to: "/interviewList", label: "Interviews" }]
                                 : []),
                               // Only include Mock Interviews if organization is NOT present
-                              ...(effectivePermissions.MockInterviews?.View
+                              ...(effectivePermissions.MockInterviews?.ViewTab
                                 ? [
                                   {
                                     to: "/mockinterview",
@@ -528,12 +530,11 @@ const Navbar = () => {
                           </div>
                         </div>
                       )}
-
                     </div>
                   )}
 
-                {(effectivePermissions.Assessments?.View ||
-                  effectivePermissions.QuestionBank?.View) && (
+                {(effectivePermissions.Assessments?.ViewTab ||
+                  effectivePermissions.QuestionBank?.ViewTab) && (
                     <div
                       className="relative h-full flex items-center"
                       ref={assessmentRef}
@@ -560,10 +561,10 @@ const Navbar = () => {
                         <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                           <div className="space-y-1">
                             {[
-                              ...(effectivePermissions.Assessments?.View
+                              ...(effectivePermissions.Assessments?.ViewTab
                                 ? [{ to: "/assessments", label: "Assessments" }]
                                 : []),
-                              ...(effectivePermissions.QuestionBank?.View
+                              ...(effectivePermissions.QuestionBank?.ViewTab
                                 ? [
                                   { to: "/questionBank", label: "Question Bank" },
                                 ]
@@ -585,8 +586,8 @@ const Navbar = () => {
                     </div>
                   )}
 
-                {(effectivePermissions.Analytics?.View ||
-                  effectivePermissions.SupportDesk?.View) && (
+                {(effectivePermissions.Analytics?.ViewTab ||
+                  effectivePermissions.SupportDesk?.ViewTab) && (
                     <div
                       className="relative h-full flex items-center"
                       ref={moreRef}
@@ -612,10 +613,10 @@ const Navbar = () => {
                         <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                           <div className="space-y-1">
                             {[
-                              ...(effectivePermissions.Analytics?.View
+                              ...(effectivePermissions.Analytics?.ViewTab
                                 ? [{ to: "/analytics", label: "Analytics" }]
                                 : []),
-                              ...(effectivePermissions.SupportDesk?.View
+                              ...(effectivePermissions.SupportDesk?.ViewTab
                                 ? [{ to: "/support-desk", label: "Support Desk" }]
                                 : []),
                             ].map(({ to, label }) => (
@@ -658,7 +659,7 @@ const Navbar = () => {
           <div className="fixed inset-0 top-16 bg-gray-800 bg-opacity-75 z-40 lg:hidden">
             <div className="fixed left-0 w-64 bg-white h-full z-50 overflow-y-auto">
               <div className="p-4 space-y-1">
-                {effectivePermissions.Candidates?.View && (
+                {effectivePermissions.Candidates?.ViewTab && (
                   <NavLink
                     to="/candidate"
                     className={`block px-4 py-3 rounded-md ${isActive("/candidate")
@@ -674,7 +675,7 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {effectivePermissions.Positions?.View && (
+                {effectivePermissions.Positions?.ViewTab && (
                   <NavLink
                     to="/position"
                     className={`block px-4 py-3 rounded-md ${isActive("/position")
@@ -690,9 +691,9 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {(effectivePermissions.Interviews?.View ||
-                  effectivePermissions.MockInterviews?.View ||
-                  effectivePermissions.InterviewTemplates?.View) && (
+                {(effectivePermissions.Interviews?.ViewTab ||
+                  effectivePermissions.MockInterviews?.ViewTab ||
+                  effectivePermissions.InterviewTemplates?.ViewTab) && (
                     <div className="relative" ref={interviewRef}>
                       <button
                         className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviewList") ||
@@ -713,7 +714,7 @@ const Navbar = () => {
                       {dropdownState.interviewDropdown && (
                         <div className="mt-1 ml-4 space-y-1">
                           {[
-                            ...(effectivePermissions.InterviewTemplates?.View
+                            ...(effectivePermissions.InterviewTemplates?.ViewTab
                               ? [
                                 {
                                   to: "/interview-templates",
@@ -721,12 +722,12 @@ const Navbar = () => {
                                 },
                               ]
                               : []),
-                            ...(effectivePermissions.Interviews?.View
+                            ...(effectivePermissions.Interviews?.ViewTab
                               ? [{ to: "/interviewList", label: "Interviews" }]
                               : []),
                             ...(organization
                               ? []
-                              : effectivePermissions.MockInterviews?.View
+                              : effectivePermissions.MockInterviews?.ViewTab
                                 ? [
                                   {
                                     to: "/mockinterview",
@@ -755,8 +756,8 @@ const Navbar = () => {
                     </div>
                   )}
 
-                {(effectivePermissions.Assessments?.View ||
-                  effectivePermissions.QuestionBank?.View) && (
+                {(effectivePermissions.Assessments?.ViewTab ||
+                  effectivePermissions.QuestionBank?.ViewTab) && (
                     <div className="relative" ref={assessmentRef}>
                       <button
                         className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") || isActive("/questionBank")
@@ -775,10 +776,10 @@ const Navbar = () => {
                       {dropdownState.assessmentDropdown && (
                         <div className="mt-1 ml-4 space-y-1">
                           {[
-                            ...(effectivePermissions.Assessments?.View
+                            ...(effectivePermissions.Assessments?.ViewTab
                               ? [{ to: "/assessments", label: "Assessments" }]
                               : []),
-                            ...(effectivePermissions.QuestionBank?.View
+                            ...(effectivePermissions.QuestionBank?.ViewTab
                               ? [
                                 { to: "/questionBank", label: "Question Bank" },
                               ]
@@ -804,8 +805,8 @@ const Navbar = () => {
                     </div>
                   )}
 
-                {(effectivePermissions.Analytics?.View ||
-                  effectivePermissions.SupportDesk?.View) && (
+                {(effectivePermissions.Analytics?.ViewTab ||
+                  effectivePermissions.SupportDesk?.ViewTab) && (
                     <div className="relative" ref={moreRef}>
                       <button
                         className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") || isActive("/support-desk")
@@ -824,10 +825,10 @@ const Navbar = () => {
                       {dropdownState.moreDropdown && (
                         <div className="mt-1 ml-4 space-y-1">
                           {[
-                            ...(effectivePermissions.Analytics?.View
+                            ...(effectivePermissions.Analytics?.ViewTab
                               ? [{ to: "/analytics", label: "Analytics" }]
                               : []),
-                            ...(effectivePermissions.SupportDesk?.View
+                            ...(effectivePermissions.SupportDesk?.ViewTab
                               ? [{ to: "/support-desk", label: "Support Desk" }]
                               : []),
                           ].map(({ to, label }) => (
