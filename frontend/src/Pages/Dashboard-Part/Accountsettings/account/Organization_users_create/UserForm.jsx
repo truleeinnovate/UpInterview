@@ -26,6 +26,7 @@ import {
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
 
 import { getOrganizationRoles } from "../../../../../apiHooks/useRoles.js";
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
@@ -322,10 +323,10 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                 className="p-1 rounded-full hover:bg-white/10"
               >
                 {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
-                )}
+                <ArrowsPointingInIcon className="h-5 w-5" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-5 w-5" />
+              )}
               </button>
               <button onClick={handleClose} className="sm:hidden">
                 <X className="w-5 h-5 text-gray-500" />
@@ -419,6 +420,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       type="text"
                       name="firstName"
                       id="firstName"
+                      placeholder="First Name"
                       value={userData.firstName}
                       onChange={handleChange}
                       className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
@@ -444,6 +446,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       type="text"
                       name="lastName"
                       id="lastName"
+                      placeholder="Last Name"
                       value={userData.lastName}
                       onChange={handleChange}
                       className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
@@ -509,6 +512,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                       <select
                         name="countryCode"
                         value={userData.countryCode}
+                        placeholder="Country Code"
                         onChange={handleCountryCodeChange}
                         className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
                           errors.phone ? "border-red-500" : "border-gray-300"
@@ -526,6 +530,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         name="phone"
                         id="phone"
                         value={userData.phone}
+                        placeholder="Enter Phone Number"
                         onChange={handlePhoneInput}
                         className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
                           errors.phone ? "border-red-500" : "border-gray-300"
@@ -554,6 +559,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         type="text"
                         readOnly
                         value={selectedCurrentRole}
+                        placeholder="Select Role"
                         onClick={toggleDropdownRole}
                         className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
                           errors.roleId ? "border-red-500" : "border-gray-300"

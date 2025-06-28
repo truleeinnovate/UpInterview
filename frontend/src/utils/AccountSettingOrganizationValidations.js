@@ -10,6 +10,7 @@ export const validateCompanyProfile = (formData) => {
     if (!safeTrim(formData.industry)) errors.industry = "Industry is required";
     if (!safeTrim(formData.employees)) errors.employees = "Company size is required";
     if (!safeTrim(formData.country)) errors.country = "Country is required";
+    if (!safeTrim(formData.website)) errors.website = "Website is required";
     if (!safeTrim(formData.firstName)) errors.firstName = "First name is required";
     if (!safeTrim(formData.lastName)) errors.lastName = "Last name is required";
     if (!safeTrim(formData.email)) errors.email = "Email is required"; // Fixed capitalization (Email -> email)

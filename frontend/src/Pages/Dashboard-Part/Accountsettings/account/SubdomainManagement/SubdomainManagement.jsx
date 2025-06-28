@@ -263,7 +263,7 @@ console.log("organizationId in subdomainmanagement", organizationId);
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
                     placeholder="your-subdomain"
-                    className="p-2 w-64 rounded-l-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue flex-1"
+                    className="p-2 w-64 rounded-l-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue flex-1"
                   />
                   <span className="inline-flex items-center px-3 py-2 border border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                     .{baseDomain}

@@ -707,6 +707,7 @@ const BasicDetailsEditPage = ({
                   <input
                     type="email"
                     name="email"
+                    placeholder="Email"
                     value={formData.email || ""}
                     onChange={handleInputChange}
                     onBlur={() =>
@@ -736,6 +737,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="firstName"
+                  placeholder="First Name"
                   value={formData.firstName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -756,6 +758,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="lastName"
+                  placeholder="Last Name"
                   value={formData.lastName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -775,6 +778,7 @@ const BasicDetailsEditPage = ({
                   selected={startDate}
                   onChange={handleDateChange}
                   dateFormat="dd-MM-yyyy"
+                  placeholderText="Select Date of Birth"
                   maxDate={new Date()}
                   showYearDropdown
                   showMonthDropdown
@@ -792,6 +796,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="profileId"
+                  placeholder="Profile ID"
                   // disabled={from === 'users'}
                   value={formData.profileId || ""}
                   onChange={handleInputChange}
@@ -834,6 +839,7 @@ const BasicDetailsEditPage = ({
                 <div className="flex gap-2">
                   <select
                     name="countryCode"
+                    placeholder="Country Code"
                     value={formData.countryCode || "+91"}
                     onChange={handleInputChange}
                     className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
@@ -848,6 +854,7 @@ const BasicDetailsEditPage = ({
                   <input
                     type="text"
                     name="phone"
+                    placeholder="Phone"
                     value={formData.phone || ""}
                     onChange={handleInputChange}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -867,6 +874,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="linkedinUrl"
+                  placeholder="LinkedIn URL"
                   value={formData.linkedinUrl || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -940,6 +948,7 @@ const BasicDetailsEditPage = ({
                 <input
                   type="text"
                   name="portfolioUrl"
+                  placeholder="Portfolio URL"
                   value={formData.portfolioUrl || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"

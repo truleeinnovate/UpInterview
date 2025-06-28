@@ -80,7 +80,7 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handle
                     onClick={() => {
                       navigate(`details/${invoice.id}`, { state: { invoiceData: invoice } });
                     }}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                     title="View Details"
                   >
                     <Eye className="w-4 h-4" />

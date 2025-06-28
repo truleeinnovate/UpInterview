@@ -195,7 +195,6 @@ const EditAdvacedDetails = ({
   // API call to save all changes
   const handleSave = async (e) => {
     e.preventDefault(); // Added to prevent form submission issues
-    setLoading(true); // loading
 
     const validationErrors = validateAdvancedForm(formData); // Validate form
     setErrors(validationErrors);
@@ -281,21 +280,21 @@ const EditAdvacedDetails = ({
     }));
     setShowDropdownIndustry(false);
     setSearchTermIndustry("");
-    // setErrors((prev) => ({ ...prev, industry: '' }));
+    setErrors((prev) => ({ ...prev, industry: '' }));
   };
 
   const handleLocationSelect = (location) => {
     setFormData((prev) => ({ ...prev, location: location.LocationName || "" }));
     setShowDropdownLocation(false);
     setSearchTermLocation("");
-    // setErrors((prev) => ({ ...prev, location: '' }));
+    setErrors((prev) => ({ ...prev, location: '' }));
   };
 
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, currentRole: role.RoleName || "" }));
     setShowDropdownCurrentRole(false);
     setSearchTermCurrentRole("");
-    // setErrors((prev) => ({ ...prev, currentRole: '' }));
+    setErrors((prev) => ({ ...prev, currentRole: '' }));
   };
 
   const toggleCurrentRole = () =>
@@ -344,7 +343,7 @@ const EditAdvacedDetails = ({
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
-        {isLoading && (
+        {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
           </div>
@@ -453,6 +452,7 @@ const EditAdvacedDetails = ({
                     autoComplete="off"
                     onClick={() =>
                       setShowDropdownIndustry(!showDropdownIndustry)
+                      
                     }
                     className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
                     readOnly
@@ -511,6 +511,7 @@ const EditAdvacedDetails = ({
                 <input
                   type="text"
                   name="experience"
+                  placeholder="Years of Experience"
                   value={formData.experience}
                   onChange={handleInputChange}
                   className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
@@ -694,6 +695,7 @@ const EditAdvacedDetails = ({
               <textarea
                 name="coverLetterdescription"
                 value={formData.coverLetterdescription}
+                placeholder="Please provide a brief description of your cover letter, including any relevant job titles, companies, or accomplishments."
                 onChange={handleInputChange}
                 autoComplete="off"
                 rows={5}

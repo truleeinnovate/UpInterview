@@ -248,7 +248,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+                    className="w-full pl-8 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     placeholder="Enter amount"
                     min="1"
                     step="0.01"

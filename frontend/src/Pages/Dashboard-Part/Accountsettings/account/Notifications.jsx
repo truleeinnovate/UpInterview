@@ -43,7 +43,7 @@ const NotificationsDetails = () => {
         <div className="space-y-4">
           {recentNotifications.map(notification => (
             <div key={notification.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
-              {notification.type === 'interview' && <BellIcon className="h-6 w-6 text-blue-500" />}
+              {notification.type === 'interview' && <BellIcon className="h-6 w-6 text-custom-blue" />}
               {notification.type === 'assessment' && <CheckIcon className="h-6 w-6 text-green-500" />}
               {notification.type === 'billing' && <CreditCardIcon className="h-6 w-6 text-purple-500" />}
               {notification.type === 'security' && <ShieldCheckIcon className="h-6 w-6 text-red-500" />}
@@ -51,7 +51,7 @@ const NotificationsDetails = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">{notification.title}</h4>
                   {!notification.read && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    <span className="px-2 py-1 bg-blue-100 text-custom-blue rounded-full text-xs">
                       New
                     </span>
                   )}
