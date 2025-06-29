@@ -51,6 +51,6 @@ const TenantQuestionsSchema = new mongoose.Schema({
     tenantId: String,
 });
 
-const TenantQuestions  = mongoose.model("tenantQuestions", TenantQuestionsSchema);
+const TenantQuestions = mongoose.models.tenantQuestions || mongoose.model("tenantQuestions", TenantQuestionsSchema);
 
 module.exports = { TenantQuestions  };

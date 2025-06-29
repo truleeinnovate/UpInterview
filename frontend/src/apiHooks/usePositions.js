@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { fetchFilterData } from '../utils/dataUtils';
+import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
 export const usePositions = () => {
   const queryClient = useQueryClient();
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
-  const positionPermissions = sharingPermissionscontext?.position || {};
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Positions?.View;
 
 
   const {
@@ -16,12 +16,12 @@ export const usePositions = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ['positions', positionPermissions],
+    queryKey: ['positions'],
     queryFn: async () => {
-      const filteredPositions = await fetchFilterData('position', positionPermissions);
-      return filteredPositions.reverse(); // Latest first
+      const data = await fetchFilterData('position');
+      return data.reverse();
     },
-    enabled: !!positionPermissions,
+    enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
@@ -59,7 +59,7 @@ export const usePositions = () => {
       console.log('Error adding rounds:', error);
     },
   });
-  
+
 
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
@@ -94,6 +94,6 @@ export const usePositions = () => {
     addRoundsMutationError: addRoundsMutation.error,
     addOrUpdatePosition: positionMutation.mutateAsync,
     addRounds: addRoundsMutation.mutateAsync,
-    deleteRoundMutation:deleteRoundMutation.mutateAsync
+    deleteRoundMutation: deleteRoundMutation.mutateAsync
   };
 };

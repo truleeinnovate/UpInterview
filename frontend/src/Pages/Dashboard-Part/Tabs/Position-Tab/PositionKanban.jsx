@@ -8,9 +8,9 @@ const formatCreatedDate = (date) => {
   return date && isValid(parseISO(date))
     ? format(parseISO(date), "dd MMM, yyyy")
     : 'N/A';
-}
+};
 
-const PositionKanban = ({ positions, loading }) => {
+const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissions }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,7 +21,6 @@ const PositionKanban = ({ positions, loading }) => {
           <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
           <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {[...Array(8)].map((_, index) => (
             <motion.div
@@ -44,7 +43,6 @@ const PositionKanban = ({ positions, loading }) => {
                   <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
                 </div>
               </div>
-
               <div className="space-y-3 mb-4">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
@@ -67,7 +65,6 @@ const PositionKanban = ({ positions, loading }) => {
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-wrap gap-2">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
@@ -100,7 +97,6 @@ const PositionKanban = ({ positions, loading }) => {
               {positions?.length} Positions
             </span>
           </motion.div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
             {positions.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
@@ -119,7 +115,7 @@ const PositionKanban = ({ positions, loading }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   whileHover={{ y: -5 }}
-                  onClick={() => navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } })}
+                  onClick={() => effectivePermissions.Positions?.View && onView(position)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center">
@@ -129,34 +125,36 @@ const PositionKanban = ({ positions, loading }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/position/view-details/${position._id}`, { state: { from: location.pathname } });
-                        }}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/position/edit-position/${position._id}`);
-                        }}
-                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </motion.button>
+                      {effectivePermissions.Positions?.View && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onView(position);
+                          }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                      {effectivePermissions.Positions?.Edit && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(position);
+                          }}
+                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </motion.button>
+                      )}
                     </div>
                   </div>
-
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5 text-gray-600">
@@ -176,7 +174,6 @@ const PositionKanban = ({ positions, loading }) => {
                         </span>
                       </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <Clock className="w-4 h-4 text-gray-500" />
@@ -188,7 +185,6 @@ const PositionKanban = ({ positions, loading }) => {
                       </div>
                     </div>
                   </div>
-
                   <div className="mt-4">
                     <div className="flex flex-wrap gap-1">
                       {position?.skills?.slice(0, 3).map((skill, index) => (

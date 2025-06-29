@@ -72,6 +72,6 @@ const mockInterviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const MockInterview = mongoose.model("MockInterview", mockInterviewSchema);
+const MockInterview = mongoose.models.MockInterview || mongoose.model('MockInterview', mockInterviewSchema);
 
 module.exports = { MockInterview };

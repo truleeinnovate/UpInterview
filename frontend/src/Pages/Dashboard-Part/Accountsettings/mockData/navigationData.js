@@ -7,17 +7,10 @@ import {
   ChartBarIcon,
   WalletIcon,
   UserGroupIcon,
-  CalendarIcon,
-  DocumentTextIcon,
-  AcademicCapIcon,
-  ClipboardDocumentListIcon,
-  ChatBubbleLeftRightIcon,
-  PresentationChartLineIcon,
   UserIcon,
   ShareIcon,
   UsersIcon,
   GlobeAltIcon,
-  UserCircleIcon,
   CodeBracketIcon,
   ArrowsRightLeftIcon
 } from '@heroicons/react/24/outline'
@@ -32,8 +25,6 @@ const mainNavigation = [
   { name: 'Security', icon: KeyIcon, id: 'security' },
   { name: 'Usage', icon: ChartBarIcon, id: 'usage' },
   { name: 'Users', icon: UsersIcon, id: 'users' },
-  // { name: 'Team Members', icon: UserGroupIcon, id: 'team' },
-  // { name: 'My Team', icon: UserCircleIcon, id: 'my-team' },
   { name: 'Interviewer Groups', icon: UserGroupIcon, id: 'interviewer-groups' },
   { name: 'Roles', icon: UserIcon, id: 'roles' },
   { name: 'Sharing Settings', icon: ShareIcon, id: 'sharing' },
@@ -42,16 +33,6 @@ const mainNavigation = [
   { name: 'Notification Settings', icon: BellIcon, id: 'notifications' },
 ]
 
-
-
-const interviewNavigation = [
-  { name: 'Interview Calendar', icon: CalendarIcon, id: 'calendar' },
-  { name: 'Question Bank', icon: DocumentTextIcon, id: 'questions' },
-  { name: 'Assessment Templates', icon: ClipboardDocumentListIcon, id: 'templates' },
-  { name: 'Skills Matrix', icon: AcademicCapIcon, id: 'skills' },
-  { name: 'Interview Feedback', icon: ChatBubbleLeftRightIcon, id: 'feedback' },
-  { name: 'Analytics', icon: PresentationChartLineIcon, id: 'analytics' }
-]
 
 const integrationNavigation = [
   { name: 'Webhooks', icon: CodeBracketIcon, id: 'webhooks' },
@@ -63,10 +44,6 @@ export const navigation = [
     category: 'Account',
     items: mainNavigation
   },
-  // {
-  //   category: 'Interview Tools',
-  //   items: interviewNavigation
-  // },
   {
     category: 'Integrations',
     items: integrationNavigation

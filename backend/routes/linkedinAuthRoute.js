@@ -126,18 +126,21 @@ router.post("/check-user", async (req, res) => {
         token,
       });
     } else {
-      // Create new User
-      const newUser = await Users.create({
-        ...userInfo, // includes firstName, lastName, email, pictureUrl, profileUrl
-      });
 
       // Create new Tenant
       const newTenant = await Tenant.create({
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         email: userInfo.email,
-        ownerId: newUser._id, // who is created this tenant
       });
+
+      const newUser = await Users.create({
+        ...userInfo,
+        tenantId: newTenant._id
+      });
+
+      newTenant.ownerId = newUser._id;
+      await newTenant.save();
 
       // Create new Contact
       // await Contacts.create({

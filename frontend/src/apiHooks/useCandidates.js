@@ -1,14 +1,51 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { fetchFilterData } from "../utils/dataUtils";
-import { config } from "../config";
+import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
+import { config } from "../config";
 import { uploadFile } from "./imageApis";
+
+// export const useCandidates = () => {
+//   const queryClient = useQueryClient();
+//   // const { sharingPermissionscontext = {} } = usePermissions() || {};
+//   // const candidatePermissions = sharingPermissionscontext?.candidate || {};
+
+//   const {
+//     data: candidateData = [],
+//     isLoading: isQueryLoading,
+//     isError,
+//     error,
+//   } = useQuery({
+//     queryKey: ["candidates"],
+//     queryFn: async () => {
+//       const filteredCandidates = await fetchFilterData(
+//         "candidate",
+//       );
+//       return filteredCandidates
+//         .map((candidate) => {
+//           if (candidate.ImageData?.filename) {
+//             return {
+//               ...candidate,
+//               imageUrl: `${
+//                 config.REACT_APP_API_URL
+//               }/${candidate.ImageData.path.replace(/\\/g, "/")}`,
+//             };
+//           }
+//           return candidate;
+//         })
+//         .reverse();
+//     },
+//     // enabled: !!candidatePermissions,
+//     retry: 1,
+//     staleTime: 1000 * 60 * 5,
+//   });
 
 export const useCandidates = () => {
   const queryClient = useQueryClient();
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
-  const candidatePermissions = sharingPermissionscontext?.candidate || {};
+  const { effectivePermissions } = usePermissions();
+
+  // Check if user has permission to view candidates
+  const hasViewPermission = effectivePermissions?.Candidates?.View;
 
   const {
     data: candidateData = [],
@@ -16,29 +53,22 @@ export const useCandidates = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["candidates", candidatePermissions],
+    queryKey: ["candidates"],
     queryFn: async () => {
-      const filteredCandidates = await fetchFilterData(
-        "candidate",
-        candidatePermissions
-      );
-      return filteredCandidates
-        .map((candidate) => {
-          if (candidate.ImageData?.filename) {
-            return {
-              ...candidate,
-              imageUrl: `${
-                config.REACT_APP_API_URL
-              }/${candidate.ImageData.path.replace(/\\/g, "/")}`,
-            };
-          }
-          return candidate;
-        })
-        .reverse();
+      const data = await fetchFilterData("candidate");
+      return data.map((candidate) => {
+        if (candidate.ImageData?.filename) {
+          return {
+            ...candidate,
+            imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, "/")}`,
+          };
+        }
+        return candidate;
+      }).reverse();
     },
-    enabled: !!candidatePermissions,
+    enabled: !!hasViewPermission, // Only fetch if user has permission
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const mutation = useMutation({

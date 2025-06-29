@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { useAuth } from "../../Context/AuthContext";
+// import { useAuth } from "../../Context/AuthContext";
 import MetricsOverview from "../../Components/SuperAdminComponents/Dashboard/MetricsOverview";
 import RecentActivity from "../../Components/SuperAdminComponents/Dashboard/RecentActivity";
 import TenantMetricsChart from "../../Components/SuperAdminComponents/Dashboard/TenantMetricsChart";
 import { AiOutlineWarning } from "react-icons/ai";
 
 function Dashboard() {
-  const { user, hasRole } = useAuth();
+  // const { user, hasRole } = useAuth();
 
   useEffect(() => {
     document.title = "Dashboard | Admin Portal";
@@ -200,8 +200,8 @@ function Dashboard() {
 
       <MetricsOverview />
 
-      {hasRole("super_admin") && renderSuperAdminContent()}
-      {hasRole("support_team") && renderSupportContent()}
+      { renderSuperAdminContent()}
+      { renderSupportContent()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
         <TenantMetricsChart />

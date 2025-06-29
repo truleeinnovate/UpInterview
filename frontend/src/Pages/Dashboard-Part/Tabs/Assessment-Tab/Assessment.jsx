@@ -17,10 +17,11 @@ import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { config } from "../../../../config.js";
 import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const Assessment = () => {
-const { assessmentData, isLoading } = useAssessments();
-  
+  const { effectivePermissions } = usePermissions();
+  const { assessmentData, isLoading } = useAssessments();
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
   const [viewMode, setViewMode] = useState("table");
@@ -35,7 +36,6 @@ const { assessmentData, isLoading } = useAssessments();
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
 
-  // Fetch sections for current page's assessments
   const rowsPerPage = 10;
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
@@ -95,7 +95,6 @@ const { assessmentData, isLoading } = useAssessments();
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
-    // Reset filter popup UI state
     setIsDifficultyOpen(false);
     setIsDurationOpen(false);
     setSelectedDifficulty([]);
@@ -148,19 +147,23 @@ const { assessmentData, isLoading } = useAssessments();
   };
 
   const handleView = (assessment) => {
-    navigate(`/assessment-details/${assessment._id}`);
+    if (effectivePermissions.Assessments?.View) {
+      navigate(`/assessment-details/${assessment._id}`);
+    }
   };
 
   const handleEdit = (assessment) => {
-    navigate(`/assessment/edit/${assessment._id}`);
+    if (effectivePermissions.Assessments?.Edit) {
+      navigate(`/assessment/edit/${assessment._id}`);
+    }
   };
 
-  const handleShareClick = async (assessment) => {
-    if ((assessmentSections[assessment._id] ?? 0) === 0) {
+  const handleShareClick = (assessment) => {
+    if (effectivePermissions.Assessments?.Share && (assessmentSections[assessment._id] ?? 0) > 0) {
+      setIsShareOpen(assessment);
+    } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
       toast.error("No questions added to this assessment.");
-      return;
     }
-    setIsShareOpen(assessment);
   };
 
   const handleCloseShare = () => {
@@ -216,8 +219,7 @@ const { assessmentData, isLoading } = useAssessments();
       key: "passScore",
       header: "Pass Score (Number / %)",
       render: (value, row) =>
-row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided"
-
+        row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided",
     },
     {
       key: "Duration",
@@ -227,25 +229,37 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
   ];
 
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: handleView,
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: handleEdit,
-    },
-    {
-      key: "share",
-      label: "Share",
-      icon: <Share2 className="w-4 h-4 text-green-600" />,
-      onClick: handleShareClick,
-      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
-    },
+    ...(effectivePermissions.Assessments?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: handleView,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.Assessments?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: handleEdit,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.Assessments?.Share
+      ? [
+          {
+            key: "share",
+            label: "Share",
+            icon: <Share2 className="w-4 h-4 text-green-600" />,
+            onClick: handleShareClick,
+            disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+          },
+        ]
+      : []),
   ];
 
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
@@ -288,6 +302,7 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
               title="Assessment Templates"
               onAddClick={() => navigate("/assessment/new")}
               addButtonText="New Template"
+              canCreate={effectivePermissions.Assessments?.Create}
             />
             <Toolbar
               view={viewMode}
@@ -312,29 +327,25 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
-              <>
-                <TableView
-                  data={currentFilteredRows}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={isLoading}
-                  emptyState="No assessments found."
-                  className="table-fixed w-full"
-                />
-              </>
+              <TableView
+                data={currentFilteredRows}
+                columns={tableColumns}
+                actions={tableActions}
+                loading={isLoading}
+                emptyState="No assessments found."
+                className="table-fixed w-full"
+              />
             ) : (
-              <>
-                <AssessmentKanban
-                  assessments={currentFilteredRows}
-                  loading={isLoading}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onShare={handleShareClick}
-                  assessmentSections={assessmentSections}
-                />
-              </>
+              <AssessmentKanban
+                assessments={currentFilteredRows}
+                loading={isLoading}
+                onView={handleView}
+                onEdit={handleEdit}
+                onShare={handleShareClick}
+                assessmentSections={assessmentSections}
+                effectivePermissions={effectivePermissions}
+              />
             )}
-
             <FilterPopup
               isOpen={isFilterPopupOpen}
               onClose={() => setFilterPopupOpen(false)}
@@ -343,7 +354,6 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
               filterIconRef={filterIconRef}
             >
               <div className="space-y-3">
-                {/* Difficulty Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -372,8 +382,6 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
                     </div>
                   )}
                 </div>
-
-                {/* Duration Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -405,7 +413,6 @@ row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "
               </div>
             </FilterPopup>
           </motion.div>
-
         </div>
       </main>
       {isShareOpen && (

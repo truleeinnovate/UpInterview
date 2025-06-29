@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useMemo } from 'react';
-import { fetchFilterData } from '../utils/dataUtils';
+import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 import Cookies from 'js-cookie';
@@ -9,11 +9,10 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 export const useQuestions = () => {
   const queryClient = useQueryClient();
-  const { sharingPermissionscontext = { questionBank: {} } } = usePermissions() || {};
-  const sharingPermissions = useMemo(
-    () => sharingPermissionscontext.questionBank || {},
-    [sharingPermissionscontext]
-  );
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.QuestionBank?.View;
+
+
 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
@@ -21,24 +20,26 @@ export const useQuestions = () => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
-  // 1️⃣ Fetch My Questions
   const {
     data: myQuestionsList = {},
     isLoading: isMyQuestionsLoading,
     isError: isMyQuestionsError,
     error: myQuestionsError,
   } = useQuery({
-    queryKey: ['myQuestions', sharingPermissions],
+    queryKey: ['questions'],
     queryFn: async () => {
-      const filteredPositions = await fetchFilterData('tenentquestions', sharingPermissions);
-      return Object.keys(filteredPositions).reduce((acc, key) => {
-        acc[key] = Array.isArray(filteredPositions[key])
-          ? filteredPositions[key].map((each) => ({ ...each, isAdded: false }))
+      const data = await fetchFilterData('tenantquestions');
+      return Object.keys(data).reduce((acc, key) => {
+        acc[key] = Array.isArray(data[key])
+          ? data[key].map(question => ({
+            ...question,
+            isAdded: false // Additional transformation
+          }))
           : [];
         return acc;
       }, {});
     },
-    enabled: !!sharingPermissions,
+    enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
@@ -123,11 +124,11 @@ export const useQuestions = () => {
       console.log('Payload:', payload);
       console.log('isEdit:', isEdit);
       console.log('questionId:', questionId);
-      
+
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/newquestion/${questionId}`
         : `${config.REACT_APP_API_URL}/newquestion`;
-      
+
       const method = isEdit ? 'patch' : 'post';
       const response = await axios[method](url, payload);
       console.log('Mutation response:', response.data);
@@ -177,18 +178,18 @@ export const useQuestions = () => {
       if (!suggestedQuestionId || !listIds?.length) {
         throw new Error('Missing required fields');
       }
-      
+
       try {
         // First get existing question with current lists
         const { data } = await axios.get(
           `${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`,
           { params: { [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId } }
         );
-        
+
         // Merge existing and new list IDs
         const currentListIds = data.data?.tenantListId?.map(id => id.toString()) || [];
         const updatedListIds = [...new Set([...currentListIds, ...listIds])];
-        
+
         // Update question with merged list IDs
         const response = await axios.patch(
           `${config.REACT_APP_API_URL}/newquestion/${data.data._id}`,

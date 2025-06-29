@@ -576,18 +576,17 @@ const getUsersByTenant = async (req, res) => {
 
       return {
         _id: user._id,
-        contactId: contact._id || "",
-        isEmailVerified: user.isEmailVerified || false,
-        firstName: contact.firstName || "",
-        lastName: contact.lastName || "",
-        email: user.email || "",
-        newEmail: user.newEmail || "",
-        countryCode: contact.countryCode || "",
-        gender: contact.gender || "",
-        phone: contact.phone || "",
-        status: user.status || "",
-        expectedRatePerMockInterview:
-          contact.expectedRatePerMockInterview || "",
+        contactId: contact._id || '',
+        isEmailVerified:user.isEmailVerified || false,
+        firstName: contact.firstName || '',
+        lastName: contact.lastName || '',
+        email: user.email || '',
+        newEmail: user.newEmail || '',
+        countryCode: contact.countryCode || '',
+        gender: contact.gender || '',
+        phone: contact.phone || '',
+        status: user.status || '',
+ expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
 
         roleId: role?._id || '',
@@ -648,8 +647,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
 
-    if (!ownerId || ownerId === "undefined") {
-      return res.status(400).json({ message: "Invalid owner ID" });
+  if (!ownerId || ownerId === 'undefined') {
+      return res.status(400).json({ message: 'Invalid owner ID' });
     }
 
     if (!mongoose.Types.ObjectId.isValid(ownerId)) {
@@ -666,8 +665,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .populate({
         path: "availability",
         // model: 'InterviewAvailability',
-        model: "InterviewAvailability", // Make sure the casing is correct
-        select: "availability.day availability.timeSlots _id",
+         model: 'InterviewAvailability', // Make sure the casing is correct
+    select: 'availability.day availability.timeSlots _id',
         // select: 'day timeSlots -_id',
         // select: 'availability',
         select: "availability.day availability.timeSlots",
@@ -719,8 +718,9 @@ const getUniqueUserByOwnerId = async (req, res) => {
       timeZone: contact.timeZone || "",
       preferredDuration: contact.preferredDuration || "",
       availability: contact.availability || [],
-      dateOfBirth: contact.dateOfBirth || "",
-      expectedRatePerMockInterview: contact.expectedRatePerMockInterview || "",
+      dateOfBirth: contact.dateOfBirth || '',
+      expectedRatePerMockInterview:contact.expectedRatePerMockInterview || ''
+
     };
 
     res.status(200).json(combinedUser);

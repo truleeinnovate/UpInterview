@@ -11,17 +11,12 @@ import { ReactComponent as MdKeyboardArrowUp } from "../../icons/MdKeyboardArrow
 import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArrowDown.svg";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates.js";
 import { useMediaQuery } from "react-responsive";
+import { usePermissions } from "../../Context/PermissionsContext";
 
 const InterviewTemplates = () => {
+  const { effectivePermissions } = usePermissions();
   const { templatesData, isLoading } = useInterviewTemplates();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  useEffect(() => {
-    if (isTablet) {
-      setView("kanban");
-    } else {
-      setView("table");
-    }
-  }, [isTablet]);
   const navigate = useNavigate();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +28,14 @@ const InterviewTemplates = () => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const filterIconRef = useRef(null);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
 
   const handleStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -83,10 +86,7 @@ const InterviewTemplates = () => {
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(
-    startIndex + itemsPerPage,
-    filteredTemplates.length
-  );
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredTemplates.length);
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
@@ -98,6 +98,18 @@ const InterviewTemplates = () => {
   const handleNextPage = () => {
     if (currentPage < totalPages - 1) {
       setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handleView = (template) => {
+    if (effectivePermissions.InterviewTemplates?.View) {
+      navigate(`/interview-templates/${template._id}`);
+    }
+  };
+
+  const handleEdit = (template) => {
+    if (effectivePermissions.InterviewTemplates?.Edit) {
+      navigate(`edit/${template._id}`);
     }
   };
 
@@ -127,7 +139,7 @@ const InterviewTemplates = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/interview-templates/${row._id}`)}
+          onClick={() => handleView(row)}
         >
           {value || "N/A"}
         </div>
@@ -139,7 +151,7 @@ const InterviewTemplates = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/interview-templates/${row._id}`)}
+          onClick={() => handleView(row)}
         >
           {value || "N/A"}
         </div>
@@ -175,18 +187,26 @@ const InterviewTemplates = () => {
   ];
 
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => navigate(`/interview-templates/${row._id}`),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(effectivePermissions.InterviewTemplates?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: handleView,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.InterviewTemplates?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: handleEdit,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -198,6 +218,7 @@ const InterviewTemplates = () => {
               title="Interview Templates"
               onAddClick={() => navigate("new")}
               addButtonText="New Template"
+              canCreate={effectivePermissions.InterviewTemplates?.Create}
             />
             <Toolbar
               view={view}
@@ -222,7 +243,13 @@ const InterviewTemplates = () => {
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {view === "kanban" ? (
-              <KanbanView templates={paginatedTemplates} loading={isLoading} />
+              <KanbanView
+                templates={paginatedTemplates}
+                loading={isLoading}
+                effectivePermissions={effectivePermissions}
+                onView={handleView}
+                onEdit={handleEdit}
+              />
             ) : (
               <TableView
                 data={paginatedTemplates}

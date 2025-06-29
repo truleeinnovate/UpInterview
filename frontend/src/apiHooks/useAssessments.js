@@ -1,33 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
-import { fetchFilterData } from '../utils/dataUtils';
+import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
 export const useAssessments = () => {
   const queryClient = useQueryClient();
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
-  
-  // Use ref to track initial load and prevent initial log
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Assessments?.View;
   const initialLoad = useRef(true);
-  
-  // Get permissions without memo to ensure fresh data
-  const assessmentPermissions = sharingPermissionscontext?.assessment || {};
 
-  // Assessment data query
   const {
     data: assessmentData = [],
     isLoading: isQueryLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['assessments', assessmentPermissions],
+    queryKey: ['assessments'],
     queryFn: async () => {
-      const filteredAssessments = await fetchFilterData('assessment', assessmentPermissions);
-      return filteredAssessments.reverse(); // Latest first
+      const data = await fetchFilterData('assessment');
+      return data.map(assessment => ({
+        ...assessment,
+        // Add any assessment-specific transformations here
+      })).reverse(); // Latest first
     },
-    enabled: !!assessmentPermissions,
+    enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });

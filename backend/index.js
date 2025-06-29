@@ -39,6 +39,8 @@ const corsOptions = {
     "X-Requested-With",
     "Cookie",
     "Accept",
+    'X-Role-Level',
+    'x-role-level'
   ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   optionsSuccessStatus: 200,
@@ -146,6 +148,7 @@ app.use(cookieParser());
 // });
 
 // API Routes
+const apiRoutes = require('./routes/apiRoutes');
 
 const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
@@ -154,6 +157,7 @@ const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.
 const organizationRoutes = require("./routes/organizationLoginRoutes.js");
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
+app.use('/api', apiRoutes);
 // Register all routes
 app.use("/linkedin", linkedinAuthRoutes);
 app.use("/Individual", individualLoginRoutes);
@@ -277,292 +281,292 @@ const Profile = require("./models/Profile.js");
 const { TenantQuestions } = require("./models/tenantQuestions.js");
 const SharingRule = require("./models/SharingRules.js");
 
-app.post("/api/sharing-rules", async (req, res) => {
-  const {
-    label,
-    name,
-    objectName,
-    ruleType,
-    recordsOwnedBy,
-    recordsOwnedById,
-    shareWith,
-    shareWithId,
-    access,
-    description,
-    orgId,
-  } = req.body;
+// app.post("/api/sharing-rules", async (req, res) => {
+//   const {
+//     label,
+//     name,
+//     objectName,
+//     ruleType,
+//     recordsOwnedBy,
+//     recordsOwnedById,
+//     shareWith,
+//     shareWithId,
+//     access,
+//     description,
+//     orgId,
+//   } = req.body;
 
-  const newSharingRule = new SharingRule({
-    label,
-    name,
-    objectName,
-    ruleType,
-    recordsOwnedBy,
-    recordsOwnedById,
-    shareWith,
-    shareWithId,
-    access,
-    description,
-    orgId,
-  });
+//   const newSharingRule = new SharingRule({
+//     label,
+//     name,
+//     objectName,
+//     ruleType,
+//     recordsOwnedBy,
+//     recordsOwnedById,
+//     shareWith,
+//     shareWithId,
+//     access,
+//     description,
+//     orgId,
+//   });
 
-  try {
-    const savedRule = await newSharingRule.save();
-    res.status(201).json(savedRule);
-  } catch (error) {
-    console.error("Error saving sharing rule:", error); // Log the error
-    res
-      .status(500)
-      .json({ message: "Error saving sharing rule", error: error.message });
-  }
-});
+//   try {
+//     const savedRule = await newSharingRule.save();
+//     res.status(201).json(savedRule);
+//   } catch (error) {
+//     console.error("Error saving sharing rule:", error); // Log the error
+//     res
+//       .status(500)
+//       .json({ message: "Error saving sharing rule", error: error.message });
+//   }
+// });
 
-app.get("/api/from/sharing-rules", async (req, res) => {
-  const { orgId } = req.query; // Get the organization ID from query parameters
+// app.get("/api/from/sharing-rules", async (req, res) => {
+//   const { orgId } = req.query; // Get the organization ID from query parameters
 
-  try {
-    // Query the database for sharing rules with the specified organization ID
-    const sharingRules = await SharingRule.find({ orgId });
+//   try {
+//     // Query the database for sharing rules with the specified organization ID
+//     const sharingRules = await SharingRule.find({ orgId });
 
-    // Return the sharing rules as a JSON response
-    res.status(200).json(sharingRules);
-  } catch (error) {
-    console.error("Error fetching sharing rules:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
-});
-// this sharing rule fetch used in datautils function
-app.get("/api/sharing-rules", async (req, res) => {
-  const { orgId, objectName, shareWithId } = req.query;
+//     // Return the sharing rules as a JSON response
+//     res.status(200).json(sharingRules);
+//   } catch (error) {
+//     console.error("Error fetching sharing rules:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
+//   }
+// });
+// // this sharing rule fetch used in datautils function
+// app.get("/api/sharing-rules", async (req, res) => {
+//   const { orgId, objectName, shareWithId } = req.query;
 
-  // Ensure shareWithId is an array
-  const shareWithIdArray = Array.isArray(shareWithId)
-    ? shareWithId
-    : [shareWithId];
+//   // Ensure shareWithId is an array
+//   const shareWithIdArray = Array.isArray(shareWithId)
+//     ? shareWithId
+//     : [shareWithId];
 
-  try {
-    // Validate required parameters
-    if (!objectName || !shareWithIdArray.length) {
-      return res
-        .status(400)
-        .json({ message: "Missing required query parameters" });
-    }
+//   try {
+//     // Validate required parameters
+//     if (!objectName || !shareWithIdArray.length) {
+//       return res
+//         .status(400)
+//         .json({ message: "Missing required query parameters" });
+//     }
 
-    // Query the database for sharing rules
-    const sharingRules = await SharingRule.find({
-      orgId,
-      objectName,
-      shareWithId: { $in: shareWithIdArray },
-    });
+//     // Query the database for sharing rules
+//     const sharingRules = await SharingRule.find({
+//       orgId,
+//       objectName,
+//       shareWithId: { $in: shareWithIdArray },
+//     });
 
-    res.status(200).json(sharingRules);
-  } catch (error) {
-    console.error("Error fetching sharing rules:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
-});
+//     res.status(200).json(sharingRules);
+//   } catch (error) {
+//     console.error("Error fetching sharing rules:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
+//   }
+// });
 
-// this is common code for datautils
-const modelMapping = {
-  candidate: Candidate,
-  position: Position,
-  team: TeamMember,
-  assessment: Assessment,
-  interview: Interview,
-  mockinterview: MockInterview,
-  users: Users,
-  rolesdata: Role,
-  profiles: Profile,
-  tenentquestions: TenantQuestions,
-};
+// // this is common code for datautils
+// const modelMapping = {
+//   candidate: Candidate,
+//   position: Position,
+//   team: TeamMember,
+//   assessment: Assessment,
+//   interview: Interview,
+//   mockinterview: MockInterview,
+//   users: Users,
+//   rolesdata: Role,
+//   profiles: Profile,
+//   tenentquestions: TenantQuestions,
+// };
 
-const { InterviewRounds } = require("./models/InterviewRounds.js");
-const TenantQuestionsListNames = require("./models/tenantQuestionsListNames.js");
+// const { InterviewRounds } = require("./models/InterviewRounds.js");
+// const TenantQuestionsListNames = require("./models/tenantQuestionsListNames.js");
 
-app.get("/api/:model", async (req, res) => {
-  const { model } = req.params;
-  const { tenantId, ownerId } = req.query;
+// app.get("/api/:model", async (req, res) => {
+//   const { model } = req.params;
+//   const { tenantId, ownerId } = req.query;
 
-  // Get the correct model based on the endpoint
-  const DataModel = modelMapping[model.toLowerCase()];
+//   // Get the correct model based on the endpoint
+//   const DataModel = modelMapping[model.toLowerCase()];
 
-  if (!DataModel) {
-    return res.status(400).json({ message: "Invalid model" });
-  }
+//   if (!DataModel) {
+//     return res.status(400).json({ message: "Invalid model" });
+//   }
 
-  if (!ownerId) {
-    return res.status(200).json([]);
-  }
+//   if (!ownerId) {
+//     return res.status(200).json([]);
+//   }
 
-  try {
-    let query = DataModel.find(tenantId ? { tenantId } : { ownerId });
+//   try {
+//     let query = DataModel.find(tenantId ? { tenantId } : { ownerId });
 
-    // Handle specific models with additional population
-    switch (model.toLowerCase()) {
-      // case 'mockinterview':
-      //   query = query
-      //     .populate({
-      //       path: 'rounds.interviewers',
-      //       model: 'Interviewavailability',
-      //     });
-      //   break;
+//     // Handle specific models with additional population
+//     switch (model.toLowerCase()) {
+//       // case 'mockinterview':
+//       //   query = query
+//       //     .populate({
+//       //       path: 'rounds.interviewers',
+//       //       model: 'Interviewavailability',
+//       //     });
+//       //   break;
 
-      case "mockinterview":
-        query = query.populate({
-          path: "rounds.interviewers",
-          model: "Interviewavailability",
-          populate: {
-            path: "contact",
-            model: "Contacts",
-            // select: 'firstName lastName email',
-          },
-        });
-        break;
+//       case "mockinterview":
+//         query = query.populate({
+//           path: "rounds.interviewers",
+//           model: "Interviewavailability",
+//           populate: {
+//             path: "contact",
+//             model: "Contacts",
+//             // select: 'firstName lastName email',
+//           },
+//         });
+//         break;
 
-      case "tenentquestions":
-        // First fetch all list names for this tenant/owner
-        const lists = await TenantQuestionsListNames.find(
-          tenantId ? { tenantId } : { ownerId }
-        );
+//       case "tenentquestions":
+//         // First fetch all list names for this tenant/owner
+//         const lists = await TenantQuestionsListNames.find(
+//           tenantId ? { tenantId } : { ownerId }
+//         );
 
-        // Then fetch questions that match these list IDs
-        const questions = await TenantQuestions.find({
-          [tenantId ? "tenantId" : "ownerId"]: tenantId || ownerId,
-          tenantListId: { $in: lists.map((list) => list._id) },
-        })
-          .populate({
-            path: "suggestedQuestionId",
-            model: "suggestedQuestions",
-          })
-          .populate({
-            path: "tenantListId",
-            model: "TenantQuestionsListNames",
-            select: "label name ownerId tenantId",
-          })
-          .exec();
+//         // Then fetch questions that match these list IDs
+//         const questions = await TenantQuestions.find({
+//           [tenantId ? "tenantId" : "ownerId"]: tenantId || ownerId,
+//           tenantListId: { $in: lists.map((list) => list._id) },
+//         })
+//           .populate({
+//             path: "suggestedQuestionId",
+//             model: "suggestedQuestions",
+//           })
+//           .populate({
+//             path: "tenantListId",
+//             model: "TenantQuestionsListNames",
+//             select: "label name ownerId tenantId",
+//           })
+//           .exec();
 
-        // Create structure with all lists (including empty ones)
-        const groupedQuestions = {};
+//         // Create structure with all lists (including empty ones)
+//         const groupedQuestions = {};
 
-        // Initialize all lists first
-        lists.forEach((list) => {
-          groupedQuestions[list.label] = [];
-        });
+//         // Initialize all lists first
+//         lists.forEach((list) => {
+//           groupedQuestions[list.label] = [];
+//         });
 
-        // Add questions to their respective lists
-        questions.forEach((question) => {
-          const questionData = question.isCustom
-            ? question
-            : question.suggestedQuestionId;
+//         // Add questions to their respective lists
+//         questions.forEach((question) => {
+//           const questionData = question.isCustom
+//             ? question
+//             : question.suggestedQuestionId;
 
-          question.tenantListId.forEach((list) => {
-            if (groupedQuestions[list.label]) {
-              groupedQuestions[list.label].push({
-                ...questionData._doc,
-                label: list.label,
-                listId: list._id,
-              });
-            }
-          });
-        });
+//           question.tenantListId.forEach((list) => {
+//             if (groupedQuestions[list.label]) {
+//               groupedQuestions[list.label].push({
+//                 ...questionData._doc,
+//                 label: list.label,
+//                 listId: list._id,
+//               });
+//             }
+//           });
+//         });
 
-        return res.status(200).json(groupedQuestions);
+//         return res.status(200).json(groupedQuestions);
 
-      case "position":
-        // console.log("query",query);
-        query = query.populate({
-          path: "rounds.interviewers",
-          model: "Contacts",
-          select: "firstName lastName email",
-        });
+//       case "position":
+//         // console.log("query",query);
+//         query = query.populate({
+//           path: "rounds.interviewers",
+//           model: "Contacts",
+//           select: "firstName lastName email",
+//         });
 
-        break;
+//         break;
 
-      case "interview":
-        query = query
-          .populate({
-            path: "candidateId",
-            model: "Candidate",
-          })
-          .populate({
-            path: "positionId",
-            model: "Position",
-          })
-          .populate({
-            path: "templateId",
-            model: "InterviewTemplate",
-          });
+//       case "interview":
+//         query = query
+//           .populate({
+//             path: "candidateId",
+//             model: "Candidate",
+//           })
+//           .populate({
+//             path: "positionId",
+//             model: "Position",
+//           })
+//           .populate({
+//             path: "templateId",
+//             model: "InterviewTemplate",
+//           });
 
-        const interviews = await query.exec();
-        const interviewIds = interviews.map((interview) => interview._id);
+//         const interviews = await query.exec();
+//         const interviewIds = interviews.map((interview) => interview._id);
 
-        // Fetch rounds separately
-        const roundsData = await InterviewRounds.find({
-          interviewId: { $in: interviewIds },
-        }).populate({
-          path: "interviewers",
-          model: "Contacts",
-          select: "firstName lastName email",
-        });
-        // .populate({
-        //   path: "assessmentId",
-        //   model: "assessment",
-        //   select: "Sections",
-        //   populate: {
-        //     path: "Sections.Questions",
-        //     model: "assessmentQuestions",
-        //     select: "snapshot",
-        //   },
-        // });
+//         // Fetch rounds separately
+//         const roundsData = await InterviewRounds.find({
+//           interviewId: { $in: interviewIds },
+//         }).populate({
+//           path: "interviewers",
+//           model: "Contacts",
+//           select: "firstName lastName email",
+//         });
+//         // .populate({
+//         //   path: "assessmentId",
+//         //   model: "assessment",
+//         //   select: "Sections",
+//         //   populate: {
+//         //     path: "Sections.Questions",
+//         //     model: "assessmentQuestions",
+//         //     select: "snapshot",
+//         //   },
+//         // });
 
-        // Fetch interview questions separately using interviewId and roundId
-        const interviewQuestionData = await interviewQuestions
-          .find({
-            interviewId: { $in: interviewIds },
-          })
-          .select("roundId snapshot");
+//         // Fetch interview questions separately using interviewId and roundId
+//         const interviewQuestionData = await interviewQuestions
+//           .find({
+//             interviewId: { $in: interviewIds },
+//           })
+//           .select("roundId snapshot");
 
-        // Map rounds and attach matching questions
-        // Map rounds and attach all matching questions
-        const roundsWithQuestions = roundsData.map((round) => {
-          const matchingQuestions = interviewQuestionData.filter((q) =>
-            q.roundId.equals(round._id)
-          );
+//         // Map rounds and attach matching questions
+//         // Map rounds and attach all matching questions
+//         const roundsWithQuestions = roundsData.map((round) => {
+//           const matchingQuestions = interviewQuestionData.filter((q) =>
+//             q.roundId.equals(round._id)
+//           );
 
-          return {
-            ...round._doc,
-            questions: matchingQuestions, // Attach all question data instead of selecting fields
-          };
-        });
+//           return {
+//             ...round._doc,
+//             questions: matchingQuestions, // Attach all question data instead of selecting fields
+//           };
+//         });
 
-        // Merge rounds into the interviews
-        const interviewsWithRounds = interviews.map((interview) => {
-          const interviewRounds = roundsWithQuestions.filter((round) =>
-            round.interviewId.equals(interview._id)
-          );
-          return {
-            ...interview._doc,
-            rounds: interviewRounds,
-          };
-        });
+//         // Merge rounds into the interviews
+//         const interviewsWithRounds = interviews.map((interview) => {
+//           const interviewRounds = roundsWithQuestions.filter((round) =>
+//             round.interviewId.equals(interview._id)
+//           );
+//           return {
+//             ...interview._doc,
+//             rounds: interviewRounds,
+//           };
+//         });
 
-        return res.status(200).json(interviewsWithRounds);
-    }
+//         return res.status(200).json(interviewsWithRounds);
+//     }
 
-    const data = await query.exec();
-    if (!data || data.length === 0) {
-      return res.status(200).json([]);
-    }
-    res.status(200).json(data);
-  } catch (error) {
-    console.error(`Error fetching data for ${model}:`, error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-});
+//     const data = await query.exec();
+//     if (!data || data.length === 0) {
+//       return res.status(200).json([]);
+//     }
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error(`Error fetching data for ${model}:`, error);
+//     res.status(500).json({ message: "Internal server error", error });
+//   }
+// });
 
 app.get("/getUsersByRoleId", async (req, res) => {
   const { organizationId, roleId } = req.query;
@@ -671,32 +675,32 @@ app.get("/auth/users/:id", async (req, res) => {
   }
 });
 
-app.delete("/users/:id/image", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await Users.findById(id);
-    if (!user) {
-      return res.status(404).send("User not found.");
-    }
+// app.delete("/users/:id/image", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const user = await Users.findById(id);
+//     if (!user) {
+//       return res.status(404).send("User not found.");
+//     }
 
-    const imagePath = user.ImageData?.path;
-    user.ImageData = undefined;
-    await user.save();
+//     const imagePath = user.ImageData?.path;
+//     user.ImageData = undefined;
+//     await user.save();
 
-    if (imagePath) {
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.error("Error deleting image file:", err);
-        }
-      });
-    }
+//     if (imagePath) {
+//       fs.unlink(imagePath, (err) => {
+//         if (err) {
+//           console.error("Error deleting image file:", err);
+//         }
+//       });
+//     }
 
-    res.status(200).send("Image deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting image:", error);
-    res.status(500).send("Server error");
-  }
-});
+//     res.status(200).send("Image deleted successfully.");
+//   } catch (error) {
+//     console.error("Error deleting image:", error);
+//     res.status(500).send("Server error");
+//   }
+// });
 
 app.put("/users/:id", async (req, res) => {
   const { id } = req.params;
@@ -947,7 +951,7 @@ const notificationRoutes = require("./routes/notificationRoutes.js");
 app.use("/notifications", notificationRoutes);
 
 // upload route
-const uploadRoute = require("./routes/UploadRoute/uploadRoute.js");
+const uploadRoute = require("./routes/UploadRoute/uploadRoute.js"); 
 app.use("/upload", uploadRoute);
 
 // Tenant routes
