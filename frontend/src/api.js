@@ -90,7 +90,7 @@ export const fetchFilterData = async (endpoint) => {
   try {
     const authToken = Cookies.get('authToken') ?? '';
     const tokenPayload = authToken ? decodeJwt(authToken) : {};
-    
+
 
     const userId = tokenPayload?.userId;
     const tenantId = tokenPayload?.tenantId;
@@ -107,7 +107,8 @@ export const fetchFilterData = async (endpoint) => {
       withCredentials: true,
     });
 
-    console.log('response from api', response);
+
+    console.log('Response for', endpoint, ':', response.data);
 
     return response.data.data || []; // Backend returns data in response.data.data
   } catch (error) {
@@ -115,33 +116,3 @@ export const fetchFilterData = async (endpoint) => {
     throw error;
   }
 };
-
-// export const fetchTenants = async () => {
-//   try {
-//     const response = await axios.get(`/api/super-admin/tenants`);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error fetching tenants:', error);
-//     return { tenants: [] };
-//   }
-// };
-
-// export const impersonateUser = async (userId) => {
-//   try {
-//     const response = await axios.post(`/api/super-admin/impersonate/${userId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error impersonating user:', error);
-//     throw error;
-//   }
-// };
-
-// export const endImpersonation = async () => {
-//   try {
-//     const response = await axios.post(`/api/super-admin/end-impersonation`);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error ending impersonation:', error);
-//     throw error;
-//   }
-// };

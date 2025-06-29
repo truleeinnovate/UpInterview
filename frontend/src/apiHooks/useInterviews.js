@@ -1,64 +1,55 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useMemo, useRef } from 'react';
-import { fetchFilterData } from '../utils/dataUtils';
 import { config } from '../config';
-import { usePermissions } from '../Context/PermissionsContext';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-
+import { fetchFilterData } from "../api";
+import { usePermissions } from "../Context/PermissionsContext";
 export const useInterviews = () => {
   const queryClient = useQueryClient();
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Interviews?.View;
   const navigate = useNavigate();
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
   const initialLoad = useRef(true);
 
-  // Memoize permissions
-  const interviewPermissions = useMemo(
-    () => sharingPermissionscontext?.interviews || {},
-    [sharingPermissionscontext]
-  );
-
-  // Interviews query with candidate data
   const {
     data: interviewData = [],
     isLoading: isQueryLoading,
     isError,
     error,
-    refetch: refetchInterviews,
   } = useQuery({
-    queryKey: ['interviews', interviewPermissions],
+    queryKey: ['interviews'],
     queryFn: async () => {
-      const filteredInterviews = await fetchFilterData('interview', interviewPermissions);
-      
+      const interviews = await fetchFilterData('interview');
+
+      // Enhanced with candidate data
       const interviewsWithCandidates = await Promise.all(
-        filteredInterviews.map(async (interview) => {
+        interviews.map(async (interview) => {
           if (!interview.CandidateId) {
             return { ...interview, candidate: null };
           }
-          
+
           try {
-            const candidateResponse = await axios.get(
-              `${config.REACT_APP_API_URL}/candidate/${interview.CandidateId}`
-            );
-            const candidate = candidateResponse.data;
-            
-            if (candidate.ImageData?.filename) {
-              candidate.imageUrl = `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`;
-            }
-            
-            return { ...interview, candidate };
-          } catch (error) {
+            const candidate = await fetchFilterData(`candidate/${interview.CandidateId}`);
+            return {
+              ...interview,
+              candidate: candidate.ImageData?.filename ? {
+                ...candidate,
+                imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`
+              } : candidate
+            };
+          } catch {
             return { ...interview, candidate: null };
           }
         })
       );
-      
+
       return interviewsWithCandidates.reverse();
     },
-    enabled: !!interviewPermissions,
+    enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    staleTime: 1000 * 60 * 5,
   });
 
   // Create new interview mutation
@@ -150,20 +141,20 @@ export const useInterviews = () => {
   });
 
   const deleteRoundMutation = useMutation({
-          mutationFn: async (roundId) => {
-            const response = await axios.delete(
-              `${config.REACT_APP_API_URL}/interview/delete-round/${roundId}`
-            );
-            return response.data;
-          },
-          onSuccess: () => {
-            queryClient.invalidateQueries(['interviews']);
-          },
-          onError: (error) => {
-            console.error('Error deleting round:', error);
-            //toast.error('Failed to delete round');
-          },
-        });
+    mutationFn: async (roundId) => {
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/interview/delete-round/${roundId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['interviews']);
+    },
+    onError: (error) => {
+      console.error('Error deleting round:', error);
+      //toast.error('Failed to delete round');
+    },
+  });
 
   // Calculate loading states
   const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending || updateInterviewStatus.isPending || deleteRoundMutation.isPending;
@@ -199,7 +190,7 @@ export const useInterviews = () => {
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
-    refetchInterviews,
+    // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
   };
 };

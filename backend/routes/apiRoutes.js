@@ -185,41 +185,55 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { Candidate } = require('../models/Candidate');
-const Position = require('../models/Position');
-const Interview = require('../models/Interview');
+const Assessment = require("../models/assessment");
+const { Position } = require('../models/Position');
+const InterviewTemplate = require("../models/InterviewTemplate");
+
+const { Interview } = require('../models/Interview');
 const MockInterview = require('../models/MockInterview');
-const TenantQuestions = require('../models/TenantQuestions');
+const { TenantQuestions } = require('../models/TenantQuestions');
 const TenantQuestionsListNames = require('../models/TenantQuestionsListNames');
-const InterviewRounds = require('../models/InterviewRounds');
+const {InterviewRounds} = require('../models/InterviewRounds');
 const InterviewQuestions = require('../models/InterviewQuestions');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
 
 // Define model requirements at the top of your file
+// Backend modelRequirements (should match frontend)
 const modelRequirements = {
   candidate: {
     model: Candidate,
-    permissionName: 'Candidates',
+    permissionName: 'Candidates', // Must match exactly
     requiredPermission: 'View'
   },
   position: {
     model: Position,
-    permissionName: 'Positions',
+    permissionName: 'Positions', // Must match exactly
     requiredPermission: 'View'
   },
   interview: {
     model: Interview,
-    permissionName: 'Interviews',
+    permissionName: 'Interviews', // Must match exactly
     requiredPermission: 'View'
   },
-  mockinterview: {
-    model: MockInterview,
-    permissionName: 'MockInterviews',
+  assessment: {
+    model: Assessment,
+    permissionName: 'Assessments', // Must match exactly
     requiredPermission: 'View'
   },
   tenantquestions: {
     model: TenantQuestions,
-    permissionName: 'QuestionBank',
+    permissionName: 'QuestionBank', // Must match exactly
+    requiredPermission: 'View'
+  },
+  interviewtemplate: {  // <- Note the lowercase here to match URL
+    model: InterviewTemplate,
+    permissionName: 'InterviewTemplates', // Permission name remains capitalized
+    requiredPermission: 'View'
+  },
+  tenantquestions: {
+    model: TenantQuestions,
+    permissionName: 'QuestionBank', // Must match exactly
     requiredPermission: 'View'
   }
 };
@@ -228,7 +242,7 @@ const modelRequirements = {
 const getModelMapping = (permissions) => {
   return Object.entries(modelRequirements).reduce((acc, [key, config]) => {
     const modelPerms = permissions?.[config.permissionName] || {};
-    
+
     acc[key] = {
       model: config.model,
       permissionName: config.permissionName,
@@ -245,28 +259,22 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
 
     if (!authToken) {
-      console.error('No auth token found');
       return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
     }
 
-    // Decode JWT directly
+    // Decode JWT - only require userId and tenantId
     let decoded;
     try {
       decoded = jwt.verify(authToken, process.env.JWT_SECRET);
     } catch (err) {
-      console.error('JWT verification error:', err.message);
-      return res.status(401).json({ error: 'Unauthorized: Invalid token', details: err.message });
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
-    const { userId, tenantId, impersonatedUserId } = decoded;
-    console.log('userId:', userId, 'tenantId:', tenantId, 'impersonatedUserId:', impersonatedUserId);
-    const isImpersonating = !!impersonatedUserId;
+    const { userId, tenantId } = decoded;
 
-    if (!userId && !impersonatedUserId) {
-      console.error('Missing userId and impersonatedUserId');
-      return res.status(401).json({ error: 'Unauthorized: Missing both userId and impersonatedUserId' });
+    if (!userId || !tenantId) {
+      return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
-
     // Get permissions from res.locals
     const { effectivePermissions, superAdminPermissions, inheritedRoleIds } = res.locals;
     const permissionsToCheck = superAdminPermissions || effectivePermissions;
@@ -299,7 +307,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     // Build query based on permissions
     let query = {};
-    if (permissionsToCheck?.SuperAdmin?.ViewAll && !isImpersonating) {
+    if (permissionsToCheck?.SuperAdmin?.ViewAll) {
       // Super Admins view all data
     } else {
       // Regular users or impersonated Super Admins are restricted to tenant data
@@ -429,120 +437,120 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
 
 // CRUD operations (unchanged from previous)
-router.post('/:model', permissionMiddleware, async (req, res) => {
-  try {
-    const { model } = req.params;
-    const { tenantId, userId, permissions } = req;
+// router.post('/:model', permissionMiddleware, async (req, res) => {
+//   try {
+//     const { model } = req.params;
+//     const { tenantId, userId, permissions } = req;
 
-    const DataModel = modelMapping[model.toLowerCase()];
-    if (!DataModel) {
-      return res.status(400).json({ message: 'Invalid model' });
-    }
+//     const DataModel = modelMapping[model.toLowerCase()];
+//     if (!DataModel) {
+//       return res.status(400).json({ message: 'Invalid model' });
+//     }
 
-    const modelName = model.charAt(0).toUpperCase() + model.slice(1);
-    if (!permissions[modelName]?.Create && !permissions.SuperAdmin?.CreateAll) {
-      return res.status(403).json({ error: `No permission to create ${modelName}` });
-    }
+//     const modelName = model.charAt(0).toUpperCase() + model.slice(1);
+//     if (!permissions[modelName]?.Create && !permissions.SuperAdmin?.CreateAll) {
+//       return res.status(403).json({ error: `No permission to create ${modelName}` });
+//     }
 
-    const data = await DataModel.create({
-      ...req.body,
-      tenantId,
-      ownerId: userId,
-      createdBy: userId
-    });
+//     const data = await DataModel.create({
+//       ...req.body,
+//       tenantId,
+//       ownerId: userId,
+//       createdBy: userId
+//     });
 
-    res.status(201).json({
-      data,
-      permissions: res.locals.permissions,
-      inheritedRoleIds: res.locals.inheritedRoleIds
-    });
-  } catch (error) {
-    console.error(`Error creating ${model}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+//     res.status(201).json({
+//       data,
+//       permissions: res.locals.permissions,
+//       inheritedRoleIds: res.locals.inheritedRoleIds
+//     });
+//   } catch (error) {
+//     console.error(`Error creating ${model}:`, error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
 
-router.put('/:model/:id', permissionMiddleware, async (req, res) => {
-  try {
-    const { model, id } = req.params;
-    const { tenantId, userId, inheritedRoleIds, permissions } = req;
+// router.put('/:model/:id', permissionMiddleware, async (req, res) => {
+//   try {
+//     const { model, id } = req.params;
+//     const { tenantId, userId, inheritedRoleIds, permissions } = req;
 
-    const DataModel = modelMapping[model.toLowerCase()];
-    if (!DataModel) {
-      return res.status(400).json({ message: 'Invalid model' });
-    }
+//     const DataModel = modelMapping[model.toLowerCase()];
+//     if (!DataModel) {
+//       return res.status(400).json({ message: 'Invalid model' });
+//     }
 
-    const modelName = model.charAt(0).toUpperCase() + model.slice(1);
-    if (!permissions[modelName]?.Edit && !permissions.SuperAdmin?.EditAll) {
-      return res.status(403).json({ error: `No permission to edit ${modelName}` });
-    }
+//     const modelName = model.charAt(0).toUpperCase() + model.slice(1);
+//     if (!permissions[modelName]?.Edit && !permissions.SuperAdmin?.EditAll) {
+//       return res.status(403).json({ error: `No permission to edit ${modelName}` });
+//     }
 
-    const record = await DataModel.findOne({ _id: id, tenantId });
-    if (!record) {
-      return res.status(404).json({ error: `${modelName} not found` });
-    }
+//     const record = await DataModel.findOne({ _id: id, tenantId });
+//     if (!record) {
+//       return res.status(404).json({ error: `${modelName} not found` });
+//     }
 
-    if (inheritedRoleIds.length > 0 && !permissions.SuperAdmin?.EditAll) {
-      const creator = await Users.findById(record.createdBy).populate('roleId');
-      if (record.ownerId.toString() !== userId && !inheritedRoleIds.includes(creator.roleId?._id)) {
-        return res.status(403).json({ error: `No permission to edit this ${modelName}` });
-      }
-    }
+//     if (inheritedRoleIds.length > 0 && !permissions.SuperAdmin?.EditAll) {
+//       const creator = await Users.findById(record.createdBy).populate('roleId');
+//       if (record.ownerId.toString() !== userId && !inheritedRoleIds.includes(creator.roleId?._id)) {
+//         return res.status(403).json({ error: `No permission to edit this ${modelName}` });
+//       }
+//     }
 
-    const updatedRecord = await DataModel.findByIdAndUpdate(
-      id,
-      { ...req.body, updatedBy: userId },
-      { new: true }
-    );
+//     const updatedRecord = await DataModel.findByIdAndUpdate(
+//       id,
+//       { ...req.body, updatedBy: userId },
+//       { new: true }
+//     );
 
-    res.json({
-      data: updatedRecord,
-      permissions: res.locals.permissions,
-      inheritedRoleIds: res.locals.inheritedRoleIds
-    });
-  } catch (error) {
-    console.error(`Error updating ${model}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+//     res.json({
+//       data: updatedRecord,
+//       permissions: res.locals.permissions,
+//       inheritedRoleIds: res.locals.inheritedRoleIds
+//     });
+//   } catch (error) {
+//     console.error(`Error updating ${model}:`, error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
 
-router.delete('/:model/:id', permissionMiddleware, async (req, res) => {
-  try {
-    const { model, id } = req.params;
-    const { tenantId, userId, inheritedRoleIds, permissions } = req;
+// router.delete('/:model/:id', permissionMiddleware, async (req, res) => {
+//   try {
+//     const { model, id } = req.params;
+//     const { tenantId, userId, inheritedRoleIds, permissions } = req;
 
-    const DataModel = modelMapping[model.toLowerCase()];
-    if (!DataModel) {
-      return res.status(400).json({ message: 'Invalid model' });
-    }
+//     const DataModel = modelMapping[model.toLowerCase()];
+//     if (!DataModel) {
+//       return res.status(400).json({ message: 'Invalid model' });
+//     }
 
-    const modelName = model.charAt(0).toUpperCase() + model.slice(1);
-    if (!permissions[modelName]?.Delete && !permissions.SuperAdmin?.DeleteAll) {
-      return res.status(403).json({ error: `No permission to delete ${modelName}` });
-    }
+//     const modelName = model.charAt(0).toUpperCase() + model.slice(1);
+//     if (!permissions[modelName]?.Delete && !permissions.SuperAdmin?.DeleteAll) {
+//       return res.status(403).json({ error: `No permission to delete ${modelName}` });
+//     }
 
-    const record = await DataModel.findOne({ _id: id, tenantId });
-    if (!record) {
-      return res.status(404).json({ error: `${modelName} not found` });
-    }
+//     const record = await DataModel.findOne({ _id: id, tenantId });
+//     if (!record) {
+//       return res.status(404).json({ error: `${modelName} not found` });
+//     }
 
-    if (inheritedRoleIds.length > 0 && !permissions.SuperAdmin?.DeleteAll) {
-      const creator = await Users.findById(record.createdBy).populate('roleId');
-      if (record.ownerId.toString() !== userId && !inheritedRoleIds.includes(creator.roleId?._id)) {
-        return res.status(403).json({ error: `No permission to delete this ${modelName}` });
-      }
-    }
+//     if (inheritedRoleIds.length > 0 && !permissions.SuperAdmin?.DeleteAll) {
+//       const creator = await Users.findById(record.createdBy).populate('roleId');
+//       if (record.ownerId.toString() !== userId && !inheritedRoleIds.includes(creator.roleId?._id)) {
+//         return res.status(403).json({ error: `No permission to delete this ${modelName}` });
+//       }
+//     }
 
-    await DataModel.findByIdAndDelete(id);
-    res.json({
-      message: `${modelName} deleted`,
-      permissions: res.locals.permissions,
-      inheritedRoleIds: res.locals.inheritedRoleIds
-    });
-  } catch (error) {
-    console.error(`Error deleting ${model}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+//     await DataModel.findByIdAndDelete(id);
+//     res.json({
+//       message: `${modelName} deleted`,
+//       permissions: res.locals.permissions,
+//       inheritedRoleIds: res.locals.inheritedRoleIds
+//     });
+//   } catch (error) {
+//     console.error(`Error deleting ${model}:`, error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
 
 module.exports = router;

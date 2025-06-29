@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { fetchFilterData } from "../api";
-import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
+import { config } from "../config";
 import { uploadFile } from "./imageApis";
 
 // export const useCandidates = () => {
@@ -42,10 +42,10 @@ import { uploadFile } from "./imageApis";
 
 export const useCandidates = () => {
   const queryClient = useQueryClient();
-  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const { effectivePermissions } = usePermissions();
 
   // Check if user has permission to view candidates
-  const hasViewPermission = effectivePermissions?.Candidates?.View || superAdminPermissions?.Candidates?.View;
+  const hasViewPermission = effectivePermissions?.Candidates?.View;
 
   const {
     data: candidateData = [],
