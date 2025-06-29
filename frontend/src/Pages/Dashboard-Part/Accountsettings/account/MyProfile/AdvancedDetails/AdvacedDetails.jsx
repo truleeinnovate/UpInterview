@@ -104,12 +104,12 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Resume PDF </p>
-            <p className="font-medium">{contactData.ResumePdf || 'No File'}</p>
+            <p className="font-medium">{contactData?.resume?.filename || 'No File'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Cover Letter </p>
-            <p className="font-medium">{contactData.coverletter || 'No File'}</p>
+            <p className="font-medium">{contactData?.coverLetter?.filename || 'No File'}</p>
           </div>
 
         </div>
