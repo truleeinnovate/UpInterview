@@ -584,7 +584,7 @@ const MultiStepForm = () => {
         }
 
         // RESUME AND COVER LETTER UPLOAD
-        if (currentStep === 1) {
+        if (currentStep >= 1) {
           const newContactId = contactId || response.data.contactId;
 
           // Resume
