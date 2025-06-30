@@ -193,7 +193,10 @@ const permissionMiddleware = async (req, res, next) => {
   try {
     const userId = req.headers['x-user-id'];
     const tenantId = req.headers['x-tenant-id'];
-    const impersonatedUserId = req.headers['x-impersonated-user-id'];
+    const impersonatedUserId = req.headers['x-impersonated-token'];
+    console.log("User ID permisson tab:", userId);
+    console.log("Tenant ID permisson tab:", tenantId);
+    console.log("Impersonated User ID permisson tab:", impersonatedUserId);
 
     // Get tokens - both are optional
     // const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];

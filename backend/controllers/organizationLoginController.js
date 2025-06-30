@@ -1269,7 +1269,8 @@ const registerOrganization = async (req, res) => {
       roleId: adminRole._id,
       tenantId: savedTenant._id,
       password: hashedPassword,
-      isEmailVerified: false
+      isEmailVerified: false,
+      status: 'active',
     });
     const savedUser = await newUser.save();
     console.log('User saved successfully with ID:', savedUser._id);
