@@ -1019,7 +1019,7 @@ const App = () => {
 
               {/* Wallet */}
               {hasPermission('Wallet') && (
-                <Route path="/wallet-transcations" element={<Wallet />}>
+                <Route path="/wallet" element={<Wallet />}>
                   <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
                   <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
                 </Route>
@@ -1046,6 +1046,13 @@ const App = () => {
                     <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
                   </Route>
                 )}
+                {hasPermission('Wallet') && (
+                <Route path="wallet" element={<Wallet />}>
+                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
+                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+                </Route>
+               )}
+
                 {hasPermission('MyProfile') && (
                   <Route path="my-profile" element={<MyProfile />}>
                     <Route index element={<Navigate to="basic" replace />} />
