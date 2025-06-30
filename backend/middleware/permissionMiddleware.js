@@ -170,6 +170,19 @@
 // module.exports = { permissionMiddleware };
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 const jwt = require('jsonwebtoken');
 const { Users } = require('../models/Users');
 const Tenant = require('../models/Tenant');
@@ -178,17 +191,17 @@ const RoleOverrides = require('../models/roleOverrides');
 
 const permissionMiddleware = async (req, res, next) => {
   try {
-    // Get tokens - authToken is required, impersonationToken is optional
-    const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
-    const impersonationToken = req.cookies.impersonationToken;
 
-    if (!authToken) {
-      console.error('No auth token found');
-      return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
-    }
+    const userId = req.headers['x-user-id'];
+    const tenantId = req.headers['x-tenant-id'];
+    const impersonatedUserId = req.headers['x-impersonated-user-id'];
 
-    // Initialize variables
-    let decoded;
+    // Get tokens - both are optional
+    // const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
+    // const impersonationToken = req.cookies.impersonationToken;
+
+    // Initialize variables with default values
+    let decoded = null;
     let currentUser = null;
     let effectiveUser = null;
     let effectiveTenantId = null;
@@ -199,42 +212,44 @@ const permissionMiddleware = async (req, res, next) => {
     let roleType = null;
     let roleLevel = null;
 
-    // Verify and process the primary auth token
-    try {
-      decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-      console.log('Decoded authToken:', decoded);
-    } catch (err) {
-      console.error('JWT verification error:', err.message);
-      return res.status(401).json({ error: 'Unauthorized: Invalid token', details: err.message });
-    }
-
-    const { userId, tenantId } = decoded;
-    if (!userId) {
-      console.error('Missing userId in token');
-      return res.status(401).json({ error: 'Unauthorized: Missing userId in token' });
-    }
-
-    // Get current user
-    currentUser = await Users.findById(userId).populate('roleId');
-    if (!currentUser) {
-      console.error(`User not found for userId: ${userId}`);
-      return res.status(401).json({ error: 'Unauthorized: User not found' });
-    }
-
-    // Set default effective user (non-impersonated)
-    effectiveUser = currentUser;
-    effectiveTenantId = tenantId || currentUser.tenantId;
-    roleType = currentUser.roleId?.roleType || null;
-    roleLevel = currentUser.roleLevel || null;
-
-    // Process impersonation token if present (optional)
-    if (impersonationToken) {
+    // Process auth token if present
+    if (userId && tenantId) {
       try {
-        const impersonationDecoded = jwt.verify(impersonationToken, process.env.JWT_SECRET);
-        console.log('Decoded impersonationToken:', impersonationDecoded);
+        // decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+        // console.log('Decoded authToken:', decoded);
 
-        if (impersonationDecoded.impersonatedUserId) {
-          const impersonatedUser = await Users.findById(impersonationDecoded.impersonatedUserId).populate('roleId');
+        // const { userId, tenantId } = decoded;
+        if (!userId) {
+          console.error('Missing userId in token');
+          return res.status(401).json({ error: 'Unauthorized: Missing userId in token' });
+        }
+
+        // Get current user
+        currentUser = await Users.findById(userId).populate('roleId');
+        if (!currentUser) {
+          console.error(`User not found for userId: ${userId}`);
+          return res.status(401).json({ error: 'Unauthorized: User not found' });
+        }
+
+        // Set default effective user (non-impersonated)
+        effectiveUser = currentUser;
+        effectiveTenantId = effectiveTenantId || currentUser.tenantId;
+        roleType = currentUser.roleId?.roleType || null;
+        roleLevel = currentUser.roleLevel || null;
+      } catch (err) {
+        console.error('JWT verification error:', err.message);
+        // Continue with default permissions instead of throwing error
+      }
+    }
+
+    // Process impersonation token if present
+    if (impersonatedUserId) { // Only process if we have a valid currentUser
+      try {
+        // const impersonationDecoded = jwt.verify(impersonationToken, process.env.JWT_SECRET);
+        // console.log('Decoded impersonationToken:', impersonationDecoded);
+
+        if (impersonatedUserId) {
+          const impersonatedUser = await Users.findById(impersonatedUserId).populate('roleId');
 
           if (impersonatedUser) {
             isImpersonating = true;
@@ -259,11 +274,11 @@ const permissionMiddleware = async (req, res, next) => {
     }
 
     // Process permissions for non-superadmin users
-    if (!superAdminPermissions && currentUser.roleId?.roleType !== 'internal') {
-      if (currentUser.roleId) {
-        const roleTemplate = await RolesPermissionObject.findById(currentUser.roleId);
+    if (!superAdminPermissions && effectiveUser?.roleId?.roleType !== 'internal') {
+      if (effectiveUser?.roleId) {
+        const roleTemplate = await RolesPermissionObject.findById(effectiveUser.roleId);
         if (!roleTemplate) {
-          console.error(`Role template not found for roleId: ${currentUser.roleId}`);
+          console.error(`Role template not found for roleId: ${effectiveUser.roleId}`);
           return res.status(403).json({ error: 'Role template not found' });
         }
 
@@ -297,7 +312,7 @@ const permissionMiddleware = async (req, res, next) => {
           effectivePermissions = roleTemplate.objects;
         }
       } else {
-        effectivePermissions = currentUser.permissions || [];
+        effectivePermissions = effectiveUser?.permissions || [];
       }
     }
 
@@ -344,10 +359,6 @@ const permissionMiddleware = async (req, res, next) => {
 };
 
 module.exports = { permissionMiddleware };
-
-
-
-
 
 
 
