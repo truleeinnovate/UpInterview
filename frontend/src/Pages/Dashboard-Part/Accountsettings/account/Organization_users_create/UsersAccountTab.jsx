@@ -22,8 +22,10 @@ import maleImage from "../../../Images/man.png";
 import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
 import ConfirmationModal from "./ConfirmModel";
+import { usePermissions } from "../../../../../Context/PermissionsContext";
 
 const UsersAccountTab = () => {
+    const { effectivePermissions } = usePermissions();
   const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
     useCustomContext();
   const navigate = useNavigate();
@@ -315,6 +317,7 @@ const UsersAccountTab = () => {
                 }
               }}
               addButtonText="Add User"
+              canCreate={effectivePermissions.Users?.Create}
             />
           </motion.div>
           <Toolbar

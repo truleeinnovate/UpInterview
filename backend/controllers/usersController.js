@@ -347,11 +347,6 @@ const getInterviewers = async (req, res) => {
         .populate("contact")
         .lean();
 
-      console.log(
-        `✅ [getInterviewers] External availabilities raw data:`,
-        JSON.stringify(availabilities, null, 2)
-      );
-
       return availabilities.map((availability) => {
         const contact = availability.contact || {};
         const ownerId = contact.ownerId?.toString();
@@ -416,11 +411,7 @@ const getInterviewers = async (req, res) => {
     // Combine results
     const allResults = [...internalResults, ...externalResults];
 
-    // Debug log to check the final data being sent
-    console.log(
-      "✅ [getInterviewers] Final data being sent:",
-      JSON.stringify(allResults, null, 2)
-    );
+    // Debug log to check the final data being sen
 
     return res.json({
       success: true,
