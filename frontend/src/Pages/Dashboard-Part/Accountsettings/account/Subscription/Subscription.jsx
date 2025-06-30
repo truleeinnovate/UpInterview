@@ -6,10 +6,15 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
+import LoadingButton from "../../../../../Components/LoadingButton";
+import { usePositions } from '../../../../../apiHooks/usePositions';
+
 const Subscription = () => {
   console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
+
+  const { isMutationLoading } = usePositions();
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -452,8 +457,9 @@ const Subscription = () => {
                     <span className="text-sm sm:text-base md:text-lg font-medium"> /{isAnnual ? "year" : "month"}</span>
                   </p>
                 </div>
-                <button
+                <LoadingButton
                   onClick={() => submitPlans(plan)}
+                  loading={isMutationLoading}
                   className={`w-full font-semibold py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm md:text-base lg:text-lg mt-4 transition-all duration-200   shadow-lg border
 
                     ${isHighlighted(plan) ? "bg-white hover:bg-white text-black " : "text-black bg-white hover:bg-white shadow-slate-50"}
@@ -494,7 +500,7 @@ const Subscription = () => {
                         }
                         return "Choose";
                       })()}
-                </button>
+                </LoadingButton>
 
               </div>
             ))}
