@@ -7,30 +7,57 @@ const cors = require("cors");
 const express = require("express");
 const app = express();
 
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (!origin) return callback(null, true);
+
+//     if (
+//       origin.startsWith("http://localhost:") ||
+//       origin.startsWith("https://localhost:")
+//     )
+//       return callback(null, true);
+
+//     let originHost;
+//     try {
+//       originHost = new URL(origin).hostname;
+//     } catch (e) {
+//       return callback(new Error("Invalid origin URL"));
+//     }
+
+//     if (
+//       originHost === "app.upinterview.io" ||
+//       /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
+//     )
+//       return callback(null, true);
+
+//     return callback(new Error("Not allowed by CORS"));
+//   },
+//   credentials: true,
+//   allowedHeaders: [
+//     "Content-Type",
+//     "Authorization",
+//     "X-Requested-With",
+//     "Cookie",
+//     "Accept",
+//     'X-Role-Level',
+//     'x-role-level'
+//   ],
+//   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+//   optionsSuccessStatus: 200,
+// };
+
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    if (
-      origin.startsWith("http://localhost:") ||
-      origin.startsWith("https://localhost:")
-    )
-      return callback(null, true);
-
-    let originHost;
-    try {
-      originHost = new URL(origin).hostname;
-    } catch (e) {
-      return callback(new Error("Invalid origin URL"));
+    const allowedOrigins = [
+      'https://app.upinterview.io',
+      /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
+      'http://localhost:3000'
+    ];
+    if (!origin || allowedOrigins.some((allowed) => typeof allowed === 'string' ? allowed === origin : allowed.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-
-    if (
-      originHost === "app.upinterview.io" ||
-      /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
-    )
-      return callback(null, true);
-
-    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
   allowedHeaders: [
@@ -953,7 +980,7 @@ const notificationRoutes = require("./routes/notificationRoutes.js");
 app.use("/notifications", notificationRoutes);
 
 // upload route
-const uploadRoute = require("./routes/UploadRoute/uploadRoute.js"); 
+const uploadRoute = require("./routes/UploadRoute/uploadRoute.js");
 app.use("/upload", uploadRoute);
 
 // Tenant routes

@@ -191,7 +191,6 @@ const RoleOverrides = require('../models/roleOverrides');
 
 const permissionMiddleware = async (req, res, next) => {
   try {
-
     const userId = req.headers['x-user-id'];
     const tenantId = req.headers['x-tenant-id'];
     const impersonatedUserId = req.headers['x-impersonated-user-id'];
@@ -242,7 +241,6 @@ const permissionMiddleware = async (req, res, next) => {
       }
     }
 
-    // Process impersonation token if present
     if (impersonatedUserId) { // Only process if we have a valid currentUser
       try {
         // const impersonationDecoded = jwt.verify(impersonationToken, process.env.JWT_SECRET);
