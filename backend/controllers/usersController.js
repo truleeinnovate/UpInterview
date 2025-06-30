@@ -346,7 +346,7 @@ const getInterviewers = async (req, res) => {
       })
         .populate("contact")
         .lean();
-
+      
       return availabilities.map((availability) => {
         const contact = availability.contact || {};
         const ownerId = contact.ownerId?.toString();
@@ -410,8 +410,6 @@ const getInterviewers = async (req, res) => {
 
     // Combine results
     const allResults = [...internalResults, ...externalResults];
-
-    // Debug log to check the final data being sen
 
     return res.json({
       success: true,
