@@ -87,7 +87,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{contactData.experienceYears ?`${contactData.experienceYears} Years` :  'Not Provided'}</p>
+            <p className="font-medium">{contactData.yearsOfExperience ?`${contactData.yearsOfExperience} Years` :  'Not Provided'}</p>
           </div>
 
           <div>

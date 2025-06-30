@@ -106,7 +106,7 @@ const EditAdvacedDetails = ({
       setFormData({
         currentRole: userProfile.currentRole || "",
         industry: userProfile.industry || "",
-        experience: userProfile.experienceYears || "",
+        experience: userProfile.yearsOfExperience || "",
         location: userProfile.location || "",
         coverLetterdescription: userProfile.coverLetterdescription || "",
         id: userProfile._id,
@@ -205,7 +205,7 @@ const EditAdvacedDetails = ({
     const cleanFormData = {
       currentRole: formData.currentRole?.trim() || "",
       industry: formData.industry?.trim() || "",
-      experienceYears: formData.experience?.trim() || "",
+      yearsOfExperience: formData.experience?.trim() || "",
       location: formData.location?.trim() || "",
       coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills

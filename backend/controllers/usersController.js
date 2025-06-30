@@ -347,10 +347,10 @@ const getInterviewers = async (req, res) => {
         .populate("contact")
         .lean();
 
-      console.log(
-        `✅ [getInterviewers] External availabilities raw data:`,
-        JSON.stringify(availabilities, null, 2)
-      );
+      // console.log(
+      //   `✅ [getInterviewers] External availabilities raw data:`,
+      //   JSON.stringify(availabilities, null, 2)
+      // );
 
       return availabilities.map((availability) => {
         const contact = availability.contact || {};
@@ -417,10 +417,10 @@ const getInterviewers = async (req, res) => {
     const allResults = [...internalResults, ...externalResults];
 
     // Debug log to check the final data being sent
-    console.log(
-      "✅ [getInterviewers] Final data being sent:",
-      JSON.stringify(allResults, null, 2)
-    );
+    // console.log(
+    //   "✅ [getInterviewers] Final data being sent:",
+    //   JSON.stringify(allResults, null, 2)
+    // );
 
     return res.json({
       success: true,
@@ -538,7 +538,7 @@ const getUsersByTenant = async (req, res) => {
     // .populate({ path: 'roleId', select: '_id label roleName status' })
     // .lean();
 
-     const users = await Users.find({ tenantId })
+    const users = await Users.find({ tenantId })
       .populate({
         path: 'roleId',
         select: '_id label roleName status' // Only fetch needed fields
@@ -570,14 +570,14 @@ const getUsersByTenant = async (req, res) => {
     const combinedUsers = users.map((user) => {
       const contact = contactMap[user._id.toString()] || {};
       // const role = user.roleId ? roleMap[user.roleId] : {};
-       const role = user.roleId || {};
+      const role = user.roleId || {};
       // console.log("user",role);
-      
+
 
       return {
         _id: user._id,
         contactId: contact._id || '',
-        isEmailVerified:user.isEmailVerified || false,
+        isEmailVerified: user.isEmailVerified || false,
         firstName: contact.firstName || '',
         lastName: contact.lastName || '',
         email: user.email || '',
@@ -586,17 +586,17 @@ const getUsersByTenant = async (req, res) => {
         gender: contact.gender || '',
         phone: contact.phone || '',
         status: user.status || '',
- expectedRatePerMockInterview:contact.expectedRatePerMockInterview || '',
+        expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
         // <<<<<<< Ranjith
-
+        yearsOfExperience: contact?.yearsOfExperience || '',
         roleId: role?._id || '',
         roleName: role?.roleName || '',
         label: role?.label || '',
-// =======
-//         roleId: user?.roleId?.roleId || "",
-//         roleName: user?.roleId?.roleName || "",
-//         label: user?.roleId?.label || "",
-// >>>>>>> main
+        // =======
+        //         roleId: user?.roleId?.roleId || "",
+        //         roleName: user?.roleId?.roleName || "",
+        //         label: user?.roleId?.label || "",
+        // >>>>>>> main
         // =======
         //         roleId: users.roleId || '',
         //         roleName: users.roleName || '',
@@ -647,7 +647,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
 
-  if (!ownerId || ownerId === 'undefined') {
+    if (!ownerId || ownerId === 'undefined') {
       return res.status(400).json({ message: 'Invalid owner ID' });
     }
 
@@ -665,8 +665,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .populate({
         path: "availability",
         // model: 'InterviewAvailability',
-         model: 'InterviewAvailability', // Make sure the casing is correct
-    select: 'availability.day availability.timeSlots _id',
+        model: 'InterviewAvailability', // Make sure the casing is correct
+        select: 'availability.day availability.timeSlots _id',
         // select: 'day timeSlots -_id',
         // select: 'availability',
         select: "availability.day availability.timeSlots",
@@ -677,10 +677,11 @@ const getUniqueUserByOwnerId = async (req, res) => {
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
       _id: users._id,
-      roleId: users?.roleId?._id || '' ,
+      roleId: users?.roleId?._id || '',
       roleLabel: users?.roleId?.label || '',
       roleName: users?.roleId?.roleName || '',
       contactId: contact._id || '',
+      yearsOfExperience:contact?.yearsOfExperience || '',
       firstName: contact.firstName || '',
       lastName: contact.lastName || '',
       email: users.email || '',
@@ -719,13 +720,13 @@ const getUniqueUserByOwnerId = async (req, res) => {
       preferredDuration: contact.preferredDuration || "",
       availability: contact.availability || [],
       dateOfBirth: contact.dateOfBirth || '',
-      expectedRatePerMockInterview:contact.expectedRatePerMockInterview || ''
+      expectedRatePerMockInterview: contact.expectedRatePerMockInterview || ''
 
     };
 
     res.status(200).json(combinedUser);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
