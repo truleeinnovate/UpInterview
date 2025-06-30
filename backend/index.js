@@ -60,9 +60,19 @@ const corsOptions = {
     }
   },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Cookie",
+    "Accept",
+    "x-user-id",           // Add these three custom headers
+    "x-tenant-id",         // in lowercase as they'll be
+    "x-impersonation-token" // transformed to lowercase by the server
+  ],
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   optionsSuccessStatus: 200,
+  exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-token"]
 };
 
 // Apply CORS middleware

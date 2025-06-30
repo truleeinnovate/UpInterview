@@ -170,6 +170,19 @@
 // module.exports = { permissionMiddleware };
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 const jwt = require('jsonwebtoken');
 const { Users } = require('../models/Users');
 const Tenant = require('../models/Tenant');
@@ -178,9 +191,13 @@ const RoleOverrides = require('../models/roleOverrides');
 
 const permissionMiddleware = async (req, res, next) => {
   try {
+    const userId = req.headers['x-user-id'];
+    const tenantId = req.headers['x-tenant-id'];
+    const impersonatedUserId = req.headers['x-impersonated-user-id'];
+
     // Get tokens - both are optional
-    const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
-    const impersonationToken = req.cookies.impersonationToken;
+    // const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
+    // const impersonationToken = req.cookies.impersonationToken;
 
     // Initialize variables with default values
     let decoded = null;
@@ -195,12 +212,12 @@ const permissionMiddleware = async (req, res, next) => {
     let roleLevel = null;
 
     // Process auth token if present
-    if (authToken) {
+    if (userId && tenantId) {
       try {
-        decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-        console.log('Decoded authToken:', decoded);
+        // decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+        // console.log('Decoded authToken:', decoded);
 
-        const { userId, tenantId } = decoded;
+        // const { userId, tenantId } = decoded;
         if (!userId) {
           console.error('Missing userId in token');
           return res.status(401).json({ error: 'Unauthorized: Missing userId in token' });
@@ -215,7 +232,7 @@ const permissionMiddleware = async (req, res, next) => {
 
         // Set default effective user (non-impersonated)
         effectiveUser = currentUser;
-        effectiveTenantId = tenantId || currentUser.tenantId;
+        effectiveTenantId = effectiveTenantId || currentUser.tenantId;
         roleType = currentUser.roleId?.roleType || null;
         roleLevel = currentUser.roleLevel || null;
       } catch (err) {
@@ -224,14 +241,13 @@ const permissionMiddleware = async (req, res, next) => {
       }
     }
 
-    // Process impersonation token if present
-    if (impersonationToken) { // Only process if we have a valid currentUser
+    if (impersonatedUserId) { // Only process if we have a valid currentUser
       try {
-        const impersonationDecoded = jwt.verify(impersonationToken, process.env.JWT_SECRET);
-        console.log('Decoded impersonationToken:', impersonationDecoded);
+        // const impersonationDecoded = jwt.verify(impersonationToken, process.env.JWT_SECRET);
+        // console.log('Decoded impersonationToken:', impersonationDecoded);
 
-        if (impersonationDecoded.impersonatedUserId) {
-          const impersonatedUser = await Users.findById(impersonationDecoded.impersonatedUserId).populate('roleId');
+        if (impersonatedUserId) {
+          const impersonatedUser = await Users.findById(impersonatedUserId).populate('roleId');
 
           if (impersonatedUser) {
             isImpersonating = true;
@@ -341,10 +357,6 @@ const permissionMiddleware = async (req, res, next) => {
 };
 
 module.exports = { permissionMiddleware };
-
-
-
-
 
 
 
