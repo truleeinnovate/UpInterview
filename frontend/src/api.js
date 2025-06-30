@@ -88,9 +88,11 @@ import { config } from './config';
 
 export const fetchFilterData = async (endpoint) => {
   try {
+let tokenPayload = {};
     const authToken = Cookies.get('authToken') ?? '';
-    const tokenPayload = authToken ? decodeJwt(authToken) : {};
-
+        if(authToken){
+    tokenPayload = authToken ? decodeJwt(authToken) : {};
+  }
 
     const userId = tokenPayload?.userId;
     const tenantId = tokenPayload?.tenantId;
