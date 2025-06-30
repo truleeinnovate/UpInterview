@@ -459,7 +459,8 @@ const Subscription = () => {
                 </div>
                 <LoadingButton
                   onClick={() => submitPlans(plan)}
-                  loading={isMutationLoading}
+                  isLoading={isMutationLoading}
+                  loadingText="Processing..."
                   className={`w-full font-semibold py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm md:text-base lg:text-lg mt-4 transition-all duration-200   shadow-lg border
 
                     ${isHighlighted(plan) ? "bg-white hover:bg-white text-black " : "text-black bg-white hover:bg-white shadow-slate-50"}
