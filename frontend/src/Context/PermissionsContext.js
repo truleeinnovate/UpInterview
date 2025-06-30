@@ -261,6 +261,10 @@ export const PermissionsProvider = ({ children }) => {
       const userId = tokenPayload?.userId;
       const orgId = tokenPayload?.tenantId;
       const impersonationToken = decodeJwt(Cookies.get("impersonationToken"));
+      console.log('tokenPayload frontend', tokenPayload);
+      console.log('userId frontend', userId);
+      console.log('orgId frontend', orgId);
+      console.log('impersonationToken frontend', impersonationToken);
   
       const headers = {
         'x-user-id': userId,
@@ -272,6 +276,7 @@ export const PermissionsProvider = ({ children }) => {
         headers,
         withCredentials: true 
       });
+      console.log('response frontend', response.data);
       
       setEffectivePermissions(response.data.effectivePermissions || {});
       setSuperAdminPermissions(response.data.superAdminPermissions || null);

@@ -6,10 +6,16 @@ import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
 import Cookies from "js-cookie";
+import LoadingButton from "../../../Components/LoadingButton.jsx";
+import { usePositions } from '../../../apiHooks/usePositions.js';
+
+
 const SubscriptionPlan = () => {
   // console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
+
+  const { isMutationLoading } = usePositions();
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -307,8 +313,10 @@ const SubscriptionPlan = () => {
                 {isAnnual ? plan.annualPrice : plan.monthlyPrice}
                 <span className="text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
               </p>
-              <button
+              <LoadingButton
                 onClick={() => submitPlans(plan)}
+                isLoading={isMutationLoading}
+                loadingText="Processing..."
                 className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
                 ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -319,7 +327,7 @@ const SubscriptionPlan = () => {
               : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
               ? "Continue to Payment"
               : "Choose"}
-              </button>
+              </LoadingButton>
             </div>
           ))}
         </div>
