@@ -7,6 +7,9 @@ export const getOrganizationRoles = async () => {
     const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
     const allRoles = response.data;
 
+    console.log("allRoles",allRoles);
+    
+
     const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
     return filteredRoles;
   } catch (error) {
