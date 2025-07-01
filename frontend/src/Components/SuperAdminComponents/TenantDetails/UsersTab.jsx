@@ -28,18 +28,21 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TableView from "../../Shared/Table/TableView.jsx";
-import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
+// import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 import { LiaGenderlessSolid } from "react-icons/lia";
 import { config } from "../../../config.js";
-import { setAuthCookies, getImpersonationToken } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
-import { toast } from 'react-toastify';
-import { usePermissions } from '../../../Context/PermissionsContext';
-
+import {
+  setAuthCookies,
+  getImpersonationToken,
+} from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { toast } from "react-toastify";
+import { usePermissions } from "../../../Context/PermissionsContext";
+import KanbanView from "./Users/Kanban.jsx";
 
 function UsersTab({ users }) {
-    const { refreshPermissions } = usePermissions();
-  
+  const { refreshPermissions } = usePermissions();
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [view, setView] = useState("table");
@@ -81,9 +84,9 @@ function UsersTab({ users }) {
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      filters.experience.max
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
     );
   };
 
@@ -143,25 +146,28 @@ function UsersTab({ users }) {
   };
 
   // Common function for Login as User API call
-const handleLoginAsUser = async (userId) => {
+  const handleLoginAsUser = async (userId) => {
     try {
       const impersonationToken = getImpersonationToken();
       if (!impersonationToken) {
-        toast.error('Super admin session expired. Please log in again.');
-        navigate('/organization-login');
+        toast.error("Super admin session expired. Please log in again.");
+        navigate("/organization-login");
         return;
       }
 
-      const response = await fetch(`${config.REACT_APP_API_URL}/Organization/login-as-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${impersonationToken}`,
-        },
-        body: JSON.stringify({ userId }),
-        credentials: 'include',
-      });
-      console.log('Login as user response:', response);
+      const response = await fetch(
+        `${config.REACT_APP_API_URL}/Organization/login-as-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${impersonationToken}`,
+          },
+          body: JSON.stringify({ userId }),
+          credentials: "include",
+        }
+      );
+      console.log("Login as user response:", response);
 
       const data = await response.json();
       if (data.success) {
@@ -172,14 +178,14 @@ const handleLoginAsUser = async (userId) => {
           organization: data.isOrganization,
         });
         await refreshPermissions();
-        navigate('/home');
+        navigate("/home");
       } else {
-        console.error('Login failed:', data.message);
-        toast.error(data.message || 'Login failed');
+        console.error("Login failed:", data.message);
+        toast.error(data.message || "Login failed");
       }
     } catch (error) {
-      console.error('Error during login as user:', error);
-      toast.error('An error occurred during login');
+      console.error("Error during login as user:", error);
+      toast.error("An error occurred during login");
     }
   };
 
@@ -195,7 +201,7 @@ const handleLoginAsUser = async (userId) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
+  console.log("USERS ========================= ", users);
   const handleLogin = (user) => {
     setSelectedUser(user);
     setShowLoginModal(true);
@@ -205,6 +211,9 @@ const handleLoginAsUser = async (userId) => {
     setShowLoginModal(false);
     setSelectedUser(null);
   };
+
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   // Shared Actions Configuration for Table and Kanban
   const actions = [
@@ -258,8 +267,7 @@ const handleLoginAsUser = async (userId) => {
       header: "Role",
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-          <span>{row.status || "N/A"}</span>
+          <span>{row?.roleName ? row.roleName : "N/A"}</span>
         </div>
       ),
     },
@@ -267,12 +275,30 @@ const handleLoginAsUser = async (userId) => {
       key: "lastLogin",
       header: "Last Login",
       render: (value, row) =>
-        new Date(row.lastLogin).toLocaleDateString() || "N/A",
+        new Date(row.updatedAt).toLocaleDateString() || "N/A",
     },
     {
       key: "status",
       header: "Status",
       render: (value, row) => <StatusBadge status={row.status} /> || "N/A",
+    },
+  ];
+
+  // Kanban Columns Configuration
+  const kanbanColumns = [
+    {
+      key: "firstName",
+      header: "Name",
+      render: (value) => capitalizeFirstLetter(value),
+    },
+    {
+      key: "email",
+      header: "Email",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
     },
   ];
 
@@ -571,13 +597,11 @@ const handleLoginAsUser = async (userId) => {
                         data={currentFilteredRows.map((user) => ({
                           ...user,
                           id: user._id,
-                          title: `${user.FirstName || ""} ${user.LastName || ""}`,
-                          subtitle: user.CurrentRole || user.CurrentExperience || "N/A",
-                          avatar: "",
-                          status: "active",
-                          isAssessmentView: <p>Is assignment view</p>,
+                          title: user.firstName || "N/A",
+                          subtitle: user.roleName || "N/A",
+                          avatar: user.imageData?.path || null,
                         }))}
-                        columns={[]}
+                        columns={kanbanColumns}
                         loading={isLoading}
                         renderActions={renderKanbanActions}
                         emptyState="No Users found."

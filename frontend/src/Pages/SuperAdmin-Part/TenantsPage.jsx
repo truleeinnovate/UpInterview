@@ -9,7 +9,7 @@ import { useMediaQuery } from "react-responsive";
 import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
+import KanbanView from "./Tenant/KanbanView.jsx";
 import {
   Eye,
   Mail,
@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { config } from "../../config.js";
+import { usePermissions } from "../../Context/PermissionsContext";
 
 function TenantsPage() {
+  const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
   // const [selectedTenant, setSelectedTenant] = useState(null);
   // const [selectTenantView, setSelectTenantView] = useState(false);
@@ -202,6 +204,9 @@ function TenantsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   // Table Columns
   const tableColumns = [
     {
@@ -218,17 +223,14 @@ function TenantsPage() {
           </div>
           <div className="ml-4">
             <div className="font-medium text-gray-900">
-              {row.company || "N/A"}
+              {capitalizeFirstLetter(row.company) || "N/A"}
             </div>
-            <div className="text-gray-500">{row.industry || "N/A"}</div>
+            <div className="text-gray-500">
+              {capitalizeFirstLetter(row.industry) || "N/A"}
+            </div>
           </div>
         </div>
       ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value, row) => <StatusBadge status={row.status} />,
     },
     {
       key: "plan",
@@ -250,15 +252,23 @@ function TenantsPage() {
       render: (value) => value || "0",
     },
     {
-      key: "activeCandidates",
+      key: "activeUsersCount",
       header: "Active Candidates",
-      render: (value, row) => row.activeCandidates || "0",
+      render: (value, row) =>
+        row?.activeUsersCount ? row.activeUsersCount : "0",
     },
     {
       key: "lastActivity",
       header: "Last Activity",
       render: (value, row) => (
         <span>{row ? formatDate(row?.updatedAt) : "N/A"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
   ];
@@ -292,27 +302,46 @@ function TenantsPage() {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "firstName",
+      header: "Name",
+    },
+    {
+      key: "email",
+      header: "Email",
+    },
+    {
+      key: "phone",
+      header: "Phone",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
+    },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item, { onView, onEdit, onResendLink } = {}) => (
     <div className="flex items-center gap-1">
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`/tenants/${item._id}`);
+          onView ? onView(item) : navigate(`/tenants/${item._id}`);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
         title="View Details"
       >
         <Eye className="w-4 h-4" />
       </button>
+
       {!isLoading ? (
         <>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              item?._id && navigate(`/tenants/${item._id}`);
+              navigate(`/tenants/${item._id}`);
             }}
             className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="360° View"
@@ -322,7 +351,7 @@ function TenantsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`edit/${item._id}`);
+              onEdit ? onEdit(item) : navigate(`edit/${item._id}`);
             }}
             className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="Edit"
@@ -334,7 +363,7 @@ function TenantsPage() {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            if (onResendLink) onResendLink(item.id);
           }}
           disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -403,6 +432,8 @@ function TenantsPage() {
     );
   };
 
+  console.log("TENANTS ========================: ", tenants);
+
   return (
     <div className="bg-background">
       <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
@@ -444,24 +475,24 @@ function TenantsPage() {
             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Total Tenants</div>
-                <div className="text-xl font-semibold">{tenants.length}</div>
+                <div className="text-xl font-semibold">{tenants?.length}</div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Active</div>
                 <div className="text-xl font-semibold">
-                  {tenants.filter((t) => t.status === "active").length}
+                  {tenants?.filter((t) => t.status === "active").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Inactive</div>
                 <div className="text-xl font-semibold">
-                  {tenants.filter((t) => t.status === "inactive").length}
+                  {tenants?.filter((t) => t.status === "inactive").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Pending</div>
                 <div className="text-xl font-semibold">
-                  {tenants.filter((t) => t.status === "pending").length}
+                  {tenants?.filter((t) => t.status === "pending").length}
                 </div>
               </div>
               {selectedType === "all" && (
@@ -469,13 +500,13 @@ function TenantsPage() {
                   <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                     <div className="text-xs text-gray-500">Organizations</div>
                     <div className="text-xl font-semibold">
-                      {tenants.filter((t) => t.type === "organization").length}
+                      {tenants?.filter((t) => t.type === "organization").length}
                     </div>
                   </div>
                   <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                     <div className="text-xs text-gray-500">Individuals</div>
                     <div className="text-xl font-semibold">
-                      {tenants.filter((t) => t.type === "individual").length}
+                      {tenants?.filter((t) => t.type === "individual").length}
                     </div>
                   </div>
                 </>
@@ -491,6 +522,7 @@ function TenantsPage() {
               title="Tenants"
               onAddClick={() => navigate("/tenants/new")}
               addButtonText="Add Tenant"
+              canCreate={superAdminPermissions?.Tenants?.Create}
             />
 
             {/* Toolbar */}
@@ -534,10 +566,7 @@ function TenantsPage() {
                       id: tenant._id,
                       title: tenant.company || "N/A",
                       subtitle: tenant.industry || "N/A",
-                      avatar: tenant.branding ? tenant.branding.path : null,
-                      status: tenant.status || "N/A",
-                      name: tenant.firstName,
-
+                      avatar: tenant.branding?.path || null,
                     }))}
                     columns={kanbanColumns}
                     loading={isLoading}

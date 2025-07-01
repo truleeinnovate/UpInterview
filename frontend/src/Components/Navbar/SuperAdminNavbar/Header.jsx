@@ -20,8 +20,10 @@ import { useCustomContext } from "../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { clearAllCookies } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { usePermissions } from "../../../Context/PermissionsContext";
 
 function Header() {
+  const { superAdminPermissions } = usePermissions();
   // const { user, hasRole } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -92,25 +94,43 @@ function Header() {
   });
 
   const mainNavItems = [
-    { path: "/tenants", label: "Tenants" },
+    { path: "/tenants", label: "Tenants", permissionKey: "Tenants.ViewTab" },
     {
       path: "/interviewer-requests",
       label: "Interviewer Requests",
+      permissionKey: "InterviewRequest.ViewTab",
       // role: "super_admin",
     },
     {
       path: "/outsource-interviewers",
       label: "Outsource Interviewers",
+      permissionKey: "OutsourceInterviewerRequest.ViewTab",
       // role: "super_admin",
     },
-    { path: "/support-tickets", label: "Support" },
-    { path: "/admin-billing", label: "Billing" },
+    {
+      path: "/support-tickets",
+      label: "Support Desk",
+      permissionKey: "SupportDesk.ViewTab",
+    },
+    {
+      path: "/admin-billing",
+      label: "Billing",
+      permissionKey: "Billing.ViewTab",
+    },
   ];
 
   const moreNavItems = [
-    { path: "/settings", label: "Settings" },
-    { path: "/internal-logs", label: "Internal Logs" },
-    { path: "/integrations", label: "Integrations" },
+    { path: "/settings", label: "Settings", permissionKey: "Settings.ViewTab" },
+    {
+      path: "/internal-logs",
+      label: "Internal Logs",
+      permissionKey: "InternalLogs.ViewTab",
+    },
+    {
+      path: "/integrations",
+      label: "Integrations",
+      permissionKey: "IntegrationLogs.ViewTab",
+    },
   ];
 
   // Utility function to close all dropdowns
@@ -320,7 +340,7 @@ function Header() {
           Log Out
         </button>
       </div>
-      <div className="px-2 py-1">
+      {/* <div className="px-2 py-1">
         {[
           { to: "/billing", label: "Billing", icon: <CiCreditCard1 /> },
           {
@@ -339,7 +359,7 @@ function Header() {
             {label}
           </NavLink>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 
@@ -360,12 +380,14 @@ function Header() {
           onClick={() => closeAllDropdowns()}
         >
           <IoHome
-            className={isActive("/home") ? "text-custom-blue" : "text-black"}
+            className={
+              isActive("/admin-dashboard") ? "text-custom-blue" : "text-black"
+            }
           />
         </NavLink>
       ),
       className: "text-xl border rounded-md p-2",
-      isActive: isActive("/home"),
+      isActive: isActive("/admin-dashboard"),
     },
     {
       key: "info",
@@ -454,7 +476,7 @@ function Header() {
   ];
 
   return (
-    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-6 md:px-6 lg:px-6 xl:px-6 2xl:px-6 h-16 bg-white border border-b-gray-200">
+    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-4 md:px-4 lg:px-4 xl:px-4 2xl:px-4 h-16 bg-white border border-b-gray-200">
       <div className="flex items-center flex-1">
         <div className="flex items-center flex-shrink-0 gap-2">
           <button
@@ -471,7 +493,11 @@ function Header() {
         <nav className="hidden lg:flex xl:flex s2xl:flex ml-16 gap-x-1">
           {mainNavItems.map(
             (item) =>
-              !item.role && (
+              !item.role &&
+              (!item.permissionKey ||
+                item.permissionKey
+                  .split(".")
+                  .reduce((acc, key) => acc?.[key], superAdminPermissions)) && (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -489,11 +515,21 @@ function Header() {
               )
           )}
 
-          {/* More dropdown */}
+          {/* More Dropdown */}
           <div className="relative flex items-center" ref={moreRef}>
             <button
               className={`flex items-center h-16 relative px-1 transition-colors duration-300 ${
-                moreNavItems.some((item) => isActive(item.path))
+                moreNavItems.some(
+                  (item) =>
+                    isActive(item.path) &&
+                    (!item.permissionKey ||
+                      item.permissionKey
+                        .split(".")
+                        .reduce(
+                          (acc, key) => acc?.[key],
+                          superAdminPermissions
+                        ))
+                )
                   ? "text-custom-blue font-bold border-b-2 border-custom-blue"
                   : "text-gray-600 hover:text-custom-blue"
               }`}
@@ -519,7 +555,17 @@ function Header() {
             >
               <div className="space-y-1">
                 {moreNavItems
-                  .filter((item) => !item.role)
+                  .filter(
+                    (item) =>
+                      !item.role &&
+                      (!item.permissionKey ||
+                        item.permissionKey
+                          .split(".")
+                          .reduce(
+                            (acc, key) => acc?.[key],
+                            superAdminPermissions
+                          ))
+                  )
                   .map(({ path: to, label }) => (
                     <NavLink
                       key={to}

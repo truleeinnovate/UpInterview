@@ -84,12 +84,12 @@ function TenantDetailsPage() {
           <AiOutlineLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-custom-blue">
             {tenant?.tenant.firstName || "Tenant"}
           </h1>
           <div className="text-sm text-gray-500">
-            <span className="text-gray-900">{tenant?.tenant?.company}</span> • {tenant?.tenant?.userCount}{" "}
-            Users • Created At -{" "}
+            <span className="text-gray-900">{tenant?.tenant?.company}</span> •{" "}
+            {tenant?.tenant?.userCount} Users • Created At -{" "}
             {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
           </div>
         </div>
