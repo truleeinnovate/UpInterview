@@ -248,10 +248,18 @@ function InvoicesTable({ organizationId }) {
 
   const tableColumns = [
     {
-      key: "id",
+      key: "invoiceCode",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row._id ? row._id : row.id}</span>
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedInvoiceId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
+          {row.invoiceCode ? row.invoiceCode : "N/A"}
+        </span>
       ),
     },
     {
@@ -314,7 +322,7 @@ function InvoicesTable({ organizationId }) {
     {
       key: "dueDate",
       header: "Due Date",
-      render: (value, row) => formatDate(row.dueDate || "N/A"),
+      render: (value, row) => formatDate(row.dueDate) || "N/A",
     },
   ];
 
@@ -725,11 +733,6 @@ function InvoicesTable({ organizationId }) {
           <div className="md:mt-2 sm:mt-4 w-full">
             <main className="px-4">
               <div className="sm:px-0">
-                {/* <Header
-                  title="Invoices"
-                  onAddClick={() => navigate("new")}
-                  addButtonText="Create Invoice"
-                /> */}
                 <Toolbar
                   view={view}
                   setView={setView}
@@ -769,13 +772,7 @@ function InvoicesTable({ organizationId }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      invoices={currentFilteredRows.map((invoice) => ({
-                        ...invoices,
-                        _id: invoice?._id,
-                        title: `${invoice?._id || ""}`,
-                        subtitle: "Invoice",
-                        status: invoice.status,
-                      }))}
+                      invoices={currentFilteredRows}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}

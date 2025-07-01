@@ -209,14 +209,18 @@ function TenantsPage() {
       header: "Tenant Name",
       render: (value, row) => (
         <div className="flex items-center">
-          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-            {row?.firstName?.charAt(0) + row?.lastName?.charAt(0)}
+          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold">
+            {row?.branding ? (
+              <img src={row?.branding?.path} alt="branding" />
+            ) : (
+              row?.company?.charAt(0).toUpperCase() || "?"
+            )}
           </div>
           <div className="ml-4">
             <div className="font-medium text-gray-900">
-              {row.company || "abc company"}
+              {row.company || "N/A"}
             </div>
-            <div className="text-gray-500">{row.industry || "Technology"}</div>
+            <div className="text-gray-500">{row.industry || "N/A"}</div>
           </div>
         </div>
       ),
@@ -236,7 +240,7 @@ function TenantsPage() {
       header: "Users",
       render: (value, row) => (
         <div className="flex items-center gap-2">
-          <span>{row.usersCount || "0"}</span>
+          <span>{row.usersCount || 0}</span>
         </div>
       ),
     },
@@ -267,24 +271,24 @@ function TenantsPage() {
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-    },
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+    // },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`edit/${row._id}`),
     },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
@@ -345,7 +349,15 @@ function TenantsPage() {
   // Render Filter Content
   const renderFilterContent = () => {
     // filter options
-    const statusOptions = ["active", "inactive", "pending", "inProgress"];
+    const statusOptions = [
+      "active",
+      "inactive",
+      "submitted",
+      "payment_pending",
+      "created",
+      "cancelled",
+      "draft",
+    ];
 
     return (
       <div className="space-y-3">
@@ -520,15 +532,12 @@ function TenantsPage() {
                     data={currentFilteredRows.map((tenant) => ({
                       ...tenant,
                       id: tenant._id,
-                      title: `${tenant.firstName || "N/A"} ${
-                        tenant.lastName || "N/A"
-                      }`,
-                      subtitle:
-                        tenant.jobTitle || tenant.country || "Not Provided",
-                      avatar: tenant.ImageData
-                        ? `http://localhost:5000/${tenant.ImageData.path}`
-                        : null,
+                      title: tenant.company || "N/A",
+                      subtitle: tenant.industry || "N/A",
+                      avatar: tenant.branding ? tenant.branding.path : null,
                       status: tenant.status || "N/A",
+                      name: tenant.firstName,
+
                     }))}
                     columns={kanbanColumns}
                     loading={isLoading}

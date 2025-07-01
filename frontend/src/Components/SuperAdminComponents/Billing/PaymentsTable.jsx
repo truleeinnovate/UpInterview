@@ -422,10 +422,18 @@ function PaymentsTable({ organizationId }) {
 
   const tableColumns = [
     {
-      key: "id",
+      key: "paymentCode",
       header: "Payment ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row.id ? row.id : row._id}</span>
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedPaymentId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
+          {row.paymentCode ? row.paymentCode : "N/A"}
+        </span>
       ),
     },
     {
@@ -932,14 +940,7 @@ function PaymentsTable({ organizationId }) {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        payments={currentFilteredRows.map((payment) => ({
-                          ...payments,
-                          _id: payment._id,
-                          title: `${payment._id || ""} ${""}`,
-                          subtitle: "N/A",
-                          avatar: "",
-                          status: payment.status,
-                        }))}
+                        payments={currentFilteredRows}
                         columns={kanbanColumns}
                         loading={isLoading}
                         renderActions={renderKanbanActions}

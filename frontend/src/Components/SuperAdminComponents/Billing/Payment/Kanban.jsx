@@ -114,8 +114,7 @@ const Kanban = ({ payments, loading }) => {
                   No payments Found
                 </h3>
                 <p className="text-gray-500 text-center max-w-md">
-                  There are no payments to display at the moment. Create a new
-                  position to get started.
+                  There are no payments to display at the moment.
                 </p>
               </div>
             ) : (
@@ -138,8 +137,7 @@ const Kanban = ({ payments, loading }) => {
                       <div className="relative"></div>
                       <div>
                         <h4 className="text-sm font-medium text-custom-blue">
-                          {/* {payment?.interviewerNo || "N/A"} */}
-                          payment #{payment?._id?.slice(-5, -1) || "N/A"}
+                          {payment?.paymentCode || "N/A"}
                         </h4>
                       </div>
                     </div>
@@ -197,7 +195,7 @@ const Kanban = ({ payments, loading }) => {
                       </div>
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <MapPin className="w-4 h-4 text-red-500" />
-                        <span>{payment?.transactionId || "Not disclosed"}</span>
+                        <span className="trunc">{payment?.transactionId || "Not disclosed"}</span>
                       </div>
                     </div>
                   </div>

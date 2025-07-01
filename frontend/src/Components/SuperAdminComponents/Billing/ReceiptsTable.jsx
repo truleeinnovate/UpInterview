@@ -227,14 +227,18 @@ function ReceiptsTable({ organizationId }) {
       key: "id",
       header: "Receipt ID",
       render: (vale, row) => (
-        <span className="font-mono text-sm">{row.id ? row.id : row._id}</span>
+        <span className="text-sm font-medium text-custom-blue cursor-pointer">
+          {row.receiptCode ? row.receiptCode : "N/A"}
+        </span>
       ),
     },
     {
       key: "invoiceId",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">{row?.invoiceId}</span>
+        <span className="font-mono text-sm">
+          {row?.invoiceCode ? row.invoiceCode : "N/A"}
+        </span>
       ),
     },
     {

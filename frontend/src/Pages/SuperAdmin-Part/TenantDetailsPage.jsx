@@ -88,8 +88,9 @@ function TenantDetailsPage() {
             {tenant?.tenant.firstName || "Tenant"}
           </h1>
           <div className="text-sm text-gray-500">
-            {tenant?.tenant?.company} • {tenant?.tenant?.userCount} Users •
-            Created {new Date(tenant?.createdAt).toLocaleDateString()}
+            <span className="text-gray-900">{tenant?.tenant?.company}</span> • {tenant?.tenant?.userCount}{" "}
+            Users • Created At -{" "}
+            {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
           </div>
         </div>
       </div>
