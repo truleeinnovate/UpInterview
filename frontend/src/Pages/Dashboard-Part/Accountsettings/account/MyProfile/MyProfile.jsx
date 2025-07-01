@@ -10,6 +10,7 @@ import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser'
 // import { navigation } from '../../mockData/navigationData';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { DocumentsSection } from './DocumentsDetails/DocumentsSection';
 
 const MyProfile = () => {
   const location = useLocation();
@@ -33,6 +34,11 @@ const MyProfile = () => {
    const pathSegments = location.pathname.split('/');
    const lastSegment = pathSegments[pathSegments.length - 1];
    const secondLastSegment = pathSegments[pathSegments.length - 2];
+
+   const [documents, setDocuments] = useState({
+    resume: null,
+    coverLetter: null,
+   });
   
   
 
@@ -95,7 +101,7 @@ const MyProfile = () => {
     const validSubtabs =
     //  isFreelancer || roleName === "Internal_Interviewer"
     // ? 
-    ['basic', 'advanced', 'interview', 'availability'] 
+    ['basic', 'advanced', 'interview', 'availability', 'documents'] 
     // : ['basic', 'advanced',];
     // const validSubtabs = ['basic', 'advanced', 'interview', 'availability'];
     if (!validSubtabs.includes(subtab)) {
@@ -122,6 +128,7 @@ const MyProfile = () => {
       advanced: <AdvancedDetails />,
       interview: <InterviewUserDetails />,
       availability: <AvailabilityUser />,
+      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} />,
     };
     // console.log('Current active tab:', activeTab);
     return subTabComponents[activeTab] || subTabComponents['basic'];
@@ -131,7 +138,7 @@ const MyProfile = () => {
   isFreelancer || roleName === "Internal_Interviewer"
     ? 
      ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced'];
+    : ['basic', 'advanced','documents'];
 
 // Internal_Interviewer
 
