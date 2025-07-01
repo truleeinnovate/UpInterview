@@ -432,8 +432,6 @@ function TenantsPage() {
     );
   };
 
-  console.log("TENANTS ========================: ", tenants);
-
   return (
     <div className="bg-background">
       <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">

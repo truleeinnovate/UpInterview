@@ -19,7 +19,6 @@
 // import Loading from '../../Components/Loading.js';
 // import { useMasterData } from '../../apiHooks/useMasterData.js';
 
-
 // const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
 //   const {
 //     skills,
@@ -597,9 +596,6 @@
 // };
 
 // export default OutsourceInterviewers;
-
-
-
 
 // import { useCallback, useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
@@ -1506,6 +1502,9 @@ const OutsourceInterviewers = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   // Table Columns
   const tableColumns = [
     {
@@ -1555,10 +1554,7 @@ const OutsourceInterviewers = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={row.status === "inProgress"}
-          text={row.status.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
   ];

@@ -20,6 +20,7 @@ const CustomProvider = ({ children }) => {
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
+  const impersonatedUserId = Cookies.get("impersonatedUserId");
 
   const [userRole, setuserRole] = useState("Admin");
 
@@ -280,6 +281,24 @@ const CustomProvider = ({ children }) => {
           `${config.REACT_APP_API_URL}/contacts/owner/${userId}`
         );
         setsingleContact(res.data);
+      } catch (err) {
+        console.error("Error fetching user contacts:", err);
+      }
+    };
+
+    fetchContacts();
+  }, [userId]);
+
+  // fetching super admin
+  const [superAdminProfile, setSuperAdminProfile] = useState([]);
+  useEffect(() => {
+    const fetchContacts = async (usersId = null) => {
+      try {
+        const res = await axios.get(
+          `${config.REACT_APP_API_URL}/contacts/owner/${impersonatedUserId}`
+        );
+        setSuperAdminProfile(res.data);
+        console.log("SUPER ADMIN USER: ", res.data);
       } catch (err) {
         console.error("Error fetching user contacts:", err);
       }
@@ -667,6 +686,7 @@ const CustomProvider = ({ children }) => {
 
         interviewRounds,
         fetchInterviewRounds,
+        superAdminProfile,
       }}
     >
       {children}

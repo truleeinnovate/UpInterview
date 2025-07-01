@@ -1729,6 +1729,9 @@ const InternalRequest = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   // Table Columns
   const tableColumns = [
     {
@@ -1763,10 +1766,7 @@ const InternalRequest = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={row.status === "inProgress"}
-          text={row.status.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
     {
