@@ -225,7 +225,7 @@ const UsersAccountTab = () => {
     { key: "phone", header: "Phone", render: (value) => value || "Not Provided" },
    
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
-     {key:"status",header:"Status",render:(value) => value || "Not Found"},
+     {key:"status",header:"Status",render:(value) => value.charAt(0).toUpperCase() + value.slice(1) || "Not Found"},
   ];
 
   // Table Actions Configuration

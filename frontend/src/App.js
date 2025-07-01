@@ -658,6 +658,7 @@ import InvoiceTab from './Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx';
 import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx';
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
 import VerifyUserEmail from './VerifyUserEmail.jsx';
+import { DocumentsSection } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx';
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -1064,6 +1065,7 @@ const App = () => {
                     <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
                     <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
                     <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+                    <Route path="documents" element={<DocumentsSection/>} />
                   </Route>
                 )}
                 {hasPermission('InterviewerGroups') && (
