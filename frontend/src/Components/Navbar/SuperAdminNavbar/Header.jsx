@@ -31,9 +31,10 @@ function Header() {
   // const [userType, setUserType] = useState("SuperAdmin");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { userProfile } = useCustomContext();
+  const { userProfile, superAdminProfile } = useCustomContext();
 
   const authToken = Cookies.get("authToken");
+  const impersonatedUserId = Cookies.get("impersonatedUserId");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
 
@@ -45,6 +46,9 @@ function Header() {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
 
+  // const capitalizeFirstLetter = (str) =>
+  //   str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
 
@@ -55,25 +59,25 @@ function Header() {
   const profileRef = useRef(null);
 
   // Fetch profile image
-  useEffect(() => {
-    const fetchProfileImage = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/contacts/${userId}`
-        );
-        const contact = response.data;
-        if (contact.ImageData && contact.ImageData.filename) {
-          const imageUrl = `${
-            config.REACT_APP_API_URL
-          }/${contact.ImageData.path.replace(/\\/g, "/")}`;
-          setProfileImage(imageUrl);
-        }
-      } catch (error) {
-        console.error("Error fetching profile image:", error);
-      }
-    };
-    fetchProfileImage();
-  }, [userId]);
+  // useEffect(() => {
+  //   const fetchProfileImage = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/contacts/${userId}`
+  //       );
+  //       const contact = response.data;
+  //       if (contact.ImageData && contact.ImageData.path) {
+  //         const imageUrl = `${
+  //           config.REACT_APP_API_URL
+  //         }/${contact.ImageData.path.replace(/\\/g, "/")}`;
+  //         setProfileImage(imageUrl);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching profile image:", error);
+  //     }
+  //   };
+  //   fetchProfileImage();
+  // }, [userId]);
 
   // State for dropdowns and sidebar
   const [dropdownState, setDropdownState] = useState({
@@ -111,25 +115,34 @@ function Header() {
       path: "/support-tickets",
       label: "Support Desk",
       permissionKey: "SupportDesk.ViewTab",
+      // role: "super_admin",
     },
     {
       path: "/admin-billing",
       label: "Billing",
       permissionKey: "Billing.ViewTab",
+      // role: "super_admin",
     },
   ];
 
   const moreNavItems = [
-    { path: "/settings", label: "Settings", permissionKey: "Settings.ViewTab" },
+    {
+      path: "/settings",
+      label: "Settings",
+      permissionKey: "Settings.ViewTab",
+      // role: "super_admin",
+    },
     {
       path: "/internal-logs",
       label: "Internal Logs",
       permissionKey: "InternalLogs.ViewTab",
+      // role: "super_admin",
     },
     {
       path: "/integrations",
       label: "Integrations",
       permissionKey: "IntegrationLogs.ViewTab",
+      // role: "super_admin",
     },
   ];
 
@@ -303,9 +316,9 @@ function Header() {
           className="font-medium text-custom-blue"
           onClick={toggleProfileDropdown}
         >
-          {profileImage ? (
+          {superAdminProfile[0]?.imageData ? (
             <img
-              src={profileImage}
+              src={superAdminProfile[0]?.imageData?.path}
               alt="Profile"
               className="w-7 h-7 rounded-full"
             />
@@ -314,7 +327,8 @@ function Header() {
           )}
         </p>
         <span className="font-medium ml-1">
-          {firstName} {lastName}
+          {formatName(superAdminProfile[0]?.firstName)}{" "}
+          {formatName(superAdminProfile[0]?.lastName)}
         </span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
