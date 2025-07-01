@@ -84,20 +84,20 @@ const CompanyProfile = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Company Name
                   </label>
-                  <p>{companyProfile?.company || "not provided"}</p>
+                  <p>{companyProfile?.company || "Not Provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Industry
                   </label>
 
-                  <p>{companyProfile?.industry || "not provided"}</p>
+                  <p>{companyProfile?.industry || "Not Provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Company Size
                   </label>
-                  <p>{companyProfile?.employees || "not provided"}</p>
+                  <p>{companyProfile?.employees || "Not Provided"}</p>
                 </div>
               </div>
             </div>
@@ -110,7 +110,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-2" />
-                    <p>{companyProfile?.website || "not provided"}</p>
+                    <p>{companyProfile?.website || "Not Provided"}</p>
                   </div>
                 </div>
                 <div>
@@ -119,7 +119,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <Globe className="h-5 w-5 text-gray-400 mr-2" />
-                    <p> {companyProfile?.country || "not provided"}</p>
+                    <p> {companyProfile?.country || "Not Provided"}</p>
                   </div>
                 </div>
 
@@ -129,7 +129,7 @@ const CompanyProfile = () => {
                   </label>
                   <div className="flex items-center mt-1">
                     <MapPin className="h-5 w-5 text-gray-400 mr-2" />
-                    <p> {companyProfile?.location || "not provided"}</p>
+                    <p> {companyProfile?.location || "Not Provided"}</p>
                   </div>
                 </div>
               </div>
