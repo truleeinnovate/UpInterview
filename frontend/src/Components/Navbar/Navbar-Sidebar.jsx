@@ -270,7 +270,7 @@ const Navbar = () => {
           {firstName} {lastName}
         </span>
       </div>
-      <div className="flex justify-between px-3 py-1 border-b text-xs">
+      <div className="flex justify-between px-3 py-1 text-xs">
         <button
           className="text-custom-blue hover:text-blue-500 ml-6"
           onClick={() => {
@@ -291,7 +291,7 @@ const Navbar = () => {
           Log Out
         </button>
       </div>
-      <div className="px-2 py-1">
+      <div className={`px-2 py-1 ${effectivePermissions.Billing?.ViewTab && effectivePermissions.Wallet?.ViewTab ? "border-t" : ""}`}>
         {[
           ...(effectivePermissions.Billing?.ViewTab
             ? [{ to: "/account-settings/billing-details", label: "Billing", icon: <CiCreditCard1 /> }]
