@@ -4,48 +4,53 @@ import { FaCheckCircle, FaCircle } from "react-icons/fa";
 function InterviewStatusIndicator({ currentStatus }) {
   // Define base status steps
   const getStatusSteps = (status) => {
-    const baseSteps = ["", "New", 'Contacted', 'In Progress'];
+    const baseSteps = ["", "New", "Contacted", "In Progress"];
 
     // Add the final status based on currentStatus
-    if (status === 'Active') {
-      return [...baseSteps, 'Active'];
-    } else if (status === 'InActive' || status === "Blacklisted") {
+    if (status === "Active") {
+      return [...baseSteps, "Active"];
+    } else if (status === "InActive" || status === "Blacklisted") {
       return [...baseSteps, status];
     } else {
-      return [...baseSteps, 'Active/InActive'];
+      return [...baseSteps, "Active/InActive"];
     }
   };
 
   const statusSteps = getStatusSteps(currentStatus);
   const currentStepIndex = statusSteps.indexOf(currentStatus);
-  const isFinalRed = currentStatus === "InActive" || currentStatus === "Blacklisted";
+  const isFinalRed =
+    currentStatus === "InActive" || currentStatus === "Blacklisted";
 
   return (
     <div className="flex justify-center items-center w-full max-w-4xl mx-auto mb-8">
       {statusSteps.map((step, index) => (
-        <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
+        <div
+          key={step || `step-${index}`}
+          className="flex items-center flex-1 last:flex-initial"
+        >
           <div className="flex flex-col items-center relative">
             {/* Status Circle */}
             <div
-              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${index === 0
+              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                index === 0
                   ? "border-teal-600" // Default first circle
                   : isFinalRed && index === statusSteps.length - 1
-                    ? "border-red-600"
-                    : (currentStatus === 'Active') && index > 0
-                      ? "border-teal-600"
-                      : index < currentStepIndex
-                        ? "border-teal-600"
-                        : index === currentStepIndex
-                          ? "border-orange-500"
-                          : "border-gray-300"
-                }`}
+                  ? "border-red-600"
+                  : currentStatus === "Active" && index > 0
+                  ? "border-teal-600"
+                  : index < currentStepIndex
+                  ? "border-teal-600"
+                  : index === currentStepIndex
+                  ? "border-orange-500"
+                  : "border-gray-300"
+              }`}
             >
               {/* First circle has no tick */}
               {index === 0 ? (
                 <FaCircle className="text-teal-600 h-5 w-5 text-base" />
               ) : isFinalRed && index === statusSteps.length - 1 ? (
                 <FaCheckCircle className="text-red-600 h-5 w-5 text-base" />
-              ) : (currentStatus === 'Active') && index > 0 ? (
+              ) : currentStatus === "Active" && index > 0 ? (
                 <FaCheckCircle className="text-teal-600 h-5 w-5 text-base" />
               ) : index < currentStepIndex ? (
                 <FaCheckCircle className="text-teal-600 h-5 w-5 text-base" />
@@ -67,20 +72,20 @@ function InterviewStatusIndicator({ currentStatus }) {
               )}
               {/* Line */}
               <div
-                className={`h-full ${isFinalRed && index === statusSteps.length - 2
+                className={`h-full ${
+                  isFinalRed && index === statusSteps.length - 2
                     ? "bg-red-600"
-                    : currentStatus === 'Active'
-                      ? "bg-teal-600"
-                      : index < currentStepIndex - 1
-                        ? "bg-teal-600"
-                        : index === currentStepIndex - 1
-                          ? "bg-orange-500"
-                          : "bg-gray-300"
-                  }`}
+                    : currentStatus === "Active"
+                    ? "bg-teal-600"
+                    : index < currentStepIndex - 1
+                    ? "bg-teal-600"
+                    : index === currentStepIndex - 1
+                    ? "bg-orange-500"
+                    : "bg-gray-300"
+                }`}
               />
             </div>
           )}
-
         </div>
       ))}
     </div>

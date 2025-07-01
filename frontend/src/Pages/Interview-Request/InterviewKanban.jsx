@@ -10,7 +10,7 @@ const formatCreatedDate = (date) => {
     : "N/A";
 };
 
-const Kanban = ({ invoices, loading }) => {
+const InterviewRequestKanban = ({ interviewers, loading }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -99,35 +99,36 @@ const Kanban = ({ invoices, loading }) => {
             transition={{ duration: 0.3 }}
           >
             <h3 className="text-xl font-semibold text-gray-800">
-              All invoices
+              All Interviewers
             </h3>
             <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-              {invoices?.length || 0} invoices
+              {interviewers?.length || 0} interviewers
             </span>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
-            {invoices?.length === 0 ? (
+            {interviewers?.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
                 <Briefcase className="w-16 h-16 text-gray-300 mb-4" />
                 <h3 className="text-lg font-medium text-gray-700 mb-2">
-                  No invoices Found
+                  No interviewers Found
                 </h3>
                 <p className="text-gray-500 text-center max-w-md">
-                  There are no invoices to display at the moment.
+                  There are no interviewers to display at the moment. Create a
+                  new position to get started.
                 </p>
               </div>
             ) : (
-              invoices?.map((invoice, index) => (
+              interviewers?.map((outsource, index) => (
                 <motion.div
-                  key={invoice._id}
+                  key={outsource._id}
                   className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   whileHover={{ y: -5 }}
                   onClick={() =>
-                    navigate(`/invoice/view-details/${invoice._id}`, {
+                    navigate(`/outsource/view-details/${outsource._id}`, {
                       state: { from: location.pathname },
                     })
                   }
@@ -137,7 +138,7 @@ const Kanban = ({ invoices, loading }) => {
                       <div className="relative"></div>
                       <div>
                         <h4 className="text-sm font-medium text-custom-blue">
-                          {invoice?.invoiceCode || "N/A"}
+                          {outsource?.interviewerNo || "N/A"}
                         </h4>
                       </div>
                     </div>
@@ -147,7 +148,7 @@ const Kanban = ({ invoices, loading }) => {
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/invoice/view-details/${invoice._id}`, {
+                          navigate(`/outsource/view-details/${outsource._id}`, {
                             state: { from: location.pathname },
                           });
                         }}
@@ -162,7 +163,9 @@ const Kanban = ({ invoices, loading }) => {
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/invoice/edit-invoice/${invoice._id}`);
+                          navigate(
+                            `/outsource/edit-outsource/${outsource._id}`
+                          );
                         }}
                         className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                         title="Edit"
@@ -176,33 +179,37 @@ const Kanban = ({ invoices, loading }) => {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <Building2 className="w-4 h-4 text-gray-500" />
-                        <span className="truncate">
-                          {invoice?.status || "N/A"}
-                        </span>
+                        <span className="truncate">{outsource?.status}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-600">
+                      {/* <div className="flex items-center gap-1.5 text-gray-600">
                         <Briefcase className="w-4 h-4 text-gray-500" />
                         <span className="truncate">
-                          {invoice?.status || "N/A"}
+                          {outsource?.minexperience && outsource?.maxexperience
+                            ? `${outsource.minexperience} - ${outsource.maxexperience} years`
+                            : outsource?.minexperience
+                            ? `${outsource.minexperience} - Not Disclosed`
+                            : outsource?.maxexperience
+                            ? `${outsource.maxexperience} - Not Disclosed`
+                            : "Not Disclosed"}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <Clock className="w-4 h-4 text-gray-500" />
-                        {formatCreatedDate(invoice?.createdAt) || "N/A"}
+                        {formatCreatedDate(outsource?.createdAt)}
                       </div>
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <MapPin className="w-4 h-4 text-red-500" />
-                        <span>{invoice?.Location || "Not disclosed"}</span>
+                        <span>{outsource?.Location || "Not disclosed"}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-4">
                     <div className="flex flex-wrap gap-1">
-                      {invoice?.candidateId?.skills
+                      {outsource?.candidateId?.skills
                         ?.slice(0, 3)
                         .map((skill, index) => (
                           <motion.span
@@ -213,9 +220,9 @@ const Kanban = ({ invoices, loading }) => {
                             {skill.skill}
                           </motion.span>
                         ))}
-                      {invoice?.skills?.length > 3 && (
+                      {outsource?.skills?.length > 3 && (
                         <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium">
-                          +{invoice?.skills.length - 3} more
+                          +{outsource?.skills.length - 3} more
                         </span>
                       )}
                     </div>
@@ -230,4 +237,4 @@ const Kanban = ({ invoices, loading }) => {
   );
 };
 
-export default Kanban;
+export default InterviewRequestKanban;

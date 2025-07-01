@@ -1,9 +1,6 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import {
-  AiOutlineDown,
-} from "react-icons/ai";
+import { AiOutlineDown } from "react-icons/ai";
 import { CiCreditCard1 } from "react-icons/ci";
 import { LiaWalletSolid } from "react-icons/lia";
 import { FaBars, FaCaretDown, FaCaretUp } from "react-icons/fa";
@@ -22,8 +19,7 @@ import axios from "axios";
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
-import { clearAllCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
-
+import { clearAllCookies } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 
 function Header() {
   // const { user, hasRole } = useAuth();
@@ -100,12 +96,12 @@ function Header() {
     {
       path: "/interviewer-requests",
       label: "Interviewer Requests",
-      role: "super_admin",
+      // role: "super_admin",
     },
     {
       path: "/outsource-interviewers",
       label: "Outsource Interviewers",
-      role: "super_admin",
+      // role: "super_admin",
     },
     { path: "/support-tickets", label: "Support" },
     { path: "/admin-billing", label: "Billing" },
@@ -113,8 +109,8 @@ function Header() {
 
   const moreNavItems = [
     { path: "/settings", label: "Settings" },
-    { path: "/internal-logs", label: "Internal Logs", role: "super_admin" },
-    { path: "/integrations", label: "Integrations", role: "super_admin" },
+    { path: "/internal-logs", label: "Internal Logs" },
+    { path: "/integrations", label: "Integrations" },
   ];
 
   // Utility function to close all dropdowns
@@ -475,7 +471,7 @@ function Header() {
         <nav className="hidden lg:flex xl:flex s2xl:flex ml-16 gap-x-1">
           {mainNavItems.map(
             (item) =>
-              (!item.role) && (
+              !item.role && (
                 <NavLink
                   key={item.path}
                   to={item.path}

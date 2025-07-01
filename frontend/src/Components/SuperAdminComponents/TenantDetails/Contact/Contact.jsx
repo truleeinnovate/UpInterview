@@ -483,7 +483,26 @@ const Contact = ({ organizationId, sharingPermissions }) => {
       key: "name",
       header: "Name",
       render: (value, row) => (
-        <span>{row?.name ? row.name : row?.Name ? row.Name : "N/A"}</span>
+        <div className="flex items-center">
+          {console.log("VALUE OF ROW: ", row)}
+          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold">
+            {row?.imageData ? (
+              <img
+                src={row?.imageData?.path}
+                alt="contact"
+                className="rounded-full"
+              />
+            ) : (
+              row?.firstName?.charAt(0).toUpperCase() || "?"
+            )}
+          </div>
+          <div className="ml-4">
+            <div className="font-medium text-gray-900">
+              {row.firstName || "N/A"}
+            </div>
+            <div className="text-gray-500">{row.lastName || "N/A"}</div>
+          </div>
+        </div>
       ),
     },
 
@@ -498,14 +517,14 @@ const Contact = ({ organizationId, sharingPermissions }) => {
       key: "industry",
       header: "Industry",
       render: (value, row) => (
-        <span>{row?.CompanyName ? row.CompanyName : "N/A"}</span>
+        <span>{row?.industry ? row.industry : "N/A"}</span>
       ),
     },
     {
-      key: "experience",
+      key: "experienceYear",
       header: "Years Of Experience",
       render: (value, row) => (
-        <span>{row?.experience ? row.experience : "N/A"}</span>
+        <span>{row?.experienceYears ? row.experienceYears : "N/A"}</span>
       ),
     },
     {
@@ -548,13 +567,7 @@ const Contact = ({ organizationId, sharingPermissions }) => {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [
-    {
-      key: "id",
-      header: "Id",
-      render: (row) => <span>{row._id}</span>,
-    },
-  ];
+  const kanbanColumns = [];
 
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
@@ -949,7 +962,16 @@ const Contact = ({ organizationId, sharingPermissions }) => {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={currentFilteredRows}
+                    // data={currentFilteredRows}
+                    data={currentFilteredRows.map((contact) => ({
+                      ...contact,
+                      id: contact._id,
+                      title: contact.company || "N/A",
+                      subtitle: contact.industry || "N/A",
+                      avatar: contact.imageData ? contact.imageData.path : null,
+                      status: contact.status || "N/A",
+                      name: contact.firstName,
+                    }))}
                     renderActions={renderKanbanActions}
                     columns={kanbanColumns}
                   />
@@ -981,7 +1003,6 @@ const Contact = ({ organizationId, sharingPermissions }) => {
           </div>
         </>
       )} */}
-
       </div>
       <Outlet />
     </>

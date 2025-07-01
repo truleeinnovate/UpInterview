@@ -1,17 +1,17 @@
-const mongoose = require('mongoose');
-const Interview = require('../models/Interview.js')
-const InterviewRequest = require('../models/InterviewRequest');
-const { Contacts } = require('../models/Contacts');
-const { InterviewRounds } = require('../models/InterviewRounds');
+const mongoose = require("mongoose");
+const Interview = require("../models/Interview.js");
+const InterviewRequest = require("../models/InterviewRequest");
+const { Contacts } = require("../models/Contacts");
+const { InterviewRounds } = require("../models/InterviewRounds");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
 // exports.createRequest = async (req, res) => {
 //     try {
-//         const { 
-//             tenantId, ownerId, scheduledInterviewId, interviewerType, 
+//         const {
+//             tenantId, ownerId, scheduledInterviewId, interviewerType,
 //             dateTime, duration, interviewerIds, candidateId,
-//             positionId, status, roundId, requestMessage, expiryDateTime 
+//             positionId, status, roundId, requestMessage, expiryDateTime
 //         } = req.body;
 
 //         // const formattedInterviewerIds = interviewerIds.map(interviewer => ({
@@ -46,67 +46,94 @@ const { InterviewRounds } = require('../models/InterviewRounds');
 
 // each interviwer send one request
 
+function generateCustomRequestId(latestNumber) {
+  const nextNumber = latestNumber + 1;
+  return `INT-RQST-${String(nextNumber).padStart(5, "0")}`;
+}
+
 exports.createRequest = async (req, res) => {
-    try {
-      const {
-        tenantId,
-        ownerId,
-        scheduledInterviewId,
-        interviewerType,
-        dateTime,
-        duration,
-        interviewerId,
-        candidateId,
-        positionId,
-        status,
-        roundId,
-        requestMessage,
-        expiryDateTime,
-      } = req.body;
-      const isInternal = interviewerType === "internal";
-  
-      const newRequest = new InterviewRequest({
-        tenantId: new mongoose.Types.ObjectId(tenantId),
-        ownerId,
-        scheduledInterviewId: new mongoose.Types.ObjectId(scheduledInterviewId),
-        interviewerType,
-        interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
-        dateTime,
-        duration,
-        candidateId: new mongoose.Types.ObjectId(candidateId),
-        positionId: new mongoose.Types.ObjectId(positionId),
-        status: isInternal ? "accepted" : "inprogress",
-        roundId: new mongoose.Types.ObjectId(roundId),
-        requestMessage,
-        expiryDateTime,
-      });
-  
-      await newRequest.save();
-      res.status(201).json({ message: "Interview request created successfully", data: newRequest });
-    } catch (error) {
-      console.error("Error creating interview request:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
+  try {
+    const {
+      tenantId,
+      ownerId,
+      scheduledInterviewId,
+      interviewerType,
+      dateTime,
+      duration,
+      interviewerId,
+      candidateId,
+      positionId,
+      status,
+      roundId,
+      requestMessage,
+      expiryDateTime,
+    } = req.body;
+    const isInternal = interviewerType === "internal";
+
+    // Step 1: Get the last created request to determine the last number used
+    const lastRequest = await InterviewRequest.findOne({})
+      .sort({ createdAt: -1 }) // ensure you have timestamps enabled
+      .select("customRequestId");
+
+    let latestNumber = 0;
+    if (lastRequest && lastRequest.customRequestId) {
+      const match = lastRequest.customRequestId.match(/INT-RQST-(\d+)/);
+      if (match) {
+        latestNumber = parseInt(match[1], 10);
+      }
     }
-  };
+
+    const customRequestId = generateCustomRequestId(latestNumber);
+
+    const newRequest = new InterviewRequest({
+      interviewRequestCode: customRequestId,
+      tenantId: new mongoose.Types.ObjectId(tenantId),
+      ownerId,
+      scheduledInterviewId: new mongoose.Types.ObjectId(scheduledInterviewId),
+      interviewerType,
+      interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
+      dateTime,
+      duration,
+      candidateId: new mongoose.Types.ObjectId(candidateId),
+      positionId: new mongoose.Types.ObjectId(positionId),
+      status: isInternal ? "accepted" : "inprogress",
+      roundId: new mongoose.Types.ObjectId(roundId),
+      requestMessage,
+      expiryDateTime,
+    });
+
+    await newRequest.save();
+    res.status(201).json({
+      message: "Interview request created successfully",
+      data: newRequest,
+    });
+  } catch (error) {
+    console.error("Error creating interview request:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 exports.getAllRequests = async (req, res) => {
-    try {
-        const requests = await InterviewRequest.find()
-            .populate({
-                path: 'positionId',
-                model: 'Position',
-                select: 'title',
-                match: (doc) => mongoose.Types.ObjectId.isValid(doc.positionId) ? {} : null,
-            })
-            .populate({
-                path: 'candidateId',
-                model: 'Candidate',
-                select: 'skills'
-            });
-        res.status(200).json(requests);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
+  try {
+    const requests = await InterviewRequest.find()
+      .populate({
+        path: "positionId",
+        model: "Position",
+        select: "title",
+        match: (doc) =>
+          mongoose.Types.ObjectId.isValid(doc.positionId) ? {} : null,
+      })
+      .populate({
+        path: "candidateId",
+        model: "Candidate",
+        select: "skills",
+      });
+    res.status(200).json(requests);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
 // exports.updateRequestStatus = async (req, res) => {
@@ -134,47 +161,56 @@ exports.getAllRequests = async (req, res) => {
 // };
 
 exports.updateRequestStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { interviewerIds } = req.body;
-        const request = await InterviewRequest.findById(id);
-        if (!request) {
-            return res.status(404).json({ message: 'Interview request not found' });
-        }
-        let isAccepted = false;
-        request.interviewerIds = request.interviewerIds.map(interviewer => {
-            const updatedInterviewer = interviewerIds.find(i => String(i.id) === String(interviewer.id));
-            if (updatedInterviewer) {
-                interviewer.status = updatedInterviewer.status;
-                if (updatedInterviewer.status === "accepted") {
-                    isAccepted = true;
-                }
-            }
-            return interviewer;
-        });
-        if (isAccepted) {
-            request.interviewerIds = request.interviewerIds.map(interviewer => ({
-                ...interviewer,
-                status: interviewer.status === "accepted" ? "accepted" : "cancelled"
-            }));
-            const interview = await Interview.findById(request.scheduledInterviewId);
-            if (interview) {
-                interview.Status = "Scheduled";
-                interview.rounds = interview.rounds.map(round => ({
-                    ...round,
-                    Status: "scheduled" 
-                }));
-                await interview.save();
-            } else {
-                return res.status(404).json({ message: 'Interview not found for the scheduledInterviewId' });
-            }
-        }
-        await request.save();
-        res.status(200).json({ message: 'Request and interview updated successfully', data: request });
-    } catch (error) {
-        console.error('Error updating request:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+  try {
+    const { id } = req.params;
+    const { interviewerIds } = req.body;
+    const request = await InterviewRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: "Interview request not found" });
     }
+    let isAccepted = false;
+    request.interviewerIds = request.interviewerIds.map((interviewer) => {
+      const updatedInterviewer = interviewerIds.find(
+        (i) => String(i.id) === String(interviewer.id)
+      );
+      if (updatedInterviewer) {
+        interviewer.status = updatedInterviewer.status;
+        if (updatedInterviewer.status === "accepted") {
+          isAccepted = true;
+        }
+      }
+      return interviewer;
+    });
+    if (isAccepted) {
+      request.interviewerIds = request.interviewerIds.map((interviewer) => ({
+        ...interviewer,
+        status: interviewer.status === "accepted" ? "accepted" : "cancelled",
+      }));
+      const interview = await Interview.findById(request.scheduledInterviewId);
+      if (interview) {
+        interview.Status = "Scheduled";
+        interview.rounds = interview.rounds.map((round) => ({
+          ...round,
+          Status: "scheduled",
+        }));
+        await interview.save();
+      } else {
+        return res.status(404).json({
+          message: "Interview not found for the scheduledInterviewId",
+        });
+      }
+    }
+    await request.save();
+    res.status(200).json({
+      message: "Request and interview updated successfully",
+      data: request,
+    });
+  } catch (error) {
+    console.error("Error updating request:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
 };
 
 exports.getInterviewRequests = async (req, res) => {
@@ -182,7 +218,7 @@ exports.getInterviewRequests = async (req, res) => {
     const { ownerId } = req.query;
 
     if (!ownerId) {
-      return res.status(400).json({ message: 'ownerId is required' });
+      return res.status(400).json({ message: "ownerId is required" });
     }
 
     console.log(`ownerId: ${ownerId}`);
@@ -191,76 +227,87 @@ exports.getInterviewRequests = async (req, res) => {
     const contacts = await Contacts.find({ ownerId });
 
     if (!contacts || contacts.length === 0) {
-      console.log('No contacts found for ownerId:', ownerId);
-      return res.status(404).json({ message: 'No contacts found for this ownerId' });
+      console.log("No contacts found for ownerId:", ownerId);
+      return res
+        .status(404)
+        .json({ message: "No contacts found for this ownerId" });
     }
-    
+
     console.log(`Found ${contacts.length} contacts for ownerId:`, ownerId);
 
     // Get all contact IDs for the query
-    console.log('contacts:', contacts);
-    const contactIds = contacts.map(contact => contact._id);
-    console.log('contactIds:', contactIds);
-    
+    console.log("contacts:", contacts);
+    const contactIds = contacts.map((contact) => contact._id);
+    console.log("contactIds:", contactIds);
+
     // Find interview requests where interviewerId matches any of the contact IDs
     const query = { interviewerId: { $in: contactIds } };
-    console.log('Querying interview requests with:', JSON.stringify(query, null, 2));
-    
+    console.log(
+      "Querying interview requests with:",
+      JSON.stringify(query, null, 2)
+    );
+
     // Find all matching interview requests and populate all fields from referenced models
     const requests = await InterviewRequest.find(query)
-      .populate('candidateId')   // Populate all candidate fields
-      .populate('positionId')    // Populate all position fields
-      .populate('tenantId')      // Populate all tenant fields
-      .populate('roundId')       // Populate all round fields
-      .populate('interviewerId') // Populate all contact fields
+      .populate("candidateId") // Populate all candidate fields
+      .populate("positionId") // Populate all position fields
+      .populate("tenantId") // Populate all tenant fields
+      .populate("roundId") // Populate all round fields
+      .populate("interviewerId") // Populate all contact fields
       .lean();
 
     console.log(`Found ${requests.length} matching interview requests`);
 
-    const formattedRequests = requests.map(request => {
+    const formattedRequests = requests.map((request) => {
       // Create a new object with all request fields
       return {
         ...request, // Spread all original request fields
         _id: request._id, // Keep the original _id
         id: request._id, // Also include as id for backward compatibility
         // Include full populated objects
-        positionId : request.positionId || null,
-        tenantId : request.tenantId || null,
-        roundId : request.roundId || null,
-        contactId : request.interviewerId || null,
+        positionId: request.positionId || null,
+        tenantId: request.tenantId || null,
+        roundId: request.roundId || null,
+        contactId: request.interviewerId || null,
         // Keep existing calculated fields
         status: request.status,
-        requestedDate: request.requestedAt ? new Date(request.requestedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        requestedDate: request.requestedAt
+          ? new Date(request.requestedAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
         urgency: request.expiryDateTime
           ? new Date(request.expiryDateTime) < new Date()
-            ? 'High'
-            : 'Medium'
-          : 'Low',
+            ? "High"
+            : "Medium"
+          : "Low",
         // For backward compatibility, keep these fields
-        type: request.roundId?.interviewType || 'Unknown Type',
+        type: request.roundId?.interviewType || "Unknown Type",
         roundId: request.roundId?._id || null,
-        roundDetails: request.roundId ? {
-          roundTitle: request.roundId.roundTitle,
-          interviewType: request.roundId.interviewType,
-          duration: request.roundId.duration,
-          dateTime: request.roundId.dateTime,
-        } : null,
+        roundDetails: request.roundId
+          ? {
+              roundTitle: request.roundId.roundTitle,
+              interviewType: request.roundId.interviewType,
+              duration: request.roundId.duration,
+              dateTime: request.roundId.dateTime,
+            }
+          : null,
         originalRequest: {
           dateTime: request.dateTime,
           duration: request.duration,
           status: request.status,
           interviewerType: request.interviewerType,
-          expiryDateTime: request.expiryDateTime
-        }
+          expiryDateTime: request.expiryDateTime,
+        },
       };
     });
 
-    console.log(`Sending ${formattedRequests.length} formatted requests to frontend`);
+    console.log(
+      `Sending ${formattedRequests.length} formatted requests to frontend`
+    );
 
     res.status(200).json(formattedRequests);
   } catch (error) {
-    console.error('[getInterviewRequests] Error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("[getInterviewRequests] Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -270,57 +317,74 @@ exports.acceptInterviewRequest = async (req, res) => {
   try {
     const { requestId, contactId, roundId } = req.body;
 
-    console.log(`acceptInterviewRequest called with body: ${JSON.stringify(req.body, null, 2)}`);
+    console.log(
+      `acceptInterviewRequest called with body: ${JSON.stringify(
+        req.body,
+        null,
+        2
+      )}`
+    );
 
     if (!requestId || !contactId || !roundId) {
-      console.log('acceptInterviewRequest: One or more required params missing');
-      return res.status(400).json({ message: 'requestId, contactId, and roundId are required' });
+      console.log(
+        "acceptInterviewRequest: One or more required params missing"
+      );
+      return res
+        .status(400)
+        .json({ message: "requestId, contactId, and roundId are required" });
     }
 
     // Update InterviewRounds: Add contactId to interviewers array
     const round = await InterviewRounds.findById(roundId).session(session);
     if (!round) {
-      console.log(`acceptInterviewRequest: Interview round not found for roundId ${roundId}`);
+      console.log(
+        `acceptInterviewRequest: Interview round not found for roundId ${roundId}`
+      );
       await session.abortTransaction();
       session.endSession();
-      return res.status(404).json({ message: 'Interview round not found' });
+      return res.status(404).json({ message: "Interview round not found" });
     }
 
     console.log(`Found interview round: ${JSON.stringify(round, null, 2)}`);
 
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
-      round.status = 'scheduled';
+      round.status = "scheduled";
       await round.save({ session });
     } else {
-      console.log(`acceptInterviewRequest: Contact ${contactId} already in round ${roundId}`);
+      console.log(
+        `acceptInterviewRequest: Contact ${contactId} already in round ${roundId}`
+      );
     }
 
     // Delete all interview requests with the same roundId
-    const deleteResult = await InterviewRequest.deleteMany({ 
+    const deleteResult = await InterviewRequest.deleteMany({
       roundId: roundId,
-      _id: { $ne: requestId } // Don't delete the accepted request
+      _id: { $ne: requestId }, // Don't delete the accepted request
     }).session(session);
 
-    console.log(`Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`);
+    console.log(
+      `Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`
+    );
 
     // Update the status of the accepted request
     await InterviewRequest.findByIdAndUpdate(
       requestId,
-      { status: 'accepted' },
+      { status: "accepted" },
       { session, new: true }
     );
 
     await session.commitTransaction();
     session.endSession();
-    res.status(200).json({ 
-      message: 'Interview request accepted and other requests for this round removed',
-      deletedCount: deleteResult.deletedCount
+    res.status(200).json({
+      message:
+        "Interview request accepted and other requests for this round removed",
+      deletedCount: deleteResult.deletedCount,
     });
   } catch (error) {
-    console.error('[acceptInterviewRequest] Error:', error);
+    console.error("[acceptInterviewRequest] Error:", error);
     await session.abortTransaction();
     session.endSession();
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

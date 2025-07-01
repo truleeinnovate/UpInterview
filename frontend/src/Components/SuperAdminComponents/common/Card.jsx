@@ -13,7 +13,7 @@ function Card({
   let trendIcon = null;
 
   if (trend) {
-    trendColor = trend === "up" ? "text-success-500" : "text-error-500";
+    trendColor = trend === "up" ? "text-green-500" : "text-orange-600";
     trendIcon = trend === "up" ? "↑" : "↓";
   }
 

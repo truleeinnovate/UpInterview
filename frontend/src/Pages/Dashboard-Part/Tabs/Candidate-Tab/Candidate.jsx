@@ -172,6 +172,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+  
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
