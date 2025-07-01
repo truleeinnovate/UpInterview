@@ -41,7 +41,9 @@ function OverviewTab({ tenant }) {
           <div className="space-y-3">
             <div>
               <span className="text-sm text-gray-500">Plan</span>
-              <p className="font-medium">{String(tenant?.plan || "")}</p>
+              <p className="font-medium">
+                {String(tenant?.selectedBillingCycle || "")}
+              </p>
             </div>
             <div>
               <span className="text-sm text-gray-500">Billing Email</span>
@@ -52,8 +54,8 @@ function OverviewTab({ tenant }) {
             <div>
               <span className="text-sm text-gray-500">Renewal Date</span>
               <p className="font-medium">
-                {tenant?.subscriptionRenews
-                  ? formatDate(tenant?.subscriptionRenews)
+                {tenant?.nextBillingDate
+                  ? formatDate(tenant?.nextBillingDate)
                   : ""}
               </p>
             </div>
@@ -64,7 +66,7 @@ function OverviewTab({ tenant }) {
           </div>
         </div>
 
-        <div className="card">
+        {/* <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Features</h3>
           <div className="space-y-2">
             {Object.entries(tenant?.features || {}).map(
@@ -82,6 +84,36 @@ function OverviewTab({ tenant }) {
                   </span>
                 </div>
               )
+            )}
+          </div>
+        </div> */}
+        <div className="card">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Features</h3>
+          <div className="space-y-2">
+            {(tenant?.features || []).map(
+              ({ name, description, limit, _id }) => {
+                const enabled = !!limit && limit > 0; // Or use another logic if needed
+                return (
+                  <div key={_id} className="flex items-center">
+                    <div
+                      className={`h-4 w-4 rounded-full mr-2 ${
+                        enabled ? "bg-green-500" : "bg-gray-400"
+                      }`}
+                      title={description}
+                    ></div>
+                    <span
+                      className={enabled ? "text-gray-900" : "text-gray-500"}
+                    >
+                      {name}
+                      {limit !== undefined && (
+                        <span className="ml-2 text-sm text-gray-500 font-semibold">
+                          ({limit})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+              }
             )}
           </div>
         </div>
