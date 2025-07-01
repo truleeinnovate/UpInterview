@@ -1,323 +1,388 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
-import Cookies from 'js-cookie'
-import { SidePopup } from './SidePopup'
-import classNames from 'classnames';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import Modal from 'react-modal';
-import { Maximize, Minimize } from 'lucide-react';
-import { ReactComponent as FaTimes } from '../../../../../icons/FaTimes.svg';
+import classNames from 'classnames';
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
-import { config } from '../../../../../config'
+import { config } from '../../../../../config';
+import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
 
 const RoleFormPopup = ({ onSave, onClose }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const editMode = !!id;
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload.tenantId;
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [formData, setFormData] = useState({
     _id: '',
     label: '',
     roleName: '',
     description: '',
-    permissions: {},
-    isDefault: false,
+    objects: [],
     level: 5,
     inherits: [],
-    canAssign: [],
-    // organizationId: role?.organizationId || '',
-    // reportsToRoleId: role?.reportsToRoleId?._id || role?.reportsToRoleId || ''
-  })
-  const [permissionCategories, setPermissionCategories] = useState([])
-  const [roles, setRoles] = useState([])
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+    tenantId: tenantId,
+  });
 
-  const tenantId = tokenPayload.tenantId;
-  console.log("tenantId in roleformpopup", tenantId);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [availablePermissions, setAvailablePermissions] = useState({});
+  // Track initial state for detecting changes
+  const initialFormDataRef = useRef(null);
 
-  // useEffect(() => {
-  //   const fetchRoles = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${config.REACT_APP_API_URL}/rolesdata?organizationId=${organizationId}`
-  //       );
-  //       const role_data = response.data
-  //       const role = role_data.find(role => role._id === id);
-  //       setFormData(role);
-  //       console.log('Fetched roles:', response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching roles:', error);
-  //     }
-  //   };
-  //   fetchRoles();
-  // }, [organizationId]);
-
+  // Fetch roles and role data (for edit mode)
   useEffect(() => {
-    const fetchPermissionCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/permissions`)
-        const data = response.data
-        setPermissionCategories(data)
+        // Fetch all organization roles
+        const fetchedRoles = await getOrganizationRoles();
+        setRoles(fetchedRoles);
 
-        // If in edit mode, transform the permissions data to match the expected format
-        if (editMode && formData?.permissions) {
-          const transformedPermissions = {};
+        // Derive available permissions
+        if (editMode) {
+          // In edit mode, use objects from both RoleOverrides and RolesPermissionObject
+          const role = fetchedRoles.find((r) => r._id === id);
+          if (!role) {
+            throw new Error('Role not found');
+          }
 
-          // For each permission category in the fetched data
-          data.forEach(category => {
-            // Check if the role has permissions for this category
-            const categoryPermissions = formData.permissions[category.name];
+          // Fetch role overrides for this roleName and tenantId
+          const overrideResponse = await axios.get(
+            `${config.REACT_APP_API_URL}/role-overrides?tenantId=${tenantId}&roleName=${role.roleName}`
+          );
+          const override = overrideResponse.data;
 
-            if (categoryPermissions && categoryPermissions.length > 0) {
-              // Map permission names/ids to permission _ids for the checkboxes
-              const permissionIds = [];
+          // Merge objects: prioritize RoleOverrides.objects, include RolesPermissionObject.objects for non-overridden objects
+          const overrideObjectsMap = new Map(
+            override?.objects?.map((obj) => [obj.objectName, obj.permissions]) || []
+          );
+          const roleObjectsMap = new Map(
+            role.objects.map((obj) => [obj.objectName, obj.permissions])
+          );
 
-              categoryPermissions.forEach(perm => {
-                // Find the matching permission in the category
-                const matchingPerm = category.permissions.find(p =>
-                  p.name === perm.name || p.name === perm.id
-                );
-
-                if (matchingPerm) {
-                  permissionIds.push(matchingPerm._id);
-                }
-              });
-
-              // Store the permission _ids for this category
-              if (permissionIds.length > 0) {
-                transformedPermissions[category._id] = permissionIds;
-              }
-            }
-          });
-
-          // Update the formData with the transformed permissions
-          setFormData(prev => ({
-            ...prev,
-            permissions: transformedPermissions
+          // Combine objects, with overrides taking precedence
+          const mergedObjects = Array.from(
+            new Map([...roleObjectsMap, ...overrideObjectsMap]).entries()
+          ).map(([objectName, permissions]) => ({
+            objectName,
+            permissions,
           }));
 
-          console.log('Transformed permissions for edit mode:', transformedPermissions);
+          const permissionsMap = {};
+          mergedObjects.forEach((obj) => {
+            permissionsMap[obj.objectName] = Object.keys(obj.permissions);
+          });
+          setAvailablePermissions(permissionsMap);
+
+          const formData = {
+            _id: role._id,
+            label: role.label,
+            roleName: role.roleName,
+            description: role.description || '',
+            objects: mergedObjects.map((obj) => ({
+              objectName: obj.objectName,
+              permissions: Object.entries(obj.permissions)
+                .filter(([_, value]) => value === true)
+                .map(([key]) => key),
+            })),
+            level: override?.level ?? role.level, // Prioritize RoleOverrides.level
+            inherits: override?.inherits || role.inherits || [],
+            tenantId: tenantId,
+          };
+          setFormData(formData);
+          // Store initial form data for comparison
+          initialFormDataRef.current = JSON.parse(JSON.stringify(formData));
+        } else {
+          // In create mode, use all roles' objects and their permissions
+          const permissionsMap = {};
+          fetchedRoles.forEach((role) => {
+            role.objects.forEach((obj) => {
+              if (!permissionsMap[obj.objectName]) {
+                permissionsMap[obj.objectName] = Object.keys(obj.permissions);
+              } else {
+                const existingPerms = permissionsMap[obj.objectName];
+                const newPerms = Object.keys(obj.permissions).filter(
+                  (perm) => !existingPerms.includes(perm)
+                );
+                permissionsMap[obj.objectName] = [...existingPerms, ...newPerms];
+              }
+            });
+          });
+          setAvailablePermissions(permissionsMap);
         }
       } catch (error) {
-        console.error('Failed to fetch permission categories:', error)
+        console.error('Error fetching data:', error);
       }
-    }
+    };
+    fetchData();
+  }, [tenantId, id, editMode]);
 
-
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/rolesdata?tenantId=${tenantId}`
-        )
-        const role_data = response.data
-        setRoles(role_data)
-
-
-        const role = role_data.find(role => role._id === id);
-        setFormData(role);
-
-      } catch (error) {
-        console.error('Failed to fetch roles:', error)
-      }
-    }
-
-    fetchPermissionCategories()
-    fetchRoles()
-  }, [editMode, tenantId])
-
-  // Handle label change and update name
+  // Handle label change and update roleName
   const handleLabelChange = (e) => {
-    const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, "");
+    const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
     setFormData({
       ...formData,
       label: sanitizedValue,
-      roleName: sanitizedValue.replace(/\s+/g, "_")
+      roleName: sanitizedValue.replace(/\s+/g, '_'),
     });
   };
 
+  // Handle permission change for an object
+  const handlePermissionChange = (objectName, permission) => {
+    setFormData((prev) => {
+      const updatedObjects = prev.objects.map((obj) => {
+        if (obj.objectName === objectName) {
+          const currentPerms = obj.permissions || [];
+          const updatedPerms = currentPerms.includes(permission)
+            ? currentPerms.filter((p) => p !== permission)
+            : [...currentPerms, permission];
+          return { ...obj, permissions: updatedPerms };
+        }
+        return obj;
+      });
+
+      // If the object isn't in the array yet, add it
+      if (!updatedObjects.some((obj) => obj.objectName === objectName)) {
+        updatedObjects.push({ objectName, permissions: [permission] });
+      }
+
+      return { ...prev, objects: updatedObjects };
+    });
+  };
+
+  // Handle inherit change
+  const handleInheritChange = (roleId) => {
+    setFormData((prev) => {
+      const updatedInherits = prev.inherits.includes(roleId)
+        ? prev.inherits.filter((id) => id !== roleId)
+        : [...prev.inherits, roleId];
+      return { ...prev, inherits: updatedInherits };
+    });
+  };
+
+  // Filter roles available for inheritance (roles with higher level)
+  const availableForInheritance = roles
+    .filter((role) => role.level > formData.level)
+    .sort((a, b) => a.level - b.level);
+
+  // Compare arrays to detect changes
+  const arraysEqual = (arr1, arr2) => {
+    if (arr1.length !== arr2.length) return false;
+    return arr1.every((item, index) => item === arr2[index]);
+  };
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Log the data being sent to help debug
     console.log('Submitting form data:', formData);
 
     try {
-      // Transform permissions to store only name, not _id (for both create and edit modes)
-      const transformedPermissions = {};
-      if (formData.permissions && typeof formData.permissions === 'object') {
-        Object.entries(formData.permissions).forEach(([catId, permIds]) => {
-          // Find the category object
-          const category = permissionCategories.find(cat => cat._id === catId);
-          if (!category) return;
-          // Use category.name as the key
-          transformedPermissions[category.name] = permIds.map(permId => {
-            const perm = category.permissions.find(p => p._id === permId || p.id === permId);
-            return perm ? { name: perm.name } : null;
-          }).filter(Boolean);
-        });
-      }
-
-      // Create the data object to send
-      const dataToSend = {
-        ...formData,
-        permissions: transformedPermissions
-      };
-
-      // Remove _id field when creating a new role to avoid MongoDB validation error
-      if (!editMode) {
-        delete dataToSend._id;
-      }
-
-      console.log('Sending transformed data:', dataToSend);
-
-      // Handle edit or create based on mode
+      // Prepare RoleOverrides update
+      const overrideData = {};
       if (editMode) {
-        const response = await axios.patch(`${config.REACT_APP_API_URL}/rolesdata/${formData._id}`, dataToSend);
-        console.log('Server response (edit):', response.data);
-        if (response.data) {
-          // onSave(response.data);
-          // navigate('/roles');
-          navigate('/account-settings/roles')
+        // Check for changes in inherits
+        if (!arraysEqual(formData.inherits, initialFormDataRef.current.inherits)) {
+          overrideData.inherits = formData.inherits;
         }
-        return;
-      }
 
-      // These fields are already set in the dataToSend object above
-      // Just ensure they have default values if not already set
-      // if (!dataToSend.reportsToRoleId) {
-      //   dataToSend.reportsToRoleId = '67f8af5f82a3a5a4c386611d';
-      // }
-      if (!dataToSend.tenantId) {
-        dataToSend.tenantId = tenantId;
-      }
-      // Convert inherits and canAssign to empty arrays if they're null/undefined
-      dataToSend.inherits = dataToSend.inherits || [];
-      dataToSend.canAssign = dataToSend.canAssign || [];
+        // Check for changes in level
+        if (formData.level !== initialFormDataRef.current.level) {
+          overrideData.level = formData.level;
+        }
 
-      console.log('Sending data to API:', dataToSend);
-      const response = await axios.post(`${config.REACT_APP_API_URL}/rolesdata`, dataToSend);
+        // Check for changes in objects
+        const modifiedObjects = formData.objects.filter((obj) => {
+          const initialObj = initialFormDataRef.current.objects.find(
+            (o) => o.objectName === obj.objectName
+          );
+          if (!initialObj) return true; // New object
+          return !arraysEqual(obj.permissions, initialObj.permissions);
+        });
 
-      console.log('Server response:', response.data);
-      if (response.data) {
-        // onSave(response.data);
-        // navigate('/roles');
-        navigate('/account-settings/roles')
-      }
-    } catch (error) {
-      console.error("Error saving role:", error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        console.error("Error response headers:", error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("Error request:", error.request);
+        if (modifiedObjects.length > 0) {
+          overrideData.objects = modifiedObjects.map((obj) => {
+            const permissions = {};
+            const availablePerms = availablePermissions[obj.objectName] || [];
+            availablePerms.forEach((perm) => {
+              permissions[perm] = obj.permissions.includes(perm);
+            });
+            return {
+              objectName: obj.objectName,
+              permissions,
+            };
+          });
+        }
+
+        // Only update RoleOverrides if there are changes
+        if (Object.keys(overrideData).length > 0) {
+          overrideData.tenantId = tenantId;
+          overrideData.roleName = formData.roleName;
+
+          const overrideResponse = await axios.get(
+            `${config.REACT_APP_API_URL}/role-overrides?tenantId=${tenantId}&roleName=${formData.roleName}`
+          );
+          const existingOverride = overrideResponse.data;
+
+          if (existingOverride) {
+            // Update existing RoleOverrides with only changed fields
+            const response = await axios.patch(
+              `${config.REACT_APP_API_URL}/role-overrides/${existingOverride._id}`,
+              overrideData
+            );
+            console.log('Server response (update):', response.data);
+            if (response.data && onSave) {
+              onSave(response.data);
+            }
+          } else {
+            // Create new RoleOverrides
+            const response = await axios.post(
+              `${config.REACT_APP_API_URL}/role-overrides`,
+              overrideData
+            );
+            console.log('Server response (create):', response.data);
+            if (response.data && onSave) {
+              onSave(response.data);
+            }
+          }
+        }
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error message:", error.message);
+        // In create mode, send all objects with all available permissions
+        overrideData.tenantId = tenantId;
+        overrideData.roleName = formData.roleName;
+        overrideData.level = formData.level;
+        overrideData.objects = formData.objects.map((obj) => {
+          const permissions = {};
+          const availablePerms = availablePermissions[obj.objectName] || [];
+          availablePerms.forEach((perm) => {
+            permissions[perm] = obj.permissions.includes(perm);
+          });
+          return {
+            objectName: obj.objectName,
+            permissions,
+          };
+        });
+        overrideData.inherits = formData.inherits;
+
+        const response = await axios.post(
+          `${config.REACT_APP_API_URL}/role-overrides`,
+          overrideData
+        );
+        console.log('Server response (create):', response.data);
+        if (response.data && onSave) {
+          onSave(response.data);
+        }
+      }
+
+      // Prepare RolesPermissionObject update
+      const roleData = {};
+      if (editMode) {
+        if (formData.level !== initialFormDataRef.current.level) {
+          roleData.level = formData.level;
+        }
+        if (formData.label !== initialFormDataRef.current.label) {
+          roleData.label = formData.label;
+        }
+        if (formData.description !== initialFormDataRef.current.description) {
+          roleData.description = formData.description;
+        }
+        if (formData.roleName !== initialFormDataRef.current.roleName) {
+          roleData.roleName = formData.roleName;
+        }
+
+        // Only update if there are changes
+        if (Object.keys(roleData).length > 0) {
+          await axios.patch(
+            `${config.REACT_APP_API_URL}/roles/${formData._id}`,
+            roleData
+          );
+        }
+      } else {
+        // In create mode, create new role
+        roleData.label = formData.label;
+        roleData.roleName = formData.roleName;
+        roleData.description = formData.description;
+        roleData.level = formData.level;
+        roleData.tenantId = tenantId;
+        roleData.objects = formData.objects.map((obj) => {
+          const permissions = {};
+          const availablePerms = availablePermissions[obj.objectName] || [];
+          availablePerms.forEach((perm) => {
+            permissions[perm] = obj.permissions.includes(perm);
+          });
+          return {
+            objectName: obj.objectName,
+            permissions,
+          };
+        });
+        roleData.roleType = 'organization'; // Default roleType
+
+        await axios.post(
+          `${config.REACT_APP_API_URL}/roles`,
+          roleData
+        );
+      }
+
+      navigate('/account-settings/roles');
+    } catch (error) {
+      console.error('Error saving role:', error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
       }
     }
-  }
-
-  const handlePermissionChange = (category, permission) => {
-    const currentPerms = formData.permissions[category] || []
-    const updatedPerms = currentPerms.includes(permission)
-      ? currentPerms.filter(p => p !== permission)
-      : [...currentPerms, permission]
-
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [category]: updatedPerms
-      }
-    }))
-  }
-
-  const handleInheritChange = (roleId) => {
-    const updatedInherits = formData.inherits.includes(roleId)
-      ? formData.inherits.filter(id => id !== roleId)
-      : [...formData.inherits, roleId]
-
-    setFormData(prev => ({
-      ...prev,
-      inherits: updatedInherits
-    }))
-  }
-
-  // const handleAssignableChange = (roleId) => {
-  //   const updatedAssignable = formData.canAssign.includes(roleId)
-  //     ? formData.canAssign.filter(id => id !== roleId)
-  //     : [...formData.canAssign, roleId]
-
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     canAssign: updatedAssignable
-  //   }))
-  // }
-
-  const availableForInheritance = roles
-    .filter(role => role.level > formData.level)
-    .sort((a, b) => a.level - b.level)
-
-
-  // const availableForAssignment = roles
-  //   .filter(role => role.level > formData.level)
-  //   .sort((a, b) => a.level - b.level)
+  };
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
     {
       'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen,
     }
   );
 
+  const toggleFullWidth = () => {
+    setIsFullScreen((prev) => !prev);
+  };
+
   return (
-    // <SidePopup
-    //   title={id ? 'Edit Role' : 'Create New Role'}
-    //   // onClose={onClose}
-    //   position="right"
-    //   size="medium"
-    // >
     <Modal
       isOpen={true}
       onRequestClose={() => navigate('/account-settings/roles')}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    // className={modalClass}
     >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
-
+      <div className={classNames("h-full", {
+        "max-w-6xl mx-auto px-6": isFullScreen,
+      })}>
         <div className="p-6">
-
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue ">{id ? 'Edit Role' : 'Create New Role'}</h2>
+            <h2 className="text-2xl font-bold text-custom-blue">
+              {editMode ? 'Edit Role' : 'Create New Role'}
+            </h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                // className="p-2  rounded-lg transition-colors"
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={toggleFullWidth}
+                className="p-1 rounded-full hover:bg-white/10"
               >
                 {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
+                  <ArrowsPointingInIcon className="h-5 w-5" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <ArrowsPointingOutIcon className="h-5 w-5" />
                 )}
               </button>
-              <button
-                onClick={() => {
-                  navigate('/account-settings/roles')
-                  // setUserData(formData)
-                  // setIsBasicModalOpen(false);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <FaTimes className="w-5 h-5 text-gray-500" />
+              <button onClick={() => navigate('/account-settings/roles')} className="sm:hidden">
+                <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
           </div>
@@ -350,19 +415,19 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                     readOnly
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
                     className="w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 min-h-[100px] resize-none"
                     rows={3}
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hierarchy Level
@@ -370,27 +435,17 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                   <input
                     type="number"
                     value={formData.level}
-                    onChange={(e) => setFormData(prev => ({ ...prev, level: parseInt(e.target.value) }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, level: parseInt(e.target.value) }))
+                    }
                     className="w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-
-                    // className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     min="1"
                     max="10"
                     required
                   />
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Lower numbers have higher authority (1 is highest)</p>
-                </div>
-
-                <div>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.isDefault}
-                      onChange={(e) => setFormData(prev => ({ ...prev, isDefault: e.target.checked }))}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">Set as default role</span>
-                  </label>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    Lower numbers have higher authority (1 is highest)
+                  </p>
                 </div>
               </div>
             </div>
@@ -398,71 +453,54 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             {/* Role Hierarchy Section */}
             <div className="mb-8 border-b pb-6">
               <h3 className="text-base sm:text-lg font-medium mb-4">Role Hierarchy</h3>
-
-              {/* Inherits From */}
               <div className="mb-6">
                 <h4 className="font-medium mb-2">Inherits Permissions From</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
-                  {availableForInheritance?.map((role) => (
-                    <label key={role._id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.inherits.includes(role._id)}
-                        onChange={() => handleInheritChange(role._id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">
-                        {role.roleName}
-                        <span className="text-gray-500 text-xs ml-2">(Level {role.level})</span>
-                      </span>
-                    </label>
-                  ))}
+                  {availableForInheritance.length > 0 ? (
+                    availableForInheritance.map((role) => (
+                      <label key={role._id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.inherits.includes(role._id)}
+                          onChange={() => handleInheritChange(role._id)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">
+                          {role.label}
+                          <span className="text-gray-500 text-xs ml-2">(Level {role.level})</span>
+                        </span>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      No roles with lower authority available.
+                    </p>
+                  )}
                 </div>
               </div>
-
-              {/* Can Assign Roles */}{/* we can use this in future and functionality is added and selected roles Id's are saved in database */}
-              {/* <div>
-            <h4 className="font-medium mb-2">Can Assign Roles</h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
-              {availableForAssignment.map((role) => (
-                <label key={role._id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.canAssign.includes(role._id)}
-                    onChange={() => handleAssignableChange(role._id)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {role.roleName}
-                    <span className="text-gray-500 text-xs ml-2">(Level {role.level})</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div> */}
             </div>
 
             {/* Permissions Section */}
             <div className="space-y-6">
               <h3 className="text-base sm:text-lg font-medium">Permissions</h3>
-
-              {/* General Permissions */}
               <div className="pb-6">
-                <h4 className="font-medium mb-4">General Permissions</h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {permissionCategories?.map(category => (
-                    <div key={category._id} className="space-y-2">
-                      <h5 className="font-medium">{category.name}</h5>
+                  {Object.keys(availablePermissions).map((objectName) => (
+                    <div key={objectName} className="space-y-2">
+                      <h5 className="font-medium capitalize">{objectName}</h5>
                       <div className="space-y-2 grid grid-cols-4">
-                        {category.permissions?.map(permission => (
-                          <label key={permission._id} className="flex items-center space-x-2">
+                        {availablePermissions[objectName].map((perm) => (
+                          <label key={perm} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              checked={(formData.permissions[category._id] || []).includes(permission._id)}
-                              onChange={() => handlePermissionChange(category._id, permission._id)}
+                              checked={
+                                (formData.objects.find((o) => o.objectName === objectName)
+                                  ?.permissions || []).includes(perm)
+                              }
+                              onChange={() => handlePermissionChange(objectName, perm)}
                               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-700">{permission.name}</span>
+                            <span className="text-sm text-gray-700 capitalize">{perm}</span>
                           </label>
                         ))}
                       </div>
@@ -472,27 +510,26 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               </div>
             </div>
 
-            <div className="mt-6 flex sm:flex-col flex-row justify-end  sticky bottom-0 gap-3 bg-white p-4">
+            <div className="flex justify-end py-2 mt-10 px-4">
               <button
                 type="button"
                 onClick={() => navigate('/account-settings/roles')}
-                className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors duration-200 text-sm font-medium"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 text-sm font-medium"
+                className="mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
               >
-                {id ? 'Save Changes' : 'Create Role'}
+                {editMode ? 'Save Changes' : 'Create Role'}
               </button>
             </div>
           </form>
-
         </div>
       </div>
     </Modal>
-    // </SidePopup>
-  )
-}
+  );
+};
+
 export default RoleFormPopup;
