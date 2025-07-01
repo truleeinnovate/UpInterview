@@ -11,12 +11,14 @@ import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser'
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { DocumentsSection } from './DocumentsDetails/DocumentsSection';
+import {usePermissions} from '../../../../../Context/PermissionsContext';
 
 const MyProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
   const {singlecontact} = useCustomContext();
+  const {effectivePermissions} = usePermissions();
   // const subtab = location.pathname.split('/').pop();
 
   const authToken = Cookies.get("authToken");
