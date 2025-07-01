@@ -11,11 +11,11 @@ import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 import { ReactComponent as FaPlus } from "../../../icons/FaPlus.svg";
 import { useCustomContext } from "../../../Context/Contextfetch";
 import CustomDatePicker from "../../../utils/CustomDatePicker";
-import {
-  validateTenantForm,
-  getErrorMessage,
-  countryCodes,
-} from "../../../utils/tenantValidation";
+// import {
+//   validateTenantForm,
+//   getErrorMessage,
+//   countryCodes,
+// } from "../../../utils/tenantValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import { Minimize, Expand, ChevronDown, X } from "lucide-react";
@@ -453,7 +453,7 @@ const AddTenantForm = ({ mode }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    let errorMessage = getErrorMessage(name, value);
+    // let errorMessage = getErrorMessage(name, value);
 
     // if (name === "CurrentExperience" || name === "RelevantExperience") {
     //   if (!/^\d*$/.test(value)) {
@@ -462,7 +462,7 @@ const AddTenantForm = ({ mode }) => {
     // }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: errorMessage }));
+    // setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   };
 
   // const handleDateChange = (date) => {
@@ -508,17 +508,17 @@ const AddTenantForm = ({ mode }) => {
     console.log("User info:", { userId, userName, orgId });
 
     // Validate form data
-    const { formIsValid, newErrors } = validateTenantForm(
-      formData,
-      entries || [],
-      errors || {}
-    );
+    // const { formIsValid, newErrors } = validateTenantForm(
+    //   formData,
+    //   entries || [],
+    //   errors || {}
+    // );
 
-    if (!formIsValid) {
-      console.log("Form validation failed:", newErrors);
-      setErrors(newErrors);
-      return;
-    }
+    // if (!formIsValid) {
+    //   console.log("Form validation failed:", newErrors);
+    //   setErrors(newErrors);
+    //   return;
+    // }
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
@@ -583,17 +583,17 @@ const AddTenantForm = ({ mode }) => {
     const orgId = tokenPayload?.tenantId;
 
     // Validate form data
-    const { formIsValid, newErrors } = validateTenantForm(
-      formData,
-      entries || [],
-      errors || {}
-    );
+    // const { formIsValid, newErrors } = validateTenantForm(
+    //   formData,
+    //   entries || [],
+    //   errors || {}
+    // );
 
-    if (!formIsValid) {
-      console.log("Form validation failed:", newErrors);
-      setErrors(newErrors);
-      return;
-    }
+    // if (!formIsValid) {
+    //   console.log("Form validation failed:", newErrors);
+    //   setErrors(newErrors);
+    //   return;
+    // }
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
@@ -971,7 +971,7 @@ const AddTenantForm = ({ mode }) => {
                         hideLabel
                         name="CountryCode"
                         value={formData.CountryCode}
-                        options={countryCodes}
+                        // options={countryCodes}
                         onChange={handleChange}
                         placeholder="+91"
                         error={errors.CountryCode}

@@ -29,7 +29,7 @@ const getAllGroups = async (req, res) => {
             // usersNames: group.users.map(user => user.UserName), // Array of usernames
             userIds: group.users.map(user => user._id)// Add user IDs
         }));
-            console.log("formattedGroups",formattedGroups);
+            // console.log("formattedGroups",formattedGroups);
             
         res.status(200).json(formattedGroups);
     } catch (error) {

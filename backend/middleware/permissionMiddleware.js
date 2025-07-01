@@ -255,6 +255,7 @@ const permissionMiddleware = async (req, res, next) => {
             if (!tenantId) {
               console.error('Missing tenantId for organization user');
               return res.status(401).json({ error: 'Unauthorized: Missing tenantId for organization user' });
+
             }
 
             const tenant = await Tenant.findById(tenantId);
@@ -263,6 +264,7 @@ const permissionMiddleware = async (req, res, next) => {
               console.error(`Invalid tenant for tenantId: ${tenantId}`);
               return res.status(403).json({ error: 'Invalid tenant for organization user' });
             }
+
 
             const roleOverride = await RoleOverrides.findOne({
               tenantId: tenantId,
@@ -417,4 +419,8 @@ const permissionMiddleware = async (req, res, next) => {
   }
 };
 
+
 module.exports = { permissionMiddleware };
+
+
+

@@ -28,7 +28,7 @@ const runTaskReminderJob = async () => {
     const now = moment();
     const dueIn24Hours = moment(now).add(24, 'hours');
 
-    console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
+    // console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
 
     const tasks = await Task.find({
       dueDate: {
@@ -44,7 +44,7 @@ const runTaskReminderJob = async () => {
 
 
     
-    console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
+    // console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
 
     // // Fetch email template for task reminder
     // const emailTemplate = await emailTemplateModel.findOne({
@@ -101,7 +101,7 @@ const runTaskReminderJob = async () => {
     for (const task of tasks) {
       if (!task.ownerId) {
 
-        console.warn(`Task ${task._id} has no ownerId.`);
+        // console.warn(`Task ${task._id} has no ownerId.`);
 
         continue;
       }
@@ -150,13 +150,13 @@ const runTaskReminderJob = async () => {
         });
         await notification.save();
 
-        console.log(`Task reminder notification stored for user ${user.email} and task ${task._id}`);
+        // console.log(`Task reminder notification stored for user ${user.email} and task ${task._id}`);
       } else {
-        console.log(`Task reminder notification already exists for user ${user.email} and task ${task._id}, skipping save.`);
+        // console.log(`Task reminder notification already exists for user ${user.email} and task ${task._id}, skipping save.`);
       }
     }
 
-    console.log('Automated task email reminder job completed successfully.');
+    // console.log('Automated task email reminder job completed successfully.');
 
   } catch (error) {
     console.error('Automated Task Email Reminder Job Error:', error);

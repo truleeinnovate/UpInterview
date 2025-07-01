@@ -20,13 +20,11 @@ import { config } from '../../../../config';
 
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  console.log('tokenPayload', tokenPayload);
   const isOrganization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const [selectedFilter, setSelectedFilter] = useState('All');
   const freelancer = tokenPayload?.freelancer;
-  console.log('freelancer', freelancer);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
 

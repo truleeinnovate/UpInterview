@@ -179,10 +179,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { config } from '../config';
+import Cookies from 'js-cookie';
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 const PermissionsContext = createContext();
 
 export const PermissionsProvider = ({ children }) => {
   const [permissions, setPermissions] = useState({});
+
+
 
   // const [roleLevel, setRoleLevel] = useState(null);
   // const [isImpersonating, setIsImpersonating] = useState(false);
@@ -229,24 +233,58 @@ export const PermissionsProvider = ({ children }) => {
   // console.log('roleLevel', roleLevel);
 
 
+  // const refreshPermissions = async () => {
+  //   try {
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { withCredentials: true });
+  //     setEffectivePermissions(response.data.effectivePermissions || {});
+  //     setSuperAdminPermissions(response.data.superAdminPermissions || null);
+  //     // setInheritedRoleIds(response.data.inheritedRoleIds || []);
+  //     // setIsImpersonating(response.data.isImpersonating || false);
+  //     // setRoleType(response.data.roleType || null);
+  //     // setRoleLevel(response.data.roleLevel || null);
+  //     setAuthError(null);
+  //   } catch (error) {
+  //     console.error('Error refreshing permissions:', error);
+  //     setEffectivePermissions({});
+  //     setSuperAdminPermissions(null);
+  //     // setInheritedRoleIds([]);
+  //     // setIsImpersonating(false);
+  //     // setRoleType(null);
+  //     // setRoleLevel(null);
+  //     setAuthError('Failed to load permissions');
+  //   }
+  // };
+
   const refreshPermissions = async () => {
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { withCredentials: true });
+      const tokenPayload = decodeJwt(Cookies.get("authToken"));
+      const userId = tokenPayload?.userId;
+      const orgId = tokenPayload?.tenantId;
+      const impersonationToken = decodeJwt(Cookies.get("impersonationToken"));
+      console.log('tokenPayload frontend', tokenPayload);
+      console.log('userId frontend', userId);
+      console.log('orgId frontend', orgId);
+      console.log('impersonationToken frontend', impersonationToken);
+  
+      const headers = {
+        'x-user-id': userId,
+        'x-tenant-id': orgId,
+        'x-impersonation-token': impersonationToken?.impersonatedUserId || ''
+      };
+  
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { 
+        headers,
+        withCredentials: true 
+      });
+      console.log('response frontend', response.data);
+      
       setEffectivePermissions(response.data.effectivePermissions || {});
       setSuperAdminPermissions(response.data.superAdminPermissions || null);
-      // setInheritedRoleIds(response.data.inheritedRoleIds || []);
-      // setIsImpersonating(response.data.isImpersonating || false);
-      // setRoleType(response.data.roleType || null);
-      // setRoleLevel(response.data.roleLevel || null);
       setAuthError(null);
     } catch (error) {
       console.error('Error refreshing permissions:', error);
       setEffectivePermissions({});
       setSuperAdminPermissions(null);
-      // setInheritedRoleIds([]);
-      // setIsImpersonating(false);
-      // setRoleType(null);
-      // setRoleLevel(null);
       setAuthError('Failed to load permissions');
     }
   };
