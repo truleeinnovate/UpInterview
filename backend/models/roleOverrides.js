@@ -21,8 +21,13 @@ const roleOverridesSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RolesPermissionObject',
     }
-  ]
+  ],
+  level: {
+    type: Number,
+    min: 1,
+    max: 10,
+  }
 });
 
-// ✅ Prevent OverwriteModelError by checking existing models
+// Prevent OverwriteModelError by checking existing models
 module.exports = mongoose.models.RoleOverrides || mongoose.model('RoleOverrides', roleOverridesSchema);
