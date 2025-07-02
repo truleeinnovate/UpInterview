@@ -173,6 +173,29 @@ const getInvoices = async (req, res) => {
     });
   }
 };
+
+const getInvoicesByTenantId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoices = await Invoice.find({ tenantId: id });
+    res.status(200).json({
+      invoices,
+    });
+  } catch (error) {
+    console.error("Detailed error:", {
+      message: error.message,
+    });
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message,
+    });
+  }
+};
 // --------------------------------------------------------------->
 
-module.exports = { createInvoice, getInvoice, getInvoices };
+module.exports = {
+  createInvoice,
+  getInvoice,
+  getInvoices,
+  getInvoicesByTenantId,
+};

@@ -235,7 +235,13 @@ function TenantsPage() {
     {
       key: "plan",
       header: "Plan",
-      render: (value, row) => <span>{row.plan || "N/A"}</span>,
+      render: (value, row) => (
+        <span>
+          {row?.subscription?.selectedBillingCycle
+            ? row.subscription.selectedBillingCycle
+            : "N/A"}
+        </span>
+      ),
     },
     {
       key: "organizations",

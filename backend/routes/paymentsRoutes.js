@@ -5,13 +5,13 @@ const PaymentsRouter = express.Router();
 
 const {
   getPaymentsSummary,
-  getPaymentById,
+  getPaymentsById,
   getSinglePaymentById,
 } = require("../controllers/paymentsController");
 
-PaymentsRouter.get("/:id", getPaymentById);
+PaymentsRouter.get("/:id", getPaymentsById);
 
-PaymentsRouter.get("/:id", getSinglePaymentById);
+PaymentsRouter.get("/:paymentId", getSinglePaymentById);
 
 PaymentsRouter.get("/", getPaymentsSummary);
 

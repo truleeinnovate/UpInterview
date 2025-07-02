@@ -40,7 +40,7 @@ import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import KanbanView from "./Users/Kanban.jsx";
 
-function UsersTab({ users }) {
+function UsersTab({ users}) {
   const { refreshPermissions } = usePermissions();
 
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -78,6 +78,15 @@ function UsersTab({ users }) {
       setView("table");
     }
   }, [isTablet]);
+
+    useEffect(() => {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -258,7 +267,8 @@ function UsersTab({ users }) {
       header: "Contact",
       render: (value, row) => (
         <div className="text-gray-500">
-          {row?.contact || row?.Contact || "N/A"}
+          {capitalizeFirstLetter(row?.firstName)}{" "}
+          {capitalizeFirstLetter(row?.lastName)}
         </div>
       ),
     },

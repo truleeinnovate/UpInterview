@@ -1160,12 +1160,41 @@ const getAllOrganizations = async (req, res) => {
 
     const organizations = await Tenant.find();
 
+    // const enrichedOrganizations = organizations.map((org) => {
+    //   const orgId = org._id.toString();
+    //   return {
+    //     ...org.toObject(),
+    //     usersCount: userCountMap[orgId] || 0,
+    //     activeUsersCount: activeUserCountMap[orgId] || 0, // Add active candidates count
+    //   };
+    // });
+
+    // Fetch latest subscription per tenant (assuming latest by createdAt or startDate)
+    const subscriptions = await CustomerSubscription.aggregate([
+      {
+        $sort: { createdAt: -1 }, // or startDate if you prefer
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          latestSubscription: { $first: "$$ROOT" },
+        },
+      },
+    ]);
+
+    const subscriptionMap = {};
+    subscriptions.forEach(({ _id, latestSubscription }) => {
+      subscriptionMap[_id] = latestSubscription;
+    });
+
+    // Combine all data
     const enrichedOrganizations = organizations.map((org) => {
       const orgId = org._id.toString();
       return {
         ...org.toObject(),
         usersCount: userCountMap[orgId] || 0,
-        activeUsersCount: activeUserCountMap[orgId] || 0, // Add active candidates count
+        activeUsersCount: activeUserCountMap[orgId] || 0,
+        subscription: subscriptionMap[orgId] || null, // Add latest subscription data
       };
     });
 
