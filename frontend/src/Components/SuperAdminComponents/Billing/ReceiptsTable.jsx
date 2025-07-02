@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
-import ReceiptDetailsModal from "./ReceiptDetailsModal";
+// import ReceiptDetailsModal from "./ReceiptDetailsModal";
 
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../Loading/Loading.jsx";
+// import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Receipt/Kanban.jsx";
@@ -21,11 +21,11 @@ import {
 import {
   AiOutlineDownload,
   AiOutlineMail,
-  AiOutlineCreditCard,
-  AiOutlineBank,
-  AiOutlineUser,
-  AiOutlineKey,
-  AiOutlineShop,
+  // AiOutlineCreditCard,
+  // AiOutlineBank,
+  // AiOutlineUser,
+  // AiOutlineKey,
+  // AiOutlineShop,
 } from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config.js";
@@ -130,7 +130,7 @@ function ReceiptsTable({ organizationId }) {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/receipts/${selectedReceiptId}`
+          `${config.REACT_APP_API_URL}/receipts/receipt/${selectedReceiptId}`
         );
         setSelectedReceipt(response.data);
       } catch (error) {

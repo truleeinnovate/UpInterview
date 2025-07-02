@@ -30,7 +30,7 @@ const getPaymentsSummary = async (req, res) => {
   }
 };
 
-const getPaymentById = async (req, res) => {
+const getPaymentsById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -40,7 +40,7 @@ const getPaymentById = async (req, res) => {
 
     const payments = await Payments.find({ tenantId: id });
 
-    res.status(200).json(payments);
+    res.status(200).json({payments});
   } catch (error) {
     console.error("Detailed error:", {
       message: error.message,
@@ -57,9 +57,9 @@ const getPaymentById = async (req, res) => {
 // SUPER ADMIN added by Ashok
 const getSinglePaymentById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { paymentId } = req.params;
 
-    const payment = await Payments.findById(id);
+    const payment = await Payments.findById(paymentId);
 
     res.status(200).json(payment);
   } catch (error) {
@@ -75,4 +75,4 @@ const getSinglePaymentById = async (req, res) => {
   }
 };
 
-module.exports = { getPaymentsSummary, getPaymentById, getSinglePaymentById };
+module.exports = { getPaymentsSummary, getPaymentsById, getSinglePaymentById };

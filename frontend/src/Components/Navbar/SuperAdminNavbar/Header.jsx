@@ -125,28 +125,29 @@ function Header() {
     },
   ];
 
-  const moreNavItems = [
-    {
-      path: "/settings",
-      label: "Settings",
-      permissionKey: "Settings.ViewTab",
-      // role: "super_admin",
-    },
-    {
-      path: "/internal-logs",
-      label: "Internal Logs",
-      permissionKey: "InternalLogs.ViewTab",
-      // role: "super_admin",
-    },
-    {
-      path: "/integrations",
-      label: "Integrations",
-      permissionKey: "IntegrationLogs.ViewTab",
-      // role: "super_admin",
-    },
-  ];
+  // const moreNavItems = [
+  //   {
+  //     path: "/settings",
+  //     label: "Settings",
+  //     permissionKey: "Settings.ViewTab",
+  //     // role: "super_admin",
+  //   },
+  //   {
+  //     path: "/internal-logs",
+  //     label: "Internal Logs",
+  //     permissionKey: "InternalLogs.ViewTab",
+  //     // role: "super_admin",
+  //   },
+  //   {
+  //     path: "/integrations",
+  //     label: "Integrations",
+  //     permissionKey: "IntegrationLogs.ViewTab",
+  //     // role: "super_admin",
+  //   },
+  // ];
 
   // Utility function to close all dropdowns
+  
   const closeAllDropdowns = React.useCallback((openDropdown = null) => {
     setDropdownState((prevState) => ({
       moreDropdown: openDropdown === "moreDropdown",
@@ -403,33 +404,32 @@ function Header() {
       className: "text-xl border rounded-md p-2",
       isActive: isActive("/admin-dashboard"),
     },
-    {
-      key: "info",
-      ref: outlineRef,
-      content: (
-        <div className="relative">
-          <p
-            className="font-medium cursor-pointer"
-            onClick={toggleOutlineDropdown}
-          >
-            <IoMdInformationCircleOutline
-              className={
-                dropdownState.outlineDropdown
-                  ? "text-custom-blue"
-                  : "text-black"
-              }
-            />
-            {/* <div className="absolute top-10 right-0 w-4 h-4 bg-white border-t border-l border-custom-blue rotate-45 z-50"></div> */}
-            {dropdownState.outlineDropdown && (
-              <IoIosArrowUp className="absolute top-10 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
-            )}
-          </p>
-          {dropdownState.outlineDropdown && outlineDropdownContent}
-        </div>
-      ),
-      className: "text-xl border rounded-md p-2",
-      isActive: dropdownState.outlineDropdown,
-    },
+    // {
+    //   key: "info",
+    //   ref: outlineRef,
+    //   content: (
+    //     <div className="relative">
+    //       <p
+    //         className="font-medium cursor-pointer"
+    //         onClick={toggleOutlineDropdown}
+    //       >
+    //         <IoMdInformationCircleOutline
+    //           className={
+    //             dropdownState.outlineDropdown
+    //               ? "text-custom-blue"
+    //               : "text-black"
+    //           }
+    //         />
+    //         {dropdownState.outlineDropdown && (
+    //           <IoIosArrowUp className="absolute top-10 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
+    //         )}
+    //       </p>
+    //       {dropdownState.outlineDropdown && outlineDropdownContent}
+    //     </div>
+    //   ),
+    //   className: "text-xl border rounded-md p-2",
+    //   isActive: dropdownState.outlineDropdown,
+    // },
     {
       key: "notification",
       ref: notificationRef,
@@ -530,7 +530,7 @@ function Header() {
           )}
 
           {/* More Dropdown */}
-          <div className="relative flex items-center" ref={moreRef}>
+          {/* <div className="relative flex items-center" ref={moreRef}>
             <button
               className={`flex items-center h-16 relative px-1 transition-colors duration-300 ${
                 moreNavItems.some(
@@ -596,7 +596,7 @@ function Header() {
                   ))}
               </div>
             </div>
-          </div>
+          </div> */}
         </nav>
 
         <div className="xl:hidden">

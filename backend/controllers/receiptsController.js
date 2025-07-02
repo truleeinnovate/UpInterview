@@ -13,6 +13,17 @@ const getReceiptById = async (req, res) => {
   }
 };
 
+const getReceiptsByTenantId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const receipts = await Receipts.find({ tenantId: id });
+    res.status(200).json({ receipts });
+  } catch (error) {
+    console.error("Error fetching receipt by id: ", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const getReceiptsSummary = async (req, res) => {
   try {
     const receipts = await Receipts.find();
@@ -45,4 +56,4 @@ const getReceiptsSummary = async (req, res) => {
   }
 };
 
-module.exports = { getReceiptsSummary, getReceiptById };
+module.exports = { getReceiptsSummary, getReceiptById, getReceiptsByTenantId };
