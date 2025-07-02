@@ -195,9 +195,9 @@ const permissionMiddleware = async (req, res, next) => {
     const tenantId = req.headers['x-tenant-id'];
     const impersonatedUserId = req.headers['x-impersonation-token'];
 
-    console.log('userId backend', userId);
-    console.log('tenantId backend', tenantId);
-    console.log('impersonatedUserId backend', impersonatedUserId);
+    // console.log('userId backend', userId);
+    // console.log('tenantId backend', tenantId);
+    // console.log('impersonatedUserId backend', impersonatedUserId);
 
     // Get tokens - both are optional
     // const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
@@ -237,13 +237,15 @@ const permissionMiddleware = async (req, res, next) => {
         // Set default effective user (non-impersonated)
         // effectiveUser = currentUser;
         // effectiveTenantId = currentUser.tenantId;
+        // console.log('currentUser', currentUser);
         roleType = currentUser.roleId?.roleType || null;
-        roleLevel = currentUser.roleLevel || null;
+        roleLevel = currentUser.roleId?.level || null;
+        roleName = currentUser.roleId?.roleName || null;
 
         if (currentUser?.roleId) {
-          console.log('Processing permissions for user:', currentUser._id);
+          // console.log('Processing permissions for user:', currentUser._id);
           const roleTemplate = await RolesPermissionObject.findById(currentUser.roleId);
-          console.log('roleTemplate', roleTemplate);
+          // console.log('roleTemplate', roleTemplate);
 
           if (!roleTemplate) {
             console.error(`Role template not found for roleId: ${effectiveUser.roleId}`);
@@ -251,7 +253,7 @@ const permissionMiddleware = async (req, res, next) => {
           }
 
           if (roleTemplate.roleType === 'organization') {
-            console.log('Processing organization role type');
+            // console.log('Processing organization role type');
             if (!tenantId) {
               console.error('Missing tenantId for organization user');
               return res.status(401).json({ error: 'Unauthorized: Missing tenantId for organization user' });
@@ -259,7 +261,7 @@ const permissionMiddleware = async (req, res, next) => {
             }
 
             const tenant = await Tenant.findById(tenantId);
-            console.log('tenant', tenant);
+            // console.log('tenant', tenant);
             if (!tenant || tenant.type !== 'organization') {
               console.error(`Invalid tenant for tenantId: ${tenantId}`);
               return res.status(403).json({ error: 'Invalid tenant for organization user' });
@@ -271,7 +273,7 @@ const permissionMiddleware = async (req, res, next) => {
               roleName: roleTemplate.roleName,
             }).populate('inherits');
 
-            console.log('roleOverride', roleOverride);
+            // console.log('roleOverride', roleOverride);
 
             effectivePermissions = roleTemplate.objects.map((obj) => {
               const overrideObj = roleOverride?.objects?.find((o) => o.objectName === obj.objectName);
@@ -283,15 +285,15 @@ const permissionMiddleware = async (req, res, next) => {
 
             inheritedRoleIds = roleOverride?.inherits?.map((r) => r._id) || [];
           } else if (roleTemplate.roleType === 'individual') {
-            console.log('Processing individual role type');
+            // console.log('Processing individual role type');
             effectivePermissions = roleTemplate.objects || [];
           }
         } else {
-          console.log('No roleId found, using default permissions');
+          // console.log('No roleId found, using default permissions');
           effectivePermissions = currentUser?.permissions || [];
         }
 
-        console.log('Final Effective Permissions:', effectivePermissions);
+        // console.log('Final Effective Permissions:', effectivePermissions);
         // Convert permissions to object format
  
       } catch (err) {
@@ -306,7 +308,7 @@ const permissionMiddleware = async (req, res, next) => {
         // console.log('Decoded impersonationToken:', impersonationDecoded);
 
         const impersonatedUser = await Users.findById(impersonatedUserId).populate('roleId');
-        console.log('impersonatedUser:', impersonatedUser);
+        // console.log('impersonatedUser:', impersonatedUser);
 
         if (impersonatedUser) {
           isImpersonating = true;
@@ -406,8 +408,10 @@ const permissionMiddleware = async (req, res, next) => {
       roleType,
       roleLevel,
       tenantId,
+      roleName,
       userId: currentUser?._id
     };
+    console.log("res.locals permissionMiddleware", res.locals);
     next();
   } catch (error) {
     console.error('Permission Middleware Error:', error);

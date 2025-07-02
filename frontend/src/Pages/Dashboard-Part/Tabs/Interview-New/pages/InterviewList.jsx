@@ -393,7 +393,7 @@ function InterviewList() {
       ? [{
           key: 'view',
           label: 'View Details',
-          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
           onClick: handleViewInterview,
         }]
       : []),
