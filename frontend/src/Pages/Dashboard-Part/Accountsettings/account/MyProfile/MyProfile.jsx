@@ -24,7 +24,7 @@ const MyProfile = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload.userId;
-  const organization = tokenPayload?.organization;
+  //const organization = tokenPayload?.organization;
 
   // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isEditMode = location.pathname.includes('-edit');
@@ -136,11 +136,22 @@ const MyProfile = () => {
     return subTabComponents[activeTab] || subTabComponents['basic'];
   };
 
-  const tabsToShow = 
-  isFreelancer || roleName === "Internal_Interviewer"
-    ? 
-     ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced','documents'];
+  // Build a list of tabs that the current user is allowed to see.
+  // `effectivePermissions` flags are booleans, so when a flag is false the
+  // expression evaluates to `false`. We filter out these falsy values to avoid
+  // non-string items (e.g. `false`) ending up in the array, which would later
+  // cause runtime errors like `tabKey.charAt is not a function`.
+  const tabsToShow = [
+    effectivePermissions.MyProfile?.isbasic && 'basic',
+    effectivePermissions.MyProfile?.isadvance && 'advanced',
+    effectivePermissions.MyProfile?.isinterview && 'interview',
+    effectivePermissions.MyProfile?.isavailability && 'availability',
+    effectivePermissions.MyProfile?.isdocuments && 'documents',
+  ].filter(Boolean);
+  // isFreelancer || roleName === "Internal_Interviewer"
+  //   ? 
+  //    ['basic', 'advanced', 'interview', 'availability'] 
+  //   : ['basic', 'advanced','documents'];
 
 // Internal_Interviewer
 
