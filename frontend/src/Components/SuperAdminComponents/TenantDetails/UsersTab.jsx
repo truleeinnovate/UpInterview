@@ -40,7 +40,7 @@ import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import KanbanView from "./Users/Kanban.jsx";
 
-function UsersTab({ users}) {
+function UsersTab({ users, viewMode = "expanded" }) {
   const { refreshPermissions } = usePermissions();
 
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -78,15 +78,6 @@ function UsersTab({ users}) {
       setView("table");
     }
   }, [isTablet]);
-
-    useEffect(() => {
-    const handleResize = () => {
-      setView(window.innerWidth < 1024 ? "kanban" : "table");
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -210,7 +201,7 @@ function UsersTab({ users}) {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-  console.log("USERS ========================= ", users);
+
   const handleLogin = (user) => {
     setSelectedUser(user);
     setShowLoginModal(true);
