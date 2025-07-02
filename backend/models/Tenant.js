@@ -54,6 +54,8 @@ const TenantSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
 
     // Office Details
@@ -77,7 +79,6 @@ const TenantSchema = new mongoose.Schema(
     subdomainLastVerified: { type: Date },
     usersBandWidth: { type: Number },
     totalUsers: { type: Number },
-    
   },
   { timestamps: true }
 );

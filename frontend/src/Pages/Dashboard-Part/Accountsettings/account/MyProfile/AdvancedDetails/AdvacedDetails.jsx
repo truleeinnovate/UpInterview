@@ -100,7 +100,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
         </div>
 
 
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
 
           <div>
             <p className="text-sm text-gray-500">Resume PDF </p>
@@ -112,7 +112,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
             <p className="font-medium">{contactData?.coverLetter?.filename || 'No File'}</p>
           </div>
 
-        </div>
+        </div> */}
 
 
         {/* <div>

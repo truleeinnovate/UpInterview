@@ -131,6 +131,8 @@ const ContactsSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
     timeZone: String,
     preferredDuration: String,
@@ -142,6 +144,8 @@ const ContactsSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
     // coverLetter: String,
     coverLetter: {
@@ -149,6 +153,8 @@ const ContactsSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
     // ranjith added have to check proeprly
     coverLetterdescription: String,
@@ -159,7 +165,7 @@ const ContactsSchema = new mongoose.Schema(
     PreviousExperienceConductingInterviews: String,
     PreviousExperienceConductingInterviewsYears: String,
     ExpertiseLevel_ConductingInterviews: String,
-    expectedRatePerMockInterview:String,  //newly added  Ranjith
+    expectedRatePerMockInterview: String, //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],

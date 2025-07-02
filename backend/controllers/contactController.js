@@ -1,6 +1,7 @@
 const { Contacts } = require("../models/Contacts");
 const InterviewAvailability = require("../models/InterviewAvailability");
 const { Users } = require("../models/Users");
+const mongoose = require("mongoose");
 
 // Mansoor: for fetching the total contacts to the login pages (Individual-4)
 const getAllContacts = async (req, res) => {
@@ -91,6 +92,11 @@ const getContactsByOwnerId = async (req, res) => {
 
     if (!ownerId) {
       return res.status(400).json({ message: "Owner ID is required" });
+    }
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+      return res.status(400).json({ message: "Invalid Owner ID format" });
     }
 
     const contacts = await Contacts.find({ ownerId })

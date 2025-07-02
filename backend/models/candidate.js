@@ -30,12 +30,16 @@ const candidateSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
     resume: {
       filename: String,
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -46,6 +50,7 @@ const candidateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Candidate = mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
+const Candidate =
+  mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
 
 module.exports = { Candidate };

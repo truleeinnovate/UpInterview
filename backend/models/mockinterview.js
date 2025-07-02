@@ -58,11 +58,14 @@ const mockInterviewSchema = new mongoose.Schema(
         dateTime: String,
       },
     ],
-    resume: { // Added by Ashok
+    resume: {
+      // Added by Ashok
       filename: String,
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     }, //in future we have to work on resume saving functionality
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -72,6 +75,8 @@ const mockInterviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const MockInterview = mongoose.models.MockInterview || mongoose.model('MockInterview', mockInterviewSchema);
+const MockInterview =
+  mongoose.models.MockInterview ||
+  mongoose.model("MockInterview", mockInterviewSchema);
 
 module.exports = { MockInterview };
