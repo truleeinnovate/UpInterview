@@ -9,6 +9,15 @@ import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
 import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
 
+const formatWithSpaces = (str) => {
+  if (!str) return '';
+  const formatted = str
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1).toLowerCase();
+};
+
 const Role = () => {
   const [editingRole, setEditingRole] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -22,7 +31,6 @@ const Role = () => {
     const fetchRoles = async () => {
       try {
         const organizationRoles = await getOrganizationRoles();
-        // Fetch RoleOverrides for each role
         const rolesWithOverrides = await Promise.all(
           organizationRoles.map(async (role) => {
             try {
@@ -32,7 +40,6 @@ const Role = () => {
               const override = overrideResponse.data;
 
               if (override) {
-                // Merge objects: prioritize RoleOverrides.objects, include RolesPermissionObject.objects for non-overridden objects
                 const overrideObjectsMap = new Map(
                   override.objects?.map((obj) => [obj.objectName, obj.permissions]) || []
                 );
@@ -83,16 +90,16 @@ const Role = () => {
   const renderRoleCard = (role) => {
     return (
       <div key={role._id} className="mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-5 rounded-lg shadow">
           <div className="flex justify-between items-start">
             <div>
               <h3 className="text-lg font-medium">{role.label}</h3>
-              <p className="text-gray-600">{role.description || 'No description available'}</p>
+              <p className="text-gray-600 text-sm w-[90%]">{role.description || 'No description available'}</p>
               <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
-                {role.inherits?.length || 0} Inherited Roles
+              <span className="px-2 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-xs w-20">
+                {role.inherits?.length || 0} Inherited
               </span>
               <EditButton
                 onClick={() => {
@@ -107,7 +114,7 @@ const Role = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
               {role.objects && role.objects.map((obj) => (
                 <div key={obj.objectName} className="space-y-2">
-                  <h5 className="font-medium capitalize">{obj.objectName}</h5>
+                  <h5 className="font-medium">{formatWithSpaces(obj.objectName)}</h5>
                   <div className="space-y-1">
                     {Object.entries(obj.permissions).map(([permissionName, value], index) => (
                       <div key={index} className="flex items-center text-sm text-gray-600">
@@ -116,7 +123,7 @@ const Role = () => {
                         ) : (
                           <XMarkIcon className="h-4 w-4 text-red-500 mr-2" />
                         )}
-                        <span className="capitalize">{permissionName}</span>
+                        <span>{formatWithSpaces(permissionName)}</span>
                       </div>
                     ))}
                   </div>
@@ -178,7 +185,6 @@ const Role = () => {
           <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
         </div>
 
-        {/* Role Hierarchy */}
         <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
           <h3 className="text-lg font-medium mb-4">Role Hierarchy</h3>
           <div className="space-y-2">
@@ -188,7 +194,6 @@ const Role = () => {
           </div>
         </div>
       </div>
-      {/* Role Form Popup */}
       {(editingRole || isCreating) && (
         <RoleFormPopup
           role={editingRole}
