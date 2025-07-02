@@ -24,7 +24,7 @@ const uploadToCloudinary = (buffer, originalname, folder) => {
       {
         folder,
         resource_type,
-        public_id: sanitizedPublicId,
+        public_id: `${sanitizedPublicId}${ext}`,
         overwrite: true,
       },
       (error, result) => {

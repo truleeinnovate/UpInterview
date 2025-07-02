@@ -79,17 +79,17 @@ const EditAdvacedDetails = ({
     coverLetterdescription: "",
   });
 
-  const [resumeName, setResumeName] = useState("");
-  const [coverLetterName, setCoverLetterName] = useState("");
+  // const [resumeName, setResumeName] = useState("");
+  // const [coverLetterName, setCoverLetterName] = useState("");
 
-  const [resume, setResume] = useState(null);
-  const [coverLetter, setCoverLetter] = useState(null);
+  // const [resume, setResume] = useState(null);
+  // const [coverLetter, setCoverLetter] = useState(null);
 
-  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
+  // const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  // const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
 
-  const [resumeError, setResumeError] = useState("");
-  const [coverLetterError, setCoverLetterError] = useState("");
+  // const [resumeError, setResumeError] = useState("");
+  // const [coverLetterError, setCoverLetterError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // console.log("userId AdvacedDetails", from);
@@ -111,61 +111,61 @@ const EditAdvacedDetails = ({
         coverLetterdescription: userProfile.coverLetterdescription || "",
         id: userProfile._id,
       });
-      setResumeName(userProfile?.resume?.filename);
-      setCoverLetterName(userProfile?.coverLetter?.filename);
+      // setResumeName(userProfile?.resume?.filename);
+      // setCoverLetterName(userProfile?.coverLetter?.filename);
       setErrors({});
     }
   }, [resolvedId, userProfile?._id]);
 
   // Handle file upload
-  const handleFileUpload = async (e, type) => {
-    const file = e.target.files[0];
+  // const handleFileUpload = async (e, type) => {
+  //   const file = e.target.files[0];
 
-    if (file) {
-      // Set the file name based on the type (Resume or CoverLetter)
-      if (type === "resume") {
-        const error = await validateFile(file, "resume");
-        if (error) {
-          setResumeError(error);
-          return;
-        }
-        setResumeError("");
-        setResume(file);
-        setResumeName(file.name);
-      } else if (type === "coverLetter") {
-        const error = await validateFile(file, "resume");
-        if (error) {
-          setCoverLetterError(error);
-          return;
-        }
-        setCoverLetter(file);
-        setCoverLetterError("");
-        setCoverLetterName(file.name);
-      }
-    }
-  };
+  //   if (file) {
+  //     // Set the file name based on the type (Resume or CoverLetter)
+  //     if (type === "resume") {
+  //       const error = await validateFile(file, "resume");
+  //       if (error) {
+  //         setResumeError(error);
+  //         return;
+  //       }
+  //       setResumeError("");
+  //       setResume(file);
+  //       setResumeName(file.name);
+  //     } else if (type === "coverLetter") {
+  //       const error = await validateFile(file, "resume");
+  //       if (error) {
+  //         setCoverLetterError(error);
+  //         return;
+  //       }
+  //       setCoverLetter(file);
+  //       setCoverLetterError("");
+  //       setCoverLetterName(file.name);
+  //     }
+  //   }
+  // };
 
   // Handle file removal
-  const handleRemoveFile = (type) => {
-    if (type === "resume") {
-      if (resumeInputRef.current) {
-        resumeInputRef.current.value = "";
-      }
-      setIsResumeRemoved(true);
-      setResume(null);
-      setResumeName("");
-    } else if (type === "coverLetter") {
-      if (coverLetterInputRef.current) {
-        coverLetterInputRef.current.value = "";
-      }
-      setIsCoverLetterRemoved(true);
-      setCoverLetter(null);
-      setCoverLetterName("");
-    }
-  };
+  // const handleRemoveFile = (type) => {
+  //   if (type === "resume") {
+  //     if (resumeInputRef.current) {
+  //       resumeInputRef.current.value = "";
+  //     }
+  //     setIsResumeRemoved(true);
+  //     setResume(null);
+  //     setResumeName("");
+  //   } else if (type === "coverLetter") {
+  //     if (coverLetterInputRef.current) {
+  //       coverLetterInputRef.current.value = "";
+  //     }
+  //     setIsCoverLetterRemoved(true);
+  //     setCoverLetter(null);
+  //     setCoverLetterName("");
+  //   }
+  // };
 
-  const resumeInputRef = useRef(null);
-  const coverLetterInputRef = useRef(null);
+  // const resumeInputRef = useRef(null);
+  // const coverLetterInputRef = useRef(null);
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -228,18 +228,18 @@ const EditAdvacedDetails = ({
 
       // resume update or delete
       const contactId = userProfile.contactId;
-      if (isResumeRemoved && !resume) {
-        await uploadFile(null, "resume", "contact", contactId);
-      } else if (resume instanceof File) {
-        await uploadFile(resume, "resume", "contact", contactId);
-      }
+      // if (isResumeRemoved && !resume) {
+      //   await uploadFile(null, "resume", "contact", contactId);
+      // } else if (resume instanceof File) {
+      //   await uploadFile(resume, "resume", "contact", contactId);
+      // }
 
       // cover letter update or delete
-      if (isCoverLetterRemoved && !coverLetter) {
-        await uploadFile(null, "coverLetter", "contact", contactId);
-      } else if (coverLetter instanceof File) {
-        await uploadFile(coverLetter, "coverLetter", "contact", contactId);
-      }
+      // if (isCoverLetterRemoved && !coverLetter) {
+      //   await uploadFile(null, "coverLetter", "contact", contactId);
+      // } else if (coverLetter instanceof File) {
+      //   await uploadFile(coverLetter, "coverLetter", "contact", contactId);
+      // }
 
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
@@ -590,7 +590,7 @@ const EditAdvacedDetails = ({
               </div>
 
               {/* Resume Upload */}
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label
                   htmlFor="resume"
                   className="block text-sm font-medium text-gray-900 mb-1"
@@ -635,10 +635,10 @@ const EditAdvacedDetails = ({
                   </div>
                 )}
                 <span className="text-sm text-red-500 mt-1">{resumeError}</span>
-              </div>
+              </div> */}
 
               {/* Cover Letter Upload */}
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label
                   htmlFor="coverLetter"
                   className="block text-sm font-medium text-gray-900 mb-1"
@@ -685,7 +685,7 @@ const EditAdvacedDetails = ({
                 <span className="text-sm text-red-500 mt-1">
                   {coverLetterError}
                 </span>
-              </div>
+              </div> */}
             </div>
 
             <div className="mt-6">
