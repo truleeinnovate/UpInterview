@@ -3,11 +3,11 @@ import { CheckIcon, ArrowDownIcon, XMarkIcon } from '@heroicons/react/24/outline
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { EditButton } from './Buttons';
-import RoleFormPopup from './RoleFormPopup';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
 import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
+import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 
 const formatWithSpaces = (str) => {
   if (!str) return '';
@@ -19,6 +19,7 @@ const formatWithSpaces = (str) => {
 };
 
 const Role = () => {
+  const { effectivePermissions_RoleName } = usePermissions();
   const [editingRole, setEditingRole] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [roles, setRoles] = useState([]);
@@ -26,6 +27,23 @@ const Role = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
+
+  // Sort permissions: ViewTab, Create, Edit, Delete first, then others alphabetically
+  const sortPermissions = (permissions) => {
+    const priorityOrder = ['ViewTab', 'Create', 'Edit', 'Delete'];
+    const sortedKeys = Object.keys(permissions).sort((a, b) => {
+      const aIndex = priorityOrder.indexOf(a);
+      const bIndex = priorityOrder.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    return sortedKeys.reduce((acc, key) => {
+      acc[key] = permissions[key];
+      return acc;
+    }, {});
+  };
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -51,7 +69,8 @@ const Role = () => {
                   new Map([...roleObjectsMap, ...overrideObjectsMap]).entries()
                 ).map(([objectName, permissions]) => ({
                   objectName,
-                  permissions,
+                  permissions: sortPermissions(permissions),
+                  visibility: role.objects.find((o) => o.objectName === objectName)?.visibility || 'view_all',
                 }));
 
                 return {
@@ -61,10 +80,22 @@ const Role = () => {
                   inherits: override.inherits || role.inherits || [],
                 };
               }
-              return role;
+              return {
+                ...role,
+                objects: role.objects.map((obj) => ({
+                  ...obj,
+                  permissions: sortPermissions(obj.permissions),
+                })),
+              };
             } catch (error) {
               console.error(`Error fetching override for role ${role.roleName}:`, error);
-              return role;
+              return {
+                ...role,
+                objects: role.objects.map((obj) => ({
+                  ...obj,
+                  permissions: sortPermissions(obj.permissions),
+                })),
+              };
             }
           })
         );
@@ -88,31 +119,37 @@ const Role = () => {
   };
 
   const renderRoleCard = (role) => {
+    const isAdmin = effectivePermissions_RoleName === 'Admin' && role.roleName === 'Admin';
+    const maxRows = 2;
+    // Filter objects to show only those with visibility: 'view_all'
+    const visibleObjects = role.objects
+      ? role.objects
+          .filter((obj) => obj.visibility === 'view_all')
+          .slice(0, maxRows)
+      : [];
+
     return (
       <div key={role._id} className="mb-6">
         <div className="bg-white p-5 rounded-lg shadow">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className="text-lg font-medium">{role.label}</h3>
               <p className="text-gray-600 text-sm w-[90%]">{role.description || 'No description available'}</p>
               <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="px-2 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-xs w-20">
-                {role.inherits?.length || 0} Inherited
-              </span>
+            {!isAdmin && (
               <EditButton
                 onClick={() => {
                   navigate(`/account-settings/roles/role-edit/${role._id}`);
                 }}
               />
-            </div>
+            )}
           </div>
 
           <div className="mt-4">
             <h4 className="font-medium mb-2">Permissions</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
-              {role.objects && role.objects.map((obj) => (
+              {visibleObjects.map((obj) => (
                 <div key={obj.objectName} className="space-y-2">
                   <h5 className="font-medium">{formatWithSpaces(obj.objectName)}</h5>
                   <div className="space-y-1">
@@ -130,9 +167,17 @@ const Role = () => {
                 </div>
               ))}
             </div>
+            {role.objects && role.objects.filter((obj) => obj.visibility === 'view_all').length > maxRows && (
+              <button
+                onClick={() => navigate(`/account-settings/roles/view/${role._id}`, { state: { role, roles } })}
+                className="mt-4 text-custom-blue hover:underline text-sm"
+              >
+                View More
+              </button>
+            )}
           </div>
 
-          {role.inherits && role.inherits.length > 0 && (
+          {role.inherits && role.inherits.length > 0 && !isAdmin && (
             <div className="mt-4">
               <h4 className="font-medium mb-2">Inherits From</h4>
               <div className="flex flex-wrap gap-2">
@@ -149,27 +194,9 @@ const Role = () => {
               </div>
             </div>
           )}
-
-          {role.canAssign && role.canAssign.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Can Assign</h4>
-              <div className="flex flex-wrap gap-2">
-                {role.canAssign.map((assignableRole) => {
-                  const assignableRoleId = typeof assignableRole === 'string' ? assignableRole : assignableRole._id;
-                  const foundRole = roles.find((r) => r._id === assignableRoleId);
-                  const label = foundRole ? foundRole.label : assignableRoleId;
-                  return (
-                    <span key={assignableRoleId} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                      {label}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        {role.inherits && role.inherits.length > 0 && (
+        {role.inherits && role.inherits.length > 0 && !isAdmin && (
           <div className="flex justify-center my-4">
             <ArrowDownIcon className="h-6 w-6 text-gray-400" />
           </div>
@@ -190,21 +217,10 @@ const Role = () => {
           <div className="space-y-2">
             {roles
               .sort((a, b) => a.level - b.level)
-              .map(role => renderRoleCard(role))}
+              .map((role) => renderRoleCard(role))}
           </div>
         </div>
       </div>
-      {(editingRole || isCreating) && (
-        <RoleFormPopup
-          role={editingRole}
-          onSave={editingRole ? handleEditRole : handleCreateRole}
-          onClose={() => {
-            setEditingRole(null);
-            setIsCreating(false);
-          }}
-        />
-      )}
-
       <Outlet />
     </>
   );

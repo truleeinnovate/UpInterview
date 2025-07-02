@@ -724,6 +724,8 @@ const UserProfileDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsett
 const EmailTemplate = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate'));
 const Role = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/Role'));
 const RoleFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup'));
+const RoleView = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleView.jsx'));
+
 const Sharing = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Sharing'));
 const DomainManagement = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement'));
 const Webhooks = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks'));
@@ -1113,10 +1115,11 @@ const App = () => {
                   <Route path="usage" element={<Usage />} />
                 )}
                 {hasPermission('Roles') && (
-                  <Route path="roles" element={<Role />}>
-                    <Route index element={null} />
-                    <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-                  </Route>
+            <Route path="roles" element={<Role />}>
+  <Route index element={null} />
+  <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+  <Route path="view/:id" element={<RoleView />} />
+</Route>
                 )}
                 {hasPermission('Sharing') && (
                   <Route path="sharing" element={<Sharing />} />
