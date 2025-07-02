@@ -10,6 +10,7 @@ import { X } from 'lucide-react';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
 import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
+import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 
 const formatWithSpaces = (str) => {
   if (!str) return '';
@@ -44,6 +45,20 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   const [availablePermissions, setAvailablePermissions] = useState({});
   const initialFormDataRef = useRef(null);
 
+  // Sort permissions: ViewTab, Create, Edit, Delete first, then others alphabetically
+  const sortPermissions = (permissions) => {
+    const priorityOrder = ['ViewTab', 'Create', 'Edit', 'Delete'];
+    const sortedKeys = permissions.sort((a, b) => {
+      const aIndex = priorityOrder.indexOf(a);
+      const bIndex = priorityOrder.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    return sortedKeys;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -73,11 +88,12 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           ).map(([objectName, permissions]) => ({
             objectName,
             permissions,
+            visibility: role.objects.find((o) => o.objectName === objectName)?.visibility || 'view_all',
           }));
 
           const permissionsMap = {};
           mergedObjects.forEach((obj) => {
-            permissionsMap[obj.objectName] = Object.keys(obj.permissions);
+            permissionsMap[obj.objectName] = sortPermissions(Object.keys(obj.permissions));
           });
           setAvailablePermissions(permissionsMap);
 
@@ -91,6 +107,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               permissions: Object.entries(obj.permissions)
                 .filter(([_, value]) => value === true)
                 .map(([key]) => key),
+              visibility: obj.visibility,
             })),
             level: override?.level ?? role.level,
             inherits: override?.inherits || role.inherits || [],
@@ -103,13 +120,13 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           fetchedRoles.forEach((role) => {
             role.objects.forEach((obj) => {
               if (!permissionsMap[obj.objectName]) {
-                permissionsMap[obj.objectName] = Object.keys(obj.permissions);
+                permissionsMap[obj.objectName] = sortPermissions(Object.keys(obj.permissions));
               } else {
                 const existingPerms = permissionsMap[obj.objectName];
                 const newPerms = Object.keys(obj.permissions).filter(
                   (perm) => !existingPerms.includes(perm)
                 );
-                permissionsMap[obj.objectName] = [...existingPerms, ...newPerms];
+                permissionsMap[obj.objectName] = sortPermissions([...existingPerms, ...newPerms]);
               }
             });
           });
@@ -145,7 +162,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
       });
 
       if (!updatedObjects.some((obj) => obj.objectName === objectName)) {
-        updatedObjects.push({ objectName, permissions: [permission] });
+        updatedObjects.push({ objectName, permissions: [permission], visibility: 'view_all' });
       }
 
       return { ...prev, objects: updatedObjects };
@@ -203,6 +220,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             return {
               objectName: obj.objectName,
               permissions,
+              visibility: obj.visibility,
             };
           });
         }
@@ -249,6 +267,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           return {
             objectName: obj.objectName,
             permissions,
+            visibility: obj.visibility,
           };
         });
         overrideData.inherits = formData.inherits;
@@ -299,6 +318,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           return {
             objectName: obj.objectName,
             permissions,
+            visibility: obj.visibility,
           };
         });
         roleData.roleType = 'organization';
@@ -335,6 +355,13 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   const toggleFullWidth = () => {
     setIsFullScreen((prev) => !prev);
   };
+
+  // Filter objects to show only those with visibility: 'view_all'
+  const visibleObjects = Object.keys(availablePermissions)
+    .filter((objectName) => {
+      const visibility = formData.objects.find((o) => o.objectName === objectName)?.visibility || 'view_all';
+      return visibility === 'view_all';
+    });
 
   return (
     <Modal
@@ -463,7 +490,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               <h3 className="text-base sm:text-lg font-medium">Permissions</h3>
               <div className="pb-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {Object.keys(availablePermissions).map((objectName) => (
+                  {visibleObjects.map((objectName) => (
                     <div key={objectName} className="space-y-2">
                       <h5 className="font-medium">{formatWithSpaces(objectName)}</h5>
                       <div className="space-y-2 grid grid-cols-4">
