@@ -48,6 +48,7 @@ const RolesPermissionObjectSchema = new Schema({
   level: { type: Number }, // Optional for individual/global roles
   // isGlobal: { type: Boolean, default: false }
   roleType: { type: String, enum: ['organization', 'individual', 'internal'], required: true },
+  description: { type: String },
   //internal type means super admin,support team
 }, { timestamps: true });
 
