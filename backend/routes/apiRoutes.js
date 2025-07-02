@@ -75,14 +75,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     console.log('Received permissions header:', permissionsHeader);
     
-    if (permissionsHeader) {
-      try {
-        const permissions = JSON.parse(permissionsHeader);
-        console.log('Parsed permissions:', permissions);
-      } catch (e) {
-        console.error('Error parsing permissions:', e);
-      }
-    }
 
     if (!authToken) {
       return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
