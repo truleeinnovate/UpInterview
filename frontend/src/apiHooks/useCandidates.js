@@ -55,7 +55,7 @@ export const useCandidates = () => {
   } = useQuery({
     queryKey: ["candidates"],
     queryFn: async () => {
-      const data = await fetchFilterData("candidate");
+      const data = await fetchFilterData("candidate", effectivePermissions);
       return data.map((candidate) => {
         if (candidate.ImageData?.filename) {
           return {

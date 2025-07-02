@@ -1231,18 +1231,18 @@ const App = () => {
                   )}
                 </Route>
               )}
-              {hasPermission('SupportDesk') && (
+              {hasPermission('SuperAdminSupportDesk') && (
                 <Route path="/support-tickets" element={<SupportTicketsPage />}>
                   <Route index element={null} />
-                  {hasPermission('SupportDesk', 'Create') && (
+                  {hasPermission('SuperAdminSupportDesk', 'Create') && (
                     <Route path="new" element={<AddSupportForm mode="Create" />} />
                   )}
-                  {hasPermission('SupportDesk', 'Edit') && (
+                  {hasPermission('SuperAdminSupportDesk', 'Edit') && (
                     <Route path="edit/:id" element={<AddSupportForm mode="Edit" />} />
                   )}
                 </Route>
               )}
-              {hasPermission('SupportDesk', 'View') && (
+              {hasPermission('SuperAdminSupportDesk', 'View') && (
                 <Route path="/support/:id" element={<SupportDetails />} />
               )}
               <Route path="/settings" element={<SettingsPage />} />

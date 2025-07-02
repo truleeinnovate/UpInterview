@@ -6,6 +6,10 @@ require('./controllers/PushNotificationControllers/pushNotificationTaskControlle
 const cors = require("cors");
 const express = require("express");
 const app = express();
+
+const { permissionMiddleware } = require('./middleware/permissionMiddleware');
+
+app.use(permissionMiddleware);
  
 // const corsOptions = {
 //   origin: function (origin, callback) {

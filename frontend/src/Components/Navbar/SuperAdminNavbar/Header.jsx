@@ -114,7 +114,7 @@ function Header() {
     {
       path: "/support-tickets",
       label: "Support Desk",
-      permissionKey: "SupportDesk.ViewTab",
+      permissionKey: "SuperAdminSupportDesk.ViewTab",
       // role: "super_admin",
     },
     {
