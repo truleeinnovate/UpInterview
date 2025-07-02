@@ -25,8 +25,16 @@ router.get('/permissions', permissionMiddleware, async (req, res) => {
       inheritedRoleIds: res.locals.inheritedRoleIds,
       isImpersonating: res.locals.isImpersonating,
       roleType: res.locals.roleType,
-      roleLevel: res.locals.roleLevel
+      roleLevel: res.locals.roleLevel,
+      roleName: res.locals.roleName
     });
+    console.log("effectivePermissions userroutes", res.locals.effectivePermissions);
+    console.log("superAdminPermissions userroutes", res.locals.superAdminPermissions);
+    console.log("inheritedRoleIds userroutes", res.locals.inheritedRoleIds);
+    console.log("isImpersonating userroutes", res.locals.isImpersonating);
+    console.log("roleType userroutes", res.locals.roleType);
+    console.log("roleLevel userroutes", res.locals.roleLevel);
+    console.log("roleName userroutes", res.locals.roleName);    
   } catch (error) {
     console.error('Get Permissions Error:', error);
     res.status(500).json({ error: 'Internal server error' });
