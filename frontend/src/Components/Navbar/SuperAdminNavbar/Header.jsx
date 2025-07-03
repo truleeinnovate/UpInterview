@@ -32,6 +32,7 @@ function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { userProfile, superAdminProfile } = useCustomContext();
+  // console.log('superAdminProfile---',superAdminProfile[0]?.ownerId?.firstName  )
 
   const authToken = Cookies.get("authToken");
   const impersonatedUserId = Cookies.get("impersonatedUserId");
@@ -112,7 +113,7 @@ function Header() {
       // role: "super_admin",
     },
     {
-      path: "/support-tickets",
+      path: "/superAdmin-desk",
       label: "Support Desk",
       permissionKey: "SuperAdminSupportDesk.ViewTab",
       // role: "super_admin",

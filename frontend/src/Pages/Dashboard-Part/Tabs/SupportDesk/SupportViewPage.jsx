@@ -14,6 +14,7 @@ const SupportViewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const ticketData = location.state?.ticketData;
+  console.log("lastModifiedBy:",ticketData.updatedByUserId)
   const [isFullScreen, setIsFullScreen] = useState(false);
   //const [openForm, setOpenForm] = useState(false);
 
@@ -202,7 +203,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Modified By</p>
-                <p className="text-gray-700">{ticketData.lastModifiedBy || ticketData.contact || 'Unknown'}, {formatDate(ticketData.updatedAt)}</p>
+                <p className="text-gray-700">{ticketData?.statusHistory?.[0]?.user || 'Unknown'}, {formatDate(ticketData.updatedAt)}</p>
               </div>
             </div>
           </div>

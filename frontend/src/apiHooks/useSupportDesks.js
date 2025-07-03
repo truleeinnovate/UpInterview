@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../Context/Contextfetch";
 import { uploadFile } from "../apiHooks/imageApis";
+import { usePermissions } from "../Context/PermissionsContext";
 
 // Always send cookies across domains (needed when FE + BE sit on *.azurewebsites.net)
 axios.defaults.withCredentials = true;
@@ -14,6 +15,7 @@ axios.defaults.withCredentials = true;
 export const useSupportTickets = () => {
   const queryClient = useQueryClient();
   const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
+  const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
 
   /* --------------------------------------------------------------------- */
   /*  Auth token                                                            */
@@ -38,7 +40,7 @@ export const useSupportTickets = () => {
       const all = data?.tickets ?? [];
       if (!userRole) return [];
 
-      if (["SuperAdmin", "Support Team"].includes(userRole)) return all;
+      if (["Super_Admin", "Support_Team"].includes(impersonatedUser_roleName)) return all;
       if (!organization) {
         if (userRole === "Admin" && userId)
           return all.filter((t) => t.ownerId === userId);

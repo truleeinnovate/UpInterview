@@ -10,6 +10,7 @@ import StatusHistory from './StatusHistory';
 import axios from 'axios';
 import { config } from '../../../../config';
 import { useCustomContext } from '../../../../Context/Contextfetch';
+import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X } from 'lucide-react';
 
 const getStatusColor = (status) => {
@@ -31,10 +32,12 @@ const getStatusColor = (status) => {
 
 function SupportDetails() {
   const { userRole } = useCustomContext();
+  const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
 
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTicket, setCurrentTicket] = useState(location.state?.ticketData || null);
+  //console.log("curentTicket-------",currentTicket)
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
@@ -187,7 +190,7 @@ function SupportDetails() {
             <h2 className="text-2xl font-semibold text-custom-blue">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
-            {userRole === 'SuperAdmin' && (
+            {impersonatedUser_roleName === 'Super_Admin' && (
               <button
                 onClick={toggleStatusModal}
                 className="p-2 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
@@ -388,7 +391,7 @@ function SupportDetails() {
                         <p className="text-gray-700">{currentTicket.assignedTo || 'N/A'}</p>
                       )}
                     </div>
-                    {userRole === 'SuperAdmin' && (
+                    {impersonatedUser_roleName === 'Super_Admin' && (
                       <div className="flex items-center justify-center w-full">
                         <button
                           onClick={toggleOwnerEdit}

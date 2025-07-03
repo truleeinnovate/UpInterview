@@ -1159,13 +1159,10 @@ const App = () => {
                 </>
               )}
 
-              {/* Support Desk */}
+              {/* Support Desk Admin*/}
               {hasPermission('SupportDesk') && (
                 <>
                   <Route path="/support-desk" element={<SupportDesk />} />
-              {hasPermission('SupportDesk', 'View') && (
-                  <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
-              )}
               {hasPermission('SupportDesk', 'Create') && (
 
                   <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
@@ -1231,7 +1228,7 @@ const App = () => {
                   )}
                 </Route>
               )}
-              {hasPermission('SuperAdminSupportDesk') && (
+              {/* {hasPermission('SuperAdminSupportDesk') && (
                 <Route path="/support-tickets" element={<SupportTicketsPage />}>
                   <Route index element={null} />
                   {hasPermission('SuperAdminSupportDesk', 'Create') && (
@@ -1241,9 +1238,17 @@ const App = () => {
                     <Route path="edit/:id" element={<AddSupportForm mode="Edit" />} />
                   )}
                 </Route>
-              )}
+              )} */}
+              
+              {/* SuperAdminSupportDesk */}
+              {hasPermission('SuperAdminSupportDesk') && (
+                <>
+                  <Route path="/superAdmin-desk" element={<SupportDesk />} />
               {hasPermission('SuperAdminSupportDesk', 'View') && (
-                <Route path="/support/:id" element={<SupportDetails />} />
+                  <Route path="/superAdmin-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
+              )}
+              
+                </>
               )}
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/internal-logs" element={<InternalLogsPage />} />

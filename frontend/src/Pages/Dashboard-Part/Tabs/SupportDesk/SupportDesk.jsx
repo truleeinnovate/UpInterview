@@ -23,7 +23,7 @@ function SupportDesk() {
   isLoading
 } = useSupportTickets();
 
-console.log("tickets", tickets);
+console.log("tickets-------", tickets);
 
   const { userRole } = useCustomContext();
     const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
@@ -144,11 +144,11 @@ console.log("tickets", tickets);
   };
 
   const hasActionAccess = (ticket) => {
-    if (userRole === "SuperAdmin") {
+    if (impersonatedUser_roleName === "Super_Admin") {
       return true;
-    } else if (userRole === "Support Team") {
+    } else if (impersonatedUser_roleName === "Support_Team") {
       return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-    } else if (userRole === "Admin") {
+    } else if (effectivePermissions_RoleName === "Admin") {
       return true;
     } else {
       return ticket.assignedToId === currentUserId;
@@ -163,9 +163,9 @@ console.log("tickets", tickets);
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => {
-            const path = userRole === "Admin"
+            const path = effectivePermissions_RoleName === "Admin"
               ? `/support-desk/${row._id}`
-              : `/support-desk/view/${row._id}`;
+              : `/superAdmin-desk/view/${row._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -196,7 +196,7 @@ console.log("tickets", tickets);
         </span>
       ),
     },
-    ...(userRole === "SuperAdmin" || userRole === "Support Team"
+    ...(impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team"
       ? [
         {
           key: "priority",
@@ -218,7 +218,7 @@ console.log("tickets", tickets);
       header: "Created On",
       render: (value) => formatDate(value),
     },
-    ...(userRole === "SuperAdmin"
+    ...(impersonatedUser_roleName === "Super_Admin"
       ? [
         {
           key: "assignedTo",
@@ -248,14 +248,14 @@ console.log("tickets", tickets);
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        const path = userRole === "Admin"
+        const path = effectivePermissions_RoleName === "Admin"
           ? `/support-desk/${row._id}`
-          : `/support-desk/view/${row._id}`;
+          : `/superAdmin-desk/view/${row._id}`;
         navigate(path, { state: { ticketData: row } });
       },
       disabled: (row) => !hasActionAccess(row),
     },
-    ...(userRole === "Admin"
+    ...(effectivePermissions_RoleName === "Admin"
       ? [
         {
           key: "edit",
@@ -289,26 +289,13 @@ console.log("tickets", tickets);
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
-          {userRole === "SuperAdmin" && (
-            <motion.div
-            className="flex justify-between items-center py-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-        >
-            <h1 className="text-2xl font-semibold text-custom-blue">
-                Support Desk
-            </h1>
-            {/* No Add Invoice button as per requirement */}
-        </motion.div>
-          )}
-          {userRole === "Admin" && (
             <Header
               title="Support Desk"
-              onAddClick={() => userRole === "Admin" && navigate("/support-desk/new-ticket")}
+              onAddClick={() => navigate("/support-desk/new-ticket")}
               addButtonText="Create Ticket"
+              canCreate={effectivePermissions.SupportDesk?.Create}
             />
-          )}
+
             <Toolbar
               view={viewMode}
               setView={setViewMode}

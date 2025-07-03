@@ -46,7 +46,7 @@ function StatusHistory({ history }) {
       </div>
       <div className="flex items-center">
         <span className="font-medium text-gray-700 w-32">Modified By</span>
-        <span className="">
+        <span className="text-gray-600">
         {history?.statusHistory?.[0]?.user} {new Date(history?.statusHistory?.[0]?.date).toLocaleString()}
         </span>
       </div>
