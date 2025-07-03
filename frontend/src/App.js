@@ -581,13 +581,13 @@ const App = () => {
               {hasPermission('InterviewRequest') && (
                 <Route path="/interviewer-requests" element={<InterviewerRequestsPage />} />
               )}
-              {hasPermission('Billing') && (
+              {hasPermission('SuperAdminBilling') && (
                 <Route path="/admin-billing" element={<BillingPage />}>
                   <Route index element={null} />
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="new" element={<AddInvoiceForm mode="Create" />} />
                   )}
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="edit/:id" element={<AddInvoiceForm mode="Edit" />} />
                   )}
                 </Route>

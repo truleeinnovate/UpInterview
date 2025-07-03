@@ -132,7 +132,7 @@ const ContactsSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate: Date,
     },
     timeZone: String,
     preferredDuration: String,
@@ -145,7 +145,7 @@ const ContactsSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate: Date,
     },
     // coverLetter: String,
     coverLetter: {
@@ -154,7 +154,7 @@ const ContactsSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate: Date, 
     },
     // ranjith added have to check proeprly
     coverLetterdescription: String,

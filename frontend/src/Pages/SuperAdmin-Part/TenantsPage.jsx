@@ -124,7 +124,6 @@ function TenantsPage() {
           `${config.REACT_APP_API_URL}/Organization/all-organizations`
         );
         setTenants(response.data.organizations);
-        console.log("organizations: ", response.data.organizations);
       } catch (error) {
         console.error("Error fetching organizations:", error);
       } finally {
@@ -214,24 +213,41 @@ function TenantsPage() {
       header: "Tenant Name",
       render: (value, row) => (
         <div className="flex items-center">
-          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold">
-            {row?.branding ? (
-              <img src={row?.branding?.path} alt="branding" />
+          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold overflow-hidden">
+            {row?.branding?.path ? (
+              <img
+                src={row.branding.path}
+                alt="branding"
+                className="object-cover w-full h-full rounded-full"
+              />
             ) : (
               row?.company?.charAt(0).toUpperCase() || "?"
             )}
           </div>
           <div className="ml-4">
-            <div className="font-medium text-gray-900">
+            <div
+              className={`font-medium ${
+                superAdminPermissions.Tenants.Edit
+                  ? "text-custom-blue cursor-pointer"
+                  : "text-gray-900"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevents row-level handlers (if any)
+                if (superAdminPermissions.Tenants.Edit && row?._id) {
+                  navigate(`/tenants/${row._id}`);
+                }
+              }}
+            >
               {capitalizeFirstLetter(row.company) || "N/A"}
-            </div>
-            <div className="text-gray-500">
-              {capitalizeFirstLetter(row.industry) || "N/A"}
+              <div className="text-custom-blue">
+                {capitalizeFirstLetter(row.industry) || "N/A"}
+              </div>
             </div>
           </div>
         </div>
       ),
     },
+
     {
       key: "plan",
       header: "Plan",
@@ -281,24 +297,26 @@ function TenantsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-    },
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-    // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(superAdminPermissions.Tenants.Edit
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
+          },
+        ]
+      : []),
+    ...(superAdminPermissions.Tenants.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -331,18 +349,20 @@ function TenantsPage() {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink } = {}) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onView ? onView(item) : navigate(`/tenants/${item._id}`);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
+      {superAdminPermissions.Tenants.View && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onView ? onView(item) : navigate(`/tenants/${item._id}`);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
 
-      {!isLoading ? (
+      {!isLoading && superAdminPermissions.Tenants.View ? (
         <>
           <button
             onClick={(e) => {
@@ -366,17 +386,19 @@ function TenantsPage() {
           </button>
         </>
       ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onResendLink) onResendLink(item.id);
-          }}
-          disabled={item.status === "completed"}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
-        >
-          <Mail className="w-4 h-4" />
-        </button>
+        superAdminPermissions.Tenants.Edit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onResendLink) onResendLink(item.id);
+            }}
+            disabled={item.status === "completed"}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Resend Link"
+          >
+            <Mail className="w-4 h-4" />
+          </button>
+        )
       )}
     </div>
   );
