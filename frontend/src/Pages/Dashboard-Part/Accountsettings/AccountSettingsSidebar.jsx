@@ -276,7 +276,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const AccountSettingsSidebar = () => {
-  const { effectivePermissions } = usePermissions();
+  const { effectivePermissions, superAdminPermissions } = usePermissions();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
