@@ -8,10 +8,10 @@ const TOKEN_EXPIRATION = '2h';
 const REFRESH_WINDOW = 30 * 1000;
 
 function generateToken(payload) {
-  console.log('JWT_SECRET:', process.env.JWT_SECRET);
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
-  }
+  // console.log('JWT_SECRET:', process.env.JWT_SECRET);
+  // if (!process.env.JWT_SECRET) {
+  //   throw new Error('JWT_SECRET is not defined');
+  // }
   return jwt.sign(payload, process.env.JWT_SECRET, { 
     expiresIn: TOKEN_EXPIRATION 
   });

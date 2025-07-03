@@ -73,7 +73,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
     const permissionsHeader = req.headers['x-permissions'];
 
-    console.log('Received permissions header:', permissionsHeader);
+    // Log incoming headers and cookies
+    console.log('--- Incoming Request ---');
+    console.log('authToken:', authToken);
+    console.log('permissionsHeader:', permissionsHeader);
+    console.log('req.cookies:', req.cookies);
+    console.log('req.headers:', req.headers);
+
+    // Log res.locals as soon as possible
+    console.log('--- res.locals after permissionMiddleware ---');
+    console.log('res.locals:', res.locals);
 
     if (permissionsHeader) {
       try {
@@ -85,22 +94,28 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     }
 
     if (!authToken) {
+      console.log('No authToken found');
       return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+      console.log('Decoded JWT:', decoded);
     } catch (err) {
+      console.error('JWT verification failed:', err);
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
     const { userId, tenantId } = decoded;
+    console.log('userId:', userId, 'tenantId:', tenantId);
 
     if (!userId || !tenantId) {
+      console.log('Missing userId or tenantId in JWT');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
+    // Log all permission-related locals
     const {
       effectivePermissions = {},
       superAdminPermissions = null,
@@ -113,15 +128,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       impersonatedUser_roleName = null
     } = res.locals;
 
-    console.log('Server-side 1 effectivePermissions:', effectivePermissions);
-    console.log('Server-side 2 superAdminPermissions:', superAdminPermissions);
-    console.log('Server-side 3 inheritedRoleIds:', inheritedRoleIds);
-    console.log('Server-side 4 isImpersonating:', isImpersonating);
-    console.log('Server-side 5 effectivePermissions_RoleType:', effectivePermissions_RoleType);
-    console.log('Server-side 6 effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
-    console.log('Server-side 7 effectivePermissions_RoleName:', effectivePermissions_RoleName);
-    console.log('Server-side 8 impersonatedUser_roleType:', impersonatedUser_roleType);
-    console.log('Server-side 9 impersonatedUser_roleName:', impersonatedUser_roleName);
+    console.log('--- Permission Data from res.locals ---');
+    console.log('effectivePermissions:', effectivePermissions);
+    console.log('superAdminPermissions:', superAdminPermissions);
+    console.log('inheritedRoleIds:', inheritedRoleIds);
+    console.log('isImpersonating:', isImpersonating);
+    console.log('effectivePermissions_RoleType:', effectivePermissions_RoleType);
+    console.log('effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
+    console.log('effectivePermissions_RoleName:', effectivePermissions_RoleName);
+    console.log('impersonatedUser_roleType:', impersonatedUser_roleType);
+    console.log('impersonatedUser_roleName:', impersonatedUser_roleName);
 
     const permissionsToCheck = superAdminPermissions || effectivePermissions;
     const modelMapping = getModelMapping(permissionsToCheck);
@@ -137,27 +153,44 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       return res.status(500).json({ error: `Invalid model configuration for ${model}` });
     }
 
-    let query = {};
-    if (permissionsToCheck?.SuperAdmin?.ViewAll) {
-    } else {
-      query.tenantId = tenantId;
+ let query = {};
 
+if (permissionsToCheck?.SuperAdmin?.ViewAll) {
+  // SuperAdmin: no restrictions
+} else {
+  // Use values from res.locals
+  const roleType = effectivePermissions_RoleType;
+  const roleName = effectivePermissions_RoleName;
+
+  if (roleType === 'individual') {
+    // Individual: only see their own tenant's data
+    query.tenantId = tenantId;
+  } else if (roleType === 'organization') {
+    if (roleName === 'Admin') {
+      // Organization Admin: see all data for their tenant
+      query.tenantId = tenantId;
+    } else {
+      // Not Admin
       if (inheritedRoleIds?.length > 0) {
+        // Has inherited roles: show data for users with those roles
         const accessibleUsers = await Users.find({
           tenantId,
           roleId: { $in: inheritedRoleIds },
         }).select('_id');
         const userIds = accessibleUsers.map((user) => user._id);
-        query.$or = [
-          { ownerId: userId },
-        ];
+        query.tenantId = tenantId;
+        query.ownerId = { $in: userIds };
       } else {
-        query.$or = [
-          { ownerId: userId },
-          { tenantId },
-        ];
+        // No inherited roles: show only own data
+        query.tenantId = tenantId;
+        query.ownerId = userId;
       }
     }
+  } else {
+    // Fallback: restrict by tenant
+    query.tenantId = tenantId;
+  }
+}
 
     let data;
     switch (model.toLowerCase()) {

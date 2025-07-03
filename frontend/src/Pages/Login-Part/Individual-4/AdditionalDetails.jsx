@@ -14,6 +14,7 @@ const AdditionalDetails = ({
   setIsResumeRemoved,
   setCoverLetterFile,
   setIsCoverLetterRemoved,
+  isProfileCompleteStateOrg
 }) => {
   const { locations, industries, currentRoles } = useMasterData();
   const resumeInputRef = useRef(null);
@@ -248,9 +249,8 @@ const AdditionalDetails = ({
               onClick={toggleCurrentRole}
               placeholder="Senior Software Engineer"
               autoComplete="off"
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.currentRole ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.currentRole ? "border-red-500" : "border-gray-300"
+                }`}
               readOnly
             />
             <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -310,9 +310,8 @@ const AdditionalDetails = ({
               placeholder="Information Technology"
               autoComplete="off"
               onClick={toggleIndustry}
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.industry ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? "border-red-500" : "border-gray-300"
+                }`}
               readOnly
             />
             <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -382,9 +381,8 @@ const AdditionalDetails = ({
               id="yearsOfExperience"
               min="1"
               max="15"
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.yearsOfExperience ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.yearsOfExperience ? "border-red-500" : "border-gray-300"
+                }`}
             />
             {errors.yearsOfExperience && (
               <p className="text-red-500 text-sm sm:text-xs">
@@ -411,9 +409,8 @@ const AdditionalDetails = ({
               placeholder="Delhi,India"
               autoComplete="off"
               onClick={toggleLocation}
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.location ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.location ? "border-red-500" : "border-gray-300"
+                }`}
               readOnly
             />
             <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -467,118 +464,122 @@ const AdditionalDetails = ({
 
         {/* </div> */}
 
-        {/* Resume Section */}
-        <div className="sm:col-span-2 col-span-1">
-          <div>
-            <label
-              htmlFor="resume"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Resume
-            </label>
-            <div className="relative flex">
-              <input
-                ref={resumeInputRef}
-                type="file"
-                name="resume"
-                id="resume"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(e) => handleFileUpload(e, "resume")}
-              />
-              <div
-                className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
-                onClick={() => resumeInputRef.current.click()} // Trigger file input click
-              >
-                {resumeName ? "Uploaded" : "Upload File"}
+        {isProfileCompleteStateOrg && (
+          <>
+            {/* Resume Section */}
+            < div className="sm:col-span-2 col-span-1">
+              <div>
+                <label
+                  htmlFor="resume"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Resume
+                </label>
+                <div className="relative flex">
+                  <input
+                    ref={resumeInputRef}
+                    type="file"
+                    name="resume"
+                    id="resume"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => handleFileUpload(e, "resume")}
+                  />
+                  <div
+                    className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                    onClick={() => resumeInputRef.current.click()} // Trigger file input click
+                  >
+                    {resumeName ? "Uploaded" : "Upload File"}
+                  </div>
+                  <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">
+                    Upload PDF only. 4 MB max
+                  </p>
+                </div>
               </div>
-              <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">
-                Upload PDF only. 4 MB max
+              {resumeName && (
+                <div className="border mt-2 inline-flex items-center gap-2">
+                  <span className="text-gray-600">{resumeName}</span>
+                  <button
+                    className="text-red-500"
+                    onClick={() => handleRemoveFile("resume")}
+                  >
+                    <span className="text-xl">×</span>
+                  </button>
+                </div>
+              )}
+              <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
+                {resumeError}
               </p>
             </div>
-          </div>
-          {resumeName && (
-            <div className="border mt-2 inline-flex items-center gap-2">
-              <span className="text-gray-600">{resumeName}</span>
-              <button
-                className="text-red-500"
-                onClick={() => handleRemoveFile("resume")}
-              >
-                <span className="text-xl">×</span>
-              </button>
-            </div>
-          )}
-          <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
-            {resumeError}
-          </p>
-        </div>
 
-        {/* Cover Letter Section */}
-        <div className="sm:col-span-2 col-span-1">
-          <div>
-            <label
-              htmlFor="coverLetter"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Cover Letter
-            </label>
-            <div className="relative flex">
-              <input
-                ref={coverLetterInputRef}
-                type="file"
-                name="coverLetter"
-                id="coverLetter"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(e) => handleCoverLetterUpload(e, "coverLetter")}
-              />
-              <div
-                className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
-                onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
-              >
-                {coverLetterName ? "Uploaded" : "Upload File"}
+            {/* Cover Letter Section */}
+            <div className="sm:col-span-2 col-span-1">
+              <div>
+                <label
+                  htmlFor="coverLetter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Cover Letter
+                </label>
+                <div className="relative flex">
+                  <input
+                    ref={coverLetterInputRef}
+                    type="file"
+                    name="coverLetter"
+                    id="coverLetter"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => handleCoverLetterUpload(e, "coverLetter")}
+                  />
+                  <div
+                    className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                    onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
+                  >
+                    {coverLetterName ? "Uploaded" : "Upload File"}
+                  </div>
+                  <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">
+                    Upload PDF only. 4 MB max
+                  </p>
+                </div>
               </div>
-              <p className="text-sm sm:text-xs text-gray-400 py-2 px-4">
-                Upload PDF only. 4 MB max
+              {coverLetterName && (
+                <div className="border mt-2 inline-flex items-center gap-2">
+                  <span className="text-gray-600">{coverLetterName}</span>
+                  <button
+                    className="text-red-500"
+                    onClick={handleRemoveCoverLetter}
+                  >
+                    <span className="text-xl">×</span>
+                  </button>
+                </div>
+              )}
+              <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
+                {coverLetterError}
               </p>
             </div>
-          </div>
-          {coverLetterName && (
-            <div className="border mt-2 inline-flex items-center gap-2">
-              <span className="text-gray-600">{coverLetterName}</span>
-              <button
-                className="text-red-500"
-                onClick={handleRemoveCoverLetter}
-              >
-                <span className="text-xl">×</span>
-              </button>
-            </div>
-          )}
-          <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
-            {coverLetterError}
-          </p>
-        </div>
 
-        {/* coverLetterdescription */}
-        <div className="col-span-2 sm:col-span-2">
-          <p className="flex justify-center mb-3">(OR)</p>
-          <div>
-            <textarea
-              name="coverLetterdescription"
-              type="text"
-              rows={5}
-              id="coverLetterdescription"
-              value={additionalDetailsData.coverLetterdescription}
-              onChange={(e) =>
-                handleInputChangeintro(e, "coverLetterdescription")
-              }
-              placeholder="I am a technical interviewer..."
-              autoComplete="off"
-              className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
-            />
-            <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
-              {additionalDetailsData.coverLetterdescription?.length}/2000
-            </p>
-          </div>
-        </div>
+            {/* coverLetterdescription */}
+            <div className="col-span-2 sm:col-span-2">
+              <p className="flex justify-center mb-3">(OR)</p>
+              <div>
+                <textarea
+                  name="coverLetterdescription"
+                  type="text"
+                  rows={5}
+                  id="coverLetterdescription"
+                  value={additionalDetailsData.coverLetterdescription}
+                  onChange={(e) =>
+                    handleInputChangeintro(e, "coverLetterdescription")
+                  }
+                  placeholder="I am a technical interviewer..."
+                  autoComplete="off"
+                  className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
+                />
+                <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
+                  {additionalDetailsData.coverLetterdescription?.length}/2000
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
