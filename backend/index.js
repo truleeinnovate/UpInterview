@@ -7,8 +7,8 @@ const cors = require("cors");
 const express = require("express");
 const app = express();
 
-const { permissionMiddleware } = require('./middleware/permissionMiddleware');
-app.use(permissionMiddleware);
+
+
 
 // Apply the permission middleware to all routes in this router
 
@@ -96,6 +96,9 @@ app.use((req, res, next) => {
 // Standard middleware
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+const { permissionMiddleware } = require('./middleware/permissionMiddleware');
+app.use(permissionMiddleware);
 
 // app.get('/api/validate-domain', (req, res) => {
 //   const token = req.cookies.token;

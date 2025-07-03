@@ -106,6 +106,7 @@ const ProtectedRoute = ({ children }) => {
     const tokenPayload = authToken ? decodeJwt(authToken) : null;
     const userId = tokenPayload?.userId;
     const currentUserData = usersData?.find(user => user._id === userId);
+    console.log('currentuserdata', currentUserData)
     const organization = currentUserData?.tenantId;
 
     const currentDomain = window.location.hostname;

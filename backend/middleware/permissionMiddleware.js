@@ -6,21 +6,15 @@ const RoleOverrides = require('../models/roleOverrides');
 const { refreshTokenIfNeeded } = require('../utils/jwt');
 
 const permissionMiddleware = async (req, res, next) => {
-  console.log('Permission middleware hit!');
-  console.log('Request Headers:', req.headers);
-  console.log('x-user-id:', req.headers['x-user-id']);
-  console.log('x-tenant-id:', req.headers['x-tenant-id']);
-  console.log('x-impersonation-token:', req.headers['x-impersonation-token']);
-  console.log('authorization:', req.headers.authorization);
 
   try {
-    const userId = req.headers['x-user-id'];
-    const tenantId = req.headers['x-tenant-id'];
+    const userId = req.headers['x-user-id'] || req.cookies.userId;
+    const tenantId = req.headers['x-tenant-id'] || req.cookies.tenantId;
     const impersonatedUserId = req.headers['x-impersonation-token'];
     const authHeader = req.headers.authorization;
 
     // console.log('Setting res.locals with:', {
-    //   effectivePermissions: Object.keys(effectivePermissions),
+    //   effectivePermissions: Object.keys(permissionsObject),
     //   isImpersonating,
     //   // ... other relevant data
     // });
@@ -161,6 +155,7 @@ const permissionMiddleware = async (req, res, next) => {
       impersonatedUser_roleType,
       impersonatedUser_roleName
     };
+    console.log('res.locals', res.locals)
     next();
   } catch (error) {
     console.error('Permission Middleware Error:', error);
@@ -174,6 +169,5 @@ const permissionMiddleware = async (req, res, next) => {
 
 
 module.exports = { permissionMiddleware };
-
 
 
