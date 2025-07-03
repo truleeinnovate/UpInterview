@@ -93,7 +93,7 @@ const TemplateDetail = lazy(() => import('../src/Pages/InteviewTemplates/Templat
 const RoundFormTemplate = lazy(() => import('../src/Pages/InteviewTemplates/RoundForm'));
 const InterviewTemplateForm = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplateForm'));
 const SupportDesk = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk'));
-const SupportDetails = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails'));
+const SuperSupportDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/SupportDesk/SuperSupportDetails.jsx'));
 const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm'));
 const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
 const InterviewRequest = lazy(() => import('./Pages/Interview-Request/InterviewRequest.jsx'));
@@ -581,13 +581,13 @@ const App = () => {
               {hasPermission('InterviewRequest') && (
                 <Route path="/interviewer-requests" element={<InterviewerRequestsPage />} />
               )}
-              {hasPermission('Billing') && (
+              {hasPermission('SuperAdminBilling') && (
                 <Route path="/admin-billing" element={<BillingPage />}>
                   <Route index element={null} />
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="new" element={<AddInvoiceForm mode="Create" />} />
                   )}
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="edit/:id" element={<AddInvoiceForm mode="Edit" />} />
                   )}
                 </Route>
@@ -607,9 +607,9 @@ const App = () => {
               {/* SuperAdminSupportDesk */}
               {hasPermission('SuperAdminSupportDesk') && (
                 <>
-                  <Route path="/superAdmin-desk" element={<SupportDesk />} />
+                  <Route path="/super-admin-desk" element={<SupportDesk />} />
               {hasPermission('SuperAdminSupportDesk', 'View') && (
-                  <Route path="/superAdmin-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
+                  <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
               )}
               
                 </>

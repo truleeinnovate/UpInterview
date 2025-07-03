@@ -245,11 +245,31 @@ function UsersTab({ users, viewMode = "expanded" }) {
       key: "name",
       header: "Name",
       render: (value, row) => (
-        <div>
-          <div className="font-medium text-gray-900">
-            {row?.firstName || row?.FirstName}
+        <div className="flex items-center">
+          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold">
+            {row?.contact?.imageData?.path ? (
+              <img
+                src={row?.contact?.imageData?.path}
+                alt="user"
+                className="rounded-full"
+              />
+            ) : (
+              row?.firstName?.charAt(0).toUpperCase() || "?"
+            )}
           </div>
-          <div className="text-gray-500">{row?.email || row?.Email}</div>
+          <div className="ml-4">
+            <div
+              className="font-medium text-custom-blue cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUserId(row._id);
+                setIsPopupOpen(true);
+              }}
+            >
+              {capitalizeFirstLetter(row.firstName) || "N/A"}
+            </div>
+            <div className="text-gray-500">{row.email || "N/A"}</div>
+          </div>
         </div>
       ),
     },
@@ -258,8 +278,17 @@ function UsersTab({ users, viewMode = "expanded" }) {
       header: "Contact",
       render: (value, row) => (
         <div className="text-gray-500">
-          {capitalizeFirstLetter(row?.firstName)}{" "}
-          {capitalizeFirstLetter(row?.lastName)}
+          <div
+            className="font-medium text-custom-blue cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedUserId(row._id);
+              setIsPopupOpen(true);
+            }}
+          >
+            {capitalizeFirstLetter(row?.firstName)}{" "}
+            {capitalizeFirstLetter(row?.lastName)}
+          </div>
         </div>
       ),
     },
@@ -701,16 +730,17 @@ function UsersTab({ users, viewMode = "expanded" }) {
           </div>
         </div>
       )}
-
-      {isPopupOpen && selectedUser && (
-        <SidebarPopup
-          title="User"
-          subTitle={selectedUserId}
-          onClose={() => setIsPopupOpen(false)}
-        >
-          {renderPopupContent(selectedUser)}
-        </SidebarPopup>
-      )}
+      <div>
+        {isPopupOpen && selectedUser && (
+          <SidebarPopup
+            title="User"
+            subTitle={selectedUserId}
+            onClose={() => setIsPopupOpen(false)}
+          >
+            {renderPopupContent(selectedUser)}
+          </SidebarPopup>
+        )}
+      </div>
     </div>
   );
 }

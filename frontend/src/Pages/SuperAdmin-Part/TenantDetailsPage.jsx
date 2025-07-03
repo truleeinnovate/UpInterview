@@ -238,7 +238,7 @@ function TenantDetailsPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [viewOverride, setViewOverride] = useState('kanban'); // 'table' or 'kanban' or null
+  const [viewOverride, setViewOverride] = useState("kanban"); // 'table' or 'kanban' or null
 
   const [viewMode, setViewMode] = useState("collapsed"); // 'collapsed' or 'expanded'
   const toggleViewMode = () =>
@@ -299,6 +299,7 @@ function TenantDetailsPage() {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  console.log("ORGANIZATION TENANT ====================> ", tenant);
 
   return (
     // <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
@@ -483,7 +484,11 @@ function TenantDetailsPage() {
             )}
             {activeTab === "integrations" && <IntegrationsTab />}
             {activeTab === "contact" && (
-              <ContactTab organizationId={id} viewMode={viewMode} />
+              <ContactTab
+                organizationId={id}
+                contacts={tenant?.tenant}
+                viewMode={viewMode}
+              />
             )}
           </div>
         </div>

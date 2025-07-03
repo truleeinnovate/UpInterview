@@ -222,6 +222,9 @@ function ReceiptsTable({ organizationId }) {
     return new Date(dateString).toLocaleString();
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   const tableColumns = [
     {
       key: "id",
@@ -273,10 +276,7 @@ function ReceiptsTable({ organizationId }) {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={row.status === "success" ? "success" : "warning"}
-          text={row.status.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
     {

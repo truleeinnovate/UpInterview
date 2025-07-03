@@ -122,9 +122,6 @@ function PaymentsTable({ organizationId }) {
     getPaymentsSummary();
   }, [organizationId]);
 
-  console.log("PAYMENTS =======================> ", payments);
-  console.log("ORGANIZATION ID =======================> ", organizationId);
-
   // Get payment by ID
   useEffect(() => {
     const getPaymentById = async () => {
@@ -239,6 +236,9 @@ function PaymentsTable({ organizationId }) {
     }
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   const tableColumns = [
     {
       key: "paymentCode",
@@ -280,10 +280,7 @@ function PaymentsTable({ organizationId }) {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={getStatusDisplay(row.status)}
-          text={row.status.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
     {
