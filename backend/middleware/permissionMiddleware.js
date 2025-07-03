@@ -17,11 +17,11 @@ const permissionMiddleware = async (req, res, next) => {
     const impersonatedUserId = req.headers['x-impersonation-token'];
     const authHeader = req.headers.authorization;
 
-    console.log('Setting res.locals with:', {
-      effectivePermissions: Object.keys(permissionsObject),
-      isImpersonating,
-      // ... other relevant data
-    });
+    // console.log('Setting res.locals with:', {
+    //   effectivePermissions: Object.keys(permissionsObject),
+    //   isImpersonating,
+    //   // ... other relevant data
+    // });
     
     // Check for token refresh
     if (authHeader && authHeader.startsWith('Bearer ')) {

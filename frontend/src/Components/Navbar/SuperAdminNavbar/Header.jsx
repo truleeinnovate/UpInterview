@@ -32,7 +32,7 @@ function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { userProfile, superAdminProfile } = useCustomContext();
-  // console.log('superAdminProfile---',superAdminProfile[0]?.ownerId?.firstName  )
+  //console.log('superAdminProfile---',superAdminProfile.firstName  )
 
   const authToken = Cookies.get("authToken");
   const impersonatedUserId = Cookies.get("impersonatedUserId");
@@ -113,7 +113,7 @@ function Header() {
       // role: "super_admin",
     },
     {
-      path: "/superAdmin-desk",
+      path: "/super-admin-desk",
       label: "Support Desk",
       permissionKey: "SuperAdminSupportDesk.ViewTab",
       // role: "super_admin",
@@ -329,8 +329,8 @@ function Header() {
           )}
         </p>
         <span className="font-medium ml-1">
-          {formatName(superAdminProfile[0]?.firstName)}{" "}
-          {formatName(superAdminProfile[0]?.lastName)}
+          {formatName(superAdminProfile.firstName)}{" "}
+          {formatName(superAdminProfile.lastName)}
         </span>
       </div>
       <div className="flex justify-between px-3 py-1 border-b text-xs">
