@@ -8,6 +8,7 @@ const express = require("express");
 const app = express();
 
 const { permissionMiddleware } = require('./middleware/permissionMiddleware');
+app.use(permissionMiddleware);
 
 // Apply the permission middleware to all routes in this router
 
@@ -46,7 +47,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-app.use(permissionMiddleware);
 
 // Force production mode to avoid webhook issues
 // console.log(
