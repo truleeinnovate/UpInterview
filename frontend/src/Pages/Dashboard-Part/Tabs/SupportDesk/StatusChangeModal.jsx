@@ -25,7 +25,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   //console.log('impersonationPayload:', impersonationPayload.impersonatedUserId);
 
   const { superAdminProfile } = useCustomContext();
-  //console.log(superAdminProfile[0]?.ownerId?.firstName)
+  //console.log(superAdminProfile.firstName)
 
   const [newStatus, setNewStatus] = useState('');
   const [comment, setComment] = useState('');
@@ -64,7 +64,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
         status: newStatus, 
         comment: comment.trim(),
         notifyUser,
-        user: superAdminProfile[0]?.ownerId?.firstName || 'System' // You can replace this with actual user info if available
+        user: superAdminProfile.firstName || 'System' // You can replace this with actual user info if available
       };
      
       const response = await axios.patch(

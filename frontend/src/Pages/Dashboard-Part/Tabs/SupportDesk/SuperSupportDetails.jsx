@@ -5,11 +5,11 @@ import { MdOutlineCancel } from "react-icons/md";
 import { IoArrowBack } from "react-icons/io5";
 import { FaExternalLinkAlt, FaTicketAlt, FaUser, FaBuilding, FaCalendarAlt, FaTag, FaFileAlt, FaCircle, FaCheckCircle, FaExchangeAlt } from "react-icons/fa";
 import { format, parseISO, isValid } from "date-fns";
-import StatusChangeModal from './StatusChangeModal';
-import StatusHistory from './StatusHistory';
+import StatusChangeModal from './StatusChangeModal.jsx';
+import StatusHistory from './StatusHistory.jsx';
 import axios from 'axios';
-import { config } from '../../../../config';
-import { useCustomContext } from '../../../../Context/Contextfetch';
+import { config } from '../../../../config.js';
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X } from 'lucide-react';
 
@@ -44,15 +44,19 @@ function SupportDetails() {
   const statusSteps = ["", "New", "Assigned", "Inprogress", "Resolved", "Close"];
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
+  console.log("ownerOptions---",ownerOptions)
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
+
         const filteredUsers = response.data.filter(user =>
-          user.RoleId === "67f77613588be9a9ef019765" ||
-          user.RoleId === "67f77640588be9a9ef019767"
+           user.roleId === "680360b7682a6e89ff1c49e1"||
+          user.roleId === "67f77613588be9a9ef019765"
+          
         );
+        console.log("filteredUsers---",filteredUsers)
         setOwnerOptions(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -123,7 +127,7 @@ function SupportDetails() {
     const selectedUser = ownerOptions.find(user => user._id === selectedUserId);
 
     if (selectedUser) {
-      setSelectedOwner(selectedUser.Name);
+      setSelectedOwner(selectedUser.firstName+" "+selectedUser.lastName);
       setSelectedOwnerId(selectedUser._id);
     } else {
       setSelectedOwner('');
@@ -140,6 +144,7 @@ function SupportDetails() {
   };
 
   const updateOwner = async () => {
+    // Check if the selected owner is the same as the current ticket's owner
     if (selectedOwner === currentTicket.assignedTo && selectedOwnerId === currentTicket.assignedToId) {
       setIsOwnerEditing(false);
       return;
@@ -364,7 +369,7 @@ function SupportDetails() {
                             <option value="" hidden>Select Owner</option>
                             {ownerOptions.map((user) => (
                               <option key={user._id} value={user._id}>
-                                {user.Name}
+                                {user.firstName+" "+user.lastName}
                               </option>
                             ))}
                           </select>
@@ -388,7 +393,7 @@ function SupportDetails() {
                           </button>
                         </div>
                       ) : (
-                        <p className="text-gray-700">{currentTicket.assignedTo || 'N/A'}</p>
+                        <p className="text-gray-700 whitespace-nowrap">{currentTicket.assignedTo || 'N/A'}</p>
                       )}
                     </div>
                     {impersonatedUser_roleName === 'Super_Admin' && (

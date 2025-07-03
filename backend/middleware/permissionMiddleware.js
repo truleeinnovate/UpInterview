@@ -20,7 +20,11 @@ const permissionMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     // console.log('Setting res.locals with:', {
+
+    //   effectivePermissions: Object.keys(permissionsObject),
+
     //   effectivePermissions: Object.keys(effectivePermissions),
+
     //   isImpersonating,
     //   // ... other relevant data
     // });

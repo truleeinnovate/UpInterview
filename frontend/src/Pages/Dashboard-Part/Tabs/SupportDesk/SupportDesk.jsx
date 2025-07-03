@@ -165,7 +165,7 @@ console.log("tickets-------", tickets);
           onClick={() => {
             const path = effectivePermissions_RoleName === "Admin"
               ? `/support-desk/${row._id}`
-              : `/superAdmin-desk/view/${row._id}`;
+              : `/super-admin-desk/view/${row._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -250,7 +250,7 @@ console.log("tickets-------", tickets);
       onClick: (row) => {
         const path = effectivePermissions_RoleName === "Admin"
           ? `/support-desk/${row._id}`
-          : `/superAdmin-desk/view/${row._id}`;
+          : `/super-admin-desk/view/${row._id}`;
         navigate(path, { state: { ticketData: row } });
       },
       disabled: (row) => !hasActionAccess(row),
