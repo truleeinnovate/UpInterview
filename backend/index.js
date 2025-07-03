@@ -9,46 +9,8 @@ const app = express();
 
 const { permissionMiddleware } = require('./middleware/permissionMiddleware');
 
-app.use(permissionMiddleware);
- 
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     if (!origin) return callback(null, true);
+// Apply the permission middleware to all routes in this router
 
-//     if (
-//       origin.startsWith("http://localhost:") ||
-//       origin.startsWith("https://localhost:")
-//     )
-//       return callback(null, true);
-
-//     let originHost;
-//     try {
-//       originHost = new URL(origin).hostname;
-//     } catch (e) {
-//       return callback(new Error("Invalid origin URL"));
-//     }
-
-//     if (
-//       originHost === "app.upinterview.io" ||
-//       /^[a-z0-9-]+\.app\.upinterview\.io$/.test(originHost)
-//     )
-//       return callback(null, true);
-
-//     return callback(new Error("Not allowed by CORS"));
-//   },
-//   credentials: true,
-//   allowedHeaders: [
-//     "Content-Type",
-//     "Authorization",
-//     "X-Requested-With",
-//     "Cookie",
-//     "Accept",
-//     'X-Role-Level',
-//     'x-role-level'
-//   ],
-//   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-//   optionsSuccessStatus: 200,
-// };
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -83,6 +45,8 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+app.use(permissionMiddleware);
 
 // Force production mode to avoid webhook issues
 // console.log(
@@ -693,6 +657,10 @@ app.use("/tenant-list", TenentQuestionsListNamesRoute);
 
 const interviewTemplateRoutes = require("./routes/interviewTemplateRoutes");
 app.use("/interviewTemplates", interviewTemplateRoutes);
+
+// Import and use auth routes
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
 
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {

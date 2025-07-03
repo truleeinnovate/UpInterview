@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
-import Loading from './Loading';
 import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
 import { PermissionsProvider } from '../Context/PermissionsContext';
+import { startActivityTracking } from '../utils/activityTracker';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const authToken = Cookies.get('authToken');
@@ -16,7 +15,34 @@ const ProtectedRoute = ({ children }) => {
   const tokenPayload = authToken ? decodeJwt(authToken) : null;
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
-  const [finalDomain, setFinalDomain] = useState(null);
+
+  // Handle user inactivity
+  const handleUserInactive = useCallback(() => {
+    // Clear the auth token
+    Cookies.remove('authToken', { path: '/' });
+    // Only redirect if not already on login page
+    if (!location.pathname.includes('organization-login')) {
+      navigate('/organization-login', { replace: true });
+    }
+  }, [navigate, location.pathname]);
+
+  // Set up activity tracking and event listeners
+  useEffect(() => {
+    // Only set up activity tracking if user is authenticated
+    if (authToken || impersonationToken) {
+      // Start activity tracking
+      const cleanupActivityTracker = startActivityTracking();
+      
+      // Add event listener for user inactivity
+      window.addEventListener('userInactive', handleUserInactive);
+      
+      // Cleanup function
+      return () => {
+        cleanupActivityTracker();
+        window.removeEventListener('userInactive', handleUserInactive);
+      };
+    }
+  }, [authToken, impersonationToken, handleUserInactive]);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
@@ -61,8 +87,8 @@ const ProtectedRoute = ({ children }) => {
     checkAuthAndRedirect();
   }, [authToken, impersonationToken, tokenPayload, impersonationPayload, usersData, navigate, location.pathname]);
 
-  // Show loading while checking or redirecting
-  if (isChecking || isRedirecting) {
+  // Show loading while checking
+  if (isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
