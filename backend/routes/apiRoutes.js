@@ -11,7 +11,7 @@ const { Interview } = require('../models/Interview');
 const MockInterview = require('../models/MockInterview');
 const { TenantQuestions } = require('../models/TenantQuestions');
 const TenantQuestionsListNames = require('../models/TenantQuestionsListNames');
-const {InterviewRounds} = require('../models/InterviewRounds');
+const { InterviewRounds } = require('../models/InterviewRounds');
 const InterviewQuestions = require('../models/InterviewQuestions');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
@@ -74,7 +74,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const permissionsHeader = req.headers['x-permissions'];
 
     console.log('Received permissions header:', permissionsHeader);
-    
+
     if (permissionsHeader) {
       try {
         const permissions = JSON.parse(permissionsHeader);
@@ -100,12 +100,32 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     if (!userId || !tenantId) {
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
-    const { effectivePermissions, superAdminPermissions, inheritedRoleIds } = res.locals;
+
+    const {
+      effectivePermissions = {},
+      superAdminPermissions = null,
+      inheritedRoleIds = [],
+      isImpersonating = false,
+      effectivePermissions_RoleType = null,
+      effectivePermissions_RoleLevel = null,
+      effectivePermissions_RoleName = null,
+      impersonatedUser_roleType = null,
+      impersonatedUser_roleName = null
+    } = res.locals;
+
+    console.log('Server-side effectivePermissions:', effectivePermissions);
+
     console.log('Server-side effectivePermissions:', effectivePermissions);
     console.log('Server-side superAdminPermissions:', superAdminPermissions);
     console.log('Server-side inheritedRoleIds:', inheritedRoleIds);
-    const permissionsToCheck = superAdminPermissions || effectivePermissions;
+    console.log('Server-side isImpersonating:', isImpersonating);
+    console.log('Server-side effectivePermissions_RoleType:', effectivePermissions_RoleType);
+    console.log('Server-side effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
+    console.log('Server-side effectivePermissions_RoleName:', effectivePermissions_RoleName);
+    console.log('Server-side impersonatedUser_roleType:', impersonatedUser_roleType);
+    console.log('Server-side impersonatedUser_roleName:', impersonatedUser_roleName);
 
+    const permissionsToCheck = superAdminPermissions || effectivePermissions;
     const modelMapping = getModelMapping(permissionsToCheck);
     const modelConfig = modelMapping[model.toLowerCase()];
     if (!modelConfig) {
