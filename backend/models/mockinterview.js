@@ -65,7 +65,7 @@ const mockInterviewSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate: Date,
     }, //in future we have to work on resume saving functionality
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

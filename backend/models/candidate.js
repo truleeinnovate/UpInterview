@@ -31,7 +31,7 @@ const candidateSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate:  Date,
     },
     resume: {
       filename: String,
@@ -39,7 +39,7 @@ const candidateSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate:  Date,
     },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

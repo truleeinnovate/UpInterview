@@ -55,7 +55,7 @@ const TenantSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: { type: Date, default: Date.now },
+      uploadDate: Date,
     },
 
     // Office Details
