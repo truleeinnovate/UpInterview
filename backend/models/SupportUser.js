@@ -25,6 +25,8 @@ const TicketSchema = new mongoose.Schema(
       path: String,
       contentType: String,
       publicId: String,
+      fileSize: Number,
+      uploadDate: { type: Date, default: Date.now },
     },
     createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

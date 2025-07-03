@@ -15,6 +15,7 @@ import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { useCustomContext } from '../../../../Context/Contextfetch';
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
+import { usePermissions } from "../../../../Context/PermissionsContext.js";
 
 function SupportDesk() {
   const { 
@@ -25,6 +26,11 @@ function SupportDesk() {
 console.log("tickets", tickets);
 
   const { userRole } = useCustomContext();
+    const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
+    console.log("effectivePermissions", effectivePermissions);
+    console.log("superAdminPermissions", superAdminPermissions);
+    console.log("impersonatedUser_roleName", impersonatedUser_roleName);
+    console.log("effectivePermissions_RoleName", effectivePermissions_RoleName);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);

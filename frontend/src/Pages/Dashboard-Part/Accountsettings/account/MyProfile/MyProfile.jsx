@@ -142,11 +142,11 @@ const MyProfile = () => {
   // non-string items (e.g. `false`) ending up in the array, which would later
   // cause runtime errors like `tabKey.charAt is not a function`.
   const tabsToShow = [
-    effectivePermissions.MyProfile?.isbasic && 'basic',
-    effectivePermissions.MyProfile?.isadvance && 'advanced',
-    effectivePermissions.MyProfile?.isinterview && 'interview',
-    effectivePermissions.MyProfile?.isavailability && 'availability',
-    effectivePermissions.MyProfile?.isdocuments && 'documents',
+    effectivePermissions.MyProfile?.Basic && 'basic',
+    effectivePermissions.MyProfile?.Advance && 'advanced',
+    effectivePermissions.MyProfile?.Interview && 'interview',
+    effectivePermissions.MyProfile?.Availability && 'availability',
+    effectivePermissions.MyProfile?.Documents && 'documents',
   ].filter(Boolean);
   // isFreelancer || roleName === "Internal_Interviewer"
   //   ? 

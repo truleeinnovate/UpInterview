@@ -105,6 +105,7 @@ const uploadHandler = async (req, res) => {
       await deleteFromCloudinary(prevFile.publicId, resourceType);
     }
 
+
     // Upload to Cloudinary
     const folder = `${entity}/${entityId}/${type}`;
     const result = await uploadToCloudinary(
@@ -118,6 +119,8 @@ const uploadHandler = async (req, res) => {
       path: result.secure_url,
       contentType: file.mimetype,
       publicId: result.public_id,
+      fileSize: file.size,
+      uploadDate: new Date(),
     };
 
     await instance.save();
