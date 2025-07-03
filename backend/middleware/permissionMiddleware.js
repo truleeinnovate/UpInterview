@@ -6,10 +6,12 @@ const RoleOverrides = require('../models/roleOverrides');
 const { refreshTokenIfNeeded } = require('../utils/jwt');
 
 const permissionMiddleware = async (req, res, next) => {
-
   console.log('Permission middleware hit!');
-  console.log('Request URL:', req.originalUrl);
   console.log('Request Headers:', req.headers);
+  console.log('x-user-id:', req.headers['x-user-id']);
+  console.log('x-tenant-id:', req.headers['x-tenant-id']);
+  console.log('x-impersonation-token:', req.headers['x-impersonation-token']);
+  console.log('authorization:', req.headers.authorization);
 
   try {
     const userId = req.headers['x-user-id'];
@@ -17,11 +19,11 @@ const permissionMiddleware = async (req, res, next) => {
     const impersonatedUserId = req.headers['x-impersonation-token'];
     const authHeader = req.headers.authorization;
 
-    console.log('Setting res.locals with:', {
-      effectivePermissions: Object.keys(permissionsObject),
-      isImpersonating,
-      // ... other relevant data
-    });
+    // console.log('Setting res.locals with:', {
+    //   effectivePermissions: Object.keys(effectivePermissions),
+    //   isImpersonating,
+    //   // ... other relevant data
+    // });
     
     // Check for token refresh
     if (authHeader && authHeader.startsWith('Bearer ')) {

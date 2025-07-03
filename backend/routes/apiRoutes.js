@@ -113,17 +113,15 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       impersonatedUser_roleName = null
     } = res.locals;
 
-    console.log('Server-side effectivePermissions:', effectivePermissions);
-
-    console.log('Server-side effectivePermissions:', effectivePermissions);
-    console.log('Server-side superAdminPermissions:', superAdminPermissions);
-    console.log('Server-side inheritedRoleIds:', inheritedRoleIds);
-    console.log('Server-side isImpersonating:', isImpersonating);
-    console.log('Server-side effectivePermissions_RoleType:', effectivePermissions_RoleType);
-    console.log('Server-side effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
-    console.log('Server-side effectivePermissions_RoleName:', effectivePermissions_RoleName);
-    console.log('Server-side impersonatedUser_roleType:', impersonatedUser_roleType);
-    console.log('Server-side impersonatedUser_roleName:', impersonatedUser_roleName);
+    console.log('Server-side 1 effectivePermissions:', effectivePermissions);
+    console.log('Server-side 2 superAdminPermissions:', superAdminPermissions);
+    console.log('Server-side 3 inheritedRoleIds:', inheritedRoleIds);
+    console.log('Server-side 4 isImpersonating:', isImpersonating);
+    console.log('Server-side 5 effectivePermissions_RoleType:', effectivePermissions_RoleType);
+    console.log('Server-side 6 effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
+    console.log('Server-side 7 effectivePermissions_RoleName:', effectivePermissions_RoleName);
+    console.log('Server-side 8 impersonatedUser_roleType:', impersonatedUser_roleType);
+    console.log('Server-side 9 impersonatedUser_roleName:', impersonatedUser_roleName);
 
     const permissionsToCheck = superAdminPermissions || effectivePermissions;
     const modelMapping = getModelMapping(permissionsToCheck);
