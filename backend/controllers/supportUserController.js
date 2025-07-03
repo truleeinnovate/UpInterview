@@ -156,6 +156,8 @@ exports.updateSupportTicket = async (req, res) => {
     // Update ticket fields
     ticket.status = status;
     ticket.updatedByUserId = updatedByUserId;
+    //console.log("updatedByUserId----", updatedByUserId);
+    //console.log("user-----", user)
 
     // Add to status history
     ticket.statusHistory.unshift({
