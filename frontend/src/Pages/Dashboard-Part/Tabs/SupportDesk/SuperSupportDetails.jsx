@@ -5,11 +5,12 @@ import { MdOutlineCancel } from "react-icons/md";
 import { IoArrowBack } from "react-icons/io5";
 import { FaExternalLinkAlt, FaTicketAlt, FaUser, FaBuilding, FaCalendarAlt, FaTag, FaFileAlt, FaCircle, FaCheckCircle, FaExchangeAlt } from "react-icons/fa";
 import { format, parseISO, isValid } from "date-fns";
-import StatusChangeModal from './StatusChangeModal';
-import StatusHistory from './StatusHistory';
+import StatusChangeModal from './StatusChangeModal.jsx';
+import StatusHistory from './StatusHistory.jsx';
 import axios from 'axios';
-import { config } from '../../../../config';
-import { useCustomContext } from '../../../../Context/Contextfetch';
+import { config } from '../../../../config.js';
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
+import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X } from 'lucide-react';
 
 const getStatusColor = (status) => {
@@ -31,25 +32,31 @@ const getStatusColor = (status) => {
 
 function SupportDetails() {
   const { userRole } = useCustomContext();
+  const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
 
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTicket, setCurrentTicket] = useState(location.state?.ticketData || null);
+  //console.log("curentTicket-------",currentTicket)
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const statusSteps = ["", "New", "Assigned", "Inprogress", "Resolved", "Close"];
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
+  console.log("ownerOptions---",ownerOptions)
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
+
         const filteredUsers = response.data.filter(user =>
-          user.RoleId === "67f77613588be9a9ef019765" ||
-          user.RoleId === "67f77640588be9a9ef019767"
+           user.roleId === "680360b7682a6e89ff1c49e1"||
+          user.roleId === "67f77613588be9a9ef019765"
+          
         );
+        console.log("filteredUsers---",filteredUsers)
         setOwnerOptions(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -120,7 +127,7 @@ function SupportDetails() {
     const selectedUser = ownerOptions.find(user => user._id === selectedUserId);
 
     if (selectedUser) {
-      setSelectedOwner(selectedUser.Name);
+      setSelectedOwner(selectedUser.firstName+" "+selectedUser.lastName);
       setSelectedOwnerId(selectedUser._id);
     } else {
       setSelectedOwner('');
@@ -137,6 +144,7 @@ function SupportDetails() {
   };
 
   const updateOwner = async () => {
+    // Check if the selected owner is the same as the current ticket's owner
     if (selectedOwner === currentTicket.assignedTo && selectedOwnerId === currentTicket.assignedToId) {
       setIsOwnerEditing(false);
       return;
@@ -187,7 +195,7 @@ function SupportDetails() {
             <h2 className="text-2xl font-semibold text-custom-blue">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
-            {userRole === 'SuperAdmin' && (
+            {impersonatedUser_roleName === 'Super_Admin' && (
               <button
                 onClick={toggleStatusModal}
                 className="p-2 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
@@ -361,7 +369,7 @@ function SupportDetails() {
                             <option value="" hidden>Select Owner</option>
                             {ownerOptions.map((user) => (
                               <option key={user._id} value={user._id}>
-                                {user.Name}
+                                {user.firstName+" "+user.lastName}
                               </option>
                             ))}
                           </select>
@@ -385,10 +393,10 @@ function SupportDetails() {
                           </button>
                         </div>
                       ) : (
-                        <p className="text-gray-700">{currentTicket.assignedTo || 'N/A'}</p>
+                        <p className="text-gray-700 whitespace-nowrap">{currentTicket.assignedTo || 'N/A'}</p>
                       )}
                     </div>
-                    {userRole === 'SuperAdmin' && (
+                    {impersonatedUser_roleName === 'Super_Admin' && (
                       <div className="flex items-center justify-center w-full">
                         <button
                           onClick={toggleOwnerEdit}

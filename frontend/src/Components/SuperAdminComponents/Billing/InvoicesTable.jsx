@@ -19,21 +19,21 @@ import {
   Pencil,
   ChevronUp,
   ChevronDown,
-  Phone,
-  GraduationCap,
-  School,
+  // Phone,
+  // GraduationCap,
+  // School,
   // ExternalLink,
   // X,
-  Briefcase,
+  // Briefcase,
   // User,
-  Calendar,
+  // Calendar,
 } from "lucide-react";
-import { LiaGenderlessSolid } from "react-icons/lia";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-  AiOutlineEdit,
-} from "react-icons/ai";
+// import { LiaGenderlessSolid } from "react-icons/lia";
+// import {
+//   AiOutlineDownload,
+//   AiOutlineMail,
+//   AiOutlineEdit,
+// } from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
@@ -246,6 +246,9 @@ function InvoicesTable({ organizationId }) {
     }
   };
 
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
   const tableColumns = [
     {
       key: "invoiceCode",
@@ -313,10 +316,7 @@ function InvoicesTable({ organizationId }) {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={getStatusDisplay(row.status)}
-          text={row?.status?.replace("_", " ").toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
     {

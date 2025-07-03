@@ -32,6 +32,7 @@ const ContactProfileDetails = () => {
   const [contact] = useState(contactData);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("Basic-Details");
+  console.log('CONTACTS DATA =================================> ', contactData)
 
   const handleNavigate = () => {
     navigate(-1);
@@ -402,7 +403,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.FirstName || "N/A"}
+                    {contact?.firstName || "N/A"}
                   </p>
                 </div>
               </div>
@@ -416,7 +417,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.Name || "N/A"}
+                    {contact.lastName || "N/A"}
                   </p>
                 </div>
               </div>
@@ -430,7 +431,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.UserId || "N/A"}
+                    {contact.tenantId || "N/A"}
                   </p>
                 </div>
               </div>
@@ -444,7 +445,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.Gender || "N/A"}
+                    {contact.gender || "N/A"}
                   </p>
                 </div>
               </div>
@@ -458,7 +459,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.Email || "N/A"}
+                    {contact.email || "N/A"}
                   </p>
                 </div>
               </div>
@@ -472,7 +473,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.Phone || "N/A"}
+                    {contact.phone || "N/A"}
                   </p>
                 </div>
               </div>
@@ -486,7 +487,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="">
                   <p className="text-gray-700 text-sm">
-                    {contact.LinkedinUrl || "N/A"}
+                    {contact.linkedinUrl || "N/A"}
                   </p>
                 </div>
               </div>
@@ -506,7 +507,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="w-1/3 sm:w-1/2">
                   <p className="text-gray-700 text-sm">
-                    {contact.CurrentRole || "N/A"}
+                    {contact.currentRole || "N/A"}
                   </p>
                 </div>
               </div>
@@ -534,7 +535,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="w-1/3 sm:w-1/2">
                   <p className="text-gray-700 text-sm">
-                    {contact.Experience || "N/A"}
+                    {contact.yearsOfExperience || "N/A"}
                   </p>
                 </div>
               </div>
@@ -562,7 +563,7 @@ const ContactProfileDetails = () => {
                 </div>
                 <div className="w-1/3 sm:w-1/2">
                   <p className="text-gray-700 text-sm">
-                    {contact.Introduction || "N/A"}
+                    {contact.introduction || "N/A"}
                   </p>
                 </div>
               </div>
@@ -575,12 +576,12 @@ const ContactProfileDetails = () => {
             <div className="col-span-1 space-y-6">
               <div className="mb-5">
                 <div className="font-medium">Technology</div>
-                <p className="text-gray-700">{contact.Technology}</p>
+                <p className="text-gray-700">{contact.technology}</p>
               </div>
 
               <div className="mb-5">
                 <div className="font-medium">Skill</div>
-                <p className="text-gray-700">{contact.Skill}</p>
+                <p className="text-gray-700">{contact.skill}</p>
               </div>
 
               <div className="font-normal mb-5">

@@ -132,7 +132,7 @@ router.post("/check-user", async (req, res) => {
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         email: userInfo.email,
-        type: "Individual",
+        type: "individual",
       });
 
       const newUser = await Users.create({

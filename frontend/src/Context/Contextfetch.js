@@ -201,6 +201,7 @@ const CustomProvider = ({ children }) => {
 
   // users
   const [usersData, setUsersData] = useState([]);
+  console.log('usersData in context to check subdomain :-', usersData)
 
   // Fetch users data
   const fetchUsersData = async () => {
@@ -278,7 +279,7 @@ const CustomProvider = ({ children }) => {
     const fetchContacts = async (usersId = null) => {
       try {
         const res = await axios.get(
-          `${config.REACT_APP_API_URL}/contacts/owner/${userId}`
+          `${config.REACT_APP_API_URL}/users/owner/${userId}`
         );
         setsingleContact(res.data);
       } catch (err) {
@@ -295,7 +296,7 @@ const CustomProvider = ({ children }) => {
     const fetchContacts = async (usersId = null) => {
       try {
         const res = await axios.get(
-          `${config.REACT_APP_API_URL}/contacts/owner/${impersonatedUserId}`
+          `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
         );
         setSuperAdminProfile(res.data);
         console.log("SUPER ADMIN USER: ", res.data);
@@ -305,7 +306,7 @@ const CustomProvider = ({ children }) => {
     };
 
     fetchContacts();
-  }, [userId]);
+  }, [impersonatedUserId]);
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);

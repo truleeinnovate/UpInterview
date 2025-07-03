@@ -8,9 +8,43 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import LoadingButton from "../../../../Components/LoadingButton";
-import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 
 const maxDescriptionLen = 500;
+
+const validateFile = async (file, type = "attachment") => {
+  if (!file || typeof file !== "object") {
+    return "Invalid file.";
+  }
+
+  const fileType = file.type;
+  const fileName = file.name.toLowerCase();
+  const fileSizeInMB = file.size / (1024 * 1024);
+
+  // Define allowed types and extensions
+  const allowedMimeTypes = ["image/jpeg", "image/jpg", "application/pdf"];
+  const allowedExtensions = [".jpg", ".jpeg", ".pdf"];
+  const maxFileSizeMB = 5;
+
+  // Check MIME type
+  if (!allowedMimeTypes.includes(fileType)) {
+    return "Unsupported file type. Only JPG and PDF files are allowed.";
+  }
+
+  // Check extension as a fallback (some browsers may give blank MIME type)
+  const hasValidExtension = allowedExtensions.some((ext) =>
+    fileName.endsWith(ext)
+  );
+  if (!hasValidExtension) {
+    return "Unsupported file extension. Only .jpg and .pdf are allowed.";
+  }
+
+  // Check file size
+  if (fileSizeInMB > maxFileSizeMB) {
+    return `File is too big. Max file size is ${maxFileSizeMB} MB.`;
+  }
+
+  return ""; // No error
+};
 
 const SupportForm = () => {
   const { isMutationLoading, submitTicket } = useSupportTickets();
@@ -50,8 +84,7 @@ const SupportForm = () => {
   );
 
   const [formState, setFormState] = useState(initialFormState);
-  const { otherIssueFlag, otherIssue, selectedIssue, description } =
-    formState;
+  const { otherIssueFlag, otherIssue, selectedIssue, description } = formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
 
@@ -129,7 +162,7 @@ const SupportForm = () => {
   const onChangeFileInput = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const error = await validateFile(file, "image");
+      const error = await validateFile(file, "attachment");
       if (error) {
         setAttachmentFileError(error);
         return;
@@ -180,7 +213,6 @@ const SupportForm = () => {
     () => ({
       issueType: selectedIssue || otherIssue,
       description,
-      // attachment: attachmentFile,
       ...(editMode
         ? {}
         : {
@@ -202,7 +234,6 @@ const SupportForm = () => {
       selectedIssue,
       otherIssue,
       description,
-      // attachmentFile,
       editMode,
       contact,
       ownerId,

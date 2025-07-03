@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../Context/Contextfetch";
 import { uploadFile } from "../apiHooks/imageApis";
+import { usePermissions } from "../Context/PermissionsContext";
 
 // Always send cookies across domains (needed when FE + BE sit on *.azurewebsites.net)
 axios.defaults.withCredentials = true;
@@ -14,6 +15,9 @@ axios.defaults.withCredentials = true;
 export const useSupportTickets = () => {
   const queryClient = useQueryClient();
   const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
+  const impersonationToken = Cookies.get('impersonationToken');
+  const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken) : null;
+  const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
 
   /* --------------------------------------------------------------------- */
   /*  Auth token                                                            */
@@ -36,9 +40,18 @@ export const useSupportTickets = () => {
       );
 
       const all = data?.tickets ?? [];
+      console.log("all---",all)
       if (!userRole) return [];
+      console.log("userRole---",userRole)
+      console.log("impersonatedUser_roleName---",impersonatedUser_roleName)
 
-      if (["SuperAdmin", "Support Team"].includes(userRole)) return all;
+      if (impersonatedUser_roleName === "Super_Admin") return all;
+      if (impersonatedUser_roleName === "Support_Team") {
+           // console.log("Support_Team: impersonatedUserId", impersonationPayload.impersonatedUserId);
+            const supportTickets = all.filter((t) => t.assignedToId === impersonationPayload.impersonatedUserId);
+            //console.log("Support_Team: tickets", supportTickets);
+            return supportTickets;
+        }
       if (!organization) {
         if (userRole === "Admin" && userId)
           return all.filter((t) => t.ownerId === userId);
@@ -48,7 +61,7 @@ export const useSupportTickets = () => {
       }
       if (userRole === "Individual" && userId)
         return all.filter((t) => t.ownerId === userId);
-      if (userId) return all.filter((t) => t.assignedToId === userId);
+      
 
       return [];
     } catch (err) {

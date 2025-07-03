@@ -3,12 +3,31 @@ const { Users } = require('../models/Users');
 const Tenant = require('../models/Tenant');
 const RolesPermissionObject = require('../models/rolesPermissionObject');
 const RoleOverrides = require('../models/roleOverrides');
+const { refreshTokenIfNeeded } = require('../utils/jwt');
 
 const permissionMiddleware = async (req, res, next) => {
+
   try {
-    const userId = req.headers['x-user-id'];
-    const tenantId = req.headers['x-tenant-id'];
+    const userId = req.headers['x-user-id'] || req.cookies.userId;
+    const tenantId = req.headers['x-tenant-id'] || req.cookies.tenantId;
     const impersonatedUserId = req.headers['x-impersonation-token'];
+    const authHeader = req.headers.authorization;
+
+    // console.log('Setting res.locals with:', {
+    //   isImpersonating,
+    //   // ... other relevant data
+    // });
+    
+    // Check for token refresh
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const newToken = refreshTokenIfNeeded(token);
+      
+      if (newToken) {
+        // Set the new token in the response headers
+        res.set('X-New-Token', newToken);
+      }
+    }
     
     let decoded = null;
     let currentUser = null;
@@ -135,6 +154,7 @@ const permissionMiddleware = async (req, res, next) => {
       impersonatedUser_roleType,
       impersonatedUser_roleName
     };
+    console.log('res.locals', res.locals)
     next();
   } catch (error) {
     console.error('Permission Middleware Error:', error);
@@ -148,6 +168,5 @@ const permissionMiddleware = async (req, res, next) => {
 
 
 module.exports = { permissionMiddleware };
-
 
 

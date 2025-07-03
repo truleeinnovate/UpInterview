@@ -1236,8 +1236,10 @@ const getOrganizationById = async (req, res) => {
       ).lean();
     }
 
-    // Add role data for each user without modifying existing logic
-    const usersWithRoleName = await Promise.all(
+    // Fetch contacts for all users under this tenant
+    const allContacts = await Contacts.find({ tenantId: id }).lean();
+
+    const usersWithRoleAndContact = await Promise.all(
       users.map(async (user) => {
         let roleName = null;
 
@@ -1250,9 +1252,15 @@ const getOrganizationById = async (req, res) => {
           }
         }
 
+        // Find contact for this user
+        const contact = allContacts.find(
+          (contact) => contact.ownerId?.toString() === user._id.toString()
+        );
+
         return {
           ...user.toObject(),
-          roleName, // just the roleName added
+          roleName,
+          contact, // attach the contact object if available
         };
       })
     );
@@ -1263,7 +1271,7 @@ const getOrganizationById = async (req, res) => {
         ...subscription,
         subscriptionPlan,
       },
-      users: usersWithRoleName,
+      users: usersWithRoleAndContact,
     };
 
     return res.status(200).json({ organization: tenant });

@@ -6,12 +6,26 @@ import { config } from '../../../../config';
 import { Minimize, Expand, X } from 'lucide-react';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
+import { useUserProfile } from "../../../../apiHooks/useUsers.js";
+import { useCustomContext } from "../../../../Context/Contextfetch.js";
+
+
+
+
 const statusOptions = ['New', 'Assigned', 'Inprogress', 'Resolved', "Close"];
 
 function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
+  
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
+
+  const impersonationToken = Cookies.get('impersonationToken');
+  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
+  //console.log('impersonationPayload:', impersonationPayload.impersonatedUserId);
+
+  const { superAdminProfile } = useCustomContext();
+  //console.log(superAdminProfile.firstName)
 
   const [newStatus, setNewStatus] = useState('');
   const [comment, setComment] = useState('');
@@ -19,21 +33,9 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isFullWidth, setIsFullWidth] = useState(false);
-  const [modifiedUser, setModifiedUser] = useState(null);
+  
 
   
-  useEffect(() => {
-      const fetchUsers = async () => {
-        try {
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/${ownerId}`);
-          setModifiedUser(response.data.data);
-        } catch (error) {
-          console.error('Error fetching users:', error);
-        }
-      };
-  
-      fetchUsers();
-    }, [ownerId]);
 
 
   const isFormValid = useMemo(() => 
@@ -58,13 +60,13 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
 
     try {
       const statusData = { 
-        updatedByUserId: modifiedUser._id,
+        updatedByUserId: impersonationPayload.impersonatedUserId,
         status: newStatus, 
         comment: comment.trim(),
         notifyUser,
-        user: modifiedUser.firstName || 'System' // You can replace this with actual user info if available
+        user: superAdminProfile.firstName || 'System' // You can replace this with actual user info if available
       };
-
+     
       const response = await axios.patch(
         `${config.REACT_APP_API_URL}/update-ticket/${ticketId}/status`, 
         statusData
@@ -93,7 +95,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isFormValid, newStatus, comment, notifyUser, ticketId, onClose, onStatusUpdate, modifiedUser]);
+  }, [isFormValid, newStatus, comment, notifyUser, ticketId, onClose, onStatusUpdate,impersonationPayload.impersonatedUserId,superAdminProfile[0]?.ownerId?.firstName]);
 
   const handleSubmit = useCallback(() => {
     updateTicketStatus();

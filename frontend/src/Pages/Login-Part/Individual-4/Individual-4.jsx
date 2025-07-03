@@ -689,6 +689,7 @@ const MultiStepForm = () => {
                     setIsResumeRemoved={setIsResumeRemoved}
                     setIsCoverLetterRemoved={setIsCoverLetterRemoved}
                     setCoverLetterFile={setCoverLetterFile}
+                    isProfileCompleteStateOrg={isProfileCompleteStateOrg}
                   />
                 )}
 

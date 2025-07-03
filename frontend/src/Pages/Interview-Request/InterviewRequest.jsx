@@ -1536,8 +1536,10 @@ import { LiaGenderlessSolid } from "react-icons/lia";
 import axios from "axios";
 import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import { usePermissions } from "../../Context/PermissionsContext.js";
 
 const InternalRequest = () => {
+  const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
   const [selectedRequest, setSelectedRequest] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -1780,27 +1782,35 @@ const InternalRequest = () => {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedRequestId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedRequestId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
     // {
     //   key: "360-view",
     //   label: "360° View",
     //   icon: <requestCircle className="w-4 h-4 text-purple-600" />,
     //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -1815,39 +1825,43 @@ const InternalRequest = () => {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedRequestId(item._id);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
+      {superAdminPermissions?.InterviewRequest?.View && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedRequestId(item._id);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
       {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/tenants/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
+        superAdminPermissions?.InterviewRequest?.View && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                item?._id && navigate(`/tenants/${item._id}`);
+              }}
+              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+              title="360° View"
+            >
+              <UserCircle className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`edit/${item._id}`);
+              }}
+              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          </>
+        )
       ) : (
         <button
           onClick={(e) => {
