@@ -120,7 +120,7 @@ function Header() {
     {
       path: "/admin-billing",
       label: "Billing",
-      permissionKey: "Billing.ViewTab",
+      permissionKey: "SuperAdminBilling.ViewTab",
       // role: "super_admin",
     },
   ];

@@ -168,7 +168,7 @@ const Navbar = () => {
 
   const handleSettingsClick = () => {
     closeAllDropdowns();
-    navigate("/account-settings");
+    navigate("/super-admin-account-settings");
   };
 
   // Check if a nav item or icon is active

@@ -774,13 +774,13 @@ const App = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   console.log('tokenPayload:', tokenPayload);
-  
+
   const organization = tokenPayload?.organization;
 
   const impersonationToken = Cookies.get('impersonationToken');
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   console.log('impersonationPayload:', impersonationPayload);
-  
+
 
   // Combine permissions into a single object
   const combinedPermissions = useMemo(() => {
@@ -963,15 +963,15 @@ const App = () => {
               {hasPermission('MockInterviews') && (
                 <>
                   <Route path="/mockinterview" element={<MockInterview />} />
-                       {hasPermission('MockInterviews', 'Create') && (
-                  <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-                )}
-                     {hasPermission('MockInterviews', 'Edit') && (
-                  <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-                )}
-                     {hasPermission('MockInterviews', 'View') && (
-                  <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
-                )}
+                  {hasPermission('MockInterviews', 'Create') && (
+                    <Route path="/mockinterview-create" element={<MockSchedulelater />} />
+                  )}
+                  {hasPermission('MockInterviews', 'Edit') && (
+                    <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
+                  )}
+                  {hasPermission('MockInterviews', 'View') && (
+                    <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+                  )}
                 </>
               )}
 
@@ -979,15 +979,15 @@ const App = () => {
               {hasPermission('Interviews') && (
                 <>
                   <Route path="/interviewList" element={<InterviewList />} />
-                       {hasPermission('Interviews', 'Create') && (
-                  <Route path="/interviews/new" element={<InterviewForm />} />
-                )}
-                     {hasPermission('Interviews', 'View') && (
-                  <Route path="/interviews/:id" element={<InterviewDetail />} />
-                )}
-                     {hasPermission('Interviews', 'Edit') && (
-                  <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-                )}
+                  {hasPermission('Interviews', 'Create') && (
+                    <Route path="/interviews/new" element={<InterviewForm />} />
+                  )}
+                  {hasPermission('Interviews', 'View') && (
+                    <Route path="/interviews/:id" element={<InterviewDetail />} />
+                  )}
+                  {hasPermission('Interviews', 'Edit') && (
+                    <Route path="/interviews/:id/edit" element={<InterviewForm />} />
+                  )}
                   <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
                 </>
               )}
@@ -1028,7 +1028,7 @@ const App = () => {
                 </Route>
               )}
 
-              {/* Account Settings Routes */}
+              {/* Account Settings Routes from effective user */}
               <Route path="/account-settings" element={<AccountSettingsSidebar />}>
                 <Route
                   index
@@ -1050,11 +1050,11 @@ const App = () => {
                   </Route>
                 )}
                 {hasPermission('Wallet') && (
-                <Route path="wallet" element={<Wallet />}>
-                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
-                </Route>
-               )}
+                  <Route path="wallet" element={<Wallet />}>
+                    <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
+                    <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
+                  </Route>
+                )}
 
                 {hasPermission('MyProfile') && (
                   <Route path="my-profile" element={<MyProfile />}>
@@ -1067,7 +1067,7 @@ const App = () => {
                     <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
                     <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
                     <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
-                    <Route path="documents" element={<DocumentsSection/>} />
+                    <Route path="documents" element={<DocumentsSection />} />
                   </Route>
                 )}
                 {hasPermission('InterviewerGroups') && (
@@ -1080,18 +1080,18 @@ const App = () => {
                 )}
                 {hasPermission('Users') && (
                   <Route path="users" element={<UsersLayout />}>
-                {hasPermission('Users', 'Create') && (
-                    
-                    <Route path="new" element={<UserForm mode="create" />} />
-                  )}
-                {hasPermission('Users', 'Edit') && (
+                    {hasPermission('Users', 'Create') && (
 
-                    <Route path="edit/:id" element={<UserForm mode="edit" />} />
-                  )}
-                {hasPermission('Users', 'View') && (
+                      <Route path="new" element={<UserForm mode="create" />} />
+                    )}
+                    {hasPermission('Users', 'Edit') && (
 
-                    <Route path="details/:id" element={<UserProfileDetails />} />
-                  )}
+                      <Route path="edit/:id" element={<UserForm mode="edit" />} />
+                    )}
+                    {hasPermission('Users', 'View') && (
+
+                      <Route path="details/:id" element={<UserProfileDetails />} />
+                    )}
                   </Route>
                 )}
                 {hasPermission('Billing') && (
@@ -1110,16 +1110,16 @@ const App = () => {
                   <Route path="notifications" element={<NotificationsDetails />} />
                 )}
 
-                  <Route path="email-settings" element={<EmailTemplate />} />
+                <Route path="email-settings" element={<EmailTemplate />} />
                 {hasPermission('Usage') && (
                   <Route path="usage" element={<Usage />} />
                 )}
                 {hasPermission('Roles') && (
-            <Route path="roles" element={<Role />}>
-  <Route index element={null} />
-  <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-  <Route path="view/:id" element={<RoleView />} />
-</Route>
+                  <Route path="roles" element={<Role />}>
+                    <Route index element={null} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                    <Route path="view/:id" element={<RoleView />} />
+                  </Route>
                 )}
                 {hasPermission('Sharing') && (
                   <Route path="sharing" element={<Sharing />} />
@@ -1166,21 +1166,21 @@ const App = () => {
               {hasPermission('SupportDesk') && (
                 <>
                   <Route path="/support-desk" element={<SupportDesk />} />
-              {hasPermission('SupportDesk', 'View') && (
-                  <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
-              )}
-              {hasPermission('SupportDesk', 'Create') && (
+                  {hasPermission('SupportDesk', 'View') && (
+                    <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
+                  )}
+                  {hasPermission('SupportDesk', 'Create') && (
 
-                  <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
-              )}
-              {hasPermission('SupportDesk', 'Edit') && (
+                    <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
+                  )}
+                  {hasPermission('SupportDesk', 'Edit') && (
 
-                  <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
-              )}
-              {hasPermission('SupportDesk', 'View') && (
+                    <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
+                  )}
+                  {hasPermission('SupportDesk', 'View') && (
 
-                  <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
-              )}
+                    <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+                  )}
                 </>
               )}
 
@@ -1199,7 +1199,7 @@ const App = () => {
                 <Route path="/outsource-interview-request" element={<InterviewRequest />} />
               )}
 
-              {/* Super Admin Routes */}
+              {/* -----------------------------------Super Admin Routes------------------------- */}
               {hasPermission('Tenants') && (
                 <Route path="/tenants" element={<TenantsPage />}>
                   <Route index element={null} />
@@ -1223,13 +1223,13 @@ const App = () => {
               {hasPermission('InterviewRequest') && (
                 <Route path="/interviewer-requests" element={<InterviewerRequestsPage />} />
               )}
-              {hasPermission('Billing') && (
+              {hasPermission('SuperAdminBilling') && (
                 <Route path="/admin-billing" element={<BillingPage />}>
                   <Route index element={null} />
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="new" element={<AddInvoiceForm mode="Create" />} />
                   )}
-                  {hasPermission('Billing', 'Manage') && (
+                  {hasPermission('SuperAdminBilling', 'Manage') && (
                     <Route path="edit/:id" element={<AddInvoiceForm mode="Edit" />} />
                   )}
                 </Route>
@@ -1253,6 +1253,32 @@ const App = () => {
               <Route path="/integrations" element={<IntegrationsPage />} />
               <Route path="/contact-profile-details" element={<ContactProfileDetails />} />
               <Route path="/admin-dashboard" element={<SuperAdminDashboard />} />
+
+              {/* Account Settings Routes */}
+              <Route path="/super-admin-account-settings" element={<AccountSettingsSidebar />}>
+                {hasPermission('MyProfile') && (
+                  <Route path="my-profile" element={<MyProfile />}>
+                    <Route index element={<Navigate to="basic" replace />} />
+                    <Route path="basic" element={<BasicDetails />} />
+                    <Route path="advanced" element={<AdvancedDetails />} />
+                    <Route path="interview" element={<InterviewUserDetails />} />
+                    <Route path="availability" element={<AvailabilityUser />} />
+                    <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="my-profile" />} />
+                    <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
+                    <Route path="interview-edit/:id" element={<EditInterviewDetails from="my-profile" />} />
+                    <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
+                    <Route path="documents" element={<DocumentsSection />} />
+                  </Route>
+                )}
+
+                {hasPermission('Roles') && (
+                  <Route path="roles" element={<Role />}>
+                    <Route index element={null} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
+                    <Route path="view/:id" element={<RoleView />} />
+                  </Route>
+                )}
+              </Route>
             </Route>
           </Routes>
         </div>
