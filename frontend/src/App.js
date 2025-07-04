@@ -162,10 +162,9 @@ const App = () => {
     '/admin-billing',
     '/admin-billing/new',
     '/admin-billing/edit/:id',
-    '/support-tickets',
-    '/support-tickets/new',
-    '/support-tickets/edit/:id',
-    '/support/:id',
+    '/super-admin-desk',
+    '/super-admin-desk/:id',
+    '/super-admin-desk/view/:id',
     '/settings',
     '/internal-logs',
     '/integrations',
@@ -607,9 +606,12 @@ const App = () => {
               {/* SuperAdminSupportDesk */}
               {hasPermission('SuperAdminSupportDesk') && (
                 <>
-                  <Route path="/super-admin-desk" element={<SupportDesk />} />
+                  <Route exact path="/super-admin-desk" element={<SupportDesk />} />
               {hasPermission('SuperAdminSupportDesk', 'View') && (
+                <>
                   <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
+                  <Route path="/super-admin-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+                </>
               )}
               
                 </>
