@@ -74,44 +74,44 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const permissionsHeader = req.headers['x-permissions'];
 
     // Log incoming headers and cookies
-    console.log('--- Incoming Request ---');
-    console.log('authToken:', authToken);
-    console.log('permissionsHeader:', permissionsHeader);
-    console.log('req.cookies:', req.cookies);
-    console.log('req.headers:', req.headers);
+    // console.log('--- Incoming Request ---');
+    // console.log('authToken:', authToken);
+    // console.log('permissionsHeader:', permissionsHeader);
+    // console.log('req.cookies:', req.cookies);
+    // console.log('req.headers:', req.headers);
 
     // Log res.locals as soon as possible
-    console.log('--- res.locals after permissionMiddleware ---');
-    console.log('res.locals:', res.locals);
+    // console.log('--- res.locals after permissionMiddleware ---');
+    // console.log('res.locals:', res.locals);
 
     if (permissionsHeader) {
       try {
         const permissions = JSON.parse(permissionsHeader);
-        console.log('Parsed permissions:', permissions);
+        // console.log('Parsed permissions:', permissions);
       } catch (e) {
         console.error('Error parsing permissions:', e);
       }
     }
 
     if (!authToken) {
-      console.log('No authToken found');
+      // console.log('No authToken found');
       return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-      console.log('Decoded JWT:', decoded);
+      // console.log('Decoded JWT:', decoded);
     } catch (err) {
       console.error('JWT verification failed:', err);
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
     const { userId, tenantId } = decoded;
-    console.log('userId:', userId, 'tenantId:', tenantId);
+    // console.log('userId:', userId, 'tenantId:', tenantId);
 
     if (!userId || !tenantId) {
-      console.log('Missing userId or tenantId in JWT');
+      // console.log('Missing userId or tenantId in JWT');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
@@ -128,16 +128,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       impersonatedUser_roleName = null
     } = res.locals;
 
-    console.log('--- Permission Data from res.locals ---');
-    console.log('effectivePermissions:', effectivePermissions);
-    console.log('superAdminPermissions:', superAdminPermissions);
-    console.log('inheritedRoleIds:', inheritedRoleIds);
-    console.log('isImpersonating:', isImpersonating);
-    console.log('effectivePermissions_RoleType:', effectivePermissions_RoleType);
-    console.log('effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
-    console.log('effectivePermissions_RoleName:', effectivePermissions_RoleName);
-    console.log('impersonatedUser_roleType:', impersonatedUser_roleType);
-    console.log('impersonatedUser_roleName:', impersonatedUser_roleName);
+    // console.log('--- Permission Data from res.locals ---');
+    // console.log('effectivePermissions:', effectivePermissions);
+    // console.log('superAdminPermissions:', superAdminPermissions);
+    // console.log('inheritedRoleIds:', inheritedRoleIds);
+    // console.log('isImpersonating:', isImpersonating);
+    // console.log('effectivePermissions_RoleType:', effectivePermissions_RoleType);
+    // console.log('effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
+    // console.log('effectivePermissions_RoleName:', effectivePermissions_RoleName);
+    // console.log('impersonatedUser_roleType:', impersonatedUser_roleType);
+    // console.log('impersonatedUser_roleName:', impersonatedUser_roleName);
 
     const permissionsToCheck = superAdminPermissions || effectivePermissions;
     const modelMapping = getModelMapping(permissionsToCheck);

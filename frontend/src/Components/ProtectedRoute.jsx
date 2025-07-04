@@ -5,6 +5,7 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
 import { PermissionsProvider } from '../Context/PermissionsContext';
 import { startActivityTracking } from '../utils/activityTracker';
+import { getActivityEmitter } from '../utils/activityTracker';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
@@ -15,15 +16,31 @@ const ProtectedRoute = ({ children }) => {
   const tokenPayload = authToken ? decodeJwt(authToken) : null;
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
+  
+  useEffect(() => {
+    console.log('ProtectedRoute: starting activity tracking');
+    // Start activity tracking
+    const cleanupActivityTracker = startActivityTracking();
+    
+    // Listen for logout events
+    const emitter = getActivityEmitter();
+    const handleLogout = () => {
+      // Clear auth token
+      Cookies.remove('authToken', { path: '/' });
+    };
+    
+    emitter.on('logout', handleLogout);
+    
+    return () => {
+      cleanupActivityTracker();
+      emitter.off('logout', handleLogout);
+    };
+  }, [navigate, location.pathname]);
 
   // Handle user inactivity
   const handleUserInactive = useCallback(() => {
     // Clear the auth token
     Cookies.remove('authToken', { path: '/' });
-    // Only redirect if not already on login page
-    if (!location.pathname.includes('organization-login')) {
-      navigate('/organization-login', { replace: true });
-    }
   }, [navigate, location.pathname]);
 
   // Set up activity tracking and event listeners
@@ -32,10 +49,10 @@ const ProtectedRoute = ({ children }) => {
     if (authToken || impersonationToken) {
       // Start activity tracking
       const cleanupActivityTracker = startActivityTracking();
-      
+
       // Add event listener for user inactivity
       window.addEventListener('userInactive', handleUserInactive);
-      
+
       // Cleanup function
       return () => {
         cleanupActivityTracker();
@@ -92,41 +109,42 @@ const ProtectedRoute = ({ children }) => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-16 h-16 border-4 border-custom-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your workspace...</p>
         </div>
       </div>
     );
   }
 
-  const ProtectedContent = ({ children }) => {
-    const { usersData } = useCustomContext() || {};
+const ProtectedContent = ({ children }) => {
+  const { usersData } = useCustomContext() || {};
 
-    const authToken = Cookies.get('authToken');
-    const tokenPayload = authToken ? decodeJwt(authToken) : null;
-    const userId = tokenPayload?.userId;
-    const currentUserData = usersData?.find(user => user._id === userId);
-    console.log('currentuserdata', currentUserData)
-    const organization = currentUserData?.tenantId;
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = authToken ? decodeJwt(authToken) : null;
+  const userId = tokenPayload?.userId;
+  const currentUserData = usersData?.find(user => user._id === userId);
 
-    const currentDomain = window.location.hostname;
-    const isLocalhost = currentDomain === 'localhost';
-    let targetDomain;
+  const organization = currentUserData?.tenantId;
 
-    // Only apply domain redirect for normal users (with authToken and organization)
-    if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
-      targetDomain = `${organization.subdomain}.app.upinterview.io`;
-    } else {
-      targetDomain = 'app.upinterview.io';
-    }
+  const currentDomain = window.location.hostname;
+  let targetDomain;
 
-    if (!isLocalhost && !currentDomain.includes(targetDomain)) {
-      window.location.href = `https://${targetDomain}${location.pathname}`;
-      return null;
-    }
+  if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
+    targetDomain = `${organization.subdomain}.app.upinterview.io`;
+  } else {
+    targetDomain = 'app.upinterview.io';
+  }
 
-    return children;
-  };
+  // Only redirect for subdomain if NOT localhost
+  const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
+  if (!isLocalhost && !currentDomain.includes(targetDomain)) {
+    const protocol = window.location.protocol;
+    window.location.href = `${protocol}//${targetDomain}${location.pathname}`;
+    return null;
+  }
+
+  return children;
+};
 
   return (
     <PermissionsProvider>
