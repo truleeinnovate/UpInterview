@@ -61,7 +61,7 @@ exports.newAssessment = async (req, res) => {
     }
 
     // Generate custom AssessmentCode like "ASMT-00001"
-    const lastAssessment = await Assessment.findOne({})
+    const lastAssessment = await Assessment.findOne({ tenantId })
       .sort({ _id: -1 })
       .select("AssessmentCode")
       .lean();

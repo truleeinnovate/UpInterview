@@ -3,8 +3,9 @@ const InterviewTemplate = require("../models/InterviewTemplate");
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
   try {
+    const { tenantId } = req.body;
     // Generate custom code like ASMT-TPL-00001
-    const lastTemplate = await InterviewTemplate.findOne({})
+    const lastTemplate = await InterviewTemplate.findOne({ tenantId })
       .sort({ _id: -1 })
       .select("interviewTemplateCode")
       .lean();
@@ -78,7 +79,7 @@ exports.getAllTemplates = async (req, res) => {
     // Populate only firstName and lastName for interviewers
     const templates = await InterviewTemplate.find(filter).populate({
       path: "rounds.interviewers",
-       model: "Contacts",
+      model: "Contacts",
       select: "firstName lastName email",
       // select: "firstName lastName _id", // limit fields
     });
@@ -95,8 +96,7 @@ exports.getAllTemplates = async (req, res) => {
       //   }
       //   return round;
       // });
-      
-      
+
       return templateObj;
     });
 
