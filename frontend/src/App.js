@@ -165,7 +165,6 @@ const App = () => {
     '/super-admin-desk',
     '/super-admin-desk/new',
     '/super-admin-desk/edit/:id',
-    '/support/:id',
     '/settings',
     '/internal-logs',
     '/integrations',
