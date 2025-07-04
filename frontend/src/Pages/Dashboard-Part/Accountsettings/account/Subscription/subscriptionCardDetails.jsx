@@ -9,6 +9,7 @@ import { handleMembershipChange } from "../../../../../utils/PaymentpageValidati
 //import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
+import Loading from '../../../../../Components/Loading.js';
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -51,7 +52,7 @@ const SubscriptionCardDetails = () => {
         addOn: "",
         autoRenew: true // Default to auto-renewal enabled
     });
-    
+
     const [processing, setProcessing] = useState(false);
     const [buttonLoading, setButtonLoading] = useState(false);
 
@@ -67,31 +68,31 @@ const SubscriptionCardDetails = () => {
         annually: 0,
     });
 
-    const {userProfile, isLoading, isError} = useUserProfile(ownerId)
+    const { userProfile, isLoading, isError } = useUserProfile(ownerId)
     const [userProfileData, setUserProfile] = useState([])
 
     // Fetch user profile data from contacts API
     useEffect(() => {
-              const fetchUserProfile = async () => {
-                  try {
-                      if (userProfile) {
-                              setUserProfile({
-                                  name: `${userProfile.firstName} ${userProfile.lastName}`,
-                                  email: userProfile.email,
-                                  phone: userProfile.phone
-                              });
-                              console.log('User profile fetched:', userProfile);
-                      }
-                  } catch (error) {
-                      console.error('Error fetching user profile:', error);
-                      toast.error('Failed to fetch user profile data');
-                  }
-              };
-      
-              fetchUserProfile();
-          }, [ownerId,userProfile]);
+        const fetchUserProfile = async () => {
+            try {
+                if (userProfile) {
+                    setUserProfile({
+                        name: `${userProfile.firstName} ${userProfile.lastName}`,
+                        email: userProfile.email,
+                        phone: userProfile.phone
+                    });
+                    console.log('User profile fetched:', userProfile);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                toast.error('Failed to fetch user profile data');
+            }
+        };
 
-    
+        fetchUserProfile();
+    }, [ownerId, userProfile]);
+
+
     useEffect(() => {
         if (planDetails) {
             const { monthlyPrice, annualPrice } = planDetails;
@@ -110,7 +111,7 @@ const SubscriptionCardDetails = () => {
 
             // Default selection logic
             const defaultMembershipType = planDetails.billingCycle === "annual" ? "annual" : "monthly";
-            
+
             // Update card details with membership type and user info
             setCardDetails(prevData => ({
                 ...prevData,
@@ -122,13 +123,13 @@ const SubscriptionCardDetails = () => {
 
             // Calculate the initial total using the same logic as updateTotalPaid
             const price = defaultMembershipType === "annual" ? annual : monthly;
-            const discount = defaultMembershipType === "annual" 
-                ? parseFloat(planDetails.annualDiscount) || 0 
+            const discount = defaultMembershipType === "annual"
+                ? parseFloat(planDetails.annualDiscount) || 0
                 : parseFloat(planDetails.monthDiscount) || 0;
-                
+
             const initialTotal = Math.max(0, price - discount);
             console.log('Initial total calculation:', { price, discount, initialTotal });
-            
+
             setTotalPaid(initialTotal.toFixed(2));
         }
     }, [ownerId, planDetails, tenantId]);
@@ -150,7 +151,7 @@ const SubscriptionCardDetails = () => {
             toast.error("Invalid payment amount");
             return false;
         }
-        
+
         return true;
     };
 
@@ -166,7 +167,7 @@ const SubscriptionCardDetails = () => {
         try {
             // Set button loading state to true when Pay button is clicked
             setButtonLoading(true);
-            
+
             // Load Razorpay script
             const isScriptLoaded = await loadRazorpayScript();
             if (!isScriptLoaded) {
@@ -180,7 +181,7 @@ const SubscriptionCardDetails = () => {
             // Ensure totalAmount is a valid number and properly formatted
             const amountToCharge = parseFloat(totalPaid) || 0;
             console.log('Creating order with amount:', amountToCharge, 'INR');
-            
+
             // Create order data object
             const orderData = {
                 planDetails: {
@@ -210,12 +211,12 @@ const SubscriptionCardDetails = () => {
                     planName: planDetails.name || 'Subscription Plan',
                     autoRenew: cardDetails.autoRenew,
                     // Include Razorpay plan ID for the selected billing cycle if available
-                    razorpayPlanId: (planDetails.razorpayPlanIds && 
+                    razorpayPlanId: (planDetails.razorpayPlanIds &&
                         planDetails.razorpayPlanIds[cardDetails.membershipType]) || '',
                     timestamp: new Date().toISOString()
                 }
             };
-            
+
             console.log('Sending order to backend:', {
                 amount: amountToCharge,
                 currency: 'INR',
@@ -226,9 +227,9 @@ const SubscriptionCardDetails = () => {
 
             // Always use the subscription endpoint
             const endpoint = `${process.env.REACT_APP_API_URL}/payment/create-subscription`;
-            
+
             console.log('Using subscription payment endpoint:', endpoint);
-            
+
             // Send request to create order or subscription
             const orderResponse = await axios.post(endpoint, orderData);
 
@@ -237,7 +238,7 @@ const SubscriptionCardDetails = () => {
             // Check if this is a subscription or one-time payment
             if (orderResponse.data.isSubscription) {
                 console.log('Processing subscription response:', orderResponse.data);
-                
+
                 // Save subscription info for confirmation later
                 localStorage.setItem('pendingSubscription', JSON.stringify({
                     subscriptionId: orderResponse.data.subscriptionId,
@@ -247,7 +248,7 @@ const SubscriptionCardDetails = () => {
                     tenantId,
                     autoRenew: cardDetails.autoRenew
                 }));
-                
+
                 if (orderResponse.data.orderId) {
                     try {
                         // First, make sure the Razorpay script is loaded
@@ -255,11 +256,11 @@ const SubscriptionCardDetails = () => {
                         if (!scriptLoaded) {
                             throw new Error('Failed to load Razorpay script');
                         }
-                        
+
                         // Prepare options for Razorpay checkout
                         // Make sure amount is exactly the same as in the order (no modifications)
                         console.log('Order amount from backend:', orderResponse.data.amount);
-                        
+
                         const options = {
                             key: orderResponse.data.razorpayKeyId,
                             subscription_id: orderResponse.data.subscriptionId,
@@ -268,7 +269,7 @@ const SubscriptionCardDetails = () => {
                             // amount: orderResponse.data.amount,
                             currency: 'INR',//orderResponse.data.currency || 
                             name: "UpInterview",
-                            description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount/100).toFixed(2)}`,
+                            description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
                             image: "https://upinterview.io/logo.png",
                             prefill: {
                                 name: userProfileData?.name || "",
@@ -283,7 +284,7 @@ const SubscriptionCardDetails = () => {
                             theme: {
                                 color: "#3399cc",
                             },
-                            handler: async function(response) {
+                            handler: async function (response) {
                                 try {
                                     // Handle successful payment
                                     console.log("Payment successful:", response);
@@ -302,7 +303,7 @@ const SubscriptionCardDetails = () => {
                                         autoRenew: cardDetails.autoRenew,
                                         invoiceId: planDetails.invoiceId // Include the invoiceId passed from SubscriptionPlan.jsx
                                     };
-                                    
+
                                     // Log to verify invoiceId is included
                                     console.log('Including invoiceId in verification data:', planDetails.invoiceId);
 
@@ -316,10 +317,10 @@ const SubscriptionCardDetails = () => {
 
                                     console.log('Payment verification response:', verifyResponse.data);
 
-                                    if (verifyResponse.data.status === 'paid' || 
+                                    if (verifyResponse.data.status === 'paid' ||
                                         verifyResponse.data.status === 'success' ||
                                         verifyResponse.data.message?.toLowerCase().includes('success')) {
-                                        
+
                                         toast.success("Payment successfully completed!");
 
                                         // Navigate to success page
@@ -360,16 +361,16 @@ const SubscriptionCardDetails = () => {
                                 // });
                             },
                             modal: {
-                                ondismiss: function() {
+                                ondismiss: function () {
                                     console.log('Payment cancelled by user');
                                     toast.info('Payment cancelled');
                                     setProcessing(false);
                                 }
                             }
                         };
-                        
+
                         console.log('Opening Razorpay checkout with options:', options);
-                        
+
                         // Create and open Razorpay checkout in one step
                         const rzp1 = new window.Razorpay(options);
                         rzp1.open();
@@ -392,154 +393,156 @@ const SubscriptionCardDetails = () => {
             setButtonLoading(false);
         }
     };
-    
-    
+
+
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50  pt-4">
             {/* Add ToastContainer to display toast notifications */}
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-            
+
             {processing ? (
-                <div className="flex flex-col items-center justify-center h-screen">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                    <p className="mt-4 text-lg font-medium text-white">Processing your Subscription...</p>
-                </div>
+                // <div className="flex flex-col items-center justify-center h-screen">
+                //     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
+                //     <p className="mt-4 text-lg font-medium text-white">Processing your Subscription...</p>
+                // </div>
+                <Loading message="Processing your Subscription..." />
+
             ) : (
                 <form
                     className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"
                     onSubmit={handleSubmit}
-            >
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold mb-2">
-                        Upgrade to a Basic Membership
-                    </h2>
-                    <XCircle
-                        onClick={() => navigate("/account-settings/subscription")}
-                        className="h-7 w-7" />
-                </div>
-                <p className="text-gray-500  text-md mb-2">
-                    Get all access and an extra 20% off when you subscribe annually
-                </p>
-
-
-                <div className="w-full flex gap-6">
-
-                    <div className="w-9/12 md:w-7/12  sm:w-6/12">
-
-                        <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
-                            <h3 className="text-lg font-medium text-blue-800 mb-2">Secure Payment</h3>
-                            <p className="text-blue-600">
-                                Your payment information will be securely collected by Razorpay's payment form.
-                                No card details are stored on our servers.
-                            </p>
-                            
-                            <div className="mt-3 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                                <span className="text-blue-600">Your payment is protected with industry-standard encryption</span>
-                            </div>
-                            
-                            <div className="mt-3 flex justify-center">
-                                <img alt="VisaCard" className="h-8 mx-1" src="https://img.icons8.com/?size=100&id=13608&format=png&color=000000" />
-                                <img alt="MasterCard" className="h-8 mx-1" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
-                                <img alt="Razorpay" className="h-8 mx-1" src="https://razorpay.com/assets/razorpay-logo.svg" />
-                            </div>
-                        </div>
-
-                        <div className="mt-6 mb-4 flex flex-col">
-                            <span className="font-semibold text-lg"> {cardDetails.membershipType === "monthly"
-                                ? `$${(pricePerMember.monthly - planDetails.monthDiscount || Math.round(pricePerMember.monthly))} / Month / User`
-                                : `$${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
-                            </span>
-
-                            <span className="text-blue-400">Details</span>
-                        </div>
-
+                >
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold mb-2">
+                            Upgrade to a Basic Membership
+                        </h2>
+                        <XCircle
+                            onClick={() => navigate("/account-settings/subscription")}
+                            className="h-7 w-7" />
                     </div>
+                    <p className="text-gray-500  text-md mb-2">
+                        Get all access and an extra 20% off when you subscribe annually
+                    </p>
 
 
-                    <div className="w-1/2">
+                    <div className="w-full flex gap-6">
 
-                        {/* Membership Type */}
-                        <label className="block mb-1  text-lg font-medium text-gray-500">
-                            Membership Type
-                        </label>
+                        <div className="w-9/12 md:w-7/12  sm:w-6/12">
 
+                            <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
+                                <h3 className="text-lg font-medium text-blue-800 mb-2">Secure Payment</h3>
+                                <p className="text-blue-600">
+                                    Your payment information will be securely collected by Razorpay's payment form.
+                                    No card details are stored on our servers.
+                                </p>
 
-                        <div className="flex flex-col gap-4   mb-4">
-
-                            <div
-                                className={`border p-2 flex items-center gap-2 rounded-md bg-gray-50
-                                     ${cardDetails.membershipType === "monthly"
-                                        ? "border-[#217989]"
-                                        : "border-gray-300"
-                                    }`}
-                                onClick={() => handleMembershipChange("monthly", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
-                            >
-
-                                <div className="flex  items-center">
-                                    <input
-                                        type="radio"
-                                        name="membershipType"
-                                        value="monthly"
-                                        checked={cardDetails.membershipType === "monthly"}
-                                        // onChange={(e) => setCardDetails((prevData) => ({ ...prevData, membershipType: e.target.value }))}
-                                        readOnly
-
-                                        className="mr-1 h-4 w-5"
-                                    />
-
+                                <div className="mt-3 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    <span className="text-blue-600">Your payment is protected with industry-standard encryption</span>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold">Pay Monthly</span>
-                                    <span className="text-sm font-medium"> ${pricePerMember.monthly} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}</span>
+
+                                <div className="mt-3 flex justify-center">
+                                    <img alt="VisaCard" className="h-8 mx-1" src="https://img.icons8.com/?size=100&id=13608&format=png&color=000000" />
+                                    <img alt="MasterCard" className="h-8 mx-1" src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg" />
+                                    <img alt="Razorpay" className="h-8 mx-1" src="https://razorpay.com/assets/razorpay-logo.svg" />
                                 </div>
                             </div>
 
+                            <div className="mt-6 mb-4 flex flex-col">
+                                <span className="font-semibold text-lg"> {cardDetails.membershipType === "monthly"
+                                    ? `$${(pricePerMember.monthly - planDetails.monthDiscount || Math.round(pricePerMember.monthly))} / Month / User`
+                                    : `$${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
+                                </span>
 
-                            <div
-                                className={`border p-2 flex justify-between items-center gap-4 rounded-md bg-gray-50 
+                                <span className="text-blue-400">Details</span>
+                            </div>
+
+                        </div>
+
+
+                        <div className="w-1/2">
+
+                            {/* Membership Type */}
+                            <label className="block mb-1  text-lg font-medium text-gray-500">
+                                Membership Type
+                            </label>
+
+
+                            <div className="flex flex-col gap-4   mb-4">
+
+                                <div
+                                    className={`border p-2 flex items-center gap-2 rounded-md bg-gray-50
+                                     ${cardDetails.membershipType === "monthly"
+                                            ? "border-[#217989]"
+                                            : "border-gray-300"
+                                        }`}
+                                    onClick={() => handleMembershipChange("monthly", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
+                                >
+
+                                    <div className="flex  items-center">
+                                        <input
+                                            type="radio"
+                                            name="membershipType"
+                                            value="monthly"
+                                            checked={cardDetails.membershipType === "monthly"}
+                                            // onChange={(e) => setCardDetails((prevData) => ({ ...prevData, membershipType: e.target.value }))}
+                                            readOnly
+
+                                            className="mr-1 h-4 w-5"
+                                        />
+
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-semibold">Pay Monthly</span>
+                                        <span className="text-sm font-medium"> ${pricePerMember.monthly} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}</span>
+                                    </div>
+                                </div>
+
+
+                                <div
+                                    className={`border p-2 flex justify-between items-center gap-4 rounded-md bg-gray-50 
                                     ${cardDetails.membershipType === "annual"
-                                        ? "border-[#217989]"
-                                        : "border-gray-300"
-                                    }`}
-                                onClick={() => handleMembershipChange("annual", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
-
-                            >
-
-                                <div className="flex gap-2  items-center"
-
+                                            ? "border-[#217989]"
+                                            : "border-gray-300"
+                                        }`}
+                                    onClick={() => handleMembershipChange("annual", setCardDetails, pricePerMember, planDetails, setTotalPaid)}
 
                                 >
-                                    <input
-                                        type="radio"
-                                        name="membershipType"
-                                        value="annual"
-                                        checked={cardDetails.membershipType === "annual"}
 
-                                        readOnly
-                                        className="mr-1 h-4 w-5"
-                                    />
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-semibold">Pay Annually</span>
-                                        <span className="text-sm font-medium"> ${Math.round(pricePerMember.annually / 12)} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}</span>
+                                    <div className="flex gap-2  items-center"
+
+
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="membershipType"
+                                            value="annual"
+                                            checked={cardDetails.membershipType === "annual"}
+
+                                            readOnly
+                                            className="mr-1 h-4 w-5"
+                                        />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold">Pay Annually</span>
+                                            <span className="text-sm font-medium"> ${Math.round(pricePerMember.annually / 12)} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}</span>
+                                        </div>
+
                                     </div>
 
-                                </div>
+                                    <div>
+                                        <span className="text-sm font-semibold">{planDetails.annualBadge}</span>
+                                    </div>
 
-                                <div>
-                                    <span className="text-sm font-semibold">{planDetails.annualBadge}</span>
-                                </div>
 
+                                </div>
 
                             </div>
 
-                        </div>
-
-                        {/* Add-on */}
-                        {/* <label className="block mb-1 text-lg font-medium text-gray-700">
+                            {/* Add-on */}
+                            {/* <label className="block mb-1 text-lg font-medium text-gray-700">
                             Add-ons
                         </label>
                         <div
@@ -582,30 +585,30 @@ const SubscriptionCardDetails = () => {
 
                         </div> */}
 
-                        {errors.membershipType && (
-                            <p className="text-red-500 text-sm pt-1">{errors.membershipType}</p>
-                        )}
+                            {errors.membershipType && (
+                                <p className="text-red-500 text-sm pt-1">{errors.membershipType}</p>
+                            )}
 
-                        {/* Submit */}
+                            {/* Submit */}
 
-                        <p className="text-xs md:text-sm text-gray-500 mt-4 m-2">
-                            By continuing, {" "}
-                            <span className="text-[#217989] ">
-                                you agree to our terms and conditions
-                            </span>
-                            .
-                        </p>
-                        <button
-                            type="submit"
-                            className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
-                            disabled={buttonLoading || processing}
-                        >
-                            {buttonLoading ? "Processing..." : "Pay"}
-                        </button>
+                            <p className="text-xs md:text-sm text-gray-500 mt-4 m-2">
+                                By continuing, {" "}
+                                <span className="text-[#217989] ">
+                                    you agree to our terms and conditions
+                                </span>
+                                .
+                            </p>
+                            <button
+                                type="submit"
+                                className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
+                                disabled={buttonLoading || processing}
+                            >
+                                {buttonLoading ? "Processing..." : "Pay"}
+                            </button>
 
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
             )}
         </div>
     );

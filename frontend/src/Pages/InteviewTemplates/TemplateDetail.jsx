@@ -8,6 +8,7 @@ import VerticalRoundsView from './VerticalRoundsView';
 import InterviewProgress from './InterviewProgress';
 import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
 import { Switch } from '@headlessui/react';
+import Loading from '../../Components/Loading';
 
 const TemplateDetail = () => {
   const { templatesData, saveTemplate } = useInterviewTemplates();
@@ -139,9 +140,11 @@ const TemplateDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-      </div>
+      // <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+      //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+      // </div>
+      <Loading message="Loading..." />
+
     );
   }
 

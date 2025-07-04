@@ -13,6 +13,7 @@ import { config } from "../../../config.js";
 import { setAuthCookies } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
+import Loading from "../../../Components/Loading.js";
 
 const FooterButtons = ({
   onNext,
@@ -53,7 +54,7 @@ const FooterButtons = ({
       >
         {isSubmitting ? (
           <>
-            <svg
+            {/* <svg
               className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -72,7 +73,9 @@ const FooterButtons = ({
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
-            </svg>
+            </svg> */}
+            <Loading message="Loading..." />
+
             {isLastStep ? "Saving..." : "Processing..."}
           </>
         ) : isLastStep ? (
@@ -380,7 +383,7 @@ const MultiStepForm = () => {
       } else if (interviewDetailsData.bio.length < 150) {
         interviewErrors.bio = "Professional bio must be at least 150 characters";
       }
-  
+
       setErrors({ ...errors, ...interviewErrors });
       isValid = Object.keys(interviewErrors).length === 0;
     } else if (currentStep === 3) {
@@ -509,29 +512,29 @@ const MultiStepForm = () => {
             .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
-          const requestData = {
-            userData,
-            contactData: {
-              ...contactData,
-              // Map frontend field names to backend field names
-              skills: interviewDetailsData.skills.filter(skill => skill !== null),
-              technologies: interviewDetailsData.technologies,
-              PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
-              PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
-              ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
-              hourlyRate: interviewDetailsData.hourlyRate,
-              InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
-              expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
-              NoShowPolicy: interviewDetailsData.noShowPolicy,
-              bio: interviewDetailsData.bio,
-              professionalTitle: interviewDetailsData.professionalTitle,
-            },
-            ...(availabilityData.length > 0 && { availabilityData }),
-            isInternalInterviewer,
-            isProfileCompleteStateOrg,
-            ownerId: matchedContact.ownerId,
-            tenantData,
-          };
+      const requestData = {
+        userData,
+        contactData: {
+          ...contactData,
+          // Map frontend field names to backend field names
+          skills: interviewDetailsData.skills.filter(skill => skill !== null),
+          technologies: interviewDetailsData.technologies,
+          PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
+          PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
+          ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
+          hourlyRate: interviewDetailsData.hourlyRate,
+          InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
+          expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
+          NoShowPolicy: interviewDetailsData.noShowPolicy,
+          bio: interviewDetailsData.bio,
+          professionalTitle: interviewDetailsData.professionalTitle,
+        },
+        ...(availabilityData.length > 0 && { availabilityData }),
+        isInternalInterviewer,
+        isProfileCompleteStateOrg,
+        ownerId: matchedContact.ownerId,
+        tenantData,
+      };
 
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,

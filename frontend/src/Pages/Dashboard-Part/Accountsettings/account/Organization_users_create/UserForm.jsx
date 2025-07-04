@@ -27,6 +27,7 @@ import { validateFile } from "../../../../../utils/FileValidation/FileValidation
 
 import { getOrganizationRoles } from "../../../../../apiHooks/useRoles.js";
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+import Loading from "../../../../../Components/Loading.js";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
   const { addOrUpdateUser } = useCustomContext();
@@ -308,9 +309,10 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         })}
       >
         {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-          </div>
+          // <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+          // </div>
+          <Loading message="Loading..." />
         )}
         <div className="p-3">
           <div className="flex justify-between items-center mb-6 mt-2">
