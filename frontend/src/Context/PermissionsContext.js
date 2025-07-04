@@ -35,7 +35,7 @@ export const PermissionsProvider = ({ children }) => {
       const headers = {
         'x-user-id': userId,
         'x-tenant-id': orgId,
-        'x-impersonation-token': impersonationToken?.impersonatedUserId || ''
+        'x-impersonation-userid': impersonationToken?.impersonatedUserId || ''
       };
   
       const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { 
