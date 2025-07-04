@@ -180,8 +180,12 @@ import Modal from 'react-modal';
 import classNames from 'classnames';
 import PermissionDisplay from './PermissionDisplay';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils';
+import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 
-const RoleView = () => {
+const RoleView = ({ type }) => {
+  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
@@ -190,16 +194,18 @@ const RoleView = () => {
   const roles = location.state?.roles || [];
 
   if (!role) {
-    navigate('/account-settings/roles');
+    navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles');
     return null;
   }
 
-  const visibleObjects = role.objects?.filter((obj) => obj.visibility === 'view_all') || [];
+  const visibleObjects = role.objects?.filter((obj) =>
+    type === 'superAdmin' ? true : obj.visibility === 'view_all'
+  ) || [];
 
   const modalClass = classNames(
     'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
     {
-      'top-0 left-0 right-0 bottom-0': isFullScreen, // Ensure full width and height
+      'top-0 left-0 right-0 bottom-0': isFullScreen,
       'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen,
     }
   );
@@ -209,13 +215,17 @@ const RoleView = () => {
   };
 
   const handleEdit = () => {
-    navigate(`/account-settings/roles/role-edit/${role._id}`);
+    navigate(
+      type === 'superAdmin'
+        ? `/super-admin-account-settings/roles/role-edit/${role._id}`
+        : `/account-settings/roles/role-edit/${role._id}`
+    );
   };
 
   return (
     <Modal
       isOpen={true}
-      onRequestClose={() => navigate('/account-settings/roles')}
+      onRequestClose={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
@@ -227,9 +237,11 @@ const RoleView = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-custom-blue">{role.label}</h2>
             <div className="flex items-center gap-2">
-              <button onClick={handleEdit} className="p-1 rounded-full hover:bg-white/10">
-                <PencilIcon className="h-5 w-5 text-gray-500" />
-              </button>
+              {(type === 'superAdmin' ? permissions.SuperAdminRole?.Edit : permissions.Roles?.Edit && role.roleName !== 'Admin') && (
+                <button onClick={handleEdit} className="p-1 rounded-full hover:bg-white/10">
+                  <PencilIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              )}
               <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 rounded-full hover:bg-white/10">
                 {isExpanded ? (
                   <ArrowsPointingInIcon className="h-5 w-5 text-gray-500" />
@@ -237,7 +249,10 @@ const RoleView = () => {
                   <ArrowsPointingOutIcon className="h-5 w-5 text-gray-500" />
                 )}
               </button>
-              <button onClick={() => navigate('/account-settings/roles')} className="p-1 rounded-full hover:bg-white/10">
+              <button
+                onClick={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+                className="p-1 rounded-full hover:bg-white/10"
+              >
                 <XMarkIcon className="h-5 w-5 text-gray-500" />
               </button>
             </div>
@@ -257,12 +272,12 @@ const RoleView = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Hierarchy Level</p>
-                  <p className="text-sm text-gray-600">Level: {role.level}</p>
+                  <p className="text-sm text-gray-600">Level: {role.level ?? 0}</p>
                 </div>
               </div>
             </div>
 
-            {role.inherits && role.inherits.length > 0 && (
+            {type !== 'superAdmin' && role.inherits && role.inherits.length > 0 && (
               <div>
                 <h3 className="text-lg font-medium mb-4">Inherits From</h3>
                 <div className="flex flex-wrap gap-2">
@@ -284,12 +299,18 @@ const RoleView = () => {
               <h3 className="text-lg font-medium mb-4">Permissions</h3>
               <div className={isExpanded ? "grid grid-cols-3 gap-4" : "grid grid-cols-2 gap-4"}>
                 {visibleObjects.map((obj) => (
-                  <PermissionDisplay
-                    key={obj.objectName}
-                    objectName={obj.objectName}
-                    permissions={sortPermissions(obj.permissions)}
-                    isExpanded={isExpanded}
-                  />
+                  <div key={obj.objectName}>
+                    <PermissionDisplay
+                      objectName={obj.objectName}
+                      permissions={sortPermissions(obj.permissions)}
+                      isExpanded={isExpanded}
+                    />
+                    {type === 'superAdmin' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Visibility: {obj.visibility} | Type: {obj.type}
+                      </p>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
