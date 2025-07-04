@@ -381,7 +381,7 @@ function Header() {
 
   const handleSettingsClick = () => {
     closeAllDropdowns();
-    navigate("/account-settings");
+    navigate("/super-admin-account-settings");
   };
 
   // Icon configuration for Home, Information, Bell, and Profile
@@ -491,7 +491,7 @@ function Header() {
   ];
 
   return (
-    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-4 md:px-4 lg:px-4 xl:px-4 2xl:px-4 h-16 bg-white border border-b-gray-200">
+    <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-4 md:px-4 lg:px-4 xl:px-4 2xl:px-4 bg-white border border-b-gray-200">
       <div className="flex items-center flex-1">
         <div className="flex items-center flex-shrink-0 gap-2">
           <button

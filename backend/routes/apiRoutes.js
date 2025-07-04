@@ -162,34 +162,53 @@ if (permissionsToCheck?.SuperAdmin?.ViewAll) {
   const roleType = effectivePermissions_RoleType;
   const roleName = effectivePermissions_RoleName;
 
-  if (roleType === 'individual') {
-    // Individual: only see their own tenant's data
+if (roleType === 'individual') {
+  console.log('Role Type: individual');
+  console.log(`Applying tenantId filter: ${tenantId}`);
+  // Individual: only see their own tenant's data
+  query.tenantId = tenantId;
+
+} else if (roleType === 'organization') {
+  console.log('Role Type: organization');
+
+  if (roleName === 'Admin') {
+    console.log('Role Name: Admin');
+    console.log(`Admin access - Applying tenantId filter: ${tenantId}`);
+    // Organization Admin: see all data for their tenant
     query.tenantId = tenantId;
-  } else if (roleType === 'organization') {
-    if (roleName === 'Admin') {
-      // Organization Admin: see all data for their tenant
-      query.tenantId = tenantId;
-    } else {
-      // Not Admin
-      if (inheritedRoleIds?.length > 0) {
-        // Has inherited roles: show data for users with those roles
-        const accessibleUsers = await Users.find({
-          tenantId,
-          roleId: { $in: inheritedRoleIds },
-        }).select('_id');
-        const userIds = accessibleUsers.map((user) => user._id);
-        query.tenantId = tenantId;
-        query.ownerId = { $in: userIds };
-      } else {
-        // No inherited roles: show only own data
-        query.tenantId = tenantId;
-        query.ownerId = userId;
-      }
-    }
+
   } else {
-    // Fallback: restrict by tenant
-    query.tenantId = tenantId;
+    console.log(`Role Name: ${roleName} (Not Admin)`);
+
+    if (inheritedRoleIds?.length > 0) {
+      console.log(`Inherited Role IDs found: ${inheritedRoleIds.join(', ')}`);
+      console.log('Fetching users with inherited roles...');
+
+      const accessibleUsers = await Users.find({
+        tenantId,
+        roleId: { $in: inheritedRoleIds },
+      }).select('_id');
+
+      const userIds = accessibleUsers.map((user) => user._id);
+      console.log(`Accessible User IDs: ${userIds.join(', ')}`);
+
+      query.ownerId = { $in: userIds };
+
+    } else {
+      console.log('No inherited roles found.');
+      console.log(`Restricting to only current user's data. UserId: ${userId}`);
+
+      query.ownerId = userId;
+    }
   }
+}
+
+console.log('Final Query:', query);
+
+  //  else {
+  //   // Fallback: restrict by tenant
+  //   query.tenantId = tenantId;
+  // }
 }
 
     let data;
