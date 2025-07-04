@@ -29,6 +29,8 @@ export const useSupportTickets = () => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
+  console.log("impersonatedUser_roleName=====",impersonatedUser_roleName)
+
   /* --------------------------------------------------------------------- */
   /*  QUERY: fetch tickets                                                  */
   /* --------------------------------------------------------------------- */
@@ -41,17 +43,17 @@ export const useSupportTickets = () => {
 
       const all = data?.tickets ?? [];
       console.log("all---",all)
-      if (!userRole) return [];
       console.log("userRole---",userRole)
       console.log("impersonatedUser_roleName---",impersonatedUser_roleName)
 
-      if (impersonatedUser_roleName === "Super_Admin") return all;
-      if (impersonatedUser_roleName === "Support_Team") {
-           // console.log("Support_Team: impersonatedUserId", impersonationPayload.impersonatedUserId);
-            const supportTickets = all.filter((t) => t.assignedToId === impersonationPayload.impersonatedUserId);
-            //console.log("Support_Team: tickets", supportTickets);
-            return supportTickets;
-        }
+      if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") return all;
+      // if (impersonatedUser_roleName === "Support_Team") {
+      //      // console.log("Support_Team: impersonatedUserId", impersonationPayload.impersonatedUserId);
+      //       const supportTickets = all.filter((t) => t.assignedToId === impersonationPayload.impersonatedUserId);
+      //       //console.log("Support_Team: tickets", supportTickets);
+      //       return supportTickets;
+      //   }
+      if (!userRole) return [];
       if (!organization) {
         if (userRole === "Admin" && userId)
           return all.filter((t) => t.ownerId === userId);
@@ -76,7 +78,7 @@ export const useSupportTickets = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["supportTickets", userRole, tenantId, userId],
+    queryKey: ["supportTickets", userRole, tenantId, userId,impersonatedUser_roleName],
     queryFn: fetchTickets,
     enabled: !!userRole, // wait until role is known
     staleTime: 1000 * 60 * 5, // 5 min

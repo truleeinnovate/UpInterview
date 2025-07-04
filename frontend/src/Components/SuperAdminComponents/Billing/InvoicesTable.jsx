@@ -39,7 +39,7 @@ import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 
-function InvoicesTable({ organizationId }) {
+function InvoicesTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
   const [selectedInvoice, setSelectedInvoice] = useState();
   // const [selectInvoiceView, setSelectInvoiceView] = useState(false);
@@ -160,13 +160,25 @@ function InvoicesTable({ organizationId }) {
     }
   }, [selectedInvoiceId]);
 
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView("kanban");
+  //   } else {
+  //     setView("table");
+  //   }
+  // }, [isTablet]);
+
   useEffect(() => {
-    if (isTablet) {
+    if (viewMode === "collapsed") {
+      setView("kanban");
+    } else if (viewMode === "expanded") {
+      setView("table");
+    } else if (isTablet) {
       setView("kanban");
     } else {
       setView("table");
     }
-  }, [isTablet]);
+  }, [viewMode, isTablet]);
 
   const dataToUse = invoices;
 
@@ -358,57 +370,67 @@ function InvoicesTable({ organizationId }) {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "totalAmount",
+      header: "Total Amount",
+      render: (value) => (
+        <div className="font-medium">{formatCurrency(value)}</div>
+      ),
+    },
+    {
+      key: "amountPaid",
+      header: "Paid",
+      render: (value) => <div>{formatCurrency(value)}</div>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        // setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
 
@@ -772,11 +794,17 @@ function InvoicesTable({ organizationId }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      invoices={currentFilteredRows}
+                      data={currentFilteredRows.map((invoice) => ({
+                        ...invoice,
+                        id: invoice._id,
+                        title: invoice.invoiceCode || "N/A",
+                        subtitle: invoice.type || "N/A",
+                      }))}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}
                       emptyState="No invoices found."
+                      viewMode={viewMode}
                     />
                   </div>
                 )}

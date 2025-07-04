@@ -6,30 +6,35 @@ const RoleOverrides = require('../models/roleOverrides');
 const { refreshTokenIfNeeded } = require('../utils/jwt');
 
 const permissionMiddleware = async (req, res, next) => {
-
+  console.log('[permissionMiddleware] Starting middleware execution');
   try {
-    const userId = req.headers['x-user-id'] || req.cookies.userId;
-    const tenantId = req.headers['x-tenant-id'] || req.cookies.tenantId;
-    const impersonatedUserId = req.headers['x-impersonation-token'];
-    const authHeader = req.headers.authorization;
+    
+    // const authHeader = req.headers.authorization || req.cookies.authToken;
+    // console.log('authHeader', authHeader)
+    let userId = req.headers['x-user-id'];
+    let tenantId = req.headers['x-tenant-id'];
+    const impersonatedUserId = req.headers['x-impersonation-userid'];
 
-    // console.log('Setting res.locals with:', {
-    //   isImpersonating,
-    //   // ... other relevant data
-    // });
-    
-    // Check for token refresh
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const newToken = refreshTokenIfNeeded(token);
-      
-      if (newToken) {
-        // Set the new token in the response headers
-        res.set('X-New-Token', newToken);
-      }
-    }
-    
-    let decoded = null;
+    // Decode JWT if available
+    // let decoded = null;
+    // if (authHeader && authHeader.startsWith('Bearer ')) {
+    //   const token = authHeader.split(' ')[1];
+    //   try {
+    //     decoded = jwt.verify(token, process.env.JWT_SECRET);
+    //     userId = userId || decoded.userId; // Fallback to JWT if header is missing
+    //     tenantId = tenantId || decoded.tenantId; // Fallback to JWT if header is missing
+    //     console.log('[permissionMiddleware] Decoded JWT:', { userId, tenantId });
+
+    //     // Check for token refresh
+    //     const newToken = refreshTokenIfNeeded(token);
+    //     if (newToken) {
+    //       res.set('X-New-Token', newToken);
+    //     }
+    //   } catch (err) {
+    //     console.error('[permissionMiddleware] JWT verification error:', err.message);
+    //   }
+    // }
+
     let currentUser = null;
     let isImpersonating = false;
     let superAdminPermissions = null;
@@ -41,15 +46,17 @@ const permissionMiddleware = async (req, res, next) => {
     let impersonatedUser_roleType = null;
     let impersonatedUser_roleName = null;
 
+    console.log('userId && tenantId 1', userId, tenantId)
+
     if (userId && tenantId) {
+    console.log('userId && tenantId 2', userId, tenantId)
+
       try {
-        if (!userId) {
-          console.error('Missing userId in token');
-          return res.status(401).json({ error: 'Unauthorized: Missing userId in token' });
-        }
+    console.log('userId && tenantId 3', userId, tenantId)
+
         currentUser = await Users.findById(userId).populate('roleId');
         if (!currentUser) {
-          console.error(`User not found for userId: ${userId}`);
+          console.error(`[permissionMiddleware] User not found for userId: ${userId}`);
           return res.status(401).json({ error: 'Unauthorized: User not found' });
         }
 
@@ -59,25 +66,17 @@ const permissionMiddleware = async (req, res, next) => {
 
         if (currentUser?.roleId) {
           const roleTemplate = await RolesPermissionObject.findById(currentUser.roleId);
-
           if (!roleTemplate) {
-            console.error(`Role template not found for roleId: ${effectiveUser.roleId}`);
+            console.error(`[permissionMiddleware] Role template not found for roleId: ${currentUser.roleId}`);
             return res.status(403).json({ error: 'Role template not found' });
           }
 
           if (roleTemplate.roleType === 'organization') {
-            if (!tenantId) {
-              console.error('Missing tenantId for organization user');
-              return res.status(401).json({ error: 'Unauthorized: Missing tenantId for organization user' });
-
-            }
-
             const tenant = await Tenant.findById(tenantId);
             if (!tenant || tenant.type !== 'organization') {
-              console.error(`Invalid tenant for tenantId: ${tenantId}`);
+              console.error(`[permissionMiddleware] Invalid tenant for tenantId: ${tenantId}`);
               return res.status(403).json({ error: 'Invalid tenant for organization user' });
             }
-
 
             const roleOverride = await RoleOverrides.findOne({
               tenantId: tenantId,
@@ -99,21 +98,20 @@ const permissionMiddleware = async (req, res, next) => {
         } else {
           effectivePermissions = currentUser?.permissions || [];
         }
- 
       } catch (err) {
-        console.error('JWT verification error:', err.message);
+        console.error('[permissionMiddleware] Error processing user/tenant:', err.message);
       }
+    } else {
+      console.log('[permissionMiddleware] Missing userId or tenantId, skipping user processing');
     }
 
     if (impersonatedUserId) {
       try {
         const impersonatedUser = await Users.findById(impersonatedUserId).populate('roleId');
-
         if (impersonatedUser) {
           isImpersonating = true;
           impersonatedUser_roleType = impersonatedUser.roleId?.roleType || null;
           impersonatedUser_roleName = impersonatedUser.roleId?.roleName || null;
-          
           const superAdminRole = await RolesPermissionObject.findById(impersonatedUser.roleId);
           if (superAdminRole) {
             superAdminPermissions = superAdminRole.objects.reduce((acc, obj) => {
@@ -121,10 +119,9 @@ const permissionMiddleware = async (req, res, next) => {
               return acc;
             }, {});
           }
-
         }
       } catch (err) {
-        console.error('Impersonation token error (continuing with normal auth):', err.message);
+        console.error('[permissionMiddleware] Impersonation token error:', err.message);
       }
     }
 
@@ -132,14 +129,6 @@ const permissionMiddleware = async (req, res, next) => {
       acc[objectName] = permissions;
       return acc;
     }, {});
-
-    req.effectivePermissions = permissionsObject;
-    req.superAdminPermissions = superAdminPermissions;
-    req.inheritedRoleIds = inheritedRoleIds;
-    req.tenantId = tenantId;
-    req.userId = currentUser?._id;
-    req.isImpersonating = isImpersonating;
-    req.currentUserId = currentUser?._id;
 
     res.locals = {
       effectivePermissions: permissionsObject,
@@ -152,21 +141,19 @@ const permissionMiddleware = async (req, res, next) => {
       tenantId,
       userId: currentUser?._id,
       impersonatedUser_roleType,
-      impersonatedUser_roleName
+      impersonatedUser_roleName,
     };
-    console.log('res.locals', res.locals)
+
+    console.log('[permissionMiddleware] Setting res.locals:', res.locals);
     next();
   } catch (error) {
-    console.error('Permission Middleware Error:', error);
+    console.error('[permissionMiddleware] Error:', error.message);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
 
-
 module.exports = { permissionMiddleware };
-
-

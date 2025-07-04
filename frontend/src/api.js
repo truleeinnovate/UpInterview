@@ -4,7 +4,7 @@ import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import { config } from './config';
 
 export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
-  console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));
+  // console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));
 
   try {
     const authToken = Cookies.get('authToken') ?? '';
@@ -29,7 +29,7 @@ export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
       withCredentials: true,
     });
 
-    console.log('API Response for', endpoint, ':', response.data);
+    // console.log('API Response for', endpoint, ':', response.data);
     return response.data.data || [];
   } catch (error) {
     console.error(`Error fetching ${endpoint}:`, error);

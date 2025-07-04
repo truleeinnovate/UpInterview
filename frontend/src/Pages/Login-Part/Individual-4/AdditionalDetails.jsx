@@ -464,7 +464,7 @@ const AdditionalDetails = ({
 
         {/* </div> */}
 
-        {isProfileCompleteStateOrg && (
+        {!isProfileCompleteStateOrg && (
           <>
             {/* Resume Section */}
             < div className="sm:col-span-2 col-span-1">
