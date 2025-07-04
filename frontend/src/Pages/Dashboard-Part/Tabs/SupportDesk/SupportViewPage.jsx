@@ -151,8 +151,8 @@ const SupportViewPage = () => {
             <div className="p-2 bg-custom-bg rounded-lg mt-1">
               <FaFileAlt className="w-5 h-5 text-gray-500" />
             </div>
-            <div className="flex-1">
-              <p className="text-gray-700 whitespace-pre-wrap">{ticketData.description || 'No description provided.'}</p>
+            <div className="flex-grow whitespace-pre-wrap break-words break-all">
+              <p className="text-gray-700">{ticketData.description || 'No description provided.'}</p>
             </div>
           </div>
         </div>
