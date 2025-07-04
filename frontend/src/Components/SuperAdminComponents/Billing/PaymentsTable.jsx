@@ -128,9 +128,10 @@ function PaymentsTable({ organizationId, viewMode }) {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/payments/${selectedPaymentId}`
+          `${config.REACT_APP_API_URL}/payments/payment/${selectedPaymentId}`
         );
         setSelectedPayment(response.data);
+        console.log("SELECTED PAYMENT RESPONSE: ", response.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -474,11 +475,13 @@ function PaymentsTable({ organizationId, viewMode }) {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {payment?.firstName ? payment.firstName : "N/A"}
+                    {payment?.paymentCode ? payment.paymentCode : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {payment?.CurrentRole || "position"}
+                    {payment?.transactionDate
+                      ? payment?.transactionDate
+                      : "N/A"}
                   </p>
                 </div>
               </div>
@@ -495,26 +498,21 @@ function PaymentsTable({ organizationId, viewMode }) {
                         <div className="flex justify-between">
                           <span className="text-gray-600">Amount</span>
                           <span className="font-medium">
-                            {formatCurrency(payment.amount, payment.currency)}
+                            {formatCurrency(payment.amount, payment.currency) ||
+                              "N/A"}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Status</span>
                           <StatusBadge
-                            status={
-                              payment.status === "captured"
-                                ? "success"
-                                : payment.status === "pending"
-                                ? "warning"
-                                : "error"
-                            }
+                            status={payment.status}
                             text={payment?.status?.toUpperCase()}
                           />
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Payment Method</span>
                           <span className="capitalize">
-                            {payment?.paymentMethod?.replace("_", " ")}
+                            {payment?.paymentMethod?.replace("_", " ") || "N/A"}
                           </span>
                         </div>
                       </div>
@@ -532,7 +530,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Gateway</span>
                         <span className="capitalize">
-                          {payment.paymentGateway}
+                          {payment.paymentGateway || "N/A"}
                         </span>
                       </div>
                       {payment.razorpayPaymentId && (
@@ -541,7 +539,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                             Razorpay Payment ID
                           </span>
                           <span className="font-mono text-sm">
-                            {payment.razorpayPaymentId}
+                            {payment.razorpayPaymentId || "N/A"}
                           </span>
                         </div>
                       )}
@@ -551,7 +549,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                             Razorpay Order ID
                           </span>
                           <span className="font-mono text-sm">
-                            {payment.razorpayOrderId}
+                            {payment.razorpayOrderId || "N/A"}
                           </span>
                         </div>
                       )}
@@ -560,9 +558,9 @@ function PaymentsTable({ organizationId, viewMode }) {
                           <span className="text-gray-600">Signature</span>
                           <span
                             className="font-mono text-sm truncate max-w-[200px]"
-                            title={payment.razorpaySignature}
+                            title={payment.razorpaySignature || "N/A"}
                           >
-                            {payment.razorpaySignature}
+                            {payment.razorpaySignature || "N/A"}
                           </span>
                         </div>
                       )}
@@ -580,7 +578,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Customer ID</span>
                         <span className="font-mono text-sm">
-                          {payment.razorpayCustomerId}
+                          {payment.razorpayCustomerId || "N/A"}
                         </span>
                       </div>
                     )}
@@ -588,7 +586,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Card ID</span>
                         <span className="font-mono text-sm">
-                          {payment.cardId}
+                          {payment.cardId || "N/A"}
                         </span>
                       </div>
                     )}
@@ -603,16 +601,20 @@ function PaymentsTable({ organizationId, viewMode }) {
                   <div className="mt-2 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Transaction ID</span>
-                      <span className="font-mono">{payment.transactionId}</span>
+                      <span className="font-mono">
+                        {payment.transactionId || "N/A"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Transaction Date</span>
-                      <span>{formatDate(payment.transactionDate)}</span>
+                      <span>
+                        {formatDate(payment.transactionDate) || "N/A"}
+                      </span>
                     </div>
                     {payment.paidAt && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Paid At</span>
-                        <span>{formatDate(payment.paidAt)}</span>
+                        <span>{formatDate(payment.paidAt) || "N/A"}</span>
                       </div>
                     )}
                   </div>
@@ -633,7 +635,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                         <div className="flex justify-between">
                           <span className="text-gray-600">Billing Cycle</span>
                           <span className="capitalize">
-                            {payment.billingCycle}
+                            {payment.billingCycle || "N/A"}
                           </span>
                         </div>
                         {payment.subscriptionId && (
@@ -642,7 +644,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                               Subscription ID
                             </span>
                             <span className="font-mono text-sm">
-                              {payment.subscriptionId}
+                              {payment.subscriptionId || "N/A"}
                             </span>
                           </div>
                         )}
@@ -748,53 +750,48 @@ function PaymentsTable({ organizationId, viewMode }) {
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            {payments?.length === 0 ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={tableActions}
-                        emptyState="No payments found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((payment) => ({
-                          ...payment,
-                          id: payment._id,
-                          title: payment.paymentCode || "N/A",
-                          subtitle:
-                            formatDate(payment.transactionDate) || "N/A",
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No payments found."
-                        viewMode={viewMode}
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState="No payments found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((payment) => ({
+                        ...payment,
+                        id: payment._id,
+                        title: payment.paymentCode || "N/A",
+                        subtitle: formatDate(payment.transactionDate) || "N/A",
+                      }))}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No payments found."
+                      viewMode={viewMode}
+                    />
+                  </div>
+                )}
 
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    {renderFilterContent()}
-                  </FilterPopup>
-                </div>
-              </motion.div>
-            )}
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  {renderFilterContent()}
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

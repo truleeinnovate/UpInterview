@@ -224,7 +224,7 @@ const Contact = ({ organizationId, viewMode }) => {
   }
 
   if (!contacts || contacts.length === 0) {
-    return <div className="text-center mt-12">No Contacts found.</div>;
+    return <div className="text-center mt-20">No Contacts found.</div>;
   }
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);

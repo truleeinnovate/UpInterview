@@ -191,6 +191,19 @@ const getInvoicesByTenantId = async (req, res) => {
     });
   }
 };
+
+const getSingleInvoiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const invoice = await Invoice.findById(id);
+    res.status(200).json(invoice);
+  } catch (error) {
+    console.log("Internal server error", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // --------------------------------------------------------------->
 
 module.exports = {
@@ -198,4 +211,5 @@ module.exports = {
   getInvoice,
   getInvoices,
   getInvoicesByTenantId,
+  getSingleInvoiceById,
 };

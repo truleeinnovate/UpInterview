@@ -40,7 +40,7 @@ const getPaymentsById = async (req, res) => {
 
     const payments = await Payments.find({ tenantId: id });
 
-    res.status(200).json({payments});
+    res.status(200).json({ payments });
   } catch (error) {
     console.error("Detailed error:", {
       message: error.message,
@@ -57,20 +57,15 @@ const getPaymentsById = async (req, res) => {
 // SUPER ADMIN added by Ashok
 const getSinglePaymentById = async (req, res) => {
   try {
-    const { paymentId } = req.params;
+    const { id } = req.params;
+    console.log("SINGLE PAYMENT ID", id);
 
-    const payment = await Payments.findById(paymentId);
-
+    const payment = await Payments.findById(id);
     res.status(200).json(payment);
   } catch (error) {
-    console.error("Detailed error:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
+    console.log("Internal server error:", error.message);
     res.status(500).json({
-      error: "Server error",
-      details: error.message,
+      message: "Internal server error",
     });
   }
 };

@@ -2166,7 +2166,7 @@ const InternalRequest = () => {
 
   return (
     <>
-      <div className="fixed top-16 sm:top-20 md:top-24 left-0 right-0">
+      <div className="fixed top-12 sm:top-12 md:top-12 left-0 right-0">
         <div className="flex justify-between p-4">
           <div>
             <span className="text-lg font-semibold text-custom-blue">

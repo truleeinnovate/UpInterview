@@ -462,7 +462,7 @@ function TenantsPage() {
 
   return (
     <div className="bg-background">
-      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 top-16 left-0 right-0 bg-background">
+      <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 left-0 right-0 bg-background">
         <main className="flex justify-between items-center px-4">
           <div className="flex flex-col items-center space-x-2 w-full">
             <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4">

@@ -146,11 +146,11 @@ function InvoicesTable({ organizationId, viewMode }) {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/invoices/${selectedInvoiceId}`
+          `${config.REACT_APP_API_URL}/invoices/invoice/${selectedInvoiceId}`
         );
         setSelectedInvoice(response.data);
       } catch (error) {
-        console.error("Error fetching internal logs:", error);
+        console.error("Error fetching invoice:", error);
       } finally {
         setIsLoading(false);
       }
@@ -241,22 +241,22 @@ function InvoicesTable({ organizationId, viewMode }) {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "paid":
-        return "success";
-      case "partially_paid":
-        return "warning";
-      case "pending":
-        return "warning";
-      case "overdue":
-        return "error";
-      case "failed":
-        return "error";
-      default:
-        return "neutral";
-    }
-  };
+  // const getStatusDisplay = (status) => {
+  //   switch (status) {
+  //     case "paid":
+  //       return "success";
+  //     case "partially_paid":
+  //       return "warning";
+  //     case "pending":
+  //       return "warning";
+  //     case "overdue":
+  //       return "error";
+  //     case "failed":
+  //       return "error";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -499,20 +499,10 @@ function InvoicesTable({ organizationId, viewMode }) {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {invoice?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${invoice?.ImageData?.path}`}
-                      alt={invoice?.FirstName || invoice?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {invoice?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {invoice?.invoiceCode?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
                   {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                 invoice?.Status === 'active' ? 'bg-green-100 text-green-800' :
                 invoice?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
@@ -524,11 +514,11 @@ function InvoicesTable({ organizationId, viewMode }) {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {invoice?.firstName ? invoice.firstName : "N/A"}
+                    {invoice?.invoiceCode ? invoice.invoiceCode : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {invoice?.CurrentRole || "position"}
+                    {formatDate(invoice?.dueDate) || "N/A"}
                   </p>
                 </div>
               </div>

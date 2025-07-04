@@ -491,12 +491,14 @@ function ReceiptsTable({ organizationId, viewMode }) {
                     <div className="mt-2 space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Invoice ID</span>
-                        <span className="font-mono">{receipt.receiptCode}</span>
+                        <span className="font-mono">
+                          {receipt.receiptCode || "N/A"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Amount</span>
                         <span className="font-medium">
-                          {formatCurrency(receipt.amount)}
+                          {formatCurrency(receipt.amount) || "N/A"}
                         </span>
                       </div>
                       {receipt.discount > 0 && (
@@ -506,13 +508,13 @@ function ReceiptsTable({ organizationId, viewMode }) {
                               Original Price
                             </span>
                             <span className="text-gray-500">
-                              {formatCurrency(receipt.price)}
+                              {formatCurrency(receipt.price) || "N/A"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Discount</span>
                             <span className="text-success-600">
-                              -{formatCurrency(receipt.discount)}
+                              -{formatCurrency(receipt.discount) || "N/A"}
                             </span>
                           </div>
                         </>
@@ -530,22 +532,25 @@ function ReceiptsTable({ organizationId, viewMode }) {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Payment Method</span>
                         <span className="capitalize">
-                          {receipt.paymentMethod.replace("_", " ")}
+                          {receipt.paymentMethod.replace("_", " ") || "N/A"}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Transaction ID</span>
                         <span className="font-mono">
-                          {receipt.transactionId}
+                          {receipt.transactionId || "N/A"}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Payment Date</span>
-                        <span>{formatDate(receipt.paymentDate)}</span>
+                        <span>{formatDate(receipt.paymentDate) || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status</span>
-                        <StatusBadge status={receipt.status} />
+                        <StatusBadge
+                          status={receipt.status}
+                          text={receipt?.status?.toUpperCase()}
+                        />
                       </div>
                     </div>
                   </div>
@@ -558,12 +563,14 @@ function ReceiptsTable({ organizationId, viewMode }) {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal</span>
-                      <span>{formatCurrency(receipt.price)}</span>
+                      <span>{formatCurrency(receipt.price) || "N/A"}</span>
                     </div>
                     {receipt.discount > 0 && (
                       <div className="flex justify-between text-success-600">
                         <span>Discount</span>
-                        <span>-{formatCurrency(receipt.discount)}</span>
+                        <span>
+                          -{formatCurrency(receipt.discount) || "N/A"}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -571,7 +578,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <span>Total Paid</span>
-                  <span>{formatCurrency(receipt.amount)}</span>
+                  <span>{formatCurrency(receipt.amount) || "N/A"}</span>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -679,7 +686,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
                         ...payment,
                         id: payment._id,
                         title: payment.receiptCode || "N/A",
-                        subtitle: formatDate(payment.transactionDate) || "N/A",
+                        subtitle: formatDate(payment.paymentDate) || "N/A",
                       }))}
                       columns={kanbanColumns}
                       loading={isLoading}

@@ -227,13 +227,15 @@ import {
 } from "react-icons/ai";
 import { CgDetailsMore } from "react-icons/cg";
 import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
+import { usePermissions } from "../../../Context/PermissionsContext";
 
 function Sidebar({ open, onClose }) {
+  const { superAdminPermissions } = usePermissions();
   // const { user, logout } = useAuth();
-  const [showMore, setShowMore] = useState(false);
+  // const [showMore, setShowMore] = useState(false);
 
   const navigation = [
-    { href: "/admin-dashboard", name: "Dashboard", icon: AiOutlineHome },
+    // { href: "/admin-dashboard", name: "Dashboard", icon: AiOutlineHome },
     { href: "/tenants", name: "Tenants", icon: AiOutlineTeam },
     {
       href: "/interviewer-requests",
@@ -248,32 +250,32 @@ function Sidebar({ open, onClose }) {
       role: "super_admin",
     },
     {
-      name: "Support",
-      href: "/support-tickets",
+      name: "Support Desk",
+      href: "/super-admin-desk",
       icon: AiOutlineCustomerService,
     },
     { href: "/admin-billing", name: "Billing", icon: AiOutlineDollar },
   ];
 
-  const moreNavItems = [
-    { href: "/settings", name: "Settings", icon: AiOutlineSetting },
-    {
-      href: "/internal-logs",
-      name: "Internal Logs",
-      role: "super_admin",
-      icon: AiOutlineFileText,
-    },
-    {
-      href: "/integrations",
-      name: "Integrations",
-      role: "super_admin",
-      icon: AiOutlineCheckSquare,
-    },
-  ];
+  // const moreNavItems = [
+  //   { href: "/settings", name: "Settings", icon: AiOutlineSetting },
+  //   {
+  //     href: "/internal-logs",
+  //     name: "Internal Logs",
+  //     role: "super_admin",
+  //     icon: AiOutlineFileText,
+  //   },
+  //   {
+  //     href: "/integrations",
+  //     name: "Integrations",
+  //     role: "super_admin",
+  //     icon: AiOutlineCheckSquare,
+  //   },
+  // ];
 
-  const filteredMoreItems = moreNavItems.filter(
-    (item) => !item.role || item.role === "super_admin"
-  );
+  // const filteredMoreItems = moreNavItems.filter(
+  //   (item) => !item.role || item.role === "super_admin"
+  // );
 
   return (
     <>
@@ -330,29 +332,40 @@ function Sidebar({ open, onClose }) {
         {/* Navigation */}
         <nav className="flex-1 px-2 py-4 overflow-y-auto">
           <div className="space-y-1">
-            {navigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  `group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`
-                }
-              >
-                <item.icon
-                  className="mr-3 flex-shrink-0 h-5 w-5"
-                  aria-hidden="true"
-                />
-                {item.name}
-              </NavLink>
-            ))}
+            {navigation.map((item) => {
+              // If item doesn't require permission, or if permissionKey exists and is valid in superAdminPermissions
+              const hasPermission =
+                !item.permissionKey ||
+                item.permissionKey
+                  .split(".")
+                  .reduce((acc, key) => acc?.[key], superAdminPermissions);
+
+              if (!hasPermission) return null;
+
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive
+                        ? "bg-primary-50 text-primary-700"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`
+                  }
+                >
+                  <item.icon
+                    className="mr-3 flex-shrink-0 h-5 w-5"
+                    aria-hidden="true"
+                  />
+                  {item.name}
+                </NavLink>
+              );
+            })}
           </div>
 
           {/* Show More */}
-          <div className="relative">
+          {/* <div className="relative">
             <button
               onClick={() => setShowMore((prev) => !prev)}
               className="w-full flex items-center justify-between px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors"
@@ -391,7 +404,7 @@ function Sidebar({ open, onClose }) {
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
         </nav>
 
         {/* Logout */}

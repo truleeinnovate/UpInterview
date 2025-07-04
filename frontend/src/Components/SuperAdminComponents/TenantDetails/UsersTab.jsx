@@ -31,6 +31,7 @@ import TableView from "../../Shared/Table/TableView.jsx";
 // import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 import { LiaGenderlessSolid } from "react-icons/lia";
+import { FaCircle } from "react-icons/fa";
 import { config } from "../../../config.js";
 import {
   setAuthCookies,
@@ -381,9 +382,9 @@ function UsersTab({ users, viewMode }) {
             <div className="p-2">
               <div className="flex justify-center items-center gap-4 mb-4">
                 <div className="relative">
-                  {user?.ImageData ? (
+                  {user?.contact?.imageData ? (
                     <img
-                      src={`http://localhost:5000/${user?.ImageData?.path}`}
+                      src={user?.contact?.imageData?.path}
                       alt={user?.FirstName || user?.firstName}
                       onError={(e) => {
                         e.target.src = "/default-profile.png";
@@ -398,11 +399,9 @@ function UsersTab({ users, viewMode }) {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {user?.firstName ? user.firstName : "N/A"}
+                    {capitalizeFirstLetter(user?.firstName) || "N/A"}
                   </h3>
-                  <p className="text-gray-600 mt-1">
-                    {user.CurrentRole || "position"}
-                  </p>
+                  <p className="text-gray-600 mt-1">{user.roleName || "N/A"}</p>
                 </div>
               </div>
 
@@ -421,7 +420,8 @@ function UsersTab({ users, viewMode }) {
                           <div>
                             <p className="text-sm text-gray-500">Name</p>
                             <p className="text-gray-700">
-                              {user?.firstName || "N/A"} {user?.lastName || ""}
+                              {capitalizeFirstLetter(user?.firstName)}{" "}
+                              {capitalizeFirstLetter(user?.lastName) || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -434,9 +434,7 @@ function UsersTab({ users, viewMode }) {
                               Date of Birth
                             </p>
                             <p className="text-gray-700">
-                              {new Date(
-                                user?.Date_Of_Birth
-                              ).toLocaleDateString() || "N/A"}
+                              {user?.contact?.dateOfBirth || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -448,7 +446,20 @@ function UsersTab({ users, viewMode }) {
                             <div>
                               <p className="text-sm text-gray-500">Gender</p>
                               <p className="text-gray-700">
-                                {user?.Gender || "N/A"}
+                                {user?.contact?.gender || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-custom-bg rounded-lg">
+                              <FaCircle className="w-5 h-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Status</p>
+                              <p className="text-gray-700">
+                                {<StatusBadge status={user?.status} /> || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -469,7 +480,7 @@ function UsersTab({ users, viewMode }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Mail className="w-5 h-5 text-gray-500" />
                           </div>
-                          <span className="text-gray-700">
+                          <span className="text-gray-700 truncate">
                             {user?.email || "N/A"}
                           </span>
                         </div>
@@ -477,7 +488,17 @@ function UsersTab({ users, viewMode }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Phone className="w-5 h-5 text-gray-500" />
                           </div>
-                          <span className="text-gray-700">{user?.Phone}</span>
+                          <span className="text-gray-700">
+                            {user?.contact?.phone || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <Phone className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <span className="text-gray-700 truncate">
+                            {user?.contact?.linkedinUrl || "N/A"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -495,10 +516,10 @@ function UsersTab({ users, viewMode }) {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">
-                              Qualification
+                              Current Role
                             </p>
                             <p className="text-gray-700">
-                              {user?.HigherQualification || "N/A"}
+                              {user?.contact?.currentRole || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -507,9 +528,9 @@ function UsersTab({ users, viewMode }) {
                             <School className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">University</p>
+                            <p className="text-sm text-gray-500">Industry</p>
                             <p className="text-gray-700">
-                              {user?.UniversityCollege || "N/A"}
+                              {user?.contact?.industry || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -520,13 +541,15 @@ function UsersTab({ users, viewMode }) {
                             <Briefcase className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Experience</p>
+                            <p className="text-sm text-gray-500">
+                              Years of experience
+                            </p>
                             <p className="text-gray-700">
-                              {user?.CurrentExperience || "N/A"}
+                              {user?.contact?.experienceYears || "N/A"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Briefcase className="w-5 h-5" />
                           </div>
@@ -538,7 +561,7 @@ function UsersTab({ users, viewMode }) {
                               {user?.RelevantExperience || "N/A"}
                             </p>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>
@@ -549,8 +572,8 @@ function UsersTab({ users, viewMode }) {
                     Skills
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {user?.skills ? (
-                      user.skills.map((skill, index) => (
+                    {user?.contact?.skills ? (
+                      user?.contact?.skills.map((skill, index) => (
                         <span
                           key={index}
                           className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
@@ -593,7 +616,7 @@ function UsersTab({ users, viewMode }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen">
       <div className="absolute md:mt-0 sm:mt-0 top-0 left-0 right-0 bg-background">
         <div className="flex justify-between items-center mb-4">
           <div className="md:mt-4 sm:mt-4 w-full">
