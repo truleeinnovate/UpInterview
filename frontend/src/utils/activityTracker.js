@@ -217,11 +217,10 @@
 import Cookies from 'js-cookie';
 import { EventEmitter } from 'events';
 
-console.log('activityTracker.js loaded');
+// console.log('activityTracker.js loaded');
 
 // Configuration
-// const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
-const INACTIVITY_TIMEOUT = 20 * 1000; // 20 seconds
+const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
 const WARNING_TIMEOUT = INACTIVITY_TIMEOUT - (5 * 1000); // Show warning 5 seconds before logout
 const CHECK_INTERVAL = 1000; // Check every minute
 
@@ -253,7 +252,7 @@ function resetTimers() {
   logoutTimer = setTimeout(logoutUser, INACTIVITY_TIMEOUT);
 
   // Log activity detected
-  console.log('✅ Activity detected, timers reset.');
+  // console.log('✅ Activity detected, timers reset.');
 
   // Update UI to show session is active
   activityEvents.emit('activity');
@@ -261,7 +260,7 @@ function resetTimers() {
 
 // Show warning UI
 function showWarning() {
-  console.log('⚠️ Session will expire soon.');
+  // console.log('⚠️ Session will expire soon.');
   activityEvents.emit('warning', {
     message: 'Your session will expire due to inactivity soon.',
     remainingTime: 5 // here it's just 5 seconds for testing
@@ -269,7 +268,7 @@ function showWarning() {
 }
 // Logout user and show expiration UI
 function logoutUser() {
-  console.log('⏰ Session expired due to inactivity.');
+  // console.log('⏰ Session expired due to inactivity.');
 
   // Clear all cookies except those needed for super admin
   Cookies.remove('authToken', { path: '/' });
@@ -300,7 +299,7 @@ export function startActivityTracking() {
     const timeRemaining = INACTIVITY_TIMEOUT - timeSinceLastActivity;
 
     // Log remaining time every second
-    console.log(`⏳ Inactivity time remaining: ${Math.max(0, Math.ceil(timeRemaining / 1000))} seconds`);
+    // console.log(`⏳ Inactivity time remaining: ${Math.max(0, Math.ceil(timeRemaining / 1000))} seconds`);
 
     if (timeRemaining <= 0) {
       logoutUser();

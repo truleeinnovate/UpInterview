@@ -68,152 +68,144 @@ const getModelMapping = (permissions) => {
 };
 
 router.get('/:model', permissionMiddleware, async (req, res) => {
+  console.log('started api routes page1');
   try {
+    console.log('started api routes page');
     const { model } = req.params;
-    const authToken = req.cookies.authToken || req.headers.authorization?.split('Bearer ')[1];
+    const authToken = req.cookies.authToken;
     const permissionsHeader = req.headers['x-permissions'];
 
-    // Log incoming headers and cookies
-    // console.log('--- Incoming Request ---');
-    // console.log('authToken:', authToken);
-    // console.log('permissionsHeader:', permissionsHeader);
-    // console.log('req.cookies:', req.cookies);
-    // console.log('req.headers:', req.headers);
-
-    // Log res.locals as soon as possible
-    // console.log('--- res.locals after permissionMiddleware ---');
-    // console.log('res.locals:', res.locals);
+    console.log('--- [1] Incoming GET /:model request ---');
+    console.log('Model param:', model);
+    console.log('authToken:', !!authToken);
+    console.log('permissionsHeader:', permissionsHeader);
 
     if (permissionsHeader) {
       try {
         const permissions = JSON.parse(permissionsHeader);
-        // console.log('Parsed permissions:', permissions);
+        console.log('[2] Parsed permissionsHeader:', permissions);
       } catch (e) {
-        console.error('Error parsing permissions:', e);
+        console.error('[2] Error parsing permissionsHeader:', e);
       }
     }
 
     if (!authToken) {
-      // console.log('No authToken found');
+      console.log('[3] No authToken found, returning 401');
       return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-      // console.log('Decoded JWT:', decoded);
+      console.log('[4] Decoded JWT:', decoded);
     } catch (err) {
-      console.error('JWT verification failed:', err);
+      console.error('[4] JWT verification failed:', err);
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
     const { userId, tenantId } = decoded;
-    // console.log('userId:', userId, 'tenantId:', tenantId);
+    console.log('[5] userId:', userId, 'tenantId:', tenantId);
 
     if (!userId || !tenantId) {
-      // console.log('Missing userId or tenantId in JWT');
+      console.log('[6] Missing userId or tenantId in JWT, returning 401');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
-    // Log all permission-related locals
+    // Permission locals
     const {
-      effectivePermissions = {},
-      superAdminPermissions = null,
-      inheritedRoleIds = [],
-      isImpersonating = false,
-      effectivePermissions_RoleType = null,
-      effectivePermissions_RoleLevel = null,
-      effectivePermissions_RoleName = null,
-      impersonatedUser_roleType = null,
-      impersonatedUser_roleName = null
+      effectivePermissions,
+      superAdminPermissions,
+      inheritedRoleIds,
+      isImpersonating,
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleLevel,
+      effectivePermissions_RoleName,
+      impersonatedUser_roleType,
+      impersonatedUser_roleName
     } = res.locals;
 
-    // console.log('--- Permission Data from res.locals ---');
-    // console.log('effectivePermissions:', effectivePermissions);
-    // console.log('superAdminPermissions:', superAdminPermissions);
-    // console.log('inheritedRoleIds:', inheritedRoleIds);
-    // console.log('isImpersonating:', isImpersonating);
-    // console.log('effectivePermissions_RoleType:', effectivePermissions_RoleType);
-    // console.log('effectivePermissions_RoleLevel:', effectivePermissions_RoleLevel);
-    // console.log('effectivePermissions_RoleName:', effectivePermissions_RoleName);
-    // console.log('impersonatedUser_roleType:', impersonatedUser_roleType);
-    // console.log('impersonatedUser_roleName:', impersonatedUser_roleName);
+    console.log('[7] Permission Data from res.locals:', {
+      effectivePermissions,
+      superAdminPermissions,
+      inheritedRoleIds,
+      isImpersonating,
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleLevel,
+      effectivePermissions_RoleName,
+      impersonatedUser_roleType,
+      impersonatedUser_roleName
+    });
+
+    // Check if res.locals is empty
+    if (!effectivePermissions && !superAdminPermissions) {
+      console.log('[7.1] No permissions found in res.locals, returning 403');
+      return res.status(403).json({ error: 'Forbidden: No permissions available' });
+    }
 
     const permissionsToCheck = superAdminPermissions || effectivePermissions;
+
     const modelMapping = getModelMapping(permissionsToCheck);
     const modelConfig = modelMapping[model.toLowerCase()];
+    console.log('[8] Model config:', modelConfig);
+
     if (!modelConfig) {
+      console.log('[8] Invalid model:', model);
       return res.status(400).json({ message: `Invalid model: ${model}` });
     }
 
     const { model: DataModel, permissionName, hasViewPermission } = modelConfig;
+    console.log('[9] Model config details:', { permissionName, hasViewPermission });
 
     if (!DataModel || typeof DataModel.find !== 'function') {
-      console.error(`Invalid DataModel for ${model}:`, DataModel);
+      console.error('[10] Invalid DataModel for', model, DataModel);
       return res.status(500).json({ error: `Invalid model configuration for ${model}` });
     }
 
- let query = {};
+    let query = {};
 
-if (permissionsToCheck?.SuperAdmin?.ViewAll) {
-  // SuperAdmin: no restrictions
-} else {
-  // Use values from res.locals
-  const roleType = effectivePermissions_RoleType;
-  const roleName = effectivePermissions_RoleName;
-
-if (roleType === 'individual') {
-  console.log('Role Type: individual');
-  console.log(`Applying tenantId filter: ${tenantId}`);
-  // Individual: only see their own tenant's data
-  query.tenantId = tenantId;
-
-} else if (roleType === 'organization') {
-  console.log('Role Type: organization');
-
-  if (roleName === 'Admin') {
-    console.log('Role Name: Admin');
-    console.log(`Admin access - Applying tenantId filter: ${tenantId}`);
-    // Organization Admin: see all data for their tenant
-    query.tenantId = tenantId;
-
-  } else {
-    console.log(`Role Name: ${roleName} (Not Admin)`);
-
-    if (inheritedRoleIds?.length > 0) {
-      console.log(`Inherited Role IDs found: ${inheritedRoleIds.join(', ')}`);
-      console.log('Fetching users with inherited roles...');
-
-      const accessibleUsers = await Users.find({
-        tenantId,
-        roleId: { $in: inheritedRoleIds },
-      }).select('_id');
-
-      const userIds = accessibleUsers.map((user) => user._id);
-      console.log(`Accessible User IDs: ${userIds.join(', ')}`);
-
-      query.ownerId = { $in: userIds };
-
+    if (permissionsToCheck?.SuperAdmin?.ViewAll) {
+      console.log('[11] SuperAdmin: no restrictions');
     } else {
-      console.log('No inherited roles found.');
-      console.log(`Restricting to only current user's data. UserId: ${userId}`);
+      const roleType = effectivePermissions_RoleType;
+      const roleName = effectivePermissions_RoleName;
 
-      query.ownerId = userId;
+      if (roleType === 'individual') {
+        console.log('[12] Role Type: individual, tenantId:', tenantId);
+        query.tenantId = tenantId;
+      } else if (roleType === 'organization') {
+        console.log('[13] Role Type: organization, roleName:', roleName);
+
+        if (roleName === 'Admin') {
+          console.log('[14] Organization Admin, tenantId:', tenantId);
+          query.tenantId = tenantId;
+        } else {
+          console.log('[15] Organization, not Admin, roleName:', roleName);
+
+          if (inheritedRoleIds?.length > 0) {
+            console.log('[16] Inherited Role IDs:', inheritedRoleIds);
+
+            const accessibleUsers = await Users.find({
+              tenantId,
+              roleId: { $in: inheritedRoleIds },
+            }).select('_id');
+
+            const userIds = accessibleUsers.map((user) => user._id);
+            console.log('[17] Accessible User IDs:', userIds);
+
+            query.ownerId = { $in: userIds };
+          } else {
+            console.log('[18] No inherited roles, restricting to userId:', userId);
+            query.ownerId = userId;
+          }
+        }
+      }
+      console.log('[19] Final Query:', query);
     }
-  }
-}
-
-console.log('Final Query:', query);
-
-  //  else {
-  //   // Fallback: restrict by tenant
-  //   query.tenantId = tenantId;
-  // }
-}
 
     let data;
     switch (model.toLowerCase()) {
       case 'mockinterview':
+        console.log('[20] Fetching MockInterview data with query:', query);
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -224,9 +216,12 @@ console.log('Final Query:', query);
         break;
 
       case 'tenantquestions':
+        console.log('[21] Fetching TenantQuestionsListNames with query:', query);
         const lists = await TenantQuestionsListNames.find(query).lean();
         const listIds = lists.map((list) => list._id);
+        console.log('[22] List IDs:', listIds);
 
+        console.log('[23] Fetching TenantQuestions with listIds:', listIds);
         const questions = await TenantQuestions.find({
           ...query,
           tenantListId: { $in: listIds },
@@ -264,6 +259,7 @@ console.log('Final Query:', query);
         break;
 
       case 'interview':
+        console.log('[24] Fetching Interview data with query:', query);
         const interviews = await DataModel.find(query)
           .populate({ path: 'candidateId', model: 'Candidate' })
           .populate({ path: 'positionId', model: 'Position' })
@@ -271,6 +267,7 @@ console.log('Final Query:', query);
           .lean();
 
         const interviewIds = interviews.map((interview) => interview._id);
+        console.log('[25] Interview IDs:', interviewIds);
 
         const roundsData = await InterviewRounds.find({ interviewId: { $in: interviewIds } })
           .populate({
@@ -279,12 +276,14 @@ console.log('Final Query:', query);
             select: 'firstName lastName email',
           })
           .lean();
+        console.log('[26] Rounds Data:', roundsData.length);
 
         const interviewQuestions = await InterviewQuestions.find({
           interviewId: { $in: interviewIds },
         })
           .select('roundId snapshot')
           .lean();
+        console.log('[27] Interview Questions:', interviewQuestions.length);
 
         const roundsWithQuestions = roundsData.map((round) => ({
           ...round,
@@ -298,15 +297,17 @@ console.log('Final Query:', query);
         break;
 
       default:
+        console.log('[28] Fetching generic model data with query:', query);
         data = await DataModel.find(query).lean();
     }
 
+    console.log('[29] Sending response data:', Array.isArray(data) ? `Array of length ${data.length}` : typeof data);
     res.status(200).json({
       data,
     });
   } catch (error) {
-    console.error(`Error fetching data for model ${req.params.model}:`, error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error(`[30] Error fetching data for model ${req.params.model}:`, error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
 

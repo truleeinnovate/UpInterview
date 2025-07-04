@@ -35,12 +35,12 @@ const corsOptions = {
     "Accept",
     "x-user-id",
     "x-tenant-id",
-    "x-impersonation-token", 
+    "x-impersonation-userid", 
     "x-permissions"
   ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   optionsSuccessStatus: 200,
-  exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-token", "x-permissions"]
+  exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-userid", "x-permissions"]
 };
 
 // Apply CORS middleware

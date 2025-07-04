@@ -169,8 +169,8 @@ cron.schedule('* * * * *', async () => {
 });
 
 
-console.log('Task reminder cron job scheduled to run every minute for testing.');
+// console.log('Task reminder cron job scheduled to run every minute for testing.');
 
 // Run immediately on file load for testing
-console.log('Running initial test of task reminder job at startup...');
+// console.log('Running initial test of task reminder job at startup...');
 runTaskReminderJob();
