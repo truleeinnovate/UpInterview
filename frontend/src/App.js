@@ -1,7 +1,8 @@
-import React, { lazy, Suspense, useMemo } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import ErrorBoundary from './Components/ErrorBoundary';
+import { getActivityEmitter } from './utils/activityTracker';
 import Navbar from './Components/Navbar/Navbar-Sidebar';
 import SuperAdminNavbar from "./Components/Navbar/SuperAdminNavbar/Header.jsx";
 import Logo from './Pages/Login-Part/Logo';
@@ -17,6 +18,7 @@ import SubscriptionSuccess from './Pages/Login-Part/SubscriptionPlans/Subscripti
 import AccountSettingsSidebar from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
 import VerifyUserEmail from './VerifyUserEmail.jsx';
 import { DocumentsSection } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx';
+import SessionExpiration from './Components/SessionExpiration.jsx';
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
@@ -142,6 +144,21 @@ const App = () => {
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   console.log('impersonationPayload:', impersonationPayload);
 
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const emitter = getActivityEmitter();
+    const handleShowExpiration = () => setSessionExpired(true);
+    const handleActivity = () => setSessionExpired(false);
+
+    emitter.on('showExpiration', handleShowExpiration);
+    emitter.on('activity', handleActivity);
+
+    return () => {
+      emitter.off('showExpiration', handleShowExpiration);
+      emitter.off('activity', handleActivity);
+    };
+  }, []);
 
   // Combine permissions into a single object
   const combinedPermissions = useMemo(() => {
@@ -231,6 +248,8 @@ const App = () => {
       <SuspenseWithLoading>
         {showLogo && <Logo />}
         <div>
+          <SessionExpiration />
+          {sessionExpired ? null : (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -481,6 +500,7 @@ const App = () => {
                   <Route path="usage" element={<Usage />} />
                 )}
                 {hasPermission('Roles') && (
+
                   <Route path="roles" element={<Role type="effective" />}>
                     <Route index element={null} />
                     <Route path="role-edit/:id" element={<RoleFormPopup type="effective" />} />
@@ -620,7 +640,6 @@ const App = () => {
                   <Route path="/super-admin-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
                 </>
               )}
-              
                 </>
               )}
               <Route path="/settings" element={<SettingsPage />} />
@@ -653,6 +672,7 @@ const App = () => {
               </Route>
             </Route>
           </Routes>
+            )}
         </div>
       </SuspenseWithLoading>
     </ErrorBoundary>

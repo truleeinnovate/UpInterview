@@ -201,7 +201,7 @@ const CustomProvider = ({ children }) => {
 
   // users
   const [usersData, setUsersData] = useState([]);
-  console.log('usersData in context to check subdomain :-', usersData)
+  // console.log('usersData in context to check subdomain :-', usersData)
 
   // Fetch users data
   const fetchUsersData = async () => {
@@ -299,7 +299,7 @@ const CustomProvider = ({ children }) => {
           `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
         );
         setSuperAdminProfile(res.data);
-        console.log("SUPER ADMIN USER: ", res.data);
+        // console.log("SUPER ADMIN USER: ", res.data);
       } catch (err) {
         console.error("Error fetching user contacts:", err);
       }
