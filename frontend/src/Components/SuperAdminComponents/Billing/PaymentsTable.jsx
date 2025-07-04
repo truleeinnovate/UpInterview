@@ -31,7 +31,7 @@ import axios from "axios";
 import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 
-function PaymentsTable({ organizationId }) {
+function PaymentsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,13 +152,25 @@ function PaymentsTable({ organizationId }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView("kanban");
+  //   } else {
+  //     setView("table");
+  //   }
+  // }, [isTablet]);
+
   useEffect(() => {
-    if (isTablet) {
+    if (viewMode === "collapsed") {
+      setView("kanban");
+    } else if (viewMode === "expanded") {
+      setView("table");
+    } else if (isTablet) {
       setView("kanban");
     } else {
       setView("table");
     }
-  }, [isTablet]);
+  }, [viewMode, isTablet]);
 
   const dataToUse = payments;
 
@@ -327,61 +339,69 @@ function PaymentsTable({ organizationId }) {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "amount",
+      header: "Amount",
+      render: (value) => (
+        <div className="font-medium">{formatCurrency(value)}</div>
+      ),
+    },
+    {
+      key: "method",
+      header: "Payment Method",
+      render: (value) => <div>{value || "N/A"}</div>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        // setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedPaymentId(item._id);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
-
   const renderFilterContent = () => {
     // filters options
     const statusOptions = ["success", "pending", "captured", "charged"];
@@ -439,20 +459,10 @@ function PaymentsTable({ organizationId }) {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {payment?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${payment?.ImageData?.path}`}
-                      alt={payment?.FirstName || payment?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {payment?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {payment?.paymentCode?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
                   {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                   payment?.Status === 'active' ? 'bg-green-100 text-green-800' :
                   payment?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
@@ -756,11 +766,18 @@ function PaymentsTable({ organizationId }) {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        payments={currentFilteredRows}
+                        data={currentFilteredRows.map((payment) => ({
+                          ...payment,
+                          id: payment._id,
+                          title: payment.paymentCode || "N/A",
+                          subtitle:
+                            formatDate(payment.transactionDate) || "N/A",
+                        }))}
                         columns={kanbanColumns}
                         loading={isLoading}
                         renderActions={renderKanbanActions}
                         emptyState="No payments found."
+                        viewMode={viewMode}
                       />
                     </div>
                   )}

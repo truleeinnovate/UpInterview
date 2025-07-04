@@ -299,7 +299,6 @@ function TenantDetailsPage() {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  console.log("ORGANIZATION TENANT ====================> ", tenant);
 
   return (
     // <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
@@ -482,13 +481,11 @@ function TenantDetailsPage() {
             {activeTab === "billing" && (
               <BillingPage organizationId={id} viewMode={viewMode} />
             )}
-            {activeTab === "integrations" && <IntegrationsTab />}
+            {activeTab === "integrations" && (
+              <IntegrationsTab viewMode={viewMode} />
+            )}
             {activeTab === "contact" && (
-              <ContactTab
-                organizationId={id}
-                contacts={tenant?.tenant}
-                viewMode={viewMode}
-              />
+              <ContactTab organizationId={id} viewMode={viewMode} />
             )}
           </div>
         </div>

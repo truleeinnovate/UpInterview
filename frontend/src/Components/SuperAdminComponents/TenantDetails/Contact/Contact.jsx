@@ -31,7 +31,7 @@ import {
 import { config } from "../../../../config.js";
 // import SidebarPopup from "../../../SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
 
-const Contact = ({ organizationId, sharingPermissions }) => {
+const Contact = ({ organizationId, viewMode }) => {
   const [view, setView] = useState("table");
   // const [selectedContact, setSelectedContact] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,13 +112,25 @@ const Contact = ({ organizationId, sharingPermissions }) => {
     document.title = "Tenants | Admin Portal";
   }, []);
 
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView("kanban");
+  //   } else {
+  //     setView("table");
+  //   }
+  // }, [isTablet]);
+
   useEffect(() => {
-    if (isTablet) {
+    if (viewMode === "collapsed") {
+      setView("kanban");
+    } else if (viewMode === "expanded") {
+      setView("table");
+    } else if (isTablet) {
       setView("kanban");
     } else {
       setView("table");
     }
-  }, [isTablet]);
+  }, [viewMode, isTablet]);
 
   // Function to fetch contacts
 
@@ -536,6 +548,7 @@ const Contact = ({ organizationId, sharingPermissions }) => {
                     renderActions={renderKanbanActions}
                     columns={kanbanColumns}
                     emptyState="No Contacts found."
+                    viewMode={viewMode}
                   />
                 </div>
               )}

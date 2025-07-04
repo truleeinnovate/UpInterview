@@ -31,7 +31,7 @@ import axios from "axios";
 import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 
-function ReceiptsTable({ organizationId }) {
+function ReceiptsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
   // const [selectedCandidate, setSelectedCandidate] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -154,13 +154,25 @@ function ReceiptsTable({ organizationId }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView("kanban");
+  //   } else {
+  //     setView("table");
+  //   }
+  // }, [isTablet]);
+
   useEffect(() => {
-    if (isTablet) {
+    if (viewMode === "collapsed") {
+      setView("kanban");
+    } else if (viewMode === "expanded") {
+      setView("table");
+    } else if (isTablet) {
       setView("kanban");
     } else {
       setView("table");
     }
-  }, [isTablet]);
+  }, [viewMode, isTablet]);
 
   const dataToUse = receipts;
 
@@ -230,7 +242,13 @@ function ReceiptsTable({ organizationId }) {
       key: "id",
       header: "Receipt ID",
       render: (vale, row) => (
-        <span className="text-sm font-medium text-custom-blue cursor-pointer">
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedReceiptId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
           {row.receiptCode ? row.receiptCode : "N/A"}
         </span>
       ),
@@ -318,58 +336,67 @@ function ReceiptsTable({ organizationId }) {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "amount",
+      header: "Amount",
+      render: (value) => (
+        <div className="font-medium">{formatCurrency(value)}</div>
+      ),
+    },
+    {
+      key: "paymentMethod",
+      header: "Payment Method",
+      render: (value) => <div>{value || "N/A"}</div>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        // setSelectedUserId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedReceiptId(item._id);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
 
@@ -431,20 +458,10 @@ function ReceiptsTable({ organizationId }) {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {receipt?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${receipt?.ImageData?.path}`}
-                      alt={receipt?.FirstName || receipt?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {receipt?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {receipt?.receiptCode?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
                   {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                   receipt?.Status === 'active' ? 'bg-green-100 text-green-800' :
                   receipt?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
@@ -456,11 +473,11 @@ function ReceiptsTable({ organizationId }) {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {receipt?.firstName ? receipt.firstName : "N/A"}
+                    {receipt?.receiptCode ? receipt.receiptCode : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {receipt?.CurrentRole || "position"}
+                    {formatDate(receipt?.paymentDate) || "N/A"}
                   </p>
                 </div>
               </div>
@@ -474,7 +491,7 @@ function ReceiptsTable({ organizationId }) {
                     <div className="mt-2 space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Invoice ID</span>
-                        <span className="font-mono">{receipt.invoiceId}</span>
+                        <span className="font-mono">{receipt.receiptCode}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Amount</span>
@@ -528,12 +545,7 @@ function ReceiptsTable({ organizationId }) {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status</span>
-                        <StatusBadge
-                          status={
-                            receipt.status === "success" ? "success" : "warning"
-                          }
-                          text={receipt.status.toUpperCase()}
-                        />
+                        <StatusBadge status={receipt.status} />
                       </div>
                     </div>
                   </div>
@@ -663,20 +675,17 @@ function ReceiptsTable({ organizationId }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      receipts={currentFilteredRows.map((receipt) => ({
-                        ...receipts,
-                        _id: receipt._id,
-                        title: `${receipt._id || ""}`,
-                        subtitle:
-                          receipt.CurrentRole ||
-                          receipt.CurrentExperience ||
-                          "N/A",
-                        status: receipt.status,
+                      data={currentFilteredRows.map((payment) => ({
+                        ...payment,
+                        id: payment._id,
+                        title: payment.receiptCode || "N/A",
+                        subtitle: formatDate(payment.transactionDate) || "N/A",
                       }))}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}
                       emptyState="No receipts found."
+                      viewMode={viewMode}
                     />
                   </div>
                 )}
