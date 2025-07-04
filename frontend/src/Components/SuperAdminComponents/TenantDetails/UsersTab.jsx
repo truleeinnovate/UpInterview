@@ -40,7 +40,7 @@ import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import KanbanView from "./Users/Kanban.jsx";
 
-function UsersTab({ users, viewMode = "expanded" }) {
+function UsersTab({ users, viewMode }) {
   const { refreshPermissions } = usePermissions();
 
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -70,14 +70,35 @@ function UsersTab({ users, viewMode = "expanded" }) {
     }
   }, [selectedUserId, users]);
 
-  // Set view based on device
   useEffect(() => {
-    if (isTablet) {
+    const handleResize = () => {
+      setView(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Set view based on device
+  // useEffect(() => {
+  //   if (isTablet) {
+  //     setView("kanban");
+  //   } else {
+  //     setView("table");
+  //   }
+  // }, [isTablet]);
+
+  useEffect(() => {
+    if (viewMode === "collapsed") {
+      setView("kanban");
+    } else if (viewMode === "expanded") {
+      setView("table");
+    } else if (isTablet) {
       setView("kanban");
     } else {
       setView("table");
     }
-  }, [isTablet]);
+  }, [viewMode, isTablet]);
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -635,6 +656,7 @@ function UsersTab({ users, viewMode = "expanded" }) {
                         loading={isLoading}
                         renderActions={renderKanbanActions}
                         emptyState="No Users found."
+                        viewMode={viewMode}
                       />
                     </div>
                   )}

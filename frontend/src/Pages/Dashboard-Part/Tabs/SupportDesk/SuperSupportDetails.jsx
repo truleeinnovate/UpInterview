@@ -195,13 +195,13 @@ function SupportDetails() {
             <h2 className="text-2xl font-semibold text-custom-blue">Support Ticket Details</h2>
           </div>
           <div className="flex items-center space-x-2">
-            {impersonatedUser_roleName === 'Super_Admin' && (
+            {(impersonatedUser_roleName === 'Super_Admin' || impersonatedUser_roleName === 'Support_Team') && (
               <button
                 onClick={toggleStatusModal}
                 className="p-2 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
                 title="Change Status"
               >
-                Change Status
+                <FaExchangeAlt className="w-5 h-5" />
               </button>
             )}
 
@@ -241,7 +241,7 @@ function SupportDetails() {
           </span>
         </div>
 
-        <div className="mb-4 border-b border-gray-200">
+        <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {['details', 'status'].map((tab) => (
               <button
@@ -260,7 +260,7 @@ function SupportDetails() {
 
         {activeTab === 'details' ? (
           <>
-            <div className={`flex justify-center items-center ${isFullScreen ? 'max-w-4xl' : 'w-[70%]'} mx-auto mt-8 mb-8`}>
+            <div className={`flex justify-center items-center ${isFullScreen ? 'max-w-4xl' : 'w-[90%]'} mx-auto mt-10 mb-8`}>
               {statusSteps.map((step, index) => (
                 <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
                   <div className="flex flex-col items-center relative">
@@ -418,8 +418,8 @@ function SupportDetails() {
                 <div className="p-2 bg-custom-blue/10 rounded-lg mt-1">
                   <FaFileAlt className="w-5 h-5 text-custom-blue" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-gray-700 whitespace-pre-wrap">{currentTicket.description || 'No description provided.'}</p>
+                <div className="flex-grow whitespace-pre-wrap break-words break-all">
+                  <p className="text-gray-700 ">{currentTicket.description || 'No description provided.'}</p>
                 </div>
               </div>
             </div>

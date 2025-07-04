@@ -1,15 +1,19 @@
-import axios from 'axios';
-// import config from '../config'; // adjust if your config path is different
-import { config } from "../config.js";
 
-export const getOrganizationRoles = async () => {
+
+import axios from 'axios';
+import { config } from '../config';
+
+export const getOrganizationRoles = async (type) => {
   try {
     const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
     const allRoles = response.data;
 
-    console.log("allRoles",allRoles);
-    
+    console.log("allRoles", allRoles);
 
+    // Return all roles for super admins, filter for organization roles for effective users
+    if (type === 'superAdmin') {
+      return allRoles;
+    }
     const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
     return filteredRoles;
   } catch (error) {

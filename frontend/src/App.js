@@ -179,14 +179,19 @@ const App = () => {
     '/admin-billing',
     '/admin-billing/new',
     '/admin-billing/edit/:id',
-    '/support-tickets',
-    '/support-tickets/new',
-    '/support-tickets/edit/:id',
-    '/support/:id',
+    '/super-admin-desk',
+    '/super-admin-desk/new',
+    '/super-admin-desk/edit/:id',
     '/settings',
     '/internal-logs',
     '/integrations',
     '/contact-profile-details',
+    '/super-admin-account-settings',
+    '/super-admin-account-settings/profile',
+    '/super-admin-account-settings/profile/basic',
+    '/super-admin-account-settings/roles',
+    '/super-admin-account-settings/roles/role-edit/:id',
+
   ], []);
 
   // Define paths where Logo should be shown
@@ -408,8 +413,8 @@ const App = () => {
                 </Route>
               )}
 
-              {/* Account Settings Routes */}
-              <Route path="/account-settings" element={<AccountSettingsSidebar />}>
+              {/* Account Settings Routes from effective user */}
+              <Route path="/account-settings" element={<AccountSettingsSidebar type="effective" />}>
                 <Route
                   index
                   element={
@@ -495,10 +500,12 @@ const App = () => {
                   <Route path="usage" element={<Usage />} />
                 )}
                 {hasPermission('Roles') && (
-                  <Route path="roles" element={<Role />}>
+
+                  <Route path="roles" element={<Role type="effective" />}>
                     <Route index element={null} />
-                    <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-                    <Route path="view/:id" element={<RoleView />} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup type="effective" />} />
+                    <Route path="role-edit/new" element={<RoleFormPopup type="effective" />} />
+                    <Route path="view/:id" element={<RoleView type="effective" />} />
                   </Route>
                 )}
                 {hasPermission('Sharing') && (
@@ -576,7 +583,7 @@ const App = () => {
                 <Route path="/outsource-interview-request" element={<InterviewRequest />} />
               )}
 
-              {/* Super Admin Routes */}
+              {/* -----------------------------------Super Admin Routes------------------------- */}
               {hasPermission('Tenants') && (
                 <Route path="/tenants" element={<TenantsPage />}>
                   <Route index element={null} />
@@ -626,11 +633,13 @@ const App = () => {
               {/* SuperAdminSupportDesk */}
               {hasPermission('SuperAdminSupportDesk') && (
                 <>
-                  <Route path="/super-admin-desk" element={<SupportDesk />} />
-                  {hasPermission('SuperAdminSupportDesk', 'View') && (
-                    <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
-                  )}
-
+                  <Route exact path="/super-admin-desk" element={<SupportDesk />} />
+              {hasPermission('SuperAdminSupportDesk', 'View') && (
+                <>
+                  <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
+                  <Route path="/super-admin-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+                </>
+              )}
                 </>
               )}
               <Route path="/settings" element={<SettingsPage />} />
@@ -638,6 +647,29 @@ const App = () => {
               <Route path="/integrations" element={<IntegrationsPage />} />
               <Route path="/contact-profile-details" element={<ContactProfileDetails />} />
               <Route path="/admin-dashboard" element={<SuperAdminDashboard />} />
+
+              <Route
+                path="/super-admin-account-settings"
+                element={<AccountSettingsSidebar type="superAdmin" />}
+              >
+                {hasPermission('SuperAdminMyProfile') && (
+                  <Route path="my-profile" element={<MyProfile />}>
+                    <Route index element={<Navigate to="basic" replace />} />
+                    <Route path="basic" element={<BasicDetails />} />
+                    <Route path="advanced" element={<AdvancedDetails />} />
+                    <Route path="basic-edit/:id" element={<BasicDetailsEditPage from="my-profile" />} />
+                    <Route path="advanced-edit/:id" element={<EditAdvacedDetails from="my-profile" />} />
+                  </Route>
+                )}
+                {hasPermission('SuperAdminRole') && (
+                  <Route path="roles" element={<Role type="superAdmin" />}>
+                    <Route index element={null} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup type="superAdmin" />} />
+                    <Route path="role-edit/new" element={<RoleFormPopup type="superAdmin" />} />
+                    <Route path="view/:id" element={<RoleView type="superAdmin" />} />
+                  </Route>
+                )}
+              </Route>
             </Route>
           </Routes>
             )}

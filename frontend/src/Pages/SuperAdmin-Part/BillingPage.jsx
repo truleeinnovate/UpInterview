@@ -7,7 +7,7 @@ import InvoicesTable from "../../Components/SuperAdminComponents/Billing/Invoice
 // import axios from "axios";
 // import { config } from "../../config";
 
-function BillingPage({ organizationId }) {
+function BillingPage({ organizationId, viewMode }) {
   const [activeTab, setActiveTab] = useState("invoices");
 
   useEffect(() => {
@@ -51,13 +51,22 @@ function BillingPage({ organizationId }) {
 
           <div className="relative min-h-screen w-full">
             {activeTab === "invoices" && (
-              <InvoicesTable organizationId={organizationId} />
+              <InvoicesTable
+                organizationId={organizationId}
+                viewMode={viewMode}
+              />
             )}
             {activeTab === "payments" && (
-              <PaymentsTable organizationId={organizationId} />
+              <PaymentsTable
+                organizationId={organizationId}
+                viewMode={viewMode}
+              />
             )}
             {activeTab === "receipts" && (
-              <ReceiptsTable organizationId={organizationId} />
+              <ReceiptsTable
+                organizationId={organizationId}
+                viewMode={viewMode}
+              />
             )}
           </div>
         </div>
