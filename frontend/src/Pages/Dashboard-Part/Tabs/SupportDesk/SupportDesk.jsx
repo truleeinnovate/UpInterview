@@ -25,6 +25,10 @@ function SupportDesk() {
 
 console.log("tickets-------", tickets);
 
+const impersonationToken = Cookies.get('impersonationToken');
+const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken) : null;
+//console.log("impersonationPayload", impersonationPayload.impersonatedUserId);
+
   const { userRole } = useCustomContext();
     const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
     console.log("effectivePermissions", effectivePermissions);
@@ -93,7 +97,8 @@ console.log("tickets-------", tickets);
       const matchesSearchQuery =
         !searchQuery ||
         ticketId.includes(searchQuery.toLowerCase()) ||
-        contact.includes(searchQuery.toLowerCase());
+        contact.includes(searchQuery.toLowerCase()) ||
+        ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
         selectedFilters.status.length === 0 ||
@@ -165,7 +170,7 @@ console.log("tickets-------", tickets);
           onClick={() => {
             const path = effectivePermissions_RoleName === "Admin"
               ? `/support-desk/${row._id}`
-              : `/super-admin-desk/view/${row._id}`;
+              : (row.assignedToId === impersonationPayload.impersonatedUserId && impersonatedUser_roleName === "Support_Team") ? `/super-admin-desk/view/${row._id}` : (impersonatedUser_roleName === "Super_Admin")?`/super-admin-desk/view/${row._id}`: `/super-admin-desk/${row._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -218,7 +223,7 @@ console.log("tickets-------", tickets);
       header: "Created On",
       render: (value) => formatDate(value),
     },
-    ...(impersonatedUser_roleName === "Super_Admin"
+    ...(impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team"
       ? [
         {
           key: "assignedTo",
@@ -246,12 +251,12 @@ console.log("tickets-------", tickets);
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         const path = effectivePermissions_RoleName === "Admin"
-          ? `/support-desk/${row._id}`
-          : `/super-admin-desk/view/${row._id}`;
-        navigate(path, { state: { ticketData: row } });
+              ? `/support-desk/${row._id}`
+              : (row.assignedToId === impersonationPayload.impersonatedUserId && impersonatedUser_roleName === "Support_Team") ? `/super-admin-desk/view/${row._id}` : (impersonatedUser_roleName === "Super_Admin")?`/super-admin-desk/view/${row._id}`: `/super-admin-desk/${row._id}`;
+            navigate(path, { state: { ticketData: row } });
       },
       disabled: (row) => !hasActionAccess(row),
     },

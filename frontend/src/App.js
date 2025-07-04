@@ -165,7 +165,6 @@ const App = () => {
     '/super-admin-desk',
     '/super-admin-desk/new',
     '/super-admin-desk/edit/:id',
-    '/support/:id',
     '/settings',
     '/internal-logs',
     '/integrations',
@@ -614,11 +613,14 @@ const App = () => {
               {/* SuperAdminSupportDesk */}
               {hasPermission('SuperAdminSupportDesk') && (
                 <>
-                  <Route path="/super-admin-desk" element={<SupportDesk />} />
-                  {hasPermission('SuperAdminSupportDesk', 'View') && (
-                    <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
-                  )}
-
+                  <Route exact path="/super-admin-desk" element={<SupportDesk />} />
+              {hasPermission('SuperAdminSupportDesk', 'View') && (
+                <>
+                  <Route path="/super-admin-desk/view/:id" element={<><SuperSupportDetails /><SupportDesk /></>} />
+                  <Route path="/super-admin-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+                </>
+              )}
+              
                 </>
               )}
               <Route path="/settings" element={<SettingsPage />} />
