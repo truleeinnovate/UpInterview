@@ -35,10 +35,10 @@ import {
 
 import { toast } from "react-hot-toast";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
-import { getOrganizationRoles } from "../../../../../../apiHooks/useRoles.js";
 import { useCallback } from "react";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation.js";
 import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
+import { useRolesQuery } from "../../../../../../apiHooks/useRoles.js";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -47,6 +47,8 @@ const BasicDetailsEditPage = ({
   setBasicEditOpen,
   onSuccess,
 }) => {
+    const { data: organizationRoles } = useRolesQuery();
+  
   // const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -125,19 +127,10 @@ const BasicDetailsEditPage = ({
   };
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const roles = await getOrganizationRoles();
-        setCurrentRole(roles);
-      } catch (err) {
-        // Optionally handle UI-specific error here
-      }
-    };
-
-    // if (tenantId) {
-    fetchRoles();
-    // }
-  }, []);
+    if (organizationRoles) {
+      setCurrentRole(organizationRoles);
+    }
+  }, [organizationRoles]);
 
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);

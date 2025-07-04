@@ -549,11 +549,14 @@ import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24
 import { X } from 'lucide-react';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
-import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
+import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
+
 import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils.js';
 
 const RoleFormPopup = ({ onSave, onClose, type }) => {
+  const { data: organizationRoles, isLoading, isError, error } = useRolesQuery(type);
+
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
@@ -599,12 +602,11 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
 
     const fetchData = async () => {
       try {
-        const fetchedRoles = await getOrganizationRoles(type);
-        setRoles(fetchedRoles);
+        setRoles(organizationRoles);
 
         // Build available permissions from all roles
         const permissionsMap = {};
-        fetchedRoles.forEach((role) => {
+        organizationRoles.forEach((role) => {
           role.objects.forEach((obj) => {
             if (!permissionsMap[obj.objectName]) {
               permissionsMap[obj.objectName] = {
@@ -639,7 +641,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
         });
 
         if (editMode) {
-          const role = fetchedRoles.find((r) => r._id === id);
+          const role = organizationRoles.find((r) => r._id === id);
           if (!role) {
             throw new Error('Role not found');
           }
@@ -1385,7 +1387,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
               </div>
             </div>
 
-            <div className="flex justify-end py-2 mt-10 px-4">
+            <div className="flex justify-end py-2 mt-10">
               <button
                 type="button"
                 onClick={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}

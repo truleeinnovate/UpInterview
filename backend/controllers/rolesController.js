@@ -100,6 +100,9 @@ const rolesPermissionObject = require('../models/rolesPermissionObject');
   // GET all role permission objects
 const getAllRoles = async (req, res) => {
   try {
+    // Optional: Simulate loading delay (remove in production)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const data = await rolesPermissionObject.find().lean();
 
     if (!data || data.length === 0) {

@@ -235,15 +235,18 @@ import { EditButton } from './Buttons';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
-import { getOrganizationRoles } from '../../../../../apiHooks/useRoles.js';
+import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
 import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import PermissionDisplay from './PermissionDisplay';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils';
+import Loading from '../../../../../Components/Loading.js';
 
 const Role = ({ type }) => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
+  
+  const { data: organizationRoles, isLoading, isError, error } = useRolesQuery(type);
   const [roles, setRoles] = useState([]);
   const navigate = useNavigate();
   const authToken = Cookies.get('authToken');
@@ -251,9 +254,10 @@ const Role = ({ type }) => {
   const tenantId = tokenPayload.tenantId;
 
   useEffect(() => {
-    const fetchRoles = async () => {
+    if (!organizationRoles) return;
+
+    const fetchRoleOverrides = async () => {
       try {
-        const organizationRoles = await getOrganizationRoles(type);
         const rolesWithOverrides = await Promise.all(
           organizationRoles.map(async (role) => {
             if (type === 'superAdmin') {
@@ -319,12 +323,12 @@ const Role = ({ type }) => {
         );
         setRoles(rolesWithOverrides);
       } catch (err) {
-        console.error('Error fetching roles:', err);
+        console.error('Error processing role overrides:', err);
       }
     };
 
-    fetchRoles();
-  }, [tenantId, type]);
+    fetchRoleOverrides();
+  }, [organizationRoles, tenantId, type]);
 
   const renderRoleCard = (role) => {
     const isAdmin = permissions[permissionKey].RoleName === 'Admin' && role.roleName === 'Admin';
@@ -337,6 +341,8 @@ const Role = ({ type }) => {
       : [];
 
     return (
+      <>
+
       <div key={role._id} className="mb-6">
         <div className="bg-white p-5 rounded-lg shadow">
           <div className="flex justify-between items-start mb-4">
@@ -415,8 +421,13 @@ const Role = ({ type }) => {
           )}
         </div>
       </div>
+      </>
     );
   };
+   if (isLoading) {
+    return <Loading message="Loading roles..." />;
+  }
+
 
   return (
     <>
@@ -432,7 +443,7 @@ const Role = ({ type }) => {
                     : '/account-settings/roles/role-edit/new'
                 )
               }
-              className="px-4 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
+              className="px-4 py-1 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
             >
               Create Role
             </button>

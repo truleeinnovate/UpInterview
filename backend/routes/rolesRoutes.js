@@ -34,7 +34,7 @@ router.get('/getAllRoles',getAllRoles)
 // });
 
 router.post('/roles', async (req, res) => {
-  try {
+  try { 
     const roleData = req.body;
     const newRole = new RolesPermissionObject(roleData);
     await newRole.save();
