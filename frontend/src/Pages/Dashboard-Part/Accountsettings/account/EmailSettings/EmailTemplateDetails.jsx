@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import { Eye, Lock, CheckCircle2, XCircle } from 'lucide-react';
+import Loading from '../../../../../Components/Loading';
 
 function EmailTemplates({ 
   templates,
@@ -12,9 +13,10 @@ function EmailTemplates({
   return (
     <div className="space-y-4 px-4 pb-4">
       {isLoading ? (
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
+        // <div className="flex items-center justify-center h-screen">
+        //   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        // </div>
+        <Loading message="Loading email templates..." />
       ) : (
         templates.length === 0 ? (
           <div className="text-center py-8 text-gray-500">

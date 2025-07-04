@@ -6,6 +6,7 @@ import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
 import { PermissionsProvider } from '../Context/PermissionsContext';
 import { startActivityTracking } from '../utils/activityTracker';
 import { getActivityEmitter } from '../utils/activityTracker';
+import Loading from './Loading';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
@@ -107,12 +108,13 @@ const ProtectedRoute = ({ children }) => {
   // Show loading while checking
   if (isChecking) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-custom-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your workspace...</p>
-        </div>
-      </div>
+      // <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      //   <div className="text-center">
+      //     <div className="w-16 h-16 border-4 border-custom-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
+      //     <p className="mt-4 text-gray-600">Loading your workspace...</p>
+      //   </div>
+      // </div>
+      <Loading message="Loading your workspace..." />
     );
   }
 

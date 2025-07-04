@@ -23,6 +23,7 @@ import {
 } from "@tanstack/react-query";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
+import Loading from "../../../../../../Components/Loading";
 
 // Skills.svg
 
@@ -344,9 +345,10 @@ const EditAdvacedDetails = ({
         })}
       >
         {loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-          </div>
+          // <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+          // </div>
+          <Loading message="Loading..." />
         )}
         <div className="p-6  ">
           <div className="flex justify-between items-center mb-6 ">

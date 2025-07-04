@@ -10,6 +10,7 @@ import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js
 //import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../apiHooks/useUsers.js";
+import Loading from '../../../Components/Loading.js';
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -69,29 +70,29 @@ const CardDetails = () => {
     });
 
 
-    const {userProfile, isLoading, isError} = useUserProfile(ownerId)
+    const { userProfile, isLoading, isError } = useUserProfile(ownerId)
     const [userProfileData, setUserProfile] = useState([])
 
     // Fetch user profile data from contacts API
-   useEffect(() => {
-                 const fetchUserProfile = async () => {
-                     try {
-                         if (userProfile) {
-                                 setUserProfile({
-                                     name: `${userProfile.firstName} ${userProfile.lastName}`,
-                                     email: userProfile.email,
-                                     phone: userProfile.phone
-                                 });
-                                 console.log('User profile fetched:', userProfile);
-                         }
-                     } catch (error) {
-                         console.error('Error fetching user profile:', error);
-                         toast.error('Failed to fetch user profile data');
-                     }
-                 };
-         
-                 fetchUserProfile();
-             }, [ownerId,userProfile]);
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                if (userProfile) {
+                    setUserProfile({
+                        name: `${userProfile.firstName} ${userProfile.lastName}`,
+                        email: userProfile.email,
+                        phone: userProfile.phone
+                    });
+                    console.log('User profile fetched:', userProfile);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                toast.error('Failed to fetch user profile data');
+            }
+        };
+
+        fetchUserProfile();
+    }, [ownerId, userProfile]);
 
     useEffect(() => {
         if (planDetails) {
@@ -466,10 +467,12 @@ const CardDetails = () => {
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
             {processing ? (
-                <div className="flex flex-col items-center justify-center h-screen">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                    <p className="mt-4 text-lg font-medium text-white">Processing your Home...</p>
-                </div>
+                // <div className="flex flex-col items-center justify-center h-screen">
+                //     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
+                //     <p className="mt-4 text-lg font-medium text-white">Processing your Home...</p>
+                // </div>
+                <Loading message="Processing your Home..." />
+
             ) : (
                 <form
                     className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"

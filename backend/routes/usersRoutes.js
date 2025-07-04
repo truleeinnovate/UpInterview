@@ -55,6 +55,6 @@ router.patch("/:id/status", UpdateUser);
 router.get("/platform-users", getPlatformUsers);
 // =================================================================>
 
-module.exports = router;
+module.exports = router;  
 
 
