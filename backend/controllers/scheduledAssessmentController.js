@@ -100,10 +100,9 @@ exports.createScheduledAssessment = async (req, res) => {
       order,
     } = req.body;
 
-
     // Generate custom code like ASMT-TPL-00001
     const lastScheduled = await scheduledAssessmentsSchema
-      .findOne({})
+      .findOne({ organizationId })
       .sort({ createdAt: -1 })
       .select("scheduledAssessmentCode")
       .lean();

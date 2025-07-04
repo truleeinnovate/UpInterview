@@ -486,9 +486,8 @@ const createInterview = async (req, res) => {
         return res.status(404).json({ message: "Interview not found" });
       }
     } else {
-        
       // Generate interviewCode for new interview
-      const lastInterview = await Interview.findOne({})
+      const lastInterview = await Interview.findOne({ tenantId: orgId })
         .sort({ _id: -1 })
         .select("interviewCode")
         .lean();
