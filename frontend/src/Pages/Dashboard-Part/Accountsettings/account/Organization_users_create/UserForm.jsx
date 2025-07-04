@@ -25,11 +25,14 @@ import {
 
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
 
-import { getOrganizationRoles } from "../../../../../apiHooks/useRoles.js";
+import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
+
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 import Loading from "../../../../../Components/Loading.js";
 
 const UserForm = ({ isOpen, onDataAdded }) => {
+  const { data: organizationRoles } = useRolesQuery();
+
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,19 +139,10 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   };
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const roles = await getOrganizationRoles();
-        setCurrentRole(roles);
-      } catch (err) {
-        // Optionally handle UI-specific error here
-      }
-    };
-
-    // if (tenantId) {
-    fetchRoles();
-    // }
-  }, []);
+    if (organizationRoles) {
+      setCurrentRole(organizationRoles);
+    }
+  }, [organizationRoles]);
 
   // Initialize form data for edit mode
   useEffect(() => {
