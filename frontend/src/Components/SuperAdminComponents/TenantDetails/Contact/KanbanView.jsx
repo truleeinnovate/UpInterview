@@ -16,6 +16,7 @@ const KanbanView = ({
   loading = false,
   renderActions = () => null,
   emptyState = "No Data Found",
+  viewMode = "",
 }) => {
   return (
     <motion.div
@@ -37,7 +38,13 @@ const KanbanView = ({
         ) : data?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
+          <div
+            className={`${
+              viewMode === "collapsed"
+                ? "flex flex-col gap-5 w-full"
+                : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full"
+            }`}
+          >
             {data.map((item, index) => (
               <motion.div
                 key={item.id || item._id || index}
