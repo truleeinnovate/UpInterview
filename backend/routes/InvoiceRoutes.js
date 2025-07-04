@@ -3,6 +3,7 @@ const {
   getInvoice,
   getInvoices, // SUPER ADMIN added by Ashok
   getInvoicesByTenantId,
+  getSingleInvoiceById,
 } = require("../controllers/InvoiceControllers");
 const InvoiceRouter = express.Router();
 
@@ -12,6 +13,7 @@ InvoiceRouter.get("/get-invoice/:id", getInvoice);
 // SUPER ADMIN added by Ashok ---------------------------------
 InvoiceRouter.get("/", getInvoices);
 InvoiceRouter.get("/:id", getInvoicesByTenantId);
+InvoiceRouter.get("/invoice/:id", getSingleInvoiceById);
 // ------------------------------------------------------------
 
 module.exports = InvoiceRouter;

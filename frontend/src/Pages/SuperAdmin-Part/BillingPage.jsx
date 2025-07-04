@@ -15,7 +15,7 @@ function BillingPage({ organizationId, viewMode }) {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen">
       <div
         className={`absolute py-3 left-0 right-0 bg-background ${
           organizationId ? "top-0" : "top-16"

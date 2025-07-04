@@ -213,7 +213,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
 import {
-  AiOutlineLeft,
+  // AiOutlineLeft,
   AiOutlineTeam,
   AiOutlineFile,
   AiOutlineApi,
@@ -238,23 +238,10 @@ function TenantDetailsPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [viewOverride, setViewOverride] = useState("kanban"); // 'table' or 'kanban' or null
 
   const [viewMode, setViewMode] = useState("collapsed"); // 'collapsed' or 'expanded'
   const toggleViewMode = () =>
     setViewMode((prev) => (prev === "expanded" ? "collapsed" : "expanded"));
-
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 50); // Small delay helps CSS transition
-    return () => clearTimeout(timer);
-  }, []);
-
-  const [isOpen, setIsOpen] = useState(false);
-  useEffect(() => {
-    setIsOpen(true);
-  }, []);
 
   useEffect(() => {
     const getTenant = async () => {
@@ -387,106 +374,210 @@ function TenantDetailsPage() {
     //     </div>
     //   </div>
     // </div>
+
+    // <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
+    //   <div
+    //     className={`absolute top-0 right-0 h-full bg-white z-50 overflow-y-auto overflow-x-hidden ${
+    //       viewMode === "collapsed" ? "w-[50vw]" : "w-full"
+    //     }`}
+    //   >
+    //     <div className="flex justify-between items-center px-6 border-b-2 border-b-gray-100 py-6">
+    //       <div className="flex flex-col">
+    //         <h1 className="text-2xl font-bold text-custom-blue mb-2">
+    //           {tenant?.tenant?.firstName || "Tenant"}
+    //         </h1>
+    //         <div className="text-sm text-gray-500">
+    //           <span className="text-gray-700 font-semibold text-sm">
+    //             {capitalizeFirstLetter(tenant?.tenant?.company) || "N/A"}
+    //           </span>{" "}
+    //           {tenant?.tenant?.userCount} • Created At -{" "}
+    //           {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
+    //         </div>
+    //       </div>
+    //       <div className="flex space-x-2">
+    //         <button
+    //           onClick={() => {
+    //             toggleViewMode();
+    //           }}
+    //           className="p-2 hidden md:flex lg:flex xl:flex 2xl:flex hover:text-gray-600 rounded-full hover:bg-gray-100"
+    //           title={viewMode === "expanded" ? "Compress" : "Expand"}
+    //         >
+    //           {viewMode === "expanded" ? (
+    //             <Minimize size={20} className="text-gray-500" />
+    //           ) : (
+    //             <Expand size={20} className="text-gray-500" />
+    //           )}
+    //         </button>
+    //         <button
+    //           onClick={() => navigate(-1)}
+    //           className="p-2 text-gray-500 hover:text-gray-600 rounded-full hover:bg-gray-100"
+    //           title="Close"
+    //         >
+    //           <X size={20} />
+    //         </button>
+    //       </div>
+    //     </div>
+
+    //     {/* Tabs */}
+    //     <div className="bg-white shadow-card overflow-hidden mt-4 mx-4">
+    //       <div className="border-b border-gray-200">
+    //         <nav className="flex -mb-px overflow-x-auto">
+    //           <Tab
+    //             active={activeTab === "overview"}
+    //             onClick={() => setActiveTab("overview")}
+    //             icon={<AiOutlineFile />}
+    //             label="Overview"
+    //           />
+    //           <Tab
+    //             active={activeTab === "contact"}
+    //             onClick={() => setActiveTab("contact")}
+    //             icon={<AiOutlineContacts />}
+    //             label="Contact"
+    //           />
+    //           <Tab
+    //             active={activeTab === "users"}
+    //             onClick={() => setActiveTab("users")}
+    //             icon={<AiOutlineTeam />}
+    //             label="Users"
+    //           />
+    //           <Tab
+    //             active={activeTab === "integrations"}
+    //             onClick={() => setActiveTab("integrations")}
+    //             icon={<AiOutlineApi />}
+    //             label="Integrations"
+    //           />
+    //           <Tab
+    //             active={activeTab === "billing"}
+    //             onClick={() => setActiveTab("billing")}
+    //             icon={<AiOutlineFolder />}
+    //             label="Billing"
+    //           />
+    //         </nav>
+    //       </div>
+
+    //       {/* Content */}
+    //       <div className="relative min-h-screen w-full pt-4 px-4">
+    //         {activeTab === "overview" && (
+    //           <OverviewTab tenant={tenant?.tenant} viewMode={viewMode} />
+    //         )}
+    //         {activeTab === "users" && (
+    //           <UsersTab users={tenant?.users || []} viewMode={viewMode} />
+    //         )}
+    //         {activeTab === "billing" && (
+    //           <BillingPage organizationId={id} viewMode={viewMode} />
+    //         )}
+    //         {activeTab === "integrations" && (
+    //           <IntegrationsTab viewMode={viewMode} />
+    //         )}
+    //         {activeTab === "contact" && (
+    //           <ContactTab organizationId={id} viewMode={viewMode} />
+    //         )}
+    //       </div>
+    //     </div>
+    //   </div>
+    // </div>
+
     <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
       <div
-        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-y-auto overflow-x-hidden ${
+        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden ${
           viewMode === "collapsed" ? "w-[50vw]" : "w-full"
         }`}
       >
-        <div className="flex justify-between items-center px-6 border-b-2 border-b-gray-100 py-6">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-custom-blue mb-2">
-              {tenant?.tenant?.firstName || "Tenant"}
-            </h1>
-            <div className="text-sm text-gray-500">
-              <span className="text-gray-700 font-semibold text-sm">
-                {capitalizeFirstLetter(tenant?.tenant?.company) || "N/A"}
-              </span>{" "}
-              {tenant?.tenant?.userCount} • Created At -{" "}
-              {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
+        {/* 🔒 Fixed Header */}
+        <div className="sticky top-0 bg-white z-50 border-b border-gray-100 px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold text-custom-blue mb-2">
+                {tenant?.tenant?.firstName || "Tenant"}
+              </h1>
+              <div className="text-sm text-gray-500">
+                <span className="text-gray-700 font-semibold text-sm">
+                  {capitalizeFirstLetter(tenant?.tenant?.company) || "N/A"}
+                </span>{" "}
+                {tenant?.tenant?.userCount} • Created At -{" "}
+                {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
+              </div>
             </div>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                toggleViewMode();
-                setViewOverride((prev) =>
-                  prev === "kanban" ? "table" : "kanban"
-                );
-              }}
-              className="p-2 hidden md:flex lg:flex xl:flex 2xl:flex hover:text-gray-600 rounded-full hover:bg-gray-100"
-              title={viewMode === "expanded" ? "Compress" : "Expand"}
-            >
-              {viewMode === "expanded" ? (
-                <Minimize size={20} className="text-gray-500" />
-              ) : (
-                <Expand size={20} className="text-gray-500" />
-              )}
-            </button>
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 text-gray-500 hover:text-gray-600 rounded-full hover:bg-gray-100"
-              title="Close"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={toggleViewMode}
+                className="p-2 hidden md:flex lg:flex xl:flex 2xl:flex hover:text-gray-600 rounded-full hover:bg-gray-100"
+                title={viewMode === "expanded" ? "Compress" : "Expand"}
+              >
+                {viewMode === "expanded" ? (
+                  <Minimize size={20} className="text-gray-500" />
+                ) : (
+                  <Expand size={20} className="text-gray-500" />
+                )}
+              </button>
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 text-gray-500 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white shadow-card overflow-hidden mt-4 mx-4">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px overflow-x-auto">
-              <Tab
-                active={activeTab === "overview"}
-                onClick={() => setActiveTab("overview")}
-                icon={<AiOutlineFile />}
-                label="Overview"
-              />
-              <Tab
-                active={activeTab === "contact"}
-                onClick={() => setActiveTab("contact")}
-                icon={<AiOutlineContacts />}
-                label="Contact"
-              />
-              <Tab
-                active={activeTab === "users"}
-                onClick={() => setActiveTab("users")}
-                icon={<AiOutlineTeam />}
-                label="Users"
-              />
-              <Tab
-                active={activeTab === "integrations"}
-                onClick={() => setActiveTab("integrations")}
-                icon={<AiOutlineApi />}
-                label="Integrations"
-              />
-              <Tab
-                active={activeTab === "billing"}
-                onClick={() => setActiveTab("billing")}
-                icon={<AiOutlineFolder />}
-                label="Billing"
-              />
-            </nav>
-          </div>
+        {/* 🌟 Scrollable Tabs + Content */}
+        <div className="overflow-y-auto h-[calc(100%-112px)] px-4 pt-4 pb-8">
+          <div className="bg-white shadow-card overflow-hidden">
+            {/* Tabs */}
+            <div className="border-b border-gray-200">
+              <nav className="flex -mb-px overflow-x-auto">
+                <Tab
+                  active={activeTab === "overview"}
+                  onClick={() => setActiveTab("overview")}
+                  icon={<AiOutlineFile />}
+                  label="Overview"
+                />
+                <Tab
+                  active={activeTab === "contact"}
+                  onClick={() => setActiveTab("contact")}
+                  icon={<AiOutlineContacts />}
+                  label="Contact"
+                />
+                <Tab
+                  active={activeTab === "users"}
+                  onClick={() => setActiveTab("users")}
+                  icon={<AiOutlineTeam />}
+                  label="Users"
+                />
+                <Tab
+                  active={activeTab === "integrations"}
+                  onClick={() => setActiveTab("integrations")}
+                  icon={<AiOutlineApi />}
+                  label="Integrations"
+                />
+                <Tab
+                  active={activeTab === "billing"}
+                  onClick={() => setActiveTab("billing")}
+                  icon={<AiOutlineFolder />}
+                  label="Billing"
+                />
+              </nav>
+            </div>
 
-          {/* Content */}
-          <div className="relative min-h-screen w-full pt-4 px-4">
-            {activeTab === "overview" && (
-              <OverviewTab tenant={tenant?.tenant} viewMode={viewMode} />
-            )}
-            {activeTab === "users" && (
-              <UsersTab users={tenant?.users || []} viewMode={viewMode} />
-            )}
-            {activeTab === "billing" && (
-              <BillingPage organizationId={id} viewMode={viewMode} />
-            )}
-            {activeTab === "integrations" && (
-              <IntegrationsTab viewMode={viewMode} />
-            )}
-            {activeTab === "contact" && (
-              <ContactTab organizationId={id} viewMode={viewMode} />
-            )}
+            {/* Tab Content */}
+            <div className="relative w-full pt-4">
+              {activeTab === "overview" && (
+                <OverviewTab tenant={tenant?.tenant} viewMode={viewMode} />
+              )}
+              {activeTab === "users" && (
+                <UsersTab users={tenant?.users || []} viewMode={viewMode} />
+              )}
+              {activeTab === "billing" && (
+                <BillingPage organizationId={id} viewMode={viewMode} />
+              )}
+              {activeTab === "integrations" && (
+                <IntegrationsTab viewMode={viewMode} />
+              )}
+              {activeTab === "contact" && (
+                <ContactTab organizationId={id} viewMode={viewMode} />
+              )}
+            </div>
           </div>
         </div>
       </div>

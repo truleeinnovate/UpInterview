@@ -11,7 +11,7 @@ const {
 
 PaymentsRouter.get("/:id", getPaymentsById);
 
-PaymentsRouter.get("/:paymentId", getSinglePaymentById);
+PaymentsRouter.get("/payment/:id", getSinglePaymentById);
 
 PaymentsRouter.get("/", getPaymentsSummary);
 

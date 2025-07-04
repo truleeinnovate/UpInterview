@@ -190,7 +190,7 @@ function Dashboard() {
   );
 
   return (
-    <div className="space-y-6 mt-16 px-4 py-4">
+    <div className="space-y-6 mt-2 px-4">
       <div className="flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row 2x:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-custom-blue">Dashboard</h1>
         <div className="text-sm text-gray-500 font-semibold">
