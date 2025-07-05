@@ -63,3 +63,4 @@ function SidebarPopup({ title, children, onClose }) {
 }
 
 export default SidebarPopup;
+
