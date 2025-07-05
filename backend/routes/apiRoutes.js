@@ -524,7 +524,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         })
           .populate({
             path: 'suggestedQuestionId',
-            model: 'SuggestedQuestions',
+            model: 'suggestedQuestions', // Fix: changed model name to 'suggestedQuestions'
           })
           .populate({
             path: 'tenantListId',
