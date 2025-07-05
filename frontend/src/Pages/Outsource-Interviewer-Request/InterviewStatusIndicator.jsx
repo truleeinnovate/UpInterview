@@ -33,13 +33,13 @@ function InterviewStatusIndicator({ currentStatus }) {
             <div
               className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                 index === 0
-                  ? "border-teal-600" // Default first circle
+                  ? "border-custom-blue" // Default first circle
                   : isFinalRed && index === statusSteps.length - 1
                   ? "border-red-600"
                   : currentStatus === "Active" && index > 0
-                  ? "border-teal-600"
+                  ? "border-custom-blue"
                   : index < currentStepIndex
-                  ? "border-teal-600"
+                  ? "border-custom-blue"
                   : index === currentStepIndex
                   ? "border-orange-500"
                   : "border-gray-300"
@@ -47,13 +47,13 @@ function InterviewStatusIndicator({ currentStatus }) {
             >
               {/* First circle has no tick */}
               {index === 0 ? (
-                <FaCircle className="text-teal-600 h-5 w-5 text-base" />
+                <FaCircle className="text-custom-blue h-5 w-5 text-base" />
               ) : isFinalRed && index === statusSteps.length - 1 ? (
                 <FaCheckCircle className="text-red-600 h-5 w-5 text-base" />
               ) : currentStatus === "Active" && index > 0 ? (
-                <FaCheckCircle className="text-teal-600 h-5 w-5 text-base" />
+                <FaCheckCircle className="text-custom-blue h-5 w-5 text-base" />
               ) : index < currentStepIndex ? (
-                <FaCheckCircle className="text-teal-600 h-5 w-5 text-base" />
+                <FaCheckCircle className="text-custom-blue h-5 w-5 text-base" />
               ) : index === currentStepIndex ? (
                 <div className="h-5 w-5 rounded-full bg-orange-500"></div>
               ) : (
@@ -76,9 +76,9 @@ function InterviewStatusIndicator({ currentStatus }) {
                   isFinalRed && index === statusSteps.length - 2
                     ? "bg-red-600"
                     : currentStatus === "Active"
-                    ? "bg-teal-600"
+                    ? "bg-custom-blue"
                     : index < currentStepIndex - 1
-                    ? "bg-teal-600"
+                    ? "bg-custom-blue"
                     : index === currentStepIndex - 1
                     ? "bg-orange-500"
                     : "bg-gray-300"

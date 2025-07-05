@@ -1307,8 +1307,8 @@ import TableView from "../../Components/Shared/Table/TableView.jsx";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
@@ -1318,21 +1318,13 @@ import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/Sid
 import InterviewerDetails from "./InterviewerDetails.jsx";
 import { useCustomContext } from "../../Context/Contextfetch.js";
 import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanView.jsx";
-
-// ===================================================================
-import InterviewStatusIndicator from "./InterviewStatusIndicator";
-import FeedbackStatusChangeModal from "./FeedbackStatusChangeModal";
-import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
-import Availability from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability";
-import axios from "axios";
 import { config } from "../../config.js";
-// ==================================================================
+import axios from "axios";
 
 const OutsourceInterviewers = () => {
   const { Outsourceinterviewers: outsource, loading } = useCustomContext();
 
   const [view, setView] = useState("table");
-  const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
@@ -1348,11 +1340,31 @@ const OutsourceInterviewers = () => {
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState("Admin");
+  // const [user, setUser] = useState("Admin");
 
   const [selectedInterviewerId, setSelectedInterviewerId] = useState(null);
+  const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [interviewers, setInterviewers] = useState([]);
+
+  // Fetch interview requests
+  // useEffect(() => {
+  //   const getInterviewRequests = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/outsourceInterviewers/${selectedInterviewerId}`
+  //       );
+  //       setSelectedInterviewer(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching Interviewer request:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   getInterviewRequests();
+  // }, [selectedInterviewerId]);
 
   useEffect(() => {
     if (selectedInterviewerId && outsource?.length) {
@@ -1494,19 +1506,34 @@ const OutsourceInterviewers = () => {
   }
 
   if (!interviewers || interviewers.length === 0) {
-    return <div>No Outsource interviewers found.</div>;
+    return <div className="text-center mt-32">No Outsource interviewers found.</div>;
   }
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
+  // const formatDate = (dateString) => {
+  //   const options = { year: "numeric", month: "short", day: "numeric" };
+  //   return new Date(dateString).toLocaleDateString("en-US", options);
+  // };
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   // Table Columns
   const tableColumns = [
+    {
+      key: "interviewerNo",
+      header: "Interviewer ID",
+      render: (vale, row) => (
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedInterviewerId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
+          {row?.interviewerNo ? row?.interviewerNo : "N/A"}
+        </span>
+      ),
+    },
     {
       key: "name",
       header: "Name",
@@ -1591,58 +1618,66 @@ const OutsourceInterviewers = () => {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "hourlyRate",
+      header: "Price per hour",
+      render: (value, row) => (
+        <div className="font-medium">
+          {row.requestedRate?.hourlyRate || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge status={capitalizeFirstLetter(value)} />
+      ),
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        setSelectedInterviewerId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedInterviewerId(item._id);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/tenants/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
 
@@ -1695,17 +1730,17 @@ const OutsourceInterviewers = () => {
     );
   };
 
-  // Render Popup Content
-  const renderPopupContent = () => (
-    <InterviewerDetails
-      selectedInterviewersData={selectedInterviewer}
-      isOpen={isPopupOpen}
-    />
-  );
+  // // Render Popup Content
+  // const renderPopupContent = () => (
+  //   <InterviewerDetails
+  //     selectedInterviewersData={selectedInterviewer}
+  //     isOpen={isPopupOpen}
+  //   />
+  // );
 
   return (
     <>
-      <div className="fixed top-16 sm:top-20 md:top-24 left-0 right-0">
+      <div className="fixed top-12 sm:top-12 md:top-12 left-0 right-0">
         <div className="flex justify-between p-4">
           <div>
             <span className="text-lg font-semibold text-custom-blue">
@@ -1750,11 +1785,20 @@ const OutsourceInterviewers = () => {
             ) : (
               <div className="w-full">
                 <KanbanView
-                  outsourceInterviewers={currentFilteredRows}
+                  data={currentFilteredRows.map((interview) => ({
+                    ...interview,
+                    id: interview._id,
+                    title: interview.interviewerNo || "N/A",
+                    subtitle:
+                      interview?.contactId?.firstName &&
+                      interview?.contactId?.lastName
+                        ? `${interview.contactId.firstName} ${interview.contactId.lastName}`
+                        : "N/A",
+                  }))}
                   columns={kanbanColumns}
-                  data={interviewers}
-                  actions={renderKanbanActions}
-                  emptyState="No Outsource Interviewers found."
+                  loading={isLoading}
+                  renderActions={renderKanbanActions}
+                  emptyState="No interviewer requests found."
                 />
               </div>
             )}
@@ -1773,15 +1817,19 @@ const OutsourceInterviewers = () => {
         </div>
       </div>
       {/* Details view popup */}
-      <div className="flex-grow h-full">
+      <div>
         {isPopupOpen && selectedInterviewer && (
-          <SidebarPopup
-            title="Outsource Interviewer Details"
-            subTitle={selectedInterviewerId}
-            onClose={() => setIsPopupOpen(false)}
-          >
-            {renderPopupContent(selectedInterviewer)}
-          </SidebarPopup>
+          // <SidebarPopup
+          //   title="Outsource Interviewer Details"
+          //   subTitle={selectedInterviewerId}
+          //   onClose={() => setIsPopupOpen(false)}
+          // >
+          //   {renderPopupContent(selectedInterviewer)}
+          // </SidebarPopup>
+          <InterviewerDetails
+            selectedInterviewersData={selectedInterviewer}
+            onClose={setIsPopupOpen}
+          />
         )}
       </div>
       <Outlet />

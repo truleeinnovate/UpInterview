@@ -12,6 +12,10 @@ router.get(
   "/all-interviewers",
   outsourceInterviewerController.getAllOutsourceInterviewers
 );
+// router.get(
+//   "/:id",
+//   outsourceInterviewerController.getSingleOutsourceInterviewer
+// );
 // -------------------------------------------------------------------------->
 
 module.exports = router;
