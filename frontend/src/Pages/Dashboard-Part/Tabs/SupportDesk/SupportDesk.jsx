@@ -148,17 +148,17 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
     }
   };
 
-  const hasActionAccess = (ticket) => {
-    if (impersonatedUser_roleName === "Super_Admin") {
-      return true;
-    } else if (impersonatedUser_roleName === "Support_Team") {
-      return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-    } else if (effectivePermissions_RoleName === "Admin") {
-      return true;
-    } else {
-      return ticket.assignedToId === currentUserId;
-    }
-  };
+  // const hasActionAccess = (ticket) => {
+  //   if (impersonatedUser_roleName === "Super_Admin") {
+  //     return true;
+  //   } else if (impersonatedUser_roleName === "Support_Team") {
+  //     return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
+  //   } else if (effectivePermissions_RoleName === "Admin") {
+  //     return true;
+  //   } else {
+  //     return ticket.assignedToId === currentUserId;
+  //   }
+  // };
 
   const tableColumns = [
     {
@@ -258,7 +258,7 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
               : (row.assignedToId === impersonationPayload.impersonatedUserId && impersonatedUser_roleName === "Support_Team") ? `/super-admin-desk/view/${row._id}` : (impersonatedUser_roleName === "Super_Admin")?`/super-admin-desk/view/${row._id}`: `/super-admin-desk/${row._id}`;
             navigate(path, { state: { ticketData: row } });
       },
-      disabled: (row) => !hasActionAccess(row),
+      //disabled: (row) => !hasActionAccess(row),
     },
     ...(effectivePermissions_RoleName === "Admin"
       ? [
@@ -268,7 +268,7 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
           icon: <Pencil className="w-4 h-4 text-green-600" />,
           onClick: (row) =>
             navigate(`/support-desk/edit-ticket/${row._id}`, { state: { ticketData: row } }),
-          disabled: (row) => !hasActionAccess(row),
+          //disabled: (row) => !hasActionAccess(row),
         },
       ]
       : []),
