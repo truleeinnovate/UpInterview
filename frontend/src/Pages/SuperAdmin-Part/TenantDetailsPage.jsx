@@ -263,28 +263,28 @@ function TenantDetailsPage() {
     if (id) getTenant();
   }, [id]);
 
-  if (loading) {
-    return (
-      // <div className="flex justify-center items-center h-64">
-      //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      // </div>
-      <Loading message="Loading..." />
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     // <div className="flex justify-center items-center h-64">
+  //     //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+  //     // </div>
+  //     <Loading message="Loading..." />
+  //   );
+  // }
 
-  if (!tenant) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-xl text-gray-600">Tenant not found</div>
-        <Link
-          to="/tenants"
-          className="mt-4 inline-block text-primary-600 hover:text-primary-800"
-        >
-          Return to tenants list
-        </Link>
-      </div>
-    );
-  }
+  // if (!tenant) {
+  //   return (
+  //     <div className="text-center py-32">
+  //       <div className="text-xl text-gray-600">Tenant not found</div>
+  //       <Link
+  //         to="/tenants"
+  //         className="mt-4 inline-block text-primary-600 hover:text-primary-800"
+  //       >
+  //         Return to tenants list
+  //       </Link>
+  //     </div>
+  //   );
+  // }
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -485,7 +485,7 @@ function TenantDetailsPage() {
           viewMode === "collapsed" ? "w-[50vw]" : "w-full"
         }`}
       >
-        {/* 🔒 Fixed Header */}
+        {/* Fixed Header */}
         <div className="sticky top-0 bg-white z-50 border-b border-gray-100 px-6 py-6">
           <div className="flex justify-between items-center">
             <div className="flex flex-col">
@@ -523,7 +523,7 @@ function TenantDetailsPage() {
           </div>
         </div>
 
-        {/* 🌟 Scrollable Tabs + Content */}
+        {/* Scrollable Tabs + Content */}
         <div className="overflow-y-auto h-[calc(100%-112px)] px-4 pt-4 pb-8">
           <div className="bg-white shadow-card overflow-hidden">
             {/* Tabs */}

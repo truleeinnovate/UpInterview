@@ -1,5 +1,5 @@
-const { mongoose } = require('mongoose');
-const { Position } = require('../models/position.js');
+const { mongoose } = require("mongoose");
+const { Position } = require("../models/position.js");
 
 // const createPosition = async (req, res) => {
 //   res.locals.loggedByController = true;
@@ -101,7 +101,6 @@ const { Position } = require('../models/position.js');
 //     });
 //   }
 // };
-
 
 // feed and log data added in this code but not saving the data in the database due to the error of owner is required
 // const createPosition = async (req, res) => {
@@ -212,20 +211,36 @@ const { Position } = require('../models/position.js');
 
 const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
-  res.locals.processName = 'Create Position';
+  res.locals.processName = "Create Position";
   console.log("🔁 Incoming request to createPosition:", req.body);
 
   // Check if ownerId exists
   if (!req.body.ownerId) {
     res.locals.responseData = {
-      status: 'error',
+      status: "error",
       message: "OwnerId field is required",
     };
     return res.status(400).json(res.locals.responseData);
   }
 
   try {
-    console.log("📦 Position data received:", req.body);
+    console.log("Position data received:", req.body);
+
+    // Generate custom positionCode like POS-00001
+    const lastPosition = await Position.findOne({ tenantId: req.body.tenantId })
+      .sort({ _id: -1 })
+      .select("positionCode")
+      .lean();
+
+    let nextNumber = 1;
+    if (lastPosition?.positionCode) {
+      const match = lastPosition.positionCode.match(/POS-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    const positionCode = `POS-${String(nextNumber).padStart(5, "0")}`;
 
     // Map request body to schema fields
     const positionData = {
@@ -240,15 +255,22 @@ const createPosition = async (req, res) => {
       tenantId: req.body.tenantId || "",
       minSalary: req.body.minSalary || "",
       maxSalary: req.body.maxSalary || "",
-      NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
+      NoofPositions: req.body.NoofPositions
+        ? Number(req.body.NoofPositions)
+        : undefined,
       Location: req.body.Location || "",
       selectedTemplete: req.body.template?.templateName || null,
-      createdBy: req.body.ownerId, // ✅ Fixed: use req.body.ownerId instead of undefined ownerId
+      createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
+      positionCode, // Custom code added
     };
 
     // Handle rounds if template exists
-    if (req.body.template && req.body.template.rounds && req.body.template.rounds.length > 0) {
-      positionData.rounds = req.body.template.rounds.map(round => ({
+    if (
+      req.body.template &&
+      req.body.template.rounds &&
+      req.body.template.rounds.length > 0
+    ) {
+      positionData.rounds = req.body.template.rounds.map((round) => ({
         roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
         interviewerType: round.interviewerType || "",
@@ -258,10 +280,12 @@ const createPosition = async (req, res) => {
         interviewers: round.interviewers || [],
         assessmentId: round.assessmentId || null,
         sequence: round.sequence || 0,
-        questions: round.questions ? round.questions.map(q => ({
-          questionId: q.questionId || null,
-          snapshot: q.snapshot || null
-        })) : []
+        questions: round.questions
+          ? round.questions.map((q) => ({
+              questionId: q.questionId || null,
+              snapshot: q.snapshot || null,
+            }))
+          : [],
       }));
     } else {
       positionData.rounds = [];
@@ -277,32 +301,32 @@ const createPosition = async (req, res) => {
     // Feed and log data
     res.locals.feedData = {
       tenantId: req.body.tenantId,
-      feedType: 'info',
+      feedType: "info",
       action: {
-        name: 'position_created',
+        name: "position_created",
         description: `Position was created`,
       },
       ownerId: req.body.ownerId,
       parentId: newPosition._id,
-      parentObject: 'Position',
+      parentObject: "Position",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
+      severity: res.statusCode >= 500 ? "high" : "low",
       message: `Position was created successfully`,
     };
 
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: 'Create Position',
+      processName: "Create Position",
       requestBody: req.body,
-      status: 'success',
-      message: 'Position created successfully',
+      status: "success",
+      message: "Position created successfully",
       responseBody: newPosition,
     };
 
     return res.status(201).json({
-      status: 'success',
-      message: 'Position created successfully',
+      status: "success",
+      message: "Position created successfully",
       data: newPosition,
     });
   } catch (error) {
@@ -311,23 +335,22 @@ const createPosition = async (req, res) => {
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: 'Create Position',
+      processName: "Create Position",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
+      status: "error",
     };
 
     return res.status(500).json({
-      status: 'error',
+      status: "error",
       message: error.message,
     });
   }
 };
 
-
 const updatePosition = async (req, res) => {
   res.locals.loggedByController = true;
-  res.locals.processName = 'Update Position';
+  res.locals.processName = "Update Position";
 
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
@@ -342,24 +365,31 @@ const updatePosition = async (req, res) => {
     const positionData = {
       title: updateFields.title || currentPosition.title,
       companyname: updateFields.companyName || currentPosition.companyname,
-      jobDescription: updateFields.jobDescription || currentPosition.jobDescription,
-      minexperience: updateFields.minexperience || currentPosition.minexperience,
-      maxexperience: updateFields.maxexperience || currentPosition.maxexperience,
-      selectedTemplete: updateFields.template?.templateName ?? currentPosition.selectedTemplete,
+      jobDescription:
+        updateFields.jobDescription || currentPosition.jobDescription,
+      minexperience:
+        updateFields.minexperience || currentPosition.minexperience,
+      maxexperience:
+        updateFields.maxexperience || currentPosition.maxexperience,
+      selectedTemplete:
+        updateFields.template?.templateName ?? currentPosition.selectedTemplete,
       skills: updateFields.skills || currentPosition.skills,
-      additionalNotes: updateFields.additionalNotes || currentPosition.additionalNotes,
+      additionalNotes:
+        updateFields.additionalNotes || currentPosition.additionalNotes,
       ownerId: ownerId || currentPosition.ownerId,
       tenantId: tenantId || currentPosition.tenantId,
       minSalary: updateFields.minSalary || currentPosition.minSalary,
       maxSalary: updateFields.maxSalary || currentPosition.maxSalary,
-      NoofPositions: updateFields.NoofPositions ? Number(updateFields.NoofPositions) : currentPosition.NoofPositions,
+      NoofPositions: updateFields.NoofPositions
+        ? Number(updateFields.NoofPositions)
+        : currentPosition.NoofPositions,
       Location: updateFields.Location || currentPosition.Location,
-      updatedBy: ownerId
+      updatedBy: ownerId,
     };
 
     // Handle rounds update only if template is provided and has rounds
     if (updateFields.template?.rounds) {
-      positionData.rounds = updateFields.template.rounds.map(round => ({
+      positionData.rounds = updateFields.template.rounds.map((round) => ({
         roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
         interviewerType: round.interviewerType || "",
@@ -369,10 +399,12 @@ const updatePosition = async (req, res) => {
         interviewers: round.interviewers || [],
         assessmentId: round.assessmentId || null,
         sequence: round.sequence || 0,
-        questions: round.questions ? round.questions.map(q => ({
-          questionId: q.questionId || null,
-          snapshot: q.snapshot || null
-        })) : []
+        questions: round.questions
+          ? round.questions.map((q) => ({
+              questionId: q.questionId || null,
+              snapshot: q.snapshot || null,
+            }))
+          : [],
       }));
     } else {
       // Keep existing rounds if no template rounds provided
@@ -385,9 +417,13 @@ const updatePosition = async (req, res) => {
         const oldValue = currentPosition[key];
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
           const normalizeArray = (array) =>
-            array.map(({ _id, ...rest }) => rest)
+            array
+              .map(({ _id, ...rest }) => rest)
               .sort((a, b) => (a.skill || "").localeCompare(b.skill || ""));
-          return JSON.stringify(normalizeArray(oldValue)) !== JSON.stringify(normalizeArray(newValue));
+          return (
+            JSON.stringify(normalizeArray(oldValue)) !==
+            JSON.stringify(normalizeArray(newValue))
+          );
         }
         return oldValue !== newValue;
       })
@@ -399,8 +435,8 @@ const updatePosition = async (req, res) => {
 
     if (changes.length === 0) {
       return res.status(200).json({
-        status: 'no_changes',
-        message: 'No changes detected, position details remain the same',
+        status: "no_changes",
+        message: "No changes detected, position details remain the same",
       });
     }
 
@@ -416,16 +452,16 @@ const updatePosition = async (req, res) => {
 
     res.locals.feedData = {
       tenantId,
-      feedType: 'update',
+      feedType: "update",
       action: {
-        name: 'position_updated',
+        name: "position_updated",
         description: `Position was updated`,
       },
       ownerId,
       parentId: positionId,
-      parentObject: 'Position',
+      parentObject: "Position",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
+      severity: res.statusCode >= 500 ? "high" : "low",
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
@@ -436,44 +472,43 @@ const updatePosition = async (req, res) => {
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Update Position',
+      processName: "Update Position",
       requestBody: req.body,
-      status: 'success',
-      message: 'Position updated successfully',
+      status: "success",
+      message: "Position updated successfully",
       responseBody: updatedPosition,
     };
 
     res.status(201).json({
-      status: 'success',
-      message: 'Position updated successfully',
+      status: "success",
+      message: "Position updated successfully",
       data: updatedPosition,
     });
   } catch (error) {
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Update Position',
+      processName: "Update Position",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
+      status: "error",
     };
 
     res.status(500).json({
-      status: 'error',
+      status: "error",
       message: error.message,
     });
   }
 };
 
-
-
 const saveInterviewRoundPosition = async (req, res) => {
   try {
-
     const { positionId, round, roundId } = req.body;
 
     if (!positionId || !round) {
-      return res.status(400).json({ message: "Interview ID and round data are required." });
+      return res
+        .status(400)
+        .json({ message: "Interview ID and round data are required." });
     }
 
     // Find the position document
@@ -482,12 +517,11 @@ const saveInterviewRoundPosition = async (req, res) => {
       return res.status(404).json({ message: "Position not found." });
     }
 
-    
-
-
     if (roundId) {
       // **Edit an existing round**
-      const roundIndex = position.rounds.findIndex(r => r._id.toString() === roundId);
+      const roundIndex = position.rounds.findIndex(
+        (r) => r._id.toString() === roundId
+      );
       if (roundIndex === -1) {
         return res.status(404).json({ message: "Round not found." });
       }
@@ -500,10 +534,11 @@ const saveInterviewRoundPosition = async (req, res) => {
       //   round.interviewers = [];
       // }
 
-
-
       // Update the existing round with new data
-      position.rounds[roundIndex] = { ...position.rounds[roundIndex], ...round };
+      position.rounds[roundIndex] = {
+        ...position.rounds[roundIndex],
+        ...round,
+      };
 
       // **Reorder all rounds based on sequence**
       await reorderInterviewRounds(position);
@@ -516,19 +551,17 @@ const saveInterviewRoundPosition = async (req, res) => {
         message: "Round updated successfully.",
         data: position.rounds[roundIndex],
       });
-
     } else {
       // **Add a new round**
       const totalRounds = position.rounds.length;
       const newSequence = round.sequence || totalRounds + 1; // Default to next sequence
 
       // **Shift existing rounds if inserting at a lower sequence**
-      position.rounds.forEach(r => {
+      position.rounds.forEach((r) => {
         if (r.sequence >= newSequence) {
           r.sequence += 1;
         }
       });
-
 
       // if (round.interviewers && Array.isArray(round.interviewers)) {
       //   round.interviewers = round.interviewers
@@ -538,10 +571,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       //   round.interviewers = [];
       // }
 
-
-
       console.log("Position rounds 540", positionId, round, roundId);
-
 
       // **Add the new round**
       const newRound = {
@@ -556,11 +586,14 @@ const saveInterviewRoundPosition = async (req, res) => {
 
       await position.save();
 
-      return res.status(201).json({ message: "Interview round created successfully.", data: position.rounds[position.rounds.length - 1], });
+      return res.status(201).json({
+        message: "Interview round created successfully.",
+        data: position.rounds[position.rounds.length - 1],
+      });
     }
 
     /**
-     * Reorders interview rounds based on sequence. 
+     * Reorders interview rounds based on sequence.
      */
     function reorderInterviewRounds(positionId) {
       position.rounds.sort((a, b) => a.sequence - b.sequence);
@@ -569,11 +602,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       position.rounds.forEach((round, index) => {
         round.sequence = index + 1;
       });
-
-
     }
-
-
 
     // Sending emails to interviewers
     // const emailPromises = [];
@@ -699,8 +728,6 @@ const saveInterviewRoundPosition = async (req, res) => {
 //       tenantId: tenantId, // Filter by tenant
 //     }).lean(); // Convert to plain JS object for performance
 
-
-
 //     if (!position) {
 //       return res.status(404).json({
 //         success: false,
@@ -726,8 +753,6 @@ const saveInterviewRoundPosition = async (req, res) => {
 //   }
 // };
 
-
-
 // const updateRounds = async (req, res) => {
 //   const { positionId } = req.params;
 //   const { rounds } = req.body;
@@ -750,20 +775,21 @@ const saveInterviewRoundPosition = async (req, res) => {
 //   }
 // };
 
-
 const deleteRound = async (req, res) => {
   const { roundId } = req.params;
-  
+
   try {
-    const position = await Position.findOne({ 'rounds._id': roundId });
+    const position = await Position.findOne({ "rounds._id": roundId });
     if (!position) {
-      return res.status(404).json({ message: 'Round not found' });
+      return res.status(404).json({ message: "Round not found" });
     }
 
     // Find the index of the round to delete
-    const roundIndex = position.rounds.findIndex(round => round._id.toString() === roundId);
+    const roundIndex = position.rounds.findIndex(
+      (round) => round._id.toString() === roundId
+    );
     if (roundIndex === -1) {
-      return res.status(404).json({ message: 'Round not found' });
+      return res.status(404).json({ message: "Round not found" });
     }
 
     // Remove the round from the array
@@ -772,10 +798,10 @@ const deleteRound = async (req, res) => {
     // Save the updated position
     await position.save();
 
-    res.status(200).json({ message: 'Round deleted successfully' });
+    res.status(200).json({ message: "Round deleted successfully" });
   } catch (error) {
-    console.error('Error deleting round:', error);
-    res.status(500).json({ message: 'Error deleting round' });
+    console.error("Error deleting round:", error);
+    res.status(500).json({ message: "Error deleting round" });
   }
 };
 
@@ -783,5 +809,5 @@ module.exports = {
   createPosition,
   updatePosition,
   saveInterviewRoundPosition,
-  deleteRound
+  deleteRound,
 };

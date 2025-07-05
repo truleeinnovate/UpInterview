@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 /* Override browser autofill styles */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -21,206 +20,193 @@ input:-webkit-autofill:focus {
   outline: none !important;
 }
 
-
-
-
 /* Custom password masking */
 .password-mask {
-    -webkit-text-security: disc !important; /* Displays bullets like a password field */
-    text-security: disc !important; /* Standard property for masking */
-  }
-  
-  /* Ensure no browser-native password toggle appears */
-  input[type="text"][autocomplete="new-password"] {
-    -webkit-appearance: none !important; /* Remove browser-specific styling */
-    appearance: none !important;
-  }
-  
-  /* Optional: Handle focus and autofill states */
-  .password-mask:focus {
-    -webkit-text-security: none !important; /* Ensure text is visible when focused and showPassword is true */
-    text-security: none !important;
+  -webkit-text-security: disc !important; /* Displays bullets like a password field */
+  text-security: disc !important; /* Standard property for masking */
+}
+
+/* Ensure no browser-native password toggle appears */
+input[type="text"][autocomplete="new-password"] {
+  -webkit-appearance: none !important; /* Remove browser-specific styling */
+  appearance: none !important;
+}
+
+/* Optional: Handle focus and autofill states */
+.password-mask:focus {
+  -webkit-text-security: none !important; /* Ensure text is visible when focused and showPassword is true */
+  text-security: none !important;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
   }
 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
 
-
-
-  @layer base {
-    :root {
-      --background: 0 0% 100%;
-      --foreground: 222.2 84% 4.9%;
-      --card: 0 0% 100%;
-      --card-foreground: 222.2 84% 4.9%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 222.2 84% 4.9%;
-      --primary: 221.2 83.2% 53.3%;
-      --primary-foreground: 210 40% 98%;
-      --secondary: 210 40% 96.1%;
-      --secondary-foreground: 222.2 47.4% 11.2%;
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
-      --accent: 210 40% 96.1%;
-      --accent-foreground: 222.2 47.4% 11.2%;
-      --destructive: 0 84.2% 60.2%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 221.2 83.2% 53.3%;
-      --radius: 0.5rem;
-    }
-  
-    .dark {
-      --background: 222.2 84% 4.9%;
-      --foreground: 210 40% 98%;
-      --card: 222.2 84% 4.9%;
-      --card-foreground: 210 40% 98%;
-      --popover: 222.2 84% 4.9%;
-      --popover-foreground: 210 40% 98%;
-      --primary: 217.2 91.2% 59.8%;
-      --primary-foreground: 222.2 47.4% 11.2%;
-      --secondary: 217.2 32.6% 17.5%;
-      --secondary-foreground: 210 40% 98%;
-      --muted: 217.2 32.6% 17.5%;
-      --muted-foreground: 215 20.2% 65.1%;
-      --accent: 217.2 32.6% 17.5%;
-      --accent-foreground: 210 40% 98%;
-      --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 217.2 32.6% 17.5%;
-      --input: 217.2 32.6% 17.5%;
-      --ring: 224.3 76.3% 48%;
-    }
-  }
-  
-  @layer base {
-    * {
-      @apply border-border;
-    }
-  
-    body {
-      background-color: hsl(var(--background));
-      color: hsl(var(--foreground));
-      font-feature-settings: "rlig" 1, "calt" 1;
-    }
-  }
-  
-  @layer utilities {
-    .bg-background {
-      background-color: hsl(var(--background));
-    }
-    
-    .text-foreground {
-      color: hsl(var(--foreground));
-    }
-    
-    .border-border {
-      border-color: hsl(var(--border));
-    }
-  }
-  
-  .glass-card {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-  }
-  
-  .glass-sidebar {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-left: 1px solid rgba(255, 255, 255, 0.18);
-  }
-  
-  .animate-in {
-    animation: animateIn 0.3s ease forwards;
-  }
-  
-  @keyframes animateIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .animate-slide-in-right {
-    animation: slideInRight 0.3s ease forwards;
-  }
-  
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  .gradient-bg {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  }
-  
-  .gradient-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
-  }
-  
-  .shadow-soft {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05),
-      0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  }
-  
-  .shadow-card {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
-      0 2px 4px -1px rgba(0, 0, 0, 0.025);
-  }
-  
-  .no-spinner::-webkit-inner-spin-button,
-  .no-spinner::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .no-spinner {
-    -moz-appearance: textfield;
+@layer base {
+  * {
+    @apply border-border;
   }
 
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
 
+@layer utilities {
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
 
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
 
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+}
 
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
 
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
+.animate-in {
+  animation: animateIn 0.3s ease forwards;
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+}
+
+.shadow-soft {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+.shadow-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.025);
+}
+
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-
 
 /* Status badge custom colors */
 /* src/index.css or src/globals.css */
 .badge-success {
-  @apply bg-emerald-100 text-emerald-800 border-emerald-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-green-100 text-green-700 border-green-300 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 .badge-warning {
-  @apply bg-amber-100 text-amber-800 border-amber-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-yellow-100 text-yellow-700 border-yellow-300 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 .badge-error {
-  @apply bg-red-100 text-red-800 border-red-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-rose-100 text-rose-700 border-rose-300 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 .badge-neutral {
-  @apply bg-gray-100 text-gray-800 border-gray-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-slate-200 text-slate-700 border-slate-300 rounded-full px-2 py-1 text-xs font-medium;
 }
