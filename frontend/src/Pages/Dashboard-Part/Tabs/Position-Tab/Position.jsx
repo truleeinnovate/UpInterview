@@ -262,7 +262,7 @@ const PositionTab = () => {
     },
     {
       key: "skills",
-      header: "Skills/Technology",
+      header: "Skills",
       render: (value) => (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 2).map((skill, idx) => (
@@ -347,7 +347,7 @@ const PositionTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
-              searchPlaceholder="Search positions..."
+              searchPlaceholder="Search Positions..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -364,7 +364,7 @@ const PositionTab = () => {
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
-                    emptyState="No positions found."
+                    emptyState="No Positions Found."
                   />
                 </div>
               ) : (
@@ -419,7 +419,7 @@ const PositionTab = () => {
                           ))
                         ) : (
                           <span className="text-sm text-gray-500">
-                            No locations available
+                            No Locations Available
                           </span>
                         )}
                       </div>
@@ -431,7 +431,7 @@ const PositionTab = () => {
                       onClick={() => setIsSkillsOpen(!isSkillsOpen)}
                     >
                       <span className="font-medium text-gray-700">
-                        Skills/Technology
+                        Skills
                       </span>
                       {isSkillsOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
@@ -460,7 +460,7 @@ const PositionTab = () => {
                           ))
                         ) : (
                           <span className="text-sm text-gray-500">
-                            No skills available
+                            No Skills Available
                           </span>
                         )}
                       </div>
@@ -491,9 +491,10 @@ const PositionTab = () => {
                               type="number"
                               min="0"
                               max="15"
+                              placeholder="Min..."
                               value={experience.min}
                               onChange={(e) => handleExperienceChange(e, "min")}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              className="mt-1 px-2 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                             />
                           </div>
                           <div className="flex-1">
@@ -504,9 +505,10 @@ const PositionTab = () => {
                               type="number"
                               min="0"
                               max="15"
+                              placeholder="Max..."
                               value={experience.max}
                               onChange={(e) => handleExperienceChange(e, "max")}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              className="mt-1 px-2 block w-full rounded-md border  border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                             />
                           </div>
                         </div>

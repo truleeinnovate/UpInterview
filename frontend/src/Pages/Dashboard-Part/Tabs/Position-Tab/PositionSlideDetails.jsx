@@ -144,7 +144,7 @@ const PositionSlideDetails = () => {
             <div className="space-y-6 mt-4">
               <div className="text-center mb-4">
                 <h3 className="text-2xl font-bold text-gray-900">{position?.companyname || ''}</h3>
-                <p className="text-gray-600 mt-1">{position.title || 'position'}</p>
+                <p className="text-gray-600 mt-1">{position.title.charAt(0).toUpperCase() + position.title.slice(1) || 'position'}</p>
               </div>
 
               {/* {position.rounds?.length === 0
