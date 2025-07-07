@@ -156,7 +156,7 @@ const AssessmentKanban = ({
         transition={{ duration: 0.3 }}
       >
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {assessments.length} {assessments.length === 1 ? 'Assessment' : 'Assessments'}
+          {assessments.length} {assessments.length <= 1 ? 'Assessment' : 'Assessments'}
         </span>
       </motion.div>
 
@@ -205,7 +205,7 @@ const AssessmentKanban = ({
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => onView(assessment)}
-                                className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded"
                                 title="View"
                               >
                                 <EyeIcon className="w-5 h-5" />
@@ -214,7 +214,7 @@ const AssessmentKanban = ({
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => onEdit(assessment)}
-                                className="p-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-indigo-50 rounded"
                                 title="Edit"
                               >
                                 <PencilSquareIcon className="w-5 h-5" />
@@ -255,7 +255,7 @@ const AssessmentKanban = ({
                                 className="font-medium text-lg text-custom-blue pr-20 cursor-pointer"
                                 onClick={() => onView(assessment)}
                               >
-                                {assessment.AssessmentTitle}
+                                {assessment.AssessmentTitle.charAt(0).toUpperCase() + assessment.AssessmentTitle.slice(1)}
                               </h3>
                             </motion.div>
 
@@ -309,7 +309,7 @@ const AssessmentKanban = ({
                                 {assessment.status}
                               </motion.span>
                               <span className="text-xs text-gray-500">
-                                {assessmentSections[assessment._id] ?? 0} Sections
+                                {assessmentSections[assessment._id] ?? 0} {assessmentSections[assessment._id] <= 1 ? 'Section' : 'Sections'}
                               </span>
                             </div>
                           </motion.div>

@@ -105,7 +105,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
       >
         <h3 className="text-xl font-semibold text-gray-800">All Interview Templates</h3>
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {templates.length} {templates.length === 1 ? 'Template' : 'Templates'}
+          {templates.length} {templates.length <= 1 ? 'Template' : 'Templates'}
         </span>
       </motion.div>
       {templates.length > 0 ? (
@@ -129,7 +129,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                   whileHover={{ x: 2 }}
                 >
                   <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
-                    {template.templateName}
+                    {template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1)}
                   </h4>
                   <p className="mt-2 text-gray-600 line-clamp-2 h-[40px] text-sm break-words">
                     {template.description}
@@ -141,7 +141,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onView(template)}
-                      className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
+                      className="text-custom-blue hover:bg-custom-blue/80 p-2 rounded-lg"
                       title="View"
                     >
                       <FaEye className="w-4 h-4" />
@@ -168,14 +168,14 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       whileHover={{ scale: 1.05 }}
                     >
                       <Layers className="h-4 w-4 text-custom-blue" />
-                      <span className="text-sm font-medium text-gray-900">{template.rounds?.length || 0} rounds</span>
+                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{template.rounds?.length || 0} {template.rounds?.length <= 1 ? 'Round' : 'Rounds'}</span>
                     </motion.div>
                     <motion.div 
                       className="flex items-center gap-2"
                       whileHover={{ scale: 1.05 }}
                     >
                       <Calendar className="h-4 w-4 text-custom-blue" />
-                      <span className="text-sm font-medium text-gray-900">{formatRelativeDate(template.updatedAt)}</span>
+                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{formatRelativeDate(template.updatedAt)}</span>
                     </motion.div>
                   </div>
                   <motion.span 
@@ -212,7 +212,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                         className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-center text-gray-500"
                         whileHover={{ x: 2 }}
                       >
-                        +{template.rounds.length - 2} more rounds
+                        +{template.rounds.length - 2} More Rounds
                       </motion.div>
                     )}
                   </motion.div>

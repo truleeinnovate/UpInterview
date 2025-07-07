@@ -153,7 +153,7 @@ const InterviewTemplates = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "N/A"}
+          {value.charAt(0).toUpperCase() + value.slice(1) || "N/A"}
         </div>
       ),
     },

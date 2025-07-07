@@ -628,7 +628,7 @@ const selectedLabelId = useMemo(() => {
                       title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="truncate">{listName}</span>
+                        <span className="truncate">{listName.charAt(0).toUpperCase() + listName.slice(1)}</span>
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
                             groupedQuestions[listName].length === 0

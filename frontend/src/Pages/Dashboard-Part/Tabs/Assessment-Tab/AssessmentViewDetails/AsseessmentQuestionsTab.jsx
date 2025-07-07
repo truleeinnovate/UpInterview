@@ -27,9 +27,9 @@ return (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
                   <span className="bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
-                    {section.questions?.length || 0} Questions
+                    {section.questions?.length || 0} {section.questions?.length <= 1 ? 'Question' : 'Questions'}
                   </span>
-                  <h3 className="font-semibold text-gray-800">{section.sectionName}</h3>
+                  <h3 className="font-semibold text-gray-800">{section.sectionName.charAt(0).toUpperCase() + section.sectionName.slice(1)}</h3>
                 </div>
               </div>
               <div className="flex items-center space-x-4">

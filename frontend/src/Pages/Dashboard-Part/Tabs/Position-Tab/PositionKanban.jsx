@@ -94,7 +94,7 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
           >
             <h3 className="text-xl font-semibold text-gray-800">All Positions</h3>
             <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-              {positions?.length} Positions
+            {positions?.length} {`Position${positions?.length === 1 ? '' : 's'}`}
             </span>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
@@ -121,7 +121,7 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
                     <div className="flex items-center">
                       <div className="relative"></div>
                       <div>
-                        <h4 className="text-sm font-medium text-custom-blue">{position?.title || 'N/A'}</h4>
+                        <h4 className="text-sm font-medium text-custom-blue">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'N/A'}</h4>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -133,7 +133,7 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
                             e.stopPropagation();
                             onView(position);
                           }}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />

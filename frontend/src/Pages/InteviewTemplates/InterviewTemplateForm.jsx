@@ -295,6 +295,7 @@ const InterviewSlideover = ({ mode }) => {
                                         type="text"
                                         id="label"
                                         name="label"
+                                        placeholder="Senior_Frontend_Developer"
                                         value={newTemplate.label}
                                         readOnly
                                         onFocus={() => handleBlur('label')}
@@ -328,9 +329,9 @@ const InterviewSlideover = ({ mode }) => {
                                     <div className="flex justify-between items-center ">
                                         <span className="text-sm text-gray-500">
                                             {errors.description ? (
-                                                <p className="text-red-500 text-xs ">{errors.description}</p>
+                                                <p className="text-red-500 text-sm ">{errors.description}</p>
                                             ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
-                                                <p className="text-gray-500 text-xs">
+                                                <p className="text-gray-500 text-sm">
                                                     Minimum {20 - newTemplate.description.length} more characters needed
                                                 </p>
                                             ) : null}

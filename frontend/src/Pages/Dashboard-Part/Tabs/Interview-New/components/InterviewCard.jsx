@@ -113,7 +113,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                   <div className="flex items-center mt-1 text-sm text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-1 flex-shrink-0" />
                     <div className="flex items-center truncate">
-                      <span className="truncate">{position?.title || 'Unknown Position'}</span>
+                      <span className="truncate">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown Position'}</span>
                       {position && (
                         <button
                           // onClick={() => handleViewEntityDetails(position, 'position', 'sidebar')}
@@ -139,7 +139,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
 
               <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>Progress: {completedRounds} of {totalRounds} rounds completed</span>
+                <span>Progress: {completedRounds} of {totalRounds} Rounds Completed</span>
               </div>
             </div>
 
@@ -158,7 +158,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                 {nextRoundInterviewers.length > 0 && (
                   <div className="mt-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-blue-600 dark:text-blue-400">Interviewers:</span>
+                      <span className="text-xs text-custom-blue dark:text-blue-400">Interviewers:</span>
                       <div className="flex flex-wrap gap-2">
                         {nextRoundInterviewers.map((interviewer, index) => (
                           <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
@@ -166,7 +166,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                               interviewer={interviewer}
                               size="sm"
                             />
-                            <span className="ml-1 text-xs text-blue-600 dark:text-blue-400 truncate max-w-[120px]">
+                            <span className="ml-1 text-xs text-custom-blue dark:text-blue-400 truncate max-w-[120px]">
                               {interviewer?.name}
                               {interviewer?.isExternal && (
                                 <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">(Outsourced)</span>

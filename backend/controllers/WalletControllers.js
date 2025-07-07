@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const WalletTopup = require("../models/WalletTopup");
 const Razorpay = require("razorpay");
+const Payment = require("../models/Payments");
+const Invoice = require("../models/Invoicemodels");
+const Receipt = require("../models/Receiptmodels");
 const crypto = require("crypto");
 
 // Initialize Razorpay
@@ -116,6 +119,7 @@ const walletVerifyPayment = async (req, res) => {
       ownerId,
       tenantId,
       amount,
+      currency = "USD",
       description = "Wallet Top-up via Razorpay",
     } = req.body;
 
@@ -243,6 +247,11 @@ const walletVerifyPayment = async (req, res) => {
       });
     }
 
+    // Variables to hold created records
+    let invoice = null;
+    let receipt = null;
+    let payment = null;
+
     // Update wallet balance and add transaction
     try {
       // Credit transactions always increase the available balance immediately
@@ -250,6 +259,66 @@ const walletVerifyPayment = async (req, res) => {
       wallet.transactions.push(transaction);
       await wallet.save();
       console.log("Wallet updated successfully", { balance: wallet.balance });
+
+      /* ------------------------------------------------------------------
+         Create simple Invoice, Receipt and Payment records for this top-up
+         ------------------------------------------------------------------ */
+      
+      try {
+        // 1. Invoice
+        invoice = await Invoice.create({
+          tenantId: tenantId || "default",
+          ownerId,
+          planName: "Wallet Top-up",
+          type: "wallet",
+          totalAmount: parsedAmount,
+          amountPaid: parsedAmount,
+          status: "paid",
+          lineItems: [
+            {
+              description: "Wallet Top-up",
+              amount: parsedAmount,
+              quantity: 1,
+              tax: 0,
+            },
+          ],
+          invoiceCode: `INVC-${Date.now()}`,
+        });
+
+        // 2. Receipt – reference the created invoice
+        receipt = await Receipt.create({
+          invoiceId: invoice._id,
+          tenantId: tenantId || "default",
+          ownerId,
+          amount: parsedAmount,
+          paymentMethod: "razorpay",
+          transactionId: razorpay_payment_id,
+          receiptCode: `RCPT-${Date.now()}`,
+          status: "success",
+        });
+
+        // 3. Payment – reference both invoice & receipt
+        payment = await Payment.create({
+          paymentCode: `PAY-${Date.now()}`,
+          tenantId: tenantId || "default",
+          ownerId,
+          amount: parsedAmount,
+          currency: currency || "USD",
+          status: "captured",
+          paymentMethod: "wallet",
+          paymentGateway: "razorpay",
+          razorpayPaymentId: razorpay_payment_id,
+          razorpayOrderId: razorpay_order_id,
+          razorpaySignature: razorpay_signature,
+          transactionId: razorpay_payment_id,
+          invoiceId: invoice._id,
+          receiptId: receipt._id,
+        });
+      } catch (recordErr) {
+        console.error("Error creating payment/invoice/receipt records:", recordErr);
+        // We will not fail the entire request if these records cannot be created;
+        // wallet top-up has already been credited. Just continue.
+      }
     } catch (saveError) {
       console.error("Error saving wallet:", saveError);
       return res
@@ -261,6 +330,9 @@ const walletVerifyPayment = async (req, res) => {
       success: true,
       wallet,
       transaction,
+      invoice,
+      receipt,
+      payment,
     });
   } catch (error) {
     console.error("Error verifying payment:", error);

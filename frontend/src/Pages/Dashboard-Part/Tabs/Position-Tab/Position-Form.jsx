@@ -1079,6 +1079,7 @@ const PositionForm = ({ mode }) => {
                                   type="number"
                                   min={1}
                                   value={formData.minSalary ?? ""}
+                                  placeholder="Enter min salary"
                                   onChange={(e) => {
                                     const minSalary = e.target.value;
 
@@ -1121,6 +1122,7 @@ const PositionForm = ({ mode }) => {
                                   type="number"
                                   min={1}
                                   value={formData.maxSalary ?? ""}
+                                  placeholder="Enter max salary"
                                   onChange={(e) => {
                                     const maxSalary = e.target.value;
 
