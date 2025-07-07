@@ -367,7 +367,7 @@ function PaymentsTable({ organizationId, viewMode }) {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        // setSelectedUserId(row._id);
+        setSelectedPaymentId(row._id);
         setIsPopupOpen(true);
       },
     },

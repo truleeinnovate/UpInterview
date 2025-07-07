@@ -1518,21 +1518,24 @@ import KanbanView from "../../Pages/Interview-Request/InterviewKanban.jsx";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
-  Phone,
-  GraduationCap,
-  School,
+  // Phone,
+  // GraduationCap,
+  // School,
   // ExternalLink,
   // X,
   Briefcase,
   // User,
   Calendar,
 } from "lucide-react";
-import { LiaGenderlessSolid } from "react-icons/lia";
+import { GiDuration } from "react-icons/gi";
+import { CiSquareQuestion } from "react-icons/ci";
+import { GrStatusGoodSmall } from "react-icons/gr";
+
 import axios from "axios";
 import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
@@ -1541,8 +1544,6 @@ import { usePermissions } from "../../Context/PermissionsContext.js";
 const InternalRequest = () => {
   const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -1556,7 +1557,6 @@ const InternalRequest = () => {
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   const [isLoading, setIsLoading] = useState(false);
-  // const [user, setUser] = useState("Admin");
 
   const [interviewRequests, setInterviewRequests] = useState([]);
 
@@ -1566,6 +1566,7 @@ const InternalRequest = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1642,7 +1643,7 @@ const InternalRequest = () => {
         );
         setInterviewRequests(response.data);
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        console.error("Error fetching Interview requests:", error);
       } finally {
         setIsLoading(false);
       }
@@ -1650,6 +1651,25 @@ const InternalRequest = () => {
 
     getInterviewRequests();
   }, []);
+
+  // Fetch interview request
+  useEffect(() => {
+    const getInterviewRequests = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/interviewrequest/${selectedRequestId}`
+        );
+        setSelectedRequest(response.data);
+      } catch (error) {
+        console.error("Error fetching Interviewer request:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInterviewRequests();
+  }, [selectedRequestId]);
 
   // get user by ID
   useEffect(() => {
@@ -1740,7 +1760,13 @@ const InternalRequest = () => {
       key: "interviewerId",
       header: "Interviewer ID",
       render: (vale, row) => (
-        <span className="text-sm font-medium text-custom-blue cursor-pointer">
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedRequestId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
           {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
         </span>
       ),
@@ -1820,61 +1846,64 @@ const InternalRequest = () => {
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "interviewerTyp",
+      header: "Interviewer Type",
+      render: (value, row) => (
+        <div className="font-medium">{row.interviewerType || "N/A"}</div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge status={capitalizeFirstLetter(value)} />
+      ),
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => {
+        setSelectedRequestId(row._id);
+        setIsPopupOpen(true);
+      },
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => navigate(`edit/${row._id}`),
+    },
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {superAdminPermissions?.InterviewRequest?.View && (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            setSelectedRequestId(item._id);
+            action.onClick(item);
           }}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="View Details"
+          title={action.label}
         >
-          <Eye className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
-      {!isLoading ? (
-        superAdminPermissions?.InterviewRequest?.View && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                item?._id && navigate(`/tenants/${item._id}`);
-              }}
-              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-              title="360° View"
-            >
-              <UserCircle className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`edit/${item._id}`);
-              }}
-              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-          </>
-        )
-      ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onResendLink(item.id);
-          }}
-          disabled={item.status === "completed"}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
-        >
-          <Mail className="w-4 h-4" />
-        </button>
-      )}
+      ))}
     </div>
   );
 
@@ -1935,36 +1964,20 @@ const InternalRequest = () => {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {request?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${request?.ImageData?.path}`}
-                      alt={request?.FirstName || request?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {request?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
-                  {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
-                request?.Status === 'active' ? 'bg-green-100 text-green-800' :
-                request?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {request?.Status ? request?.Status.charAt(0).toUpperCase() + request?.Status.slice(1) : "?"}
-
-              </span> */}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {request?.interviewRequestCode?.charAt(0)?.toUpperCase() ||
+                      "?"}
+                  </div>
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {request?.firstName ? request.firstName : "N/A"}
+                    {request?.interviewRequestCode
+                      ? request.interviewRequestCode
+                      : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {request?.CurrentRole || "position"}
+                    {formatDate(request?.dateTime ? request?.dateTime : "N/A")}
                   </p>
                 </div>
               </div>
@@ -1973,19 +1986,20 @@ const InternalRequest = () => {
                 <div className="grid grid-cols-1 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Personal Details
+                      Interview Details
                     </h4>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
-                            <request className="w-5 h-5 text-gray-500" />
+                            <Calendar className="w-5 h-5 text-gray-500" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Name</p>
+                            <p className="text-sm text-gray-500">
+                              Requested Date
+                            </p>
                             <p className="text-gray-700">
-                              {request?.firstName || "N/A"}{" "}
-                              {request?.lastName || ""}
+                              {formatDate(request?.requestedAt) || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -1995,24 +2009,71 @@ const InternalRequest = () => {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">
-                              Date of Birth
+                              Date of Expiry
                             </p>
                             <p className="text-gray-700">
-                              {new Date(
-                                request?.Date_Of_Birth
-                              ).toLocaleDateString() || "N/A"}
+                              {formatDate(request?.expiryDateTime) || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <GiDuration className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Duration</p>
+                            <p className="text-gray-700">
+                              {request?.duration || "N/A"}
                             </p>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-custom-bg rounded-lg">
-                              <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                              <Briefcase className="w-5 h-5 text-gray-500" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-500">Gender</p>
+                              <p className="text-sm text-gray-500">
+                                Interviewer Type
+                              </p>
                               <p className="text-gray-700">
-                                {request?.Gender || "N/A"}
+                                {request?.interviewerType || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-custom-bg rounded-lg">
+                              <GrStatusGoodSmall className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Status</p>
+                              <p className="text-gray-700 truncate">
+                                {(
+                                  <StatusBadge
+                                    status={capitalizeFirstLetter(
+                                      request?.status
+                                    )}
+                                  />
+                                ) || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-custom-bg rounded-lg">
+                              <CiSquareQuestion className="w-5 h-5 text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">
+                                Request Message
+                              </p>
+                              <p className="text-gray-700 truncate">
+                                {request?.requestMessage || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -2021,141 +2082,6 @@ const InternalRequest = () => {
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Contact Information
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <Mail className="w-5 h-5 text-gray-500" />
-                          </div>
-
-                          <span className="text-gray-700">
-                            {request?.email || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <Phone className="w-5 h-5 text-gray-500" />
-                          </div>
-
-                          <span className="text-gray-700">
-                            {request?.Phone}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Professional Details
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <GraduationCap className="w-5 h-5" />
-                          </div>
-
-                          <div>
-                            <p className="text-sm text-gray-500">
-                              Qualification
-                            </p>
-
-                            <p className="text-gray-700">
-                              {request?.HigherQualification || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <School className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">University</p>
-                            <p className="text-gray-700">
-                              {request?.UniversityCollege || "N/A"}{" "}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <Briefcase className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Experience</p>
-                            <p className="text-gray-700">
-                              {request?.CurrentExperience || "N/A"}{" "}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-custom-bg rounded-lg">
-                            <Briefcase className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">
-                              Relevant Experience
-                            </p>
-                            <p className="text-gray-700">
-                              {request?.RelevantExperience || "N/A"}{" "}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                    Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {request?.skills ? (
-                      request.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
-                        >
-                          {skill.skill}
-                        </span>
-                      ))
-                    ) : (
-                      <span>No skills found</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* have to add these feilds show case here later  */}
-                {request.interviews && request.interviews.length > 0 && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Latest Interview
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700">
-                          {request.interviews[0].company}
-                        </span>
-                        <span className="text-gray-500">
-                          {request.interviews[0].position}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Latest round: {request.interviews[0].rounds[0].round}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -2211,9 +2137,15 @@ const InternalRequest = () => {
             ) : (
               <div className="w-full">
                 <KanbanView
-                  interviewers={currentFilteredRows}
+                  data={currentFilteredRows.map((interview) => ({
+                    ...interview,
+                    id: interview._id,
+                    title: interview.interviewRequestCode || "N/A",
+                    subtitle: formatDate(interview?.requestedAt) || "N/A",
+                  }))}
                   columns={kanbanColumns}
-                  actions={renderKanbanActions}
+                  loading={isLoading}
+                  renderActions={renderKanbanActions}
                   emptyState="No interviewer requests found."
                 />
               </div>

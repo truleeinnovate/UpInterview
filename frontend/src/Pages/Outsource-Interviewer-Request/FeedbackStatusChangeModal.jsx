@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import axios from 'axios';
+import axios from "axios";
 import toast from "react-hot-toast";
 import { config } from "../../config";
 
@@ -13,44 +13,45 @@ const FeedbackStatusChangeModal = ({
   interviewer,
   onClose,
 }) => {
-
-  console.log('check 4 :', newStatus)
+  console.log("check 4 :", newStatus);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     // Ensure the latest state values are used
-    console.log('🔄 Updated Status Before API Call:', newStatus.status);
+    console.log("Updated Status Before API Call:", newStatus.status);
 
     const updatedStatus = newStatus.status;
     const updatedRating = newStatus.rating;
     const updatedComments = newStatus.comments;
 
     try {
-        const response = await axios.patch(`${config.REACT_APP_API_URL}/outsourceInterviewers`, {
-            contactId: interviewer._id,
-            givenBy: interviewer._id,
-            status: updatedStatus,
-            rating: updatedRating,
-            comments: updatedComments
-        });
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/outsourceInterviewers`,
+        {
+          contactId: interviewer._id,
+          givenBy: interviewer._id,
+          status: updatedStatus,
+          rating: updatedRating,
+          comments: updatedComments,
+        }
+      );
 
-        console.log('✅ Feedback updated successfully', response.data);
-        toast.success("Feedback Updated Successfully!");
-        onClose();
+      console.log("Feedback updated successfully", response.data);
+      toast.success("Feedback Updated Successfully!");
+      onClose();
     } catch (error) {
-        console.error('❌ Failed to update feedback', error);
-        toast.error("Error updating feedback");
+      console.error("Failed to update feedback", error);
+      toast.error("Error updating feedback");
     }
-};
-
+  };
 
   return (
-    (showStatusModal && (
+    showStatusModal && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
         <div className="bg-white w-1/2 md:w-2/3 lg:w-1/2 h-full flex flex-col">
           {/* Header */}
-          <div className="bg-teal-600 text-white sticky top-0 z-10 flex justify-between items-center p-4 border-b h-16">
+          <div className="bg-custom-blue text-white sticky top-0 z-10 flex justify-between items-center p-4 border-b h-16">
             <h2 className="text-lg font-semibold">Change Status</h2>
             <button
               onClick={onClose}
@@ -78,11 +79,7 @@ const FeedbackStatusChangeModal = ({
                   New
                 </option>
                 {statusOptions.map((status) => (
-                  <option
-                    className="text-gray-700"
-                    key={status}
-                    value={status}
-                  >
+                  <option className="text-gray-700" key={status} value={status}>
                     {status}
                   </option>
                 ))}
@@ -129,20 +126,19 @@ const FeedbackStatusChangeModal = ({
                 </div>
               </div>
             </div>
-
           </form>
           <div className="sticky w-full bottom-0 z-10 flex justify-end gap-4 p-4 border-t bg-white">
             <button
               type="button"
               onClick={handleFormSubmit}
-              className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
+              className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue"
             >
               Save
             </button>
           </div>
         </div>
       </div>
-    ))
+    )
   );
 };
 
