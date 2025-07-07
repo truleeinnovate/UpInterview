@@ -257,7 +257,7 @@ function InterviewList() {
                 >
                   {(candidate?.FirstName || '') + ' ' + (candidate?.LastName || '')}
                 </div>
-                <div className="text-sm text-gray-500 truncate">{candidate?.Email || 'No email'}</div>
+                <div className="text-sm text-gray-500 truncate">{candidate?.Email || 'No Email'}</div>
               </div>
             </div>
           </Tooltip>
@@ -276,7 +276,7 @@ function InterviewList() {
                 className="text-sm font-medium text-custom-blue cursor-pointer truncate"
                 onClick={() => handleViewPosition(position)}
               >
-                {position?.title || 'Unknown'}
+                {position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown'}
               </div>
               <div className="text-sm text-gray-500 truncate">
                 {position?.companyname || 'No Company'} • {position?.Location || 'No location'}

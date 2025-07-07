@@ -191,7 +191,7 @@ const Assessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "Not Provided"}
+          {value.charAt(0).toUpperCase() + value.slice(1) || "Not Provided"}
         </div>
       ),
     },

@@ -627,6 +627,7 @@ useEffect(() => {
                     <input
                       type="text"
                       id="QuestionType"
+                      placeholder="Select Question Type"
                       // className={`border-b focus:outline-none mb-5 w-full ${errors.questionType
                       //   ? "border-red-500"
                       //   : "border-gray-300 focus:border-black"
@@ -687,6 +688,7 @@ useEffect(() => {
                   </label>
                   <div className=" relative" ref={skillsPopupRef}>
                     <input
+                    placeholder="Select Skills"
                       className={`block w-full pl-5 pr-3 py-2 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skill
                         ? "border-red-500"
                         : "border-gray-300 focus:border-black"
@@ -808,6 +810,7 @@ useEffect(() => {
                   </div>
                   <div className="flex-grow">
                     <textarea
+                     placeholder="Enter Question"
                       rows={1}
                       name="questionText"
                       id="questionText"
@@ -935,6 +938,7 @@ useEffect(() => {
                   <div className="flex-grow">
                     <textarea
                       rows={5}
+                      placeholder="Enter Answer"
                       name="correctAnswer"
                       id="correctAnswer"
                       value={formData.correctAnswer}
@@ -965,6 +969,7 @@ useEffect(() => {
                       <input
                         type="number"
                         min="1"
+                        placeholder="Min"
                         value={charLimits.min}
                         readOnly
                         className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 text-gray-400`}
@@ -973,6 +978,7 @@ useEffect(() => {
                       <input
                         type="number"
                         min="100"
+                        placeholder="Max"
                         max="3000"
                         step="1"
                         value={charLimits.max}
@@ -996,6 +1002,7 @@ useEffect(() => {
                     <textarea
                       name="Hint"
                       id="Hint"
+                      placeholder="Enter Hint"
                       rows={1}
                       maxLength={hintCharLimit}
                       value={hintContent}
@@ -1048,6 +1055,7 @@ useEffect(() => {
                           <div className="relative">
                             <input
                               type="text"
+                              placeholder="Min Experience"
                               id="minexperience"
                               className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${errors.minexperience
                                 ? "border-red-500"
@@ -1096,6 +1104,7 @@ useEffect(() => {
                           <div className="relative">
                             <input
                               type="text"
+                              placeholder="Max Experience"
                               id="maxexperience"
                               className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${errors.maxexperience
                                 ? "border-red-500"
@@ -1147,6 +1156,7 @@ useEffect(() => {
                   <div className="relative">
                     <input
                       type="text"
+                      placeholder="Select Difficulty Level"
                       name="DifficultyLevel"
                       className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${errors.difficultyLevel
                         ? "border-red-500"

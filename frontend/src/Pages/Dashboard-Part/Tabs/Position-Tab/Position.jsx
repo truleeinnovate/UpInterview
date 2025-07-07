@@ -208,7 +208,7 @@ const PositionTab = () => {
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-              {row.title ? row.title.charAt(0) : '?'}
+              {row.title ? row.title.charAt(0).toUpperCase() : '?'}
             </div>
           </div>
           <div className="ml-3">
@@ -216,7 +216,7 @@ const PositionTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {row.title || 'N/A'}
+              {row.title.charAt(0).toUpperCase() + row.title.slice(1) || 'N/A'}
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ const PositionTab = () => {
         {
           key: 'view',
           label: 'View Details',
-          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
           onClick: (row) => handleView(row),
         },
       ]
