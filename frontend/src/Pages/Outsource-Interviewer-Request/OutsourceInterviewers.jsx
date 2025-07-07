@@ -1300,7 +1300,7 @@ import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useMediaQuery } from "react-responsive";
-import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
+// import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 // import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
@@ -1314,12 +1314,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 
-import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+// import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
 import InterviewerDetails from "./InterviewerDetails.jsx";
 import { useCustomContext } from "../../Context/Contextfetch.js";
 import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanView.jsx";
-import { config } from "../../config.js";
-import axios from "axios";
+// import { config } from "../../config.js";
+// import axios from "axios";
 
 const OutsourceInterviewers = () => {
   const { Outsourceinterviewers: outsource, loading } = useCustomContext();
@@ -1501,13 +1501,13 @@ const OutsourceInterviewers = () => {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
-  if (!interviewers || interviewers.length === 0) {
-    return <div className="text-center mt-32">No Outsource interviewers found.</div>;
-  }
+  // if (!interviewers || interviewers.length === 0) {
+  //   return <div className="text-center mt-32">No Outsource interviewers found.</div>;
+  // }
 
   // const formatDate = (dateString) => {
   //   const options = { year: "numeric", month: "short", day: "numeric" };
@@ -1526,7 +1526,7 @@ const OutsourceInterviewers = () => {
         <span
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => {
-            setSelectedInterviewerId(row._id);
+            handleOpenPopup(row);
             setIsPopupOpen(true);
           }}
         >
@@ -1644,7 +1644,7 @@ const OutsourceInterviewers = () => {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        setSelectedInterviewerId(row._id);
+        handleOpenPopup(row);
         setIsPopupOpen(true);
       },
     },
@@ -1730,13 +1730,28 @@ const OutsourceInterviewers = () => {
     );
   };
 
-  // // Render Popup Content
-  // const renderPopupContent = () => (
-  //   <InterviewerDetails
-  //     selectedInterviewersData={selectedInterviewer}
-  //     isOpen={isPopupOpen}
-  //   />
-  // );
+  const handleOpenPopup = (interviewer) => {
+    // Close it first if already open
+    if (isPopupOpen) {
+      setIsPopupOpen(false);
+      setSelectedInterviewer(null);
+
+      // Wait a tick before reopening
+      setTimeout(() => {
+        setSelectedInterviewer(interviewer);
+        setIsPopupOpen(true);
+      }, 50);
+    } else {
+      setSelectedInterviewer(interviewer);
+      setIsPopupOpen(true);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedInterviewer(null);
+  };
+
 
   return (
     <>
@@ -1792,7 +1807,7 @@ const OutsourceInterviewers = () => {
                     subtitle:
                       interview?.contactId?.firstName &&
                       interview?.contactId?.lastName
-                        ? `${interview.contactId.firstName} ${interview.contactId.lastName}`
+                        ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
                         : "N/A",
                   }))}
                   columns={kanbanColumns}
@@ -1817,21 +1832,14 @@ const OutsourceInterviewers = () => {
         </div>
       </div>
       {/* Details view popup */}
-      <div>
-        {isPopupOpen && selectedInterviewer && (
-          // <SidebarPopup
-          //   title="Outsource Interviewer Details"
-          //   subTitle={selectedInterviewerId}
-          //   onClose={() => setIsPopupOpen(false)}
-          // >
-          //   {renderPopupContent(selectedInterviewer)}
-          // </SidebarPopup>
+      {isPopupOpen && selectedInterviewer && (
+        <div>
           <InterviewerDetails
             selectedInterviewersData={selectedInterviewer}
-            onClose={setIsPopupOpen}
+            onClose={handleClosePopup}
           />
-        )}
-      </div>
+        </div>
+      )}
       <Outlet />
     </>
   );
