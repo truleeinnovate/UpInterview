@@ -9,6 +9,7 @@ import {
   AiOutlineClose,
   AiOutlineWarning,
 } from "react-icons/ai";
+import { FaLinkedin } from "react-icons/fa";
 import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
@@ -211,23 +212,23 @@ function UsersTab({ users, viewMode }) {
     }
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
-  if (!users) {
-    return <div>No Users found.</div>;
-  }
+  // if (!users) {
+  //   return <div>No Users found.</div>;
+  // }
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
+  // const formatDate = (dateString) => {
+  //   const options = { year: "numeric", month: "short", day: "numeric" };
+  //   return new Date(dateString).toLocaleDateString("en-US", options);
+  // };
 
-  const handleLogin = (user) => {
-    setSelectedUser(user);
-    setShowLoginModal(true);
-  };
+  // const handleLogin = (user) => {
+  //   setSelectedUser(user);
+  //   setShowLoginModal(true);
+  // };
 
   const handleCloseModal = () => {
     setShowLoginModal(false);
@@ -480,25 +481,58 @@ function UsersTab({ users, viewMode }) {
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Mail className="w-5 h-5 text-gray-500" />
                           </div>
-                          <span className="text-gray-700 truncate">
-                            {user?.email || "N/A"}
-                          </span>
+                          {user?.email ? (
+                            <a
+                              href={`mailto:${user.email}`}
+                              className="text-blue-600 truncate hover:underline"
+                            >
+                              {user.email}
+                            </a>
+                          ) : (
+                            <span className="text-gray-700 truncate">N/A</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Phone className="w-5 h-5 text-gray-500" />
                           </div>
-                          <span className="text-gray-700">
-                            {user?.contact?.phone || "N/A"}
-                          </span>
+                          {user?.contact?.phone ? (
+                            <a
+                              href={`tel:${user.contact.phone}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {user.contact.phone}
+                            </a>
+                          ) : (
+                            <span className="text-gray-700">N/A</span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3">
+
+                        {/* <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Phone className="w-5 h-5 text-gray-500" />
                           </div>
                           <span className="text-gray-700 truncate">
                             {user?.contact?.linkedinUrl || "N/A"}
                           </span>
+                        </div> */}
+
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-custom-bg rounded-lg">
+                            <FaLinkedin className="w-5 h-5 text-gray-500" />
+                          </div>
+                          {user?.contact?.linkedinUrl ? (
+                            <a
+                              href={user.contact.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 truncate hover:underline"
+                            >
+                              {user.contact.linkedinUrl}
+                            </a>
+                          ) : (
+                            <span className="text-gray-700 truncate">N/A</span>
+                          )}
                         </div>
                       </div>
                     </div>

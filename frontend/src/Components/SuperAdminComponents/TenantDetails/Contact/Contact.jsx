@@ -223,9 +223,10 @@ const Contact = ({ organizationId, viewMode }) => {
   //   return <Loading />;
   // }
 
-  if (!contacts || contacts.length === 0) {
-    return <div className="text-center mt-20">No Contacts found.</div>;
-  }
+  // if (!contacts || contacts.length === 0) {
+  //   return <div className="text-center mt-20">No Contacts found.</div>;
+  // }
+  
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 

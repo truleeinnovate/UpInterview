@@ -1320,8 +1320,10 @@ import { useCustomContext } from "../../Context/Contextfetch.js";
 import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanView.jsx";
 // import { config } from "../../config.js";
 // import axios from "axios";
+import { usePermissions } from "../../Context/PermissionsContext.js";
 
 const OutsourceInterviewers = () => {
+  const { superAdminPermissions } = usePermissions();
   const { Outsourceinterviewers: outsource, loading } = useCustomContext();
 
   const [view, setView] = useState("table");
@@ -1519,21 +1521,25 @@ const OutsourceInterviewers = () => {
 
   // Table Columns
   const tableColumns = [
-    {
-      key: "interviewerNo",
-      header: "Interviewer ID",
-      render: (vale, row) => (
-        <span
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            handleOpenPopup(row);
-            setIsPopupOpen(true);
-          }}
-        >
-          {row?.interviewerNo ? row?.interviewerNo : "N/A"}
-        </span>
-      ),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "interviewerNo",
+            header: "Interviewer ID",
+            render: (vale, row) => (
+              <span
+                className="text-sm font-medium text-custom-blue cursor-pointer"
+                onClick={() => {
+                  handleOpenPopup(row);
+                  setIsPopupOpen(true);
+                }}
+              >
+                {row?.interviewerNo ? row?.interviewerNo : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       key: "name",
       header: "Name",
@@ -1588,27 +1594,36 @@ const OutsourceInterviewers = () => {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedInterviewerId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedInterviewerId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
     // {
     //   key: "360-view",
     //   label: "360° View",
     //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
     //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+
+    ...(superAdminPermissions?.InterviewRequest?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -1639,21 +1654,30 @@ const OutsourceInterviewers = () => {
 
   // Shared Actions Configuration for Table and Kanban
   const actions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        handleOpenPopup(row);
-        setIsPopupOpen(true);
-      },
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              handleOpenPopup(row);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions?.InterviewRequest?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "login-as-user",
     //   label: "Login as User",
@@ -1751,7 +1775,6 @@ const OutsourceInterviewers = () => {
     setIsPopupOpen(false);
     setSelectedInterviewer(null);
   };
-
 
   return (
     <>

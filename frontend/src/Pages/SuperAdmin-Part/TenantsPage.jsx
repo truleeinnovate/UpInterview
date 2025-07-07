@@ -219,13 +219,13 @@ function TenantsPage() {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
-  if (!tenants || tenants.length === 0) {
-    return <div>No tenants found.</div>;
-  }
+  // if (!tenants || tenants.length === 0) {
+  //   return <div>No tenants found.</div>;
+  // }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };

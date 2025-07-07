@@ -144,6 +144,8 @@ function ReceiptsTable({ organizationId, viewMode }) {
     }
   }, [selectedReceiptId]);
 
+  console.log("RECEIPTS TODAY: ", receipts);
+
   // Kanban view setter
   useEffect(() => {
     const handleResize = () => {
@@ -257,8 +259,8 @@ function ReceiptsTable({ organizationId, viewMode }) {
       key: "invoiceId",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">
-          {row?.invoiceCode ? row.invoiceCode : "N/A"}
+        <span className="text-sm">
+          {row?.invoiceId ? row?.invoiceId?.invoiceCode : "N/A"}
         </span>
       ),
     },

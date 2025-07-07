@@ -645,14 +645,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                           </span>
                         </div>
 
-                        {/* <div className="flex flex-wrap gap-8">
-                          <span className="text-gray-700 font-medium w-32 shrink-0">
-                            Resume
-                          </span>
-                          <span className="text-gray-600 flex-1 break-words min-w-0">
-                            {interviewer?.resume?.filename || "Not Provided"}
-                          </span>
-                        </div> */}
                         <div className="flex flex-wrap gap-8">
                           <span className="text-gray-700 font-medium w-32 shrink-0">
                             Resume
@@ -672,6 +664,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                             </span>
                           )}
                         </div>
+
                         <div className="flex flex-wrap gap-8">
                           <span className="text-gray-700 font-medium w-32 shrink-0">
                             Cover Letter
