@@ -964,7 +964,7 @@ const PositionForm = ({ mode }) => {
                           }}
                           error={errors.companyname}
                           disabledError={true}
-                          placeholder="Select a company"
+                          placeholder="Select a Company"
                           optionKey="CompanyName"
                           optionValue="CompanyName"
                         />
@@ -1014,7 +1014,7 @@ const PositionForm = ({ mode }) => {
                                   });
                                 }}
                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
-                                placeholder="Enter min Experience"
+                                placeholder="Enter Min Experience"
                               />
 
                             </div>
@@ -1051,7 +1051,7 @@ const PositionForm = ({ mode }) => {
                                   });
                                 }}
                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
-                                placeholder="Enter max Experience"
+                                placeholder="Enter Max Experience"
                               />
 
                             </div>
@@ -1079,7 +1079,7 @@ const PositionForm = ({ mode }) => {
                                   type="number"
                                   min={1}
                                   value={formData.minSalary ?? ""}
-                                  placeholder="Enter min salary"
+                                  placeholder="Enter Min Salary"
                                   onChange={(e) => {
                                     const minSalary = e.target.value;
 
@@ -1122,7 +1122,7 @@ const PositionForm = ({ mode }) => {
                                   type="number"
                                   min={1}
                                   value={formData.maxSalary ?? ""}
-                                  placeholder="Enter max salary"
+                                  placeholder="Enter Max Salary"
                                   onChange={(e) => {
                                     const maxSalary = e.target.value;
 
@@ -1165,7 +1165,7 @@ const PositionForm = ({ mode }) => {
                     <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          No of Positions
+                          No. of Positions
                         </label>
 
                         <input
@@ -1186,7 +1186,7 @@ const PositionForm = ({ mode }) => {
                           }}
                           // readOnly
                           // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                          placeholder="Select no of positions"
+                          placeholder="Select No. of Positions"
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.noOfPositions ? "border-red-500" : "border-gray-300"}`}
                         // className="w-full px-3 py-2 border rounded-md focus:outline-none"
                         />
@@ -1204,7 +1204,7 @@ const PositionForm = ({ mode }) => {
                             setFormData({ ...formData, Location: e.target.value });
                           }}
                           disabledError={false}
-                          placeholder="Select a location"
+                          placeholder="Select a Location"
                           optionKey="LocationName"
                           optionValue="LocationName"
                         />
