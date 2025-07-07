@@ -32,7 +32,7 @@ const ContactProfileDetails = () => {
   const [contact] = useState(contactData);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("Basic-Details");
-  console.log('CONTACTS DATA =================================> ', contactData)
+  console.log("CONTACTS DATA =================================> ", contactData);
 
   const handleNavigate = () => {
     navigate(-1);
@@ -331,7 +331,7 @@ const ContactProfileDetails = () => {
     <div className="">
       <div className={`bg-white`}>
         <div className="">
-          <div className="mx-16 pt-5  sm:hidden md:hidden">
+          <div className="mx-8 pt-5  sm:hidden md:hidden">
             <p className="text-sm space-x-10">
               <span
                 className={`cursor-pointer ${
@@ -379,7 +379,7 @@ const ContactProfileDetails = () => {
           {/* Drop down for small screens */}
           <div>
             <select
-              className="w-52 p-2 text-custom-blue  rounded-md mt-5 ml-5 lg:hidden xl:hidden 2xl:hidden focus:border-custom-blue focus:ring-1 focus:ring-custom-blue"
+              className="w-52 p-2 text-custom-blue  rounded-md mt-8 ml-5 lg:hidden xl:hidden 2xl:hidden focus:border-custom-blue focus:ring-1 focus:ring-custom-blue"
               onChange={(e) => handleTabClick(e.target.value)}
               value={activeTab}
             >
@@ -392,7 +392,7 @@ const ContactProfileDetails = () => {
         </div>
 
         {activeTab === "Basic-Details" && (
-          <div className="mx-16 mt-7 grid grid-cols-4">
+          <div className="mx-8 mt-7 grid grid-cols-4">
             <div className="sm:col-span-4 md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 sm:mt-[1rem]">
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
@@ -449,21 +449,26 @@ const ContactProfileDetails = () => {
                   </p>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 mb-5">
-                <div className=" flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
                     <FaEnvelope className="text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Email Address</div>
                 </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.email || "N/A"}
-                  </p>
+                <div>
+                  {contact.email ? (
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="text-blue-600 text-sm truncate hover:underline"
+                    >
+                      {contact.email}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700 text-sm">Not Provided</p>
+                  )}
                 </div>
               </div>
-
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
@@ -471,24 +476,39 @@ const ContactProfileDetails = () => {
                   </div>
                   <div className="font-medium text-sm">Phone Number</div>
                 </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.phone || "N/A"}
-                  </p>
+                <div>
+                  {contact.phone ? (
+                    <a
+                      href={`tel:${contact.phone}`}
+                      className="text-blue-600 text-sm hover:underline"
+                    >
+                      {contact.phone}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700 text-sm">Not Provided</p>
+                  )}
                 </div>
               </div>
-
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
                     <FaLinkedin className="text-gray-500" />
                   </div>
-                  <div className="font-medium text-sm">Linkedin URL</div>
+                  <div className="font-medium text-sm">LinkedIn URL</div>
                 </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.linkedinUrl || "N/A"}
-                  </p>
+                <div>
+                  {contact.linkedinUrl ? (
+                    <a
+                      href={contact.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 text-sm truncate hover:underline"
+                    >
+                      {contact.linkedinUrl}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700 text-sm">Not Provided</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -496,7 +516,7 @@ const ContactProfileDetails = () => {
         )}
 
         {activeTab === "Additional-Details" && (
-          <div className="mx-16 mt-7 grid grid-cols-4">
+          <div className="mx-8 mt-7 grid grid-cols-4">
             <div className="sm:col-span-4 md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 sm:mt-[1rem] space-y-6">
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
@@ -572,7 +592,7 @@ const ContactProfileDetails = () => {
         )}
 
         {activeTab === "Interview-Details" && (
-          <div className="mx-16 mt-7 gap-4">
+          <div className="mx-8 mt-7 gap-4">
             <div className="col-span-1 space-y-6">
               <div className="mb-5">
                 <div className="font-medium">Technology</div>
@@ -686,7 +706,7 @@ const ContactProfileDetails = () => {
         )}
 
         {activeTab === "Availability" && (
-          <div className="mx-16 mt-7 grid grid-cols-1 gap-28 mb-5">
+          <div className="mx-8 mt-7 grid grid-cols-1 gap-28 mb-5">
             <div className="text-sm flex">
               <div>
                 <div className="text-xl">

@@ -1738,13 +1738,13 @@ const InternalRequest = () => {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
-  if (!interviewRequests || interviewRequests.length === 0) {
-    return <div>No tenants found.</div>;
-  }
+  // if (!interviewRequests || interviewRequests.length === 0) {
+  //   return <div>No tenants found.</div>;
+  // }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -1756,21 +1756,25 @@ const InternalRequest = () => {
 
   // Table Columns
   const tableColumns = [
-    {
-      key: "interviewerId",
-      header: "Interviewer ID",
-      render: (vale, row) => (
-        <span
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            setSelectedRequestId(row._id);
-            setIsPopupOpen(true);
-          }}
-        >
-          {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
-        </span>
-      ),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "interviewerId",
+            header: "Interviewer ID",
+            render: (vale, row) => (
+              <span
+                className="text-sm font-medium text-custom-blue cursor-pointer"
+                onClick={() => {
+                  setSelectedRequestId(row._id);
+                  setIsPopupOpen(true);
+                }}
+              >
+                {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       key: "interviewerTyp",
       header: "Interviewer Type",
