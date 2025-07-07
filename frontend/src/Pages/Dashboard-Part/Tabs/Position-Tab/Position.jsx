@@ -207,6 +207,18 @@ const PositionTab = () => {
 
   const tableColumns = [
     {
+      key: "positionCode",
+      header: "Position ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {row?.positionCode || "N/A"}
+        </div>
+      ),
+    },
+    {
       key: "title",
       header: "Position Title",
       render: (value, row) => (
@@ -224,18 +236,6 @@ const PositionTab = () => {
               {row.title || "N/A"}
             </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      key: "positionCode",
-      header: "Position ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {row?.positionCode || "N/A"}
         </div>
       ),
     },

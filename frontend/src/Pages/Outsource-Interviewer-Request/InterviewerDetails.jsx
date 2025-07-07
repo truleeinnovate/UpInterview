@@ -243,9 +243,9 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
   // Find the interviewer based on the ID
   // const interviewer = interviewers.find(int => int.id === parseInt(id));
 
-  if (!interviewer) {
-    return <div>Interviewer not found</div>;
-  }
+  // if (!interviewer) {
+  //   return <div>Interviewer not found</div>;
+  // }
 
   const options = [
     { label: "Charge 25% without rescheduling", value: "25-no-reschedule" },
@@ -321,21 +321,43 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
             }`}
           >
             {/* Left Content section */}
-            <div className="flex flex-col h-full items-center p-6 border border-gray-200 rounded-lg">
-              <img
+            <div
+              className={`flex h-full p-6 border border-gray-200 rounded-lg ${
+                isExpanded
+                  ? "flex-row items-start"
+                  : "lg:flex-col xl:flex-col 2xl:flex-col lg:items-center xl:items-center 2xl:items-center"
+              }`}
+            >
+              {/* <img
                 src={interviewer?.imageData?.path || maleImage}
                 alt={interviewer?.firstName || "Interviewer"}
                 className="w-32 h-32 rounded-full object-cover mb-4"
+              /> */}
+              <img
+                src={interviewer?.imageData?.path || maleImage}
+                alt={interviewer?.firstName || "Interviewer"}
+                className={`rounded-full object-cover mb-4 transition-all duration-300 
+                ${isExpanded ? "w-24 h-24" : "w-32 h-32"}
+              `}
               />
-              <h2 className="text-2xl font-medium text-custom-blue mb-1">
-                {interviewer?.firstName || "N/A"}
-              </h2>
-              <p className="text-gray-700 font-medium mb-1">
-                {interviewer?.company || "N/A"}
-              </p>
-              <p className="text-gray-700 font-medium">
-                {interviewer?.currentRole || "N/A"}
-              </p>
+
+              <div
+                className={`sm:ml-6 md:ml-6 lg:ml-6 xl:ml-6 2xl:ml-6 ${
+                  isExpanded
+                    ? "text-left ml-6"
+                    : "lg:text-center xl:text-center 2xl:text-center"
+                }`}
+              >
+                <h2 className="text-2xl font-medium text-custom-blue mb-1">
+                  {interviewer?.firstName || "N/A"}
+                </h2>
+                <p className="text-gray-700 font-medium mb-1">
+                  {interviewer?.company || "N/A"}
+                </p>
+                <p className="text-gray-700 font-medium">
+                  {interviewer?.currentRole || "N/A"}
+                </p>
+              </div>
             </div>
 
             {/* Right Content Section - Changes based on active tab */}
@@ -351,20 +373,25 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
                 <span className="text-lg text-gray-400">/</span>
                 <span className="text-lg text-gray-400">
-                  {interviewer?.firstName}
+                  {interviewer?.firstName || "Not Provided"}
                 </span>
               </div>
 
               {/* Status Timeline */}
-              <div className="flex justify-center items-center w-full max-w-4xl mx-auto mb-8 relative">
+              <div
+                className={`flex items-center w-[80%] lg:w-full xl:w-full 2xl:w-full max-w-4xl mx-auto mb-8 relative ${
+                  isExpanded ? "justify-start w-[60%]" : "justify-center w-full"
+                }`}
+              >
                 <InterviewStatusIndicator
                   currentStatus={feedbackData[0]?.status}
+                  isExpanded={isExpanded}
                 />
               </div>
 
               {/* Navigation Tabs */}
               <div className="flex justify-between items-center mb-2">
-                <div className="flex gap-8 border-none border-gray-200 ">
+                <div className="flex gap-8 border-none border-gray-200">
                   {[
                     "Details",
                     "Experience details",
@@ -376,8 +403,8 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                       onClick={() => setActiveTab(tab)}
                       className={`pb-1 text-sm font-medium ${
                         activeTab === tab
-                          ? "border-b-2 text-custom-blue"
-                          : "text-gray-500"
+                          ? "border-b-2 border-custom-blue text-custom-blue"
+                          : "text-custom-blue"
                       }`}
                     >
                       {tab}
@@ -385,7 +412,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                   ))}
                 </div>
                 <button
-                  className="bg-custom-blue text-white px-6 py-2 rounded-md hover:bg-custom-blue"
+                  className="bg-custom-blue text-white text-sm px-3 py-1 lg:px-6 xl:px-6 2xl:px-6 lg:py-2 xl:py-2 2xl:py-2 rounded-md hover:bg-custom-blue"
                   onClick={handleChangeStatus}
                 >
                   Change Status
@@ -398,7 +425,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                       <h3 className="text-lg font-semibold mb-6">
                         Basic Details:
                       </h3>
-                      <div className="grid grid-cols-2 gap-y-6">
+                      {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6">
                         <div className="flex gap-8">
                           <span className="text-gray-700 font-medium w-32">
                             Name
@@ -439,13 +466,83 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                             {interviewer?.linkedinUrl || "Not Provided"}
                           </span>
                         </div>
+                      </div> */}
+                      <div
+                        className={`grid gap-y-6 ${
+                          isExpanded
+                            ? "grid-cols-1 "
+                            : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                        }`}
+                      >
+                        <div className="flex gap-8">
+                          <span className="text-gray-700 font-medium w-32">
+                            Name
+                          </span>
+                          <span className="text-gray-600 flex-1">
+                            {interviewer?.firstName || "Not Provided"}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-8">
+                          <span className="text-gray-700 font-medium w-32">
+                            Profile ID
+                          </span>
+                          <span className="text-gray-600 flex-1">
+                            {interviewer?.profileId || "Not Provided"}
+                          </span>
+                        </div>
+                        <div className="flex gap-8">
+                          <span className="text-gray-700 font-medium w-32">
+                            Email Address
+                          </span>
+                          {interviewer?.email ? (
+                            <a
+                              href={`mailto:${interviewer.email}`}
+                              className="text-blue-600 hover:underline flex-1 break-words"
+                            >
+                              {interviewer.email}
+                            </a>
+                          ) : (
+                            <span className="text-gray-600 flex-1">
+                              Not Provided
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex gap-8">
+                          <span className="text-gray-700 font-medium w-32">
+                            Phone Number
+                          </span>
+                          <span className="text-gray-600 flex-1">
+                            {interviewer?.phone || "Not Provided"}
+                          </span>
+                        </div>
+                        <div className="flex gap-8">
+                          <span className="text-gray-700 font-medium w-32">
+                            LinkedIn URL
+                          </span>
+                          {interviewer?.linkedinUrl ? (
+                            <a
+                              href={interviewer.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex-1 break-words"
+                            >
+                              {interviewer.linkedinUrl}
+                            </a>
+                          ) : (
+                            <span className="text-gray-600 flex-1">
+                              Not Provided
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <hr className="border-gray-200 my-8" />
                       <h3 className="text-lg font-semibold mb-6">
                         Additional Details:
                       </h3>
-                      <div className="grid grid-cols-2 gap-y-6">
+                      {/* <div className="grid lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6">
                         <div className="flex gap-8">
                           <span className="text-gray-700 font-medium w-32">
                             Current Role
@@ -494,13 +591,113 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                             {interviewer?.resume?.filename || "Not Provided"}
                           </span>
                         </div>
+                      </div> */}
+                      {/* <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6 gap-x-6"> */}
+                      <div
+                        className={`grid gap-y-6 gap-x-6 ${
+                          isExpanded
+                            ? "grid-cols-1"
+                            : "grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                        }`}
+                      >
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Current Role
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.currentRole || "Not Provided"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Industry
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.industry || "Not Provided"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0 whitespace-nowrap">
+                            Experience
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.yearsOfExperience || "Not Provided"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Location
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.location || "Not Provided"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-8 col-span-1 lg:col-span-2">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Introduction
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.Introduction || "Not Provided"}
+                          </span>
+                        </div>
+
+                        {/* <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Resume
+                          </span>
+                          <span className="text-gray-600 flex-1 break-words min-w-0">
+                            {interviewer?.resume?.filename || "Not Provided"}
+                          </span>
+                        </div> */}
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Resume
+                          </span>
+                          {interviewer?.resume?.path ? (
+                            <a
+                              href={interviewer.resume.path}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex-1 break-words min-w-0"
+                            >
+                              {interviewer.resume.filename}
+                            </a>
+                          ) : (
+                            <span className="text-gray-600 flex-1 break-words min-w-0">
+                              Not Provided
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-8">
+                          <span className="text-gray-700 font-medium w-32 shrink-0">
+                            Cover Letter
+                          </span>
+                          {interviewer?.resume?.path ? (
+                            <a
+                              href={interviewer.coverLetter.path}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex-1 break-words min-w-0"
+                            >
+                              {interviewer.coverLetter.filename}
+                            </a>
+                          ) : (
+                            <span className="text-gray-600 flex-1 break-words min-w-0">
+                              Not Provided
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <hr className="border-gray-200 my-8" />
                       <h3 className="text-lg font-semibold mb-6">
                         System Details:
                       </h3>
-                      <div className="grid grid-cols-2 gap-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6">
                         <div className="flex gap-8">
                           <span className="text-gray-700 font-medium w-32">
                             Created By
