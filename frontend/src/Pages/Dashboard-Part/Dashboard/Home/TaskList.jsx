@@ -133,7 +133,7 @@ const TaskList = () => {
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-sm font-semibold text-gray-900">{task.title}</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">{task.title ? task.title.charAt(0).toUpperCase() + task.title.slice(1) : 'Not Available'}</h4>
                     <span
                       className={`px-2 py-0.5 rounded-lg text-xs font-medium ${
                         task.priority.toLowerCase() === 'high' ? 'bg-red-100 text-red-600' :
@@ -152,7 +152,7 @@ const TaskList = () => {
                     </div>
                     <div className="flex items-center space-x-1">
                       <Clock size={14} />
-                      <span>{task.assignedTo}</span>
+                      <span>{task.assignedTo ? task.assignedTo.charAt(0).toUpperCase() + task.assignedTo.slice(1) : 'Not Assigned'}</span>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded-lg text-xs font-medium ${

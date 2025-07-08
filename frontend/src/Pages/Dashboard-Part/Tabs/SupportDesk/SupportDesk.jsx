@@ -181,7 +181,7 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
     {
       key: "contact",
       header: "Contact",
-      render: (value) => value || "N/A",
+      render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "N/A",
     },
     {
       key: "issueType",
@@ -228,7 +228,7 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
         {
           key: "assignedTo",
           header: "Assigned To",
-          render: (value) => value || "N/A",
+          render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "N/A",
         },
       ]
       : []),

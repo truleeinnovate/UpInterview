@@ -361,7 +361,7 @@ const SupportForm = () => {
                         }`}
                       >
                         <option value="" className="text-gray-500" hidden>
-                          Select issue
+                          Select Issue
                         </option>
                         {renderIssueOptions()}
                         <option className="text-gray-700" value="Other">
@@ -409,6 +409,7 @@ const SupportForm = () => {
                     <textarea
                       id="description"
                       rows={8}
+                      placeholder="Enter description......"
                       value={description}
                       onChange={handleDescriptionChange}
                       className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${

@@ -211,7 +211,7 @@ const Task = () => {
       <button 
         onClick={() => handleTaskClick(task)}
       >
-        <Eye className="w-4 h-4 text-blue-600" />
+        <Eye className="w-4 h-4 text-custom-blue" />
       </button>
       <button onClick={() => handleEditTask(task._id)}>
         <Pencil className="w-4 h-4 text-green-600" />
@@ -241,7 +241,7 @@ const Task = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleTaskClick(row)}
             >
-              {value || 'Untitled Task'}
+              {value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Untitled Task'}
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ const Task = () => {
     {
       key: 'view',
       label: 'View Details',
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleTaskClick(row),
     },
     {
@@ -329,8 +329,8 @@ const Task = () => {
                     data={currentFilteredRows.map(task => ({
                       ...task,
                       id: task.id,
-                      title: task.title,
-                      Email: task.assignedTo || 'None',
+                      title: task.title.charAt(0).toUpperCase() + task.title.slice(1),
+                      Email: task.assignedTo.charAt(0).toUpperCase() + task.assignedTo.slice(1) || 'None',
                       Phone: task.relatedTo?.objectName || 'N/A',
                       HigherQualification: task.priority || 'N/A',
                       UniversityCollege: task.status || 'N/A',

@@ -97,7 +97,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                   <div className="flex items-center space-x-2">
 
                     <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                      {candidate?.LastName || 'Unknown Candidate'}
+                      {candidate?.LastName ? candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) : 'Unknown Candidate'}
                     </h3>
                     {candidate && (
                       <button

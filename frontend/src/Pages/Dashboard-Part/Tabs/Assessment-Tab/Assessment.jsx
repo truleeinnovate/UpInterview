@@ -43,7 +43,7 @@ const Assessment = () => {
   const currentAssessments = assessmentData?.slice(startIndex, endIndex) || [];
 
   useEffect(() => {
-    document.title = "Assessment Tab";
+    document.title = "Assessment Template";
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
     };
@@ -149,13 +149,13 @@ const Assessment = () => {
 
   const handleView = (assessment) => {
     if (effectivePermissions.Assessments?.View) {
-      navigate(`/assessment-details/${assessment._id}`);
+      navigate(`/assessments-template-details/${assessment._id}`);
     }
   };
 
   const handleEdit = (assessment) => {
     if (effectivePermissions.Assessments?.Edit) {
-      navigate(`/assessment/edit/${assessment._id}`);
+      navigate(`/assessments-template/edit/${assessment._id}`);
     }
   };
 
@@ -301,7 +301,7 @@ const Assessment = () => {
           <div className="sm:px-0">
             <Header
               title="Assessment Templates"
-              onAddClick={() => navigate("/assessment/new")}
+              onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
               canCreate={effectivePermissions.Assessments?.Create}
             />
