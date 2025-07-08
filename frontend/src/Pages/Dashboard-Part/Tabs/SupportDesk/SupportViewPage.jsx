@@ -44,7 +44,6 @@ const SupportViewPage = () => {
   //   navigate('/support-desk');
   //   return null;
   // }
-
   const content = (
     <div className={`${isFullScreen ? 'min-h-screen' : 'h-full'} flex flex-col`}>
       <div className="p-6">
@@ -171,7 +170,7 @@ const SupportViewPage = () => {
           </div>
         )}
 
-        {ticketData.fileName && (
+        {ticketData?.attachment && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h4 className="text-lg font-semibold text-gray-800 mb-4">Attachments</h4>
             <div className="flex items-center gap-3">
@@ -179,7 +178,7 @@ const SupportViewPage = () => {
                 <FaFileAlt className="w-5 h-5 text-gray-500" />
               </div>
               <div>
-                <p className="text-gray-700">{ticketData.fileName}</p>
+                <p className="text-gray-700">{ticketData?.attachment?.filename}</p>
               </div>
             </div>
           </div>
