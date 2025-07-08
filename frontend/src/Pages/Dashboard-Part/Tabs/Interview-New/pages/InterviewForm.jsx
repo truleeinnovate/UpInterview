@@ -65,6 +65,7 @@ const InterviewForm = () => {
 
   const isEditing = !!id;
   const interview = isEditing ? interviewData.find(interview => interview._id === id) : null;
+  //console.log('interview-----',interview);
 
   useEffect(() => {
     if (isEditing && interview) {
@@ -206,7 +207,7 @@ const handleSubmit = async (e) => {
                       className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${candidateError ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
-                      <option value="">Select a candidate</option>
+                      <option value="" hidden>Select a Candidate</option>
                       {(candidateData ?? []).map(candidate => (
                         <option key={candidate._id} value={candidate._id}>{candidate.LastName} ({candidate.Email})</option>
                       ))}
@@ -226,7 +227,7 @@ const handleSubmit = async (e) => {
                       className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${positionError ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                     >
-                      <option value="">Select a position</option>
+                      <option value="" hidden>Select a Position</option>
                       {(positionData ?? []).map(position => (
                         <option key={position._id} value={position._id}>{position.title}</option>
                       ))}
@@ -239,7 +240,7 @@ const handleSubmit = async (e) => {
                     <select id="template" value={templateId} onChange={handleTemplateChange}
                       disabled={!positionId}
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                      <option value="">Select a template</option>
+                      <option value="" hidden>Select a Template</option>
                       {(templatesData ?? []).filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active')
                       .map((template) => (
                         <option key={template._id} value={template._id}>{template.templateName}</option>

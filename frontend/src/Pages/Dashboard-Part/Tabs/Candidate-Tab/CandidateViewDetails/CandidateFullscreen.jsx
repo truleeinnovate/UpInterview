@@ -91,7 +91,7 @@ const CandidateFullscreen = () => {
             </div>
             <div className="text-center">
 
-              <h3 className="text-2xl font-bold text-gray-900">{candidate?.FirstName || ''} {candidate?.LastName || ''}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{candidate?.FirstName ? candidate?.FirstName.charAt(0).toUpperCase() + candidate?.FirstName.slice(1) : 'N/A'} {candidate?.LastName ? candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) : 'N/A'}</h3>
 
               <p className="text-gray-600 mt-1">{candidate.CurrentRole || 'position'}</p>
 
@@ -110,7 +110,7 @@ const CandidateFullscreen = () => {
                     </div>
                     <div>
                     <p className="text-sm text-gray-500">Name</p>
-                    <p className="text-gray-700">{candidate?.FirstName || 'N/A'} {candidate?.LastName || ''}</p>
+                    <p className="text-gray-700">{candidate?.FirstName ? candidate?.FirstName.charAt(0).toUpperCase() + candidate?.FirstName.slice(1) : 'N/A'} {candidate?.LastName ? candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) : 'N/A'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

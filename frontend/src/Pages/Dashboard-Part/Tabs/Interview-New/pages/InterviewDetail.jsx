@@ -323,7 +323,7 @@ const InterviewDetail = () => {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{candidate?.LastName || 'Unknown'}</div>
+                          <div className="font-medium">{candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) || 'Unknown'}</div>
                           <div className="text-xs text-gray-500 mt-1">
                             {candidate?.Email} • {candidate?.Phone}
                           </div>

@@ -35,6 +35,7 @@ const PositionRoundCard = ({
   isActive = false,
   hideHeader = false
 }) => {
+  console.log("round-------", round);
 
   // const {
   //   sectionQuestions,
@@ -310,7 +311,7 @@ const PositionRoundCard = ({
                               <span>
                                
                                 {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                                {round?.interviewers.length} Interviewer{round?.interviewers.length !== 1 ? 's' : ''}
                               </span>
                               </span>
                                     {round?.interviewerGroupName &&

@@ -233,7 +233,7 @@ const InterviewTemplates = () => {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={templatesData?.length}
-              searchPlaceholder="Search interview templates..."
+              searchPlaceholder="Search Interview Templates..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -256,7 +256,7 @@ const InterviewTemplates = () => {
                 columns={tableColumns}
                 actions={tableActions}
                 loading={isLoading}
-                emptyState="No templates found."
+                emptyState="No Templates Found."
                 className="table-fixed w-full"
               />
             )}
