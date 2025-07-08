@@ -1752,7 +1752,7 @@ const MainAppRoutes = ({
                 element={<AccountSettingsSidebar type="superAdmin" />}
               >
                 {hasPermission("SuperAdminMyProfile") && (
-                  <Route path="my-profile" element={<MyProfile />}>
+                  <Route path="my-profile" element={<MyProfile type="superAdmin" />}>
                     <Route index element={<Navigate to="basic" replace />} />
                     <Route path="basic" element={<BasicDetails />} />
                     <Route path="advanced" element={<AdvancedDetails />} />
@@ -1781,6 +1781,26 @@ const MainAppRoutes = ({
                       path="view/:id"
                       element={<RoleView type="superAdmin" />}
                     />
+                  </Route>
+                )}
+
+                {hasPermission("SuperAdminUser") && (
+                  <Route path="users" element={<UsersLayout type="superAdmin" />}>
+                    {hasPermission("SuperAdminUser", "Create") && (
+                      <Route path="new" element={<UserForm mode="create" />} />
+                    )}
+                    {hasPermission("SuperAdminUser", "Edit") && (
+                      <Route
+                        path="edit/:id"
+                        element={<UserForm mode="edit" />}
+                      />
+                    )}
+                    {hasPermission("SuperAdminUser", "View") && (
+                      <Route
+                        path="details/:id"
+                        element={<UserProfileDetails />}
+                      />
+                    )}
                   </Route>
                 )}
               </Route>
@@ -1858,9 +1878,17 @@ const App = () => {
       "/contact-profile-details",
       "/super-admin-account-settings",
       "/super-admin-account-settings/profile",
-      "/super-admin-account-settings/profile/basic",
+      "/super-admin-account-settings/my-profile/basic",
+      "/super-admin-account-settings/profile/basic-edit/:id",
+      "/super-admin-account-settings/profile/advanced",
+      "/super-admin-account-settings/profile/advanced-edit/:id",
+      "/super-admin-account-settings/my-profile",
       "/super-admin-account-settings/roles",
       "/super-admin-account-settings/roles/role-edit/:id",
+      "/super-admin-account-settings/users",
+      "/super-admin-account-settings/users/new",
+      "/super-admin-account-settings/users/edit/:id",
+      "/super-admin-account-settings/users/details/:id",
     ],
     []
   );
