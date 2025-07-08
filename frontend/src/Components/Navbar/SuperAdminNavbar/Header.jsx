@@ -32,7 +32,6 @@ function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { userProfile, superAdminProfile } = useCustomContext();
-  console.log("superAdminProfile---", superAdminProfile.firstName);
 
   const authToken = Cookies.get("authToken");
   const impersonatedUserId = Cookies.get("impersonatedUserId");

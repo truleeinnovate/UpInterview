@@ -1440,12 +1440,12 @@ const MainAppRoutes = ({
                 {hasPermission("Users") && (
                   <Route path="users" element={<UsersLayout />}>
                     {hasPermission("Users", "Create") && (
-                      <Route path="new" element={<UserForm mode="create" />} />
+                      <Route path="new" element={<UserForm mode="create" type="effective" />} />
                     )}
                     {hasPermission("Users", "Edit") && (
                       <Route
                         path="edit/:id"
-                        element={<UserForm mode="edit" />}
+                        element={<UserForm mode="edit" type="effective" />}
                       />
                     )}
                     {hasPermission("Users", "View") && (
@@ -1754,8 +1754,8 @@ const MainAppRoutes = ({
                 {hasPermission("SuperAdminMyProfile") && (
                   <Route path="my-profile" element={<MyProfile type="superAdmin" />}>
                     <Route index element={<Navigate to="basic" replace />} />
-                    <Route path="basic" element={<BasicDetails />} />
-                    <Route path="advanced" element={<AdvancedDetails />} />
+                    <Route path="basic" element={<BasicDetails type="superAdmin" />} />
+                    <Route path="advanced" element={<AdvancedDetails type="superAdmin" />} />
                     <Route
                       path="basic-edit/:id"
                       element={<BasicDetailsEditPage from="my-profile" />}
@@ -1787,18 +1787,18 @@ const MainAppRoutes = ({
                 {hasPermission("SuperAdminUser") && (
                   <Route path="users" element={<UsersLayout type="superAdmin" />}>
                     {hasPermission("SuperAdminUser", "Create") && (
-                      <Route path="new" element={<UserForm mode="create" />} />
+                      <Route path="new" element={<UserForm mode="create" type="superAdmin" />} />
                     )}
                     {hasPermission("SuperAdminUser", "Edit") && (
                       <Route
                         path="edit/:id"
-                        element={<UserForm mode="edit" />}
+                        element={<UserForm mode="edit" type="superAdmin" />}
                       />
                     )}
                     {hasPermission("SuperAdminUser", "View") && (
                       <Route
                         path="details/:id"
-                        element={<UserProfileDetails />}
+                        element={<UserProfileDetails type="superAdmin" />}
                       />
                     )}
                   </Route>

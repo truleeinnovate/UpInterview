@@ -5,47 +5,55 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
-const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
+const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, basePath }) => {
+  console.log("type in AdvancedDetails", type);
+  
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
   const [contactData, setContactData] = useState({})
 
   const authToken = Cookies.get("authToken");
+  const impersonationToken = Cookies.get("impersonationToken");
   const tokenPayload = decodeJwt(authToken);
+  const impersonatedTokenPayload = decodeJwt(impersonationToken);
+  let ownerId;
+  if (type === 'superAdmin') {
+    ownerId = impersonatedTokenPayload?.impersonatedUserId;
+  } else {
+    ownerId = tokenPayload?.userId;
+    ownerId = usersId;
 
-  const userId = tokenPayload?.userId;
+  }
 
-   const ownerId = usersId || userId;
 
-  
-      const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
-  
+  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+
 
   // console.log("userId AdvancedDetails", userId);
 
-//  useEffect(() => {
-//    const selectedContact = usersId
-//      ? usersRes.find(user => user?.contactId === usersId)
-//      : usersRes.find(user => user?._id === userId);
- 
-//    if (selectedContact) {
-//      setContactData(selectedContact);
-//      console.log("Selected contact:", selectedContact);
-//    }
-//  }, [usersId, userId, usersRes]);
+  //  useEffect(() => {
+  //    const selectedContact = usersId
+  //      ? usersRes.find(user => user?.contactId === usersId)
+  //      : usersRes.find(user => user?._id === userId);
 
-    useEffect(() => {
-       if (!userProfile || !userProfile._id) return;
+  //    if (selectedContact) {
+  //      setContactData(selectedContact);
+  //      console.log("Selected contact:", selectedContact);
+  //    }
+  //  }, [usersId, userId, usersRes]);
+
+  useEffect(() => {
+    if (!userProfile || !userProfile._id) return;
     if (userProfile) {
-  
-        // console.log("contact userProfile",userProfile )
+
+      // console.log("contact userProfile",userProfile )
       setContactData(userProfile);
     }
-  }, [userProfile,ownerId,userProfile._id]);
+  }, [userProfile, ownerId, userProfile._id]);
 
-//  console.log("contactData?.contactId", contactData);
- 
+  //  console.log("contactData?.contactId", contactData);
+
 
   return (
     <div>
@@ -54,9 +62,9 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
           onClick={
             () => {
               mode === 'users' ?
-              setAdvacedEditOpen(true)            
+                setAdvacedEditOpen(true)
                 :
-                navigate(`/account-settings/my-profile/advanced-edit/${contactData?._id}`)
+                navigate(`${basePath}/my-profile/advanced-edit/${contactData?._id}`)
             }
           }
           // onClick={() => setIsBasicModalOpen(true)}
@@ -87,7 +95,7 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
 
           <div>
             <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium">{contactData.yearsOfExperience ?`${contactData.yearsOfExperience} Years` :  'Not Provided'}</p>
+            <p className="font-medium">{contactData.yearsOfExperience ? `${contactData.yearsOfExperience} Years` : 'Not Provided'}</p>
           </div>
 
           <div>
@@ -131,13 +139,13 @@ const AdvancedDetails = ({ mode, usersId,setAdvacedEditOpen }) => {
           contactData.coverLetterdescription ?
             (
               // <div className="flex flex-col">
-                <div className={`flex flex-col ${mode === 'users' ? 'w-full' : 'max-w-3xl'} break-words`}>
+              <div className={`flex flex-col ${mode === 'users' ? 'w-full' : 'max-w-3xl'} break-words`}>
                 <span className="text-sm text-gray-500">
                   Cover Letter Description
                 </span>
 
                 {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium"> */}
-                   <p className="text-gray-800 text-sm sm:text-xs mt-1 font-medium whitespace-pre-line break-words">
+                <p className="text-gray-800 text-sm sm:text-xs mt-1 font-medium whitespace-pre-line break-words">
                   {contactData.coverLetterdescription}
                 </p>
               </div>

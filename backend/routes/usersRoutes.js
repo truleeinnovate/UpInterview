@@ -8,6 +8,7 @@ const {
   getUsersByTenant,
   getUniqueUserByOwnerId,
   getPlatformUsers, // SUPER ADMIN added by Ashok
+  getSuperAdminUsers
 } = require("../controllers/usersController.js");
 
 // routes/userRoutes.js
@@ -36,6 +37,11 @@ router.get('/permissions', permissionMiddleware, async (req, res) => {
   }
 });
 
+router.get('/super-admins', (req, res, next) => {
+  console.log('Hit /users/super-admins route');
+  getSuperAdminUsers(req, res, next);
+});
+
 // Define the route for fetching users
 router.get("/", getUsers);
 
@@ -54,7 +60,8 @@ router.patch("/:id/status", UpdateUser);
 //  SUPER ADMIN added by Ashok ====================================>
 router.get("/platform-users", getPlatformUsers);
 // =================================================================>
+// Super admin users route (must be before dynamic routes)
 
-module.exports = router;  
+module.exports = router;
 
 

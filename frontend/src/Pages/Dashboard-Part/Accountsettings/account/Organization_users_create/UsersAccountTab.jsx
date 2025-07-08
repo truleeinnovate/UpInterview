@@ -23,11 +23,14 @@ import femaleImage from "../../../Images/woman.png";
 import genderlessImage from "../../../Images/transgender.png";
 import ConfirmationModal from "./ConfirmModel";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
+import { config } from "../../../../../config";
+import axios from "axios";
 
-const UsersAccountTab = () => {
-    const { effectivePermissions } = usePermissions();
-  const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
-    useCustomContext();
+const UsersAccountTab = ({ type }) => {
+  console.log("UsersAccountTab type:", type);
+  
+  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const {  usersRes,usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -35,16 +38,47 @@ const UsersAccountTab = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState({
-    roles: [],
-  });
+  const [selectedFilters, setSelectedFilters] = useState({ roles: [] });
   const [isRolesOpen, setIsRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
+  const [superAdminUsers, setSuperAdminUsers] = useState([]);
+  const [superAdminLoading, setSuperAdminLoading] = useState(false);
   const filterIconRef = useRef(null);
+
+  // Select data and loading state based on type
+  const dataSource = type === 'superAdmin' ? superAdminUsers : usersRes;
+  const loading = type === 'superAdmin' ? superAdminLoading : usersLoading;
+
+  // Fetch super admin users when type is superAdmin
+useEffect(() => {
+    if (type === 'superAdmin') {
+      const fetchSuperAdminUsers = async () => {
+        setSuperAdminLoading(true);
+        try {
+          const url = `${config.REACT_APP_API_URL}/users/super-admins`;
+          console.log('Fetching super admin users from:', url);
+          const response = await axios.get(url, {
+            headers: {
+              'Content-Type': 'application/json',
+              // No Authorization header for super admin API
+            },
+          });
+          setSuperAdminUsers(response.data || []);
+        } catch (error) {
+          console.error('Error fetching super admin users:', error);
+          toast.error('Failed to load super admin users');
+          setSuperAdminUsers([]);
+        } finally {
+          setSuperAdminLoading(false);
+        }
+      };
+      fetchSuperAdminUsers();
+    }
+  }, [type]);
 
   // Set view based on screen size
   useEffect(() => {
@@ -93,7 +127,7 @@ const UsersAccountTab = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (usersRes?.length !== 0) {
+    if (dataSource?.length !== 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -105,13 +139,13 @@ const UsersAccountTab = () => {
 
   // Unique roles for filter options
   const uniqueRoles = [
-    ...new Set(usersRes?.map((user) => user.label).filter(Boolean)),
+    ...new Set(dataSource?.map((user) => user.label).filter(Boolean)),
   ];
 
   // Filtered data
   const FilteredData = () => {
-    if (!Array.isArray(usersRes)) return [];
-    return usersRes.filter((user) => {
+    if (!Array.isArray(dataSource)) return [];
+    return dataSource.filter((user) => {
       const fieldsToSearch = [
         user.firstName,
         user.lastName,
@@ -179,8 +213,6 @@ const UsersAccountTab = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
-    console.log("usersRes",usersRes);
-
   // Table Columns Configuration
   const tableColumns = [
     {
@@ -214,8 +246,7 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName || ""} ${row.lastName || ""}`.trim() ||
-                "Unknown"}
+              {`${row.firstName || ""} ${row.lastName || ""}`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -223,9 +254,8 @@ const UsersAccountTab = () => {
     },
     { key: "email", header: "Email", render: (value) => value || "Not Provided" },
     { key: "phone", header: "Phone", render: (value) => value || "Not Provided" },
-   
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
-     {key:"status",header:"Status",render:(value) => value.charAt(0).toUpperCase() + value.slice(1) || "Not Found"},
+    { key: "status", header: "Status", render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "Not Found" },
   ];
 
   // Table Actions Configuration
@@ -254,46 +284,20 @@ const UsersAccountTab = () => {
         handleStatusToggleAction(row);
       },
     },
-
     {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleView(row),
     },
-    // {
-    //   key: "edit",
-    //   label: "Edit",
-    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //   onClick: (row) => handleEdit(row),
-    // },
   ];
 
   return (
     <div className="h-screen fixed w-full flex">
-      {/* Sidebar spacing from AccountSettingsSidebar */}
       <div className="" />
-      {/* Main Content */}
       <div className="flex-1 flex flex-col ml-0 h-full">
         <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
-          {/* Info Icon for User Management Popup */}
-          {/* <motion.div
-            className=""
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <button
-              onClick={() => setShowUserManagementPopup(true)}
-              className="p-1 text-custom-blue hover:text-custom-blue/80 focus:outline-none"
-              title="User Management Info"
-            >
-              <Info size={20} />
-            </button>
-          </motion.div> 
-          
-          {/* Header and Toolbar */}
-          <motion.div
+            <motion.div
             className="mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -329,9 +333,9 @@ const UsersAccountTab = () => {
             transition={{ duration: 0.3 }}
           >
             <Header
-              title="Users"
+              title={type === 'superAdmin' ? "Super Admins" : "Users"}
               onAddClick={() => {
-                if (usersRes.length >= currentPlan.maxUsers) {
+                if (dataSource.length >= currentPlan.maxUsers) {
                   toast(
                     "Please upgrade your plan or deactivate existing users to add more.",
                     {
@@ -348,7 +352,7 @@ const UsersAccountTab = () => {
                 }
               }}
               addButtonText="Add User"
-              canCreate={effectivePermissions.Users?.Create}
+              canCreate={type === 'superAdmin' ? superAdminPermissions.SuperAdminUser?.Create : effectivePermissions.Users?.Create}
             />
           </motion.div>
           <Toolbar
@@ -363,7 +367,7 @@ const UsersAccountTab = () => {
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={usersRes?.length}
+            dataLength={dataSource?.length}
             searchPlaceholder="Search by Firstname, Email, Phone..."
             filterIconRef={filterIconRef}
           />
@@ -376,18 +380,18 @@ const UsersAccountTab = () => {
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
-                    loading={usersLoading}
+                    loading={loading}
                     actions={tableActions}
-                    emptyState="No users found."
+                    emptyState={type === 'superAdmin' ? "No super admins found." : "No users found."}
                   />
                 </div>
               ) : (
                 <div className="w-full pl-4 pt-4 pr-4 mb-5">
                   <KanbanView
                     currentFilteredRows={currentFilteredRows}
-                    loading={usersLoading}
+                    loading={loading}
                     setActionViewMore={() => {}}
-                    userData={usersRes}
+                    userData={dataSource}
                     toggleSidebar={() => navigate("new")}
                   />
                 </div>
@@ -400,7 +404,6 @@ const UsersAccountTab = () => {
                 filterIconRef={filterIconRef}
               >
                 <div className="space-y-3">
-                  {/* Roles Section */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
@@ -456,10 +459,10 @@ const UsersAccountTab = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
-                    User Management Guide
+                    {type === 'superAdmin' ? "Super Admin Management Guide" : "User Management Guide"}
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Manage your team's interviewers efficiently
+                    {type === 'superAdmin' ? "Manage super admin accounts efficiently" : "Manage your team's interviewers efficiently"}
                   </p>
                 </div>
                 <button
@@ -470,22 +473,20 @@ const UsersAccountTab = () => {
                   <XCircle size={20} />
                 </button>
               </div>
-
               <div className="mt-6 space-y-4 text-sm text-gray-700">
                 <div className="flex items-start">
                   <div className="flex-shrink-0 h-5 w-5 text-custom-blue mt-0.5">
                     <Info size={20} />
                   </div>
                   <p className="ml-3">
-                    Manage all users who can conduct interviews, including:
+                    {type === 'superAdmin' ? "Manage all super admin users, including:" : "Manage all users who can conduct interviews, including:"}
                   </p>
                 </div>
-
                 <ul className="space-y-3 pl-8">
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
-                      Create and manage interviewer accounts
+                      {type === 'superAdmin' ? "Create and manage super admin accounts" : "Create and manage interviewer accounts"}
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -506,7 +507,6 @@ const UsersAccountTab = () => {
                   </li>
                 </ul>
               </div>
-
               <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
                 <button
                   onClick={() => setShowUserManagementPopup(false)}

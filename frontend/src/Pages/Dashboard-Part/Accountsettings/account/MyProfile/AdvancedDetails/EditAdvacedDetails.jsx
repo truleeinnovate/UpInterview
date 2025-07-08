@@ -34,6 +34,7 @@ const EditAdvacedDetails = ({
   usersId,
   setAdvacedEditOpen,
   onSuccess,
+  basePath
 }) => {
   // onSave
   // const {
@@ -188,7 +189,7 @@ const EditAdvacedDetails = ({
     if (from === "users") {
       setAdvacedEditOpen(false);
     } else {
-      navigate("/account-settings/my-profile/advanced");
+      navigate(`${basePath}/my-profile/advanced`);
       //  navigate(previousPath || '/account-settings/my-profile/basic');
     }
   };

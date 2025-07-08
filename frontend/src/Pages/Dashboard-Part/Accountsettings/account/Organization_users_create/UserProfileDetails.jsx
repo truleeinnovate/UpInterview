@@ -62,7 +62,9 @@ const ConfirmationModal = ({
 // Set app element for accessibility
 Modal.setAppElement("#root");
 
-const UserProfileDetails = () => {
+const UserProfileDetails = ({type}) => {
+  console.log("type in UserProfileDetails", type);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
@@ -160,6 +162,7 @@ const UserProfileDetails = () => {
       <div className="bg-white p-6 rounded-lg">
         <BasicDetails
           mode="users"
+          type={type}
           usersId={userData?._id}
           setBasicEditOpen={setBasicEditOpen}
         />
@@ -370,6 +373,7 @@ const UserProfileDetails = () => {
         {availabilityEditOpen && (
           <EditAvailabilityDetails
             from="users"
+
             usersId={userData._id}
             setAvailabilityEditOpen={setAvailabilityEditOpen}
             onSuccess={handleInterviewEditSuccess}

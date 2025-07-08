@@ -22,251 +22,17 @@ const {
   sendVerificationEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
 
-// const registerOrganization = async (req, res) => {
-//   let savedTenant = null;
-//   try {
-//     console.log('Starting organization registration process...');
-//     const {
-//       firstName, lastName, email, phone, countryCode, profileId, jobTitle,
-//       company, employees, country, password
-//     } = req.body;
-//     console.log('Request body received:', { firstName, lastName, email, phone, countryCode, profileId, jobTitle, company, employees, country });
-
-//     // Validate required fields
-//     if (!firstName || !lastName || !email || !phone || !countryCode || !profileId || !jobTitle || !company || !employees || !country || !password) {
-//       return res.status(400).json({ message: 'All fields are required' });
-//     }
-
-//     // Validate work email
-//     const domain = email.split('@')[1]?.toLowerCase();
-//     const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
-//     if (personalDomains.includes(domain)) {
-//       return res.status(400).json({ message: 'Please use your company email address' });
-//     }
-
-//     // Fetch tabs and objects data from DB
-//     console.log('Fetching tabs and objects data from database...');
-//     const tabsData = await Tabs.findOne({});
-//     const objectsData = await Objects.findOne({});
-//     console.log('Tabs data:', tabsData ? 'Found' : 'Not found');
-//     console.log('Objects data:', objectsData ? 'Found' : 'Not found');
-
-//     if (!tabsData || !objectsData) {
-//       console.log('Tabs or Objects data not found in database');
-//       return res.status(500).json({ message: 'Tabs or Objects data not found' });
-//     }
-
-//     // Hash password
-//     console.log('Hashing password...');
-//     const hashedPassword = await bcrypt.hash(password, saltRounds);
-//     console.log('Password hashed successfully');
-
-//     // Create new organization
-//     console.log('Creating new organization...');
-//     const tenant = new Tenant({
-//       firstName, lastName, email, phone, profileId, jobTitle,
-//       company, employees, country, password: hashedPassword,
-//       status: 'submitted',
-//       type: 'organization',
-//     });
-
-//     // savedOrganization = await organization.save();
-//     const savedTenant = await tenant.save();
-//     console.log('Organization saved successfully with ID:', savedTenant._id);
-
-//     // Create new user
-//     console.log('Creating new user...');
-//     const newUser = new Users({
-//       lastName,
-//       firstName,
-//       email,
-//       profileId,
-//       phone,
-//       tenantId: savedTenant._id,
-//       password: hashedPassword,
-//       isEmailVerified: false
-//     });
-//     console.log('New user object:', JSON.stringify(newUser, null, 2));
-//     const savedUser = await newUser.save();
-//     console.log('User saved successfully with ID:', savedUser._id);
-
-//     // Update the organization with ownerId (user's _id)
-//     await Tenant.findByIdAndUpdate(savedTenant._id, {
-//       ownerId: savedUser._id
-//     });
-//     console.log('Organization updated with ownerId:', savedUser._id);
-
-//     // Create new contact
-//     console.log('Creating new contact...');
-//     const contact = new Contacts({
-//       lastName,
-//       firstName,
-//       email,
-//       phone,
-//       profileId,
-//       currentRole: jobTitle,
-//       company: company,
-//       employees: employees,
-//       countryCode: countryCode,
-//       tenantId: savedTenant._id,
-//       ownerId: savedUser._id
-//     });
-
-//     const savedContact = await contact.save();
-//     console.log('Contact saved successfully with ID:', savedContact._id);
-
-//     //sending email verification
-//     const emailResult = await sendVerificationEmail(email, savedUser._id, firstName, lastName);
-//     if (!emailResult.success) {
-//       throw new Error(emailResult.message);
-//     }
-
-//     // Create default sharing settings
-//     console.log('Creating default sharing settings...');
-//     const accessBody = objectsData.objects.map(obj => ({
-//       ObjName: obj,
-//       Access: 'Public',
-//       GrantAccess: false
-//     }));
-
-//     const sharingSettings = new SharingSettings({
-//       Name: 'sharingSettingDefaultName',
-//       organizationId: savedTenant._id,
-//       accessBody
-//     });
-
-//     await sharingSettings.save();
-//     console.log('Sharing settings saved successfully');
-
-//     // Create default profiles
-//     console.log('Creating default profiles...');
-//     const profileNames = ["Admin", "CEO", "HR Manager", "HR Lead", "HR Recruiter", "Internal Interviewer"];
-//     let adminProfileId = "";
-
-//     for (let profileName of profileNames) {
-//       const profileTabs = tabsData.tabs.map(tab => ({
-//         name: tab,
-//         status: profileName === "Admin" ? 'Visible' : 'Hidden'
-//       }));
-
-//       const profileObjects = objectsData.objects.map(object => ({
-//         name: object,
-//         permissions: {
-//           View: true,
-//           Create: true,
-//           Edit: true,
-//           Delete: profileName === "Admin"
-//         }
-//       }));
-
-//       const profile = new Profile({
-//         label: profileName,
-//         Name: profileName,
-//         Description: `Default profile description for ${profileName}`,
-//         Tabs: profileTabs,
-//         Objects: profileObjects,
-//         organizationId: savedTenant._id
-//       });
-
-//       const savedProfile = await profile.save();
-//       if (profileName === "Admin") {
-//         adminProfileId = savedProfile._id;
-//       }
-//     }
-
-//     // Create default roles from RolesPermissionObject
-//     console.log('Creating default roles from RolesPermissionObject...');
-//     const rolesPermissionObjects = await RolesPermissionObject.find({});
-//     let roleIds = {};
-
-//     for (let roleObj of rolesPermissionObjects) {
-//       const { label, roleName, objects, level } = roleObj;
-
-//       const roleObjects = objects.map(obj => ({
-//         objectName: obj.objectName,
-//         permissions: obj.permissions
-//       }));
-
-//       const newRole = new Role({
-//         label,
-//         roleName,
-//         description: `Default role description for ${roleName}`,
-//         tenantId: savedTenant._id,
-//         objects: roleObjects,
-//         level,
-//         inherits: [],
-//         isDefault: true
-//       });
-
-//       const savedRole = await newRole.save();
-//       roleIds[roleName] = savedRole._id;
-//     }
-
-//     // Assign Admin Role and Profile to the User
-//     console.log('Assigning Admin role and profile to user:', savedUser._id);
-//     await Users.findByIdAndUpdate(savedUser._id, {
-//       roleId: roleIds["Admin"],
-//       ProfileId: adminProfileId
-//     });
-//     console.log('Admin role and profile assigned successfully');
-
-//     // Generate JWT
-//     const payload = {
-//       userId: savedUser._id.toString(),
-//       tenantId: savedTenant._id.toString(),
-//       organization: true,
-//       timestamp: new Date().toISOString(),
-//     };
-//     const token = generateToken(payload);
-
-//     // Set JWT token in HTTP-only cookie
-//     res.cookie('jwt', token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === 'production',
-//       sameSite: 'strict',
-//       maxAge: 24 * 60 * 60 * 1000, // 1 day
-//     });
-
-//     console.log('Organization registration completed successfully');
-//     res.status(201).json({
-//       message: "Organization created successfully",
-//       tenantId: savedTenant._id,
-//       ownerId: savedUser._id,
-//       organization: savedTenant,
-//       token
-//     });
-
-//   } catch (error) {
-//     console.error('Error in organization registration:', error);
-//     if (error.code === 11000) {
-//       console.log('Duplicate key error detected:', error.message);
-//       if (savedTenant) {
-//         console.log('Cleaning up organization with ID:', savedTenant._id);
-//         await Organization.deleteOne({ _id: savedTenant._id });
-//       }
-//       return res.status(400).json({ message: 'Duplicate key error' });
-//     }
-//     console.error('Unexpected error:', error.message, error.stack);
-//     if (savedTenant) {
-//       console.log('Cleaning up organization with ID:', savedTenant._id);
-//       await Organization.deleteOne({ _id: savedTenant._id });
-//     }
-//     res.status(500).json({ message: 'Internal server error', error: error.message });
-//   }
-// };
 
 const organizationUserCreation = async (req, res) => {
   try {
-    console.log("req.body User", req.body);
-
-    console.log("req.body User", req.body);
+    console.log('--- organizationUserCreation START ---');
+    console.log('Request body:', req.body);
 
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
-      return res
-        .status(400)
-        .json({ message: "User and Contact data are required" });
+      console.log('Missing UserData or contactData');
+      return res.status(400).json({ message: 'User and Contact data are required' });
     }
 
     const {
@@ -281,192 +47,243 @@ const organizationUserCreation = async (req, res) => {
       editMode,
       _id,
       isEmailVerified,
+      type, // Extract type from UserData
     } = UserData;
 
-    // if (editMode && _id) {
-    //   // Update existing user
-    //   const existingUser = await Users.findById(_id);
-    //   if (!existingUser) {
-    //     return res.status(404).json({ message: "User not found" });
-    //   }
+    // Validate roleId
+    if (!mongoose.Types.ObjectId.isValid(roleId)) {
+      console.log(`Invalid roleId: ${roleId}`);
+      return res.status(400).json({ message: 'Invalid roleId format' });
+    }
 
-    //   // Update user fields
-    //   existingUser.firstName = firstName;
-    //   existingUser.lastName = lastName;
-    //   existingUser.email = email;
-    //   existingUser.tenantId = tenantId;
-    //   existingUser.roleId = roleId;
+    // Validate tenantId for non-super admins
+    const isSuperAdmin = type === 'superAdmin';
+    if (!isSuperAdmin && !mongoose.Types.ObjectId.isValid(tenantId)) {
+      console.log(`Invalid tenantId: ${tenantId} for non-super admin user`);
+      return res.status(400).json({ message: 'Invalid tenantId format' });
+    }
 
-    //   const savedUser = await existingUser.save();
+    if (editMode && _id) {
+      // Update existing user
+      console.log(`Updating user with _id: ${_id}`);
+      const existingUser = await Users.findById(_id);
+      if (!existingUser) {
+        console.log(`User not found: ${_id}`);
+        return res.status(404).json({ message: 'User not found' });
+      }
 
-    //   // Update contact
-    //   const existingContact = await Contacts.findOne({ ownerId: _id });
-    //   if (existingContact) {
-    //     existingContact.firstName = contactData.firstName;
-    //     existingContact.lastName = contactData.lastName;
-    //     existingContact.email = contactData.email;
-    //     existingContact.phone = contactData.phone;
-    //     existingContact.tenantId = contactData.tenantId;
-    //     existingContact.countryCode = contactData.countryCode;
-    //     await existingContact.save();
-    //   }
+      // Update user fields
+      existingUser.firstName = firstName;
+      existingUser.lastName = lastName;
+      existingUser.email = email;
+      existingUser.tenantId = isSuperAdmin ? null : tenantId; // Set tenantId to null for super admins
+      existingUser.roleId = new mongoose.Types.ObjectId(roleId); // Ensure ObjectId
+      existingUser.countryCode = countryCode;
+      existingUser.isProfileCompleted = isProfileCompleted || false;
+      existingUser.status = status || 'active';
+      existingUser.isEmailVerified = isEmailVerified || false;
 
-    //   return res.status(200).json({
-    //     message: "User updated successfully",
-    //     userId: savedUser._id,
-    //     contactId: existingContact?._id
-    //   });
-    // } else {
-    // Create new user
-    const existingUser = await Users.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+      const savedUser = await existingUser.save();
+      console.log(`User updated: ${savedUser.email}`, {
+        _id: savedUser._id.toString(),
+        roleId: savedUser.roleId.toString(),
+        tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
+        type,
+      });
+
+      // Update contact
+      const existingContact = await Contacts.findOne({ ownerId: _id });
+      if (existingContact) {
+        existingContact.firstName = contactData.firstName;
+        existingContact.lastName = contactData.lastName;
+        existingContact.email = contactData.email;
+        existingContact.phone = contactData.phone;
+        existingContact.tenantId = isSuperAdmin ? null : contactData.tenantId;
+        existingContact.countryCode = contactData.countryCode;
+        await existingContact.save();
+        console.log(`Contact updated for user: ${savedUser.email}`, {
+          contactId: existingContact._id.toString(),
+        });
+      } else {
+        console.log(`No contact found for user: ${_id}`);
+      }
+
+      console.log('--- organizationUserCreation END ---');
+      return res.status(200).json({
+        message: 'User updated successfully',
+        userId: savedUser._id,
+        contactId: existingContact?._id,
+      });
     } else {
+      // Create new user
+      console.log(`Checking if email exists: ${email}`);
+      const existingUser = await Users.findOne({ email });
+      if (existingUser) {
+        console.log(`Email already registered: ${email}`);
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+
       const newUser = new Users({
         firstName,
         lastName,
         email,
-        tenantId,
-        roleId,
+        tenantId: isSuperAdmin ? null : tenantId, // Set tenantId to null for super admins
+        roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
         countryCode,
-        isProfileCompleted,
-        status,
-        isEmailVerified: false,
+        isProfileCompleted: isProfileCompleted || false,
+        status: status || 'active',
+        isEmailVerified: isEmailVerified || false,
       });
 
       const savedUser = await newUser.save();
       const savedUserId = savedUser._id;
 
+      console.log(`User created: ${savedUser.email}`, {
+        _id: savedUserId.toString(),
+        roleId: savedUser.roleId.toString(),
+        tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
+        type,
+      });
+
       if (!savedUserId) {
-        throw new Error("User creation failed, no ID returned.");
+        throw new Error('User creation failed, no ID returned.');
       }
 
       const newContact = new Contacts({
         ...contactData,
         ownerId: savedUserId,
+        tenantId: isSuperAdmin ? null : contactData.tenantId, // Set tenantId to null for super admins
       });
 
       const savedContact = await newContact.save();
+      console.log(`Contact created for user: ${savedUser.email}`, {
+        contactId: savedContact._id.toString(),
+      });
 
+      console.log('--- organizationUserCreation END ---');
       return res.status(201).json({
-        message: "User and Contact created successfully",
+        message: 'User and Contact created successfully',
         userId: savedUserId,
         contactId: savedContact._id,
       });
     }
   } catch (error) {
-    console.error("Error in organization registration:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    console.error('Error in organizationUserCreation:', {
+      message: error.message,
+      stack: error.stack,
+      errorDetails: error,
+    });
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
-// const loginOrganization = async (req, res) => {
+
+// const organizationUserCreation = async (req, res) => {
 //   try {
-//     let { email, password } = req.body;
-//     email = email?.trim().toLowerCase();
-//     password = password?.trim();
+//     console.log("req.body User", req.body);
 
-//     if (!email || !password) {
+
+//     const { UserData, contactData } = req.body;
+
+//     if (!UserData || !contactData) {
 //       return res
 //         .status(400)
-//         .json({ success: false, message: "Email and password are required" });
+//         .json({ message: "User and Contact data are required" });
 //     }
 
-//     const user = await Users.findOne({ email });
-//     if (!user) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Invalid email or password" });
-//     }
-//     if (!user.isEmailVerified) {
-//       return res.status(403).json({
-//         success: false,
-//         message: "Email not verified",
+//     const {
+//       firstName,
+//       lastName,
+//       email,
+//       tenantId,
+//       roleId,
+//       isProfileCompleted,
+//       countryCode,
+//       status,
+//       editMode,
+//       _id,
+//       isEmailVerified,
+//     } = UserData;
+
+//     // if (editMode && _id) {
+//     //   // Update existing user
+//     //   const existingUser = await Users.findById(_id);
+//     //   if (!existingUser) {
+//     //     return res.status(404).json({ message: "User not found" });
+//     //   }
+
+//     //   // Update user fields
+//     //   existingUser.firstName = firstName;
+//     //   existingUser.lastName = lastName;
+//     //   existingUser.email = email;
+//     //   existingUser.tenantId = tenantId;
+//     //   existingUser.roleId = roleId;
+
+//     //   const savedUser = await existingUser.save();
+
+//     //   // Update contact
+//     //   const existingContact = await Contacts.findOne({ ownerId: _id });
+//     //   if (existingContact) {
+//     //     existingContact.firstName = contactData.firstName;
+//     //     existingContact.lastName = contactData.lastName;
+//     //     existingContact.email = contactData.email;
+//     //     existingContact.phone = contactData.phone;
+//     //     existingContact.tenantId = contactData.tenantId;
+//     //     existingContact.countryCode = contactData.countryCode;
+//     //     await existingContact.save();
+//     //   }
+
+//     //   return res.status(200).json({
+//     //     message: "User updated successfully",
+//     //     userId: savedUser._id,
+//     //     contactId: existingContact?._id
+//     //   });
+//     // } else {
+//     // Create new user
+//     const existingUser = await Users.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: "Email already registered" });
+//     } else {
+//       const newUser = new Users({
+//         firstName,
+//         lastName,
+//         email,
+//         tenantId,
+//         roleId,
+//         countryCode,
+//         isProfileCompleted,
+//         status,
 //         isEmailVerified: false,
 //       });
-//     }
 
-//     // Check user role
-//     let roleName = null;
-//     let roleType = null;
-//     if (user.roleId) {
-//       const role = await RolesPermissionObject.findById(user.roleId);
-//       roleName = role?.roleName;
-//       roleType = role?.roleType;
-//     }
+//       const savedUser = await newUser.save();
+//       const savedUserId = savedUser._id;
 
-//     // For internal roleType, skip tenant checks and modify token
-//     if (roleType === 'internal') {
-//       const isPasswordValid = await bcrypt.compare(password, user.password);
-//       if (!isPasswordValid) {
-//         return res.status(400).json({ success: false, message: 'Invalid email or password' });
+//       if (!savedUserId) {
+//         throw new Error("User creation failed, no ID returned.");
 //       }
-//       // Generate JWT for internal user
-//       const payload = {
-//         impersonatedUserId: user._id.toString(),
-//         timestamp: new Date().toISOString(),
-//       };
-//       const token = generateToken(payload);
 
-//       return res.status(200).json({
-//         success: true,
-//         message: 'Login successful',
-//         ownerId: user._id,
-//         token,
-//         roleType,
-//         isEmailVerified: user.isEmailVerified,
+//       const newContact = new Contacts({
+//         ...contactData,
+//         ownerId: savedUserId,
+//       });
+
+//       const savedContact = await newContact.save();
+
+//       return res.status(201).json({
+//         message: "User and Contact created successfully",
+//         userId: savedUserId,
+//         contactId: savedContact._id,
 //       });
 //     }
-
-//     // For non-internal users, proceed with tenant checks
-//     const organization = await Tenant.findOne({ _id: user.tenantId });
-//     if (!organization || organization.status === 'inactive') {
-//       return res.status(403).json({
-//         success: false,
-//         message: 'Account not active',
-//         status: organization?.status || 'not found'
-//       });
-//     }
-
-//     const isPasswordValid = await bcrypt.compare(password, user.password);
-//     if (!isPasswordValid) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Invalid email or password" });
-//     }
-
-//     // Fetch contactId where ownerId matches user._id
-//     const contact = await Contacts.findOne({ ownerId: user._id });
-//     const contactEmailFromOrg = contact?.email || null;
-
-//     // Generate JWT for non-internal users
-//     const payload = {
-//       userId: user._id.toString(),
-//       tenantId: user.tenantId,
-//       organization: true,
-//       timestamp: new Date().toISOString(),
-//     };
-//     const token = generateToken(payload);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Login successful",
-//       ownerId: user._id,
-//       tenantId: user.tenantId,
-//       token,
-//       isProfileCompleted: user?.isProfileCompleted,
-//       roleName,
-//       contactEmailFromOrg,
-//       isEmailVerified: user.isEmailVerified,
-//       status: organization.status,
-//     });
 //   } catch (error) {
-//     console.error("Error during login:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
+//     console.error("Error in organization registration:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
 //   }
 // };
+
 
 const loginOrganization = async (req, res) => {
   try {
