@@ -5,7 +5,7 @@ const { Contacts } = require('../models/Contacts');
 const InterviewAvailability = require('../models/InterviewAvailability');
 const mongoose = require('mongoose');
 const { format, parse, parseISO } = require('date-fns');
-const rolesPermissionObject = require('../models/rolesPermissionObject');
+const RolesPermissionObject = require('../models/rolesPermissionObject');
 
 
 // Controller to fetch all users with populated tenantId
@@ -287,7 +287,7 @@ const getInterviewers = async (req, res) => {
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
 
-    const internalRoles = await rolesPermissionObject.find({
+    const internalRoles = await RolesPermissionObject.find({
       roleName: 'Internal_Interviewer',
       // tenantId,
     }).select('_id label').lean();
@@ -514,12 +514,106 @@ const UpdateUser = async (req, res) => {
   }
 };
 
+
+const getSuperAdminUsers = async (req, res) => {
+  try {
+    console.log('--- getSuperAdminUsers START ---');
+
+    // Step 1: Fetch roles with roleType: 'internal'
+    console.log('Fetching roles with roleType: internal...');
+    const internalRoles = await RolesPermissionObject.find({ roleType: 'internal' })
+      .lean()
+      .select('_id label roleName roleType');
+    
+    console.log(`Total internal roles found: ${internalRoles.length}`, {
+      roles: internalRoles.map(role => ({
+        _id: role._id.toString(),
+        label: role.label,
+        roleName: role.roleName,
+      })),
+    });
+
+    // Extract role IDs as both ObjectId and string for flexibility
+    const roleIds = internalRoles.map(role => role._id);
+    const roleIdStrings = roleIds.map(id => id.toString());
+    if (roleIds.length === 0) {
+      console.log('No internal roles found, returning empty user list');
+      console.log('--- getSuperAdminUsers END ---');
+      return res.status(200).json([]);
+    }
+
+    // Step 2: Fetch users with roleId in the list (try both ObjectId and string)
+    console.log(`Fetching users with roleId in: [${roleIdStrings}]`);
+    const superAdminUsers = await Users.find({
+      $or: [
+        { roleId: { $in: roleIds } }, // Match ObjectId
+        { roleId: { $in: roleIdStrings } }, // Match string
+      ],
+    })
+      .lean()
+      .select('firstName lastName email phone status roleId imageData gender');
+
+    console.log(`Total users fetched from DB: ${superAdminUsers.length}`, {
+      users: superAdminUsers.map(user => ({
+        _id: user._id.toString(),
+        email: user.email,
+        roleId: user.roleId ? user.roleId.toString() : null,
+        roleIdType: typeof user.roleId,
+      })),
+    });
+
+    // Step 3: Map users to include role label and roleName
+    const filteredUsers = superAdminUsers
+      .map(user => {
+        // Find the corresponding role for this user
+        const roleIdStr = user.roleId ? user.roleId.toString() : null;
+        const role = internalRoles.find(r => r._id.toString() === roleIdStr);
+        if (!role) {
+          console.log(`User ${user.email || user._id} skipped: no matching role found for roleId ${roleIdStr}`);
+          return null;
+        }
+        const enrichedUser = {
+          ...user,
+          label: role.label || 'Unknown',
+          roleName: role.roleName || 'Unknown',
+        };
+        console.log(`User included: ${user.email || user._id}, Role: ${enrichedUser.roleName}, Label: ${enrichedUser.label}`);
+        return enrichedUser;
+      })
+      .filter(user => user !== null); // Remove users with no matching role
+
+    console.log(`Filtered super admin users count: ${filteredUsers.length}`, {
+      users: filteredUsers.map(user => ({
+        _id: user._id.toString(),
+        email: user.email,
+        label: user.label,
+        roleName: user.roleName,
+      })),
+    });
+
+    console.log('--- getSuperAdminUsers END ---');
+    res.status(200).json(filteredUsers);
+  } catch (error) {
+    console.error('Error in getSuperAdminUsers:', {
+      message: error.message,
+      stack: error.stack,
+      errorDetails: error,
+    });
+    res.status(500).json({
+      message: 'Server error while fetching super admin users',
+      error: error.message,
+    });
+  }
+};
+
+
 const getUsersByTenant = async (req, res) => {
   try {
     const { tenantId } = req.params;
 
-    if (!tenantId) {
-      return res.status(400).json({ message: "Invalid tenant ID" });
+    // Validate tenantId
+    if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+      return res.status(400).json({ message: 'Invalid tenantId format' });
     }
 
 
@@ -670,7 +764,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       roleLabel: users?.roleId?.label || '',
       roleName: users?.roleId?.roleName || '',
       contactId: contact._id || '',
-      yearsOfExperience:contact?.yearsOfExperience || '',
+      yearsOfExperience: contact?.yearsOfExperience || '',
       firstName: contact.firstName || '',
       lastName: contact.lastName || '',
       email: users.email || '',
@@ -770,6 +864,10 @@ const getPlatformUsers = async (req, res) => {
 };
 // ------------------------------------------------------------->
 
+
+
+
+
 module.exports = {
   getUsers,
   UpdateUser,
@@ -777,4 +875,5 @@ module.exports = {
   getUsersByTenant,
   getUniqueUserByOwnerId,
   getPlatformUsers,
+  getSuperAdminUsers
 };

@@ -8,13 +8,20 @@ export const useRolesQuery = (type) => {
   return useQuery({
     queryKey: ['roles', type],
     queryFn: async () => {
+      console.log(`Fetching roles for type=${type}`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
       const allRoles = response.data;
+      console.log('All roles fetched:', allRoles);
 
       if (type === 'superAdmin') {
-        return allRoles;
+        const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
+        console.log(`Filtered roles for superAdmin:`, filteredRoles);
+        return filteredRoles;
+      } else {
+        const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
+        console.log(`Filtered roles for ${type}:`, filteredRoles);
+        return filteredRoles;
       }
-      return allRoles.filter(role => role.roleType === 'organization');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2, // Retry twice before failing

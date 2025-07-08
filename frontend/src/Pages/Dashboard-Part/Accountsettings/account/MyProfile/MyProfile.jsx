@@ -15,6 +15,8 @@ const MyProfile = ({ type }) => {
   const navigate = useNavigate();
   
   const { singlecontact } = useCustomContext();
+  console.log("singlecontact", singlecontact);
+  
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
   // Select permissions based on type
@@ -73,9 +75,11 @@ const MyProfile = ({ type }) => {
   }, [userId, singlecontact]);
 
   const activeTab = subtab || 'basic';
+  const basePath = type === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
 
   const handleSubTabChange = (tab) => {
-    navigate(`/account-settings/my-profile/${tab}`);
+    
+    navigate(`${basePath}/my-profile/${tab}`);
   };
 
   // Redirect to basic if subtab is invalid
@@ -89,11 +93,11 @@ const MyProfile = ({ type }) => {
   // Render subtab content
   const renderSubTabContent = () => {
     const subTabComponents = {
-      basic: <BasicDetailsTab />,
-      advanced: <AdvancedDetails />,
-      interview: <InterviewUserDetails />,
-      availability: <AvailabilityUser />,
-      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} />,
+      basic: <BasicDetailsTab type={type} basePath={basePath} />,
+      advanced: <AdvancedDetails type={type} basePath={basePath} />,
+      interview: <InterviewUserDetails type={type} basePath={basePath} />,
+      availability: <AvailabilityUser type={type} basePath={basePath} />,
+      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} type={type} basePath={basePath} />,
     };
     return subTabComponents[activeTab] || subTabComponents['basic'];
   };

@@ -11,42 +11,52 @@ import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 import { toast } from 'react-hot-toast';
 
 
-const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
+const BasicDetails = ({ mode, usersId, setBasicEditOpen, type,basePath }) => {
+  console.log("type in BasicDetails", type);
+
   // const { usersRes } = useCustomContext();
 
   const [contactData, setContactData] = useState({});
-  
+
   const navigate = useNavigate();
   const location = useLocation();
- 
-  const authToken = Cookies.get('authToken');
+
+  const authToken = Cookies.get("authToken");
+  const impersonationToken = Cookies.get("impersonationToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
-    // 🟡 Choose ownerId based on context
-  const ownerId = usersId || userId;
+  const impersonatedTokenPayload = decodeJwt(impersonationToken);
+  let ownerId;
+  if (type === 'superAdmin') {
+    ownerId = impersonatedTokenPayload?.impersonatedUserId;
+  } else {
+    ownerId = tokenPayload?.userId;
+    ownerId = usersId;
+
+  }
+
   const organization = tokenPayload.organization;
 
 
   // console.log("ownerId ownerId",ownerId);
-  
-    const {userProfile, isLoading, isError, error} = useUserProfile(ownerId)
+
+  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
 
 
-  
 
-    useEffect(() => {
+
+  useEffect(() => {
     if (userProfile) {
       setContactData(userProfile);
     }
-  }, [userProfile,usersId, userId,]);
+  }, [userProfile, usersId,]);
 
 
- 
+
 
   const handleResendEmailVerification = async () => {
     try {
       const response = await axios.post(
-        `${config.REACT_APP_API_URL}/emails/auth/request-email-change`, 
+        `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
         {
           oldEmail: contactData.email,
           newEmail: contactData.newEmail,
@@ -81,14 +91,14 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen }) => {
       toast.error('Failed to send password reset email');
     }
   };
-console.log("contactData handleResendPasswordChange",contactData);
+  console.log("contactData handleResendPasswordChange", contactData);
 
   return (
     <div>
       <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
         {mode === 'users' && (
           <div className="flex gap-2">
-            {contactData.newEmail  && (
+            {contactData.newEmail && (
               <button
                 onClick={handleResendEmailVerification}
                 className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"
@@ -110,7 +120,7 @@ console.log("contactData handleResendPasswordChange",contactData);
           onClick={() => {
             mode === 'users'
               ? setBasicEditOpen(true)
-              : navigate(`/account-settings/my-profile/basic-edit/${contactData?._id}`);
+              : navigate(`${basePath}/my-profile/basic-edit/${contactData?._id}`);
           }}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 transition-colors"
         >
@@ -119,7 +129,7 @@ console.log("contactData handleResendPasswordChange",contactData);
       </div>
 
       {/* Pending Verification Banner */}
-      
+
       {contactData.newEmail && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 mt-2 rounded-lg">
           <div className="flex items-start">
@@ -145,14 +155,14 @@ console.log("contactData handleResendPasswordChange",contactData);
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Email</p>
-            <p className="font-medium whitespace-pre-line break-words">{contactData.newEmail ? "Not Verified" :contactData.email || 'Not Provided'}</p>
+            <p className="font-medium whitespace-pre-line break-words">{contactData.newEmail ? "Not Verified" : contactData.email || 'Not Provided'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">First Name</p>
             <p className="font-medium">{contactData.firstName || 'Not Provided'}</p>
           </div>
-          
+
           <div>
             <p className="text-sm text-gray-500">Last Name</p>
             <p className="font-medium">{contactData.lastName || 'Not Provided'}</p>
@@ -193,7 +203,7 @@ console.log("contactData handleResendPasswordChange",contactData);
               <p className="font-medium truncate">{contactData.portfolioUrl}</p>
             </div>
           )}
-          
+
           {organization === true && (
             <div>
               <p className="text-sm text-gray-500">Role</p>

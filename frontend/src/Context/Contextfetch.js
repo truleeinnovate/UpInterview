@@ -347,19 +347,17 @@ const CustomProvider = ({ children }) => {
   }, [fetchInterviewers]);
 
   // Query for fetching users
-  const {
+const {
     data: usersRes = [],
     isLoading: usersLoading,
     refetch: refetchUsers,
   } = useQuery({
     queryKey: ["users", tenantId],
     queryFn: async () => {
+      if (!tenantId) return []; // Skip fetch for super admins without tenantId
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/users/${tenantId}`
       );
-      // console.log('response.data user',response.data);
-
-      // Process image URLs and reverse the array (newest first)
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
@@ -372,24 +370,86 @@ const CustomProvider = ({ children }) => {
         })
         .reverse();
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId, // Only fetch if tenantId exists
   });
 
   // Mutation for creating/updating users
+  // const addOrUpdateUser = useMutation({
+  //   mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
+  //     const payload = {
+  //       UserData: {
+  //         firstName: userData.firstName,
+  //         lastName: userData.lastName,
+  //         email: userData.email,
+  //         tenantId: userData.tenantId,
+  //         phone: userData.phone,
+  //         roleId: userData.roleId,
+  //         countryCode: userData.countryCode,
+  //         status: userData.status,
+  //         isProfileCompleted: false,
+  //         isEmailVerified: true,
+  //         ...(editMode && { _id: userData._id }), // Only include _id in edit mode
+  //         editMode,
+  //       },
+  //       contactData: {
+  //         firstName: userData.firstName,
+  //         lastName: userData.lastName,
+  //         email: userData.email,
+  //         phone: userData.phone,
+  //         tenantId: userData.tenantId,
+  //         countryCode: userData.countryCode,
+  //       },
+  //     };
+
+  //     // Use the same endpoint for both create and edit
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
+  //       payload
+  //     );
+
+  //     // UPLOADING FILES LIKE IMAGES AND RESUMES
+  //     if (isFileRemoved && !file) {
+  //       await uploadFile(null, "image", "contact", response.data.contactId);
+  //     } else if (file instanceof File) {
+  //       await uploadFile(file, "image", "contact", response.data.contactId);
+  //     }
+
+  //     // Send welcome email only for new user creation
+  //     if (!editMode) {
+  //       await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
+  //         email: userData.email,
+  //         type: "usercreatepass",
+  //       });
+  //     }
+
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries(["users"]); // Refresh the users list
+  //   },
+  //   onError: (error) => {
+  //     console.error("User operation error:", error);
+  //     // You can add toast notifications here
+  //     // toast.error(error.response?.data?.message || "An error occurred");
+  //   },
+  // });
+
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
+      console.log('addOrUpdateUser mutation payload:', { userData, editMode });
       const payload = {
         UserData: {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
-          tenantId: userData.tenantId,
+          tenantId: userData.tenantId, // Will be null for super admins
           phone: userData.phone,
           roleId: userData.roleId,
           countryCode: userData.countryCode,
           status: userData.status,
           isProfileCompleted: false,
           isEmailVerified: true,
+          type: userData.type, // Include type
           ...(editMode && { _id: userData._id }), // Only include _id in edit mode
           editMode,
         },
@@ -398,12 +458,12 @@ const CustomProvider = ({ children }) => {
           lastName: userData.lastName,
           email: userData.email,
           phone: userData.phone,
-          tenantId: userData.tenantId,
+          tenantId: userData.tenantId, // Will be null for super admins
           countryCode: userData.countryCode,
         },
       };
 
-      // Use the same endpoint for both create and edit
+      console.log('Sending payload to /Organization/new-user-Creation:', payload);
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
@@ -411,13 +471,16 @@ const CustomProvider = ({ children }) => {
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
       if (isFileRemoved && !file) {
+        console.log('Removing file for contactId:', response.data.contactId);
         await uploadFile(null, "image", "contact", response.data.contactId);
       } else if (file instanceof File) {
+        console.log('Uploading file for contactId:', response.data.contactId);
         await uploadFile(file, "image", "contact", response.data.contactId);
       }
 
       // Send welcome email only for new user creation
       if (!editMode) {
+        console.log(`Sending welcome email to: ${userData.email}`);
         await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
           type: "usercreatepass",
@@ -427,14 +490,14 @@ const CustomProvider = ({ children }) => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["users"]); // Refresh the users list
+      console.log('User operation successful, invalidating users query');
+      queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
       console.error("User operation error:", error);
-      // You can add toast notifications here
-      // toast.error(error.response?.data?.message || "An error occurred");
     },
   });
+
 
   // Mutation for toggling user status
   const toggleUserStatus = useMutation({

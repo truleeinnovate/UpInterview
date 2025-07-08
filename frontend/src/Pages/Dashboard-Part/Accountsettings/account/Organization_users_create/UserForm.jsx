@@ -1,46 +1,37 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Camera,
-  RefreshCw,
   ChevronDown,
-  XCircle,
-  Maximize,
-  Minimize,
   X,
   Trash,
 } from "lucide-react";
 import classNames from "classnames";
 import Modal from "react-modal";
-import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
-import { config } from "../../../../../config";
 import {
   validateWorkEmail,
   checkEmailExists,
 } from "../../../../../utils/workEmailValidation.js";
-
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
-
 import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
-
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 import Loading from "../../../../../Components/Loading.js";
 
-const UserForm = ({ isOpen, onDataAdded }) => {
-  const { data: organizationRoles } = useRolesQuery();
-
+const UserForm = ({ type, mode }) => {
+  const { data: organizationRoles } = useRolesQuery(type);
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;
-  const editMode = location.pathname.includes("/users/edit/");
+  const editMode = mode === "edit";
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const tenantId = tokenPayload.tenantId;
+  const tenantId = type === 'superAdmin' ? null : tokenPayload.tenantId; // Set tenantId to null for super admins
   const fileInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
@@ -62,6 +53,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     imageData: "",
     countryCode: "+91",
     status: "active",
+    type, // Include type in userData
   });
 
   // Role dropdown state
@@ -71,7 +63,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   const [currentRole, setCurrentRole] = useState([]);
   const [searchTermRole, setSearchTermRole] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
-
   const [isFileRemoved, setIsFileRemoved] = useState(false);
   const [fileError, setFileError] = useState("");
 
@@ -83,10 +74,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       email: "",
       phone: "",
       roleId: "",
-      tenantId: tenantId,
+      tenantId: type === 'superAdmin' ? null : tenantId,
       imageData: "",
       countryCode: "+91",
       status: "active",
+      type,
     });
     setFile(null);
     setFilePreview(null);
@@ -110,7 +102,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
       setIsCheckingEmail(false);
       return;
     }
-    //  console.log("response currentRole",currentRole);
     setIsCheckingEmail(true);
 
     const formatError = validateWorkEmail(email);
@@ -122,7 +113,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
     const exists = await checkEmailExists(email);
     if (exists && !editMode) {
-      // Skip email existence check in edit mode for the same email
       setErrors((prev) => ({ ...prev, email: "Email already registered" }));
     } else {
       setErrors((prev) => ({ ...prev, email: "" }));
@@ -140,13 +130,15 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
   useEffect(() => {
     if (organizationRoles) {
+      console.log(`Roles loaded for type=${type}:`, organizationRoles);
       setCurrentRole(organizationRoles);
     }
-  }, [organizationRoles]);
+  }, [organizationRoles, type]);
 
   // Initialize form data for edit mode
   useEffect(() => {
     if (editMode && initialUserData) {
+      console.log('Initializing form for edit mode:', initialUserData);
       setUserData({
         _id: initialUserData._id || "",
         firstName: initialUserData.firstName || "",
@@ -154,16 +146,17 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         email: initialUserData.email || "",
         phone: initialUserData.phone || "",
         roleId: initialUserData.roleId || "",
-        tenantId: tenantId,
+        tenantId: type === 'superAdmin' ? null : tenantId,
         countryCode: initialUserData.countryCode || "+91",
         status: initialUserData.status || "active",
         contactId: initialUserData.contactId || "",
+        type,
       });
       setSelectedCurrentRole(initialUserData.label || "");
       setSelectedCurrentRoleId(initialUserData.roleId || "");
       setFilePreview(initialUserData?.imageData?.path);
     }
-  }, [editMode, initialUserData, tenantId]);
+  }, [editMode, initialUserData, tenantId, type]);
 
   // Clean up timeouts
   useEffect(() => {
@@ -206,6 +199,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
 
   // Role selection
   const handleRoleSelect = (role) => {
+    console.log(`Selected role: ${role.label} (ID: ${role._id})`);
     setSelectedCurrentRole(role.label);
     setSelectedCurrentRoleId(role._id);
     setUserData((prev) => ({ ...prev, roleId: role._id }));
@@ -243,12 +237,12 @@ const UserForm = ({ isOpen, onDataAdded }) => {
     if (isLoading) return;
 
     setIsLoading(true);
-    console.log("Submitting userData:", userData); // Debug log
+    console.log("Submitting userData:", userData);
 
     try {
       // Validate form data
       const newErrors = await validateUserForm(userData, editMode);
-      console.log("Validation errors:", newErrors); // Debug log
+      console.log("Validation errors:", newErrors);
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -261,7 +255,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
         { userData, file, isFileRemoved, editMode },
         {
           onSuccess: () => {
-            console.log("User saved successfully"); // Debug log
+            console.log("User saved successfully");
             navigate("/account-settings/users");
           },
           onError: (error) => {
@@ -279,7 +273,11 @@ const UserForm = ({ isOpen, onDataAdded }) => {
   };
 
   const handleClose = () => {
-    navigate("/account-settings/users");
+    if(type === 'superAdmin') {
+      navigate("/super-admin-account-settings/users");
+    } else {
+      navigate("/account-settings/users");
+    };
   };
 
   const modalClass = classNames(
@@ -302,12 +300,7 @@ const UserForm = ({ isOpen, onDataAdded }) => {
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
-        {isLoading && (
-          // <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-          // </div>
-          <Loading message="Loading..." />
-        )}
+        {isLoading && <Loading message="Loading..." />}
         <div className="p-3">
           <div className="flex justify-between items-center mb-6 mt-2">
             <h2 className="text-2xl font-bold text-custom-blue">
@@ -319,10 +312,10 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                 className="p-1 rounded-full hover:bg-white/10"
               >
                 {isFullScreen ? (
-                <ArrowsPointingInIcon className="h-5 w-5" />
-              ) : (
-                <ArrowsPointingOutIcon className="h-5 w-5" />
-              )}
+                  <ArrowsPointingInIcon className="h-5 w-5" />
+                ) : (
+                  <ArrowsPointingOutIcon className="h-5 w-5" />
+                )}
               </button>
               <button onClick={handleClose} className="sm:hidden">
                 <X className="w-5 h-5 text-gray-500" />
@@ -354,7 +347,6 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         className="hidden"
                         disabled={isLoading}
                       />
-
                       {filePreview ? (
                         <img
                           src={filePreview}
@@ -373,20 +365,17 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                         {/* Icon placeholder */}
                       </div>
                     </div>
-
-                    {/* Delete button outside the circle */}
                     {filePreview && (
                       <button
                         title="Remove Image"
                         type="button"
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering file input
+                          e.stopPropagation();
                           handleDeleteImage();
                         }}
                         className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                         disabled={isLoading}
                       >
-                        {/* Icon placeholder */}
                         <Trash className="w-3 h-3" />
                       </button>
                     )}
@@ -580,15 +569,21 @@ const UserForm = ({ isOpen, onDataAdded }) => {
                             />
                           </div>
                           <div className="max-h-60 overflow-y-auto">
-                            {filteredCurrentRoles.map((role) => (
-                              <div
-                                key={role._id}
-                                onClick={() => handleRoleSelect(role)}
-                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                              >
-                                {role.label}
+                            {filteredCurrentRoles.length > 0 ? (
+                              filteredCurrentRoles.map((role) => (
+                                <div
+                                  key={role._id}
+                                  onClick={() => handleRoleSelect(role)}
+                                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                >
+                                  {role.label}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-gray-500">
+                                No roles available
                               </div>
-                            ))}
+                            )}
                           </div>
                         </div>
                       )}
