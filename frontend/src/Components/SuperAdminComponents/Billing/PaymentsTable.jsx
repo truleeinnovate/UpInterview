@@ -480,7 +480,7 @@ function PaymentsTable({ organizationId, viewMode }) {
 
                   <p className="text-gray-600 mt-1">
                     {payment?.transactionDate
-                      ? payment?.transactionDate
+                      ? formatDate(payment?.transactionDate)
                       : "N/A"}
                   </p>
                 </div>

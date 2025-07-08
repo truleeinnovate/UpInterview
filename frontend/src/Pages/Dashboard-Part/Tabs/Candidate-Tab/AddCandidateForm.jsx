@@ -13,7 +13,7 @@ import {
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from "react-router-dom";
-import { Minimize, Expand, ChevronDown, X, Trash } from "lucide-react";
+import { Minimize, Expand, ChevronDown, X, Trash, Eye } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
@@ -265,6 +265,7 @@ const AddCandidateForm = ({ mode }) => {
         setSelectedResume({
           path: selectedCandidate.resume.path,
           name: selectedCandidate.resume.filename,
+          size: selectedCandidate.resume.fileSize,
         });
       } else {
         setSelectedResume(null);
@@ -732,17 +733,27 @@ const AddCandidateForm = ({ mode }) => {
                   onClick={() => resumeInputRef.current?.click()}
                   className="relative group cursor-pointer w-full max-w-sm"
                 >
-                  <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
+                  <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-all duration-200 hover:border-blue-400 hover:shadow-lg px-4 text-center">
                     {selectedResume ? (
-                      <div className="text-center px-4">
+                      <div className="text-center">
                         <p className="text-sm text-gray-700 font-medium truncate max-w-[180px]">
                           {selectedResume.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        {/* <p className="text-xs text-gray-500">
                           {selectedResume?.size &&
                             `${(selectedResume.size / 1024 / 1024).toFixed(
                               2
                             )} MB`}
+                        </p> */}
+                        <p className="text-xs text-gray-500">
+                          {selectedResume?.fileSize || selectedResume?.size
+                            ? `${(
+                                (selectedResume.size ||
+                                  selectedResume.fileSize) /
+                                1024 /
+                                1024
+                              ).toFixed(2)} MB`
+                            : ""}
                         </p>
                       </div>
                     ) : (
@@ -753,10 +764,26 @@ const AddCandidateForm = ({ mode }) => {
                         </p>
                       </>
                     )}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
-                      {/* Icon placeholder */}
-                    </div>
                   </div>
+
+                  {/* 👁 Preview Icon */}
+                  {(selectedResume?.path || selectedResume?.url) && (
+                    <button
+                      type="button"
+                      title="Preview Resume"
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevents opening upload dialog
+                        window.open(
+                          selectedResume.path || selectedResume.url,
+                          "_blank"
+                        );
+                      }}
+                      className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1.5 hover:bg-opacity-70 transition"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </button>
+                  )}
+
                   <input
                     ref={resumeInputRef}
                     type="file"
@@ -764,21 +791,22 @@ const AddCandidateForm = ({ mode }) => {
                     className="hidden"
                     onChange={handleResumeChange}
                   />
+
                   {selectedResume && (
                     <button
                       title="Remove Resume"
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // prevents opening upload dialog
                         removeResume();
                       }}
                       className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
-                      {/* Icon placeholder */}
                       <Trash className="w-3 h-3" />
                     </button>
                   )}
                 </div>
+
                 <p className="mt-2 text-sm font-medium text-gray-700">Resume</p>
                 <p className="text-xs text-gray-500">Maximum file size: 4MB</p>
                 <p className="text-xs text-red-500 font-medium text-center">
