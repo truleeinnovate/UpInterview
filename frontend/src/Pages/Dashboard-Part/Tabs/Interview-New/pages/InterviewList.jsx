@@ -442,7 +442,7 @@ function InterviewList() {
           <motion.div className="bg-white">
             <div className="relative w-full">
               {viewMode === 'kanban' ? (
-                <div className="w-full">
+                <div className="w-full h-[calc(100vh-200px)] overflow-y-auto pb-5">
                   <KanbanBoard
                     interviews={currentFilteredRows}
                     onView={handleView}

@@ -74,14 +74,14 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
               <div className="flex items-center justify-center mb-4">
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-3xl font-semibold shadow-lg">
-                    {task.title?.charAt(0) || 'T'}
+                    {task.title ? task.title.charAt(0).toUpperCase() : ''}
                   </div>
                 </div>
               </div>
               
               {/* Main Details */}
               <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">{task.title}</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{task.title.charAt(0).toUpperCase() + task.title.slice(1)}</h3>
                 <p className="text-gray-600 mt-1">{task.description}</p>
               </div>
               
@@ -136,24 +136,24 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-700">
-                          {task.assignedTo.charAt(0) || '?'}
+                          {task.assignedTo ? task.assignedTo.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Assigned To</p>
-                        <p className="text-gray-700">{task.assignedTo || 'Unassigned'}</p>
+                        <p className="text-gray-700">{task.assignedTo ? task.assignedTo.charAt(0).toUpperCase() + task.assignedTo.slice(1) : 'Unassigned'}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-700">
-                          {task.relatedTo?.objectName.charAt(0) || '?'}
+                          {task.relatedTo?.objectName ? task.relatedTo?.objectName.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Related To</p>
-                        <p className="text-gray-700">{task.relatedTo?.objectName || 'Unassigned'}</p>
+                        <p className="text-gray-700">{task.relatedTo?.objectName ? task.relatedTo?.objectName.charAt(0).toUpperCase() + task.relatedTo?.objectName.slice(1) : 'Unassigned'}</p>
                       </div>
                     </div>
                   </div>

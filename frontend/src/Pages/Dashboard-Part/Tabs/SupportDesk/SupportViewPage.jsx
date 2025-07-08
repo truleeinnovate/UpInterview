@@ -129,7 +129,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Contact</p>
-                <p className="text-gray-700">{ticketData.contact || 'N/A'}</p>
+                <p className="text-gray-700">{ticketData.contact.charAt(0).toUpperCase() + ticketData.contact.slice(1) || 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 col-span-1">
@@ -138,7 +138,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Organization</p>
-                <p className="text-gray-700">{ticketData.organization || 'N/A'}</p>
+                <p className="text-gray-700">{ticketData.organization.charAt(0).toUpperCase() + ticketData.organization.slice(1) || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Created By</p>
-                <p className="text-gray-700">{ticketData.contact || 'Unknown'}, {formatDate(ticketData.createdAt)}</p>
+                <p className="text-gray-700">{ticketData.contact.charAt(0).toUpperCase() + ticketData.contact.slice(1) || 'Unknown'}, {formatDate(ticketData.createdAt)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -202,7 +202,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Modified By</p>
-                <p className="text-gray-700">{ticketData?.statusHistory?.[0]?.user || 'Unknown'}, {formatDate(ticketData.updatedAt)}</p>
+                <p className="text-gray-700">{ticketData?.statusHistory?.[0]?.user.charAt(0).toUpperCase() + ticketData?.statusHistory?.[0]?.user.slice(1) || 'Unknown'}, {formatDate(ticketData.updatedAt)}</p>
               </div>
             </div>
           </div>

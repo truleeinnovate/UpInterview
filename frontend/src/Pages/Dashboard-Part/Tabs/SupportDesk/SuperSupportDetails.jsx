@@ -406,7 +406,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Contact</p>
                     <p className="text-gray-700">
-                      {currentTicket.contact || "N/A"}
+                      {currentTicket.contact.charAt(0).toUpperCase() + currentTicket.contact.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -417,7 +417,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Organization</p>
                     <p className="text-gray-700">
-                      {currentTicket.organization || "N/A"}
+                      {currentTicket.organization.charAt(0).toUpperCase() + currentTicket.organization.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -565,7 +565,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Created By</p>
                     <p className="text-gray-700">
-                      {currentTicket.contact || "Unknown"},{" "}
+                      {currentTicket.contact.charAt(0).toUpperCase() + currentTicket.contact.slice(1) || "Unknown"},{" "}
                       {formatDate(currentTicket.createdAt)}
                     </p>
                   </div>
@@ -577,7 +577,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Modified By</p>
                     <p className="text-gray-700">
-                      {currentTicket?.statusHistory?.[0]?.user || "Unknown"},{" "}
+                      {currentTicket?.statusHistory?.[0]?.user.charAt(0).toUpperCase() + currentTicket?.statusHistory?.[0]?.user.slice(1) || "Unknown"},{" "}
                       {formatDate(currentTicket?.statusHistory?.[0]?.date)}
                     </p>
                   </div>
