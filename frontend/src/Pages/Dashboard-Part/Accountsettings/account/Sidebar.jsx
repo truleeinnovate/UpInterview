@@ -77,12 +77,15 @@ import React from 'react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
   UserIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
+
 const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, type, permissions }) => {
   // Define tabs for super admin explicitly
   const superAdminTabs = [
     { name: 'My Profile', icon: UserIcon, id: 'my-profile' },
-    { name: 'Roles', icon: UserIcon, id: 'roles' }
+    { name: 'Roles', icon: UserIcon, id: 'roles' },
+    { name: 'Users', icon: UsersIcon, id: 'users' }
   ];
 
   return (
@@ -114,14 +117,15 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
           <div className="flex-grow overflow-y-auto">
             <nav className="mt-2 pb-4">
               {type === 'superAdmin' ? (
-                // Render only My Profile and Roles for super admins
+                // Render only My Profile, Roles, and Users for super admins
                 <div className="py-2">
                   <h2 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Account
                   </h2>
                   {superAdminTabs.map((item) => (
                     (item.id === 'my-profile' && permissions.SuperAdminMyProfile?.ViewTab) ||
-                    (item.id === 'roles' && permissions.SuperAdminRole?.ViewTab) ? (
+                    (item.id === 'roles' && permissions.SuperAdminRole?.ViewTab) ||
+                    (item.id === 'users' && permissions.SuperAdminUser?.ViewTab) ? (
                       <button
                         key={item.id}
                         onClick={() => {
@@ -176,7 +180,5 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
     </>
   );
 };
-
-// Import UserIcon to avoid undefined reference
 
 export default SidebarProfile;

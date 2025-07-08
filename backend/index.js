@@ -2,7 +2,6 @@
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
 require("dotenv").config();
-require('./controllers/PushNotificationControllers/pushNotificationTaskController');
 const cors = require("cors");
 const express = require("express");
 const app = express();
@@ -158,6 +157,7 @@ const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.
 const organizationRoutes = require("./routes/organizationLoginRoutes.js");
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
+require('./controllers/PushNotificationControllers/pushNotificationTaskController');
 app.use('/api', apiRoutes);
 // Register all routes
 app.use("/linkedin", linkedinAuthRoutes);
