@@ -246,7 +246,7 @@ function InterviewList() {
                   />
                 ) : (
                   <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                    {candidate?.LastName?.charAt(0) || '?'}
+                    {candidate?.LastName ? candidate?.LastName?.charAt(0).toUpperCase() : '?'}
                   </div>
                 )}
               </div>
@@ -255,7 +255,7 @@ function InterviewList() {
                   className="text-sm font-medium text-custom-blue cursor-pointer truncate"
                   onClick={() => handleView(candidate)}
                 >
-                  {(candidate?.FirstName || '') + ' ' + (candidate?.LastName || '')}
+                  {((candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : '') + ' ' + (candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : ''))}
                 </div>
                 <div className="text-sm text-gray-500 truncate">{candidate?.Email || 'No Email'}</div>
               </div>
@@ -431,7 +431,7 @@ function InterviewList() {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={interviewData?.length}
-              searchPlaceholder="Search interviews..."
+              searchPlaceholder="Search Interviews..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -462,7 +462,7 @@ function InterviewList() {
                       columns={tableColumns}
                       actions={tableActions}
                       loading={isLoading}
-                      emptyState="No interviews found."
+                      emptyState="No Interviews Found."
                       className="table-fixed w-full"
                     />
                   </div>

@@ -39,6 +39,7 @@ const Assessment = () => {
   const rowsPerPage = 10;
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentAssessments = assessmentData?.slice(startIndex, endIndex) || [];
 
   useEffect(() => {
@@ -76,7 +77,7 @@ const Assessment = () => {
       };
       fetchSections();
     }
-  }, [currentAssessments]);
+  }, []);
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);

@@ -130,7 +130,7 @@ const CandidateDetails = ({ mode }) => {
                 />
               ) : (
                 <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                  {candidate?.LastName?.charAt(0) || "?"}
+                  {candidate?.LastName?.charAt(0).toUpperCase() || "?"}
                 </div>
               )}
               {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
@@ -144,7 +144,7 @@ const CandidateDetails = ({ mode }) => {
             </div>
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900">
-                {candidate?.FirstName || ""} {candidate?.LastName || ""}
+                {candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : ""} {candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : ""}
               </h3>
 
               <p className="text-gray-600 mt-1">
@@ -168,8 +168,8 @@ const CandidateDetails = ({ mode }) => {
                       <div>
                         <p className="text-sm text-gray-500">Name</p>
                         <p className="text-gray-700">
-                          {candidate?.FirstName || "N/A"}{" "}
-                          {candidate?.LastName || ""}
+                          {candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : "N/A"}{" "}
+                          {candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : "N/A"}
                         </p>
                       </div>
                     </div>

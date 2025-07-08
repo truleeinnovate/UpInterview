@@ -84,7 +84,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
             </div>
 
             <h3 className="text-center font-bold text-lg">
-              {candidate?.FirstName || ""} {candidate.LastName || "N/A"}
+            {candidate?.FirstName.charAt(0).toUpperCase() + candidate?.FirstName.slice(1)} {candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1)}
             </h3>
 
             <p className="text-center text-base  pt-1 pb-2 text-gray-600">

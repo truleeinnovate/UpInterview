@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, UserCircle, Pencil, Mail, Rotate3d } from "lucide-react";
+import { Eye, CircleUser, Pencil, Mail, Rotate3d } from "lucide-react";
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -209,7 +209,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               />
             ) : (
               <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.FirstName ? row.FirstName.charAt(0) : "?"}
+                {row.FirstName ? row.FirstName.charAt(0).toUpperCase() : "?"}
               </div>
             )}
           </div>
@@ -218,7 +218,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)}
             >
-              {(row?.FirstName || "") + " " + (row.LastName || "")}
+              {(row?.FirstName.charAt(0).toUpperCase() + row.FirstName.slice(1) || "") + " " + (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) || "")}
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     },
     {
       key: "skills",
-      header: "Skills/Technology",
+      header: "Skills",
       render: (value) => (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 2).map((skill, idx) => (
@@ -279,7 +279,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) =>
               navigate(
                 isAssessmentView
@@ -322,7 +322,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           {
             key: "resend-link",
             label: "Resend Link",
-            icon: <Mail className="w-4 h-4 text-blue-600" />,
+            icon: <Mail className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => onResendLink(row.id),
             disabled: (row) => row.status === "completed",
           },
@@ -339,7 +339,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             e.stopPropagation();
             navigate(`view-details/${item._id}`);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title="View Details"
         >
           <Eye className="w-4 h-4" />
@@ -355,7 +355,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="360° View"
           >
-            <UserCircle className="w-4 h-4" />
+            <CircleUser className="w-4 h-4" />
           </button>
           {effectivePermissions.Candidates?.Edit && (
             <button
@@ -377,7 +377,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             onResendLink(item.id);
           }}
           disabled={item.status === "completed"}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title="Resend Link"
         >
           <Mail className="w-4 h-4" />
@@ -418,7 +418,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   isFilterPopupOpen={isFilterPopupOpen}
                   isFilterActive={isFilterActive}
                   dataLength={dataToUse?.length}
-                  searchPlaceholder="Search candidates..."
+                  searchPlaceholder="Search Candidates..."
                   filterIconRef={filterIconRef}
                 />
               </div>
@@ -442,7 +442,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
-                      emptyState="No candidates found."
+                      emptyState="No Candidates Found."
                     />
                   </div>
                 ) : (
@@ -451,21 +451,22 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate.FirstName || ""} ${
-                          candidate.LastName || ""
-                        }`,
-                        subtitle:
-                          candidate.CurrentRole ||
-                          candidate.CurrentExperience ||
-                          "Not Provided",
+                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""}`.trim(),
+                        firstName: `${candidate?.FirstName.charAt(0).toUpperCase()+candidate?.FirstName.slice(1) || ""} ${candidate?.LastName.charAt(0).toUpperCase()+candidate?.LastName.slice(1) || ""}`.trim(),
+                        currentRole: candidate?.CurrentRole || candidate?.CurrentExperience || "N/A",
+                        email: candidate?.Email || "N/A",
+                        phone: candidate?.Phone || "N/A",
+                        industry: candidate?.HigherQualification || "N/A",
+                        linkedinUrl: candidate?.CurrentExperience || "N/A",
+                        skills: candidate?.skills || [],
                         avatar: candidate?.ImageData?.path || null,
-                        status: candidate.HigherQualification || "Not Provided",
+                        status: candidate?.HigherQualification || "Not Provided",
                         isAssessmentView: isAssessmentView,
                       }))}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}
-                      emptyState="No candidates found."
+                      emptyState="No Candidates Found."
                     />
                   </div>
                 )}
@@ -518,7 +519,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                             ))
                           ) : (
                             <span className="text-sm text-gray-500">
-                              No qualifications available
+                              No Qualifications Available
                             </span>
                           )}
                         </div>
@@ -594,11 +595,12 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                                 type="number"
                                 min="0"
                                 max="15"
+                                placeholder="Min..."
                                 value={experience.min}
                                 onChange={(e) =>
                                   handleExperienceChange(e, "min")
                                 }
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>
                             <div className="flex-1">
@@ -608,12 +610,13 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                               <input
                                 type="number"
                                 min="0"
+                                placeholder="Max..."
                                 max="15"
                                 value={experience.max}
                                 onChange={(e) =>
                                   handleExperienceChange(e, "max")
                                 }
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>
                           </div>

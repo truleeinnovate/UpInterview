@@ -839,7 +839,7 @@ const AddCandidateForm = ({ mode }) => {
                         : null
                     }
                     onChange={handleDateChange}
-                    placeholder="Select date of birth"
+                    placeholder="Select Date of Birth"
                   />
                 </div>
                 {/* Gender */}
@@ -871,7 +871,7 @@ const AddCandidateForm = ({ mode }) => {
                     className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
                       errors.Email && "border-red-500"
                     }`}
-                    placeholder="Enter email address"
+                    placeholder="Enter Email Address"
                   />
                   {errors.Email && (
                     <p className="text-red-500 text-xs pt-1">{errors.Email}</p>
@@ -913,7 +913,7 @@ const AddCandidateForm = ({ mode }) => {
                         className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
                           errors.Phone && "border-red-500"
                         }`}
-                        placeholder="Enter Phone number"
+                        placeholder="Enter Phone Number"
                       />
 
                       {errors.Phone && (
@@ -943,7 +943,7 @@ const AddCandidateForm = ({ mode }) => {
 
                 {/* University/College */}
                 <CustomDropdown
-                  label="University College"
+                  label="University/College"
                   name="UniversityCollege"
                   value={formData.UniversityCollege}
                   options={colleges}
@@ -977,7 +977,7 @@ const AddCandidateForm = ({ mode }) => {
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
-                    placeholder="Enter current experience"
+                    placeholder="Enter Current Experience"
                   />
                   {errors.CurrentExperience && (
                     <p className="text-red-500 text-xs pt-1">
@@ -1006,7 +1006,7 @@ const AddCandidateForm = ({ mode }) => {
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
-                    placeholder="Enter relevant experience"
+                    placeholder="Enter Relevant Experience"
                   />
                   {errors.RelevantExperience && (
                     <p className="text-red-500 text-xs pt-1">
