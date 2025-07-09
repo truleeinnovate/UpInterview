@@ -560,7 +560,7 @@ const Navbar = () => {
                   </div>
                 )}
 
-                {(effectivePermissions.Assessments?.ViewTab ||
+                {(effectivePermissions.Assessment_Template?.ViewTab ||
                   effectivePermissions.Assessments?.ViewTab) && (
                   <div
                     className="relative h-full flex items-center"
@@ -589,12 +589,12 @@ const Navbar = () => {
                       <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                         <div className="space-y-1">
                           {[
-                            ...(effectivePermissions.Assessments?.ViewTab
-                              ? [{ to: "/assessments", label: "Assessments" }]
-                              : []),
-                            ...(effectivePermissions.Assessments?.ViewTab
+                            ...(effectivePermissions.Assessment_Template?.ViewTab
                               ? [{ to: "/assessments-template", label: "Assessments Template" }]
                               : []),
+                              ...(effectivePermissions.Assessments?.ViewTab
+                                ? [{ to: "/assessments", label: "Assessments" }]
+                                : []),
                           ].map(({ to, label }) => (
                             <NavLink
                               key={to}

@@ -303,7 +303,7 @@ const Assessment = () => {
               title="Assessment Templates"
               onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
-              canCreate={effectivePermissions.Assessments?.Create}
+              canCreate={effectivePermissions.Assessment_Template?.Create}
             />
             <Toolbar
               view={viewMode}
