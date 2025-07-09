@@ -3,6 +3,7 @@ const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
+const { getAuthCookieOptions, clearAuthCookies } = require("../utils/cookieUtils");
 const SubscriptionPlan = require("../models/Subscriptionmodels.js");
 const SharingSettings = require("../models/SharingSettings");
 const Profile = require("../models/Profile");
@@ -1489,12 +1490,15 @@ const registerOrganization = async (req, res) => {
     const token = generateToken(payload);
 
     // Set JWT token in HTTP-only cookie
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+    // res.cookie("jwt", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: "strict",
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day
+    // });
+
+// Set auth token cookie with consistent settings
+    res.cookie('authToken', token, getAuthCookieOptions());
 
     console.log("Organization registration completed successfully");
     res.status(201).json({

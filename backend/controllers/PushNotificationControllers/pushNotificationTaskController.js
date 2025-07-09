@@ -8,7 +8,7 @@ const PushNotification = require('../../models/PushNotifications');
 //const emailTemplateModel = require('../../models/EmailTemplatemodel'); // Adjust path as per your structure
 
 
-console.log('pushNotificationEmailController.js LOADED at', new Date().toISOString(), ' - If you see this, the file is being executed.');
+// console.log('pushNotificationEmailController.js LOADED at', new Date().toISOString(), ' - If you see this, the file is being executed.');
 
 // Function to manually test the task reminder logic
 function testTaskReminder() {
