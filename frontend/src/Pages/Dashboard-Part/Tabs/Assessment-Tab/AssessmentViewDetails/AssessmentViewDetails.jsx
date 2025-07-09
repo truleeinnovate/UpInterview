@@ -57,7 +57,7 @@ function AssessmentView() {
         }
       });
     }
-  }, [assessment, fetchAssessmentQuestions]);
+  }, [assessment]);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -135,7 +135,7 @@ function AssessmentView() {
                   <h3 className="text-lg font-medium text-gray-900">Assessment Template Details</h3>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => navigate(`/assessment/edit/${assessment._id}`)}
+                      onClick={() => navigate(`/assessments-template/edit/${assessment._id}`)}
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >
                       <Pencil className="w-4 h-4" />
