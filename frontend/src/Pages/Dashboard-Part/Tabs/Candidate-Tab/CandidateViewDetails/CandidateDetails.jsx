@@ -11,6 +11,7 @@ import {
   Calendar,
   Expand,
   Minimize,
+  Eye,
 } from "lucide-react";
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ import Loading from "../../../../../Components/Loading";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import { FaGenderless } from "react-icons/fa";
 import { LiaGenderlessSolid } from "react-icons/lia";
+import { GrDocumentText } from "react-icons/gr";
 import { ReactComponent as FaEdit } from "../../../../../icons/FaEdit.svg";
 Modal.setAppElement("#root");
 
@@ -144,7 +146,14 @@ const CandidateDetails = ({ mode }) => {
             </div>
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900">
-                {candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : ""} {candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : ""}
+                {candidate?.FirstName
+                  ? candidate.FirstName.charAt(0).toUpperCase() +
+                    candidate.FirstName.slice(1)
+                  : ""}{" "}
+                {candidate?.LastName
+                  ? candidate.LastName.charAt(0).toUpperCase() +
+                    candidate.LastName.slice(1)
+                  : ""}
               </h3>
 
               <p className="text-gray-600 mt-1">
@@ -168,8 +177,14 @@ const CandidateDetails = ({ mode }) => {
                       <div>
                         <p className="text-sm text-gray-500">Name</p>
                         <p className="text-gray-700">
-                          {candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : "N/A"}{" "}
-                          {candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : "N/A"}
+                          {candidate?.FirstName
+                            ? candidate.FirstName.charAt(0).toUpperCase() +
+                              candidate.FirstName.slice(1)
+                            : "N/A"}{" "}
+                          {candidate?.LastName
+                            ? candidate.LastName.charAt(0).toUpperCase() +
+                              candidate.LastName.slice(1)
+                            : "N/A"}
                         </p>
                       </div>
                     </div>
@@ -271,7 +286,7 @@ const CandidateDetails = ({ mode }) => {
                         <Briefcase className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Experence</p>
+                        <p className="text-sm text-gray-500">Experience</p>
                         <p className="text-gray-700">
                           {candidate?.CurrentExperience || "N/A"}{" "}
                         </p>
@@ -283,12 +298,42 @@ const CandidateDetails = ({ mode }) => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">
-                          Relevent Experence
+                          Relevant Experience
                         </p>
                         <p className="text-gray-700">
                           {candidate?.RelevantExperience || "N/A"}{" "}
                         </p>
                       </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2">
+                    <div className="flex items-center justify-between gap-3 w-full">
+
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-custom-bg rounded-lg">
+                          <GrDocumentText className="w-5 h-5" />
+                        </div>
+
+                        <div>
+                          <p className="text-sm text-gray-500">Resume</p>
+                          <p className="text-gray-700 break-all">
+                            {candidate?.resume?.filename || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {candidate?.resume?.path && (
+                        <button
+                          title="View Resume"
+                          type="button"
+                          onClick={() =>
+                            window.open(candidate.resume.path, "_blank")
+                          }
+                          className="text-custom-blue"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

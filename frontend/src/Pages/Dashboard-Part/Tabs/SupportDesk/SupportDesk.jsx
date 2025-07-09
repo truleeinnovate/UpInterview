@@ -13,28 +13,32 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "./KanbanView.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
-import { useCustomContext } from '../../../../Context/Contextfetch';
+import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 
 function SupportDesk() {
-  const { 
-  tickets,
-  isLoading
-} = useSupportTickets();
+  const { tickets, isLoading } = useSupportTickets();
 
-console.log("tickets-------", tickets);
+  console.log("tickets-------", tickets);
 
-const impersonationToken = Cookies.get('impersonationToken');
-const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken) : null;
-//console.log("impersonationPayload", impersonationPayload.impersonatedUserId);
+  const impersonationToken = Cookies.get("impersonationToken");
+  const impersonationPayload = impersonationToken
+    ? decodeJwt(impersonationToken)
+    : null;
+  //console.log("impersonationPayload", impersonationPayload.impersonatedUserId);
 
   const { userRole } = useCustomContext();
-    const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
-    console.log("effectivePermissions", effectivePermissions);
-    console.log("superAdminPermissions", superAdminPermissions);
-    console.log("impersonatedUser_roleName", impersonatedUser_roleName);
-    console.log("effectivePermissions_RoleName", effectivePermissions_RoleName);
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    impersonatedUser_roleName,
+    effectivePermissions_RoleName,
+  } = usePermissions();
+  console.log("effectivePermissions", effectivePermissions);
+  console.log("superAdminPermissions", superAdminPermissions);
+  console.log("impersonatedUser_roleName", impersonatedUser_roleName);
+  console.log("effectivePermissions_RoleName", effectivePermissions_RoleName);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -51,7 +55,7 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
   const [viewMode, setViewMode] = useState("table");
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
-  
+
   useEffect(() => {
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
@@ -110,7 +114,10 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
 
   const totalPages = Math.ceil(FilteredData().length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const currentFilteredRows = FilteredData().slice(startIndex, startIndex + itemsPerPage);
+  const currentFilteredRows = FilteredData().slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
   console.log("currentFilteredRows", currentFilteredRows);
 
   const nextPage = () => {
@@ -168,9 +175,16 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => {
-            const path = effectivePermissions_RoleName === "Admin"
-              ? `/support-desk/${row._id}`
-              : (row.assignedToId === impersonationPayload.impersonatedUserId && impersonatedUser_roleName === "Support_Team") ? `/super-admin-desk/view/${row._id}` : (impersonatedUser_roleName === "Super_Admin")?`/super-admin-desk/view/${row._id}`: `/super-admin-desk/${row._id}`;
+            const path =
+              effectivePermissions_RoleName === "Admin"
+                ? `/support-desk/${row._id}`
+                : row.assignedToId ===
+                    impersonationPayload.impersonatedUserId &&
+                  impersonatedUser_roleName === "Support_Team"
+                ? `/super-admin-desk/view/${row._id}`
+                : impersonatedUser_roleName === "Super_Admin"
+                ? `/super-admin-desk/view/${row._id}`
+                : `/super-admin-desk/${row._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -181,7 +195,8 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
     {
       key: "contact",
       header: "Contact",
-      render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "N/A",
+      render: (value) =>
+        value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
     },
     {
       key: "issueType",
@@ -201,36 +216,39 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
         </span>
       ),
     },
-    ...(impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team"
+    ...(impersonatedUser_roleName === "Super_Admin" ||
+    impersonatedUser_roleName === "Support_Team"
       ? [
-        {
-          key: "priority",
-          header: "Priority",
-          render: (value) => (
-            <span
-              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                value
-              )}`}
-            >
-              {value || "N/A"}
-            </span>
-          ),
-        },
-      ]
+          {
+            key: "priority",
+            header: "Priority",
+            render: (value) => (
+              <span
+                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                  value
+                )}`}
+              >
+                {value || "N/A"}
+              </span>
+            ),
+          },
+        ]
       : []),
     {
       key: "createdAt",
       header: "Created On",
       render: (value) => formatDate(value),
     },
-    ...(impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team"
+    ...(impersonatedUser_roleName === "Super_Admin" ||
+    impersonatedUser_roleName === "Support_Team"
       ? [
-        {
-          key: "assignedTo",
-          header: "Assigned To",
-          render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "N/A",
-        },
-      ]
+          {
+            key: "assignedTo",
+            header: "Assigned To",
+            render: (value) =>
+              value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
+          },
+        ]
       : []),
   ];
 
@@ -253,24 +271,32 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
-        const path = effectivePermissions_RoleName === "Admin"
-              ? `/support-desk/${row._id}`
-              : (row.assignedToId === impersonationPayload.impersonatedUserId && impersonatedUser_roleName === "Support_Team") ? `/super-admin-desk/view/${row._id}` : (impersonatedUser_roleName === "Super_Admin")?`/super-admin-desk/view/${row._id}`: `/super-admin-desk/${row._id}`;
-            navigate(path, { state: { ticketData: row } });
+        const path =
+          effectivePermissions_RoleName === "Admin"
+            ? `/support-desk/${row._id}`
+            : row.assignedToId === impersonationPayload.impersonatedUserId &&
+              impersonatedUser_roleName === "Support_Team"
+            ? `/super-admin-desk/view/${row._id}`
+            : impersonatedUser_roleName === "Super_Admin"
+            ? `/super-admin-desk/view/${row._id}`
+            : `/super-admin-desk/${row._id}`;
+        navigate(path, { state: { ticketData: row } });
       },
       //disabled: (row) => !hasActionAccess(row),
     },
     ...(effectivePermissions_RoleName === "Admin"
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) =>
-            navigate(`/support-desk/edit-ticket/${row._id}`, { state: { ticketData: row } }),
-          //disabled: (row) => !hasActionAccess(row),
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) =>
+              navigate(`/support-desk/edit-ticket/${row._id}`, {
+                state: { ticketData: row },
+              }),
+            //disabled: (row) => !hasActionAccess(row),
+          },
+        ]
       : []),
   ];
 
@@ -281,7 +307,9 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
 
   const handleStatusToggle = (option) => {
     setSelectedStatus((prev) =>
-      prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
     );
   };
 
@@ -333,7 +361,6 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
                 className="table-fixed w-full"
               />
             ) : (
-            
               <KanbanView
                 currentTickets={currentFilteredRows}
                 tickets={tickets}
@@ -365,7 +392,10 @@ const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken)
                   {isStatusOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                       {statusOptions.map((option) => (
-                        <label key={option} className="flex items-center space-x-2">
+                        <label
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="checkbox"
                             checked={selectedStatus.includes(option)}

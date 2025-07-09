@@ -1756,25 +1756,21 @@ const InternalRequest = () => {
 
   // Table Columns
   const tableColumns = [
-    ...(superAdminPermissions?.InterviewRequest?.View
-      ? [
-          {
-            key: "interviewerId",
-            header: "Interviewer ID",
-            render: (vale, row) => (
-              <span
-                className="text-sm font-medium text-custom-blue cursor-pointer"
-                onClick={() => {
-                  setSelectedRequestId(row._id);
-                  setIsPopupOpen(true);
-                }}
-              >
-                {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
-              </span>
-            ),
-          },
-        ]
-      : []),
+    {
+      key: "interviewerId",
+      header: "Interviewer ID",
+      render: (vale, row) => (
+        <span
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            setSelectedRequestId(row._id);
+            setIsPopupOpen(true);
+          }}
+        >
+          {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
+        </span>
+      ),
+    },
     {
       key: "interviewerTyp",
       header: "Interviewer Type",
