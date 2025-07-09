@@ -158,10 +158,7 @@ exports.getAllIntegrationLogs = async (req, res) => {
   try {
     const logs = await IntegrationLog.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: logs,
-    });
+    res.status(200).json(logs);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -174,18 +171,10 @@ exports.getAllIntegrationLogs = async (req, res) => {
 // Get integration log by ID added by Ashok
 exports.getIntegrationById = async (req, res) => {
   try {
-    const log = await IntegrationLog.findOne(req.params.integrationId);
-    if (!log) {
-      return res.status(404).json({
-        success: false,
-        message: "Integration log not found",
-      });
-    }
+    const { id } = req.params;
+    const log = await IntegrationLog.findById(id);
 
-    res.status(200).json({
-      success: true,
-      data: log,
-    });
+    res.status(200).json(log);
   } catch (error) {
     res.status(500).json({
       success: false,

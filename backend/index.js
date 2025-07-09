@@ -929,7 +929,7 @@ app.use("/internal-logs", internalLogRoutes);
 
 // integration logs
 const integrationLogRoutes = require("./routes/integrationLogRoutes");
-app.use("/api/integration-logs", integrationLogRoutes);
+app.use("/integration-logs", integrationLogRoutes);
 
 // Invoice
 const InvoiceRoutes = require("./routes/InvoiceRoutes.js");

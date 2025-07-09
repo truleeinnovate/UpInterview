@@ -250,26 +250,26 @@ function TenantsPage() {
                 className="object-cover w-full h-full rounded-full"
               />
             ) : (
-              row?.company?.charAt(0).toUpperCase() || "?"
+              row?.firstName?.charAt(0).toUpperCase() || "?"
             )}
           </div>
           <div className="ml-4">
             <div
               className={`font-medium ${
-                superAdminPermissions.Tenants.Edit
+                superAdminPermissions.Tenants.View
                   ? "text-custom-blue cursor-pointer"
                   : "text-gray-900"
               }`}
               onClick={(e) => {
                 e.stopPropagation(); // Prevents row-level handlers (if any)
-                if (superAdminPermissions.Tenants.Edit && row?._id) {
+                if (superAdminPermissions.Tenants.View && row?._id) {
                   navigate(`/tenants/${row._id}`);
                 }
               }}
             >
-              {capitalizeFirstLetter(row.company) || "N/A"}
+              {capitalizeFirstLetter(row.firstName) || "N/A"}
               <div className="text-custom-blue">
-                {capitalizeFirstLetter(row.industry) || "N/A"}
+                {capitalizeFirstLetter(row.lastName) || "N/A"}
               </div>
             </div>
           </div>
@@ -326,7 +326,7 @@ function TenantsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(superAdminPermissions.Tenants.Edit
+    ...(superAdminPermissions.Tenants.View
       ? [
           {
             key: "view",
