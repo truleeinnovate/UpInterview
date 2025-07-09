@@ -60,6 +60,7 @@ const NewAssessment = () => {
   const sidebarRefAddQuestion = useRef(null);
   const [toggleStates, setToggleStates] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState("");
+  console.log('selectedPosition----',selectedPosition);
 
   const [value, setValue] = useState("");
 
@@ -1050,7 +1051,7 @@ const NewAssessment = () => {
   const navigate = useNavigate();
 
   const NavigateToAssessmentList = () => {
-    navigate('/assessments');
+    navigate('/assessments-template');
   };
 
   const TabFooter = ({ currentTab }) => {
