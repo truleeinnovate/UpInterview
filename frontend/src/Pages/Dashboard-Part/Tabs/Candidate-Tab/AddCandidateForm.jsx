@@ -977,7 +977,7 @@ const AddCandidateForm = ({ mode }) => {
                   options={colleges}
                   onChange={handleChange}
                   error={errors.UniversityCollege}
-                  placeholder="Select University College"
+                  placeholder="Select University/College"
                   optionKey="University_CollegeName"
                   optionValue="University_CollegeName"
                 />

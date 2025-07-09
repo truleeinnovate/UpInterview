@@ -256,7 +256,7 @@ const CandidateDetails = ({ mode }) => {
                           <School className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">University</p>
+                          <p className="text-sm text-gray-500">University/College</p>
                           <p className="text-gray-700">
                             {candidate?.UniversityCollege || "N/A"}{" "}
                           </p>

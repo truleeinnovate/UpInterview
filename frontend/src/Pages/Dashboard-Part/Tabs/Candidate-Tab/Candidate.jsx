@@ -600,7 +600,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                                 onChange={(e) =>
                                   handleExperienceChange(e, "min")
                                 }
-                                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                className="mt-1 block w-full px-1 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>
                             <div className="flex-1">
@@ -616,7 +616,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                                 onChange={(e) =>
                                   handleExperienceChange(e, "max")
                                 }
-                                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                                className="mt-1 block w-full px-1 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                               />
                             </div>
                           </div>

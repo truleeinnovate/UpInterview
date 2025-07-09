@@ -818,6 +818,9 @@ const AssessmentDetails = lazy(() =>
 const AssessmentTest = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest")
 );
+const ScheduleAssessment = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment")
+);
 const MyProfile = lazy(() =>
   import(
     "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
@@ -1332,6 +1335,16 @@ const MainAppRoutes = ({
                     )}
                   </Route>
                 </>
+              )}
+
+              {/* Assessment */}
+              {hasPermission("Assessments", "View") && (
+                <Route path="/assessments" element={<ScheduleAssessment />}>
+                  {/* <Route
+                    path="assessments-details/:id"
+                    element={<AssessmentDetails />}
+                  /> */}
+                </Route>
               )}
 
               {/* Wallet */}
