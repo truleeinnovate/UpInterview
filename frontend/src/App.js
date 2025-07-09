@@ -1289,22 +1289,22 @@ const MainAppRoutes = ({
               )}
 
               {/* Assessment */}
-              {hasPermission("Assessments") && (
+              {hasPermission("Assessment_Template") && (
                 <>
                   <Route path="/assessments-template" element={<Assessment />} />
-                  {hasPermission("Assessments", "Create") && (
+                  {hasPermission("Assessment_Template", "Create") && (
                     <Route
                       path="/assessments-template/new"
                       element={<AssessmentForm />}
                     />
                   )}
-                  {hasPermission("Assessments", "View") && (
+                  {hasPermission("Assessment_Template", "View") && (
                     <Route
                       path="/assessments-template-details"
                       element={<AssessmentDetails />}
                     />
                   )}
-                  {hasPermission("Assessments", "Edit") && (
+                  {hasPermission("Assessment_Template", "Edit") && (
                     <Route
                       path="/assessments-template/edit/:id"
                       element={<AssessmentForm />}
@@ -1324,7 +1324,7 @@ const MainAppRoutes = ({
                       path="candidate-details/:id"
                       element={<CandidateDetails mode="Assessment" />}
                     />
-                    {hasPermission("Assessments", "Edit") && (
+                    {hasPermission("Assessment_Template", "Edit") && (
                       <Route
                         path="assessments-template/edit/:id"
                         element={<AssessmentForm />}
