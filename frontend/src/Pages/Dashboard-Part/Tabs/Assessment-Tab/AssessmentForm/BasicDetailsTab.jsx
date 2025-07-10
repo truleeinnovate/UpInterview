@@ -25,6 +25,7 @@ const BasicDetailsTab = ({
   handleChange,
   handleIconClick,
   showMessage,
+  setShowMessage,
   selectedPosition,
   // toggleDropdownPosition,
   showDropdownPosition,
@@ -329,7 +330,7 @@ const BasicDetailsTab = ({
                   <CgInfo className="w-4 h-4" />
                 </button>
                 {showMessage && (
-                  <div className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10">
+                  <div onClick={() => setShowMessage(false)} className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10 cursor-pointer">
                     Depending on the position, we can offer sections with tailored questions.
                   </div>
                 )}
