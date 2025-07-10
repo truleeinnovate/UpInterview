@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { format, isValid, parseISO } from "date-fns";
 
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = parseISO(dateString);
-  return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
-};
+// const formatDate = (dateString) => {
+//   if (!dateString) return "N/A";
+//   const date = parseISO(dateString);
+//   return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
+// };
 
 const capitalizeFirstLetter = (str) =>
   str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -26,9 +26,9 @@ const KanbanView = ({
     >
       <div className="h-full w-full">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">All Items</h3>
+          <h3 className="text-xl font-semibold text-gray-800">All Tenants</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-            {data?.length || 0} Items
+            {data?.length || 0} Tenants
           </span>
         </div>
 

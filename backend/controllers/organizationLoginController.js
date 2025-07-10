@@ -23,17 +23,18 @@ const {
   sendVerificationEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
 
-
 const organizationUserCreation = async (req, res) => {
   try {
-    console.log('--- organizationUserCreation START ---');
-    console.log('Request body:', req.body);
+    console.log("--- organizationUserCreation START ---");
+    console.log("Request body:", req.body);
 
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
-      console.log('Missing UserData or contactData');
-      return res.status(400).json({ message: 'User and Contact data are required' });
+      console.log("Missing UserData or contactData");
+      return res
+        .status(400)
+        .json({ message: "User and Contact data are required" });
     }
 
     const {
@@ -54,14 +55,14 @@ const organizationUserCreation = async (req, res) => {
     // Validate roleId
     if (!mongoose.Types.ObjectId.isValid(roleId)) {
       console.log(`Invalid roleId: ${roleId}`);
-      return res.status(400).json({ message: 'Invalid roleId format' });
+      return res.status(400).json({ message: "Invalid roleId format" });
     }
 
     // Validate tenantId for non-super admins
-    const isSuperAdmin = type === 'superAdmin';
+    const isSuperAdmin = type === "superAdmin";
     if (!isSuperAdmin && !mongoose.Types.ObjectId.isValid(tenantId)) {
       console.log(`Invalid tenantId: ${tenantId} for non-super admin user`);
-      return res.status(400).json({ message: 'Invalid tenantId format' });
+      return res.status(400).json({ message: "Invalid tenantId format" });
     }
 
     if (editMode && _id) {
@@ -70,7 +71,7 @@ const organizationUserCreation = async (req, res) => {
       const existingUser = await Users.findById(_id);
       if (!existingUser) {
         console.log(`User not found: ${_id}`);
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Update user fields
@@ -81,7 +82,7 @@ const organizationUserCreation = async (req, res) => {
       existingUser.roleId = new mongoose.Types.ObjectId(roleId); // Ensure ObjectId
       existingUser.countryCode = countryCode;
       existingUser.isProfileCompleted = isProfileCompleted || false;
-      existingUser.status = status || 'active';
+      existingUser.status = status || "active";
       existingUser.isEmailVerified = isEmailVerified || false;
 
       const savedUser = await existingUser.save();
@@ -109,9 +110,9 @@ const organizationUserCreation = async (req, res) => {
         console.log(`No contact found for user: ${_id}`);
       }
 
-      console.log('--- organizationUserCreation END ---');
+      console.log("--- organizationUserCreation END ---");
       return res.status(200).json({
-        message: 'User updated successfully',
+        message: "User updated successfully",
         userId: savedUser._id,
         contactId: existingContact?._id,
       });
@@ -121,7 +122,7 @@ const organizationUserCreation = async (req, res) => {
       const existingUser = await Users.findOne({ email });
       if (existingUser) {
         console.log(`Email already registered: ${email}`);
-        return res.status(400).json({ message: 'Email already registered' });
+        return res.status(400).json({ message: "Email already registered" });
       }
 
       const newUser = new Users({
@@ -132,7 +133,7 @@ const organizationUserCreation = async (req, res) => {
         roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
         countryCode,
         isProfileCompleted: isProfileCompleted || false,
-        status: status || 'active',
+        status: status || "active",
         isEmailVerified: isEmailVerified || false,
       });
 
@@ -147,7 +148,7 @@ const organizationUserCreation = async (req, res) => {
       });
 
       if (!savedUserId) {
-        throw new Error('User creation failed, no ID returned.');
+        throw new Error("User creation failed, no ID returned.");
       }
 
       const newContact = new Contacts({
@@ -161,28 +162,28 @@ const organizationUserCreation = async (req, res) => {
         contactId: savedContact._id.toString(),
       });
 
-      console.log('--- organizationUserCreation END ---');
+      console.log("--- organizationUserCreation END ---");
       return res.status(201).json({
-        message: 'User and Contact created successfully',
+        message: "User and Contact created successfully",
         userId: savedUserId,
         contactId: savedContact._id,
       });
     }
   } catch (error) {
-    console.error('Error in organizationUserCreation:', {
+    console.error("Error in organizationUserCreation:", {
       message: error.message,
       stack: error.stack,
       errorDetails: error,
     });
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
-
 
 // const organizationUserCreation = async (req, res) => {
 //   try {
 //     console.log("req.body User", req.body);
-
 
 //     const { UserData, contactData } = req.body;
 
@@ -284,7 +285,6 @@ const organizationUserCreation = async (req, res) => {
 //       .json({ message: "Internal server error", error: error.message });
 //   }
 // };
-
 
 const loginOrganization = async (req, res) => {
   try {
@@ -900,8 +900,10 @@ const verifyEmailChange = async (req, res) => {
 };
 
 // SUPER ADMIN added by Ashok ---------------------------------------------------->
+
 // const getAllOrganizations = async (req, res) => {
 //   try {
+//     // Existing total user count per tenant
 //     const userCounts = await Users.aggregate([
 //       {
 //         $group: {
@@ -916,13 +918,63 @@ const verifyEmailChange = async (req, res) => {
 //       userCountMap[_id?.toString()] = userCount;
 //     });
 
+//     // New: Active user count per tenant
+//     const activeUserCounts = await Users.aggregate([
+//       {
+//         $match: {
+//           status: "active",
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$tenantId",
+//           activeUserCount: { $sum: 1 },
+//         },
+//       },
+//     ]);
+
+//     const activeUserCountMap = {};
+//     activeUserCounts.forEach(({ _id, activeUserCount }) => {
+//       activeUserCountMap[_id?.toString()] = activeUserCount;
+//     });
+
 //     const organizations = await Tenant.find();
 
+//     // const enrichedOrganizations = organizations.map((org) => {
+//     //   const orgId = org._id.toString();
+//     //   return {
+//     //     ...org.toObject(),
+//     //     usersCount: userCountMap[orgId] || 0,
+//     //     activeUsersCount: activeUserCountMap[orgId] || 0, // Add active candidates count
+//     //   };
+//     // });
+
+//     // Fetch latest subscription per tenant (assuming latest by createdAt or startDate)
+//     const subscriptions = await CustomerSubscription.aggregate([
+//       {
+//         $sort: { createdAt: -1 }, // or startDate if you prefer
+//       },
+//       {
+//         $group: {
+//           _id: "$tenantId",
+//           latestSubscription: { $first: "$$ROOT" },
+//         },
+//       },
+//     ]);
+
+//     const subscriptionMap = {};
+//     subscriptions.forEach(({ _id, latestSubscription }) => {
+//       subscriptionMap[_id] = latestSubscription;
+//     });
+
+//     // Combine all data
 //     const enrichedOrganizations = organizations.map((org) => {
 //       const orgId = org._id.toString();
 //       return {
 //         ...org.toObject(),
 //         usersCount: userCountMap[orgId] || 0,
+//         activeUsersCount: activeUserCountMap[orgId] || 0,
+//         subscription: subscriptionMap[orgId] || null, // Add latest subscription data
 //       };
 //     });
 
@@ -941,7 +993,7 @@ const verifyEmailChange = async (req, res) => {
 
 const getAllOrganizations = async (req, res) => {
   try {
-    // Existing total user count per tenant
+    // Total user count per tenant
     const userCounts = await Users.aggregate([
       {
         $group: {
@@ -956,12 +1008,10 @@ const getAllOrganizations = async (req, res) => {
       userCountMap[_id?.toString()] = userCount;
     });
 
-    // New: Active user count per tenant
+    // Active user count per tenant
     const activeUserCounts = await Users.aggregate([
       {
-        $match: {
-          status: "active",
-        },
+        $match: { status: "active" },
       },
       {
         $group: {
@@ -976,22 +1026,12 @@ const getAllOrganizations = async (req, res) => {
       activeUserCountMap[_id?.toString()] = activeUserCount;
     });
 
+    // Fetch all tenants
     const organizations = await Tenant.find();
 
-    // const enrichedOrganizations = organizations.map((org) => {
-    //   const orgId = org._id.toString();
-    //   return {
-    //     ...org.toObject(),
-    //     usersCount: userCountMap[orgId] || 0,
-    //     activeUsersCount: activeUserCountMap[orgId] || 0, // Add active candidates count
-    //   };
-    // });
-
-    // Fetch latest subscription per tenant (assuming latest by createdAt or startDate)
+    // Fetch latest subscription per tenant
     const subscriptions = await CustomerSubscription.aggregate([
-      {
-        $sort: { createdAt: -1 }, // or startDate if you prefer
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: "$tenantId",
@@ -1005,6 +1045,17 @@ const getAllOrganizations = async (req, res) => {
       subscriptionMap[_id] = latestSubscription;
     });
 
+    // Fetch one contact per tenant
+    const contacts = await Contacts.find(); // or add projection if needed
+
+    const contactsMap = {};
+    contacts.forEach((contact) => {
+      const tenantId = contact.tenantId?.toString();
+      if (tenantId) {
+        contactsMap[tenantId] = contact; // store a single contact object, not an array
+      }
+    });
+
     // Combine all data
     const enrichedOrganizations = organizations.map((org) => {
       const orgId = org._id.toString();
@@ -1012,17 +1063,18 @@ const getAllOrganizations = async (req, res) => {
         ...org.toObject(),
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
-        subscription: subscriptionMap[orgId] || null, // Add latest subscription data
+        subscription: subscriptionMap[orgId] || null,
+        contact: contactsMap[orgId] || [],
       };
     });
 
     return res.status(200).json({
       organizations: enrichedOrganizations,
-      totalOrganizations: organizations.length,
+      totalOrganizations: organizations.length,  
       status: true,
     });
   } catch (error) {
-    console.log("Error in get organizations controller:", error.message);
+    console.error("Error in getAllOrganizations:", error.message);
     return res
       .status(500)
       .json({ message: "Internal server error", status: false });

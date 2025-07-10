@@ -234,7 +234,7 @@ function TenantsPage() {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
+  console.log("TENANTS TESTING ===========================> ", tenants);
   // Table Columns
   const tableColumns = [
     {
@@ -243,9 +243,9 @@ function TenantsPage() {
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold overflow-hidden">
-            {row?.branding?.path ? (
+            {row?.contact?.imageData ? (
               <img
-                src={row.branding.path}
+                src={row?.contact?.imageData?.path}
                 alt="branding"
                 className="object-cover w-full h-full rounded-full"
               />
@@ -356,10 +356,6 @@ function TenantsPage() {
 
   // Kanban Columns Configuration
   const kanbanColumns = [
-    {
-      key: "firstName",
-      header: "Name",
-    },
     {
       key: "email",
       header: "Email",
@@ -638,9 +634,9 @@ function TenantsPage() {
                     ).map((tenant) => ({
                       ...tenant,
                       id: tenant._id,
-                      title: tenant.company || "N/A",
-                      subtitle: tenant.industry || "N/A",
-                      avatar: tenant.branding?.path || null,
+                      title: tenant.firstName || "N/A",
+                      subtitle: tenant.lastName || "N/A",
+                      avatar: tenant?.contact?.imageData?.path || null,
                     }))}
                     columns={kanbanColumns}
                     loading={isLoading}
