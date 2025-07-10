@@ -9,7 +9,7 @@ export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
   try {
     const authToken = Cookies.get('authToken') ?? '';
     let tokenPayload = {};
-    
+
     if (authToken) {
       tokenPayload = decodeJwt(authToken);
     }

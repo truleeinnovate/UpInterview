@@ -94,8 +94,23 @@ jobs:
 
       - name: Create Deployment Structure
         run: |
+          # Create necessary directories
           mkdir -p deploy/backend
-          cp -r backend/* deploy/backend/
+          
+          # Copy only needed files (exclude node_modules, .git, etc.)
+          rsync -av --progress backend/ deploy/backend/ \
+            --exclude 'node_modules/' \
+            --exclude '.git/' \
+            --exclude '.env*' \
+            --exclude '*.log' \
+            --exclude '.DS_Store'
+            
+          # Install production dependencies only
+          cd deploy/backend
+          npm ci --only=production
+            
+          # Create zip without development files
+          cd ../..
           cd deploy
           zip -r ../release.zip .
 

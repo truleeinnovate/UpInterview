@@ -230,7 +230,7 @@ exports.verifyOtp = async (req, res) => {
 exports.submitCandidateAssessment = async (req, res) => {
   try {
     const {
-      candidateAssessmentId, // Add candidateAssessmentId
+      candidateAssessmentId,
       scheduledAssessmentId,
       candidateId,
       status,
@@ -241,10 +241,10 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     // Validate required fields (allow 0 for totalScore)
     if (
-      candidateAssessmentId === undefined || candidateAssessmentId === null ||
-      sections === undefined || sections === null ||
-      totalScore === undefined || totalScore === null ||
-      submittedAt === undefined || submittedAt === null
+      !candidateAssessmentId ||
+      !sections ||
+      totalScore === undefined ||
+      !submittedAt
     ) {
       return res.status(400).json({
         success: false,
@@ -253,9 +253,9 @@ exports.submitCandidateAssessment = async (req, res) => {
     }
 
     // Find the existing candidate assessment by candidateAssessmentId
-
-let candidateAssessment = await CandidateAssessment.findById(new mongoose.Types.ObjectId(candidateAssessmentId));
-
+    let candidateAssessment = await CandidateAssessment.findById(
+      new mongoose.Types.ObjectId(candidateAssessmentId)
+    );
 
     if (!candidateAssessment) {
       return res.status(404).json({
@@ -264,46 +264,41 @@ let candidateAssessment = await CandidateAssessment.findById(new mongoose.Types.
       });
     }
 
-    // Update the candidate assessment with submitted data
+    // Process sections and calculate results
+    let hasFailedSection = false;
+    const processedSections = sections.map(section => {
+      // Calculate section score based on answers
+      const sectionScore = section.Answers.reduce((total, answer) => {
+        // For interview questions, we might not have a correct answer to check against
+        // So we'll just sum up the scores from the answers
+        return total + (answer.score || 0);
+      }, 0);
+
+      // Determine section result
+      const sectionResult = sectionScore >= (section.passScore || 0) ? 'pass' : 'fail';
+      
+      // Update overall result if any section fails
+      if (sectionResult === 'fail') {
+        hasFailedSection = true;
+      }
+
+      return {
+        ...section,
+        totalScore: sectionScore,
+        sectionResult
+      };
+    });
+
+    // Update the candidate assessment with processed data
     candidateAssessment.status = status || 'completed';
-    candidateAssessment.sections = sections;
+    candidateAssessment.sections = processedSections;
     candidateAssessment.totalScore = totalScore;
     candidateAssessment.submittedAt = submittedAt;
     candidateAssessment.endedAt = new Date();
+    candidateAssessment.overallResult = hasFailedSection ? 'fail' : 'pass';
 
-    // Calculate overall result based on sections
-    let overallResult = 'pass';
-    let hasFailedSection = false;
-
-    // Check each section's result
- sections.forEach(section => {
-  if (!Array.isArray(section.questions)) {
-    console.warn('Missing or invalid questions array in section:', section);
-    hasFailedSection = true;
-    return; // Skip to the next section
-  }
-
-  const sectionScore = section.Answers.reduce((total, answer) => {
-    const question = section.questions.find(q => q._id.toString() === answer.questionId.toString());
-    if (!question) return total;
-
-    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-    return total + (answer.answer === correctAnswer ? (question.score ?? 0) : 0);
-  }, 0);
-
-  if (sectionScore < (section.passScore ?? 0)) {
-    hasFailedSection = true;
-  }
-});
-
-    // If any section failed, overall result is fail
-    if (hasFailedSection) {
-      overallResult = 'fail';
-    }
-
-    // Update the overall result
-    candidateAssessment.overallResult = overallResult;
-
+    // Save the updated assessment
+    await candidateAssessment.save();
     // Save the updated assessment to the database
     const updatedAssessment = await candidateAssessment.save();
 

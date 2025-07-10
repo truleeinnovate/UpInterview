@@ -31,6 +31,7 @@ router.get('/permissions', permissionMiddleware, async (req, res) => {
       impersonatedUser_roleType: res.locals.impersonatedUser_roleType,
       impersonatedUser_roleName: res.locals.impersonatedUser_roleName
     });
+
   } catch (error) {
     console.error('Get Permissions Error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -62,6 +63,4 @@ router.get("/platform-users", getPlatformUsers);
 // =================================================================>
 // Super admin users route (must be before dynamic routes)
 
-module.exports = router;
-
-
+module.exports = router;  

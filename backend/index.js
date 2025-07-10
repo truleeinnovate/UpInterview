@@ -1,87 +1,196 @@
 //ashraf added this to check online consoles
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
-require("dotenv").config();
-const cors = require("cors");
-const express = require("express");
-const app = express();
 
-
+// require("dotenv").config();
+// const cors = require("cors");
+// const express = require("express");
+// const app = express();
 
 
 // Apply the permission middleware to all routes in this router
 
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'https://app.upinterview.io',
-      /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
-      'http://localhost:3000'
-    ];
-    if (!origin || allowedOrigins.some((allowed) => typeof allowed === 'string' ? allowed === origin : allowed.test(origin))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Cookie",
-    "Accept",
-    "x-user-id",
-    "x-tenant-id",
-    "x-impersonation-userid", 
-    "x-permissions"
-  ],
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-  optionsSuccessStatus: 200,
-  exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-userid", "x-permissions"]
-};
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     const allowedOrigins = [
+//       'https://app.upinterview.io',
+//       /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
+//       'http://localhost:3000'
+//     ];
+//     if (!origin || allowedOrigins.some((allowed) => typeof allowed === 'string' ? allowed === origin : allowed.test(origin))) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   credentials: true,
+//   allowedHeaders: [
+//     "Content-Type",
+//     "Authorization",
+//     "X-Requested-With",
+//     "Cookie",
+//     "Accept",
+//     "x-user-id",
+//     "x-tenant-id",
+//     "x-impersonation-userid", 
+//     "x-permissions"
+//   ],
+//   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+//   optionsSuccessStatus: 200,
+//   exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-userid", "x-permissions"]
+// };
 
 // Apply CORS middleware
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// app.use(cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
+// require("dotenv").config();
 
-// Force production mode to avoid webhook issues
-// console.log(
-//   "process.env.NODE_ENV checking in index.js:-",
-//   process.env.NODE_ENV
-// );
-// console.log(
-//   `🔒 Application running in ${process.env.NODE_ENV.toUpperCase()} mode`
-// );
+// const mongoose = require("mongoose");
 
-require("dotenv").config();
+// const cookieParser = require("cookie-parser");
+// const bodyParser = require("body-parser");
 
-const mongoose = require("mongoose");
+// const port = process.env.PORT || 5000;
 
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-
-const port = process.env.PORT || 5000;
-
-mongoose
-  .connect(process.env.MONGODB_URI, {})
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+// mongoose
+//   .connect(process.env.MONGODB_URI, {})
+//   .then(() => console.log("✅ MongoDB connected"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Explicitly handle preflight requests
 
 // Special middleware to capture raw body for webhook signature verification
 // This MUST come before any bodyParsers
-const rawBodyParser = require("body-parser").raw({ type: "*/*" });
+// const rawBodyParser = require("body-parser").raw({ type: "*/*" });
 
 // Use raw body parser only for webhook endpoints
+// app.use((req, res, next) => {
+//   if (
+//     req.originalUrl === "/payment/webhook" ||
+//     req.path === "/payment/webhook"
+//   ) {
+//     rawBodyParser(req, res, (err) => {
+//       if (err) return next(err);
+//       req.rawBody = req.body.toString();
+//       next();
+//     });
+//   } else {
+//     next();
+//   }
+// });
+
+// Standard middleware
+// app.use(bodyParser.json());
+// app.use(cookieParser());
+
+// const { permissionMiddleware } = require('./middleware/permissionMiddleware');
+// app.use(permissionMiddleware);
+
+
+// API Routes
+// const apiRoutes = require('./routes/apiRoutes');
+
+// require('./controllers/PushNotificationControllers/pushNotificationTaskController');
+// const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
+// const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
+// const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
+// const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
+// const organizationRoutes = require("./routes/organizationLoginRoutes.js");
+// const Cardrouter = require("./routes/Carddetailsroutes.js");
+// const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
+// app.use('/api', apiRoutes);
+// // Register all routes
+// app.use("/linkedin", linkedinAuthRoutes);
+// app.use("/Individual", individualLoginRoutes);
+// app.use("/", SubscriptionRouter);
+// app.use("/", CustomerSubscriptionRouter);
+// app.use("/Organization", organizationRoutes);
+// app.use("/", Cardrouter);
+// app.use("/emails", EmailRouter);
+
+
+
+// this is new
+require('dotenv').config();
+const cors = require('cors');
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const app = express();
+
+// ✅ Trust Azure's proxy to detect HTTPS correctly
+app.set('trust proxy', 1);
+
+// ✅ Parse cookies
+app.use(cookieParser());
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log('Origin:', origin);
+    const allowedOrigins = [
+      'https://app.upinterview.io',
+      /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
+      'http://localhost:3000',
+      'http://localhost:5000'
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is allowed
+    if (allowedOrigins.some((allowed) => 
+      typeof allowed === 'string' 
+        ? allowed === origin 
+        : allowed.test(origin)
+    )) {
+      console.log('Origin allowed:', origin);
+      return callback(null, true);
+    }
+    
+    console.warn('CORS: Origin not allowed:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true, // Important: Allow credentials (cookies, authorization headers)
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Cookie',
+    'Accept',
+    'x-user-id',
+    'x-tenant-id',
+    'x-impersonation-userid',
+    'x-permissions',
+    'x-forwarded-proto',
+    'x-forwarded-host',
+    'x-forwarded-port'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  optionsSuccessStatus: 200,
+  exposedHeaders: [
+    'x-user-id',
+    'x-tenant-id',
+    'x-impersonation-userid',
+    'x-permissions',
+    'set-cookie',
+    'x-new-token'
+  ]
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+mongoose
+  .connect(process.env.MONGODB_URI, {})
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
+
+// Middleware to capture raw body for webhook endpoints
+const rawBodyParser = require('body-parser').raw({ type: '*/*' });
 app.use((req, res, next) => {
-  if (
-    req.originalUrl === "/payment/webhook" ||
-    req.path === "/payment/webhook"
-  ) {
+  if (req.originalUrl === '/payment/webhook' || req.path === '/payment/webhook') {
     rawBodyParser(req, res, (err) => {
       if (err) return next(err);
       req.rawBody = req.body.toString();
@@ -94,91 +203,45 @@ app.use((req, res, next) => {
 
 // Standard middleware
 app.use(bodyParser.json());
-app.use(cookieParser());
 
+// Apply permission middleware to all routes
 const { permissionMiddleware } = require('./middleware/permissionMiddleware');
 app.use(permissionMiddleware);
 
-// app.get('/api/validate-domain', (req, res) => {
-//   const token = req.cookies.token;
-//   const origin = req.headers.origin || req.headers.host;
-
-//   console.log('Received domain validation request from:', origin);
-
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     const subdomain = origin.split('.')[0];
-
-//     if (subdomain === decoded.organization.subdomain) {
-//       return res.json({ isValid: true });
-//     } else {
-//       return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
-//     }
-//   } catch (err) {
-//     console.error('JWT validation failed:', err.message);
-//     return res.status(401).json({ isValid: false });
-//   }
-// });
-
-// backend route (e.g. validate-domain.js or inside index.js)
-// app.get('/api/validate-domain', (req, res) => {
-//   const token = req.cookies.token;
-//   const origin = req.headers.origin || req.headers.host;
-
-//   console.log('Received domain validation request from:', origin);
-
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     console.log('Decoded JWT:', decoded);
-
-//     const subdomain = origin.split('.')[0];
-//     console.log('Extracted subdomain:', subdomain);
-
-//     if (subdomain === decoded.organization.subdomain) {
-//       console.log('Subdomain matches. Validation successful.');
-//       return res.json({ isValid: true });
-//     } else {
-//       console.log('Subdomain mismatch. Validation failed.');
-//       return res.status(403).json({ isValid: false, error: 'Subdomain mismatch' });
-//     }
-//   } catch (err) {
-//     console.error('JWT validation failed:', err.message);
-//     return res.status(401).json({ isValid: false });
-//   }
-// });
-
 // API Routes
 const apiRoutes = require('./routes/apiRoutes');
+const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
+const individualLoginRoutes = require('./routes/individualLoginRoutes.js');
+const SubscriptionRouter = require('./routes/SubscriptionRoutes.js');
+const CustomerSubscriptionRouter = require('./routes/CustomerSubscriptionRoutes.js');
+const organizationRoutes = require('./routes/organizationLoginRoutes.js');
+const Cardrouter = require('./routes/Carddetailsroutes.js');
+const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js');
+const usersRoutes = require('./routes/usersRoutes.js');
 
-const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
-const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
-const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
-const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
-const organizationRoutes = require("./routes/organizationLoginRoutes.js");
-const Cardrouter = require("./routes/Carddetailsroutes.js");
-const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
-require('./controllers/PushNotificationControllers/pushNotificationTaskController');
 app.use('/api', apiRoutes);
-// Register all routes
-app.use("/linkedin", linkedinAuthRoutes);
-app.use("/Individual", individualLoginRoutes);
-app.use("/", SubscriptionRouter);
-app.use("/", CustomerSubscriptionRouter);
-app.use("/Organization", organizationRoutes);
-app.use("/", Cardrouter);
-app.use("/emails", EmailRouter);
+app.use('/linkedin', linkedinAuthRoutes);
+app.use('/Individual', individualLoginRoutes);
+app.use('/', SubscriptionRouter);
+app.use('/', CustomerSubscriptionRouter);
+app.use('/Organization', organizationRoutes);
+app.use('/', Cardrouter);
+app.use('/emails', EmailRouter);
+app.use('/users', usersRoutes);
+
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
 
 // Master Data Routes
 const { Skills } = require("./models/MasterSchemas/skills.js");
 const { LocationMaster } = require("./models/MasterSchemas/LocationMaster.js");
 const { Industry } = require("./models/MasterSchemas/industries.js");
 const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
-const {
-  TechnologyMaster,
-} = require("./models/MasterSchemas/TechnologyMaster.js");
+const { TechnologyMaster } = require("./models/MasterSchemas/TechnologyMaster.js");
 const { HigherQualification } = require("./models/higherqualification.js");
 const { University_CollegeName } = require("./models/college.js");
 const { Company } = require("./models/company.js");
+
 // Master Data Endpoints
 app.get("/skills", async (req, res) => {
   try {
@@ -264,9 +327,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server is running on http://localhost:${port}`);
+// });
 
 
 // this is common code for datautils
@@ -777,8 +840,8 @@ app.get("/org-users", async (req, res) => {
   }
 });
 
-const usersRoutes = require("./routes/usersRoutes.js");
-app.use("/users", usersRoutes);
+// const usersRoutes = require("./routes/usersRoutes.js");
+// app.use("/users", usersRoutes);
 
 // Email TemplateRouter
 const EmailTemplateRouter = require("./routes/EmailTemplateRoutes.js");

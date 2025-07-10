@@ -8,14 +8,14 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
     const { id } = req.params;
     const scheduledAssessment = await scheduledAssessmentsSchema
       .findById(id)
-      // .populate("createdBy", "Firstname")
-      .populate("assessmentId");
-    // .populate({
-    //   path: "assessmentId",
-    //   populate: { path: "Sections.Questions" },
-    // });
-    // const scheduledAssessment = await scheduledAssessmentsSchema.findById(id).populate('createdBy',"Firstname").populate('assessmentId')
-    // console.log("scheduled assesmne,", scheduledAssessment);
+      .populate({
+        path: 'assessmentId',
+        populate: {
+          path: 'Position',
+          model: 'Position' // Assuming your position model is named 'Position'
+        }
+      });
+
     return res.status(200).send({
       message: "Retrieved scheduled assessments",
       success: true,

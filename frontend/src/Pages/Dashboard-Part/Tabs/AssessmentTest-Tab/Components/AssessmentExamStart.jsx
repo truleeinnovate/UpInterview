@@ -187,8 +187,8 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
                         answeredQuestions={answeredQuestions}
                     />
                     <div className="flex-1">
-                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20">
-                            <div className="p-8 border-b border-gray-100">
+                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg">
+                            <div className="p-8">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center space-x-4">
                                         <span className="px-4 py-2 bg-blue-100 text-custom-blue rounded-lg text-sm font-medium">

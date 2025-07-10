@@ -642,7 +642,7 @@ useEffect(() => {
                       readOnly
                     />
                     {errors.questionType && (
-                      <p className="text-red-500 text-sm    ">
+                      <p className="text-red-500 text-sm">
                         {errors.questionType}
                       </p>
                     )}

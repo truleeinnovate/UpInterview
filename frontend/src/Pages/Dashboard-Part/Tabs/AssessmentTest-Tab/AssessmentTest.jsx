@@ -24,7 +24,7 @@ const AssessmentTest = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [candidateAssessmentId, setCandidateAssessmentId] = useState(null);
 
- // Fallback URL
+  // Fallback URL
 
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
@@ -192,25 +192,36 @@ const AssessmentTest = () => {
     fetchAssessmentAndCandidate();
   }, [location]);
 
-  const renderHeader = () => (
-    <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-[90rem] mx-auto px-8 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-        <img src={logo} alt="Logo" className="w-20" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500">Powered by</span>
-            <img
-              src="https://placehold.co/150x50?text=Customer"
-              alt="Customer Logo"
-              className="h-6 hover:opacity-80 transition-opacity"
-            />
+  const renderHeader = () => {
+    // Get the organization logo from assessment data if available
+    const organizationLogo = assessment?.organization?.logo ||
+      assessment?.assessmentId?.organization?.logo ||
+      'https://placehold.co/150x50?text=Organization';
+
+    return (
+      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-[90rem] mx-auto px-8 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <img src={logo} alt="Logo" className="w-20" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">Powered by</span>
+              <img
+                src={organizationLogo}
+                alt="Organization Logo"
+                className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = 'https://placehold.co/150x50?text=Organization';
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (isLinkExpired) {
     return (
@@ -241,7 +252,7 @@ const AssessmentTest = () => {
   }
 
   return (
-    <div className="-mt-16">
+    <div className="">
       <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
         {renderHeader()}
 

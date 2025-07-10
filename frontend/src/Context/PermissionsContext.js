@@ -31,19 +31,19 @@
 //       const userId = tokenPayload?.userId;
 //       const orgId = tokenPayload?.tenantId;
 //       const impersonationToken = decodeJwt(Cookies.get("impersonationToken"));
-  
+
 //       const headers = {
 //         'x-user-id': userId,
 //         'x-tenant-id': orgId,
 //         'x-impersonation-userid': impersonationToken?.impersonatedUserId || ''
 //       };
-  
+
 //       const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { 
 //         headers,
 //         withCredentials: true 
 //       });
 //       console.log('response frontend', response.data);
-      
+
 //       setEffectivePermissions(response.data.effectivePermissions || {});
 //       setSuperAdminPermissions(response.data.superAdminPermissions || null);
 //       setEffectivePermissions_RoleType(response.data.effectivePermissions_RoleType || null);
@@ -100,7 +100,6 @@ import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import Loading from '../Components/Loading.js';
 
-
 const PermissionsContext = createContext();
 
 export const PermissionsProvider = ({ children }) => {
@@ -112,60 +111,38 @@ export const PermissionsProvider = ({ children }) => {
     effectivePermissions_RoleName: null,
     impersonatedUser_roleType: null,
     impersonatedUser_roleName: null,
-    loading: true, // Initialize as loading
-    authError: null
+    loading: true,
+    authError: null,
   });
-
-  // const getPermissionDataFromCookies = useCallback(() => {
-  //   try {
-  //     const authToken = Cookies.get('authToken');
-  //     const impersonationToken = Cookies.get('impersonationToken');
-      
-  //     const authPayload = authToken ? decodeJwt(authToken) : null;
-  //     const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
-      
-  //     return {
-  //       userId: authPayload?.userId,
-  //       tenantId:authPayload?.tenantId,
-  //       isImpersonating: !!impersonationToken,
-  //       impersonatedUserId: impersonationPayload?.impersonatedUserId
-  //     };
-  //   } catch (error) {
-  //     console.error('Cookie decoding error:', error);
-  //     return {};
-  //   }
-  // }, []);
 
   const refreshPermissions = useCallback(async () => {
     try {
-      setPermissionState(prev => ({ ...prev, loading: true }));
-      
-      // const { userId, tenantId } = getPermissionDataFromCookies();
-      
-      // if (!userId || !tenantId) {
-      //   throw new Error('Missing user or tenant information');
-      // }
+      setPermissionState((prev) => ({ ...prev, loading: true }));
 
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, { 
-        withCredentials: true
+      const authToken = Cookies.get('authToken');
+      const impersonationToken = Cookies.get('impersonationToken');
+      const tokenPayload = authToken ? decodeJwt(authToken) : null;
+
+      console.log('tokenPayload, impersonationToken frontend :----', tokenPayload, impersonationToken);
+
+      // Send request with cookies only (no headers)
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, {
+        withCredentials: true, // Ensure cookies are sent with the request
       });
 
-      const permissionData = response.data || 
-        (response.headers['x-permissions-data'] && JSON.parse(response.headers['x-permissions-data'])) || 
-        {};
+      const permissionData = response.data;
 
       setPermissionState({
         ...permissionData,
         loading: false,
-        authError: null
+        authError: null,
       });
-
     } catch (error) {
       console.error('Permission refresh error:', error);
-      setPermissionState(prev => ({
+      setPermissionState((prev) => ({
         ...prev,
         loading: false,
-        authError: error.message || 'Failed to load permissions'
+        authError: error.message || 'Failed to load permissions',
       }));
     }
   }, []);
@@ -176,14 +153,14 @@ export const PermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      response => {
+      (response) => {
         if (response.headers['x-permissions-data']) {
           try {
             const permissionData = JSON.parse(response.headers['x-permissions-data']);
-            setPermissionState(prev => ({
+            setPermissionState((prev) => ({
               ...prev,
               ...permissionData,
-              loading: false
+              loading: false,
             }));
           } catch (error) {
             console.error('Error parsing permission headers:', error);
@@ -191,11 +168,11 @@ export const PermissionsProvider = ({ children }) => {
         }
         return response;
       },
-      error => {
+      (error) => {
         if (error.response?.status === 401) {
-          setPermissionState(prev => ({
+          setPermissionState((prev) => ({
             ...prev,
-            authError: 'Session expired. Please log in again.'
+            authError: 'Session expired. Please log in again.',
           }));
         }
         return Promise.reject(error);
@@ -209,12 +186,7 @@ export const PermissionsProvider = ({ children }) => {
 
   return (
     <PermissionsContext.Provider value={{ ...permissionState, refreshPermissions }}>
-      {/* Show loading component when permissions are being loaded */}
-      {permissionState.loading ? (
-        <Loading message="Loading..." />
-      ) : (
-        children
-      )}
+      {permissionState.loading ? <Loading message="Loading..." /> : children}
     </PermissionsContext.Provider>
   );
 };
