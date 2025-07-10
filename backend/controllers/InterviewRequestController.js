@@ -388,3 +388,16 @@ exports.acceptInterviewRequest = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getSingleInterviewRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const request = await InterviewRequest.findById(id);
+
+    return res.status(200).json(request);
+  } catch (error) {
+    console.error("Internal server error:", error.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

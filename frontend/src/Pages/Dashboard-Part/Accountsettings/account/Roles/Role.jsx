@@ -374,11 +374,11 @@ const Role = ({ type }) => {
                     permissions={obj.permissions}
                     isExpanded={false}
                   />
-                  {type === 'superAdmin' && (
+                  {/* {type === 'superAdmin' && (
                     <p className="text-xs text-gray-500 mt-1">
                       Visibility: {obj.visibility} | Type: {obj.type}
                     </p>
-                  )}
+                  )} */}
                 </div>
               ))}
             </div>

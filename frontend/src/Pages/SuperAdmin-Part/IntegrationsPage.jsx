@@ -22,8 +22,10 @@ import {
 import axios from "axios";
 import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import { usePermissions } from "../../Context/PermissionsContext.js";
 
 function IntegrationsPage() {
+  const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
   // const [selectedCandidate, setSelectedCandidate] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -48,233 +50,7 @@ function IntegrationsPage() {
 
   const [selectedLog, setSelectedLog] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  const [integrations, setIntegrations] = useState([
-    // {
-    //   timeStamp: "2025-06-02T10:15:00Z",
-    //   logId: "LOG-001",
-    //   status: "success",
-    //   code: "200",
-    //   message: "Interview completed successfully",
-    //   serverName: "interview-service-01",
-    //   severity: "low",
-    //   processName: "InterviewRecording",
-    //   executionTime: "125ms",
-    //   requestEndPoint: "/api/v1/interviews/complete",
-    //   requestMethod: "POST",
-    //   requestBody: { interviewId: "12345", duration: 3600 },
-    //   responseStatusCode: "200",
-    //   responseMessage: "Interview marked as complete",
-    //   responseBody: { success: true },
-    //   ownerId: "USER-001",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:10:00Z",
-    //   logId: "LOG-002",
-    //   status: "error",
-    //   code: "500",
-    //   message: "Database connection failed",
-    //   serverName: "assessment-service-02",
-    //   severity: "high",
-    //   processName: "AssessmentScoring",
-    //   executionTime: "2500ms",
-    //   requestEndPoint: "/api/v1/assessments/score",
-    //   requestMethod: "POST",
-    //   requestBody: { assessmentId: "67890" },
-    //   responseStatusCode: "500",
-    //   responseError: "Internal Server Error",
-    //   responseMessage: "Failed to connect to database",
-    //   ownerId: "USER-002",
-    //   tenantId: "TENANT-002",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-003",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0004",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0005",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0006",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0007",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0008",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0009",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0010",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0011",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0012",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-    // {
-    //   timeStamp: "2025-06-02T10:05:00Z",
-    //   logId: "LOG-0013",
-    //   status: "warning",
-    //   code: "429",
-    //   message: "Rate limit approaching",
-    //   serverName: "api-gateway-01",
-    //   severity: "medium",
-    //   processName: "RateLimiter",
-    //   executionTime: "5ms",
-    //   requestEndPoint: "/api/v1/candidates",
-    //   requestMethod: "GET",
-    //   responseStatusCode: "200",
-    //   responseMessage: "Rate limit warning",
-    //   ownerId: "USER-003",
-    //   tenantId: "TENANT-001",
-    // },
-  ]);
+  const [integrations, setIntegrations] = useState([]);
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -330,9 +106,9 @@ function IntegrationsPage() {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/integration-logs/all`
+          `${config.REACT_APP_API_URL}/integration-logs`
         );
-        setIntegrations(response.data.data);
+        setIntegrations(response.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -351,7 +127,7 @@ function IntegrationsPage() {
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/integration-logs/${selectedLogId}`
         );
-        setSelectedLog(response.data.data);
+        setSelectedLog(response.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -381,17 +157,6 @@ function IntegrationsPage() {
       setView("table");
     }
   }, [isTablet]);
-
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
-  };
 
   const dataToUse = integrations;
 
@@ -455,60 +220,72 @@ function IntegrationsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "success":
-        return "success";
-      case "error":
-        return "error";
-      case "warning":
-        return "warning";
-      default:
-        return "neutral";
-    }
-  };
+  // const getStatusDisplay = (status) => {
+  //   switch (status) {
+  //     case "success":
+  //       return "success";
+  //     case "error":
+  //       return "error";
+  //     case "warning":
+  //       return "warning";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
 
-  const getSeverityDisplay = (severity) => {
-    switch (severity) {
-      case "high":
-        return "error";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "neutral";
-    }
-  };
+  // const getSeverityDisplay = (severity) => {
+  //   switch (severity) {
+  //     case "high":
+  //       return "error";
+  //     case "medium":
+  //       return "warning";
+  //     case "low":
+  //       return "success";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
+
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   const tableColumns = [
     {
       key: "logId",
       header: "Log ID",
-      render: (value, row) => (
-        <span className="font-mono text-xs">
-          {row.logId ? row.logId : row._id}
-        </span>
-      ),
+      render: (value, row) =>
+        superAdminPermissions?.IntegrationLogs?.View ? (
+          <span
+            className="text-sm cursor-pointer text-custom-blue font-semibold"
+            onClick={() => {
+              setSelectedLogId(row?._id);
+              setIsPopupOpen(true);
+            }}
+          >
+            {capitalizeFirstLetter(row?.logId) || "N/A"}
+          </span>
+        ) : (
+          <span className="text-sm text-gray-700">
+            {capitalizeFirstLetter(row?.logId)}
+          </span>
+        ),
     },
     {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={getStatusDisplay(row.status)}
-          text={row?.status?.toUpperCase()}
-        />
+        <div className="font-medium">
+          {row?.status ? <StatusBadge status={row?.status} /> : "N/A"}
+        </div>
       ),
     },
     {
       key: "severity",
       header: "Severity",
       render: (value, row) => (
-        <StatusBadge
-          status={getSeverityDisplay(row.severity)}
-          text={row?.severity?.toUpperCase()}
-        />
+        <div className="font-medium">
+          {row?.severity ? <StatusBadge status={row.severity} /> : "N/A"}
+        </div>
       ),
     },
     {
@@ -532,91 +309,118 @@ function IntegrationsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedLogId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => setSelectedLogId(row._id),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    {
-      key: "resend-link",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-blue-600" />,
-      disabled: (row) => row.status === "completed",
-    },
+    ...(superAdminPermissions?.IntegrationLogs?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedLogId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+    // {
+    //   key: "360-view",
+    //   label: "360° View",
+    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //   onClick: (row) => setSelectedLogId(row._id),
+    // },
+
+    ...(superAdminPermissions?.IntegrationLogs?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
+    // {
+    //   key: "resend-link",
+    //   label: "Resend Link",
+    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
+    //   disabled: (row) => row.status === "completed",
+    // },
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "severity",
+      header: "Severity",
+      render: (value, row) => (
+        <div className="font-medium">
+          {row?.severity ? <StatusBadge status={row?.severity} /> : "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <div className="font-medium">
+          {row?.status ? <StatusBadge status={row?.status} /> : "N/A"}
+        </div>
+      ),
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    ...(superAdminPermissions?.IntegrationLogs?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedLogId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions?.IntegrationLogs?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedLogId(item._id);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedLogId(item._id);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
-
   // Render Filter Content
   const renderFilterContent = () => {
     // filters options
@@ -675,20 +479,10 @@ function IntegrationsPage() {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {log?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${log?.ImageData?.path}`}
-                      alt={log?.FirstName || log?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {log?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {log?.logId?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
                   {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                   log?.Status === 'active' ? 'bg-green-100 text-green-800' :
                   log?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
@@ -700,7 +494,7 @@ function IntegrationsPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {log?.firstName ? log.firstName : "N/A"}
+                    {log?.logId ? log.logId : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
@@ -712,11 +506,11 @@ function IntegrationsPage() {
               <div className="space-y-2">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-lg font-medium text-gray-500 mb-3">
                       Basic Information
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Timestamp:
                         </span>
@@ -724,35 +518,31 @@ function IntegrationsPage() {
                           {new Date(log?.timeStamp).toLocaleString()}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Status:</span>
-                        <span
-                          className={`text-sm font-medium ${
-                            log?.status === "success"
-                              ? "text-green-600"
-                              : log?.status === "error"
-                              ? "text-red-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {log?.status?.toUpperCase()}
+                        <span>
+                          {log?.status ? (
+                            <StatusBadge
+                              status={capitalizeFirstLetter(log?.status)}
+                            />
+                          ) : (
+                            "N/A"
+                          )}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Severity:</span>
-                        <span
-                          className={`text-sm font-medium ${
-                            log.severity === "high"
-                              ? "text-red-600"
-                              : log.severity === "medium"
-                              ? "text-yellow-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          {log?.severity?.toUpperCase()}
+                        <span>
+                          {log?.severity ? (
+                            <StatusBadge
+                              status={capitalizeFirstLetter(log?.severity)}
+                            />
+                          ) : (
+                            "N/A"
+                          )}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Server:</span>
                         <span className="text-sm font-medium">
                           {log?.serverName}
@@ -764,24 +554,24 @@ function IntegrationsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-lg font-medium text-gray-500 mb-3">
                       Process Information
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Process Name:
                         </span>
                         <span className="text-sm font-medium">
-                          {log?.processName}
+                          {log?.processName ? log?.processName : "N/A"}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Execution Time:
                         </span>
                         <span className="text-sm font-medium">
-                          {log?.executionTime}
+                          {log?.executionTime ? log?.executionTime : "N/A"}
                         </span>
                       </div>
                     </div>
@@ -789,65 +579,67 @@ function IntegrationsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-lg font-medium text-gray-500 mb-3">
                     Request Details
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Endpoint:</span>
                       <span className="text-sm font-medium break-all">
-                        {log?.requestEndPoint}
+                        {log?.endpoint ? log?.endpoint : "N/A"}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Method:</span>
                       <span className="text-sm font-medium">
-                        {log?.requestMethod}
+                        {log?.requestMethod ? log?.requestMethod : "N/A"}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">
                         Response Code:
                       </span>
                       <span className="text-sm font-medium">
-                        {log?.responseStatusCode}
+                        {log?.responseStatusCode
+                          ? log?.responseStatusCode
+                          : "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-lg font-medium text-gray-500 mb-3">
                     Additional Information
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Owner ID:</span>
                       <span className="text-sm font-medium">
-                        {log?.ownerId}
+                        {log?.ownerId ? log?.ownerId : "N/A"}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Tenant ID:</span>
                       <span className="text-sm font-medium">
-                        {log?.tenantId}
+                        {log?.tenantId ? log?.tenantId : "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-lg font-medium text-gray-500 mb-3">
                     Message
                   </h3>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {log.message}
+                    {log?.message ? log?.message : "N/A"}
                   </p>
                 </div>
 
                 {log.requestBody && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-lg font-medium text-gray-500 mb-3">
                       Request Body
                     </h3>
                     <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
@@ -858,7 +650,7 @@ function IntegrationsPage() {
 
                 {log.responseBody && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-lg font-medium text-gray-500 mb-3">
                       Response Body
                     </h3>
                     <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
@@ -968,12 +760,11 @@ function IntegrationsPage() {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      integrationLogs={currentFilteredRows.map((integration) => ({
-                        ...integration,
-                        _id: integration._id,
-                        avatar: "",
-                        status: "active",
-                        isAssessmentView: <p>Is assignment view</p>,
+                      data={currentFilteredRows.map((integrationLog) => ({
+                        ...integrationLog,
+                        id: integrationLog._id,
+                        title: integrationLog.logId || "N/A",
+                        subtitle: formatDate(integrationLog?.timeStamp),
                       }))}
                       columns={kanbanColumns}
                       loading={isLoading}

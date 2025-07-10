@@ -125,4 +125,18 @@ exports.getAllOutsourceInterviewers = async (req, res) => {
     });
   }
 };
+
+// exports.getSingleOutsourceInterviewer = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const interviewer = await OutsourceInterviewer.findById(id);
+//     return res.status(200).json(interviewer);
+//   } catch (error) {
+//     console.log("Error in get outsource interviews:", error.message);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 // ----------------------------------------------------------------------->

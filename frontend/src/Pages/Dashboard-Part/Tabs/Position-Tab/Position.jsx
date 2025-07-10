@@ -1,17 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
-import Header from '../../../../Components/Shared/Header/Header';
-import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
-import TableView from '../../../../Components/Shared/Table/TableView';
-import PositionKanban from './PositionKanban';
-import PositionSlideDetails from './PositionSlideDetails';
-import PositionForm from './Position-Form';
-import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
-import { usePositions } from '../../../../apiHooks/usePositions';
-import { useMasterData } from '../../../../apiHooks/useMasterData';
-import { usePermissions } from '../../../../Context/PermissionsContext';
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import Header from "../../../../Components/Shared/Header/Header";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
+import TableView from "../../../../Components/Shared/Table/TableView";
+import PositionKanban from "./PositionKanban";
+import PositionSlideDetails from "./PositionSlideDetails";
+import PositionForm from "./Position-Form";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { usePositions } from "../../../../apiHooks/usePositions";
+import { useMasterData } from "../../../../apiHooks/useMasterData";
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const PositionTab = () => {
   const { effectivePermissions } = usePermissions();
@@ -19,10 +19,10 @@ const PositionTab = () => {
   const { positionData, isLoading } = usePositions();
   const navigate = useNavigate();
   const location = useLocation();
-  const [view, setView] = useState('table');
+  const [view, setView] = useState("table");
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -31,27 +31,27 @@ const PositionTab = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     location: [],
     tech: [],
-    experience: { min: '', max: '' },
+    experience: { min: "", max: "" },
   });
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [isExperienceOpen, setIsExperienceOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
-  const [experience, setExperience] = useState({ min: '', max: '' });
+  const [experience, setExperience] = useState({ min: "", max: "" });
   const filterIconRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        setView('kanban');
+        setView("kanban");
       } else {
-        setView('table');
+        setView("table");
       }
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -75,14 +75,12 @@ const PositionTab = () => {
 
   const handleTechToggle = (tech) => {
     setSelectedTech((prev) =>
-      prev.includes(tech)
-        ? prev.filter((t) => t !== tech)
-        : [...prev, tech]
+      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
     );
   };
 
   const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, Number(e.target.value) || ''));
+    const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
     setExperience((prev) => ({
       ...prev,
       [type]: value,
@@ -93,11 +91,11 @@ const PositionTab = () => {
     const clearedFilters = {
       location: [],
       tech: [],
-      experience: { min: '', max: '' },
+      experience: { min: "", max: "" },
     };
     setSelectedLocation([]);
     setSelectedTech([]);
-    setExperience({ min: '', max: '' });
+    setExperience({ min: "", max: "" });
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -117,9 +115,9 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      filters.experience.max
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max
     );
     setFilterPopupOpen(false);
   };
@@ -136,7 +134,9 @@ const PositionTab = () => {
   };
 
   const uniqueLocations = [
-    ...new Set(positionData?.map((position) => position.Location).filter(Boolean)),
+    ...new Set(
+      positionData?.map((position) => position.Location).filter(Boolean)
+    ),
   ];
 
   const FilteredData = () => {
@@ -165,7 +165,12 @@ const PositionTab = () => {
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesLocation && matchesTech && matchesExperience;
+      return (
+        matchesSearchQuery &&
+        matchesLocation &&
+        matchesTech &&
+        matchesExperience
+      );
     });
   };
 
@@ -202,13 +207,27 @@ const PositionTab = () => {
 
   const tableColumns = [
     {
-      key: 'title',
-      header: 'Position Title',
+      key: "positionCode",
+      header: "Position ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {row?.positionCode || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "title",
+      header: "Position Title",
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-              {row.title ? row.title.charAt(0) : '?'}
+
+              {row.title ? row.title.charAt(0).toUpperCase() : '?'}
+
             </div>
           </div>
           <div className="ml-3">
@@ -216,28 +235,34 @@ const PositionTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {row.title || 'N/A'}
+
+              {row.title.charAt(0).toUpperCase() + row.title.slice(1) || 'N/A'}
+
             </div>
           </div>
         </div>
       ),
     },
-    { key: 'companyname', header: 'Company', render: (value) => value || 'N/A' },
-    { key: 'Location', header: 'Location', render: (value) => value || 'N/A' },
     {
-      key: 'experience',
-      header: 'Experience',
+      key: "companyname",
+      header: "Company",
+      render: (value) => value || "N/A",
+    },
+    { key: "Location", header: "Location", render: (value) => value || "N/A" },
+    {
+      key: "experience",
+      header: "Experience",
       render: (value, row) =>
-        `${row.minexperience || 'N/A'} - ${row.maxexperience || 'N/A'} years`,
+        `${row.minexperience || "N/A"} - ${row.maxexperience || "N/A"} years`,
     },
     {
-      key: 'rounds',
-      header: 'Rounds',
-      render: (value, row) => row.rounds?.length || 'N/A',
+      key: "rounds",
+      header: "Rounds",
+      render: (value, row) => row.rounds?.length || "N/A",
     },
     {
-      key: 'skills',
-      header: 'Skills/Technology',
+      key: "skills",
+      header: "Skills",
       render: (value) => (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 2).map((skill, idx) => (
@@ -245,7 +270,7 @@ const PositionTab = () => {
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
             >
-              {skill.skill || 'N/A'}
+              {skill.skill || "N/A"}
             </span>
           ))}
           {value.length > 2 && (
@@ -261,23 +286,25 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
+
         {
           key: 'view',
           label: 'View Details',
-          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
           onClick: (row) => handleView(row),
         },
       ]
+
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: 'edit',
-          label: 'Edit',
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
   ];
 
@@ -303,7 +330,7 @@ const PositionTab = () => {
           <div className="sm:px-0">
             <Header
               title="Positions"
-              onAddClick={() => navigate('/position/new-position')}
+              onAddClick={() => navigate("/position/new-position")}
               addButtonText="Add Position"
               canCreate={effectivePermissions.Positions?.Create}
             />
@@ -320,7 +347,7 @@ const PositionTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
-              searchPlaceholder="Search positions..."
+              searchPlaceholder="Search Positions..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -330,14 +357,14 @@ const PositionTab = () => {
         <div className="sm:px-0">
           <motion.div className="bg-white">
             <div className="relative w-full">
-              {view === 'table' ? (
+              {view === "table" ? (
                 <div className="w-full">
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
-                    emptyState="No positions found."
+                    emptyState="No Positions Found."
                   />
                 </div>
               ) : (
@@ -364,7 +391,9 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsLocationOpen(!isLocationOpen)}
                     >
-                      <span className="font-medium text-gray-700">Location</span>
+                      <span className="font-medium text-gray-700">
+                        Location
+                      </span>
                       {isLocationOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -390,7 +419,7 @@ const PositionTab = () => {
                           ))
                         ) : (
                           <span className="text-sm text-gray-500">
-                            No locations available
+                            No Locations Available
                           </span>
                         )}
                       </div>
@@ -401,7 +430,9 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsSkillsOpen(!isSkillsOpen)}
                     >
-                      <span className="font-medium text-gray-700">Skills/Technology</span>
+                      <span className="font-medium text-gray-700">
+                        Skills
+                      </span>
                       {isSkillsOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -419,14 +450,18 @@ const PositionTab = () => {
                               <input
                                 type="checkbox"
                                 checked={selectedTech.includes(skill.SkillName)}
-                                onChange={() => handleTechToggle(skill.SkillName)}
+                                onChange={() =>
+                                  handleTechToggle(skill.SkillName)
+                                }
                                 className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>
                           ))
                         ) : (
-                          <span className="text-sm text-gray-500">No skills available</span>
+                          <span className="text-sm text-gray-500">
+                            No Skills Available
+                          </span>
                         )}
                       </div>
                     )}
@@ -436,7 +471,9 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsExperienceOpen(!isExperienceOpen)}
                     >
-                      <span className="font-medium text-gray-700">Experience</span>
+                      <span className="font-medium text-gray-700">
+                        Experience
+                      </span>
                       {isExperienceOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -454,9 +491,10 @@ const PositionTab = () => {
                               type="number"
                               min="0"
                               max="15"
+                              placeholder="Min..."
                               value={experience.min}
-                              onChange={(e) => handleExperienceChange(e, 'min')}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              onChange={(e) => handleExperienceChange(e, "min")}
+                              className="mt-1 px-2 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                             />
                           </div>
                           <div className="flex-1">
@@ -467,9 +505,10 @@ const PositionTab = () => {
                               type="number"
                               min="0"
                               max="15"
+                              placeholder="Max..."
                               value={experience.max}
-                              onChange={(e) => handleExperienceChange(e, 'max')}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              onChange={(e) => handleExperienceChange(e, "max")}
+                              className="mt-1 px-2 block w-full rounded-md border  border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                             />
                           </div>
                         </div>

@@ -34,7 +34,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
           <dl className="space-y-2">
             <div>
               <dt className="text-sm font-medium text-gray-500">Position</dt>
-             <dd className="text-sm text-gray-900">{matchedPosition?.title || '-'}</dd>
+             <dd className="text-sm text-gray-900">{matchedPosition?.title.charAt(0).toUpperCase() + matchedPosition?.title.slice(1) || '-'}</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Duration</dt>

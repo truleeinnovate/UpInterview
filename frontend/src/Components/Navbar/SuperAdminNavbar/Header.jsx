@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-// import { AiOutlineDown } from "react-icons/ai";
+import { AiOutlineDown } from "react-icons/ai";
 // import { CiCreditCard1 } from "react-icons/ci";
 // import { LiaWalletSolid } from "react-icons/lia";
 import { FaBars, FaCaretDown, FaCaretUp } from "react-icons/fa";
@@ -32,14 +32,13 @@ function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { userProfile, superAdminProfile } = useCustomContext();
-  console.log("superAdminProfile---", superAdminProfile.firstName);
 
-  const authToken = Cookies.get("authToken");
-  const impersonatedUserId = Cookies.get("impersonatedUserId");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  // const authToken = Cookies.get("authToken");
+  // const impersonatedUserId = Cookies.get("impersonatedUserId");
+  // const tokenPayload = decodeJwt(authToken);
+  // const userId = tokenPayload?.userId;
 
-  const [profileImage, setProfileImage] = useState(null);
+  // const [profileImage, setProfileImage] = useState(null);
 
   // Format name to capitalize first letter of first and last names
   const formatName = (name) => {
@@ -50,8 +49,8 @@ function Header() {
   // const capitalizeFirstLetter = (str) =>
   //   str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
-  const firstName = formatName(userProfile?.firstName);
-  const lastName = formatName(userProfile?.lastName);
+  // const firstName = formatName(userProfile?.firstName);
+  // const lastName = formatName(userProfile?.lastName);
 
   // Refs for dropdowns
   const moreRef = useRef(null);
@@ -126,43 +125,35 @@ function Header() {
     },
   ];
 
-  // const moreNavItems = [
-  //   {
-  //     path: "/settings",
-  //     label: "Settings",
-  //     permissionKey: "Settings.ViewTab",
-  //     // role: "super_admin",
-  //   },
-  //   {
-  //     path: "/internal-logs",
-  //     label: "Internal Logs",
-  //     permissionKey: "InternalLogs.ViewTab",
-  //     // role: "super_admin",
-  //   },
-  //   {
-  //     path: "/integrations",
-  //     label: "Integrations",
-  //     permissionKey: "IntegrationLogs.ViewTab",
-  //     // role: "super_admin",
-  //   },
-  // ];
+  const moreNavItems = [
+    // {
+    //   path: "/settings",
+    //   label: "Settings",
+    //   permissionKey: "Settings.ViewTab",
+    //   // role: "super_admin",
+    // },
+    {
+      path: "/internal-logs",
+      label: "Internal Logs",
+      permissionKey: "InternalLogs.ViewTab",
+      // role: "super_admin",
+    },
+    {
+      path: "/integrations",
+      label: "Integrations",
+      permissionKey: "IntegrationLogs.ViewTab",
+      // role: "super_admin",
+    },
+  ];
 
   // Utility function to close all dropdowns
-
   const closeAllDropdowns = React.useCallback((openDropdown = null) => {
     setDropdownState((prevState) => ({
       moreDropdown: openDropdown === "moreDropdown",
       outlineDropdown: openDropdown === "outlineDropdown",
       profileDropdown: openDropdown === "profileDropdown",
       isNotificationOpen: openDropdown === "isNotificationOpen",
-      isDetailDropdownOpen: false,
-      isGettingDropdownOpen: false,
-      isQuestionDropdownOpen: false,
-      isFunctionDropdownOpen: false,
-      isContactDropdownOpen: false,
-      isAdditionalDropdownOpen: false,
-      isLegalDropdownOpen: false,
-      isSidebarOpen: prevState.isSidebarOpen,
+      isSidebarOpen: prevState.isSidebarOpen, // preserve sidebar state
     }));
   }, []);
 
@@ -213,16 +204,20 @@ function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        [moreRef, outlineRef, notificationRef, profileRef].every(
-          (ref) => ref.current && !ref.current.contains(event.target)
-        )
-      ) {
+      const refs = [moreRef, outlineRef, notificationRef, profileRef];
+      const clickedInsideDropdown = refs.some(
+        (ref) => ref.current && ref.current.contains(event.target)
+      );
+
+      if (!clickedInsideDropdown) {
         closeAllDropdowns();
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [closeAllDropdowns]);
 
   const handleSidebarToggle = () => {
@@ -318,9 +313,9 @@ function Header() {
           className="font-medium text-custom-blue"
           onClick={toggleProfileDropdown}
         >
-          {superAdminProfile[0]?.imageData ? (
+          {superAdminProfile?.imageData ? (
             <img
-              src={superAdminProfile[0]?.imageData?.path}
+              src={superAdminProfile?.imageData?.path}
               alt="Profile"
               className="w-7 h-7 rounded-full"
             />
@@ -463,9 +458,9 @@ function Header() {
             className="font-medium cursor-pointer"
             onClick={toggleProfileDropdown}
           >
-            {profileImage ? (
+            {superAdminProfile?.imageData ? (
               <img
-                src={profileImage}
+                src={superAdminProfile?.imageData?.path}
                 alt="Profile"
                 className="w-7 h-7 rounded-full object-cover"
               />
@@ -485,7 +480,9 @@ function Header() {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: "text-xl border rounded-md p-2",
+      className: `text-xl border rounded-md ${
+        superAdminProfile?.imageData?.path ? "p-1" : "p-2"
+      }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
@@ -800,7 +797,7 @@ function Header() {
               className="lg:hidden xl:hidden 2xl:hidden"
               onClick={handleSidebarToggle}
             >
-              <FaBars className="w-5 h-5" />
+              <FaBars className="w-5 h-5 mr-3" />
             </button>
             <img src={logo} alt="Logo" className="w-24" />
           </div>
@@ -834,6 +831,75 @@ function Header() {
                     </NavLink>
                   )
               )}
+            </div>
+
+            {/* More Dropdown */}
+            <div className="relative flex items-center ml-6" ref={moreRef}>
+              <button
+                className={`h-[52px] flex items-center relative transition-colors duration-300 ${
+                  moreNavItems.some(
+                    (item) =>
+                      isActive(item.path) &&
+                      (!item.permissionKey ||
+                        item.permissionKey
+                          .split(".")
+                          .reduce(
+                            (acc, key) => acc?.[key],
+                            superAdminPermissions
+                          ))
+                  )
+                    ? "text-custom-blue font-bold border-b-2 border-custom-blue"
+                    : "text-gray-600 hover:text-custom-blue"
+                }`}
+                onClick={toggleMoreDropdown}
+              >
+                More
+                <AiOutlineDown
+                  className={`ml-1 transition-transform duration-300 ease-in-out ${
+                    dropdownState.moreDropdown ? "rotate-180" : ""
+                  }`}
+                />
+                {moreNavItems.some((item) => isActive(item.path)) && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-custom-blue"></div>
+                )}
+              </button>
+
+              <div
+                className={`absolute left-0 top-10 z-50 w-max bg-white rounded-md shadow-lg border transform transition-all duration-300 ease-in-out origin-top ${
+                  dropdownState.moreDropdown
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                }`}
+              >
+                <div className="flex flex-col min-w-[150px]">
+                  {moreNavItems
+                    .filter(
+                      (item) =>
+                        !item.role &&
+                        (!item.permissionKey ||
+                          item.permissionKey
+                            .split(".")
+                            .reduce(
+                              (acc, key) => acc?.[key],
+                              superAdminPermissions
+                            ))
+                    )
+                    .map(({ path, label }) => (
+                      <NavLink
+                        key={path}
+                        to={path}
+                        className={`h-[42px] flex items-center px-4 relative ${
+                          isActive(path)
+                            ? "text-custom-blue font-bold"
+                            : "text-gray-600 hover:text-custom-blue"
+                        }`}
+                        onClick={closeAllDropdowns}
+                      >
+                        {label}
+                      </NavLink>
+                    ))}
+                </div>
+              </div>
             </div>
           </nav>
 

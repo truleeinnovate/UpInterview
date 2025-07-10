@@ -265,7 +265,7 @@ const MyQuestionsList1 = forwardRef(
                         }
                       }}
                     />
-                    {list.label}
+                    {list.label.charAt(0).toUpperCase() + list.label.slice(1)}
                   </label>
                 ))
               )}
@@ -292,6 +292,7 @@ const MyQuestionsList1 = forwardRef(
               </div>
               <div className="relative" ref={popupRef}>
                 <input
+                placeholder="Select Question List"
                   className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
                     error ? 'border-red-500' : 'border-gray-300 focus:border-black'
                   }`}

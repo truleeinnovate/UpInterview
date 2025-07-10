@@ -1,12 +1,11 @@
 //ashraf added this to check online consoles
 // const appInsights = require("applicationinsights");
 // appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
+
 // require("dotenv").config();
 // const cors = require("cors");
 // const express = require("express");
 // const app = express();
-
-
 
 
 // Apply the permission middleware to all routes in this router
@@ -993,7 +992,7 @@ app.use("/internal-logs", internalLogRoutes);
 
 // integration logs
 const integrationLogRoutes = require("./routes/integrationLogRoutes");
-app.use("/api/integration-logs", integrationLogRoutes);
+app.use("/integration-logs", integrationLogRoutes);
 
 // Invoice
 const InvoiceRoutes = require("./routes/InvoiceRoutes.js");

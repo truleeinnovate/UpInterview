@@ -307,7 +307,7 @@ const RoleView = ({ type }) => {
                     />
                     {type === 'superAdmin' && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Visibility: {obj.visibility} | Type: {obj.type}
+                        Visibility: {obj.visibility}
                       </p>
                     )}
                   </div>

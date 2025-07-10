@@ -463,7 +463,7 @@ const SuggestedQuestionsComponent = ({
                 <>
 
                     {/* Content */}
-                    <div className="flex-1 min-h-0 overflow-y-auto px-5 mt-[110px]">
+                    <div className="flex-1 min-h-screen overflow-y-auto px-5 mt-[110px]">
                         {selectedSkills.length > 0 && (
                             <ul className="flex gap-2 flex-wrap px-4 pb-2">
                                 {selectedSkills.map((skill, index) => (

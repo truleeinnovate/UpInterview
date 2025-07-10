@@ -560,15 +560,15 @@ const Navbar = () => {
                   </div>
                 )}
 
-                {(effectivePermissions.Assessments?.ViewTab ||
-                  effectivePermissions.QuestionBank?.ViewTab) && (
+                {(effectivePermissions.Assessment_Template?.ViewTab ||
+                  effectivePermissions.Assessments?.ViewTab) && (
                   <div
                     className="relative h-full flex items-center"
                     ref={assessmentRef}
                   >
                     <button
                       className={`flex items-center h-full relative px-1 ${
-                        isActive("/assessments") || isActive("/questionBank")
+                        isActive("/assessments") || isActive("/assessments-template")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
                       }`}
@@ -581,7 +581,7 @@ const Navbar = () => {
                         <IoIosArrowDown />
                       )}
                       {(isActive("/assessments") ||
-                        isActive("/questionBank")) && (
+                        isActive("/assessments-template")) && (
                         <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                       )}
                     </button>
@@ -589,21 +589,16 @@ const Navbar = () => {
                       <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                         <div className="space-y-1">
                           {[
-                            ...(effectivePermissions.Assessments?.ViewTab
-                              ? [{ to: "/assessments", label: "Assessments" }]
+                            ...(effectivePermissions.Assessment_Template?.ViewTab
+                              ? [{ to: "/assessments-template", label: "Assessments Template" }]
                               : []),
-                            ...(effectivePermissions.QuestionBank?.ViewTab
-                              ? [
-                                  {
-                                    to: "/questionBank",
-                                    label: "Question Bank",
-                                  },
-                                ]
-                              : []),
+                              ...(effectivePermissions.Assessments?.ViewTab
+                                ? [{ to: "/assessments", label: "Assessments" }]
+                                : []),
                           ].map(({ to, label }) => (
                             <NavLink
                               key={to}
-                              className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                              className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${
                                 isActive(to)
                                   ? "bg-gray-100 text-custom-blue"
                                   : ""
@@ -621,14 +616,15 @@ const Navbar = () => {
                 )}
 
                 {(effectivePermissions.Analytics?.ViewTab ||
-                  effectivePermissions.SupportDesk?.ViewTab) && (
+                  effectivePermissions.SupportDesk?.ViewTab ||
+                  effectivePermissions.QuestionBank?.ViewTab) && (
                   <div
                     className="relative h-full flex items-center"
                     ref={moreRef}
                   >
                     <button
                       className={`flex items-center h-full relative px-1 ${
-                        isActive("/analytics") || isActive("/support-desk")
+                        isActive("/analytics") || isActive("/support-desk") || isActive("/questionBank")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
                       }`}
@@ -641,7 +637,8 @@ const Navbar = () => {
                         <IoIosArrowDown />
                       )}
                       {(isActive("/analytics") ||
-                        isActive("/support-desk")) && (
+                        isActive("/support-desk") ||
+                        isActive("/questionBank"))&& (
                         <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                       )}
                     </button>
@@ -655,6 +652,14 @@ const Navbar = () => {
                             ...(effectivePermissions.SupportDesk?.ViewTab
                               ? [{ to: "/support-desk", label: "Support Desk" }]
                               : []),
+                              ...(effectivePermissions.QuestionBank?.ViewTab
+                                ? [
+                                    {
+                                      to: "/questionBank",
+                                      label: "Question Bank",
+                                    },
+                                  ]
+                                : []),
                           ].map(({ to, label }) => (
                             <NavLink
                               key={to}

@@ -142,8 +142,35 @@ function TenantsPage() {
     }
   };
 
+  // const FilteredData = () => {
+  //   if (!Array.isArray(dataToUse)) return [];
+  //   return dataToUse.filter((organization) => {
+  //     const fieldsToSearch = [
+  //       organization.firstName,
+  //       organization.lastName,
+  //       organization.Email,
+  //       organization.Phone,
+  //       organization.company,
+  //       organization.status,
+  //     ].filter((field) => field !== null && field !== undefined);
+
+  //     const matchesStatus =
+  //       selectedFilters?.status.length === 0 ||
+  //       selectedFilters.status.includes(organization.status);
+
+  //     const matchesSearchQuery = fieldsToSearch.some((field) =>
+  //       field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  //     );
+
+  //     return matchesSearchQuery && matchesStatus;
+  //   });
+  // };
+
+  // Pagination
+
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
+
     return dataToUse.filter((organization) => {
       const fieldsToSearch = [
         organization.firstName,
@@ -162,11 +189,13 @@ function TenantsPage() {
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus;
+      const matchesType =
+        selectedType === "all" || organization.type === selectedType;
+
+      return matchesSearchQuery && matchesStatus && matchesType;
     });
   };
 
-  // Pagination
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
   const nextPage = () => {
@@ -190,13 +219,13 @@ function TenantsPage() {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
-  if (!tenants || tenants.length === 0) {
-    return <div>No tenants found.</div>;
-  }
+  // if (!tenants || tenants.length === 0) {
+  //   return <div>No tenants found.</div>;
+  // }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -221,26 +250,26 @@ function TenantsPage() {
                 className="object-cover w-full h-full rounded-full"
               />
             ) : (
-              row?.company?.charAt(0).toUpperCase() || "?"
+              row?.firstName?.charAt(0).toUpperCase() || "?"
             )}
           </div>
           <div className="ml-4">
             <div
               className={`font-medium ${
-                superAdminPermissions.Tenants.Edit
+                superAdminPermissions.Tenants.View
                   ? "text-custom-blue cursor-pointer"
                   : "text-gray-900"
               }`}
               onClick={(e) => {
                 e.stopPropagation(); // Prevents row-level handlers (if any)
-                if (superAdminPermissions.Tenants.Edit && row?._id) {
+                if (superAdminPermissions.Tenants.View && row?._id) {
                   navigate(`/tenants/${row._id}`);
                 }
               }}
             >
-              {capitalizeFirstLetter(row.company) || "N/A"}
+              {capitalizeFirstLetter(row.firstName) || "N/A"}
               <div className="text-custom-blue">
-                {capitalizeFirstLetter(row.industry) || "N/A"}
+                {capitalizeFirstLetter(row.lastName) || "N/A"}
               </div>
             </div>
           </div>
@@ -297,7 +326,7 @@ function TenantsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(superAdminPermissions.Tenants.Edit
+    ...(superAdminPermissions.Tenants.View
       ? [
           {
             key: "view",
@@ -460,6 +489,11 @@ function TenantsPage() {
     );
   };
 
+  const tenantsToShow =
+    selectedType === "all"
+      ? tenants
+      : tenants?.filter((t) => t.type === selectedType);
+
   return (
     <div className="bg-background">
       <div className="fixed md:mt-4 sm:mt-4 lg:mt-4 xl:mt-4 2xl:mt-4 left-0 right-0 bg-background">
@@ -506,19 +540,22 @@ function TenantsPage() {
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Active</div>
                 <div className="text-xl font-semibold">
-                  {tenants?.filter((t) => t.status === "active").length}
+                  {/* {tenants?.filter((t) => t.status === "active").length} */}
+                  {tenantsToShow?.filter((t) => t.status === "active").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Inactive</div>
                 <div className="text-xl font-semibold">
-                  {tenants?.filter((t) => t.status === "inactive").length}
+                  {/* {tenants?.filter((t) => t.status === "inactive").length} */}
+                  {tenantsToShow?.filter((t) => t.status === "inactive").length}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Pending</div>
                 <div className="text-xl font-semibold">
-                  {tenants?.filter((t) => t.status === "pending").length}
+                  {/* {tenants?.filter((t) => t.status === "pending").length} */}
+                  {tenantsToShow?.filter((t) => t.status === "pending").length}
                 </div>
               </div>
               {selectedType === "all" && (
@@ -577,7 +614,13 @@ function TenantsPage() {
               {view === "table" ? (
                 <div className="w-full mb-8 bg-red">
                   <TableView
-                    data={currentFilteredRows}
+                    data={
+                      selectedType === "all"
+                        ? currentFilteredRows
+                        : currentFilteredRows.filter(
+                            (t) => t.type === selectedType
+                          )
+                    }
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
@@ -587,7 +630,12 @@ function TenantsPage() {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={currentFilteredRows.map((tenant) => ({
+                    data={(selectedType === "all"
+                      ? currentFilteredRows
+                      : currentFilteredRows.filter(
+                          (t) => t.type === selectedType
+                        )
+                    ).map((tenant) => ({
                       ...tenant,
                       id: tenant._id,
                       title: tenant.company || "N/A",

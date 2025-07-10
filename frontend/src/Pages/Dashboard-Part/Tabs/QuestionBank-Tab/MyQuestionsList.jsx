@@ -108,15 +108,40 @@ const MyQuestionsList = ({
     }, {});
   }, [myQuestionsList, selectedDifficultyLevelFilterItems, selectedQuestionTypeFilterItems]);
 
-  // Initialize loading and isOpen
+  // Initialize loading and isOpen once we have data.
+  // NOTE: The previous implementation updated `isOpen` on every render because
+  // `myQuestionsList` coming from the hook was a new object reference each time.
+  // That meant `setIsOpen` → re-render → new object → effect again, resulting in
+  // the "Maximum update depth exceeded" warning.
+  //
+  // We now:
+  // 1. Serialize the relevant shape of `myQuestionsList` (its keys) for the
+  //    dependency array so the effect only runs when the keys actually change.
+  // 2. Only call `setIsOpen` when the derived state is different from the current
+  //    state to avoid unnecessary updates.
   useEffect(() => {
-    if (myQuestionsList && typeof myQuestionsList === "object" && Object.keys(myQuestionsList).length > 0) {
-      setIsOpen(Object.keys(myQuestionsList).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+    // Early exit when loading
+    if (!myQuestionsList || typeof myQuestionsList !== "object") {
+      setIsOpen((prev) => (Object.keys(prev).length ? {} : prev));
       setLoading(false);
-    } else {
-      setIsOpen({});
-      setLoading(false);
+      return;
     }
+
+    const initialOpenState = Object.keys(myQuestionsList).reduce(
+      (acc, key) => ({ ...acc, [key]: true }),
+      {}
+    );
+
+    setIsOpen((prev) => {
+      const prevKeys = Object.keys(prev);
+      const keysUnchanged =
+        prevKeys.length === Object.keys(initialOpenState).length &&
+        prevKeys.every((k) => prev[k] === initialOpenState[k]);
+
+      return keysUnchanged ? prev : initialOpenState;
+    });
+
+    setLoading(false);
   }, [myQuestionsList]);
 
   // Handle label selection from cookies
@@ -603,7 +628,7 @@ const selectedLabelId = useMemo(() => {
                       title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="truncate">{listName}</span>
+                        <span className="truncate">{listName.charAt(0).toUpperCase() + listName.slice(1)}</span>
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
                             groupedQuestions[listName].length === 0

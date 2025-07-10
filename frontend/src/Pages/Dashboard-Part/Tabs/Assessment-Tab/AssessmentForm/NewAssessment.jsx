@@ -24,6 +24,8 @@ import { config } from "../../../../../config.js";
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 import { usePositions } from '../../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../../Components/LoadingButton';
+import { Button } from "@mui/material";
+import { X } from "lucide-react";
 
 
 
@@ -58,6 +60,7 @@ const NewAssessment = () => {
   const sidebarRefAddQuestion = useRef(null);
   const [toggleStates, setToggleStates] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState("");
+  console.log('selectedPosition----',selectedPosition);
 
   const [value, setValue] = useState("");
 
@@ -1048,7 +1051,7 @@ const NewAssessment = () => {
   const navigate = useNavigate();
 
   const NavigateToAssessmentList = () => {
-    navigate('/assessments');
+    navigate('/assessments-template');
   };
 
   const TabFooter = ({ currentTab }) => {
@@ -1171,7 +1174,8 @@ const NewAssessment = () => {
         <main className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-12 py-4 sm:px-6">
+              <div className="flex justify-between px-12 py-4 sm:px-6">
+                <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
                   {isEditing ? 'Edit Assessment Template' : 'Add New Assessment Template'}
                 </h3>
@@ -1180,6 +1184,15 @@ const NewAssessment = () => {
                     ? 'Update the Assessment Template details'
                     : 'Fill in the details to add a new assessment template'}
                 </p>
+                </div>
+                <div>
+                <button
+                  onClick={() => navigate(-1)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X/>
+                </button>
+                </div>
               </div>
 
               {/* Content */}

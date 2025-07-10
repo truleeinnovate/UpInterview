@@ -46,6 +46,7 @@ const BasicDetailsEditPage = ({
   usersId,
   setBasicEditOpen,
   onSuccess,
+  basePath
 }) => {
     const { data: organizationRoles } = useRolesQuery();
   
@@ -307,7 +308,7 @@ const BasicDetailsEditPage = ({
     if (from === "users") {
       setBasicEditOpen(false);
     } else {
-      navigate("/account-settings/my-profile/basic", { replace: true });
+      navigate(`${basePath}/my-profile/basic`, { replace: true });
     }
   };
 

@@ -144,6 +144,8 @@ function ReceiptsTable({ organizationId, viewMode }) {
     }
   }, [selectedReceiptId]);
 
+  console.log("RECEIPTS TODAY: ", receipts);
+
   // Kanban view setter
   useEffect(() => {
     const handleResize = () => {
@@ -257,8 +259,8 @@ function ReceiptsTable({ organizationId, viewMode }) {
       key: "invoiceId",
       header: "Invoice ID",
       render: (value, row) => (
-        <span className="font-mono text-sm">
-          {row?.invoiceCode ? row.invoiceCode : "N/A"}
+        <span className="text-sm">
+          {row?.invoiceId ? row?.invoiceId?.invoiceCode : "N/A"}
         </span>
       ),
     },
@@ -363,7 +365,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        // setSelectedUserId(row._id);
+        setSelectedReceiptId(row._id);
         setIsPopupOpen(true);
       },
     },

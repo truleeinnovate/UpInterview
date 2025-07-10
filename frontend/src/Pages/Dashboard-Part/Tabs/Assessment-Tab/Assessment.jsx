@@ -39,10 +39,11 @@ const Assessment = () => {
   const rowsPerPage = 10;
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentAssessments = assessmentData?.slice(startIndex, endIndex) || [];
 
   useEffect(() => {
-    document.title = "Assessment Tab";
+    document.title = "Assessment Template";
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
     };
@@ -76,7 +77,7 @@ const Assessment = () => {
       };
       fetchSections();
     }
-  }, [currentAssessments]);
+  }, []);
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
@@ -148,13 +149,13 @@ const Assessment = () => {
 
   const handleView = (assessment) => {
     if (effectivePermissions.Assessments?.View) {
-      navigate(`/assessment-details/${assessment._id}`);
+      navigate(`/assessments-template-details/${assessment._id}`);
     }
   };
 
   const handleEdit = (assessment) => {
     if (effectivePermissions.Assessments?.Edit) {
-      navigate(`/assessment/edit/${assessment._id}`);
+      navigate(`/assessments-template/edit/${assessment._id}`);
     }
   };
 
@@ -191,7 +192,7 @@ const Assessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "Not Provided"}
+          {value.charAt(0).toUpperCase() + value.slice(1) || "Not Provided"}
         </div>
       ),
     },
@@ -234,7 +235,7 @@ const Assessment = () => {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: handleView,
           },
         ]
@@ -300,9 +301,9 @@ const Assessment = () => {
           <div className="sm:px-0">
             <Header
               title="Assessment Templates"
-              onAddClick={() => navigate("/assessment/new")}
+              onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
-              canCreate={effectivePermissions.Assessments?.Create}
+              canCreate={effectivePermissions.Assessment_Template?.Create}
             />
             <Toolbar
               view={viewMode}

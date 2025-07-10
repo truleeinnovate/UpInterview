@@ -8,7 +8,7 @@ import { usePermissions } from '../Context/PermissionsContext';
 export const useAssessments = () => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const hasViewPermission = effectivePermissions?.Assessments?.View;
+  const hasViewPermission = effectivePermissions?.Assessment_Template?.View;
   const initialLoad = useRef(true);
 
   const {
@@ -17,7 +17,7 @@ export const useAssessments = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ['assessments'],
+    queryKey: ['Assessment_Template'],
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
       return data.map(assessment => ({
@@ -29,6 +29,8 @@ export const useAssessments = () => {
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
+
+  console.log("assessmentData---", assessmentData);
 
   // Add/Update assessment mutation
   const addOrUpdateAssessment = useMutation({
@@ -56,7 +58,7 @@ export const useAssessments = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['assessments']);
+      queryClient.invalidateQueries(['Assessment_Template']);
     },
     onError: (error) => {
       console.error('Assessment save error:', error.message);

@@ -136,6 +136,7 @@ function AssessmentsTab({ assessment }) {
   //  console.log("scheduledAssessments ", scheduledAssessments);
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold text-gray-900">Assessments</h3>
@@ -212,8 +213,8 @@ function AssessmentsTab({ assessment }) {
           </div>
         )}
       </div>
-
-      {isShareOpen && (
+    </div>
+    {isShareOpen && (
         <ShareAssessment
           isOpen={isShareOpen}
           onCloseshare={() => setIsShareOpen(false)}
@@ -222,7 +223,7 @@ function AssessmentsTab({ assessment }) {
         // assessmentId={assessment._id}
         />
       )}
-    </div>
+    </>
   );
 }
 

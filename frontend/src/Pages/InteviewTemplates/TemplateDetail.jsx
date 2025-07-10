@@ -265,7 +265,7 @@ const TemplateDetail = () => {
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-2 sm:mb-3">
-                  {template.templateName}
+                  {template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1)}
                 </h1>
                 <p className="text-gray-600 mb-4 sm:mb-6 text-base sm:text-lg">{template.description}</p>
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-3 sm:gap-6">

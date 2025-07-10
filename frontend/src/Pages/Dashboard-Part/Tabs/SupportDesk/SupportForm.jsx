@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
-import { Minimize, Expand, X } from "lucide-react";
+import { Minimize, Expand, X, Eye } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
@@ -122,7 +122,10 @@ const SupportForm = () => {
         ),
         // file: !initialFormState.file || null,
       }));
-      setAttachmentFileName(initialTicketData?.attachment?.filename || "");
+      if (initialTicketData?.attachment?.path) {
+        setAttachmentFile(initialTicketData.attachment.path); // set as string URL
+        setAttachmentFileName(initialTicketData.attachment.filename);
+      }
     }
   }, [editMode, initialTicketData, issuesData]);
 
@@ -218,11 +221,11 @@ const SupportForm = () => {
         : {
             contact:
               `${
-                contact?.firstName.charAt(0).toUpperCase() +
-                contact?.firstName.slice(1)
+                contact?.firstName?.charAt(0).toUpperCase() +
+                contact?.firstName?.slice(1)
               } ${
-                contact?.lastName.charAt(0).toUpperCase() +
-                contact?.lastName.slice(1)
+                contact?.lastName?.charAt(0).toUpperCase() +
+                contact?.lastName?.slice(1)
               }` || "",
             tenantId,
             ownerId,
@@ -361,7 +364,7 @@ const SupportForm = () => {
                         }`}
                       >
                         <option value="" className="text-gray-500" hidden>
-                          Select issue
+                          Select Issue
                         </option>
                         {renderIssueOptions()}
                         <option className="text-gray-700" value="Other">
@@ -409,6 +412,7 @@ const SupportForm = () => {
                     <textarea
                       id="description"
                       rows={8}
+                      placeholder="Enter description......"
                       value={description}
                       onChange={handleDescriptionChange}
                       className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
@@ -456,6 +460,35 @@ const SupportForm = () => {
                         onClick={handleRemoveFile}
                       >
                         <X className="size-4" />
+                      </button>
+                    )}
+                    {/* {attachmentFile && (
+                      <button
+                        title="View Attachment"
+                        type="button"
+                        onClick={() => {
+                          const fileURL = URL.createObjectURL(attachmentFile);
+                          window.open(fileURL, "_blank");
+                        }}
+                        className="ml-4 text-custom-blue"
+                      >
+                        <Eye className="size-4" />
+                      </button>
+                    )} */}
+                    {attachmentFile && (
+                      <button
+                        title="View Attachment"
+                        type="button"
+                        onClick={() => {
+                          const fileURL =
+                            typeof attachmentFile === "string"
+                              ? attachmentFile // if it's already a URL
+                              : URL.createObjectURL(attachmentFile); // if it's a File object
+                          window.open(fileURL, "_blank");
+                        }}
+                        className="ml-4 text-custom-blue"
+                      >
+                        <Eye className="size-4" />
                       </button>
                     )}
                   </div>

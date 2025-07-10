@@ -331,6 +331,7 @@ const { InterviewRounds } = require('../models/InterviewRounds');
 const InterviewQuestions = require('../models/InterviewQuestions');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
+const ScheduledAssessmentSchema = require('../models/scheduledAssessmentsSchema');
 
 const modelRequirements = {
   candidate: {
@@ -350,6 +351,11 @@ const modelRequirements = {
   },
   assessment: {
     model: Assessment,
+    permissionName: 'Assessment_Template',
+    requiredPermission: 'View'
+  },
+  scheduleassessment: {
+    model: ScheduledAssessmentSchema,
     permissionName: 'Assessments',
     requiredPermission: 'View'
   },
@@ -460,7 +466,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     }
 
     // Base query - always enforce tenant boundary
-    let query = { tenantId };
+    let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
     console.log('[16] Initial query with tenantId:', query);
 
     const roleType = effectivePermissions_RoleType;
@@ -472,10 +478,13 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       isOrganizationAdmin: roleType === 'organization' && roleName === 'Admin'
     });
 
-    if (roleType === 'individual') {
+    if (roleType === 'individual' && model.toLowerCase() !== 'scheduleassessment') {
       query.ownerId = userId;
       console.log('[18] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
+      if(model.toLowerCase() === 'scheduleassessment') {
+        // For scheduled assessments, organization non-admin can see all under same organization
+      }
       if (inheritedRoleIds?.length > 0) {
         console.log('[19] Non-admin org user with inherited roles:', inheritedRoleIds);
         const accessibleUsers = await Users.find({
@@ -494,6 +503,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       console.log('[22] Final query after org user processing:', query);
     } else {
       console.log('[23] Organization Admin - only tenantId filter applied');
+    // Ensure scheduled assessments are not restricted by ownerId
+    if(model.toLowerCase() === 'scheduleassessment') {
+      delete query.ownerId;
+    }
     }
  
     let data;
@@ -524,7 +537,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         })
           .populate({
             path: 'suggestedQuestionId',
-            model: 'SuggestedQuestions',
+            model: 'suggestedQuestions', // Fix: changed model name to 'suggestedQuestions'
           })
           .populate({
             path: 'tenantListId',

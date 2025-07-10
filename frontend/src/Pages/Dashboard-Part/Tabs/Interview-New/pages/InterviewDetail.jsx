@@ -323,7 +323,7 @@ const InterviewDetail = () => {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{candidate?.LastName || 'Unknown'}</div>
+                          <div className="font-medium">{candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) || 'Unknown'}</div>
                           <div className="text-xs text-gray-500 mt-1">
                             {candidate?.Email} • {candidate?.Phone}
                           </div>
@@ -364,7 +364,7 @@ const InterviewDetail = () => {
                       Position
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      <div className="font-medium">{position?.title || 'Unknown'}</div>
+                      <div className="font-medium">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown'}</div>
                       <div className="text-xs text-gray-500 mt-1">
                         {position?.companyname} • {position?.Location}
                       </div>
@@ -397,7 +397,7 @@ const InterviewDetail = () => {
                       Template
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      <div className="font-medium">{template?.templateName || 'Not selected any template'}</div>
+                      <div className="font-medium">{template?.templateName.charAt(0).toUpperCase() + template?.templateName.slice(1) || 'Not selected any template'}</div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {template && (
                           <>
@@ -427,7 +427,7 @@ const InterviewDetail = () => {
                     <dd className="mt-1">
                       <div className="flex items-center">
                         <span className="text-sm text-gray-900 mr-2">
-                          {completedRounds} of {totalRounds} rounds completed
+                          {completedRounds} of {totalRounds} Rounds Completed
                         </span>
                         <span className="text-sm font-medium text-custom-blue">
                           {progressPercentage.toFixed(0)}%

@@ -123,7 +123,11 @@ const KanbanView = ({
                 {column.header}
               </h3>
               <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-                {(groupedData[column.key] || []).length} candidates
+                {(groupedData[column.key] || []).length} {(
+                  groupedData[column.key] || []
+                ).length === 1
+                  ? "Candidate"
+                  : "Candidates"}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
@@ -150,7 +154,7 @@ const KanbanView = ({
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold shadow-sm">
-                            {item.title?.charAt(0) || "?"}
+                            {item.title?.charAt(0).toUpperCase() || "?"}
                           </div>
                         )}
                       </div>

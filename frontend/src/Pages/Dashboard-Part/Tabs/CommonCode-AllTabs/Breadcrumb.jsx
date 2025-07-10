@@ -14,7 +14,7 @@ function Breadcrumb({ items }) {
     >
       <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
         <li className="inline-flex items-center">
-          <Link to="/interviewList" className="inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
+          <Link to="/interviewList" className="inline-flex items-center text-sm font-medium text-foreground hover:text-custom-blue transition-colors">
             Home
           </Link>
         </li>
@@ -25,21 +25,21 @@ function Breadcrumb({ items }) {
               {item.path ? (
                 <Link 
                   to={item.path} 
-                  className="ml-1 text-sm font-medium text-foreground hover:text-primary transition-colors md:ml-2 flex items-center"
+                  className="ml-1 text-sm font-medium text-foreground hover:text-custom-blue transition-colors md:ml-2 flex items-center"
                 >
-                  <span>{item.label}</span>
+                  <span>{item.label.charAt(0).toUpperCase() + item.label.slice(1)}</span>
                   {item.status && (
                     <span className="ml-2">
-                      <StatusBadge status={item.status} size="sm" />
+                      <StatusBadge status={item.status.charAt(0).toUpperCase() + item.status.slice(1)} size="sm" />
                     </span>
                   )}
                 </Link>
               ) : (
                 <span className="ml-1 text-sm font-medium text-muted-foreground md:ml-2 flex items-center">
-                  <span>{item.label}</span>
+                  <span>{item.label.charAt(0).toUpperCase() + item.label.slice(1)}</span>
                   {item.status && (
                     <span className="ml-2">
-                      <StatusBadge status={item.status} size="sm" />
+                      <StatusBadge status={item.status.charAt(0).toUpperCase() + item.status.slice(1)} size="sm" />
                     </span>
                   )}
                 </span>

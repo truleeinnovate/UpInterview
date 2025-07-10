@@ -184,7 +184,7 @@ const ShareAssessment = ({
   return (
     <div className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center">
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {isLoading && (

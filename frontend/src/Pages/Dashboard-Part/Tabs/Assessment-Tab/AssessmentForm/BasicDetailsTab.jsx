@@ -138,7 +138,7 @@ const BasicDetailsTab = ({
                   onChange={(e) =>
                     handleInputChange("AssessmentTitle", e.target.value)
                   }
-                  placeholder="Enter assessment name"
+                  placeholder="Enter Assessment Name"
                   autoComplete="off"
                   className={`block w-full border ${errors.AssessmentTitle ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
@@ -176,7 +176,7 @@ const BasicDetailsTab = ({
                   max="100"
                   step="1"
                   autoComplete="off"
-                  placeholder="Enter number of questions"
+                  placeholder="Enter Number of Questions"
                   className={`block w-full border ${errors.NumberOfQuestions ? 'border-red-500' : 'border-gray-300'
                     } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                   onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
@@ -365,7 +365,7 @@ const BasicDetailsTab = ({
                       </span>
                     </span>
                   ) : (
-                    <span className="text-gray-500">Select position</span>
+                    <span className="text-gray-500">Select Position</span>
                   )}
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <MdArrowDropDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -432,7 +432,7 @@ const BasicDetailsTab = ({
                   onClick={modifiedToggleDifficulty}
                 >
                   {selectedDifficulty || (
-                    <span className="text-gray-400">Select difficulty level</span>
+                    <span className="text-gray-400">Select Difficulty Level</span>
                   )}
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>
@@ -475,7 +475,7 @@ const BasicDetailsTab = ({
                   onClick={modifiedToggleDuration}
                 >
                   {selectedDuration || (
-                    <span className="text-gray-400">Select duration</span>
+                    <span className="text-gray-400">Select Duration</span>
                   )}
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>

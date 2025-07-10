@@ -19,12 +19,14 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import { AiOutlineDownload, AiOutlineMail } from "react-icons/ai";
+// import { AiOutlineDownload, AiOutlineMail } from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import { usePermissions } from "../../Context/PermissionsContext.js";
 
 function InternalLogsPage() {
+  const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,233 +50,7 @@ function InternalLogsPage() {
 
   const [selectedLog, setSelectedLog] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  const [logs, setLogs] = useState([
-    {
-      timeStamp: "2025-06-02T10:15:00Z",
-      logId: "LOG-001",
-      status: "success",
-      code: "200",
-      message: "Interview completed successfully",
-      serverName: "interview-service-01",
-      severity: "low",
-      processName: "InterviewRecording",
-      executionTime: "125ms",
-      requestEndPoint: "/api/v1/interviews/complete",
-      requestMethod: "POST",
-      requestBody: { interviewId: "12345", duration: 3600 },
-      responseStatusCode: "200",
-      responseMessage: "Interview marked as complete",
-      responseBody: { success: true },
-      ownerId: "USER-001",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:10:00Z",
-      logId: "LOG-002",
-      status: "error",
-      code: "500",
-      message: "Database connection failed",
-      serverName: "assessment-service-02",
-      severity: "high",
-      processName: "AssessmentScoring",
-      executionTime: "2500ms",
-      requestEndPoint: "/api/v1/assessments/score",
-      requestMethod: "POST",
-      requestBody: { assessmentId: "67890" },
-      responseStatusCode: "500",
-      responseError: "Internal Server Error",
-      responseMessage: "Failed to connect to database",
-      ownerId: "USER-002",
-      tenantId: "TENANT-002",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-003",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-004",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-005",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-006",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-007",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-008",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-009",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0010",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0011",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0012",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-    {
-      timeStamp: "2025-06-02T10:05:00Z",
-      logId: "LOG-0013",
-      status: "warning",
-      code: "429",
-      message: "Rate limit approaching",
-      serverName: "api-gateway-01",
-      severity: "medium",
-      processName: "RateLimiter",
-      executionTime: "5ms",
-      requestEndPoint: "/api/v1/candidates",
-      requestMethod: "GET",
-      responseStatusCode: "200",
-      responseMessage: "Rate limit warning",
-      ownerId: "USER-003",
-      tenantId: "TENANT-001",
-    },
-  ]);
+  const [logs, setLogs] = useState([]);
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -332,7 +108,7 @@ function InternalLogsPage() {
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/internal-logs`
         );
-        setLogs(response.data.logs);
+        setLogs(response.data.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -351,7 +127,7 @@ function InternalLogsPage() {
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/internal-logs/${selectedLogId}`
         );
-        setSelectedLog(response.data.data);
+        setSelectedLog(response.data);
       } catch (error) {
         console.error("Error fetching internal logs:", error);
       } finally {
@@ -470,60 +246,68 @@ function InternalLogsPage() {
     }).format(amount);
   };
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "success":
-        return "success";
-      case "error":
-        return "error";
-      case "warning":
-        return "warning";
-      default:
-        return "neutral";
-    }
-  };
+  // const getStatusDisplay = (status) => {
+  //   switch (status) {
+  //     case "success":
+  //       return "success";
+  //     case "error":
+  //       return "error";
+  //     case "warning":
+  //       return "warning";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
 
-  const getSeverityDisplay = (severity) => {
-    switch (severity) {
-      case "high":
-        return "error";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "neutral";
-    }
-  };
+  // const getSeverityDisplay = (severity) => {
+  //   switch (severity) {
+  //     case "high":
+  //       return "error";
+  //     case "medium":
+  //       return "warning";
+  //     case "low":
+  //       return "success";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
+
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   const tableColumns = [
     {
       key: "logId",
       header: "Log ID",
-      render: (value, row) => (
-        <span className="font-mono text-xs">
-          {row.logId ? row.logId : row._id}
-        </span>
-      ),
+      render: (value, row) =>
+        superAdminPermissions?.InternalLogs?.View ? (
+          <span
+            className="text-sm cursor-pointer text-custom-blue font-semibold"
+            onClick={() => {
+              setSelectedLogId(row?._id);
+              setIsPopupOpen(true);
+            }}
+          >
+            {capitalizeFirstLetter(row?.logId)}
+          </span>
+        ) : (
+          <span className="text-sm text-gray-700">
+            {capitalizeFirstLetter(row?.logId)}
+          </span>
+        ),
     },
     {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge
-          status={getStatusDisplay(row.status)}
-          text={row.status.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.status)} />
       ),
     },
     {
       key: "severity",
       header: "Severity",
       render: (value, row) => (
-        <StatusBadge
-          status={getSeverityDisplay(row.severity)}
-          text={row.severity.toUpperCase()}
-        />
+        <StatusBadge status={capitalizeFirstLetter(row.severity)} />
       ),
     },
     {
@@ -547,80 +331,105 @@ function InternalLogsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedLogId(row.logId);
-        setIsPopupOpen(true);
-      },
-    },
-    {
-      key: "360-view",
-      label: "360° View",
-      icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-      onClick: (row) => setSelectedLogId(row.logId),
-    },
+    ...(superAdminPermissions.InternalLogs.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedLogId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions.InternalLogs.View
+      ? [
+          {
+            key: "360-view",
+            label: "360° View",
+            icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+            onClick: (row) => setSelectedLogId(row._id),
+          },
+        ]
+      : []),
   ];
 
   // Kanban Columns Configuration
-  const kanbanColumns = [];
+  const kanbanColumns = [
+    {
+      key: "severity",
+      header: "Severity",
+      render: (value, row) => (
+        <div className="font-medium">
+          {<StatusBadge status={row?.severity} /> || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge status={capitalizeFirstLetter(value)} />
+      ),
+    },
+  ];
+
+  // Shared Actions Configuration for Table and Kanban
+  const actions = [
+    ...(superAdminPermissions?.InternalLogs?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedLogId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions?.InternalLogs?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
+    // {
+    //   key: "login-as-user",
+    //   label: "Login as User",
+    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+    //   onClick: (row) => handleLoginAsUser(row._id),
+    // },
+  ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedLogId(item.logId);
-          setIsPopupOpen(true);
-        }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      {!isLoading ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/internal-log/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <UserCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`edit/${item._id}`);
-            }}
-            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
+      {actions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            onResendLink(item.id);
+            action.onClick(item);
           }}
-          disabled={item.status === "completed"}
           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Resend Link"
+          title={action.label}
         >
-          <Mail className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
+      ))}
     </div>
   );
 
-  // Render Filter Content
   const renderFilterContent = () => {
     // filters options
     const statusOptions = ["success", "pending", "captured", "charged"];
@@ -678,20 +487,10 @@ function InternalLogsPage() {
             <div className="p-2">
               <div className="flex justify-center items-center  gap-4 mb-4">
                 <div className="relative">
-                  {log?.ImageData ? (
-                    <img
-                      src={`http://localhost:5000/${log?.ImageData?.path}`}
-                      alt={log?.FirstName || log?.firstName}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                      {log?.firstName?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
+                  <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                    {log?.logId?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
                   {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                   log?.Status === 'active' ? 'bg-green-100 text-green-800' :
                   log?.Status === 'onhold' ? 'bg-yellow-100 text-yellow-800' :
@@ -703,11 +502,11 @@ function InternalLogsPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {log?.firstName ? log.firstName : "N/A"}
+                    {log?.logId ? log.logId : "N/A"}
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {log?.CurrentRole || "position"}
+                    {log?.position || "position"}
                   </p>
                 </div>
               </div>
@@ -715,11 +514,11 @@ function InternalLogsPage() {
               <div className="space-y-2">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-md font-medium text-gray-500 mb-3">
                       Basic Information
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Timestamp:
                         </span>
@@ -727,35 +526,27 @@ function InternalLogsPage() {
                           {new Date(log?.timeStamp).toLocaleString()}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Status:</span>
-                        <span
-                          className={`text-sm font-medium ${
-                            log?.status === "success"
-                              ? "text-green-600"
-                              : log?.status === "error"
-                              ? "text-red-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {log?.status?.toUpperCase()}
+                        <span>
+                          {log?.status ? (
+                            <StatusBadge status={log?.status.toUpperCase()} />
+                          ) : (
+                            "N/A"
+                          )}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Severity:</span>
-                        <span
-                          className={`text-sm font-medium ${
-                            log.severity === "high"
-                              ? "text-red-600"
-                              : log.severity === "medium"
-                              ? "text-yellow-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          {log?.severity?.toUpperCase()}
+                        <span>
+                          {log?.severity ? (
+                            <StatusBadge status={log?.severity.toUpperCase()} />
+                          ) : (
+                            "N/A"
+                          )}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">Server:</span>
                         <span className="text-sm font-medium">
                           {log?.serverName}
@@ -767,11 +558,11 @@ function InternalLogsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                    <h3 className="text-md font-medium text-gray-500 mb-3">
                       Process Information
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Process Name:
                         </span>
@@ -779,7 +570,7 @@ function InternalLogsPage() {
                           {log?.processName}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2">
                         <span className="text-sm text-gray-600">
                           Execution Time:
                         </span>
@@ -792,23 +583,23 @@ function InternalLogsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-md font-medium text-gray-500 mb-3">
                     Request Details
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Endpoint:</span>
                       <span className="text-sm font-medium break-all">
                         {log?.requestEndPoint}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Method:</span>
                       <span className="text-sm font-medium">
                         {log?.requestMethod}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">
                         Response Code:
                       </span>
@@ -820,17 +611,17 @@ function InternalLogsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-md font-medium text-gray-500 mb-3">
                     Additional Information
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Owner ID:</span>
                       <span className="text-sm font-medium">
                         {log?.ownerId}
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div className="grid grid-cols-2">
                       <span className="text-sm text-gray-600">Tenant ID:</span>
                       <span className="text-sm font-medium">
                         {log?.tenantId}
@@ -840,21 +631,21 @@ function InternalLogsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
+                  <h3 className="text-md font-medium text-gray-500 mb-3">
                     Message
                   </h3>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {log.message}
+                    {log?.message}
                   </p>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  {log.requestBody && (
+                  {log?.requestBody && (
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                       <h3 className="text-sm font-medium text-gray-500 mb-3">
                         Request Body
                       </h3>
-                      <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                      <pre className="text-md bg-gray-50 p-4 rounded-lg overflow-x-auto">
                         {JSON.stringify(log.requestBody, null, 2)}
                       </pre>
                     </div>
@@ -862,9 +653,9 @@ function InternalLogsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  {log.responseBody && (
+                  {log?.responseBody && (
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
-                      <h3 className="text-sm font-medium text-gray-500 mb-3">
+                      <h3 className="text-md font-medium text-gray-500 mb-3">
                         Response Body
                       </h3>
                       <pre className="text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto">
@@ -875,17 +666,17 @@ function InternalLogsPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  {log.responseError && (
+                  {log?.responseError && (
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                       <h3 className="text-sm font-medium text-gray-500 mb-3">
                         Error Details
                       </h3>
                       <p className="text-sm text-red-600">
-                        {log.responseError}
+                        {log?.responseError}
                       </p>
-                      {log.responseMessage && (
+                      {log?.responseMessage && (
                         <p className="mt-2 text-sm text-gray-600">
-                          {log.responseMessage}
+                          {log?.responseMessage}
                         </p>
                       )}
                     </div>
@@ -915,24 +706,24 @@ function InternalLogsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
-            <div className="text-xl font-semibold">{logs.length}</div>
+            <div className="text-xl font-semibold">{logs?.length}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Errors</div>
             <div className="text-xl font-semibold text-error-600">
-              {logs.filter((log) => log.status === "error").length}
+              {logs?.filter((log) => log.status === "error").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Warnings</div>
             <div className="text-xl font-semibold text-warning-600">
-              {logs.filter((log) => log.status === "warning").length}
+              {logs?.filter((log) => log.status === "warning").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success</div>
             <div className="text-xl font-semibold text-success-600">
-              {logs.filter((log) => log.status === "success").length}
+              {logs?.filter((log) => log.status === "success").length}
             </div>
           </div>
         </div>
@@ -960,7 +751,7 @@ function InternalLogsPage() {
         {/* New table log */}
         <main>
           <div className="sm:px-0">
-            {logs.length === 0 ? (
+            {logs?.length === 0 ? (
               <Loading />
             ) : (
               <motion.div className="bg-white">
@@ -978,11 +769,13 @@ function InternalLogsPage() {
                   ) : (
                     <div className="w-full">
                       <KanbanView
-                        internalLogs={currentFilteredRows.map((log) => ({
-                          ...logs,
-                          _id: log._id,
-                          status: log.status,
-                          isAssessmentView: <p>Is assignment view</p>,
+                        data={currentFilteredRows.map((log) => ({
+                          ...log,
+                          id: log?._id,
+                          title: log?.logId ? log?.logId : "N/A",
+                          subtitle: log?.timeStamp
+                            ? formatDate(log?.timeStamp)
+                            : "N/A",
                         }))}
                         columns={kanbanColumns}
                         loading={isLoading}

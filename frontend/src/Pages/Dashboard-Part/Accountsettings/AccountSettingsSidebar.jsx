@@ -496,7 +496,7 @@ const AccountSettingsSidebar = ({ type }) => {
     'notifications': 'NotificationsSettings',
     'email-settings': 'Notification',
     'usage': 'Usage',
-    'users': 'Users',
+    'users': type === 'superAdmin' ? 'SuperAdminUser' : 'Users',
     'interviewer-groups': 'InterviewerGroups',
     'roles': type === 'superAdmin' ? 'SuperAdminRole' : 'Roles',
     'sharing': 'Sharing',
@@ -510,7 +510,7 @@ const AccountSettingsSidebar = ({ type }) => {
     ...section,
     items: section.items.filter(item => {
       if (type === 'superAdmin') {
-        return ['my-profile', 'roles'].includes(item.id) && permissions[permissionMap[item.id]]?.ViewTab;
+        return ['my-profile', 'roles', 'users'].includes(item.id) && permissions[permissionMap[item.id]]?.ViewTab;
       }
       const permissionKey = permissionMap[item.id];
       if (['profile', 'users', 'sub-domain', 'roles', 'interviewer-groups', 'sharing', 'webhooks', 'hrms-ats'].includes(item.id)) {
