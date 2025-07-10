@@ -15,10 +15,23 @@ import {
   Cell
 } from 'recharts'
 import { analyticsData } from '../../mockData/analyticsData'
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']
 
 export function Analytics() {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Check if user has permission to access Analytics
+  const hasAnalyticsPermission = checkPermission("Analytics");
+
+  // Don't render if permissions are not initialized or user doesn't have permission
+  if (!isInitialized || !hasAnalyticsPermission) {
+    return null;
+  }
+
   const [timeRange, setTimeRange] = useState('daily')
 
   const renderOverviewCards = () => (

@@ -15,16 +15,16 @@ import MockInterviewKanban from "./MockInterviewKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
 
 const MockInterview = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const { 
-  mockinterviewData, 
-  isLoading, 
-} = useMockInterviews();
-console.log("mockinterviewData:", mockinterviewData);
-
-
-// Usage remains exactly the same as before
+    mockinterviewData, 
+    isLoading, 
+  } = useMockInterviews();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +50,11 @@ console.log("mockinterviewData:", mockinterviewData);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("MockInterviews")) {
+    return null;
+  }
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);

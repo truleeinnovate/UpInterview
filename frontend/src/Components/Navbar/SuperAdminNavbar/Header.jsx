@@ -23,7 +23,7 @@ import { clearAllCookies, logout } from "../../../utils/AuthCookieManager/AuthCo
 import { usePermissions } from "../../../Context/PermissionsContext";
 
 function Header() {
-  const { superAdminPermissions, effectivePermissions, isImpersonating } = usePermissions();
+  const { superAdminPermissions, isImpersonating } = usePermissions();
   // const { user, hasRole } = useAuth();
   // const [showDropdown, setShowDropdown] = useState(false);
   // const [showMore, setShowMore] = useState(false);
@@ -240,11 +240,6 @@ function Header() {
       return superAdminPermissions[permissionKey];
     }
 
-    // Check effective permissions
-    if (effectivePermissions && effectivePermissions[permissionKey]) {
-      return effectivePermissions[permissionKey];
-    }
-
     return false;
   };
 
@@ -362,7 +357,7 @@ function Header() {
             handleLogout();
           }}
         >
-          {isImpersonating ? "Exit Impersonation" : "Log Out"}
+          Log Out
         </button>
       </div>
       {/* <div className="px-2 py-1">
@@ -399,7 +394,7 @@ function Header() {
     if (isImpersonating) {
       // If impersonating, clear only the effective user cookies and redirect to admin dashboard
       clearAllCookies({ preserveSuperAdmin: true });
-      navigate("/admin-dashboard");
+      navigate("/organization-login");
     } else {
       // If not impersonating, clear all cookies and redirect to login
       logout(true); // true for organization login

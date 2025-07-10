@@ -1,7 +1,17 @@
 // import { XMarkIcon } from '@heroicons/react/24/outline'
 import { securitySettings } from '../mockData/securityData'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
 function Security() {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Security")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Security Settings</h2>

@@ -3,11 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import { setAuthCookies, clearAllCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllCookies, debugTokenSources, testCookieFunctionality } from '../../utils/AuthCookieManager/AuthCookieManager';
 import { config } from "../../config";
 import { validateWorkEmail } from '../../utils/workEmailValidation.js';
 import toast from "react-hot-toast";
 import { usePermissions } from '../../Context/PermissionsContext';
+import Cookies from 'js-cookie';
 
 const OrganizationLogin = () => {
   const { refreshPermissions } = usePermissions();
@@ -196,18 +197,32 @@ const OrganizationLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
-
+  
     setIsLoading(true);
-
+    const loginStartTime = new Date().toISOString();
+    console.log(`[OrganizationLogin][${loginStartTime}] Starting login process...`);
+  
     try {
-      // Clear all cookies before setting new ones
+      // Step 1: Clear cookies
       clearAllCookies();
-
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
-        email: email.trim().toLowerCase(),
-        password,
-      }, { withCredentials: true });
-
+      console.log(`[OrganizationLogin][${loginStartTime}] Cleared all cookies`);
+  
+      // Step 2: Make login request
+      const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
+      console.log(`[OrganizationLogin][${loginStartTime}] Making login request to:`, loginURL);
+      
+      const response = await axios.post(
+        loginURL,
+        {
+          email: email.trim().toLowerCase(),
+          password,
+        },
+        { withCredentials: true }
+      );
+  
+      // Step 3: Handle login response
+      console.log(`[OrganizationLogin][${loginStartTime}] Login response received:`, response.data);
+  
       const {
         authToken,
         impersonationToken,
@@ -221,45 +236,119 @@ const OrganizationLogin = () => {
         contactEmailFromOrg,
         roleType,
       } = response.data;
-
+  
+      console.log(`[OrganizationLogin][${loginStartTime}] Extracted data:`, {
+        hasAuthToken: !!authToken,
+        hasImpersonationToken: !!impersonationToken,
+        roleType,
+        status,
+        isEmailVerified,
+        isProfileCompleted
+      });
+  
+      // Step 4: Handle user type
       if (roleType === 'internal') {
+        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, setting impersonation cookies`);
         setAuthCookies({ impersonationToken, impersonatedUserId });
         navigate('/admin-dashboard');
       } else {
+        console.log(`[OrganizationLogin][${loginStartTime}] Regular user detected, setting auth cookies`);
+        
+        // Test cookie functionality first
+        const cookieTest = testCookieFunctionality();
+        console.log(`[OrganizationLogin][${loginStartTime}] Cookie functionality test:`, cookieTest);
+        
         setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
+  
+        // Add a longer delay to ensure cookies are set before navigation
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log(`[OrganizationLogin][${loginStartTime}] Cookies set, verifying...`);
+        
+        // Verify cookies were set properly
+        const authTokenFromCookies = Cookies.get('authToken');
+        const authTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('authToken='));
+        
+        // Try to decode tokens if they exist
+        const decodedAuthTokenFromCookies = authTokenFromCookies ? (() => {
+          try {
+            return decodeURIComponent(authTokenFromCookies);
+          } catch (error) {
+            return authTokenFromCookies;
+          }
+        })() : null;
+        
+        const decodedAuthTokenFromDocument = authTokenFromDocument ? (() => {
+          try {
+            return decodeURIComponent(authTokenFromDocument.split('=')[1]);
+          } catch (error) {
+            return authTokenFromDocument.split('=')[1];
+          }
+        })() : null;
+        
+        console.log(`[OrganizationLogin][${loginStartTime}] AuthToken verification:`, {
+          fromCookies: decodedAuthTokenFromCookies ? 'EXISTS' : 'MISSING',
+          fromDocument: decodedAuthTokenFromDocument ? 'EXISTS' : 'MISSING'
+        });
+        
+        // Debug all token sources
+        debugTokenSources();
+        
+        // If cookies are still not set, try setting them again
+        if (!decodedAuthTokenFromCookies && !decodedAuthTokenFromDocument) {
+          console.log(`[OrganizationLogin][${loginStartTime}] Cookies not set properly, retrying...`);
+          setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Debug again after retry
+          debugTokenSources();
+        }
+  
+        // Step 5: Handle unverified email
         if (!isEmailVerified) {
+          console.log(`[OrganizationLogin][${loginStartTime}] Email not verified, showing verification screen`);
           setIsEmailVerified(false);
           await handleResendVerification();
           setCountdown(60);
           return;
         }
+  
+        // Step 6: Refresh permissions and route based on status
+        console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions...`);
         await refreshPermissions();
-
-
+  
+        console.log(`[OrganizationLogin][${loginStartTime}] Navigating based on status:`, status);
+  
         switch (status) {
           case 'submitted':
           case 'payment_pending':
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /subscription-plans`);
             navigate('/subscription-plans');
             break;
           case 'active':
             if (isProfileCompleted === false && roleName) {
+              console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /complete-profile`);
               navigate('/complete-profile', {
                 state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
               });
             } else {
+              console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /home`);
               navigate('/home');
             }
             break;
           default:
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to default route '/'`);
             navigate('/');
         }
       }
     } catch (error) {
+      console.error(`[OrganizationLogin][${loginStartTime}] Login error:`, error);
       setIsLoading(false);
       setErrors({ email: '', password: '' });
-
+  
       if (error.response) {
         const { status, data } = error.response;
+        console.log(`[OrganizationLogin][${loginStartTime}] Error response:`, { status, data });
+  
         if (status === 400) {
           if (data.fields) {
             setErrors(data.fields);
@@ -271,6 +360,7 @@ const OrganizationLogin = () => {
           }
         } else if (status === 403) {
           if (data.isEmailVerified === false) {
+            console.log(`[OrganizationLogin][${loginStartTime}] Email not verified (403), showing verification screen`);
             setIsEmailVerified(false);
             await handleResendVerification();
             setCountdown(60);
@@ -285,8 +375,10 @@ const OrganizationLogin = () => {
       }
     } finally {
       setIsLoading(false);
+      console.log(`[OrganizationLogin][${loginStartTime}] Login process ended`);
     }
   };
+
   return (
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-1 items-center">
