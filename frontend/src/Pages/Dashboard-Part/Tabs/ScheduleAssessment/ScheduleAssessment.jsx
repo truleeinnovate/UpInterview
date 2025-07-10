@@ -34,7 +34,10 @@ const ScheduleAssessment = () => {
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [statusOptions] = useState(['Scheduled', 'Completed', 'Cancelled']);
+  // Applied filters
   const [selectedStatus, setSelectedStatus] = useState([]);
+  // Draft filters edited inside popup (not applied until Apply is clicked)
+  const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
 
   // Derived pagination
@@ -76,7 +79,7 @@ const ScheduleAssessment = () => {
 
   // Handlers
   const handleStatusToggle = (status) => {
-    setSelectedStatus((prev) => {
+    setTempSelectedStatus((prev) => {
       if (prev.includes(status)) {
         return prev.filter((s) => s !== status);
       }
@@ -85,7 +88,8 @@ const ScheduleAssessment = () => {
   };
 
   const handleApplyFilters = () => {
-    setIsFilterActive(selectedStatus.length > 0);
+    setSelectedStatus(tempSelectedStatus);
+    setIsFilterActive(true);
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
@@ -97,8 +101,12 @@ const ScheduleAssessment = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (filteredSchedules.length === 0) return;
-    setFilterPopupOpen((prev) => !prev);
+    const willOpen = !isFilterPopupOpen;
+    setFilterPopupOpen(willOpen);
+    if (willOpen) {
+      // sync draft state with applied state when opening popup
+      setTempSelectedStatus(selectedStatus);
+    }
   };
 
   // Handlers
@@ -193,7 +201,7 @@ const ScheduleAssessment = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={filteredSchedules.length}
+              dataLength={(Array.isArray(scheduleData) ? scheduleData.length : 0)}
               searchPlaceholder="Search Assessments..."
               filterIconRef={filterIconRef}
             />
@@ -247,7 +255,7 @@ const ScheduleAssessment = () => {
                         <label key={option} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
-                            checked={selectedStatus.includes(option)}
+                            checked={tempSelectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
                             className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                           />
