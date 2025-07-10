@@ -2,13 +2,13 @@ import axios from 'axios';
 import { config } from '../config';
 export const validateWorkEmail = (email) => {
   if (!email) {
-    return 'Work email is required';
+    return 'Work Email is required';
   }
   
   // Standard email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return 'Invalid email format';
+    return 'Invalid Email Format';
   }
   
   // Work email validation (must be a company email, not common personal domains)

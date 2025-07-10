@@ -4,10 +4,10 @@ export const validateInterviewTemplate = (templateData) => {
 
   // Validate template name
   if (!templateData.name || !templateData.name.trim()) {
-    errors.name = 'Template name is required';
+    errors.name = 'Title is required';
     isValid = false;
   } else if (templateData.name.trim().length > 100) {
-    errors.name = 'Template name cannot exceed 100 characters';
+    errors.name = 'Title cannot exceed 100 characters';
     isValid = false;
   }
 
@@ -39,18 +39,18 @@ export const validateInterviewTemplate = (templateData) => {
       const roundError = {};
       
       if (!round.name || !round.name.trim()) {
-        roundError.name = 'Round name is required';
+        roundError.name = 'Round Name is required';
         isValid = false;
       } else if (round.name.trim().length < 2) {
-        roundError.name = 'Round name must be at least 2 characters';
+        roundError.name = 'Round Name must be at least 2 characters';
         isValid = false;
       } else if (round.name.trim().length > 50) {
-        roundError.name = 'Round name cannot exceed 50 characters';
+        roundError.name = 'Round Name cannot exceed 50 characters';
         isValid = false;
       }
 
       if (!round.interviewType) {
-        roundError.interviewType = 'Interview type is required';
+        roundError.interviewType = 'Interview Type is required';
         isValid = false;
       }
 
@@ -72,18 +72,18 @@ export const validateRound = (round) => {
   let isValid = true;
 
   if (!round.name || !round.name.trim()) {
-    errors.name = 'Round name is required';
+    errors.name = 'Round Name is required';
     isValid = false;
   } else if (round.name.trim().length < 2) {
-    errors.name = 'Round name must be at least 2 characters';
+    errors.name = 'Round Name must be at least 2 characters';
     isValid = false;
   } else if (round.name.trim().length > 50) {
-    errors.name = 'Round name cannot exceed 50 characters';
+    errors.name = 'Round Name cannot exceed 50 characters';
     isValid = false;
   }
 
   if (!round.interviewType) {
-    errors.interviewType = 'Interview type is required';
+    errors.interviewType = 'Interview Type is required';
     isValid = false;
   }
 

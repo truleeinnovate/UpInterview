@@ -147,8 +147,8 @@ function InterviewCard({ interview, onView, onViewPosition }) {
               <div className="mt-4 p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                 <div className="flex justify-between items-start flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Next: {nextRound.name}</h4>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">Next: {nextRound.name}</h4>
+                    <p className="text-xs text-custom-blue dark:text-blue-400 mt-1">
                       {nextRound.type} • {nextRound.mode}
                     </p>
                   </div>

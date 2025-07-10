@@ -24,8 +24,8 @@ const getErrorMessage = (field, value, formData) => {
         RelevantExperienceGreater: "Relevant Experience cannot be greater than Current Experience",
         Position: "Position is required",
         skills: "At least one skill is required",
-        invalidEmail: "Invalid email address",
-        invalidPhone: "Invalid phone number",
+        invalidEmail: "Invalid Email address",
+        invalidPhone: "Invalid Phone number",
         CurrentRole: "Current Role is required",
     };
 

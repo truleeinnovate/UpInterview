@@ -108,7 +108,7 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
             ))
           ) : (
             <div className="text-center py-8 bg-background rounded-lg border border-dashed border-border">
-              <p className="text-muted-foreground">No interviews in progress</p>
+              <p className="text-muted-foreground">No Interviews in Progress</p>
             </div>
           )}
         </div>
@@ -139,7 +139,7 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
             ))
           ) : (
             <div className="text-center py-8 bg-background rounded-lg border border-dashed border-border">
-              <p className="text-muted-foreground">No completed interviews</p>
+              <p className="text-muted-foreground">No Completed Interviews</p>
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
             ))
           ) : (
             <div className="text-center py-8 bg-background rounded-lg border border-dashed border-border">
-              <p className="text-muted-foreground">No cancelled interviews</p>
+              <p className="text-muted-foreground">No Cancelled Interviews</p>
             </div>
           )}
         </div>

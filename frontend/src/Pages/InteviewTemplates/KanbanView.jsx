@@ -6,6 +6,7 @@ import { FaEye, FaPencilAlt } from 'react-icons/fa';
 const KanbanView = ({ templates, loading = false, effectivePermissions, onView, onEdit }) => {
   const navigate = useNavigate();
 
+  console.log("templates--", templates);
   const formatRelativeDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -24,12 +25,12 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
       return 'Yesterday';
     }
     if (diffDays < 30) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${diffDays} Day${diffDays > 1 ? 's' : ''} ago`;
     }
     if (diffMonths < 12) {
-      return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+      return `${diffMonths} Month${diffMonths > 1 ? 's' : ''} ago`;
     }
-    return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+    return `${diffYears} Year${diffYears > 1 ? 's' : ''} ago`;
   };
 
   if (loading) {
@@ -109,7 +110,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
         </span>
       </motion.div>
       {templates.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
           {templates.map((template, index) => (
             <motion.div
               key={template._id}
@@ -120,7 +121,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
               whileHover={{ y: -5 }}
-              onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
+              //onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
             >
               <div className="flex justify-between items-start mb-4 gap-2">
                 <motion.div
@@ -198,21 +199,21 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    {template.rounds.slice(0, 2).map((round, index) => (
+                    {template.rounds?.slice(0, 2).map((round, index) => (
                       <motion.div 
                         key={index} 
                         className="bg-gray-50 rounded-lg px-3 py-2 text-sm"
                         whileHover={{ x: 2 }}
                       >
-                        <span className="font-medium text-gray-900">{round.roundName}</span>
+                        <span className="font-medium text-gray-900">{round.roundTitle}</span>
                       </motion.div>
                     ))}
-                    {template.rounds.length > 2 && (
+                    {template.rounds?.length > 2 && (
                       <motion.div 
                         className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-center text-gray-500"
                         whileHover={{ x: 2 }}
                       >
-                        +{template.rounds.length - 2} More Rounds
+                        +{template.rounds?.length - 2} More Rounds
                       </motion.div>
                     )}
                   </motion.div>
@@ -228,7 +229,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <p className="text-gray-500">No templates found</p>
+          <p className="text-gray-500">No Templates Found</p>
         </motion.div>
       )}
     </motion.div>

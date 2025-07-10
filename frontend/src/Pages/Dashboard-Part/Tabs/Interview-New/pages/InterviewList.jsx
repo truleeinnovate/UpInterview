@@ -329,7 +329,7 @@ function InterviewList() {
         return (
           <div className="truncate max-w-[120px]">
             <div className="text-sm text-gray-700">
-              {completedRounds} of {totalRounds} rounds
+              {completedRounds} of {totalRounds} Rounds
             </div>
             <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
               <div
@@ -652,7 +652,7 @@ function InterviewList() {
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="text-sm text-gray-500">No upcoming rounds</div>
+                                  <div className="text-sm text-gray-500">No Upcoming Rounds</div>
                                 )}
                                 {effectivePermissions.Interviews?.View && (
                                   <button

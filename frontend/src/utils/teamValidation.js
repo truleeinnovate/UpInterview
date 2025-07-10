@@ -27,11 +27,11 @@ export const validateFormData = (formData, entries) => {
     });
 
     if (!validateEmail(formData.Email)) {
-        errors.Email = "Invalid email address";
+        errors.Email = "Invalid Email Address";
     }
 
     if (!validatePhone(formData.Phone)) {
-        errors.Phone = "Invalid phone number";
+        errors.Phone = "Invalid Phone Number";
     }
 
     if (entries.length === 0) {

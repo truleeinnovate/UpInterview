@@ -420,10 +420,11 @@ const TaskForm = ({
           <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Title */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <label className="block text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={formData.title}
+                placeholder="Enter Title"
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
               />
@@ -432,7 +433,7 @@ const TaskForm = ({
             {/* individual assigned to*/}
             {organization ? (
               <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+              <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select
                   value={formData.assignedToId || ''}
@@ -468,7 +469,7 @@ const TaskForm = ({
             </div>
             ) : (
               <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+              <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={formData.assignedTo}
@@ -486,7 +487,7 @@ const TaskForm = ({
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Priority */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Priority</label>
+              <label className="block text-sm font-medium text-gray-700">Priority <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select
                   value={selectedPriority}
@@ -509,7 +510,7 @@ const TaskForm = ({
 
             {/* Status */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
+              <label className="block text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select
                   value={selectedStatus}
@@ -527,13 +528,14 @@ const TaskForm = ({
             </div>
             {/* Related To */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Related To</label>
+              <label className="block text-sm font-medium text-gray-700">Related To <span className="text-red-500">*</span></label>
               <div className="flex gap-4">
                 <div className="relative w-1/2">
                   <input
                     type="text"
                     value={selectedCategoryRelatedTo}
                     onClick={toggleDropdownCategoryRelatedTo}
+                    placeholder="Select Category"
                     readOnly
                     className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedTo && 'border-red-500'}`}
                   />
@@ -603,12 +605,13 @@ const TaskForm = ({
             {/* Due Date */}
             <div className="space-y-1">
             <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
-             Due Date
+             Due Date <span className="text-red-500">*</span>
             </label>
             <input
               type="datetime-local"
               id="scheduledDate"
               name="scheduledDate"
+              placeholder="DD-MM-YYYY"
               value={taskId && formData.dueDate && !isNaN(new Date(formData.dueDate).getTime()) ? new Date(formData.dueDate).toISOString().slice(0, 16) : scheduledDate}
               onChange={(e) => setScheduledDate(e.target.value)}
               min={new Date().toISOString().slice(0, 16)}

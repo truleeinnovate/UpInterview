@@ -1054,7 +1054,7 @@ const RoundFormInterviews = () => {
                           className={`mt-1 block w-full border ${errors.roundTitle ? 'border-red-500' : 'border-gray-300'
                             } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           // required
-                          placeholder="Enter custom round title"
+                          placeholder="Enter Custom Round Title"
                         />
                       ) : (
                         <select
@@ -1161,7 +1161,7 @@ const RoundFormInterviews = () => {
                               name="assessmentTemplate"
                               id="assessmentTemplate"
                               className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                              placeholder="Enter assessment template name"
+                              placeholder="Enter Assessment Template Name"
                               value={assessmentTemplate.assessmentName || ''}
                               onChange={(e) => {
                                 setAssessmentTemplate(prev => ({
@@ -1194,7 +1194,7 @@ const RoundFormInterviews = () => {
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="px-3 py-2 text-gray-500">No assessments found</div>
+                                    <div className="px-3 py-2 text-gray-500">No Assessments Found</div>
                                   )
                                 }
                               </div>
@@ -1226,7 +1226,7 @@ const RoundFormInterviews = () => {
                                     <div className="space-y-4">
                                       {!sectionQuestions || sectionQuestions.noQuestions ? (
                                         <div className="text-center py-4 text-gray-500">
-                                          No sections available for this assessment
+                                          No Sections available for this Assessment
                                         </div>
                                       ) :
 
@@ -1249,7 +1249,7 @@ const RoundFormInterviews = () => {
                                               return (
                                                 <div key={sectionId} className="border rounded-md shadow-sm p-4">
                                                   <div className="text-center py-4 text-gray-500">
-                                                    No valid data for this section
+                                                    No Valid data for this section
                                                   </div>
                                                 </div>
                                               );
@@ -1262,7 +1262,7 @@ const RoundFormInterviews = () => {
                                                   className="flex justify-between items-center w-full"
                                                 >
                                                   <span className="font-medium">
-                                                    {sectionData?.sectionName || 'Unnamed Section'}
+                                                    {sectionData?.sectionName ? sectionData?.sectionName.charAt(0).toUpperCase() + sectionData?.sectionName.slice(1) : 'Unnamed Section'}
                                                   </span>
                                                   <ChevronUp
                                                     className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
@@ -1385,7 +1385,7 @@ const RoundFormInterviews = () => {
                                                       ))
                                                     ) : (
                                                       <div className="text-center py-4 text-gray-500">
-                                                        No questions found in this section
+                                                        No Questions found in this section
                                                       </div>
                                                     )}
                                                   </div>
@@ -1395,7 +1395,7 @@ const RoundFormInterviews = () => {
                                           })
                                         ) : (
                                           <div className="text-center py-4 text-gray-500">
-                                            No assessment data available
+                                            No Assessment data available
                                           </div>
                                         )}
                                     </div>
@@ -1579,14 +1579,14 @@ const RoundFormInterviews = () => {
                       {/* Selected Interviewers Summary */}
                       <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
                         {selectedInterviewers.length === 0 ? (
-                          <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                          <p className="text-sm text-gray-500 text-center">No Interviewers Selected</p>
                         ) : (
                           <div>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center">
                                 <Users className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
-                                  {selectedInterviewers.length} interviewer{selectedInterviewers.length !== 1 ? "s" : ""} selected
+                                  {selectedInterviewers.length} Interviewer{selectedInterviewers.length > 1 ? "s " : " "}Selected
                                   {isInternalSelected && (
                                     <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
                                       Internal
@@ -1616,7 +1616,7 @@ const RoundFormInterviews = () => {
                               <section className="mb-4 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
                                   {interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers'}
-                                  <span className="text-xs text-blue-700">({internalInterviewers.length || "Not Provided"} members)</span>
+                                  <span className="text-xs text-custom-blue">({internalInterviewers.length || "Not Provided"}{' '}{internalInterviewers.length > 1 ? "members" : "member"})</span>
                                   {/* {formData.interviewerViewType === 'groups' && formData.interviewerGroupName && (
                                                     <span className="ml-2 text-sm font-normal">(Group: {formData.interviewerGroupName})</span>
                                                                   )} */}
@@ -1633,7 +1633,7 @@ const RoundFormInterviews = () => {
                                           <div className="flex justify-between items-start mb-2">
                                             <div>
 
-                                              <span className="font-medium text-blue-900 block">{interviewerGroupName || "Not Provided"}</span>
+                                              <span className="font-medium text-custom-blue block">{interviewerGroupName || "Not Provided"}</span>
 
                                             </div>
                                             <button
@@ -1645,7 +1645,7 @@ const RoundFormInterviews = () => {
                                           </div>
                                           <div>
                                             {/* <p className="text-xs text-gray-600 mb-2">{interviewer.description}</p> */}
-                                            <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
+                                            <ul className="list-disc list-inside text-xs text-custom-blue ml-1">
                                               {interviewer.usersNames && interviewer.usersNames.length > 0 ?
                                                 interviewer.usersNames.map((name, i) => (
                                                   <li key={`${interviewer._id}-user-${i}`}>{name}</li>
@@ -1668,8 +1668,8 @@ const RoundFormInterviews = () => {
                                         className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
                                       >
                                         <div className="flex items-center">
-                                          <User className="h-4 w-4 text-blue-600 mr-2" />
-                                          <span className="text-sm font-medium text-blue-900 truncate">
+                                          <User className="h-4 w-4 text-custom-blue mr-2" />
+                                          <span className="text-sm font-medium text-custom-blue truncate">
                                             {`${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim() || interviewer.email}
                                           </span>
                                         </div>
@@ -1833,7 +1833,7 @@ const RoundFormInterviews = () => {
                       rows="10"
                       minLength={50}
                       maxLength={1000}
-
+                      placeholder='Add Instructions after the interview round is completed'
                       value={instructions}
                       readOnly={roundTitle === 'Assessment'}
                       onChange={(e) => setInstructions(e.target.value)}

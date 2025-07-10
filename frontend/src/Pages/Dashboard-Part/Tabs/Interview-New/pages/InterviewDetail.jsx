@@ -573,7 +573,7 @@ const InterviewDetail = () => {
 
                   {rounds.length === 0 && (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No rounds added yet.</p>
+                      <p className="text-gray-500">No Rounds added yet.</p>
                       {canAddRound() && (
                         <button
                           onClick={handleAddRound}

@@ -31,6 +31,7 @@ const RoundCard = ({
   isActive = false,
   hideHeader = false,
 }) => {
+  //console.log("rounds---",round.interviewers)
 
   const { deleteRoundMutation } = useInterviewTemplates();
   const { fetchAssessmentQuestions } = useAssessments();
@@ -202,7 +203,7 @@ const RoundCard = ({
                           <User className="h-3 w-3 mr-1" />
                           <span>
                             {/* Internal ({round?.interviewers.length}) */}
-                            {round?.interviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                            {round?.interviewers.length} Interviewer{round?.interviewers.length !== 1 ? 's' : ''}
                           </span>
                           </span>
                            {round?.interviewerGroupName &&
@@ -344,7 +345,7 @@ const RoundCard = ({
                                 className="flex justify-between items-center w-full"
                               >
                                 <span className="font-medium">
-                                  {sectionData?.sectionName || 'Unnamed Section'}
+                                  {sectionData?.sectionName ? sectionData?.sectionName.charAt(0).toUpperCase() + sectionData?.sectionName.slice(1) : 'Unnamed Section'}
                                 </span>
                                 <ChevronUp
                                   className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'

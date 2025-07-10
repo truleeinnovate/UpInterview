@@ -4,9 +4,9 @@ export const validateFormMyProfile = (formData) => {
   
     // First Name validation
     if (!formData.firstName?.trim()) {
-      errors.firstName = "First name is required";
+      errors.firstName = "First Name is required";
     } else if (formData.firstName.length < 2) {
-      errors.firstName = "First name must be at least 2 characters";
+      errors.firstName = "First Name must be at least 2 characters";
     }
 
     // errors.firstName = !formData?.firstName ? 'First Name is required' : '';
@@ -16,9 +16,9 @@ export const validateFormMyProfile = (formData) => {
   
     // Last Name validation
     if (!formData.lastName?.trim()) {
-      errors.lastName = "Last name is required";
+      errors.lastName = "Last Name is required";
     } else if (formData.lastName.length < 2) {
-      errors.lastName = "Last name must be at least 2 characters";
+      errors.lastName = "Last Name must be at least 2 characters";
     }
 
     // errors.lastName = !formData?.lastName ? 'Last Name is required' : '';
@@ -43,9 +43,9 @@ export const validateFormMyProfile = (formData) => {
       // Phone
   const phoneOnlyDigits = formData?.phone?.replace(/\D/g, '');
   if (!phoneOnlyDigits) {
-    errors.phone = 'Phone number is required';
+    errors.phone = 'Phone Number is required';
   } else if (!/^\d{10}$/.test(phoneOnlyDigits)) {
-    errors.phone = 'Phone number must be a valid 10-digit number';
+    errors.phone = 'Phone Number must be a valid 10-digit number';
   }
 
   
@@ -73,7 +73,7 @@ export const validateAdvancedForm = (formData) => {
   
     // Current Role validation
     if (!formData.currentRole?.trim()) {
-      errors.currentRole = "Current role is required";
+      errors.currentRole = "Current Role is required";
     }
   
     // Industry validation
@@ -266,11 +266,11 @@ export const validateInterviewForm = (formData, isReady) => {
   } else if (formData.PreviousExperienceConductingInterviews === "yes") {
     // Additional validation if 'yes' is selected
     if (!formData.PreviousExperienceConductingInterviewsYears) {
-      errors.PreviousExperienceConductingInterviewsYears = "Years of experience is required";
+      errors.PreviousExperienceConductingInterviewsYears = "Years of Experience is required";
     } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) || 
              Number(formData.PreviousExperienceConductingInterviewsYears) < 1 || 
              Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
-      errors.PreviousExperienceConductingInterviewsYears = "Enter a number between 1 and 15";
+      errors.PreviousExperienceConductingInterviewsYears = "Enter a Number between 1 and 15";
     }
   }
 
@@ -293,16 +293,16 @@ export const validateInterviewForm = (formData, isReady) => {
 
   // Professional Title validation
   if (!formData.professionalTitle) {
-    errors.professionalTitle = "Professional title is required";
+    errors.professionalTitle = "Professional Title is required";
   } else if (formData.professionalTitle.length < 50) {
-    errors.professionalTitle = "Professional title must be at least 50 characters";
+    errors.professionalTitle = "Professional Title must be at least 50 characters";
   } else if (formData.professionalTitle.length > 100) {
-    errors.professionalTitle = "Professional title cannot exceed 100 characters";
+    errors.professionalTitle = "Professional Title cannot exceed 100 characters";
   }
 
   // Professional Bio validation
   if (!formData.bio) {
-    errors.bio = "Professional bio is required";
+    errors.bio = "Professional Bio is required";
   } else if (formData.bio.length < 150) {
     errors.bio = "Bio must be at least 150 characters";
   } else if (formData.bio.length > 500) {

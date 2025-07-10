@@ -10,14 +10,14 @@ export const validateTaskForm = (formData, selectedPriority, selectedStatus, sch
 
     // Check for the category in "Related To"
     if (!formData.relatedTo.objectName) {
-        errors.relatedToCategory = "Choose any tab";
+        errors.relatedToCategory = "Choose Any Tab";
     }
 
     // Check for the record ID in "Related To"
     if (!formData.relatedTo.recordId) {
-        errors.relatedToOption = "Choose any record";
+        errors.relatedToOption = "Choose Any Record";
     } else if (!/^[0-9a-fA-F]{24}$/.test(formData.relatedTo.recordId)) {
-        errors.relatedToOption = "Invalid recordId format";
+        errors.relatedToOption = "Invalid RecordId Format";
     }
 
 

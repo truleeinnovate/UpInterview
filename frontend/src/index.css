@@ -97,6 +97,17 @@ input[type="text"][autocomplete="new-password"] {
   }
 }
 
+
+/* Hide text caret on all elements except inputs, textareas, and explicitly contenteditable elements */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+  caret-color: transparent;
+}
+
+/* Explicitly show caret inside form fields */
+input, textarea, [contenteditable="true"] {
+  caret-color: #000;
+}
+
 @layer utilities {
   .bg-background {
     background-color: hsl(var(--background));

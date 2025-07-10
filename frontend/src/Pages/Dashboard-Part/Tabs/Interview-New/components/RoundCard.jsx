@@ -123,10 +123,10 @@ const RoundCard = ({
   const handleDeleteRound = async () => {
     try {
       await deleteRoundMutation(round._id);
-      toast.success('Round deleted successfully');
+      toast.success('Round Deleted successfully');
     } catch (error) {
-      console.error('Error deleting round:', error);
-      toast.error('Failed to delete round');
+      console.error('Error Deleting Round:', error);
+      toast.error('Failed to Delete Round');
     }
   };
 
@@ -203,7 +203,7 @@ const RoundCard = ({
       );
       console.log("Status updated:", response.data);
       // Show success toast
-      toast.success(`Round status updated to ${newStatus}`, {
+      toast.success(`Round Status updated to ${newStatus}`, {
       });
     } catch (error) {
       console.error("Error updating status:", error);
@@ -258,7 +258,7 @@ const RoundCard = ({
 
   return (
     <>
-      <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
+      <div className={`bg-white rounded-lg ${!hideHeader && 'shadow-md'} overflow-hidden ${isActive ? 'ring-2 ring-custom-blue' : ''}`}>
         <div className="p-5">
           {/* Tabs */}
           {hasFeedback && (
@@ -267,7 +267,7 @@ const RoundCard = ({
                 <button
                   onClick={() => setActiveTab('details')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'details'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-custom-blue text-custom-blue'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
@@ -276,7 +276,7 @@ const RoundCard = ({
                 <button
                   onClick={() => setActiveTab('feedback')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'feedback'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-custom-blue text-custom-blue'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
@@ -327,7 +327,7 @@ const RoundCard = ({
                         Interviewers</h4>
                       <button
                         onClick={() => setShowInterviewers(!showInterviewers)}
-                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                        className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
                         {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
@@ -342,7 +342,7 @@ const RoundCard = ({
                           <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                             <span className='flex items-center'>
                               <User className="h-3 w-3 mr-1" />
-                              <span> {internalInterviewers.length} interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                              <span> {internalInterviewers.length}{internalInterviewers.length > 1 ? ' Interviewers' : ' Interviewer'}
                               </span>
                             </span>
                             {round?.interviewerGroupName &&
@@ -435,7 +435,7 @@ const RoundCard = ({
                     <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
                     <button
                       onClick={toggleShowQuestions}
-                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                      className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
                     >
                       {showQuestions ? 'Hide' : 'Show'}
                       {showQuestions ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
@@ -464,7 +464,7 @@ const RoundCard = ({
                           })}
                         </ul>
                       ) : (
-                        <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                        <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                       )}
 
                     </div>
@@ -481,7 +481,7 @@ const RoundCard = ({
                     <h4 className="text-sm font-medium text-gray-700">Assessment Questions</h4>
                     <button
                       onClick={toggleShowQuestions}
-                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                      className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
                     >
                       {showQuestions ? 'Hide' : 'Show'}
                       {showQuestions ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
@@ -514,7 +514,7 @@ const RoundCard = ({
                                       className="flex justify-between items-center w-full"
                                     >
                                       <span className="font-medium">
-                                        {sectionData?.sectionName || 'Unnamed Section'}
+                                        {sectionData?.sectionName ? sectionData?.sectionName.charAt(0).toUpperCase() + sectionData?.sectionName.slice(1) : 'Unnamed Section'}
                                       </span>
                                       <ChevronUp
                                         className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
@@ -637,7 +637,7 @@ const RoundCard = ({
                                           ))
                                         ) : (
                                           <div className="text-center py-4 text-gray-500">
-                                            No questions found in this section
+                                            No Questions found in this section
                                           </div>
                                         )}
                                       </div>

@@ -23,8 +23,10 @@ import { config } from '../../../../config.js';
 import TaskKanban from './TaskKanban.jsx';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const Task = () => {
+  const { effectivePermissions } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState('table');
@@ -289,6 +291,7 @@ const Task = () => {
               title="Tasks"
               onAddClick={handleAddTaskClick}
               addButtonText="Add Task"
+              canCreate={effectivePermissions.Tasks?.Create}
             />
           </motion.div>
           <Toolbar
@@ -319,7 +322,7 @@ const Task = () => {
                     columns={tableColumns}
                     loading={loading}
                     actions={tableActions}
-                    emptyState="No tasks found."
+                    emptyState="No Tasks Found."
                   />
                 </div>
               ) : (
@@ -340,7 +343,7 @@ const Task = () => {
                     //columns={kanbanColumns}
                     loading={loading}
                     renderActions={renderKanbanActions}
-                    emptyState="No tasks found."
+                    emptyState="No Tasks Found."
 
                   />
                 </div>
@@ -381,7 +384,7 @@ const Task = () => {
                             </label>
                           ))
                         ) : (
-                          <span className="text-sm text-gray-500">No statuses available</span>
+                          <span className="text-sm text-gray-500">No Statuses available</span>
                         )}
                       </div>
                     )}
