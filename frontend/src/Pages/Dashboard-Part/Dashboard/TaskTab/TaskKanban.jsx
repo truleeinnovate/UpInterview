@@ -109,7 +109,7 @@ const TaskKanban = ({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 truncate">{column.header}</h3>
               <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-                {(groupedData[column.key] || []).length} {(groupedData[column.key] || []).length >= 1 ? 'Task' : 'Tasks'}
+                {(groupedData[column.key] || []).length} {(groupedData[column.key] || []).length > 1 ? 'Tasks' : 'Task'}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">

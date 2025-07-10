@@ -4,7 +4,7 @@ export const validateGroupForm = (formData) => {
     const errors = {};
   
     if (!formData.name.trim()) {
-      errors.name = 'Group name is required.';
+      errors.name = 'Group Name is required.';
     }
   
     if (!formData.description.trim()) {

@@ -198,12 +198,12 @@ const Assessment = () => {
     },
     {
       key: "sections",
-      header: "No.of Sections",
+      header: "No. of Sections",
       render: (value, row) => assessmentSections[row._id] ?? 0,
     },
     {
       key: "NumberOfQuestions",
-      header: "No.of Questions",
+      header: "No. of Questions",
       render: (value) => value || "Not Provided",
     },
     {

@@ -46,18 +46,18 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
 
 export const validatePhone = (phone, countryCode) => {
   if (!phone) {
-    return 'Phone number is required';
+    return 'Phone Number is required';
   }
 
   const cleanPhone = phone.replace(/\D/g, '');
 
   if (countryCode === '+91') {
     if (!/^\d{10}$/.test(cleanPhone)) {
-      return 'Phone number must be a valid 10-digit number for India';
+      return 'Phone Number must be a valid 10-digit number for India';
     }
   } else if (countryCode === '+44') {
     if (!/^\d{10,11}$/.test(cleanPhone)) {
-      return 'Phone number must be a valid 10 or 11-digit number for UK';
+      return 'Phone Number must be a valid 10 or 11-digit number for UK';
     }
   } else {
     return 'Invalid country code';
@@ -82,7 +82,7 @@ export const validateCompany = (company) => {
 
 export const validateEmployees = (employees) => {
   if (!employees) {
-    return 'Number of employees is required';
+    return 'Number of Employees is required';
   }
   return '';
 };

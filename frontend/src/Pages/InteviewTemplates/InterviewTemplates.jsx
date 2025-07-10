@@ -126,10 +126,10 @@ const InterviewTemplates = () => {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    if (diffDays < 30) return `${diffDays} Day${diffDays > 1 ? "s" : ""} ago`;
     if (diffMonths < 12)
-      return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
-    return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+      return `${diffMonths} Month${diffMonths > 1 ? "s" : ""} ago`;
+    return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
   };
 
   const tableColumns = [

@@ -896,7 +896,7 @@ const AddCandidateForm = ({ mode }) => {
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
                       errors.Email && "border-red-500"
                     }`}
                     placeholder="Enter Email Address"

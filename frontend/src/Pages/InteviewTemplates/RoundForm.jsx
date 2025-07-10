@@ -480,15 +480,15 @@ function RoundFormTemplates() {
 
     // Round title validation
     if (!formData.roundTitle?.trim()) {
-      newErrors.roundTitle = 'Round title is required';
+      newErrors.roundTitle = 'Round Title is required';
     }
     if (formData.roundTitle === 'Other' && !formData.customRoundTitle?.trim()) {
-      newErrors.roundTitle = 'Custom round title is required';
+      newErrors.roundTitle = 'Custom Round Title is required';
     }
 
     // Interview mode validation (skip for Assessment)
     if (!formData.interviewMode && formData.roundTitle !== 'Assessment') {
-      newErrors.interviewMode = 'Interview mode is required';
+      newErrors.interviewMode = 'Interview Mode is required';
     }
 
     if (!formData.sequence || formData.sequence < 1) {
@@ -497,7 +497,7 @@ function RoundFormTemplates() {
 
     if (formData.roundTitle === 'Assessment') {
       if (!formData.assessmentTemplate?.assessmentId) {
-        newErrors.assessmentTemplate = 'Assessment template is required';
+        newErrors.assessmentTemplate = 'Assessment Template is required';
       }
     }
 
@@ -513,7 +513,7 @@ function RoundFormTemplates() {
         newErrors.instructions = 'Instructions cannot exceed 1000 characters';
       }
       if (!formData.interviewerType) {
-        newErrors.interviewerType = 'Interviewer type is required';
+        newErrors.interviewerType = 'Interviewer Type is required';
       }
       if (formData.interviewerType === 'Internal' && formData.interviewers.length === 0) {
         newErrors.interviewers = 'At least one Internal interviewer is required';
@@ -794,7 +794,7 @@ function RoundFormTemplates() {
 
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
                     required
-                    placeholder="Enter custom round title"
+                    placeholder="Enter Custom Round Title"
                   />
                 ) : (
                   <select
@@ -901,7 +901,7 @@ function RoundFormTemplates() {
                       id="assessmentTemplate"
                       className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${errors.assessmentTemplate ? 'border-red-500' : 'border-gray-300'
                         }`}
-                      placeholder="Enter assessment template name"
+                      placeholder="Enter Assessment Template Name"
                       value={formData.assessmentTemplate?.assessmentName || ''}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -962,7 +962,7 @@ function RoundFormTemplates() {
                               onClick={() => toggleSection(sectionId)}
                               className="flex justify-between items-center w-full"
                             >
-                              <span className="font-medium">{sectionData?.sectionName || 'Unnamed Section'}</span>
+                              <span className="font-medium">{sectionData?.sectionName ? sectionData?.sectionName.charAt(0).toUpperCase() + sectionData?.sectionName.slice(1) : 'Unnamed Section'}</span>
                               <ChevronUp
                                 className={`transform transition-transform ${expandedSections[sectionId] ? '' : 'rotate-180'
                                   }`}
@@ -1091,7 +1091,7 @@ function RoundFormTemplates() {
                           disabled={formData.interviewerType === 'External'}
                           title={formData.interviewerType === 'External' ? 'Clear External interviewers first' : ''}
                         >
-                          <User className="h-4 w-4 mr-1 text-blue-600" />
+                          <User className="h-4 w-4 mr-1 text-custom-blue" />
                           Select Internal
                         </Button>
                       ) : (
@@ -1107,7 +1107,7 @@ function RoundFormTemplates() {
                           disabled={formData.interviewerType === 'External'}
                           title={formData.interviewerType === 'External' ? 'Clear External interviewers first' : ''}
                         >
-                          <User className="h-4 w-4 mr-1 text-blue-600" />
+                          <User className="h-4 w-4 mr-1 text-custom-blue" />
                           Select Internal
                         </Button>
 
@@ -1135,7 +1135,7 @@ function RoundFormTemplates() {
                   <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
                     {!formData.interviewerType ? (
 
-                      <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                      <p className="text-sm text-gray-500 text-center">No Interviewers Selected</p>
                     ) : (
                       <div>
                         <div className="flex items-center justify-between mb-3">
@@ -1143,10 +1143,10 @@ function RoundFormTemplates() {
                             <Users className="h-4 w-4 text-gray-500 mr-2" />
                             <span className="text-sm text-gray-700">
                               {formData.interviewerType === 'Internal'
-                                ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? 's' : ''
+                                ? `${formData.interviewers.length} Interviewer${formData.interviewers.length !== 1 ? 's' : ''
                                 }`
-                                : 'Outsourced interviewers'}{' '}
-                              selected
+                                : 'Outsourced Interviewers'}{' '}
+                              Selected
                               {formData.interviewerType === 'Internal' && (
                                 <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                   Internal
@@ -1175,7 +1175,7 @@ function RoundFormTemplates() {
                           <section className="mb-4 w-full">
                             <h4 className="text-sm font-semibold text-gray-600 mb-3">
                               {formData.interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers'}
-                              <span className="text-xs text-blue-700">({formData.interviewers.length || "Not Provided"} members)</span>
+                              <span className="text-xs text-custom-blue">{' '}({formData.interviewers.length || "Not Provided"} {formData.interviewers.length  > 1 ? 'Members' : 'Member'})</span>
                               {/* {formData.interviewerViewType === 'groups' && formData.interviewerGroupName && (
                                                              <span className="ml-2 text-sm font-normal">(Group: {formData.interviewerGroupName})</span>
                                                            )} */}
@@ -1192,7 +1192,7 @@ function RoundFormTemplates() {
                                       <div className="flex justify-between items-start mb-2">
                                         <div>
 
-                                          <span className="font-medium text-blue-900 block">{formData?.interviewerGroupName || "Not Provided"}</span>
+                                          <span className="font-medium text-custom-blue block">{formData?.interviewerGroupName || "Not Provided"}</span>
 
                                         </div>
                                         <button
@@ -1204,7 +1204,7 @@ function RoundFormTemplates() {
                                       </div>
                                       <div>
                                         {/* <p className="text-xs text-gray-600 mb-2">{interviewer.description}</p> */}
-                                        <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
+                                        <ul className="list-disc list-inside text-xs text-custom-blue ml-1">
                                           {interviewer.usersNames ?
                                             interviewer.usersNames.map((name, i) => (
                                               <li key={`${interviewer._id}-user-${i}`}>{name}</li>
@@ -1227,8 +1227,8 @@ function RoundFormTemplates() {
                                     className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
                                   >
                                     <div className="flex items-center">
-                                      <User className="h-4 w-4 text-blue-600 mr-2" />
-                                      <span className="text-sm font-medium text-blue-900 truncate">
+                                      <User className="h-4 w-4 text-custom-blue mr-2" />
+                                      <span className="text-sm font-medium text-custom-blue truncate">
                                         {`${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim() || interviewer.email}
                                       </span>
                                     </div>
@@ -1323,7 +1323,7 @@ function RoundFormTemplates() {
                             })}
                           </ul>
                         ) : (
-                          <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                          <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                         )}
                       </div>
 
@@ -1422,7 +1422,7 @@ function RoundFormTemplates() {
                   loadingText="Adding..."
                   variant="outline"
                 >
-                  <FaPlus className="w-5 h-5 mr-1" /> Add new Round
+                  <FaPlus className="w-5 h-5 mr-1" /> Add New Round
                 </LoadingButton>
               }
 
