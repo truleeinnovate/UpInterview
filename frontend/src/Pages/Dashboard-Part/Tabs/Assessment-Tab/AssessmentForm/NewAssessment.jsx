@@ -1217,6 +1217,7 @@ const NewAssessment = () => {
                           handleChange={handleChange}
                           handleIconClick={handleIconClick}
                           showMessage={showMessage}
+                          setShowMessage={setShowMessage}
                           selectedPosition={selectedPosition}
                           showDropdownPosition={showDropdownPosition}
                           difficultyLevels={difficultyLevels}
