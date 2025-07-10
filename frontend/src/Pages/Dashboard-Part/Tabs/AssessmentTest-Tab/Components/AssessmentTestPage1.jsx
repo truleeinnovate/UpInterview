@@ -26,7 +26,10 @@ const AssessmentTestPage1 = ({
   calculatedScores,
   candidateAssessmentId,
 }) => {
-  console.log('candidateAssessmentId', candidateAssessmentId);
+
+  useEffect(() => {
+    console.log('assessment', assessment);
+  }, [assessment]);
 
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '']);
@@ -35,11 +38,11 @@ const AssessmentTestPage1 = ({
   const [timer, setTimer] = useState(30);
 
   const handleProceed = () => {
-    if (isVerified && isAgreed) {
+    // if (isVerified && isAgreed) {
       setCurrentStep(2);
-    } else {
-      toast.error('Please verify your email and agree to the terms.');
-    }
+    // } else {
+    //   toast.error('Please verify your email and agree to the terms.');
+    // }
   };
 
   useEffect(() => {
@@ -137,7 +140,7 @@ const AssessmentTestPage1 = ({
     <React.Fragment>
       <div className="max-w-[90rem] mx-auto py-8 px-8">
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden border border-white/20">
-          <div className="bg-custom-blue p-8 relative overflow-hidden">
+          <div className="bg-custom-blue p-4 relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTI0IDQ4YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnptMC0xMmMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA6IDYgNi02IDIuNjktNiA2LTZ6IiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')] opacity-10" />
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
@@ -145,11 +148,8 @@ const AssessmentTestPage1 = ({
                   <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
                     <LightBulbIcon className="h-5 w-5 text-white" />
                   </div>
-                  <h2 className="text-sm font-medium text-blue-100">
-                    {assessment?.assessmentId?.AssessmentType?.join(', ')}
-                  </h2>
                 </div>
-                <div className="flex items-center space-x-8">
+                <div className="flex items-center space-x-4 text-sm">
                   {[
                     { icon: ClockIcon, value: assessment?.assessmentId?.Duration },
                     { icon: DocumentTextIcon, value: `${assessment?.assessmentId?.NumberOfQuestions} Questions` },
@@ -162,18 +162,21 @@ const AssessmentTestPage1 = ({
                   ].map((stat, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <stat.icon className="h-4 w-4 text-blue-200" />
-                      <span className="text-sm font-medium text-blue-100">{stat.value}</span>
+                      <span className=" font-medium text-blue-100">{stat.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="mt-4">
-                <h1 className="text-3xl font-bold text-white tracking-tight leading-tight mb-2">
+                <h1 className="text-xl font-bold text-white tracking-tight leading-tight mb-2">
                   {assessment?.assessmentId?.AssessmentTitle}
                 </h1>
                 {assessment?.assessmentId?.Position && (
-                  <p className="text-blue-100 text-lg font-light">
-                    Position: <span className="font-medium text-white">{assessment?.assessmentId?.Position}</span>
+                  <p className="text-blue-100 text-sm font-light">
+                    Position: <span className="font-medium text-white">
+                      {typeof assessment?.assessmentId?.Position === 'object' 
+                        && (assessment.assessmentId.Position.title || 'Position Title Not Available')}
+                    </span>
                   </p>
                 )}
               </div>
@@ -181,8 +184,8 @@ const AssessmentTestPage1 = ({
           </div>
 
           {/* Instructions and Notes */}
-          <div className="p-8">
-            <div className="space-y-8">
+          <div className="p-4">
+            <div className="space-y-4">
               {/* Instructions */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
@@ -193,20 +196,20 @@ const AssessmentTestPage1 = ({
                 </div>
                 <div className="prose prose-blue max-w-none">
                   {assessment?.assessmentId?.Instructions?.split('\n').map((line, index) => (
-                    <p key={index} className="text-gray-600 text-base leading-relaxed">{line}</p>
+                    <p key={index} className="text-gray-600 leading-relaxed text-[13px]">{line}</p>
                   ))}
                 </div>
               </div>
 
               {!showOtpInput && (
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
                       <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
-                      <p className="text-gray-500 mt-1">Enter the code sent to {candidate?.Email}</p>
+                      <p className="text-gray-500 mt-1 text-[13px]">Enter the code sent to {candidate?.Email}</p>
                     </div>
                   </div>
 
@@ -220,14 +223,14 @@ const AssessmentTestPage1 = ({
               )}
 
               {showOtpInput && !isVerified && (
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
                       <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
-                      <p className="text-gray-500 mt-1">Enter the code sent to {candidate?.Email}</p>
+                      <p className="text-gray-500 mt-1 text-[13px]">Enter the code sent to {candidate?.Email}</p>
                     </div>
                   </div>
 
@@ -270,21 +273,21 @@ const AssessmentTestPage1 = ({
               )}
 
               {isVerified && (
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center space-x-4">
                     <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
                       <CheckCircleIcon className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">Email Verified</h3>
-                      <p className="text-gray-500 mt-1">Your email has been successfully verified.</p>
+                      <p className="text-gray-500 mt-1 text-[13px]">Your email has been successfully verified.</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {assessment?.assessmentId?.AdditionalNotes && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                   <div className="flex items-center mb-4">
                     <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
                       <ClipboardDocumentListIcon className="h-5 w-5 text-custom-blue" />
@@ -293,14 +296,14 @@ const AssessmentTestPage1 = ({
                   </div>
                   <div className="prose prose-indigo max-w-none">
                     {assessment?.assessmentId?.AdditionalNotes?.split('\n').map((line, index) => (
-                      <p key={index} className="text-gray-600 text-base leading-relaxed">{line}</p>
+                      <p key={index} className="text-gray-600 text-base leading-relaxed text-[13px]">{line}</p>
                     ))}
                   </div>
                 </div>
               )}
 
               {/* Terms and Conditions */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
                     <ShieldCheckIcon className="h-5 w-5 text-custom-blue" />
@@ -308,20 +311,18 @@ const AssessmentTestPage1 = ({
                   <h2 className="ml-3 text-lg font-semibold text-gray-900">Terms and Conditions</h2>
                 </div>
                 <div className="mb-4">
-                  <label className="flex items-start space-x-4">
-                    <div className="relative flex items-start">
-                      <div className="flex items-center h-6">
-                        <input
-                          type="checkbox"
-                          checked={isAgreed}
-                          onChange={(e) => setIsAgreed(e.target.checked)}
-                          className="h-5 w-5 text-custom-blue focus:ring-custom-blue border-gray-300 rounded-lg transition-colors"
-                        />
-                      </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="flex items-center h-6">
+                      <input
+                        type="checkbox"
+                        checked={isAgreed}
+                        onChange={(e) => setIsAgreed(e.target.checked)}
+                        className="h-5 w-5 text-custom-blue focus:ring-custom-blue border-gray-300 rounded-lg transition-colors cursor-pointer"
+                      />
                     </div>
-                    <span className="text-gray-700 text-base">
+                    <div className="text-gray-700">
                       I understand and agree to the following terms:
-                      <ul className="list-none mt-3 space-y-2">
+                      <ul className="list-none mt-3 space-y-2 text-[13px]">
                         {[
                           'I will complete the assessment honestly and independently',
                           'I will not use any external resources unless explicitly permitted',
@@ -329,32 +330,31 @@ const AssessmentTestPage1 = ({
                           'I understand that my responses will be monitored and recorded',
                           'I agree to the time limit and submission requirements',
                         ].map((term, index) => (
-                          <li key={index} className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg text-sm">
+                          <li key={index} className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
                             <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                             {term}
                           </li>
                         ))}
                       </ul>
-                    </span>
-                  </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 bg-gradient-to-b from-transparent to-gray-50/50 border-t border-gray-100">
+          <div className="px-4 py-3 bg-gradient-to-b from-transparent to-gray-50/50 border-t border-gray-100">
             <div className="flex justify-end">
               <button
                 onClick={handleProceed}
-                disabled={!isVerified || !isAgreed}
+                // disabled={!isVerified || !isAgreed}
                 className={`
-                  group inline-flex items-center px-6 py-3 rounded-xl text-base font-medium
+                  group inline-flex items-center px-4 py-2 rounded-xl text-base font-medium
                   transition-all duration-300 transform
-                  ${
-                    isVerified && isAgreed
-                      ? 'text-white bg-custom-blue hover:bg-custom-blue/90'
-                      : 'text-gray-500 bg-gray-300 cursor-not-allowed'
+                  ${isVerified && isAgreed
+                    ? 'text-white bg-custom-blue hover:bg-custom-blue/90'
+                    : 'text-gray-500 bg-gray-300 cursor-not-allowed'
                   }
                 `}
               >
