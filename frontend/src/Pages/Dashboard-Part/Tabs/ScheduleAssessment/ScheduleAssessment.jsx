@@ -123,11 +123,11 @@ const ScheduleAssessment = () => {
 
   const handleView = (schedule) => {
     // Adjust route when details page exists
-    navigate(`/schedule-assessment/${schedule._id}`);
+    navigate(`/schedule-assessment/${schedule._id}`, { state: { schedule } });
   };
-  const handleEdit = (schedule) => {
-    navigate(`/schedule-assessment/edit/${schedule._id}`);
-  };
+  // const handleEdit = (schedule) => {
+  //   navigate(`/schedule-assessment/edit/${schedule._id}`);
+  // };
 
   // Table definitions
   const tableColumns = [
@@ -177,7 +177,7 @@ const ScheduleAssessment = () => {
             key: 'edit',
             label: 'Edit',
             icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: handleEdit,
+            //onClick: handleEdit,
           },
         ]
       : []),
@@ -226,7 +226,7 @@ const ScheduleAssessment = () => {
                 schedules={currentRows}
                 loading={isLoading}
                 onView={handleView}
-                onEdit={handleEdit}
+                //onEdit={handleEdit}
               />
             )}
             <FilterPopup
