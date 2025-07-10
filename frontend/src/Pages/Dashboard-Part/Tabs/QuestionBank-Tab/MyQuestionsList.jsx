@@ -226,11 +226,11 @@ const MyQuestionsList = ({
   const getDifficultyStyles = (difficulty) => {
     switch (difficulty) {
       case "Easy":
-        return "border-white rounded-md px-2 py-1 bg-green-300";
+        return "border-white rounded-md px-2 py-1 bg-[#81C784]";
       case "Medium":
-        return "border-white rounded-md px-2 py-1 bg-orange-300";
+        return "border-white rounded-md px-2 py-1 bg-[#FFD54F]";
       case "Hard":
-        return "border-white rounded-md px-2 py-1 bg-red-300";
+        return "border-white rounded-md px-2 py-1 bg-[#E57373]";
       default:
         return "";
     }
@@ -800,7 +800,7 @@ const selectedLabelId = useMemo(() => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+                                className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-[#BBDEFB] text-blue-800" : "bg-[#D1C4E9] text-blue-800"
                                   }`}
                                 title="Question Type"
                               >
