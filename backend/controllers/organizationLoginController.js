@@ -337,6 +337,9 @@ const loginOrganization = async (req, res) => {
       };
       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
 
+      // Set impersonation token cookie
+      res.cookie('impersonationToken', impersonationToken, getAuthCookieOptions());
+
       return res.status(200).json({
         success: true,
         message: "Login successful",
@@ -370,6 +373,9 @@ const loginOrganization = async (req, res) => {
       timestamp: new Date().toISOString(),
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
+
+    // Set auth token cookie
+    res.cookie('authToken', authToken, getAuthCookieOptions());
 
     res.status(200).json({
       success: true,

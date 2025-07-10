@@ -30,19 +30,20 @@ api.interceptors.response.use(
     if (newToken) {
       Cookies.set('authToken', newToken, {
         expires: 2 / 24, // 2 hours
-        sameSite: 'strict',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'None', // Required for cross-origin requests
+        secure: true, // Required when sameSite is 'None'
+        path: '/',
       });
     }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If the error is 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         // Try to refresh the token
         const newToken = await refreshAuthToken();
@@ -57,7 +58,7 @@ api.interceptors.response.use(
         window.dispatchEvent(new Event('tokenRefreshFailed'));
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

@@ -176,7 +176,7 @@ const LinkedInCallback = () => {
 
         // Set the authToken cookie
         if (token) {
-          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'strict' });
+          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'None' });
         }
 
         if (existingUser) {

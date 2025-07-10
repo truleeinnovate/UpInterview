@@ -1,119 +1,13 @@
-//ashraf added this to check online consoles
-// const appInsights = require("applicationinsights");
-// appInsights.setup("YOUR_INSTRUMENTATION_KEY").start();
-
-// require("dotenv").config();
-// const cors = require("cors");
-// const express = require("express");
-// const app = express();
-
-
-// Apply the permission middleware to all routes in this router
-
-
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     const allowedOrigins = [
-//       'https://app.upinterview.io',
-//       /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
-//       'http://localhost:3000'
-//     ];
-//     if (!origin || allowedOrigins.some((allowed) => typeof allowed === 'string' ? allowed === origin : allowed.test(origin))) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   credentials: true,
-//   allowedHeaders: [
-//     "Content-Type",
-//     "Authorization",
-//     "X-Requested-With",
-//     "Cookie",
-//     "Accept",
-//     "x-user-id",
-//     "x-tenant-id",
-//     "x-impersonation-userid", 
-//     "x-permissions"
-//   ],
-//   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-//   optionsSuccessStatus: 200,
-//   exposedHeaders: ["x-user-id", "x-tenant-id", "x-impersonation-userid", "x-permissions"]
-// };
-
-// Apply CORS middleware
-// app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions));
-
-// require("dotenv").config();
-
-// const mongoose = require("mongoose");
-
-// const cookieParser = require("cookie-parser");
-// const bodyParser = require("body-parser");
-
-// const port = process.env.PORT || 5000;
-
-// mongoose
-//   .connect(process.env.MONGODB_URI, {})
-//   .then(() => console.log("✅ MongoDB connected"))
-//   .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// Explicitly handle preflight requests
-
-// Special middleware to capture raw body for webhook signature verification
-// This MUST come before any bodyParsers
-// const rawBodyParser = require("body-parser").raw({ type: "*/*" });
-
-// Use raw body parser only for webhook endpoints
-// app.use((req, res, next) => {
-//   if (
-//     req.originalUrl === "/payment/webhook" ||
-//     req.path === "/payment/webhook"
-//   ) {
-//     rawBodyParser(req, res, (err) => {
-//       if (err) return next(err);
-//       req.rawBody = req.body.toString();
-//       next();
-//     });
-//   } else {
-//     next();
-//   }
-// });
-
-// Standard middleware
-// app.use(bodyParser.json());
-// app.use(cookieParser());
-
-// const { permissionMiddleware } = require('./middleware/permissionMiddleware');
-// app.use(permissionMiddleware);
-
-
-// API Routes
-// const apiRoutes = require('./routes/apiRoutes');
-
-// require('./controllers/PushNotificationControllers/pushNotificationTaskController');
-// const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
-// const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
-// const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
-// const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
-// const organizationRoutes = require("./routes/organizationLoginRoutes.js");
-// const Cardrouter = require("./routes/Carddetailsroutes.js");
-// const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
-// app.use('/api', apiRoutes);
-// // Register all routes
-// app.use("/linkedin", linkedinAuthRoutes);
-// app.use("/Individual", individualLoginRoutes);
-// app.use("/", SubscriptionRouter);
-// app.use("/", CustomerSubscriptionRouter);
-// app.use("/Organization", organizationRoutes);
-// app.use("/", Cardrouter);
-// app.use("/emails", EmailRouter);
-
-
-
 // this is new
 require('dotenv').config();
+
+// Debug environment variables
+console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('COOKIE_DOMAIN:', process.env.COOKIE_DOMAIN);
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+console.log('=== END ENVIRONMENT VARIABLES DEBUG ===');
+
 const cors = require('cors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -126,6 +20,7 @@ app.set('trust proxy', 1);
 
 // ✅ Parse cookies
 app.use(cookieParser());
+
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('Origin:', origin);
@@ -135,20 +30,19 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:5000'
     ];
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
+
     if (!origin) return callback(null, true);
-    
+
     // Check if the origin is allowed
-    if (allowedOrigins.some((allowed) => 
-      typeof allowed === 'string' 
-        ? allowed === origin 
+    if (allowedOrigins.some((allowed) =>
+      typeof allowed === 'string'
+        ? allowed === origin
         : allowed.test(origin)
     )) {
       console.log('Origin allowed:', origin);
       return callback(null, true);
     }
-    
+
     console.warn('CORS: Origin not allowed:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
@@ -181,6 +75,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Add cookie debugging middleware AFTER CORS
+app.use((req, res, next) => {
+  console.log('[Cookie Debug] Request URL:', req.url);
+  console.log('[Cookie Debug] Request cookies:', req.cookies);
+  console.log('[Cookie Debug] Raw cookie header:', req.headers.cookie);
+  console.log('[Cookie Debug] Origin:', req.headers.origin);
+  console.log('[Cookie Debug] Referer:', req.headers.referer);
+  next();
+});
 
 mongoose
   .connect(process.env.MONGODB_URI, {})
@@ -218,6 +122,282 @@ const organizationRoutes = require('./routes/organizationLoginRoutes.js');
 const Cardrouter = require('./routes/Carddetailsroutes.js');
 const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js');
 const usersRoutes = require('./routes/usersRoutes.js');
+
+// Simple login test endpoint
+app.post('/test-login', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  console.log('[Test Login] Login attempt received');
+  console.log('[Test Login] Request body:', req.body);
+
+  // Set authentication cookies
+  res.cookie('authToken', 'test-auth-token-123', getAuthCookieOptions());
+  res.cookie('impersonationToken', 'test-impersonation-token-456', getAuthCookieOptions());
+
+  console.log('[Test Login] Setting cookies with options:', getAuthCookieOptions());
+
+  res.json({
+    success: true,
+    message: 'Test login successful',
+    cookiesSet: ['authToken', 'impersonationToken'],
+    cookieOptions: getAuthCookieOptions()
+  });
+});
+
+// Test permission middleware with cookies
+app.get('/test-permission-cookies', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  console.log('[Test Permission Cookies] === PERMISSION MIDDLEWARE TEST ===');
+  console.log('[Test Permission Cookies] Request URL:', req.url);
+  console.log('[Test Permission Cookies] Request cookies:', req.cookies);
+  console.log('[Test Permission Cookies] Raw cookie header:', req.headers.cookie);
+  console.log('[Test Permission Cookies] Origin:', req.headers.origin);
+
+  // Check if we have the expected cookies
+  const hasAuthToken = !!req.cookies.authToken;
+  const hasImpersonationToken = !!req.cookies.impersonationToken;
+
+  console.log('[Test Permission Cookies] Has authToken:', hasAuthToken);
+  console.log('[Test Permission Cookies] Has impersonationToken:', hasImpersonationToken);
+
+  // Set test cookies if they don't exist
+  if (!hasAuthToken) {
+    res.cookie('authToken', 'test-auth-token-for-permission', getAuthCookieOptions());
+    console.log('[Test Permission Cookies] Set authToken cookie');
+  }
+
+  if (!hasImpersonationToken) {
+    res.cookie('impersonationToken', 'test-impersonation-token-for-permission', getAuthCookieOptions());
+    console.log('[Test Permission Cookies] Set impersonationToken cookie');
+  }
+
+  // Check res.locals (set by permission middleware)
+  console.log('[Test Permission Cookies] res.locals:', res.locals);
+
+  res.json({
+    success: true,
+    message: 'Permission middleware test',
+    requestInfo: {
+      cookies: req.cookies,
+      rawCookieHeader: req.headers.cookie,
+      origin: req.headers.origin,
+      hasAuthToken,
+      hasImpersonationToken
+    },
+    permissionMiddlewareData: {
+      userId: res.locals.userId,
+      tenantId: res.locals.tenantId,
+      effectivePermissions: res.locals.effectivePermissions,
+      isImpersonating: res.locals.isImpersonating,
+      effectivePermissions_RoleName: res.locals.effectivePermissions_RoleName
+    },
+    cookieOptions: getAuthCookieOptions()
+  });
+});
+
+// Test endpoint for cookie debugging
+app.get('/test-cookies', (req, res) => {
+  console.log('[Test Cookies] Request received');
+  console.log('[Test Cookies] All cookies:', req.cookies);
+  console.log('[Test Cookies] Auth token:', req.cookies.authToken ? 'EXISTS' : 'MISSING');
+  console.log('[Test Cookies] Impersonation token:', req.cookies.impersonationToken ? 'EXISTS' : 'MISSING');
+
+  // Test setting cookies with different options
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+  const cookieOptions = getAuthCookieOptions();
+
+  console.log('[Test Cookies] Cookie options being used:', cookieOptions);
+
+  // Set test cookies
+  res.cookie('testCookie', 'test-value-123', cookieOptions);
+  res.cookie('authToken', 'test-auth-token-456', cookieOptions);
+  res.cookie('impersonationToken', 'test-impersonation-token-789', cookieOptions);
+
+  res.json({
+    message: 'Cookie test endpoint',
+    cookies: req.cookies,
+    hasAuthToken: !!req.cookies.authToken,
+    hasImpersonationToken: !!req.cookies.impersonationToken,
+    headers: {
+      cookie: req.headers.cookie,
+      origin: req.headers.origin,
+      referer: req.headers.referer
+    }
+  });
+});
+
+// Test endpoint to set cookies
+app.get('/set-test-cookie', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  // Set a test cookie
+  res.cookie('testCookie', 'testValue', getAuthCookieOptions());
+  res.cookie('authToken', 'testAuthToken123', getAuthCookieOptions());
+
+  console.log('[Set Test Cookie] Setting test cookies');
+
+  res.json({
+    message: 'Test cookies set',
+    cookieOptions: getAuthCookieOptions()
+  });
+});
+
+// Comprehensive cookie debugging endpoint
+app.get('/debug-cookies', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  console.log('[Debug Cookies] Request received');
+  console.log('[Debug Cookies] Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+    PORT: process.env.PORT
+  });
+  console.log('[Debug Cookies] Cookie options:', getAuthCookieOptions());
+  // console.log('[Debug Cookies] Request headers:', req.headers);
+  console.log('[Debug Cookies] Request cookies:', req.cookies);
+
+  // Set a test cookie with current options
+  res.cookie('debugCookie', 'debugValue', getAuthCookieOptions());
+
+  res.json({
+    message: 'Cookie debugging endpoint',
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+      PORT: process.env.PORT
+    },
+    cookieOptions: getAuthCookieOptions(),
+    requestInfo: {
+      cookies: req.cookies,
+      headers: {
+        cookie: req.headers.cookie,
+        origin: req.headers.origin,
+        referer: req.headers.referer,
+        host: req.headers.host,
+        'user-agent': req.headers['user-agent']
+      }
+    }
+  });
+});
+
+// Advanced cookie test endpoint
+app.get('/test-cookie-flow', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  console.log('[Test Cookie Flow] Request received');
+  // console.log('[Test Cookie Flow] All headers:', req.headers);
+  console.log('[Test Cookie Flow] Parsed cookies:', req.cookies);
+  console.log('[Test Cookie Flow] Raw cookie string:', req.headers.cookie);
+
+  // Test different cookie settings
+  const cookieOptions = getAuthCookieOptions();
+  console.log('[Test Cookie Flow] Cookie options:', cookieOptions);
+
+  // Set multiple test cookies with different options
+  res.cookie('test1', 'value1', cookieOptions);
+  res.cookie('test2', 'value2', { ...cookieOptions, domain: undefined });
+  res.cookie('test3', 'value3', { ...cookieOptions, sameSite: 'None', secure: true });
+
+  res.json({
+    message: 'Cookie flow test',
+    cookieOptions: cookieOptions,
+    requestInfo: {
+      cookies: req.cookies,
+      rawCookieHeader: req.headers.cookie,
+      origin: req.headers.origin,
+      host: req.headers.host,
+      userAgent: req.headers['user-agent']
+    },
+    testCookiesSet: ['test1', 'test2', 'test3']
+  });
+});
+
+// Comprehensive cookie test endpoint
+app.get('/cookie-test', (req, res) => {
+  const { getAuthCookieOptions } = require('./utils/cookieUtils');
+
+  console.log('[Cookie Test] === DETAILED COOKIE ANALYSIS ===');
+  console.log('[Cookie Test] Request URL:', req.url);
+  console.log('[Cookie Test] Request method:', req.method);
+  console.log('[Cookie Test] Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+    PORT: process.env.PORT
+  });
+  console.log('[Cookie Test] Cookie options:', getAuthCookieOptions());
+  // console.log('[Cookie Test] All request headers:', req.headers);
+  console.log('[Cookie Test] Parsed cookies:', req.cookies);
+  console.log('[Cookie Test] Raw cookie header:', req.headers.cookie);
+  console.log('[Cookie Test] Origin:', req.headers.origin);
+  console.log('[Cookie Test] Referer:', req.headers.referer);
+  console.log('[Cookie Test] Host:', req.headers.host);
+  console.log('[Cookie Test] User-Agent:', req.headers['user-agent']);
+  console.log('[Cookie Test] === END ANALYSIS ===');
+
+  // Set test cookies with different configurations
+  const cookieOptions = getAuthCookieOptions();
+
+  // Test 1: Default options
+  res.cookie('test_default', 'value1', cookieOptions);
+
+  // Test 2: No domain
+  res.cookie('test_no_domain', 'value2', {
+    ...cookieOptions,
+    domain: undefined
+  });
+
+  // Test 3: Explicit sameSite and secure
+  res.cookie('test_explicit', 'value3', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+    path: '/',
+    maxAge: 24 * 60 * 60 * 1000
+  });
+
+  res.json({
+    message: 'Comprehensive cookie test',
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+      PORT: process.env.PORT
+    },
+    cookieOptions: cookieOptions,
+    requestInfo: {
+      cookies: req.cookies,
+      rawCookieHeader: req.headers.cookie,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      host: req.headers.host,
+      userAgent: req.headers['user-agent']
+    },
+    testCookiesSet: ['test_default', 'test_no_domain', 'test_explicit']
+  });
+});
+
+// Simple test to check if browser sends cookies
+app.get('/check-cookies', (req, res) => {
+  console.log('[Check Cookies] === COOKIE DEBUG START ===');
+  console.log('[Check Cookies] URL:', req.url);
+  console.log('[Check Cookies] Method:', req.method);
+  // console.log('[Check Cookies] All headers:', JSON.stringify(req.headers, null, 2));
+  console.log('[Check Cookies] Parsed cookies:', req.cookies);
+  console.log('[Check Cookies] Raw cookie header:', req.headers.cookie);
+  console.log('[Check Cookies] Origin:', req.headers.origin);
+  console.log('[Check Cookies] Referer:', req.headers.referer);
+  console.log('[Check Cookies] === COOKIE DEBUG END ===');
+
+  res.json({
+    success: true,
+    message: 'Cookie check completed',
+    receivedCookies: req.cookies,
+    rawCookieHeader: req.headers.cookie,
+    origin: req.headers.origin,
+    referer: req.headers.referer,
+    userAgent: req.headers['user-agent']
+  });
+});
 
 app.use('/api', apiRoutes);
 app.use('/linkedin', linkedinAuthRoutes);

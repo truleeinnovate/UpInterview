@@ -5,6 +5,7 @@ const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js")
 const { generateToken } = require('../utils/jwt');
 const Tenant = require("../models/Tenant");
 const RolesPermissionObject = require('../models/RolesPermissionObject');
+const { getAuthCookieOptions } = require('../utils/cookieUtils');
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -21,30 +22,30 @@ exports.individualLogin = async (req, res) => {
     console.log('[individualLogin] Step 2.7: ownerId:', ownerId);
 
     let savedUser, savedContact, savedTenant;
-     let updatedUserData = { ...userData };
+    let updatedUserData = { ...userData };
 
     // Only handle role assignment if profile is not complete for organization
     if (isProfileCompleteStateOrg === false || isProfileCompleteStateOrg === undefined) {
       console.log('[individualLogin] Profile not complete for organization - handling role assignment');
-      
+
       // Find the appropriate role based on freelancer status
       let role;
-      console.log("Role",role);
-      
+      console.log("Role", role);
+
       if (userData.isFreelancer) {
-        role = await RolesPermissionObject.findOne({ 
-          
-          roleName: 'Individual_Freelancer', 
-          roleType: 'individual' 
+        role = await RolesPermissionObject.findOne({
+
+          roleName: 'Individual_Freelancer',
+          roleType: 'individual'
         });
-          console.log("role1", role);
+        console.log("role1", role);
 
       } else {
-        role = await RolesPermissionObject.findOne({ 
-          roleName: 'Individual', 
-          roleType: 'individual' 
+        role = await RolesPermissionObject.findOne({
+          roleName: 'Individual',
+          roleType: 'individual'
         });
-          console.log("role2", role);
+        console.log("role2", role);
 
       }
 
@@ -97,7 +98,7 @@ exports.individualLogin = async (req, res) => {
     if (availabilityData && availabilityData.length > 0 && (userData.isFreelancer || isInternalInterviewer)) {
       try {
         console.log('[individualLogin] Step 7: Saving availability data');
-        
+
         // Use the updateOrCreate method to save all availability in one document
         await InterviewAvailability.updateOrCreate(savedContact._id, availabilityData);
         console.log('[individualLogin] Step 7.1: Saved availability data');
@@ -131,7 +132,7 @@ exports.individualLogin = async (req, res) => {
     // <-----------------------OutsourceInterviewer------------------------------->
     const payload = {
       userId: savedUser._id.toString(),
-       tenantId: savedUser.tenantId,
+      tenantId: savedUser.tenantId,
       organization: isProfileCompleteStateOrg === true,
       timestamp: new Date().toISOString(),
       freelancer: userData.isFreelancer
@@ -139,6 +140,9 @@ exports.individualLogin = async (req, res) => {
 
     const token = generateToken(payload);
     // console.log('[individualLogin] Step 9: Generated token');
+
+    // Set auth token cookie
+    res.cookie('authToken', token, getAuthCookieOptions());
 
     res.status(200).json({
       success: true,
