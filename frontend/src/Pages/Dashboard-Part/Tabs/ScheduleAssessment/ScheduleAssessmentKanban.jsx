@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import {
   EyeIcon,
-  PencilSquareIcon,
+  //PencilSquareIcon,
   CalendarIcon,
 } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
